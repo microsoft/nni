@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import numpy as np
-from .util import ensure_rng
+import nni.parameter_expressions as parameter_expressions
 
 
 def _hashable(x):
@@ -30,17 +30,6 @@ def _hashable(x):
 class TargetSpace(object):
     """
     Holds the param-space coordinates (X) and target values (Y)
-    Allows for constant-time appends while ensuring no duplicates are added
-
-    Example
-    -------
-    >>> def target_func(p1, p2):
-    >>>     return p1 + p2
-    >>> pbounds = {'p1': (0, 1), 'p2': (1, 100)}
-    >>> space = TargetSpace(target_func, pbounds, random_state=0)
-    >>> x = space.random_points(1)[0]
-    >>> y = space.register_point(x)
-    >>> assert self.max_point()['max_val'] == y
     """
 
     def __init__(self, pbounds, random_state=None):
@@ -54,7 +43,7 @@ class TargetSpace(object):
         random_state : int, RandomState, or None
             optionally specify a seed for a random number generator
         """
-        self.random_state = ensure_rng(random_state)
+        self.random_state = random_state
 
         # Get the name of the parameters
         self._keys = sorted(pbounds)
@@ -121,10 +110,11 @@ class TargetSpace(object):
             )
 
         # maintain int type if the choices are int
-        # TODO: better implementation
         params = {}
         for i, _bound in enumerate(self._bounds):
-            if _bound['_type'] == "choice" and isinstance(_bound['_value'][0], int):
+            if _bound['_type'] == 'choice' and all(isinstance(val, int) for val in _bound['_value']):
+                params.update({self.keys[i]: int(x[i])})
+            elif _bound['_type'] in ['randint', 'quniform']:
                 params.update({self.keys[i]: int(x[i])})
             else:
                 params.update({self.keys[i]:  x[i]})
@@ -164,26 +154,24 @@ class TargetSpace(object):
 
         Returns
         ----------
-        data: ndarray
+        params: ndarray
             [num x dim] array points with dimensions corresponding to `self._keys`
-
-        Example
-        -------
-        >>> target_func = lambda p1, p2: p1 + p2
-        >>> pbounds = { "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]}, "conv_size":{"_type":"choice","_value":[2,3,5,7]}}
-        >>> space = TargetSpace(pbounds, random_state=0)
-        >>> space.random_points()
-        array([[ 55.33253689,   0.54488318]])
         """
-        # TODO: support randint, quniform
-        data = np.empty((1, self.dim))
+        params = np.empty(self.dim)
         for col, _bound in enumerate(self._bounds):
             if _bound['_type'] == 'uniform':
-                data.T[col] = self.random_state.uniform(
+                params[col] = parameter_expressions.uniform(
+                    _bound['_value'][0], _bound['_value'][1], self.random_state)
+            elif _bound['_type'] == 'quniform':
+                params[col] = parameter_expressions.quniform(
+                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
+            elif _bound['_type'] == 'randint':
+                params[col] = self.random_state.randint(
                     _bound['_value'][0], _bound['_value'][1], size=1)
             elif _bound['_type'] == 'choice':
-                data.T[col] = self.random_state.choice(_bound['_value'])
-        return data.ravel()
+                params[col] = parameter_expressions.choice(
+                    _bound['_value'], self.random_state)
+        return params
 
     def max(self):
         """Get maximum target value found and corresponding parametes."""

@@ -19,7 +19,7 @@ Currently we support the following algorithms:
 |[__Network Morphism__](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)|
 |[__Metis Tuner__](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)|
 |[__BOHB__](#BOHB)|BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Byesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)|
-
+|[__GP Tuner__](#GPTuner)|GP Tuner with Mater 5/2 kernel [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)|
 <br>
 
 ## Usage of Builtin Tuners
@@ -365,4 +365,46 @@ advisor:
     min_budget: 1
     max_budget: 27
     eta: 3
+```
+<br>
+
+<a name="GPTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `GP Tuner`
+
+> Builtin Tuner Name: **GPTuner**
+
+Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+
+**Suggested scenario**
+
+GP Tuner is a black-box tuner. [Detailed Description](./GPTuner.md)
+
+**Requirement of classArg**
+
+* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The kind of utility function.
+* **kappa** (*float, optional, default = 5*) - Used for utility function 'ucb'. The bigger kappa is, the more the tunre will prefer exploration.
+* **xi** (*float, optional, default = 0*) - Used for utility function 'ucb' and 'poi'. The bigger xi is, the more the tunre will prefer exploration.
+* **nu** (*float, optional, default = 2.5*) - Used for specify Matern 5/2 kernel. 
+* **alpha** (*float, optional, default = 1e-6*) - Used for specify Gaussian Process Regressor. 
+* **cold_start_num** (*int, optional, default = 10*) - Number of random exploration to perform before Gaussian Process. Random exploration can help by diversifying the exploration space.
+* **selection_num_warm_up** (*int, optional, default = 1e5*) - Number of times to randomly sample the aquisition function. It uses a combination of random sampling (cheap) and the 'L-BFGS-B'optimization method. First by sampling `selection_num_warm_up` (1e5) points at random, and then running L-BFGS-B from `selection_num_starting_points` (250) random starting points.
+* **selection_num_starting_points** (*int, optional, default = 250*) - Nnumber of times to run scipy.minimize
+
+**Usage example**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: GPTuner
+  classArgs:
+    optimize_mode: maximize
+    kappa: 5
+    xi:0
+    nu:2.5
+    alpha:1e-6
+    cold_start_num:10
+    selection_num_warm_up:1e5
+    selection_num_starting_points:250
 ```

@@ -36,13 +36,15 @@ def _match_val_type(vals, bounds):
             # Find the closest integer in the array, vals_bounds
             vals_new.append(
                 min(bounds[i]['_value'], key=lambda x: abs(x - vals[i])))
+        elif _type in ['quniform', 'randint']:
+            vals_new.append(np.around(bounds[i]['_value']))
         else:
             vals_new.append(vals[i])
 
     return vals_new
 
 
-def acq_max(ac, gp, y_max, bounds, random_state, space, n_warmup=1000, n_iter=250):
+def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
     """
     A function to find the maximum of the acquisition function
 
@@ -64,9 +66,6 @@ def acq_max(ac, gp, y_max, bounds, random_state, space, n_warmup=1000, n_iter=25
     :param bounds:
         The variables bounds to limit the search of the acq max.
 
-    :param random_state:
-        instance of np.RandomState random number generator
-
     :param n_warmup:
         number of times to randomly sample the aquisition function
 
@@ -79,20 +78,20 @@ def acq_max(ac, gp, y_max, bounds, random_state, space, n_warmup=1000, n_iter=25
     """
 
     # Warm up with random points
-    x_tries = [space.random_sample() for _ in range(n_warmup)]
-    ys = ac(x_tries, gp=gp, y_max=y_max)
-    x_max = x_tries[ys.argmax()]
-    max_acq = ys.max()
+    x_tries=[space.random_sample() for _ in range(int(n_warmup)] # TODO why int here ? 
+    ys=ac(x_tries, gp=gp, y_max=y_max)
+    x_max=x_tries[ys.argmax()]
+    max_acq=ys.max()
 
     # Explore the parameter space more throughly
-    x_seeds = [space.random_sample() for _ in range(n_iter)]
+    x_seeds=[space.random_sample() for _ in range(n_iter)]
 
-    bounds_minmax = np.array(
+    bounds_minmax=np.array(
         [[bound['_value'][0], bound['_value'][-1]] for bound in bounds])
 
     for x_try in x_seeds:
         # Find the minimum of minus the acquisition function
-        res = minimize(lambda x: -ac(x.reshape(1, -1), gp=gp, y_max=y_max),
+        res=minimize(lambda x: -ac(x.reshape(1, -1), gp=gp, y_max=y_max),
                        x_try.reshape(1, -1),
                        bounds=bounds_minmax,
                        method="L-BFGS-B")
@@ -103,13 +102,12 @@ def acq_max(ac, gp, y_max, bounds, random_state, space, n_warmup=1000, n_iter=25
 
         # Store it if better than previous minimum(maximum).
         if max_acq is None or -res.fun[0] >= max_acq:
-            x_max = _match_val_type(res.x, bounds)
-            max_acq = -res.fun[0]
+            x_max=_match_val_type(res.x, bounds)
+            max_acq=-res.fun[0]
 
     # Clip output to make sure it lies within the bounds. Due to floating
     # point technicalities this is not always the case.
-    # return np.clip(x_max, bounds[:, 0], bounds[:, 1])
-    return x_max
+    return np.clip(x_max, bounds_minmax[:, 0], bounds_minmax[:, 1])
 
 
 class UtilityFunction(object):
@@ -121,17 +119,17 @@ class UtilityFunction(object):
         """
         If UCB is to be used, a constant kappa is needed.
         """
-        self.kappa = kappa
+        self.kappa=kappa
 
-        self.xi = xi
+        self.xi=xi
 
         if kind not in ['ucb', 'ei', 'poi']:
-            err = "The utility function " \
+            err="The utility function " \
                   "{} has not been implemented, " \
                   "please choose one of ucb, ei, or poi.".format(kind)
             raise NotImplementedError(err)
         else:
-            self.kind = kind
+            self.kind=kind
 
     def utility(self, x, gp, y_max):
         if self.kind == 'ucb':
@@ -145,7 +143,7 @@ class UtilityFunction(object):
     def _ucb(x, gp, kappa):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std = gp.predict(x, return_std=True)
+            mean, std=gp.predict(x, return_std=True)
 
         return mean + kappa * std
 
@@ -153,31 +151,16 @@ class UtilityFunction(object):
     def _ei(x, gp, y_max, xi):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std = gp.predict(x, return_std=True)
+            mean, std=gp.predict(x, return_std=True)
 
-        z = (mean - y_max - xi)/std
+        z=(mean - y_max - xi)/std
         return (mean - y_max - xi) * norm.cdf(z) + std * norm.pdf(z)
 
     @staticmethod
     def _poi(x, gp, y_max, xi):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std = gp.predict(x, return_std=True)
+            mean, std=gp.predict(x, return_std=True)
 
-        z = (mean - y_max - xi)/std
+        z=(mean - y_max - xi)/std
         return norm.cdf(z)
-
-
-def ensure_rng(random_state=None):
-    """
-    Creates a random number generator based on an optional seed.  This can be
-    an integer or another random state for a seeded rng, or None for an
-    unseeded rng.
-    """
-    if random_state is None:
-        random_state = np.random.RandomState()
-    elif isinstance(random_state, int):
-        random_state = np.random.RandomState(random_state)
-    else:
-        assert isinstance(random_state, np.random.RandomState)
-    return random_state

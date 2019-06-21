@@ -23,6 +23,7 @@ gp_tuner.py
 
 import warnings
 import logging
+import numpy as np
 
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -31,7 +32,7 @@ from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .target_space import TargetSpace
-from .util import UtilityFunction, acq_max, ensure_rng
+from .util import UtilityFunction, acq_max
 
 logger = logging.getLogger("GP_Tuner_AutoML")
 
@@ -41,20 +42,36 @@ class GPTuner(Tuner):
     GPTuner
     '''
 
-    def __init__(self, optimize_mode="maximize", cold_start_num=1, random_state=None):
+    def __init__(self, optimize_mode="maximize", utility_kind='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
+                 selection_num_warm_up=1e5, selection_num_starting_points=250):
         self.optimize_mode = optimize_mode
-        self._random_state = ensure_rng(random_state)
 
+        # utility function related
+        self.utility_kind = utility_kind
+        self.kappa = kappa
+        self.xi = xi
+
+        # target space
         self._space = None
+
+        self._random_state = np.random.RandomState()
+
+        # nu, alpha are GPR related params
         self._gp = GaussianProcessRegressor(
-            kernel=Matern(nu=2.5),
-            alpha=1e-6,
+            kernel=Matern(nu=nu),
+            alpha=alpha,
             normalize_y=True,
             n_restarts_optimizer=25,
             random_state=self._random_state
         )
+        # num of random evaluations before GPR
+        self._cold_start_num = cold_start_num
 
-        self.cold_start_num = cold_start_num
+        # params for acq_max
+        self._selection_num_warm_up = selection_num_warm_up
+        self._selection_num_starting_points = selection_num_starting_points
+
+        # num of imported data
         self.supplement_data_num = 0
 
     def update_search_space(self, search_space):
@@ -80,7 +97,7 @@ class GPTuner(Tuner):
         -------
         result : dict
         """
-        if len(self._space) == 0 or len(self._space._target) < self.cold_start_num:
+        if len(self._space) == 0 or len(self._space._target) < self._cold_start_num:
             results = self._space.random_sample()
         else:
             # Sklearn's GP throws a large number of warnings at times, but
@@ -89,18 +106,21 @@ class GPTuner(Tuner):
                 warnings.simplefilter("ignore")
                 self._gp.fit(self._space.params, self._space.target)
 
-            util = UtilityFunction(kind='ei', kappa=0, xi=0)
+            util = UtilityFunction(
+                kind=self.utility_kind, kappa=self.kappa, xi=self.xi)
+
             results = acq_max(
                 ac=util.utility,
                 gp=self._gp,
                 y_max=self._space.target.max(),
                 bounds=self._space.bounds,
-                random_state=self._random_state,
-                space=self._space
+                space=self._space,
+                n_warmup=self._selection_num_warm_up,
+                n_iter=self._selection_num_starting_points
             )
 
         results = self._space.array_to_params(results)
-        logger.info("Generate paramageters(json):\n" + str(results))
+        logger.info("Generate paramageters:\n %s", results)
         return results
 
     def receive_trial_result(self, parameter_id, parameters, value):
@@ -113,9 +133,13 @@ class GPTuner(Tuner):
         value : dict/float
             if value is dict, it should have "default" key.
         """
+        value = extract_scalar_reward(value)
+        if self.optimize_mode == OptimizeMode.Minimize:
+            value = -value
+
         logger.info("Received trial result.")
-        logger.info("value is :" + str(value))
-        logger.info("parameter is : " + str(parameters))
+        logger.info("value :%s", value)
+        logger.info("parameter : %s", parameters)
         self._space.register(parameters, value)
 
     def import_data(self, data):
