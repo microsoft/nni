@@ -103,11 +103,9 @@ class TunerTestCase(TestCase):
         command, data = receive()  # this one is customized
         data = json.loads(data)
         self.assertIs(command, CommandType.NewTrialJob)
-        self.assertEqual(data, {
-            'parameter_id': 2,
-            'parameter_source': 'customized',
-            'parameters': { 'param': -1 }
-        })
+        self.assertEqual(data['parameter_id'], 2)
+        self.assertEqual(data['parameter_source'], 'customized')
+        self.assertEqual(data['parameters'], { 'param': -1 })
 
         self._assert_params(3, 6, [[1,4,11,False], [2,-1,22,True]], {'name':'SS0'})
 
