@@ -33,7 +33,12 @@ interface TrialDetailState {
     intermediateCounts: number;
 }
 
-class TrialsDetail extends React.Component<{}, TrialDetailState> {
+interface TrialsDetailProps {
+    interval: number;
+    whichPageToFresh: string;
+}
+
+class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
 
     public _isMounted = false;
     public interAccuracy = 0;
@@ -61,7 +66,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         </div>
     );
 
-    constructor(props: {}) {
+    constructor(props: TrialsDetailProps) {
         super(props);
 
         this.state = {
@@ -227,21 +232,24 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     // close timer
     isOffIntervals = () => {
-        axios(`${MANAGER_IP}/check-status`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    switch (res.data.status) {
-                        case 'DONE':
-                        case 'ERROR':
-                        case 'STOPPED':
+        const { interval } = this.props;
+        if (interval === 0) {
+            window.clearInterval(this.interTableList);
+            return;
+        } else {
+            axios(`${MANAGER_IP}/check-status`, {
+                method: 'GET'
+            })
+                .then(res => {
+                    if (res.status === 200 && this._isMounted) {
+                        const expStatus = res.data.status;
+                        if (expStatus === 'DONE' || expStatus === 'ERROR' || expStatus === 'STOPPED') {
                             window.clearInterval(this.interTableList);
-                            break;
-                        default:
+                            return;
+                        }
                     }
-                }
-            });
+                });
+        }
     }
 
     handleEntriesSelect = (value: string) => {
@@ -304,11 +312,23 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             });
     }
 
+    componentWillReceiveProps(nextProps: TrialsDetailProps) {
+        const { interval, whichPageToFresh } = nextProps;
+        window.clearInterval(this.interTableList);
+        if (interval !== 0) {
+            this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
+        }
+        if (whichPageToFresh.includes('/detail')) {
+            this.getDetailSource();
+        }
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
+        const { interval } = this.props;
         this.getDetailSource();
-        this.interTableList = window.setInterval(this.getDetailSource, 10000);
+        this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
         this.checkExperimentPlatform();
     }
 
@@ -329,7 +349,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             <div>
                 <div className="trial" id="tabsty">
                     <Tabs type="card" onChange={this.handleWhichTabs}>
-                        {/* <TabPane tab={this.titleOfacc} key="1" destroyInactiveTabPane={true}> */}
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
@@ -350,7 +369,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
                             <Duration source={source} whichGraph={whichGraph} />
-                            {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
                             <Intermediate source={source} whichGraph={whichGraph} />
