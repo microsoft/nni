@@ -239,7 +239,7 @@ class CustomerTuner(Tuner):
             indiv.mutation()
             graph = indiv.config
             temp =  json.loads(graph_dumps(graph))
-    
+
     # ......
 ```
 

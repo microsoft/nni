@@ -21,16 +21,6 @@ For other examples you need to change trial command `python3` into `python` in e
 Make sure C++ 14.0 compiler installed.
 >building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### Fail to run PowerShell when install NNI from source
-
-If you run PowerShell script for the first time and did not set the execution policies for executing the script, you will meet this error below. Try to run PowerShell as administrator with this command first:
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
->...cannot be loaded because running scripts is disabled on this system.
-
 ### Trial failed with missing DLL in command line or PowerShell
 
 This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
@@ -38,11 +28,7 @@ This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install 
 
 ### Trial failed on webUI
 
-Please check the trial log file stderr for more details. If there is no such file and NNI is installed through pip, then you need to run PowerShell as administrator with this command first:
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
+Please check the trial log file stderr for more details.
 
 If there is a stderr file, please check out. Two possible cases are as follows:
 

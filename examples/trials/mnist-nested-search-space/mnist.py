@@ -121,7 +121,7 @@ def main(params):
         for i in range(params['batch_num']):
             batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.x: batch[0], mnist_network.y: batch[1]})
-            
+
             if i % 100 == 0:
                 train_accuracy = mnist_network.accuracy.eval(feed_dict={
                     mnist_network.x: batch[0], mnist_network.y: batch[1]})

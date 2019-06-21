@@ -31,7 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     vim \
     unzip \
     wget \
-    build-essential \ 
+    build-essential \
     cmake \
     libopenblas-dev \
     automake \
@@ -51,9 +51,9 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 #
 RUN python3 -m pip install --upgrade pip
 
-# numpy 1.14.3  scipy 1.1.0 
+# numpy 1.14.3  scipy 1.1.0
 RUN python3 -m pip --no-cache-dir install \
-    numpy==1.14.3 scipy==1.1.0 
+    numpy==1.14.3 scipy==1.1.0
 
 #
 # Tensorflow 1.10.0
@@ -66,7 +66,7 @@ RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
 #
-# PyTorch 
+# PyTorch
 #
 RUN python3 -m pip --no-cache-dir install torch==0.4.1
 RUN python3 -m pip install torchvision==0.2.1

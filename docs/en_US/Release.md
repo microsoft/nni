@@ -102,14 +102,14 @@
 ## Release 0.5.1 - 1/31/2018
 ### Improvements
 * Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging 
+* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging
 
 ### Documentation
 * Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
 
 ### Bug Fixes and Other Changes
 * Fix the bug of installation in python virtualenv, and refactor the installation logic
-* Fix the bug of HDFS access failure on OpenPAI mode after OpenPAI is upgraded. 
+* Fix the bug of HDFS access failure on OpenPAI mode after OpenPAI is upgraded.
 * Fix the bug that sometimes in-place flushed stdout makes experiment crash
 
 ## Release 0.5.0 - 01/14/2019
@@ -177,7 +177,7 @@
 * [Kubeflow Training service](./KubeflowMode.md)
   * Support tf-operator
   * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](GridsearchTuner.md) 
+* [Grid search tuner](GridsearchTuner.md)
 * [Hyperband tuner](HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
 * WebUI
@@ -192,10 +192,10 @@
 ### Others
 
 * Asynchronous dispatcher
-* Docker file update, add pytorch library 
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
+* Docker file update, add pytorch library
+* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API.
 * OpenPAI training service bug fix
-  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
+  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device
   * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
   * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
   * Add timestamp at the beginning of each log entry in trial keeper.
@@ -219,7 +219,7 @@
 
 * <span style="color:red">**breaking change**</span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
 
-* New API **nni.get_sequence_id()**. 
+* New API **nni.get_sequence_id()**.
   Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
 
   ```bash

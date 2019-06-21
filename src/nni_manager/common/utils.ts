@@ -167,7 +167,7 @@ function getCmdPy(): string {
 }
 
 /**
- * Generate command line to start automl algorithm(s), 
+ * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
@@ -361,11 +361,11 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     if(process.platform === "win32") {
         cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
     } else {
-        cmd = `find ${directory} -type f | wc -l`;   
+        cmd = `find ${directory} -type f | wc -l`;
     }
     cpp.exec(cmd).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);            
+            fileCount = parseInt(result.stdout);
         }
         deferred.resolve(fileCount);
     });
@@ -395,14 +395,14 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
         try {
             // validate file names and directory names
             result = validateFileName(name);
-            if (fs.lstatSync(fullFilePath).isDirectory) {
+            if (fs.lstatSync(fullFilePath).isDirectory()) {
                 result = result && await validateFileNameRecursively(fullFilePath);
             }
             if(!result) {
-                return Promise.resolve(result);
+                return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
             }
         } catch(error) {
-            return Promise.reject(result);
+            return Promise.reject(error);
         }
     }
     return Promise.resolve(result);   
@@ -419,7 +419,7 @@ async function getVersion(): Promise<string> {
         deferred.reject(error);
     });
     return deferred.promise;
-} 
+}
 
 /**
  * run command as ChildProcess
@@ -471,7 +471,7 @@ async function isAlive(pid:any): Promise<boolean> {
 }
 
 /**
- * kill process 
+ * kill process
  */
 async function killPid(pid:any): Promise<void> {
     let deferred : Deferred<void> = new Deferred<void>();
@@ -500,7 +500,7 @@ function getNewLine(): string {
 
 /**
  * Use '/' to join path instead of '\' for all kinds of platform
- * @param path 
+ * @param path
  */
 function unixPathJoin(...paths: any[]): string {
     const dir: string = paths.filter((path: any) => path !== '').join('/');
