@@ -40,7 +40,7 @@ def _match_val_type(vals, bounds):
             vals_new.append(
                 min(bounds[i]['_value'], key=lambda x: abs(x - vals[i])))
         elif _type in ['quniform', 'randint']:
-            vals_new.append(np.around(bounds[i]['_value']))
+            vals_new.append(np.around(vals[i]))
         else:
             vals_new.append(vals[i])
 
