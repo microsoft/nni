@@ -56,6 +56,7 @@ common_schema = {
     Optional('nniManagerIp'): setType('nniManagerIp', str),
     Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
     Optional('debug'): setType('debug', bool),
+    Optional('versionCheck'): setType('versionCheck', bool),
     Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
     Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
     'useAnnotation': setType('useAnnotation', bool),
@@ -143,7 +144,7 @@ advisor_schema_dict = {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
             Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
-            Optional('eta'):setNumberRange('eta', int, 0, 9999), 
+            Optional('eta'):setNumberRange('eta', int, 0, 9999),
             Optional('min_points_in_model'): setNumberRange('min_points_in_model', int, 0, 9999),
             Optional('top_n_percent'): setNumberRange('top_n_percent', int, 1, 99),
             Optional('num_samples'): setNumberRange('num_samples', int, 1, 9999),
@@ -250,7 +251,7 @@ kubeflow_trial_schema = {
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
             'image': setType('image', str)
-        } 
+        }
     }
 }
 

@@ -27,7 +27,7 @@
 /* add the brother selector to increase the priority */
 #succeTable .commonTableStyle, #tableList .commonTableStyle {
 
-    tr{ 
+    tr{
         text-align: center;
         color:#212121;
         font-family: 'Segoe';
@@ -43,14 +43,14 @@
         border-bottom: 1px solid #d0d0d0;
         text-align: center;
     }
-    
+
 
     .ant-table-expanded-row{
         /* background-color: #f2f2f2 */
-        background-color: transparent; 
+        background-color: transparent;
     }
 
-    tr:hover{ 
+    tr:hover{
         /* cancel antd table default hover style */
         td{
             background-color: transparent;

@@ -63,7 +63,7 @@ describe('Unit Test for KubeflowTrainingService', () => {
         if (skip) {
             return;
         }
-        kubeflowTrainingService = component.get(KubeflowTrainingService);        
+        kubeflowTrainingService = component.get(KubeflowTrainingService);
     });
 
     afterEach(() => {
@@ -78,6 +78,6 @@ describe('Unit Test for KubeflowTrainingService', () => {
             return;
         }
         await kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG, testKubeflowConfig),
-        await kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testKubeflowTrialConfig);                
+        await kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testKubeflowTrialConfig);
     });
 });

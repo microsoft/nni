@@ -72,8 +72,15 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
                 let duration;
-                if (record.duration) {
-                    duration = convertDuration(record.duration);
+                if (record.duration !== undefined) {
+                    // duration is nagative number(-1) & 0-1
+                    if (record.duration > 0 && record.duration < 1 || record.duration < 0) {
+                        duration = `${record.duration}s`;
+                    } else {
+                        duration = convertDuration(record.duration);
+                    }
+                } else {
+                    duration = 0;
                 }
                 return (
                     <div className="durationsty"><div>{duration}</div></div>

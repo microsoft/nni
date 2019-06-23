@@ -76,7 +76,7 @@ def iou(preds, labels, C, EMPTY=1., ignore=None, per_image=False):
         preds, labels = (preds,), (labels,)
     ious = []
     for pred, label in zip(preds, labels):
-        iou = []    
+        iou = []
         for i in range(C):
             if i != ignore: # The ignored label is sometimes among predicted classes (ENet - CityScapes)
                 intersection = ((label == i) & (pred == i)).sum()
@@ -127,7 +127,7 @@ def lovasz_hinge_flat(logits, labels):
     grad = lovasz_grad(gt_sorted)
     loss = torch.dot(F.elu(errors_sorted)+1, Variable(grad))
     #loss = torch.dot(F.relu(errors_sorted), Variable(grad))
-    
+
     return loss
 
 

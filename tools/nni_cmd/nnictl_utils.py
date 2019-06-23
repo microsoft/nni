@@ -321,7 +321,7 @@ def log_internal(args, filetype):
     else:
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
     print(check_output_command(file_full_path, head=args.head, tail=args.tail))
-    
+
 def log_stdout(args):
     '''get stdout log'''
     log_internal(args, 'stdout')
@@ -393,7 +393,7 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list all\' to list all stopped experiments!')
     experiment_information = ""
     for key in experiment_id_list:
-        
+
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
         experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)

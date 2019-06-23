@@ -167,7 +167,7 @@ function getCmdPy(): string {
 }
 
 /**
- * Generate command line to start automl algorithm(s), 
+ * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
@@ -361,17 +361,51 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     if(process.platform === "win32") {
         cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
     } else {
-        cmd = `find ${directory} -type f | wc -l`;   
+        cmd = `find ${directory} -type f | wc -l`;
     }
     cpp.exec(cmd).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);            
+            fileCount = parseInt(result.stdout);
         }
         deferred.resolve(fileCount);
     });
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
     });
+}
+
+function validateFileName(fileName: string): boolean {
+    let pattern: string = '^[a-z0-9A-Z\.-_]+$';
+    const validateResult = fileName.match(pattern);
+    if(validateResult) {
+        return true;
+    }
+    return false;
+}
+
+async function validateFileNameRecursively(directory: string): Promise<boolean> {
+    if(!fs.existsSync(directory)) {
+        throw Error(`Direcotory ${directory} doesn't exist`);
+    }
+
+    const fileNameArray: string[] = fs.readdirSync(directory);
+    let result = true;
+    for(var name of fileNameArray){
+        const fullFilePath: string = path.join(directory, name);
+        try {
+            // validate file names and directory names
+            result = validateFileName(name);
+            if (fs.lstatSync(fullFilePath).isDirectory()) {
+                result = result && await validateFileNameRecursively(fullFilePath);
+            }
+            if(!result) {
+                return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
+            }
+        } catch(error) {
+            return Promise.reject(error);
+        }
+    }
+    return Promise.resolve(result);   
 }
 
 /**
@@ -385,7 +419,7 @@ async function getVersion(): Promise<string> {
         deferred.reject(error);
     });
     return deferred.promise;
-} 
+}
 
 /**
  * run command as ChildProcess
@@ -437,7 +471,7 @@ async function isAlive(pid:any): Promise<boolean> {
 }
 
 /**
- * kill process 
+ * kill process
  */
 async function killPid(pid:any): Promise<void> {
     let deferred : Deferred<void> = new Deferred<void>();
@@ -466,7 +500,7 @@ function getNewLine(): string {
 
 /**
  * Use '/' to join path instead of '\' for all kinds of platform
- * @param path 
+ * @param path
  */
 function unixPathJoin(...paths: any[]): string {
     const dir: string = paths.filter((path: any) => path !== '').join('/');
@@ -474,6 +508,6 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
-export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
+export {countFilesRecursively, validateFileNameRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };

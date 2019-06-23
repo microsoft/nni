@@ -95,7 +95,7 @@ def prepare(args):
     if args['optimizer'] == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=args['lr'])
     if args['optimizer'] == 'Adamax':
-        optimizer = optim.Adam(net.parameters(), lr=args['lr'])       
+        optimizer = optim.Adam(net.parameters(), lr=args['lr'])
 
 
 # Training
