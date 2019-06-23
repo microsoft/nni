@@ -130,7 +130,8 @@ else:
             fixed_inputs,
             optional_inputs,
             optional_input_size,
-            tf=None):
+            tf=None,
+            mode='general'):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
@@ -152,7 +153,9 @@ else:
         optional_input_size: number of candidate inputs to be chosen
         tf: tensorflow module
         '''
-        if tf is None:
+        global train_mode
+        train_mode = mode
+        if mode == 'general':
             mutable_block = _get_param(mutable_id)
             chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
             chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
@@ -160,19 +163,20 @@ else:
                                   for input_name in chosen_inputs]
             layer_out = funcs[chosen_layer](
                 [fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
-        else:
+        elif mode == 'general-tf':
+            assert tf is not None, 'Internal Error: Tensorflow should not be None in oneshot-tf mode'
             name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
             # store namespace
-            global name_space
             if 'name_space' not in globals():
+                global name_space
                 name_space = dict()
             name_space[mutable_id] = True
             name_space[name_prefix] = dict()
             name_space[name_prefix]['funcs'] = list(funcs)
             name_space[name_prefix]['optional_inputs'] = list(optional_inputs)
             # create tensorflow variables as 1/0 signals used to form subgraph
-            global tf_variables
             if 'tf_variables' not in globals():
+                global tf_variables
                 tf_variables = dict()
             name_for_optional_inputs = name_prefix + '_optional_inputs'
             name_for_funcs = name_prefix + '_funcs'
@@ -201,25 +205,62 @@ else:
                 branches[tf.equal(tf_variables[name_prefix]['funcs'], func_id)] = lambda: func_output
             layer_out = tf.case(branches, exclusive=True,
                                 default=lambda: func_output)
+        elif mode == 'oneshot-tf':
+            inputs = optional_inputs
+            inputs_num = len(inputs)
+            # Calculate dropout rate according to the formular r^(1/k), where r is a hyper-parameter and k is the number of inputs
+            if inputs_num > 0:
+                rate = 0.01 ** (1 / inputs_num)
+                noise_shape = [inputs_num] + [1] * inputs[0].get_shape().as_list()
+                inputs = tf.nn.dropout(inputs, rate=rate, noise_shape=noise_shape)
+            layer_outs = [func([fixed_inputs, inputs], **funcs_args[chosen_layer]) for func in funcs]
+            noise_shape = [len(layer_outs)] + [1] * layer_outs[0].get_shape().as_list()
+            layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
+            layer_out = tf.add_n(layer_outs)
+        elif mode == 'darts-tf':
+            layer_outs = [func([fixed_inputs, inputs], **funcs_args[chosen_layer]) for func in funcs]
+            # Create architecture weights for every func(op)
+            var_name = "{}_{}_".format(mutable_id, mutable_layer_id, "arch_weights")
+            if 'arch_logits_list' not in globals():
+                global arch_logits_list
+                arch_logits_list = list()
+            arch_logits = tf.get_variable(var_name, shape=[len[funcs]], trainable=False)
+            arch_logits_list.append(arch_logits)
+            arch_weights = tf.nn.softmax(arch_logits)
+            layer_out = tf.add_n([arch_weights[idx] * out for idx, out in enumerate(layer_outs)])
+        elif mode == 'darts-pytorch':
+            raise NotImplementedError()
 
         return layer_out
 
-    def reload_tensorflow_variables(session):
-        subgraph_from_tuner = trial.get_next_parameter()
-        for mutable_id, mutable_block in subgraph_from_tuner.items():
-            if mutable_id not in name_space:
-                continue
-            for mutable_layer_id, mutable_layer in mutable_block.items():
-                name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
-                # extract layer information from the subgraph sampled by tuner
-                chosen_layer = name_space[name_prefix]['funcs'].index(
-                    mutable_layer["chosen_layer"])
-                chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
-                                 else 0 for inp in name_space[name_prefix]['optional_inputs']]
-                # load these information into pre-defined tensorflow variables
-                tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
-                tf_variables[name_prefix]['optional_inputs'].load(
-                    chosen_inputs, session)
+    def reload_tensorflow_variables(session, tf=None):
+        if train_mode == 'general-tf':
+            subgraph_from_tuner = trial.get_next_parameter()
+            for mutable_id, mutable_block in subgraph_from_tuner.items():
+                if mutable_id not in name_space:
+                    continue
+                for mutable_layer_id, mutable_layer in mutable_block.items():
+                    name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
+                    # extract layer information from the subgraph sampled by tuner
+                    chosen_layer = name_space[name_prefix]['funcs'].index(
+                        mutable_layer["chosen_layer"])
+                    chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
+                                    else 0 for inp in name_space[name_prefix]['optional_inputs']]
+                    # load these information into pre-defined tensorflow variables
+                    tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
+                    tf_variables[name_prefix]['optional_inputs'].load(
+                        chosen_inputs, session)
+        elif train_mode == 'darts-tf':
+            if 'optimizer' not in globals():
+                global arch_logits_list
+                global optimizer
+                global train_op
+                optimizer = tf.MomentumOptimizer(learning_rate=0.025)
+                # TODO: Calculate loss
+                grads_and_vars = optimizer.compute_gradients(0, arch_logits_list)
+                train_op = optimizer.apply_gradients(grads_and_vars)
+            session.run(train_op)
+
 
     def _get_param(key):
         if trial._params is None:

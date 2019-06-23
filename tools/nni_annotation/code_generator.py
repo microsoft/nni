@@ -41,13 +41,10 @@ def parse_annotation_mutable_layers(code, lineno):
         mode = call.keywords[0].value
         assert isinstance(mode, (ast.Str, ast.Name)), 'Mode must be a string or Name'
         mode = mode.s if isinstance(mode, ast.Str) else mode.id
-        assert mode in ['general', 'oneshot-tf', 'oneshot-pytorch']
+        assert mode in ['general', 'general-tf', 'oneshot-tf', 'darts-tf']
     else:
         mode = 'general'
     for arg in call.args:
-        if type(arg) is ast.Str:
-            assert arg.s in ['general', 'tensorflow'], 'Unsupported mode %s' % arg.s
-            mode = arg.s
         fields = {'layer_choice': False,
                   'fixed_inputs': False,
                   'optional_inputs': False,
@@ -119,7 +116,7 @@ def parse_annotation_mutable_layers(code, lineno):
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
-        if mode == 'oneshot-tf':
+        if mode in ['general-tf', 'oneshot-tf', 'darts-tf']:
             target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
@@ -384,7 +381,7 @@ def parse(code):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
-    if transformer.mode == 'oneshot-tf':
+    if transformer.mode in ['general-tf', 'oneshot-tf', 'darts-tf']:
         import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
         nodes.insert(last_future_import + 1, import_tf)
 
