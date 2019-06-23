@@ -1,8 +1,8 @@
 authorName: default
 experimentName: example_auto-gbdt
 trialConcurrency: 1
-maxExecDuration: 48h
-maxTrialNum: 1000
+maxExecDuration: 10h
+maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
@@ -11,11 +11,10 @@ useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
   #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: GPTuner
+  builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
     optimize_mode: minimize
-    cold_start_num : 1
 trial:
   command: python3 main.py
   codeDir: .

@@ -38,7 +38,7 @@ def _match_val_type(vals, bounds):
         if _type == "choice":
             # Find the closest integer in the array, vals_bounds
             vals_new.append(
-                min(bounds[i]['_value'], key=lambda x: abs(x - vals[i])))
+                min(bound['_value'], key=lambda x: abs(x - vals[i])))
         elif _type in ['quniform', 'randint']:
             vals_new.append(np.around(vals[i]))
         else:
@@ -82,10 +82,11 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
 
     # Warm up with random points
     x_tries = [space.random_sample()
-               for _ in range(int(num_warmup))]
+               for _ in range(num_warmup)]
     ys = f_acq(x_tries, gp=gp, y_max=y_max)
     x_max = x_tries[ys.argmax()]
     max_acq = ys.max()
+
 
     # Explore the parameter space more throughly
     x_seeds = [space.random_sample() for _ in range(num_starting_points)]
@@ -156,7 +157,7 @@ class UtilityFunction():
     def _ei(x, gp, y_max, xi):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std = gp.predict(x, return_std=True)
+            mean, std = gp.predict(x, return_std=True)  # TODO: sample_y ??
 
         z = (mean - y_max - xi)/std
         return (mean - y_max - xi) * norm.cdf(z) + std * norm.pdf(z)

@@ -29,7 +29,7 @@ from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 from nni.tuner import Tuner
-from nni.utils import OptimizeMode, extract_scalar_reward
+from nni.utils import extract_scalar_reward
 
 from .target_space import TargetSpace
 from .util import UtilityFunction, acq_max
@@ -42,12 +42,12 @@ class GPTuner(Tuner):
     GPTuner
     '''
 
-    def __init__(self, optimize_mode="maximize", utility_kind='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
-                 selection_num_warm_up=1e5, selection_num_starting_points=250):
+    def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
+                 selection_num_warm_up=100000, selection_num_starting_points=250):
         self.optimize_mode = optimize_mode
 
         # utility function related
-        self.utility_kind = utility_kind
+        self.utility = utility
         self.kappa = kappa
         self.xi = xi
 
@@ -107,7 +107,7 @@ class GPTuner(Tuner):
                 self._gp.fit(self._space.params, self._space.target)
 
             util = UtilityFunction(
-                kind=self.utility_kind, kappa=self.kappa, xi=self.xi)
+                kind=self.utility, kappa=self.kappa, xi=self.xi)
 
             results = acq_max(
                 f_acq=util.utility,
@@ -134,7 +134,7 @@ class GPTuner(Tuner):
             if value is dict, it should have "default" key.
         """
         value = extract_scalar_reward(value)
-        if self.optimize_mode == OptimizeMode.Minimize:
+        if self.optimize_mode == 'minimize':
             value = -value
 
         logger.info("Received trial result.")
