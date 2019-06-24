@@ -156,27 +156,27 @@ machineList:
   
   - 说明
     
-    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 If you want to disable version check, you could set versionCheck be false.
+    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
 
 - **debug**
   
   - 说明
     
-    Debug mode will set versionCheck be False and set logLevel be 'debug'
+    调试模式会将 versionCheck 设置为 False，并将 logLevel 设置为 'debug'。
 
 - **maxTrialNum**
   
   - 说明
     
-    **maxTrialNum** specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
 
 - **trainingServicePlatform**
   
   - 说明
     
-    **trainingServicePlatform** specifies the platform to run the experiment, including {**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    - **local** run an experiment on local ubuntu machine.
+    - **local** 在本机的 Ubuntu 上运行 Experiment。
     
     - **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
     
@@ -462,7 +462,7 @@ machineList:
   
   - **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
     Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
   
