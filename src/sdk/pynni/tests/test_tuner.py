@@ -35,7 +35,7 @@ class NaiveTuner(Tuner):
         self.trial_results = [ ]
         self.search_space = None
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         # report Tuner's internal states to generated parameters,
         # so we don't need to pause the main loop
         self.param += 2
@@ -45,7 +45,7 @@ class NaiveTuner(Tuner):
             'search_space': self.search_space
         }
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, False))
 
