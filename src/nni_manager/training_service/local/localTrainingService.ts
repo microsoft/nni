@@ -373,6 +373,7 @@ class LocalTrainingService implements TrainingService {
                 if (stream === undefined) {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
+                //Refer https://github.com/Juul/tail-stream/issues/20
                 stream.end(0)
                 stream.emit('end')
                 this.jobStreamMap.delete(trialJob.id);
