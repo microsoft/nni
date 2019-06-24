@@ -117,17 +117,17 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-Note:
+注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
-**Install through source code**
+**通过源代码安装**
 
 * 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
-Linux and MacOS
+Linux 和 macOS
 
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
@@ -147,11 +147,11 @@ Windows
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
+参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
 
-For NNI on Windows, please refer to [NNI on Windows](docs/en_US/NniOnWindows.md)
+Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
 
-**Verify install**
+**验证安装**
 
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
 
