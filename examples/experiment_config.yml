@@ -1,32 +1,32 @@
-authorName: 
-experimentName: 
-trialConcurrency: 
-maxExecDuration: 
-maxTrialNum: 
+authorName:
+experimentName:
+trialConcurrency:
+maxExecDuration:
+maxTrialNum:
 #choice: local, remote
-trainingServicePlatform: 
-searchSpacePath: 
+trainingServicePlatform:
+searchSpacePath:
 #choice: true, false
-useAnnotation: 
+useAnnotation:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  builtinTunerName: 
+  builtinTunerName:
   classArgs:
     #choice: maximize, minimize
-    optimize_mode: 
+    optimize_mode:
 assessor:
   #choice: Medianstop
-  builtinAssessorName: 
+  builtinAssessorName:
   classArgs:
     #choice: maximize, minimize
-    optimize_mode: 
+    optimize_mode:
 trial:
-  command: 
-  codeDir: 
-  gpuNum: 
+  command:
+  codeDir:
+  gpuNum:
 #machineList can be empty if the platform is local
 machineList:
-  - ip: 
-    port: 
-    username: 
+  - ip:
+    port:
+    username:
     passwd: 

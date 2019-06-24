@@ -20,18 +20,22 @@
 'use strict';
 
 import * as fs from 'fs';
+import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubeflowOperator } from './kubeflowConfig';
-import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
 
-abstract class KubeflowOperatorClient extends KubernetesCRDClient{
+/**
+ * KubeflowOperator Client
+ */
+abstract class KubeflowOperatorClient extends KubernetesCRDClient {
     /**
-     * Factory method to generate operator cliet
+     * Factory method to generate operator client
      */
-    public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
-                                    operatorApiVersion: string): KubernetesCRDClient {
-        switch(kubeflowOperator) {
+    // tslint:disable-next-line:function-name
+    public static generateOperatorClient(kubeflowOperator: KubeflowOperator,
+                                         operatorApiVersion: string): KubernetesCRDClient {
+        switch (kubeflowOperator) {
             case 'tf-operator': {
-                switch(operatorApiVersion) {
+                switch (operatorApiVersion) {
                     case 'v1alpha2': {
                         return new TFOperatorClientV1Alpha2();
                     }
@@ -41,11 +45,12 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
                     case 'v1beta2': {
                         return new TFOperatorClientV1Beta2();
                     }
+                    default:
+                        throw new Error(`Invalid tf-operator apiVersion ${operatorApiVersion}`);
                 }
-                break;
             }
             case 'pytorch-operator': {
-                switch(operatorApiVersion) {
+                switch (operatorApiVersion) {
                     case 'v1alpha2': {
                         return new PyTorchOperatorClientV1Alpha2();
                     }
@@ -55,13 +60,17 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
                     case 'v1beta2': {
                         return new PyTorchOperatorClientV1Beta2();
                     }
+                    default:
+                        throw new Error(`Invalid pytorch-operator apiVersion ${operatorApiVersion}`);
                 }
-            } 
+            }
+            default:
+                throw new Error(`Invalid operator ${kubeflowOperator}`);
         }
-        throw new Error(`Invalid operator ${kubeflowOperator} or apiVersion ${operatorApiVersion}`);
     }
 }
 
+// tslint:disable: no-unsafe-any no-any completed-docs
 class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
@@ -73,12 +82,12 @@ class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1alpha2.namespaces('default').tfjobs;
     }
 
     public get containerName(): string {
         return 'tensorflow';
-    }    
+    }
 }
 
 class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
@@ -92,12 +101,12 @@ class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1beta1.namespaces('default').tfjobs;
     }
 
     public get containerName(): string {
         return 'tensorflow';
-    }    
+    }
 }
 
 class TFOperatorClientV1Beta2 extends KubernetesCRDClient {
@@ -111,12 +120,12 @@ class TFOperatorClientV1Beta2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1beta2.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1beta2.namespaces('default').tfjobs;
     }
 
     public get containerName(): string {
         return 'tensorflow';
-    }    
+    }
 }
 
 class PyTorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
@@ -130,7 +139,7 @@ class PyTorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1alpha2.namespaces('default').pytorchjobs;
     }
 
     public get containerName(): string {
@@ -149,7 +158,7 @@ class PyTorchOperatorClientV1Beta1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1beta1.namespaces('default').pytorchjobs;
     }
 
     public get containerName(): string {
@@ -168,7 +177,7 @@ class PyTorchOperatorClientV1Beta2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1beta2.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1beta2.namespaces('default').pytorchjobs;
     }
 
     public get containerName(): string {
@@ -176,5 +185,5 @@ class PyTorchOperatorClientV1Beta2 extends KubernetesCRDClient {
     }
 }
 
+// tslint:enable: no-unsafe-any
 export { KubeflowOperatorClient, GeneralK8sClient };
-

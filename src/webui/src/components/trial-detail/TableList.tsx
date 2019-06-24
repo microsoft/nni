@@ -264,7 +264,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         render: (text: string, record: TableObj) => {
                             let duration;
                             if (record.duration !== undefined) {
-                                if (record.duration > 0 && record.duration < 1) {
+                                // duration is nagative number(-1) & 0-1
+                                if (record.duration > 0 && record.duration < 1 || record.duration < 0) {
                                     duration = `${record.duration}s`;
                                 } else {
                                     duration = convertDuration(record.duration);

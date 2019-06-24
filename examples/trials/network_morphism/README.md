@@ -8,7 +8,7 @@ The Network Morphism is a build-in Tuner using network morphism techniques to se
 The network morphism now is framework-based, and we have not implemented the framework-free methods. The training frameworks which we have supported yet are PyTorch and Keras. If you get familiar with the intermediate JSON format, you can build your own model in your own training framework. In the future, we will change to intermediate format from JSON to ONNX in order to get a [standard intermediate representation spec](https://github.com/onnx/onnx/blob/master/docs/IR.md).
 
 
-### 2. Install the requirements 
+### 2. Install the requirements
 
 ```bash
 # install the requirements packages
@@ -32,7 +32,7 @@ trainingServicePlatform: local
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
-  #SMAC (SMAC should be installed through nnictl) 
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: NetworkMorphism
   classArgs:
     #choice: maximize, minimize
@@ -83,7 +83,7 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-### 5. Submit this job 
+### 5. Submit this job
 
 ```bash
 # You can use NNI command tool "nnictl" to create the a job which submit to the NNI
