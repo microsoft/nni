@@ -33,7 +33,7 @@ class FocalLoss2d(nn.Module):
 
     def forward(self, logit, target, class_weight=None, type='sigmoid'):
         target = target.view(-1, 1).long()
-        
+
         if type=='sigmoid':
             if class_weight is None:
                 class_weight = [1]*2 #[0.5, 0.5]

@@ -32,7 +32,7 @@ from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 from unittest import TestCase, main
 
 class NaiveMultiPhaseTuner(MultiPhaseTuner):
-    ''' 
+    '''
     supports only choices
     '''
     def __init__(self):

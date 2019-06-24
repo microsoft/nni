@@ -9,7 +9,10 @@
         "no-increment-decrement": false,
         "promise-function-async": false,
         "no-console": [true, "log"],
-        "no-multiline-string": false
+        "no-multiline-string": false,
+        "no-suspicious-comment": false,
+        "no-backbone-get-set-outside-model": false,
+        "max-classes-per-file": false
     },
     "rulesDirectory": [],
     "linterOptions": {

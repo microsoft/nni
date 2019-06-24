@@ -88,4 +88,4 @@ For details, please refer to this [simple weight sharing example](https://github
 [2]: https://arxiv.org/abs/1707.07012
 [3]: https://arxiv.org/abs/1806.09055
 [4]: https://arxiv.org/abs/1806.10282
-[5]: https://arxiv.org/abs/1703.01041 
+[5]: https://arxiv.org/abs/1703.01041

@@ -134,8 +134,7 @@ machineList:
   
   - 说明
     
-    **experimentName** 是 Experiment 的名称。  
-    待实现：增加默认值
+    **experimentName** 是创建的 Experiment 的名称。 待定: 增加默认值
 
 - **trialConcurrency**
   
@@ -153,11 +152,17 @@ machineList:
     
     注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
+- **versionCheck**
+  
+  - 说明
+    
+    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
+
 - **debug**
   
   - 说明
     
-    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，debug 应设置为 true。
+    调试模式会将 versionCheck 设置为 False，并将 logLevel 设置为 'debug'。
 
 - **maxTrialNum**
   
@@ -171,7 +176,7 @@ machineList:
     
     **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    - **local** 在本机的 ubuntu 上运行 Experiment。
+    - **local** 在本机的 Ubuntu 上运行 Experiment。
     
     - **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
@@ -259,7 +264,7 @@ machineList:
     
         __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
         
-        注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
+        注意: 只能使用一种方法来指定 Tuner，例如：设置 {tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置两者。
         
   
   - **includeIntermediateResults**
@@ -281,7 +286,7 @@ machineList:
     
     - **classArgs**
       
-      **classArgs** 指定了 Assessor 算法的参数。
+      **classArgs** 指定了 Assessor 算法的参数
   
   - **codeDir**, **classFileName**, **className** 和 **classArgs**
     

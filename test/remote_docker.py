@@ -62,7 +62,7 @@ def start_container(image, name, nnimanager_os):
         file.write(str(port))
 
 def stop_container(name):
-    '''Stop docker container''' 
+    '''Stop docker container'''
     stop_cmds = ['docker', 'container', 'stop', name]
     check_call(stop_cmds)
     rm_cmds = ['docker', 'container', 'rm', name]

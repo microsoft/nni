@@ -3,7 +3,7 @@
 
 ..  toctree::
     :maxdepth: 3
-    
+
     命令行<Nnictl>
     Python API<sdk_reference>
     Annotation<AnnotationSpec>

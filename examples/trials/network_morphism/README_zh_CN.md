@@ -32,7 +32,7 @@ trainingServicePlatform: local
 useAnnotation: false
 tuner:
   #可选项: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
-  #SMAC (SMAC 需要通过 nnictl 安装) 
+  #SMAC (SMAC 需要通过 nnictl 安装)
   builtinTunerName: NetworkMorphism
   classArgs:
     #可选项: maximize, minimize

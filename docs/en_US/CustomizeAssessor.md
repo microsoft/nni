@@ -47,7 +47,7 @@ assessor:
   classFileName: my_customized_assessor.py
   className: CustomizedAssessor
   # Any parameter need to pass to your Assessor class __init__ constructor
-  # can be specified in this optional classArgs field, for example 
+  # can be specified in this optional classArgs field, for example
   classArgs:
     arg1: value1
 ```

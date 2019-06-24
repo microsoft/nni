@@ -22,16 +22,6 @@ nnictl create --config nni\examples\trials\mnist\config_windows.yml
 
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### 从源代码安装 NNI 时，遇到 PowerShell 错误
-
-如果第一次运行 PowerShell 脚本，且没有设置过执行脚本的策略，会遇到下列错误。 需要以管理员身份运行此命令：
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-> ...cannot be loaded because running scripts is disabled on this system.
-
 ### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
 此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
@@ -40,11 +30,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### Web 界面上的 Trial 错误
 
-检查 Trial 日志文件来了解详情。 如果没有日志文件，且 NNI 是通过 pip 安装的，则需要在管理员权限下先运行以下命令：
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
+检查 Trial 日志文件来了解详情。
 
 如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 

@@ -21,10 +21,10 @@ from nni.assessor import Assessor, AssessResult
 logger = logging.getLogger('medianstop_Assessor')
 
 class MedianstopAssessor(Assessor):
-    """MedianstopAssessor is The median stopping rule stops a pending trial X at step S 
-    if the trial’s best objective value by step S is strictly worse than the median value 
+    """MedianstopAssessor is The median stopping rule stops a pending trial X at step S
+    if the trial’s best objective value by step S is strictly worse than the median value
     of the running averages of all completed trials’ objectives reported up to step S
-    
+
     Parameters
     ----------
     optimize_mode: str
@@ -60,7 +60,7 @@ class MedianstopAssessor(Assessor):
 
     def trial_end(self, trial_job_id, success):
         """trial_end
-        
+
         Parameters
         ----------
         trial_job_id: int
@@ -83,7 +83,7 @@ class MedianstopAssessor(Assessor):
 
     def assess_trial(self, trial_job_id, trial_history):
         """assess_trial
-        
+
         Parameters
         ----------
         trial_job_id: int

@@ -110,7 +110,7 @@
 ### 改进
 
 * [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)可配置。
-* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。 
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。
 
 ### 文档
 
@@ -119,7 +119,7 @@
 ### Bug 修复和其它更新
 
 * 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
-* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。 
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。
 * 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
 ## 发布 0.5.0 - 01/14/2019
@@ -187,7 +187,7 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
     * 支持 tf-operator
     * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](GridsearchTuner.md) 
+* [网格搜索 Tuner](GridsearchTuner.md)
 * [Hyperband Tuner](HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
@@ -202,10 +202,10 @@
 ### 其它
 
 * 异步调度
-* 更新 Docker 文件，增加 pytorch 库 
-* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
+* 更新 Docker 文件，增加 pytorch 库
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API.
 * 修复 OpenPAI 训练服务的 Bug 
-    * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。 
+    * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。
     * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
     * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。
     * 在 Trial keeper 的开始增加时间戳。

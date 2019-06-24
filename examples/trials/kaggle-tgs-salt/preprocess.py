@@ -40,7 +40,7 @@ def prepare_metadata():
                                    )
     meta.to_csv(settings.META_FILE, index=None)
 
-def cov_to_class(val):    
+def cov_to_class(val):
     for i in range(0, 11):
         if val * 10 <= i :
             return i
@@ -57,7 +57,7 @@ def generate_stratified_metadata():
     train_df["file_path_image"] = train_df.index.map(lambda x: os.path.join(settings.TRAIN_IMG_DIR, '{}.png'.format(x)))
     train_df["file_path_mask"] = train_df.index.map(lambda x: os.path.join(settings.TRAIN_MASK_DIR, '{}.png'.format(x)))
 
-    train_df.to_csv(os.path.join(settings.DATA_DIR, 'train_meta2.csv'), 
+    train_df.to_csv(os.path.join(settings.DATA_DIR, 'train_meta2.csv'),
         columns=['file_path_image','file_path_mask','is_train','z','salt_exists', 'coverage_class', 'coverage'])
     train_splits = {}
 
@@ -65,7 +65,7 @@ def generate_stratified_metadata():
     for i, (train_index, valid_index) in enumerate(kf.split(train_df.index.values.reshape(-1), train_df.coverage_class.values.reshape(-1))):
         train_splits[str(i)] = {
             'train_index': train_index.tolist(),
-            'val_index': valid_index.tolist()  
+            'val_index': valid_index.tolist()
         }
     with open(os.path.join(settings.DATA_DIR, 'train_split.json'), 'w') as f:
         json.dump(train_splits, f, indent=4)

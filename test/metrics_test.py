@@ -69,7 +69,7 @@ def get_metric_results(metrics):
         elif metric['type'] == 'FINAL':
             final_result.append(metric['data'])
     print(intermediate_result, final_result)
-    
+
     return [round(float(x),6) for x in intermediate_result], [round(float(x), 6) for x in final_result]
 
 def get_max_values(config_file):

@@ -165,7 +165,7 @@ def test_transform():
         RandomHFlipWithMask(),
         RandomVFlipWithMask(),
         RandomRotateWithMask([0, 90, 180, 270]),
-        #RandomRotateWithMask(15), 
+        #RandomRotateWithMask(15),
         RandomResizedCropWithMask(768, scale=(0.81, 1))
     ])
 
