@@ -35,7 +35,7 @@
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` is an object, for example: `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
+`RECEIVED_PARAMS` 是一个对象，如：`{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 * 定期返回指标数据（可选）
 
