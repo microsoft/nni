@@ -109,7 +109,7 @@ def expand_annotations(src_dir, dst_dir, exp_id='', trial_id='', nas_mode=None):
             dst_path = os.path.join(dst_subdir, file_name)
             if file_name.endswith('.py'):
                 if trial_id == '':
-                    annotated |= _expand_file_annotations(src_path, dst_path)
+                    annotated |= _expand_file_annotations(src_path, dst_path, nas_mode)
                 else:
                     module = package + file_name[:-3]
                     annotated |= _generate_specific_file(src_path, dst_path, exp_id, trial_id, module)
@@ -121,10 +121,10 @@ def expand_annotations(src_dir, dst_dir, exp_id='', trial_id='', nas_mode=None):
 
     return dst_dir if annotated else src_dir
 
-def _expand_file_annotations(src_path, dst_path):
+def _expand_file_annotations(src_path, dst_path, nas_mode):
     with open(src_path) as src, open(dst_path, 'w') as dst:
         try:
-            annotated_code = code_generator.parse(src.read())
+            annotated_code = code_generator.parse(src.read(), nas_mode)
             if annotated_code is None:
                 shutil.copyfile(src_path, dst_path)
                 return False

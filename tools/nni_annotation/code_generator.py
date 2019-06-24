@@ -24,11 +24,11 @@ import astor
 
 # pylint: disable=unidiomatic-typecheck
 
-def parse_annotation_mutable_layers(code, lineno, add_tensorflow):
+def parse_annotation_mutable_layers(code, lineno, nas_mode):
     """Parse the string of mutable layers in annotation.
     Return a list of AST Expr nodes and NAS mode
     code: annotation string (excluding '@')
-    add_tensorflow: whether to add tensorflow as an arg in the end
+    nas_mode: the mode of NAS
     """
     module = ast.parse(code)
     assert type(module) is ast.Module, 'internal error #1'
@@ -110,12 +110,13 @@ def parse_annotation_mutable_layers(code, lineno, add_tensorflow):
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
-        if add_tensorflow:
+        target_call_args.append(ast.Str(s=nas_mode))
+        if nas_mode in ['enas_mode', 'oneshot_mode']:
             target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)
-    return nodes, mode
+    return nodes
 
 def parse_annotation(code):
     """Parse an annotation string.
@@ -330,8 +331,7 @@ class Transformer(ast.NodeTransformer):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.mutable_layers'):
-            add_tensorflow = self.mode in ['enas_mode', 'oneshot_mode']
-            nodes = parse_annotation_mutable_layers(string[1:], node.lineno, add_tensorflow)
+            nodes = parse_annotation_mutable_layers(string[1:], node.lineno, self.nas_mode)
             return nodes
 
         if string.startswith('@nni.variable') \

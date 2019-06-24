@@ -126,8 +126,8 @@ else:
             fixed_inputs,
             optional_inputs,
             optional_input_size,
-            tf=None,
-            mode='general'):
+            mode='general',
+            tf=None):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
@@ -149,7 +149,7 @@ else:
         optional_input_size: number of candidate inputs to be chosen
         tf: tensorflow module
         '''
-        if mode == 'classic_mode':  # nas_mode
+        if mode == 'classic_mode':
             return classic_mode(mutable_id,
                             mutable_layer_id,
                             funcs,
@@ -157,7 +157,7 @@ else:
                             fixed_inputs,
                             optional_inputs,
                             optional_input_size)
-        elif mode == 'enas_mode':  # enas_mode
+        elif mode == 'enas_mode':
             assert tf is not None, 'Internal Error: Tensorflow should not be None in enas_mode'
             return enas_mode(mutable_id,
                             mutable_layer_id,
@@ -167,7 +167,7 @@ else:
                             optional_inputs,
                             optional_input_size,
                             tf)
-        elif mode == 'oneshot_mode':  # oneshot_mode
+        elif mode == 'oneshot_mode':
             assert tf is not None, 'Internal Error: Tensorflow should not be None in oneshot_mode'
             return oneshot_mode(mutable_id,
                             mutable_layer_id,

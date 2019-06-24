@@ -181,7 +181,7 @@ common_trial_schema = {
     'command': setType('command', str),
     'codeDir': setPathCheck('codeDir'),
     'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-    Optional('nasMode'): setChoice('nas_mode', 'enas_mode', 'oneshot_mode')
+    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 
