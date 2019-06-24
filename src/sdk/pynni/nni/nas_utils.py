@@ -103,6 +103,9 @@ def oneshot_mode(
         optional_inputs,
         optional_input_size,
         tf):
+
+    if trial._params is None:
+        trial.get_next_parameter()
     optional_inputs = list(optional_inputs.values())
     inputs_num = len(optional_inputs)
     # Calculate dropout rate according to the formular r^(1/k), where r is a hyper-parameter and k is the number of inputs
