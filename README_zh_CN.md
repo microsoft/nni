@@ -245,14 +245,14 @@ You can use these commands to get more information about the experiment
 
 欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
 
-Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
+推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNniDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考：[配置 NNI 开发环境](docs/zh_CN/SetupNniDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/Contributing.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/Contributing.md)。
 
-We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
-The entire codebase is under [MIT license](LICENSE)
+代码库遵循 [MIT 许可协议](LICENSE)
