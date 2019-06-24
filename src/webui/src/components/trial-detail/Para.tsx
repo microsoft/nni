@@ -145,7 +145,8 @@ class Para extends React.Component<ParaProps, ParaState> {
 
         const parallelAxis: Array<Dimobj> = [];
         // search space range and specific value [only number]
-        for (let i = 0; i < dimName.length; i++) {
+        let i = 0;
+        for (i; i < dimName.length; i++) {
             const searchKey = searchRange[dimName[i]];
             switch (searchKey._type) {
                 case 'uniform':
@@ -213,6 +214,10 @@ class Para extends React.Component<ParaProps, ParaState> {
 
             }
         }
+        parallelAxis.push({
+            dim: i,
+            name: 'default metric'
+        });
         if (lenOfDataSource === 0) {
             const optionOfNull = {
                 parallelAxis,
@@ -229,8 +234,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                                 const length = value.length;
                                 if (length > 16) {
                                     const temp = value.split('');
-                                    for (let i = 16; i < temp.length; i += 17) {
-                                        temp[i] += '\n';
+                                    for (let m = 16; m < temp.length; m += 17) {
+                                        temp[m] += '\n';
                                     }
                                     return temp.join('');
                                 } else {
