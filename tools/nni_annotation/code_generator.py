@@ -24,10 +24,11 @@ import astor
 
 # pylint: disable=unidiomatic-typecheck
 
-def parse_annotation_mutable_layers(code, lineno):
+def parse_annotation_mutable_layers(code, lineno, add_tensorflow):
     """Parse the string of mutable layers in annotation.
     Return a list of AST Expr nodes and NAS mode
     code: annotation string (excluding '@')
+    add_tensorflow: whether to add tensorflow as an arg in the end
     """
     module = ast.parse(code)
     assert type(module) is ast.Module, 'internal error #1'
@@ -37,13 +38,6 @@ def parse_annotation_mutable_layers(code, lineno):
     nodes = []
     mutable_id = 'mutable_block_' + str(lineno)
     mutable_layer_cnt = 0
-    if call.keywords:
-        mode = call.keywords[0].value
-        assert isinstance(mode, (ast.Str, ast.Name)), 'Mode must be a string or Name'
-        mode = mode.s if isinstance(mode, ast.Str) else mode.id
-        assert mode in ['general', 'general-tf', 'oneshot-tf', 'darts-tf']
-    else:
-        mode = 'general'
     for arg in call.args:
         fields = {'layer_choice': False,
                   'fixed_inputs': False,
@@ -116,7 +110,7 @@ def parse_annotation_mutable_layers(code, lineno):
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
-        if mode in ['general-tf', 'oneshot-tf', 'darts-tf']:
+        if add_tensorflow:
             target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
@@ -285,11 +279,11 @@ class FuncReplacer(ast.NodeTransformer):
 class Transformer(ast.NodeTransformer):
     """Transform original code to annotated code"""
 
-    def __init__(self):
+    def __init__(self, nas_mode=None):
         self.stack = []
         self.last_line = 0
         self.annotated = False
-        self.mode = 'general'
+        self.nas_mode = nas_mode
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -336,7 +330,8 @@ class Transformer(ast.NodeTransformer):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.mutable_layers'):
-            nodes, self.mode = parse_annotation_mutable_layers(string[1:], node.lineno)
+            add_tensorflow = self.mode in ['enas_mode', 'oneshot_mode']
+            nodes = parse_annotation_mutable_layers(string[1:], node.lineno, add_tensorflow)
             return nodes
 
         if string.startswith('@nni.variable') \
@@ -355,17 +350,18 @@ class Transformer(ast.NodeTransformer):
         return node
 
 
-def parse(code):
+def parse(code, nas_mode=None):
     """Annotate user code.
     Return annotated code (str) if annotation detected; return None if not.
-    code: original user code (str)
+    code: original user code (str),
+    nas_mode: the mode of NAS given that NAS interface is used
     """
     try:
         ast_tree = ast.parse(code)
     except Exception:
         raise RuntimeError('Bad Python code')
 
-    transformer = Transformer()
+    transformer = Transformer(nas_mode)
     try:
         transformer.visit(ast_tree)
     except AssertionError as exc:
@@ -381,7 +377,7 @@ def parse(code):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
-    if transformer.mode in ['general-tf', 'oneshot-tf', 'darts-tf']:
+    if nas_mode in ['enas_mode', 'oneshot_mode']:
         import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
         nodes.insert(last_future_import + 1, import_tf)
 
