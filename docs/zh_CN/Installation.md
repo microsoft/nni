@@ -28,7 +28,7 @@
 
 ## **在 Windows 上安装**
 
-Anaconda or Miniconda is highly recommended.
+推荐使用 Anaconda 或 Miniconda。
 
 * **通过 pip 命令安装 NNI**
     
@@ -50,7 +50,7 @@ Anaconda or Miniconda is highly recommended.
 
 ## **系统需求**
 
-Below are the minimum system requirements for NNI on Linux. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+以下是 NNI 在 Linux 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
@@ -62,7 +62,7 @@ Below are the minimum system requirements for NNI on Linux. Due to potential pro
 | **网络**   | 宽带连接                                  |                                           |
 | **分辨率**  | 1024 x 768 以上                         |                                           |
 
-Below are the minimum system requirements for NNI on macOS. 由于程序变更，NNI 的最低配置会有所更改。
+以下是 NNI 在 MacOS 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                               | 推荐配置                     |
 | -------- | -------------------------------------------------- | ------------------------ |
@@ -74,7 +74,7 @@ Below are the minimum system requirements for NNI on macOS. 由于程序变更�
 | **网络**   | 宽带连接                                               |                          |
 | **分辨率**  | 1024 x 768 以上                                      |                          |
 
-Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. 由于程序变更，NNI 的最低配置会有所更改。
+以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
