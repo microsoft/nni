@@ -8,6 +8,7 @@
 * 支持下载 Experiment 结果。
 * 支持导出 nni-manager 和 dispatcher 的日志文件。
 * 如果有任何问题，可以点击 “Feedback” 告诉我们。
+* If your experiment have more than 1000 trials, you can change the refresh interval on here.
 
 ![](../img/webui-img/over1.png)
 
@@ -58,16 +59,20 @@
 
 ![](../img/webui-img/addColumn.png)
 
-* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
+* If you want to compare some trials, you can select them and then click "Compare" to see the results.
+
+![](../img/webui-img/compare.png)
+
+* You can use the button named "Copy as python" to copy trial's parameters.
 
 ![](../img/webui-img/copyParameter.png)
 
-* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
+* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../img/webui-img/detail-pai.png)
 
-* Kill: 可终止正在运行的任务。
-* 支持搜索某个特定的 Trial。
-* 中间结果图。
+* Kill: you can kill a job that status is running.
+* Support to search for a specific trial.
+* Intermediate Result Graph: you can see default and other keys in this graph.
 
-![](../img/intermediate.png)
+![](../img/webui-img/intermediate.png)
