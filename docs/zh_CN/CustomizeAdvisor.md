@@ -33,8 +33,8 @@ advisor:
   codeDir: /home/abc/myadvisor
   classFileName: my_customized_advisor.py
   className: CustomizedAdvisor
-  # Any parameter need to pass to your advisor class __init__ constructor
-  # can be specified in this optional classArgs field, for example
+  # 任何传入 __init__ 构造函数的参数
+  # 都需要声明在 classArgs 字段中，如：
   classArgs:
     arg1: value1
 ```
