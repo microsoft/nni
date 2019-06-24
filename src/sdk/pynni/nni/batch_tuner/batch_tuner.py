@@ -78,7 +78,7 @@ class BatchTuner(Tuner):
         """
         self.values = self.is_valid(search_space)
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Returns a dict of trial (hyper-)parameters, as a serializable object.
 
         Parameters
@@ -90,7 +90,7 @@ class BatchTuner(Tuner):
             raise nni.NoMoreTrialError('no more parameters now.')
         return self.values[self.count]
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         pass
 
     def import_data(self, data):

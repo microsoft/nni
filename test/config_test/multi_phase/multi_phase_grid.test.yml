@@ -6,9 +6,7 @@ trialConcurrency: 4
 searchSpacePath: ./search_space.json
 
 tuner:
-  builtinTunerName: TPE
-  classArgs:
-    optimize_mode: maximize
+  builtinTunerName: GridSearch
 
 trial:
   codeDir: .
