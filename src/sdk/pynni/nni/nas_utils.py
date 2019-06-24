@@ -20,15 +20,14 @@
 
 from . import trial
 
-def nas_mode(
+def classic_mode(
         mutable_id,
         mutable_layer_id,
         funcs,
         funcs_args,
         fixed_inputs,
         optional_inputs,
-        optional_input_size,
-        tf=None,):
+        optional_input_size):
 
     if trial._params is None:
         trial.get_next_parameter()
@@ -50,7 +49,7 @@ def enas_mode(
         fixed_inputs,
         optional_inputs,
         optional_input_size,
-        tf=None,):
+        tf):
     
     name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
     # store namespace
@@ -102,17 +101,21 @@ def oneshot_mode(
         funcs_args,
         fixed_inputs,
         optional_inputs,
-        optional_input_size):
+        optional_input_size,
+        tf):
+    optional_inputs = list(optional_inputs.values())
     inputs_num = len(optional_inputs)
     # Calculate dropout rate according to the formular r^(1/k), where r is a hyper-parameter and k is the number of inputs
     if inputs_num > 0:
         rate = 0.01 ** (1 / inputs_num)
-        noise_shape = [inputs_num] + [1] * optional_inputs[0].get_shape().as_list()
+        noise_shape = [inputs_num] + [1] * len(optional_inputs[0].get_shape())
         optional_inputs = tf.nn.dropout(optional_inputs, rate=rate, noise_shape=noise_shape)
-    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[chosen_layer]) for func in funcs]
-    noise_shape = [len(layer_outs)] + [1] * layer_outs[0].get_shape().as_list()
+        optional_inputs = [optional_inputs[idx] for idx in range(inputs_num)]
+    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name]) for func_name, func in funcs.items()]
+    rate = 0.01 ** (1 / len(layer_outs))
+    noise_shape = [len(layer_outs)] + [1] * len(layer_outs[0].get_shape())
     layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
-    layer_out = tf.add_n(layer_outs)
+    layer_out = tf.reduce_sum(layer_outs, axis=0)
 
     return layer_out
 
