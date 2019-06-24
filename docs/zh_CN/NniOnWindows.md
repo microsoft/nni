@@ -22,29 +22,29 @@ nnictl create --config nni\examples\trials\mnist\config_windows.yml
 
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### Trial failed with missing DLL in command line or PowerShell
+### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
 
 > ImportError: DLL load failed
 
-### Trial failed on webUI
+### Web 界面上的 Trial 错误
 
-Please check the trial log file stderr for more details.
+检查 Trial 日志文件来了解详情。
 
-If there is a stderr file, please check out. Two possible cases are as follows:
+如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
 * 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
 * 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
-### Fail to use BOHB on Windows
+### 无法在 Windows 上使用 BOHB
 
-Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
+确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
 
-### Not supported tuner on Windows
+### Windows 上不支持的 Tuner
 
-SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
+当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
-Note:
+注意：
 
 * 如果遇到如 `Segmentation fault` 这样的任何错误，参考[常见问题](FAQ.md)。
