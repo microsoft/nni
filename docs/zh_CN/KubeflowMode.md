@@ -48,7 +48,7 @@ NNI 仅支持 kubeflow 的 tf-operator 和 pytorch-operator，其它操作符未
 
 ## 支持的存储类型
 
-NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config. The setting for NFS storage are as follows:
+NNI 支持使用 NFS 和 Azure 存储来存储代码和输出文件，可在配置文件进行相应的配置。 NFS 存储配置如下：
 
     kubeflowConfig:
       storage: nfs
