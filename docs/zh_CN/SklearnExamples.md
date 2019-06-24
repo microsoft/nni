@@ -14,7 +14,7 @@ nnictl create --config ./config.yml
 
 ### 2.1 分类
 
-This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes. In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "keral", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
+示例使用了数字数据集，它是由 1797 个 8x8 的图片组成，每个图片都是一个手写数字，目标是将图片分为 10 类。 在这个示例中，使用 SVC 作为模型，并为此模型选择一些参数，包括 `"C", "keral", "degree", "gamma" 和 "coef0"`。 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
 
 ### 2.2 回归
 
@@ -72,4 +72,4 @@ This example uses the dataset of digits, which is made up of 1797 8x8 images, an
     
     就可以使用这些变量来编写 scikit-learn 的代码。
 
-* **第三步** 完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job. You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+* **第三步** 完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 需要将分数传入 Tuner 算法，并生成下一组参数，将结果回传给 NNI，并开始下一个 Trial 任务。 在运行完 scikit-learn 代码后，只需要使用 `nni.report_final_result(score)` 来与 NNI 通信即可。 或者在每一步中都有多个分值，可使用 `nni.report_intemediate_result(score)` 来将它们回传给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
