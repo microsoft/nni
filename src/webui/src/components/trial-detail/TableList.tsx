@@ -43,8 +43,8 @@ interface TableListState {
     selectRows: Array<TableObj>;
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
-    intermediateData: Array<object>; // 这里是存放具体某一id的intermediate result的结果集，包括dict
-    intermediateId: string; // 用户选择看其他keys需要知道id
+    intermediateData: Array<object>; // a trial's intermediate results (include dict)
+    intermediateId: string;
     intermediateOtherKeys: Array<string>;
 }
 
