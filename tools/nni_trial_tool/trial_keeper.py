@@ -194,6 +194,8 @@ def fetch_parameter_file(args):
                 if res.status_code == 200:
                     meta_list = res.json()
                     download_parameter(meta_list, self.args)
+                else:
+                    nni_log(LogType.Warning, 'rest response: {}'.format(str(res)))
                 time.sleep(5)
 
     fetch_file_thread = FetchThread(args)
