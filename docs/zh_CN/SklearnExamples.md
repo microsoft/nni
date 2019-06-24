@@ -1,6 +1,6 @@
 # NNI 中使用 scikit-learn
 
-[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 How to make the use of scikit-learn more efficiency is a valuable topic. NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
+[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 如何更高效的使用 scikit-learn，是一个很有价值的话题。 NNI 支持多种调优算法来为 scikit-learn 搜索最好的模型和超参，并支持本机、远程服务器和云服务等多种环境。
 
 ## 1. 如何运行此样例
 
@@ -46,7 +46,7 @@ This example uses the dataset of digits, which is made up of 1797 8x8 images, an
     
     在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
 
-* **step 2** At the beginning of your python code, you should `import nni` to insure the packages works normally. 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
+* **第二步** 在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
     
     ```json
     {
@@ -72,4 +72,4 @@ This example uses the dataset of digits, which is made up of 1797 8x8 images, an
     
     就可以使用这些变量来编写 scikit-learn 的代码。
 
-* **step 3** After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job. You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+* **第三步** 完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job. You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
