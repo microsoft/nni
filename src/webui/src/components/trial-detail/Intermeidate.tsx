@@ -1,16 +1,9 @@
 import * as React from 'react';
 import { Row, Col, Button, Switch } from 'antd';
-import { TooltipForIntermediate, TableObj } from '../../static/interface';
+import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
-
-interface Intermedia {
-    name: string; // id
-    type: string;
-    data: Array<number | object>; // intermediate data
-    hyperPara: object; // each trial hyperpara value
-}
 
 interface IntermediateState {
     detailSource: Array<TableObj>;
