@@ -355,7 +355,8 @@ class LocalTrainingService implements TrainingService {
         this.log.info('Stopping local machine training service...');
         this.stopping = true;
         for (const stream of this.jobStreamMap.values()) {
-            stream.destroy();
+            stream.end(0)
+            stream.emit('end')
         }
         if (this.gpuScheduler !== undefined) {
             await this.gpuScheduler.stop();
@@ -372,7 +373,9 @@ class LocalTrainingService implements TrainingService {
                 if (stream === undefined) {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
-                stream.destroy();
+                //Refer https://github.com/Juul/tail-stream/issues/20
+                stream.end(0)
+                stream.emit('end')
                 this.jobStreamMap.delete(trialJob.id);
             }
         }
@@ -507,12 +510,12 @@ class LocalTrainingService implements TrainingService {
             script.push(
                 `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
-                `$NOW_DATE = "$NOW_DATE" + "000"`,
+                `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
         } else {
             script.push(
                 `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
         }
 
         return script;
@@ -567,7 +570,6 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
-
         this.jobStreamMap.set(trialJobDetail.id, stream);
     }
 

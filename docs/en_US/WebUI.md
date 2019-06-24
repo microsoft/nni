@@ -8,6 +8,7 @@ Click the tab "Overview".
 * Support to download the experiment result.
 * Support to export nni-manager and dispatcher log file.
 * If you have any question, you can click "Feedback" to report it.
+* If your experiment have more than 1000 trials, you can change the refresh interval on here.
 
 ![](../img/webui-img/over1.png)
 * See good performance trials.
@@ -58,6 +59,10 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 ![](../img/webui-img/addColumn.png)
 
+* If you want to compare some trials, you can select them and then click "Compare" to see the results.
+
+![](../img/webui-img/compare.png)
+
 * You can use the button named "Copy as python" to copy trial's parameters.
 
 ![](../img/webui-img/copyParameter.png)
@@ -69,6 +74,6 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
-* Intermediate Result Graph.
+* Intermediate Result Graph: you can see default and other keys in this graph.
 
-![](../img/intermediate.png)
+![](../img/webui-img/intermediate.png)

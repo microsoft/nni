@@ -31,7 +31,7 @@ class CustomizedTuner(Tuner):
     def __init__(self, ...):
         ...
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
     '''
     Receive trial's final result.
     parameter_id: int
@@ -41,7 +41,7 @@ class CustomizedTuner(Tuner):
     # your code implements here.
     ...
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
     '''
     Returns a set of trial (hyper-)parameters, as a serializable object
     parameter_id: int
@@ -51,7 +51,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
+`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send. If `multiPhase` is set to `true` in the experiment configuration file, an additional `trial_job_id` parameter is passed to `receive_trial_result` and `generate_parameters` through the `**kwargs` parameter.
 
 The `your_parameters` return from `generate_parameters` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same `your_parameters` from Tuner.
 
@@ -59,7 +59,7 @@ For example:
 If the you implement the `generate_parameters` like this:
 
 ```python
-def generate_parameters(self, parameter_id):
+def generate_parameters(self, parameter_id, **kwargs):
     '''
     Returns a set of trial (hyper-)parameters, as a serializable object
     parameter_id: int

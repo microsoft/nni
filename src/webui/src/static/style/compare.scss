@@ -1,0 +1,19 @@
+.compare{
+    width: 92%;
+    margin: 0 auto;
+    color: #333;
+    tr{
+        line-height: 30px;
+        border-bottom: 1px solid #ccc;
+    }
+    .column{
+        width: 124px;
+        padding-left: 18px;
+        font-weight: 700;
+    }
+    .value{
+        width: 152px;
+        padding-right: 18px;
+        text-align: right;
+    }
+}
