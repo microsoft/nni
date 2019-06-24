@@ -100,7 +100,7 @@ The total search space is 1,204,224, we set the number of maximum trial to 1000.
 | HyperBand     |0.415550|0.415977|0.417186|
 | GP            |0.414353|0.418563|0.420263|
 | GP            |0.414395|0.418006|0.420431|
-| GP            |0.416807|0.418095|0.420507|
+| GP            |0.416807|0.418095|0.419767|
 
 For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
 

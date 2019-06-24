@@ -378,7 +378,7 @@ Note that the only acceptable types of search space are `choice`, `randint`, `un
 
 **Suggested scenario**
 
-GP Tuner is uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) and common tools can be employed. Therefore GP Tuner is most adequate for situations where sampling the function to be optimized is a very expensive endeavor. GP Tuner has a computationoal cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix. [Detailed Description](./GPTuner.md)
+As a strategy in Sequential Model-based Global Optimization(SMBO) algorithm, GP Tuner uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) and common tools can be employed. Therefore GP Tuner is most adequate for situations where the function to be optimized is a very expensive endeavor. GP can be used when the computation resource is limited. While GP Tuner has a computationoal cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [Detailed Description](./GPTuner.md)
 
 **Requirement of classArg**
 
