@@ -46,8 +46,8 @@ assessor:
   codeDir: /home/abc/myassessor
   classFileName: my_customized_assessor.py
   className: CustomizedAssessor
-  # Any parameter need to pass to your Assessor class __init__ constructor
-  # can be specified in this optional classArgs field, for example
+  # 任何传入 __init__ 构造函数的参数，
+  # 都需要在 classArgs 字段中指定，如
   classArgs:
     arg1: value1
 ```
