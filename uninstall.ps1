@@ -15,7 +15,7 @@ else{
 $PIP_UNINSTALL = """$NNI_PYTHON3\python"" -m pip uninstall -y "
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
- 
+
 # uninstall
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 cmd /C $PIP_UNINSTALL "nni"

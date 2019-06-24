@@ -34,7 +34,7 @@ advisor:
   classFileName: my_customized_advisor.py
   className: CustomizedAdvisor
   # Any parameter need to pass to your advisor class __init__ constructor
-  # can be specified in this optional classArgs field, for example 
+  # can be specified in this optional classArgs field, for example
   classArgs:
     arg1: value1
 ```

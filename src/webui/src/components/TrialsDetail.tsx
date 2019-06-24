@@ -33,7 +33,12 @@ interface TrialDetailState {
     intermediateCounts: number;
 }
 
-class TrialsDetail extends React.Component<{}, TrialDetailState> {
+interface TrialsDetailProps {
+    interval: number;
+    whichPageToFresh: string;
+}
+
+class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
 
     public _isMounted = false;
     public interAccuracy = 0;
@@ -61,7 +66,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         </div>
     );
 
-    constructor(props: {}) {
+    constructor(props: TrialsDetailProps) {
         super(props);
 
         this.state = {
@@ -139,7 +144,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             const items = metricSource[key];
                             if (items.trialJobId === id) {
                                 // succeed trial, last intermediate result is final result
-                                // final result format may be object 
+                                // final result format may be object
                                 if (typeof JSON.parse(items.data) === 'object') {
                                     mediate.push(JSON.parse(items.data).default);
                                 } else {
@@ -227,21 +232,24 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     // close timer
     isOffIntervals = () => {
-        axios(`${MANAGER_IP}/check-status`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    switch (res.data.status) {
-                        case 'DONE':
-                        case 'ERROR':
-                        case 'STOPPED':
+        const { interval } = this.props;
+        if (interval === 0) {
+            window.clearInterval(this.interTableList);
+            return;
+        } else {
+            axios(`${MANAGER_IP}/check-status`, {
+                method: 'GET'
+            })
+                .then(res => {
+                    if (res.status === 200 && this._isMounted) {
+                        const expStatus = res.data.status;
+                        if (expStatus === 'DONE' || expStatus === 'ERROR' || expStatus === 'STOPPED') {
                             window.clearInterval(this.interTableList);
-                            break;
-                        default:
+                            return;
+                        }
                     }
-                }
-            });
+                });
+        }
     }
 
     handleEntriesSelect = (value: string) => {
@@ -304,11 +312,23 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             });
     }
 
+    componentWillReceiveProps(nextProps: TrialsDetailProps) {
+        const { interval, whichPageToFresh } = nextProps;
+        window.clearInterval(this.interTableList);
+        if (interval !== 0) {
+            this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
+        }
+        if (whichPageToFresh.includes('/detail')) {
+            this.getDetailSource();
+        }
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
+        const { interval } = this.props;
         this.getDetailSource();
-        this.interTableList = window.setInterval(this.getDetailSource, 10000);
+        this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
         this.checkExperimentPlatform();
     }
 
@@ -329,7 +349,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             <div>
                 <div className="trial" id="tabsty">
                     <Tabs type="card" onChange={this.handleWhichTabs}>
-                        {/* <TabPane tab={this.titleOfacc} key="1" destroyInactiveTabPane={true}> */}
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
@@ -350,7 +369,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
                             <Duration source={source} whichGraph={whichGraph} />
-                            {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
                             <Intermediate source={source} whichGraph={whichGraph} />
@@ -360,7 +378,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 {/* trial table list */}
                 <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
-                    <Col span={12}>
+                    <Col span={10}>
                         <span>Show</span>
                         <Select
                             className="entry"
@@ -374,26 +392,28 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </Select>
                         <span>entries</span>
                     </Col>
-                    <Col span={12} className="right">
-                        <Row>
-                            <Col span={12}>
-                                <Button
-                                    type="primary"
-                                    className="tableButton editStyle"
-                                    onClick={this.tableList ? this.tableList.addColumn : this.test}
-                                >
-                                    Add column
-                                </Button>
-                            </Col>
-                            <Col span={12}>
-                                <Input
-                                    type="text"
-                                    placeholder="Search by id, trial No. or status"
-                                    onChange={this.searchTrial}
-                                    style={{ width: 230, marginLeft: 6 }}
-                                />
-                            </Col>
-                        </Row>
+                    <Col span={14} className="right">
+                        <Button
+                            type="primary"
+                            className="tableButton editStyle"
+                            onClick={this.tableList ? this.tableList.addColumn : this.test}
+                        >
+                            Add column
+                        </Button>
+                        <Button
+                            type="primary"
+                            className="tableButton editStyle mediateBtn"
+                            // use child-component tableList's function, the function is in child-component.
+                            onClick={this.tableList ? this.tableList.compareBtn : this.test}
+                        >
+                            Compare
+                        </Button>
+                        <Input
+                            type="text"
+                            placeholder="Search by id, trial No. or status"
+                            onChange={this.searchTrial}
+                            style={{ width: 230, marginLeft: 6 }}
+                        />
                     </Col>
                 </Row>
                 <TableList

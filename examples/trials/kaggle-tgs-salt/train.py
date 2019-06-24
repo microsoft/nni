@@ -57,7 +57,7 @@ def weighted_loss(args, output, target, epoch=0):
 
 def train(args):
     print('start training...')
-    
+
     """@nni.variable(nni.choice('UNetResNetV4', 'UNetResNetV5', 'UNetResNetV6'), name=model_name)"""
     model_name = args.model_name
 
@@ -123,10 +123,10 @@ def train(args):
             img, target, salt_target = img.cuda(), target.cuda(), salt_target.cuda()
             optimizer.zero_grad()
             output, salt_out = model(img)
-            
+
             loss, *_ = weighted_loss(args, (output, salt_out), (target, salt_target), epoch=epoch)
             loss.backward()
- 
+
             if args.optim == 'Adam' and args.adamw:
                 wd = 0.0001
                 for group in optimizer.param_groups:
@@ -141,7 +141,7 @@ def train(args):
 
         iout, iou, focal_loss, lovaz_loss, salt_loss, mix_score = validate(args, model, val_loader, epoch=epoch)
         """@nni.report_intermediate_result(iout)"""
-        
+
         _save_ckp = ''
         if iout > best_iout:
             best_iout = iout
@@ -155,7 +155,7 @@ def train(args):
             focal_loss, lovaz_loss, iou, iout, best_iout, (time.time() - bg) / 60, _save_ckp, salt_loss))
 
         model.train()
-        
+
         if args.lrs == 'plateau':
             lr_scheduler.step(best_iout)
         else:
@@ -163,7 +163,7 @@ def train(args):
 
     del model, train_loader, val_loader, optimizer, lr_scheduler
     """@nni.report_final_result(best_iout)"""
-        
+
 def get_lrs(optimizer):
     lrs = []
     for pgs in optimizer.state_dict()['param_groups']:
@@ -188,7 +188,7 @@ def validate(args, model, val_loader, epoch=0, threshold=0.5):
             salt_loss += _salt_loss
             w_loss += _w_loss
             output = torch.sigmoid(output)
-            
+
             for o in output.cpu():
                 outputs.append(o.squeeze().numpy())
 
@@ -217,7 +217,7 @@ def generate_preds(args, outputs, target_size, threshold=0.5):
     return preds
 
 if __name__ == '__main__':
-    
+
     parser = argparse.ArgumentParser(description='TGS Salt segmentation')
     parser.add_argument('--layers', default=34, type=int, help='model layers')
     parser.add_argument('--nf', default=32, type=int, help='num_filters param for model')
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     parser.add_argument('--depths', action='store_true')
     parser.add_argument('--dev_mode', action='store_true')
     parser.add_argument('--adamw', action='store_true')
-    
+
     args = parser.parse_args()
 
     '''@nni.get_next_parameter()'''

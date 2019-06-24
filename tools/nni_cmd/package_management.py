@@ -36,8 +36,8 @@ def process_install(package_name):
 def package_install(args):
     '''install packages'''
     process_install(args.name)
-    
+
 def package_show(args):
     '''show all packages'''
     print(' '.join(PACKAGE_REQUIREMENTS.keys()))
-    
+

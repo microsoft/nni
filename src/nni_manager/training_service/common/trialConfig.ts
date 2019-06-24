@@ -24,13 +24,13 @@
  * Representing trial job configurable properties
  */
 export class TrialConfig {
-    /** Trail command */
+    // Trail command
     public readonly command : string;
 
-    /** Code directory */
+    // Code directory
     public readonly codeDir : string;
 
-    /** Required GPU number for trial job. The number should be in [0,100] */
+    // Required GPU number for trial job. The number should be in [0,100]
     public readonly gpuNum : number;
 
     /**

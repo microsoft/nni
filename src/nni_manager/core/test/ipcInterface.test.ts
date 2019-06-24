@@ -46,11 +46,11 @@ function runProcess(): Promise<Error | null> {
         if (code !== 0) {
             deferred.resolve(new Error(`return code: ${code}`));
         } else {
-            let str = proc.stdout.read().toString();       
+            let str = proc.stdout.read().toString();
             if(str.search("\r\n")!=-1){
                 sentCommands = str.split("\r\n");
             }
-            else{ 
+            else{
                 sentCommands = str.split('\n');
             }
             deferred.resolve(null);
@@ -76,7 +76,7 @@ function runProcess(): Promise<Error | null> {
         commandTooLong = error;
     }
 
-    // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command 
+    // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command
     try {
         dispatcher.sendCommand('FE', '1');
     } catch (error) {

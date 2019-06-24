@@ -18,12 +18,12 @@ If you have installed the docker package in your local machine, you could start 
 For example, you could start a new docker container from following command:
 ```
 docker run -i -t -p [hostPort]:[containerPort] [image]
-``` 
-`-i:` Start a docker in an interactive mode.  
+```
+`-i:` Start a docker in an interactive mode.
 
-`-t:` Docker assign the container a input terminal.  
+`-t:` Docker assign the container a input terminal.
 
-`-p:` Port mapping, map host port to a container port.  
+`-p:` Port mapping, map host port to a container port.
 
 For more information about docker command, please [refer](https://docs.docker.com/v17.09/edge/engine/reference/run/)
 
@@ -33,11 +33,11 @@ Note:
 ```
 ### Step3: Run NNI in docker container
 
-If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment. 
+If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment.
 
 If you start your own docker image, you may need to install NNI package first, please [refer](Installation.md).
 
-If you want to run NNI's offical examples, you may need to clone NNI repo in github using 
+If you want to run NNI's offical examples, you may need to clone NNI repo in github using
 ```
 git clone https://github.com/Microsoft/nni.git
 ```

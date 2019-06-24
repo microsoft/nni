@@ -21,7 +21,7 @@ Please try the following solutions in turn:
 Your machine don't have eth0 device, please set [nniManagerIp](ExperimentConfig.md) in your config file manually.
 
 ### Exceed the MaxDuration but didn't stop
-When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment. 
+When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment.
 
 ### Could not stop an experiment using `nnictl stop`
 If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the PID of your experiment, and use `kill -9 {pid}` to kill it manually.
@@ -37,7 +37,7 @@ Unable to open the WebUI may have the following reasons:
 * Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
 ### NNI on Windows problems
-Please refer to [NNI on Windows](NniOnWindows.md) 
+Please refer to [NNI on Windows](NniOnWindows.md)
 
 ### Help us improve
 Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
