@@ -381,54 +381,58 @@ def webui_url(args):
 
 def local_clean(directory):
     '''clean up local data'''
-    print_normal('cleaning up {0}'.format(directory))
+    print_normal('removing folder {0}'.format(directory))
     try:
         shutil.rmtree(directory)
     except FileNotFoundError as err:
         print_error('{0} does not exist!'.format(directory))
     
-def remote_clean(nni_config):
+def remote_clean(machine_list, experiment_id=None):
     '''clean up remote data'''
-    machine_list = nni_config.get_config('experimentConfig').get('machineList')
     for machine in machine_list:
         passwd = machine.get('passwd')
         userName = machine.get('username')
         host = machine.get('ip')
         port = machine.get('port')
-        remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', nni_config.get_config('experimentId')])
+        if experiment_id:
+            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', experiment_id])
+        else:
+            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments'])
         sftp = create_ssh_sftp_client(host, port, userName, passwd)
-        print_normal('cleaning up {0}'.format(host + ':' + str(port) + remote_dir))
+        print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remote_remove_directory(sftp, remote_dir)
     
-def hdfs_clean(nni_config):
+def hdfs_clean(host, user_name, output_dir, experiment_id=None):
     '''clean up hdfs data'''
-    host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')	
-    user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
-    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)	
-    full_path = '/' + '/'.join([user_name, 'nni', 'experiments', nni_config.get_config('experimentId')])
-    print_normal('deleting {0} in hdfs'.format(full_path))
+    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
+    if experiment_id:
+        full_path = '/' + '/'.join([user_name, 'nni', 'experiments', experiment_id])
+    else:
+        full_path = '/' + '/'.join([user_name, 'nni', 'experiments'])
+    print_normal('removing folder {0} in hdfs'.format(full_path))
     hdfs_client.delete(full_path, recursive=True)
-    output_dir = nni_config.get_config('experimentConfig').get('paiConfig').get('outputDir')
     if output_dir:
         pattern = re.compile('hdfs://(?P<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?P<baseDir>/.*)?')
         match_result = pattern.match(output_dir)
         if match_result:
             output_host = match_result.group('host')
-            output_directory = match_result.group('baseDir')
-            if output_host == host:
-                print_normal('deleting {0} in hdfs'.format(output_directory))
-                hdfs_client.delete(output_directory, recursive=True)
-            else:
+            output_dir = match_result.group('baseDir')
+            #check if the host is valid
+            if output_host != host:
                 print_warning('The host in {0} is not consistent with {1}'.format(output_dir, host))
+            else:
+                if experiment_id:
+                    output_dir = output_dir + '/' + experiment_id
+                print_normal('removing folder {0} in hdfs'.format(output_dir))
+                hdfs_client.delete(output_dir, recursive=True)
 
 def experiment_clean(args):
     '''clean up the experiment data'''
     nni_config = Config(get_config_filename(args))
     while True:
-        print('INFO: clean up all data for experiment {0}'.format(args.id))
-        inputs = input('INFO: do you want to continue?[y/n]:')
+        print('INFO: This action will delete experiment {0}, and it’s not recoverable.'.format(args.id))
+        inputs = input('INFO: do you want to continue?[y/N]:')
         if not inputs.lower() or inputs.lower() in ['n', 'no']:
-            print_normal('Exit!')
             exit(0)
         elif inputs.lower() not in ['y', 'n', 'yes', 'no']:
             print_warning('please input Y or N!')
@@ -441,42 +445,43 @@ def experiment_clean(args):
         local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
     local_clean(local_dir)
     platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
+    experiment_id = nni_config.get_config('experimentId')
     if platform == 'remote':
-        remote_clean(nni_config)
+        machine_list = nni_config.get_config('experimentConfig').get('machineList')
+        remote_clean(machine_list, experiment_id)
     elif platform == 'pai':
-        hdfs_clean(nni_config)
+        host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')	
+        user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
+        output_dir = nni_config.get_config('experimentConfig').get('trial').get('outputDir')
+        hdfs_clean(host, user_name, output_dir, experiment_id)
     elif platform != 'local':
         #TODO: support all platforms
         print_warning('platform {0} clean up not supported yet!'.format(platform))
         exit(0)
     experiment_config = Experiments()
+    print_normal('removing metadata of experiment {0}'.format(args.id))
     experiment_config.remove_experiment(args.id)
-    print_normal('Success!') 
+    print_normal('Finish!') 
 
-def get_platform_dir(experiment_dict, platform):
-    '''get directories in platform'''
+
+def get_platform_dir(config_content):
+    '''get the dir list to be deleted'''
+    platform = config_content.get('trainingServicePlatform')
     dir_list = []
-    for key in experiment_dict.keys():
-        if platform != experiment_dict[key]['platform']:
-            continue
-        file_name = experiment_dict[key].get('fileName')
-        nni_config = Config(file_name)
-        if platform == 'remote':
-            machine_list = nni_config.get_config('experimentConfig').get('machineList')
-            for machine in machine_list:
-                host = machine.get('ip')
-                port = machine.get('port')
-                remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', nni_config.get_config('experimentId')])
-                dir_list.append(host + ':' + str(port) + remote_dir)
-        elif platform == 'pai':	
-            user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')	
-            full_path = '/' + '/'.join([user_name, 'nni', 'experiments', nni_config.get_config('experimentId')])
-            dir_list.append(full_path)
-            output_dir = nni_config.get_config('experimentConfig').get('paiConfig').get('outputDir')
+    if platform == 'remote':
+        machine_list = config_content.get('machineList')
+        for machine in machine_list:
+            host = machine.get('ip')
+            port = machine.get('port')
+            dir_list.append(host + ':' + str(port) + '/tmp/nni/experiments')
+    elif platform == 'pai':
+        pai_config = config_content.get('paiConfig')
+        host = config_content.get('paiConfig').get('host')	
+        user_name = config_content.get('paiConfig').get('userName')
+        output_dir = config_content.get('trial').get('outputDir')
+        dir_list.append('hdfs://{0}:9000/{1}/nni/experiments'.format(host, user_name))
+        if output_dir:
             dir_list.append(output_dir)
-        else:
-            print_normal('not supported platform!')
-            exit(1)
     return dir_list
 
 def platform_clean(args):
@@ -485,43 +490,41 @@ def platform_clean(args):
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
         exit(1)
-    experiment_config = get_yml_content(config_path)
-    platform = experiment_config.get('trainingServicePlatform')
+    config_content = get_yml_content(config_path)
+    platform = config_content.get('trainingServicePlatform')
+    if platform not in ['remote', 'pai']:
+        print_normal('platform {0} not supported!'.format(platform))
+        exit(0)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     update_experiment()
     id_list = list(experiment_dict.keys())
-    dir_list = get_platform_dir(experiment_dict, platform)
+    dir_list = get_platform_dir(config_content)
     if not dir_list:
-        print_normal('No data to be deleted in platform {0}!'.format(platform))
+        print_normal('No folder of NNI caches is found!')
         exit(1)
     while True:
-        print_normal('going to clean up all data in:')
+        print_normal('This command will remove below folders of NNI caches. If other users are using experiments on below hosts, it will be broken.')
         for dir in dir_list:
-            print('      ' + dir)
-        inputs = input('INFO: do you want to continue?[y/n]:')
+            print('       ' + dir)
+        inputs = input('INFO: do you want to continue?[y/N]:')
         if not inputs.lower() or inputs.lower() in ['n', 'no']:
-            print_normal('Exit!')
             exit(0)
         elif inputs.lower() not in ['y', 'n', 'yes', 'no']:
             print_warning('please input Y or N!')
         else:
             break
     if platform == 'remote':
-        for key in id_list:
-            if experiment_dict[key]['platform'] == 'remote':
-                file_name = experiment_dict[key]['fileName']
-                nni_config = Config(file_name)
-                remote_clean(nni_config)
-                experiment_config.remove_experiment(key)
+        machine_list = config_content.get('machineList')
+        for machine in machine_list:
+            remote_clean(machine_list, None)
     elif platform == 'pai':
-        for key in id_list:
-            if experiment_dict[key]['platform'] == 'pai':
-                file_name = experiment_dict[key]['fileName']
-                nni_config = Config(file_name)
-                hdfs_clean(nni_config)
-                experiment_config.remove_experiment(key)
-    print_normal('Success!')
+        pai_config = config_content.get('paiConfig')
+        host = config_content.get('paiConfig').get('host')	
+        user_name = config_content.get('paiConfig').get('userName')
+        output_dir = config_content.get('trial').get('outputDir')
+        hdfs_clean(host, user_name, output_dir, None)
+    print_normal('Finish!')
 
 def experiment_list(args):
     '''get the information of all experiments'''
