@@ -374,7 +374,7 @@ advisor:
 
 > Builtin Tuner Name: **GPTuner**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+Note that the only acceptable types of search space are `choice`, `randint`, `uniform`, `quniform`,  `loguniform`, `qloguniform`.
 
 **Suggested scenario**
 
@@ -383,7 +383,7 @@ GP Tuner is uses a proxy optimization problem (finding the maximum of the acquis
 **Requirement of classArg**
 
 * **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The kind of utility function. 'ei', 'ucb' and 'poi' corresponds to 'Expected Improvement', 'Upper Confidence Bound' and 'Probability of Improvement' respectively. 
+* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The kind of utility function(acquisition function). 'ei', 'ucb' and 'poi' corresponds to 'Expected Improvement', 'Upper Confidence Bound' and 'Probability of Improvement' respectively. 
 * **kappa** (*float, optional, default = 5*) - Used by utility function 'ucb'. The bigger `kappa` is, the more the tuner will be exploratory.
 * **xi** (*float, optional, default = 0*) - Used by utility function 'ei' and 'poi'. The bigger `xi` is, the more the tuner will be exploratory.
 * **nu** (*float, optional, default = 2.5*) - Used to specify Matern kernel. The smaller nu, the less smooth the approximated function is.
@@ -405,6 +405,6 @@ tuner:
     nu: 2.5
     alpha: 1e-6
     cold_start_num: 10
-    selection_num_warm_up: 1e5
+    selection_num_warm_up: 100000
     selection_num_starting_points: 250
 ```

@@ -69,3 +69,6 @@ build
 *.egg-info
 
 .vscode
+
+# yarn lockfile
+yarn.lock

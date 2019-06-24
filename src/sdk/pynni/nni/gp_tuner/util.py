@@ -82,14 +82,14 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
 
     # Warm up with random points
     x_tries = [space.random_sample()
-               for _ in range(num_warmup)]
+               for _ in range(int(num_warmup)]
     ys = f_acq(x_tries, gp=gp, y_max=y_max)
     x_max = x_tries[ys.argmax()]
     max_acq = ys.max()
 
 
     # Explore the parameter space more throughly
-    x_seeds = [space.random_sample() for _ in range(num_starting_points)]
+    x_seeds = [space.random_sample() for _ in range(int(num_starting_points)]
 
     bounds_minmax = np.array(
         [[bound['_value'][0], bound['_value'][-1]] for bound in bounds])

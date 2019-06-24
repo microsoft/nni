@@ -138,7 +138,7 @@ class TargetSpace():
         for i, _bound in enumerate(self._bounds):
             if _bound['_type'] == 'choice' and all(isinstance(val, int) for val in _bound['_value']):
                 params.update({self.keys[i]: int(x[i])})
-            elif _bound['_type'] in ['randint', 'quniform']:
+            elif _bound['_type'] in ['randint']:
                 params.update({self.keys[i]: int(x[i])})
             else:
                 params.update({self.keys[i]:  x[i]})
@@ -175,18 +175,25 @@ class TargetSpace():
         """
         params = np.empty(self.dim)
         for col, _bound in enumerate(self._bounds):
-            if _bound['_type'] == 'uniform':
+            if _bound['_type'] == 'choice':
+                params[col] = parameter_expressions.choice(
+                    _bound['_value'], self.random_state)
+            elif _bound['_type'] == 'randint':
+                params[col] = self.random_state.randint(
+                    _bound['_value'][0], _bound['_value'][1], size=1)
+            elif _bound['_type'] == 'uniform':
                 params[col] = parameter_expressions.uniform(
                     _bound['_value'][0], _bound['_value'][1], self.random_state)
             elif _bound['_type'] == 'quniform':
                 params[col] = parameter_expressions.quniform(
                     _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
-            elif _bound['_type'] == 'randint':
-                params[col] = self.random_state.randint(
-                    _bound['_value'][0], _bound['_value'][1], size=1)
-            elif _bound['_type'] == 'choice':
-                params[col] = parameter_expressions.choice(
-                    _bound['_value'], self.random_state)
+            elif _bound['_type'] == 'loguniform':
+                params[col] = parameter_expressions.loguniform(
+                    _bound['_value'][0], _bound['_value'][1], self.random_state)
+            elif _bound['_type'] == 'qloguniform':
+                params[col] = parameter_expressions.qloguniform(
+                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
+            
         return params
 
     def max(self):
