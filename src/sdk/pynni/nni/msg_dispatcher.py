@@ -18,7 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import os
 import logging
 from collections import defaultdict
 import json_tricks
@@ -26,7 +25,7 @@ import json_tricks
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
-from .common import multi_thread_enabled
+from .common import multi_thread_enabled, multi_phase_enabled
 from .env_vars import dispatcher_env_vars
 
 _logger = logging.getLogger(__name__)
@@ -61,13 +60,19 @@ def _create_parameter_id():
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
-def _pack_parameter(parameter_id, params, customized=False):
+def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
     _trial_params[parameter_id] = params
     ret = {
         'parameter_id': parameter_id,
         'parameter_source': 'customized' if customized else 'algorithm',
         'parameters': params
     }
+    if trial_job_id is not None:
+        ret['trial_job_id'] = trial_job_id
+    if parameter_index is not None:
+        ret['parameter_index'] = parameter_index
+    else:
+        ret['parameter_index'] = 0
     return json_tricks.dumps(ret)
 
 class MsgDispatcher(MsgDispatcherBase):
@@ -133,8 +138,13 @@ class MsgDispatcher(MsgDispatcherBase):
         elif data['type'] == 'PERIODICAL':
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)
-            else:
-                pass
+        elif data['type'] == 'REQUEST_PARAMETER':
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            param_id = _create_parameter_id()
+            param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
@@ -160,9 +170,15 @@ class MsgDispatcher(MsgDispatcherBase):
         id_ = data['parameter_id']
         value = data['value']
         if id_ in _customized_parameter_ids:
-            self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+            if multi_phase_enabled():
+                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
+            else:
+                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
         else:
-            self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+            if multi_phase_enabled():
+                self.tuner.receive_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
+            else:
+                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results

@@ -378,7 +378,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 {/* trial table list */}
                 <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
-                    <Col span={12}>
+                    <Col span={10}>
                         <span>Show</span>
                         <Select
                             className="entry"
@@ -392,26 +392,28 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         </Select>
                         <span>entries</span>
                     </Col>
-                    <Col span={12} className="right">
-                        <Row>
-                            <Col span={12}>
-                                <Button
-                                    type="primary"
-                                    className="tableButton editStyle"
-                                    onClick={this.tableList ? this.tableList.addColumn : this.test}
-                                >
-                                    Add column
-                                </Button>
-                            </Col>
-                            <Col span={12}>
-                                <Input
-                                    type="text"
-                                    placeholder="Search by id, trial No. or status"
-                                    onChange={this.searchTrial}
-                                    style={{ width: 230, marginLeft: 6 }}
-                                />
-                            </Col>
-                        </Row>
+                    <Col span={14} className="right">
+                        <Button
+                            type="primary"
+                            className="tableButton editStyle"
+                            onClick={this.tableList ? this.tableList.addColumn : this.test}
+                        >
+                            Add column
+                        </Button>
+                        <Button
+                            type="primary"
+                            className="tableButton editStyle mediateBtn"
+                            // use child-component tableList's function, the function is in child-component.
+                            onClick={this.tableList ? this.tableList.compareBtn : this.test}
+                        >
+                            Compare
+                        </Button>
+                        <Input
+                            type="text"
+                            placeholder="Search by id, trial No. or status"
+                            onChange={this.searchTrial}
+                            style={{ width: 230, marginLeft: 6 }}
+                        />
                     </Col>
                 </Row>
                 <TableList
