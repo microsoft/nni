@@ -137,7 +137,7 @@ class GridSearchTuner(Tuner):
         '''
         self.expanded_search_space = self.json2parameter(search_space)
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         self.count += 1
         while (self.count <= len(self.expanded_search_space)-1):
             _params_tuple = convert_dict2tuple(self.expanded_search_space[self.count])
@@ -147,7 +147,7 @@ class GridSearchTuner(Tuner):
                 return self.expanded_search_space[self.count]
         raise nni.NoMoreTrialError('no more parameters now.')
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         pass
 
     def import_data(self, data):

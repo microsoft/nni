@@ -33,7 +33,7 @@ import { MethodNotImplementedError } from '../../common/errors';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrainingService,
+    HyperParameters, JobApplicationForm, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName,
@@ -45,7 +45,7 @@ import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
-import { PAIJobRestServer } from './paiJobRestServer';
+import { PAIJobRestServer, ParameterFileMeta } from './paiJobRestServer';
 
 import * as WebHDFS from 'webhdfs';
 
@@ -79,6 +79,7 @@ class PAITrainingService implements TrainingService {
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck: boolean = true;
     private logCollection: string;
+    private isMultiPhase: boolean = false;
 
     constructor() {
         this.log = getLogger();
@@ -179,12 +180,22 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
+        }
+        if (form.jobType === 'TRIAL') {
+                await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters);
+        } else {
+            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
+        }
+
+        return trialJobDetail;
     }
 
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
     // tslint:disable:no-http-string
@@ -336,6 +347,9 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.logCollection = value;
                 break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -445,6 +459,7 @@ class PAITrainingService implements TrainingService {
             trialJobId,
             this.experimentId,
             trialJobDetail.sequenceId,
+            this.isMultiPhase,
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
@@ -632,7 +647,50 @@ class PAITrainingService implements TrainingService {
         return Promise.race([timeoutDelay, deferred.promise])
             .finally(() => { clearTimeout(timeoutId); });
     }
-    // tslint:enable:no-any no-unsafe-any no-http-string
+
+    private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
+        if (this.paiClusterConfig === undefined) {
+            throw new Error('PAI Cluster config is not initialized');
+        }
+        if (this.paiTrialConfig === undefined) {
+            throw new Error('PAI trial config is not initialized');
+        }
+
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const hpFileName: string = generateParamFileName(hyperParameters);
+        const localFilepath: string = path.join(trialLocalTempFolder, hpFileName);
+        await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        const hdfsHpFilePath: string = path.join(hdfsCodeDir, hpFileName);
+
+        await HDFSClientUtility.copyFileToHdfs(localFilepath, hdfsHpFilePath, this.hdfsClient);
+
+        await this.postParameterFileMeta({
+            experimentId: this.experimentId,
+            trialId: trialJobId,
+            filePath: hdfsHpFilePath
+        });
+    }
+
+    private postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
+        const deferred : Deferred<void> = new Deferred<void>();
+        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
+        const req: request.Options = {
+            uri: `${restServer.endPoint}${restServer.apiRootUrl}/parameter-file-meta`,
+            method: 'POST',
+            json: true,
+            body: parameterFileMeta
+        };
+        request(req, (err: Error, res: request.Response) => {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve();
+            }
+        });
+
+        return deferred.promise;
+    }
 }
 
 export { PAITrainingService };

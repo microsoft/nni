@@ -22,7 +22,7 @@ class SimpleTuner(Tuner):
         self.sig_event = Event()
         self.thread_lock = Lock()
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         if self.f_id is None:
             self.thread_lock.acquire()
             self.f_id = parameter_id
@@ -50,7 +50,7 @@ class SimpleTuner(Tuner):
             self.thread_lock.release()
             return self.trial_meta[parameter_id]
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, reward, **kwargs):
         self.thread_lock.acquire()
         if parameter_id == self.f_id:
             self.trial_meta[parameter_id]['checksum'] = reward['checksum']

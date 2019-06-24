@@ -6,7 +6,7 @@ class MultiThreadTuner(Tuner):
     def __init__(self):
         self.parent_done = False
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         if parameter_id == 0:
             return {'x': 0}
         else:
@@ -14,7 +14,7 @@ class MultiThreadTuner(Tuner):
                 time.sleep(2)
             return {'x': 1}
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         if parameter_id == 0:
             self.parent_done = True
 

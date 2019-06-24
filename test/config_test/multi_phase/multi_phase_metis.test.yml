@@ -6,7 +6,7 @@ trialConcurrency: 4
 searchSpacePath: ./search_space.json
 
 tuner:
-  builtinTunerName: TPE
+  builtinTunerName: MetisTuner
   classArgs:
     optimize_mode: maximize
 
