@@ -1,7 +1,8 @@
 import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
-import { Row, Table, Button, Popconfirm, Modal, Checkbox } from 'antd';
+import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select } from 'antd';
+const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
@@ -42,6 +43,9 @@ interface TableListState {
     selectRows: Array<TableObj>;
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
+    intermediateData: Array<object>; // 这里是存放具体某一id的intermediate result的结果集，包括dict
+    intermediateId: string; // 用户选择看其他keys需要知道id
+    intermediateOtherKeys: Array<string>;
 }
 
 interface ColumnIndex {
@@ -67,7 +71,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCompareModal: false,
             columnSelected: COLUMN,
             selectRows: [],
-            selectedRowKeys: [] // after modal closed 清掉选择的痕迹
+            selectedRowKeys: [], // close selected trial message after modal closed
+            intermediateData: [],
+            intermediateId: '',
+            intermediateOtherKeys: []
         };
     }
 
@@ -81,6 +88,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     const intermediateArr: number[] = [];
                     // support intermediate result is dict because the last intermediate result is
                     // final result in a succeed trial, it may be a dict.
+                    // get intermediate result dict keys array
+                    let otherkeys: Array<string> = ['default'];
+                    if (res.data.length !== 0) {
+                        otherkeys = Object.keys(JSON.parse(res.data[0].data));
+                    }
+                    // intermediateArr just store default val
                     Object.keys(res.data).map(item => {
                         const temp = JSON.parse(res.data[item].data);
                         if (typeof temp === 'object') {
@@ -92,7 +105,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     const intermediate = intermediateGraphOption(intermediateArr, id);
                     if (this._isMounted) {
                         this.setState(() => ({
-                            intermediateOption: intermediate
+                            intermediateData: res.data, // store origin intermediate data for a trial
+                            intermediateOption: intermediate,
+                            intermediateOtherKeys: otherkeys,
+                            intermediateId: id
                         }));
                     }
                 }
@@ -101,6 +117,38 @@ class TableList extends React.Component<TableListProps, TableListState> {
             this.setState({
                 modalVisible: true
             });
+        }
+    }
+
+    selectOtherKeys = (value: string) => {
+
+        const isShowDefault: boolean = value === 'default' ? true : false;
+        const { intermediateData, intermediateId } = this.state;
+        const intermediateArr: number[] = [];
+        // just watch default key-val
+        if (isShowDefault === true) {
+            Object.keys(intermediateData).map(item => {
+                const temp = JSON.parse(intermediateData[item].data);
+                if (typeof temp === 'object') {
+                    intermediateArr.push(temp[value]);
+                } else {
+                    intermediateArr.push(temp);
+                }
+            });
+        } else {
+            Object.keys(intermediateData).map(item => {
+                const temp = JSON.parse(intermediateData[item].data);
+                if (typeof temp === 'object') {
+                    intermediateArr.push(temp[value]);
+                }
+            });
+        }
+        const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
+        // re-render
+        if (this._isMounted) {
+            this.setState(() => ({
+                intermediateOption: intermediate
+            }));
         }
     }
 
@@ -230,7 +278,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         const { entries, tableSource, updateList } = this.props;
         const { intermediateOption, modalVisible, isShowColumn, columnSelected,
-            selectRows, isShowCompareModal, selectedRowKeys } = this.state;
+            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
             onChange: (selected: string[] | number[], selectedRows: Array<TableObj>) => {
@@ -475,6 +523,27 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         destroyOnClose={true}
                         width="80%"
                     >
+                        {
+                            intermediateOtherKeys.length > 1
+                                ?
+                                <Row className="selectKeys">
+                                    <Select
+                                        className="select"
+                                        defaultValue="default"
+                                        onSelect={this.selectOtherKeys}
+                                    >
+                                        {
+                                            Object.keys(intermediateOtherKeys).map(item => {
+                                                const keys = intermediateOtherKeys[item];
+                                                return <Option value={keys} key={item}>{keys}</Option>;
+                                            })
+                                        }
+                                    </Select>
+
+                                </Row>
+                                :
+                                <div />
+                        }
                         <ReactEcharts
                             option={intermediateOption}
                             style={{
