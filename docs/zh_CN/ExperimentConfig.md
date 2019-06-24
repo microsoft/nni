@@ -134,7 +134,7 @@ machineList:
   
   - 说明
     
-    **experimentName** is the name of the experiment created. TBD: add default value
+    **experimentName** 是创建的 Experiment 的名称。 待定: 增加默认值
 
 - **trialConcurrency**
   
@@ -269,12 +269,12 @@ machineList:
   
   - **includeIntermediateResults**
     
-        If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
+        如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
 
-- **assessor**
+- **Assessor**
   
-  - Description
+  - 说明
     
     **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
