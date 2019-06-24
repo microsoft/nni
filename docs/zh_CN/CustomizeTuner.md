@@ -94,8 +94,8 @@ tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
   className: CustomizedTuner
-  # Any parameter need to pass to your tuner class __init__ constructor
-  # can be specified in this optional classArgs field, for example
+  # 任何传入 __init__ 构造函数的参数
+  # 都需要声明在 classArgs 字段中，如：
   classArgs:
     arg1: value1
 
