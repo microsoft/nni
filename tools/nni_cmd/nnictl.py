@@ -129,7 +129,7 @@ def parse_args():
     parser_platform = subparsers.add_parser('platform', help='get platform information')
     #add subparsers for parser_experiment
     parser_platform_subparsers = parser_platform.add_subparsers()
-    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the experiment data')
+    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the platform data')
     parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_platform_clean.set_defaults(func=platform_clean)
 

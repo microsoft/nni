@@ -418,6 +418,8 @@ def hdfs_clean(nni_config):
             if output_host == host:
                 print_normal('deleting {0} in hdfs'.format(output_directory))
                 hdfs_client.delete(output_directory, recursive=True)
+            else:
+                print_warning('The host in {0} is not consistent with {1}'.format(output_dir, host))
 
 def experiment_clean(args):
     '''clean up the experiment data'''
@@ -434,7 +436,9 @@ def experiment_clean(args):
             break
     #clean local data
     home = str(Path.home())
-    local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
+    local_dir = nni_config.get_config('experimentConfig').get('logDir')
+    if not local_dir:
+        local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
     local_clean(local_dir)
     platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
     if platform == 'remote':
