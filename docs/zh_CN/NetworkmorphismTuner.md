@@ -55,45 +55,45 @@ nni.report_final_result(best_acc)
 如果需要保存并**读取最佳模型**，推荐采用以下方法。
 
 ```python
-# 1. Use NNI API
-## You can get the best model ID from WebUI
-## or `nni/experiments/experiment_id/log/model_path/best_model.txt'
+# 1. 使用 NNI API
+## 从 Web 界面获取最佳模型的 ID
+## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
 
-## read the json string from model file and load it with NNI API
+## 从 JSON 文件中读取，并使用 NNI API 来加载
 with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
 
-# 2. Use Framework API (Related to Framework)
+# 2. 使用框架的 API (与具体框架相关)
 ## 2.1 Keras API
 
-## Save the model with Keras API in the trial code
-## it's better to save model with id in nni local mode
+## 在 Trial 代码中使用 Keras API 保存
+## 最好保存 NNI 的 ID
 model_id = nni.get_sequence_id()
-## serialize model to JSON
+## 将模型序列化为 JSON
 model_json = model.to_json()
 with open("model-{}.json".format(model_id), "w") as json_file:
     json_file.write(model_json)
-## serialize weights to HDF5
+## 将权重序列化至 HDF5
 model.save_weights("model-{}.h5".format(model_id))
 
-## Load the model with Keras API if you want to reuse the model
-## load json and create model
-model_id = "" # id of the model you want to reuse
+## 重用模型时，使用 Keras API 读取
+## 读取 JSON 文件，并创建模型
+model_id = "" # 需要重用的模型 ID
 with open('model-{}.json'.format(model_id), 'r') as json_file:
     loaded_model_json = json_file.read()
 loaded_model = model_from_json(loaded_model_json)
-## load weights into new model
+## 将权重加载到新模型中
 loaded_model.load_weights("model-{}.h5".format(model_id))
 
 ## 2.2 PyTorch API
 
-## Save the model with PyTorch API in the trial code
+## 在 Trial 代码中使用 PyTorch API 保存
 model_id = nni.get_sequence_id()
 torch.save(model, "model-{}.pt".format(model_id))
 
-## Load the model with PyTorch API if you want to reuse the model
-model_id = "" # id of the model you want to reuse
+## 重用模型时，使用 PyTorch API 读取
+model_id = "" # 需要重用的模型 ID
 loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ```
