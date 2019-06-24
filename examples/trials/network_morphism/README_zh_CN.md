@@ -26,27 +26,27 @@ experimentName: example_cifar10-network-morphism
 trialConcurrency: 1
 maxExecDuration: 48h
 maxTrialNum: 200
-#choice: local, remote, pai
+#可选项: local, remote, pai
 trainingServicePlatform: local
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
-  #SMAC (SMAC should be installed through nnictl)
+  #可选项: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
+  #SMAC (SMAC 需要通过 nnictl 安装)
   builtinTunerName: NetworkMorphism
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
-    #for now, this tuner only supports cv domain
+    #当前仅支持视觉领域
     task: cv
-    #modify to fit your input image width
+    #修改来适配自己的图像大小
     input_width: 32
-    #modify to fit your input image channel
+    #修改来适配自己的图像通道
     input_channel: 3
-    #modify to fit your number of classes
+    #修改来适配自己的分类数量
     n_output_node: 10
 trial:
-  # your own command here
+  # 自己的命令
   command: python3 cifar10_keras.py
   codeDir: .
   gpuNum: 0
