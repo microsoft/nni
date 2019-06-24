@@ -153,7 +153,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
 
 **验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
 * 通过克隆源代码下载示例。
 
@@ -161,7 +161,7 @@ The following example is an experiment built on TensorFlow. Make sure you have *
     git clone -b v0.8 https://github.com/Microsoft/nni.git
 ```
 
-Linux and MacOS
+Linux 和 macOS
 
 * 运行 MNIST 示例。
 
@@ -243,7 +243,7 @@ You can use these commands to get more information about the experiment
 
 ## **贡献**
 
-This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
 
 Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
 
