@@ -216,7 +216,10 @@ class Para extends React.Component<ParaProps, ParaState> {
         }
         parallelAxis.push({
             dim: i,
-            name: 'default metric'
+            name: 'default metric',
+            nameTextStyle: {
+                fontWeight: 700
+            }
         });
         if (lenOfDataSource === 0) {
             const optionOfNull = {

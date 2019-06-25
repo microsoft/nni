@@ -97,6 +97,7 @@ interface Dimobj {
     axisTick?: object;
     axisLabel?: object;
     axisLine?: object;
+    nameTextStyle?: object;
 }
 
 interface ParaObj {
