@@ -144,7 +144,7 @@ class Bracket():
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
         self.num_configs_to_run = []    # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.no_more_trial = False
 
     def is_completed(self):
