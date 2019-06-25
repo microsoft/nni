@@ -2,7 +2,7 @@
 
 ## 概述
 
-TrainingService 是与平台管理、任务调度相关的模块。 TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainingService, users just need to inherit the parent class and complete their own child class if they want to implement customized TrainingService.
+TrainingService 是与平台管理、任务调度相关的模块。 TrainingService 在设计上为了便于实现，将平台相关的公共属性抽象成类。用户只需要继承这个抽象类，并根据平台特点实现子类，便能够实现 TrainingService。
 
 ## 系统架构
 
@@ -10,11 +10,11 @@ TrainingService 是与平台管理、任务调度相关的模块。 TrainingServ
 
 NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持本机，[远程平台](RemoteMachineMode.md)，[OpenPAI 平台](PaiMode.md)，[Kubeflow 平台](KubeflowMode.md) 以及 [FrameworkController 平台](FrameworkController.md)。
 
-In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
+本文中，会介绍 TrainingService 的简要设计。 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
 
 ## 代码文件夹结构
 
-NNI's folder structure is shown below:
+NNI 的文件夹结构如下：
 
     nni
       |- deployment
@@ -45,7 +45,7 @@ NNI's folder structure is shown below:
       | |-nni_trial_tool
     
 
-`nni/src/` folder stores the most source code of NNI. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
+`nni/src` 文件夹存储 NNI 的大部分源代码。 这个文件夹中的代码和 NNIManager、TrainingService、SDK、WebUI 等模块有关。 用户可以在 `nni/src/nni_manager/common/trainingService.ts` 文件中找到 TrainingService 抽象类的代码，并且把自己实现的子类放到 `nni/src/nni_manager/training_service` 文件夹下。 如果用户实现了自己的 TrainingService，还需要同时实现相应的单元测试代码，并把单元测试放到 `nni/src/nni_manager/training_service/test` 文件夹下。
 
 ## TrainingService 函数解释
 
@@ -65,11 +65,11 @@ NNI's folder structure is shown below:
     }
     
 
-The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.
+TrainingService 父类有一些抽象方法，用户需要继承并实现这些抽象方法。
 
 **setClusterMetadata(key: string, value: string)**
 
-ClusterMetadata is the data related to platform details, for examples, the ClusterMetadata defined in remote machine server is:
+ClusterMetadata 是与平台细节相关的数据，例如，ClusterMetadata 在远程服务器的定义是：
 
     export class RemoteMachineMeta {
         public readonly ip : string;
@@ -95,15 +95,15 @@ ClusterMetadata is the data related to platform details, for examples, the Clust
     }
     
 
-The metadata includes the host address, the username or other configuration related to the platform. Users need to define their own metadata format, and set the metadata instance in this function. This function is called before the experiment is started to set the configuration of remote machines.
+Metadata 中包括了主机地址，用户名和其它平台相关配置。 用户需要定义自己的 Metadata 格式，并在这个方法中相应实现。 这个方法在 Experiment 启动之前调用。
 
 **getClusterMetadata(key: string)**
 
-This function will return the metadata value according to the values, it could be left empty if users don't need to use it.
+此函数将返回相应值的元数据值，如果不需要使用，可留空。
 
 **submitTrialJob(form: JobApplicationForm)**
 
-SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
+SubmitTrialJob 是用来提交新 Trial 任务的函数，需要生成一个 TrialJobDetail 类型的任务实例。 TrialJobDetail 定义如下：
 
     interface TrialJobDetail {
         readonly id: string;
@@ -120,23 +120,23 @@ SubmitTrialJob is a function to submit new trial jobs, users should generate a j
     }
     
 
-According to different kinds of implementation, users could put the job detail into a job queue, and keep fetching the job from the queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job detail after the submit work.
+根据不同的实现，用户可能需要把 Trial 任务放入队列中，并不断地从队里中取出任务进行提交。 或者也可以直接在这个方法中完成作业提交过程。
 
 **cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)**
 
-If this function is called, the trial started by the platform should be canceled. Different kind of platform has diffenent methods to calcel a running job, this function should be implemented according to specific platform.
+如果此函数被调用，应取消平台启动的 Trial。 不同的平台有不同的取消作业的方式，这个方法应该根据不同平台的特点，实现相应的细节。
 
 **updateTrialJob(trialJobId: string, form: JobApplicationForm)**
 
-This function is called to update the trial job's status, trial job's status should be detected according to different platform, and be updated to `RUNNING`, `SUCCEED`, `FAILED` etc.
+调用此函数可更新 Trial 的任务状态，Trial 任务状态根据不同的平台来检测，并需要更新为 `RUNNING`, `SUCCEED`, `FAILED` 等状态。
 
 **getTrialJob(trialJobId: string)**
 
-This function returns a trialJob detail instance according to trialJobId.
+此函数根据 trialJobId 返回 trialJob 的实例。
 
 **listTrialJobs()**
 
-Users should put all of trial job detail information into a list, and return the list.
+用户需要将所有 Trial 任务详情存入列表并返回。
 
 **addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**
 
