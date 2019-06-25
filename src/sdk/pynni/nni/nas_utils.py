@@ -20,6 +20,7 @@
 
 from . import trial
 
+
 def classic_mode(
         mutable_id,
         mutable_layer_id,
@@ -28,18 +29,19 @@ def classic_mode(
         fixed_inputs,
         optional_inputs,
         optional_input_size):
-
+    '''Execute the chosen function and inputs directly'''
     if trial._params is None:
         trial.get_next_parameter()
     mutable_block = trial.get_current_parameter(mutable_id)
     chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
     chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
     real_chosen_inputs = [optional_inputs[input_name]
-                            for input_name in chosen_inputs]
+                          for input_name in chosen_inputs]
     layer_out = funcs[chosen_layer](
         [fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
 
     return layer_out
+
 
 def enas_mode(
         mutable_id,
@@ -50,7 +52,9 @@ def enas_mode(
         optional_inputs,
         optional_input_size,
         tf):
-    
+    '''Build a tensorflow graph including all functions and optional_inputs using signal varaibles.
+    So that we can use those signal variables to change the whole graph into different subgraphs
+    in the `reload_tensorflow_variables` function'''
     name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
     # store namespace
     if 'name_space' not in globals():
@@ -68,31 +72,35 @@ def enas_mode(
     name_for_funcs = name_prefix + '_funcs'
     tf_variables[name_prefix] = dict()
     tf_variables[name_prefix]['optional_inputs'] = tf.get_variable(name_for_optional_inputs,
-                                                                    [len(optional_inputs)],
-                                                                    dtype=tf.bool,
-                                                                    trainable=False)
+                                                                   [len(
+                                                                       optional_inputs)],
+                                                                   dtype=tf.bool,
+                                                                   trainable=False)
     tf_variables[name_prefix]['funcs'] = tf.get_variable(
         name_for_funcs, [], dtype=tf.int64, trainable=False)
 
     # get real values using their variable names
     real_optional_inputs_value = [optional_inputs[name]
-                                    for name in name_space[name_prefix]['optional_inputs']]
+                                  for name in name_space[name_prefix]['optional_inputs']]
     real_func_value = [funcs[name]
-                        for name in name_space[name_prefix]['funcs']]
+                       for name in name_space[name_prefix]['funcs']]
     real_funcs_args = [funcs_args[name]
-                        for name in name_space[name_prefix]['funcs']]
+                       for name in name_space[name_prefix]['funcs']]
     # build tensorflow graph of geting chosen inputs by masking
     real_chosen_inputs = tf.boolean_mask(
         real_optional_inputs_value, tf_variables[name_prefix]['optional_inputs'])
     # build tensorflow graph of different branches by using tf.case
     branches = dict()
     for func_id in range(len(funcs)):
-        func_output = real_func_value[func_id]([fixed_inputs, real_chosen_inputs], **real_funcs_args[func_id])
-        branches[tf.equal(tf_variables[name_prefix]['funcs'], func_id)] = lambda: func_output
+        func_output = real_func_value[func_id](
+            [fixed_inputs, real_chosen_inputs], **real_funcs_args[func_id])
+        branches[tf.equal(tf_variables[name_prefix]['funcs'],
+                          func_id)] = lambda: func_output
     layer_out = tf.case(branches, exclusive=True,
                         default=lambda: func_output)
 
     return layer_out
+
 
 def oneshot_mode(
         mutable_id,
@@ -103,7 +111,9 @@ def oneshot_mode(
         optional_inputs,
         optional_input_size,
         tf):
-
+    '''Execute all the functions using all the optional_inputs, where a dropout will be implemented
+    to optional_inputs.
+    '''
     if trial._params is None:
         trial.get_next_parameter()
     optional_inputs = list(optional_inputs.values())
@@ -112,9 +122,11 @@ def oneshot_mode(
     if inputs_num > 0:
         rate = 0.01 ** (1 / inputs_num)
         noise_shape = [inputs_num] + [1] * len(optional_inputs[0].get_shape())
-        optional_inputs = tf.nn.dropout(optional_inputs, rate=rate, noise_shape=noise_shape)
+        optional_inputs = tf.nn.dropout(
+            optional_inputs, rate=rate, noise_shape=noise_shape)
         optional_inputs = [optional_inputs[idx] for idx in range(inputs_num)]
-    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name]) for func_name, func in funcs.items()]
+    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name])
+                  for func_name, func in funcs.items()]
     rate = 0.01 ** (1 / len(layer_outs))
     noise_shape = [len(layer_outs)] + [1] * len(layer_outs[0].get_shape())
     layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
@@ -122,7 +134,14 @@ def oneshot_mode(
 
     return layer_out
 
+
 def reload_tensorflow_variables(session, tf=None):
+    '''In Enas mode, this function reload every signal varaible created in `enas_mode` function so
+    the whole tensorflow graph will be changed into certain subgraph recerived from Tuner.
+    ---------------
+    session: the tensorflow session created by users
+    tf: tensorflow module
+    '''
     subgraph_from_tuner = trial.get_next_parameter()
     for mutable_id, mutable_block in subgraph_from_tuner.items():
         if mutable_id not in name_space:
@@ -133,7 +152,7 @@ def reload_tensorflow_variables(session, tf=None):
             chosen_layer = name_space[name_prefix]['funcs'].index(
                 mutable_layer["chosen_layer"])
             chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
-                            else 0 for inp in name_space[name_prefix]['optional_inputs']]
+                             else 0 for inp in name_space[name_prefix]['optional_inputs']]
             # load these information into pre-defined tensorflow variables
             tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
             tf_variables[name_prefix]['optional_inputs'].load(
