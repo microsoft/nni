@@ -112,8 +112,7 @@ def oneshot_mode(
         optional_input_size,
         tf):
     '''Execute all the functions using all the optional_inputs, where a dropout will be implemented
-    to optional_inputs.
-    '''
+    to optional_inputs.'''
     if trial._params is None:
         trial.get_next_parameter()
     optional_inputs = list(optional_inputs.values())
