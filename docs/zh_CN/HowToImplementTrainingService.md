@@ -2,17 +2,19 @@
 
 ## 概述
 
-TrainingService 是与平台管理、任务调度相关的模块。 TrainingService 在设计上为了便于实现，将平台相关的公共属性抽象成类。用户只需要继承这个抽象类，并根据平台特点实现子类，便能够实现 TrainingService。
+TrainingService 是与平台管理、任务调度相关的模块。 TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainingService, users just need to inherit the parent class and complete their own child class if they want to implement customized TrainingService.
 
 ## 系统架构
 
 ![](../img/NNIDesign.jpg)
 
-NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持本机，[远程平台](RemoteMachineMode.md)，[OpenPAI 平台](PaiMode.md)，[Kubeflow 平台](KubeflowMode.md) 以及 [FrameworkController 平台](FrameworkController.md)。 本文中，会介绍 TrainingService 的简要设计。 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
+NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持本机，[远程平台](RemoteMachineMode.md)，[OpenPAI 平台](PaiMode.md)，[Kubeflow 平台](KubeflowMode.md) 以及 [FrameworkController 平台](FrameworkController.md)。
+
+In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 
 ## 代码文件夹结构
 
-NNI 的文件夹结构如下：
+NNI's folder structure is shown below:
 
     nni
       |- deployment
@@ -43,7 +45,7 @@ NNI 的文件夹结构如下：
       | |-nni_trial_tool
     
 
-`nni/src` 文件夹存储 NNI 的大部分源代码。 这个文件夹中的代码和 NNIManager、TrainingService、SDK、WebUI 等模块有关。 用户可以在 `nni/src/nni_manager/common/trainingService.ts` 文件中找到 TrainingService 抽象类的代码，并且把自己实现的子类放到 `nni/src/nni_manager/training_service` 文件夹下。 如果用户实现了自己的 TrainingService，还需要同时实现相应的单元测试代码，并把单元测试放到 `nni/src/nni_manager/training_service/test` 文件夹下。
+`nni/src/` folder stores the most source code of NNI. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
 
 ## TrainingService 函数解释
 
@@ -63,9 +65,11 @@ NNI 的文件夹结构如下：
     }
     
 
-TrainingService 父类有一些抽象方法，用户需要继承并实现这些抽象方法。
+The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.
 
-**setClusterMetadata(key: string, value: string)** ClusterMetadata 是与平台数据有关的方法，例如，在远程平台上的 ClusterMetadata 定义是：
+**setClusterMetadata(key: string, value: string)**
+
+ClusterMetadata is the data related to platform details, for examples, the ClusterMetadata defined in remote machine server is:
 
     export class RemoteMachineMeta {
         public readonly ip : string;
@@ -91,11 +95,15 @@ TrainingService 父类有一些抽象方法，用户需要继承并实现这些�
     }
     
 
-Metadata 中包括了主机地址，用户名和其它平台相关配置。 用户需要定义自己的 Metadata 格式，并在这个方法中相应实现。 这个方法在 Experiment 启动之前调用。
+The metadata includes the host address, the username or other configuration related to the platform. Users need to define their own metadata format, and set the metadata instance in this function. This function is called before the experiment is started to set the configuration of remote machines.
 
-**getClusterMetadata(key: string)** 这个方法返回 metadata 的内容，如果不需要使用这个方法，可将方法内容留空。
+**getClusterMetadata(key: string)**
 
-**submitTrialJob(form: JobApplicationForm)** SubmitTrialJob 是用来提交 Trial 任务的方法，用户需要在这个方法中生成 TrialJobDetail 类型的实例。 TrialJobDetail 定义如下：
+This function will return the metadata value according to the values, it could be left empty if users don't need to use it.
+
+**submitTrialJob(form: JobApplicationForm)**
+
+SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
 
     interface TrialJobDetail {
         readonly id: string;
@@ -112,28 +120,52 @@ Metadata 中包括了主机地址，用户名和其它平台相关配置。 用�
     }
     
 
-根据不同的实现，用户可能需要把 Trial 任务放入队列中，并不断地从队里中取出任务进行提交。 或者也可以直接在这个方法中完成作业提交过程。
+According to different kinds of implementation, users could put the job detail into a job queue, and keep fetching the job from the queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job detail after the submit work.
 
-**cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)** 如果这个方法被调用， Trial 应该被取消执行。 不同的平台有不同的取消作业的方式，这个方法应该根据不同平台的特点，实现相应的细节。
+**cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)**
 
-**updateTrialJob(trialJobId: string, form: JobApplicationForm)** 这个方法用来更新 Trial 的状态，不同平台有不同的检测作业状态的方法，并把状态更新为`RUNNING`, `SUCCEED`, `FAILED` 等。
+If this function is called, the trial started by the platform should be canceled. Different kind of platform has diffenent methods to calcel a running job, this function should be implemented according to specific platform.
 
-**getTrialJob(trialJobId: string)** 这个方法用来根据 Trial Id 来返回相应的 Trial 实例。
+**updateTrialJob(trialJobId: string, form: JobApplicationForm)**
 
-**listTrialJobs()** 用户需要在这个方法中把所有的 Trial 实例放入一个列表中，并返回。
+This function is called to update the trial job's status, trial job's status should be detected according to different platform, and be updated to `RUNNING`, `SUCCEED`, `FAILED` etc.
 
-**addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)** NNI 会启动一个 EventEmitter 来处理作业的指标数据，如果有检测到有新的数据，EventEmitter就会被触发，来执行相应的事件。 用户需要在这个方法中开始 EventEmitter。
+**getTrialJob(trialJobId: string)**
 
-**removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)** 移除 EventEmitter。
+This function returns a trialJob detail instance according to trialJobId.
 
-**run()** Run() 函数是 TrainingService 的主循环，用户可以在这个函数中循环执行他们的代码逻辑，这个函数在实验结束前会一直循环执行。
+**listTrialJobs()**
 
-**cleanUp()** 当实验结束后，这个方法用来清除实验环境。 用户需要在这个方法中实现与平台相关的清除操作。
+Users should put all of trial job detail information into a list, and return the list.
+
+**addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**
+
+NNI will hold an EventEmitter to get job metrics, if there is new job metrics detected, the EventEmitter will be triggered. Users should start the EventEmitter in this function.
+
+**removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**
+
+Close the EventEmitter.
+
+**run()**
+
+The run() function is a main loop function in TrainingService, users could set a while loop to execute their logic code, and finish executing them when the experiment is stopped.
+
+**cleanUp()**
+
+This function is called to clean up the environment when a experiment is stopped. Users should do the platform-related cleaning operation in this function.
 
 ## TrialKeeper 工具
 
-NNI 提供了 TrialKeeper 工具，用来帮助维护 Trial 任务。 可以在 `nni/tools/nni_trial_tool` 文件夹中找到 TrialKeeper 的源代码。 如果想要运行在云平台上，这是维护任务的好工具。 TrialKeeper 的架构如下： ![](../img/trialkeeper.jpg) 当用户需要在远程云平台上运行作业，要把作业启动的命令行传入 TrailKeeper 中，并在远程云平台上启动 TriakKeeper 进程。 注意，TrialKeeper 在远程平台中使用 RESTful 服务来和 TrainingService 进行通信，用户需要在本地机器启动一个 RESTful 服务来接受 TrialKeeper 的请求。 关于 RESTful 服务的源代码可以在 `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts` 文件夹中找到.
+NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the source code in `nni/tools/nni_trial_tool`. If users want to run trial jobs in cloud platform, this tool will be a fine choice to help keeping trial running in the platform.
+
+The running architecture of TrialKeeper is show as follow:
+
+![](../img/trialkeeper.jpg)
+
+When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. Notice that TrialKeeper use restful server to communicate with TrainingService, users should start a restful server in local machine to receive metrics sent from TrialKeeper. The source code about restful server could be found in `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`.
 
 ## 参考
 
-有关调试的进一步信息，可参考[这里](HowToDebug.md)。 如何参与贡献的指南，请参考[这里](Contributing.md)。
+For more information about how to debug, please [refer](HowToDebug.md).
+
+The guideline of how to contribute, please [refer](Contributing.md).
