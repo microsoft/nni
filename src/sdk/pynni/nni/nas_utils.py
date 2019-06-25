@@ -29,7 +29,9 @@ def classic_mode(
         fixed_inputs,
         optional_inputs,
         optional_input_size):
-    '''Execute the chosen function and inputs directly'''
+    '''Execute the chosen function and inputs directly.
+    In this mode, the trial code is only running the chosen subgraph (i.e., the chosen ops and inputs),
+    without touching the full model graph.'''
     if trial._params is None:
         trial.get_next_parameter()
     mutable_block = trial.get_current_parameter(mutable_id)
@@ -54,7 +56,7 @@ def enas_mode(
         tf):
     '''Build a tensorflow graph including all functions and optional_inputs using signal varaibles.
     So that we can use those signal variables to change the whole graph into different subgraphs
-    in the `reload_tensorflow_variables` function'''
+    in the `reload_tensorflow_variables` function.'''
     name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
     # store namespace
     if 'name_space' not in globals():
@@ -124,7 +126,8 @@ def oneshot_mode(
         optional_inputs = tf.nn.dropout(
             optional_inputs, rate=rate, noise_shape=noise_shape)
         optional_inputs = [optional_inputs[idx] for idx in range(inputs_num)]
-    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name]) for func_name, func in funcs.items()]
+    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name])
+                  for func_name, func in funcs.items()]
     layer_out = tf.add_n(layer_outs)
 
     return layer_out
