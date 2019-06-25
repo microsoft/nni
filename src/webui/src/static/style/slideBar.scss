@@ -99,22 +99,29 @@ $drowHoverBgColor: #e2e2e2;
         padding: 0;
         background-color: $drowBgColor;
         border-radius: 0;
-        .ant-dropdown-menu-item:hover{
+        .ant-dropdown-menu-item{
+            font-size: 16px;
+        }
+        .ant-dropdown-menu-item:hover, .ant-dropdown-menu-submenu:hover{
             background-color: $drowHoverBgColor;
         }
     }
 }
 
+.ant-dropdown-menu-sub{
+    padding: 0;
+    background-color: $drowBgColor;
+    border-radius: 0;
+    .ant-dropdown-menu-item:hover{
+        background-color: $drowHoverBgColor;
+    }
+}
+
+
 /* nav style*/
 .little{
     width: 100%;
     .menu{
-        .show{
-            display: block;
-        }
-        .hide{
-            display: none;
-        }
         .more{
             color: #fff;
             font-size: 24px;
@@ -127,4 +134,8 @@ $drowHoverBgColor: #e2e2e2;
     .logo{
         text-align: center;
     }
+}
+
+.menuModal{
+    width: 180px;
 }
