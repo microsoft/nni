@@ -379,21 +379,21 @@ nnictl 支持的命令：
 
 * **nnictl experiment delete**
   
-  * Description
+  * 说明
     
-    Delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+    删除一个或所有 Experiment，包括日志、结果、环境信息和缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment delete [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description          |
-  | --------------- | -------- | ------- | -------------------- |
-  | id              | False    |         | ID of the experiment |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明            |
+  | ----- | ----- | --- | ------------- |
+  | id    | False |     | Experiment ID |
 
 <a name="export"></a>
 
@@ -484,38 +484,38 @@ nnictl 支持的命令：
     ```
 
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理平台的信息`
 
 * **nnictl platform clean**
   
-  * Description
+  * 说明
     
-    It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+    用于清理目标平台上的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
   
-  * Note
+  * 注意
     
-    if the target platform is being used by other users, it may cause unexpected errors to others.
+    如果目标平台正在被别人使用，可能会造成他人的意外错误。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl platform clean [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                 |
-  | --------------- | -------- | ------- | ----------------------------------------------------------- |
-  | --config        | True     |         | the path of yaml config file used when create an experiment |
+  | 参数及缩写    | 是否必需 | 默认值 | 说明                            |
+  | -------- | ---- | --- | ----------------------------- |
+  | --config | True |     | 创建 Experiment 时的 YAML 配置文件路径。 |
 
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-* Description
+* 说明
   
-  Display the current context information.
+  显示当前上下文信息。
 
-* Usage
+* 用法
   
   ```bash
   nnictl config show
@@ -523,32 +523,32 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
 
 * **nnictl log stdout**
   
-  * Description
+  * 说明
     
-    Show the stdout log content.
+    显示 stdout 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stdout [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stdout            |
-  | --tail, -t      | False    |         | show tail lines of stdout            |
-  | --path, -p      | False    |         | show the path of stdout file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
+  | ---------- | ----- | --- | --------------------- |
+  | id         | False |     | 需要设置的 Experiment 的 ID |
+  | --head, -h | False |     | 显示 stdout 开始的若干行      |
+  | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
+  | --path, -p | False |     | 显示 stdout 文件的路径       |
   
-  * Example
+  * 示例
     
-    > Show the tail of stdout log content
+    > 显示 stdout 结尾的若干行
     
     ```bash
     nnictl log stdout [experiment_id] --tail [lines_number]
@@ -556,17 +556,17 @@ nnictl 支持的命令：
 
 * **nnictl log stderr**
   
-  * Description
+  * 说明
     
-    Show the stderr log content.
+    显示 stderr 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stderr [options]
     ```
   
-  * Options
+  * 选项
   
   | Name, shorthand | Required | Default | Description                          |
   | --------------- | -------- | ------- | ------------------------------------ |
