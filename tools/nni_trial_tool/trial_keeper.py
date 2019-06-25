@@ -224,7 +224,7 @@ if __name__ == '__main__':
         exit(1)
     check_version(args)
     try:
-        if is_multi_phase():
+        if NNI_PLATFORM == 'pai' and is_multi_phase():
             fetch_parameter_file(args)
         main_loop(args)
     except SystemExit as se:
