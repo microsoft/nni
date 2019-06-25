@@ -44,7 +44,7 @@ class GPTuner(Tuner):
 
     def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
                  selection_num_warm_up=100000, selection_num_starting_points=250):
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
 
         # utility function related
         self.utility = utility
@@ -134,7 +134,7 @@ class GPTuner(Tuner):
             if value is dict, it should have "default" key.
         """
         value = extract_scalar_reward(value)
-        if self.optimize_mode == OptimizeMode.Minimize.value:
+        if self.optimize_mode == OptimizeMode.Minimize:
             value = -value
 
         logger.info("Received trial result.")
