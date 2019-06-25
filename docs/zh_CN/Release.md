@@ -77,7 +77,7 @@
 
 ### Bug 修复
 
-* [Add shmMB config key for OpenPAI](https://github.com/Microsoft/nni/issues/842)
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/Microsoft/nni/issues/842)
 * 修复在指标为 dict 时，无法显示任何结果的 Bug。
 * 修复 hyperband 中浮点类型的计算问题
 * 修复 SMAC Tuner 中搜索空间转换的错误
@@ -105,26 +105,26 @@
 * 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
 * 在 OpenPAI 客户端中支持 Pylon 路径。
 
-## Release 0.5.1 - 1/31/2018
+## 发布 0.5.1 - 1/31/2018
 
-### Improvements
+### 改进
 
 * [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)可配置。
 * 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。
 
-### Documentation
+### 文档
 
 * 重新组织文档，新的主页位置：https://nni.readthedocs.io/zh/latest/
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
 * 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
 * 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。
 * 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
-## Release 0.5.0 - 01/14/2019
+## 发布 0.5.0 - 01/14/2019
 
-### Major Features
+### 主要功能
 
 #### 支持新的 Tuner 和 Assessor
 
@@ -147,7 +147,7 @@
   * 在 WEB 界面上显示 Trial 日志的链接。
 * 支持将最终结果显示为键值对。
 
-## Release 0.4.1 - 12/14/2018
+## 发布 0.4.1 - 12/14/2018
 
 ### 主要功能
 
@@ -175,14 +175,14 @@
 * 为指标数值图提供自动缩放的数轴
 * 改进 Annotation，支持在搜索空间中显示实际的选项
 
-### New examples
+### 新示例
 
 * [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
 * 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
-## Release 0.4 - 12/6/2018
+## 发布 0.4 - 12/6/2018
 
-### Major Features
+### 主要功能
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
@@ -199,7 +199,7 @@
   * 显示 Trial 的 hdfsLogPath
   * 下载 Experiment 参数
 
-### Others
+### 其它
 
 * 异步调度
 * 更新 Docker 文件，增加 pytorch 库
@@ -210,9 +210,9 @@
   * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。
   * 在 Trial keeper 的开始增加时间戳。
 
-## Release 0.3.0 - 11/2/2018
+## 发布 0.3.0 - 11/2/2018
 
-### NNICTL new features and updates
+### NNICTL 的新功能和更新
 
 * 支持同时运行多个 Experiment。
   
@@ -224,7 +224,7 @@
 
 * 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Nnictl.md) 查看完整帮助。
 
-### API new features and updates
+### API 的新功能和更新
 
 * <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
@@ -242,11 +242,11 @@
   * float
   * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
 
-### New tuner support
+### 支持新的 Tuner
 
 * **Batch Tuner（批处理调参器）** 会执行所有超参组合，可被用来批量提交 Trial 任务。
 
-### New examples
+### 新示例
 
 * 公开的 NNI Docker 映像：
   
@@ -258,13 +258,13 @@
 
 * 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
-### Others
+### 其它
 
 * 界面重构，参考[网页文档](WebUI.md)，了解如何使用新界面。
 * 持续集成：NNI 已切换到 Azure pipelines。
 * [0.3.0 的已知问题](https://github.com/Microsoft/nni/labels/nni030knownissues)。
 
-## Release 0.2.0 - 9/29/2018
+## 发布 0.2.0 - 9/29/2018
 
 ### 主要功能
 
@@ -282,11 +282,11 @@
 
 [0.2.0 的已知问题](https://github.com/Microsoft/nni/labels/nni020knownissues)。
 
-## Release 0.1.0 - 9/10/2018 (initial release)
+## 发布 0.1.0 - 9/10/2018 (首个版本)
 
 首次发布 Neural Network Intelligence (NNI)。
 
-### Major Features
+### 主要功能
 
 * 安装和部署 
   * 支持 pip 和源代码安装
@@ -304,6 +304,6 @@
 * 其它 
   * 支持简单的 GPU 任务调度
 
-### Known Issues
+### 已知问题
 
 [0.1.0 的已知问题](https://github.com/Microsoft/nni/labels/nni010knownissues)。
