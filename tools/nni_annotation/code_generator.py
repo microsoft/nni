@@ -322,6 +322,7 @@ class Transformer(ast.NodeTransformer):
         if string.startswith('@nni.get_next_parameter'):
             call_node = parse_annotation(string[1:]).value
             if call_node.args:
+                # it is used in enas mode as it needs to retrieve the next subgraph for training
                 call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
                 return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
 
@@ -377,6 +378,7 @@ def parse(code, nas_mode=None):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
+    # enas and oneshot modes for tensorflow need tensorflow module, so we import it here
     if nas_mode in ['enas_mode', 'oneshot_mode']:
         import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
         nodes.insert(last_future_import + 1, import_tf)

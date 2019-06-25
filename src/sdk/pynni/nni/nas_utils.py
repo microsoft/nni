@@ -54,9 +54,10 @@ def enas_mode(
         optional_inputs,
         optional_input_size,
         tf):
-    '''Build a tensorflow graph including all functions and optional_inputs using signal varaibles.
-    So that we can use those signal variables to change the whole graph into different subgraphs
-    in the `reload_tensorflow_variables` function.'''
+    '''For enas mode, we build the full model graph in trial but only run a subgraph。
+    This is implemented by masking inputs and branching ops.
+    Specifically, based on the received subgraph (through nni.get_next_parameter),
+    it can be known which inputs should be masked and which op should be executed.'''
     name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
     # store namespace
     if 'name_space' not in globals():
@@ -113,8 +114,10 @@ def oneshot_mode(
         optional_inputs,
         optional_input_size,
         tf):
-    '''Execute all the functions using all the optional_inputs, where a dropout will be implemented
-    to optional_inputs.'''
+    '''Similar to enas mode, oneshot mode also builds the full model graph.
+    The difference is that oneshot mode does not receive subgraph.
+    Instead, it uses dropout to randomly dropout inputs and ops.'''
+    # NNI requires to get_next_parameter before report a result. But the parameter will not be used in this mode
     if trial._params is None:
         trial.get_next_parameter()
     optional_inputs = list(optional_inputs.values())
