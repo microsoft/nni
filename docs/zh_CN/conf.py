@@ -193,4 +193,3 @@ def setup(app):
             }, True)
     app.add_transform(AutoStructify)
     app.add_stylesheet('../../../../_static/css/custom.css')
-    
