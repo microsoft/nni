@@ -35,7 +35,7 @@
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` is an object, for example:
+`RECEIVED_PARAMS` 是一个对象，如：
 
 `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](BuiltinAssessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给[Assessor](BuiltinAssessors.md)。 通常，`指标`是损失值或精度。
 
 * 返回配置的最终性能
 
@@ -53,43 +53,43 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](BuiltinTuner.md).
+`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](BuiltinTuner.md)。
 
 ### 第三步：启用 NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
 
 ```yaml
 useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
 
-*Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
+* 参考[这里](https://nni.readthedocs.io/en/latest/sdk_reference.html)，了解更多 NNI API (例如 `nni.get_sequence_id()`)。
 
 <a name="nni-annotation"></a>
 
 ## NNI Annotation
 
-An alternative to writing a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量
 * 指定变量的搜索空间范围
 * 标记哪个变量需要作为中间结果范围给 `Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
-Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
 ### 第一步：在代码中加入 Annotation
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:
+下面是加入了 Annotation 的 TensorFlow 代码片段，高亮的 4 行 Annotation 用于：
 
 1. 调优 batch\_size 和 dropout\_rate
 2. 每执行 100 步返回 test\_acc
 3. 最后返回 test\_acc 作为最终结果。
 
-What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -118,16 +118,16 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-**NOTE**:
+**注意**：
 
 * `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
-For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
+Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
 ### 第二步：启用 Annotation
 
-In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+在 YAML 配置文件中设置 *useAnnotation* 为 true 来启用 Annotation：
 
     useAnnotation: true
     
@@ -136,9 +136,9 @@ In the YAML configure file, you need to set *useAnnotation* to true to enable NN
 
 ### 本机模式
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
+每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
+如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
 
 ```bash
 #!/bin/bash
@@ -156,9 +156,9 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ### 其它模式
 
-When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni/experiments/$experiment_id$/trials/$trial_id$/` 。
 
-For more information, please refer to [HowToDebug](HowToDebug.md)
+详细信息，可参考[调试指南](HowToDebug.md)。
 
 <a name="more-examples"></a>
 
