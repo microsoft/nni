@@ -58,7 +58,7 @@ nnictl create --config ./config.yml
     
     在代码最前面，加上 `import nni` 来导入 NNI 包。
     
-    First, you should use `nni.get_next_parameter()` function to get your parameters given by NNI. Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
+    首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
     
     ```json
     {
@@ -70,7 +70,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    You may get a parameter dict like this:
+    就会获得像下面一样的 dict：
     
     ```python
     params = {
@@ -82,10 +82,10 @@ nnictl create --config ./config.yml
     }
     ```
     
-    Then you could use these variables to write your scikit-learn code.
+    就可以使用这些变量来编写 scikit-learn 的代码。
 
 * **第三步**
     
-    完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.
+    完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 需要将分数传入 Tuner 算法，并生成下一组参数，将结果回传给 NNI，并开始下一个 Trial 任务。
     
-    You just need to use `nni.report_final_result(score)` to communicate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intermediate result of your job, but you must report back your final result.
+    在运行完 scikit-learn 代码后，只需要使用 `nni.report_final_result(score)` 来与 NNI 通信即可。 或者在每一步中都有多个分值，可使用 `nni.report_intemediate_result(score)` 来将它们回传给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
