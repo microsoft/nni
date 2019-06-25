@@ -58,7 +58,7 @@ def create_ssh_sftp_client(host_ip, port, username, password):
     except Exception as exception:
         print_error('Create ssh client error %s\n' % exception)
 
-def remote_remove_directory(sftp, directory):
+def remove_remote_directory(sftp, directory):
     '''remove a directory in remote machine'''
     try:
         files = sftp.listdir(directory)
@@ -67,7 +67,7 @@ def remote_remove_directory(sftp, directory):
             try:
                 sftp.remove(filepath)
             except IOError:
-                remote_remove_directory(sftp, filepath)
+                remove_remote_directory(sftp, filepath)
         sftp.rmdir(directory)
     except IOError as err:
         print_error(err)

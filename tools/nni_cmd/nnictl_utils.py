@@ -37,7 +37,7 @@ from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMEN
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
 from .command_utils import check_output_command, kill_command
-from .ssh_utils import create_ssh_sftp_client, remote_remove_directory
+from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
 def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
@@ -400,7 +400,7 @@ def remote_clean(machine_list, experiment_id=None):
             remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments'])
         sftp = create_ssh_sftp_client(host, port, userName, passwd)
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
-        remote_remove_directory(sftp, remote_dir)
+        remove_remote_directory(sftp, remote_dir)
     
 def hdfs_clean(host, user_name, output_dir, experiment_id=None):
     '''clean up hdfs data'''
@@ -438,12 +438,6 @@ def experiment_clean(args):
             print_warning('please input Y or N!')
         else:
             break
-    #clean local data
-    home = str(Path.home())
-    local_dir = nni_config.get_config('experimentConfig').get('logDir')
-    if not local_dir:
-        local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
-    local_clean(local_dir)
     platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
     experiment_id = nni_config.get_config('experimentId')
     if platform == 'remote':
@@ -458,6 +452,12 @@ def experiment_clean(args):
         #TODO: support all platforms
         print_warning('platform {0} clean up not supported yet!'.format(platform))
         exit(0)
+    #clean local data
+    home = str(Path.home())
+    local_dir = nni_config.get_config('experimentConfig').get('logDir')
+    if not local_dir:
+        local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
+    local_clean(local_dir)
     experiment_config = Experiments()
     print_normal('removing metadata of experiment {0}'.format(args.id))
     experiment_config.remove_experiment(args.id)
