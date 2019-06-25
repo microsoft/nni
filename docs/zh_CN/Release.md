@@ -1,41 +1,41 @@
 # 更改日志
 
-## Release 0.8 - 6/4/2019
+## 发布 0.8 - 6/4/2019
 
 ### 主要功能
 
-* Support NNI on Windows for OpenPAI/Remote mode 
+* 在 Windows 上支持 NNI 的 OpenPAI 和远程模式 
   * NNI 可在 Windows 上使用 OpenPAI 模式
-  * NNI running on windows for OpenPAI mode
-* Advanced features for using GPU 
+  * NNI 可在 Windows 上使用 OpenPAI 模式
+* GPU 的高级功能 
   * 在本机或远程模式上，可在同一个 GPU 上运行多个 Trial。
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
-* Kubeflow v1beta2 operator 
+* 支持 Kubeflow v1beta2 操作符 
   * 支持 Kubeflow TFJob/PyTorchJob v1beta2
 * [通过 NAS 编程接口](./GeneralNasInterfaces.md) 
   * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
   * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
-  * Tutorial of NAS programming interface, example of NAS on MNIST, customized random tuner for NAS
-* Support resume tuner/advisor's state for experiment resume
-* For experiment resume, tuner/advisor will be resumed by replaying finished trial data
-* Web Portal 
-  * Improve the design of copying trial's parameters
-  * Support 'randint' type in hyper-parameter graph
-  * Use should ComponentUpdate to avoid unnecessary render
+  * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
+* 支持在恢复 Experiment 时，同时恢复 Tuner 和 Advisor 的状态
+* 在恢复 Experiment 时，Tuner 和 Advisor 会导入已完成的 Trial 的数据。
+* Web 界面 
+  * 改进拷贝 Trial 参数的设计
+  * 在 hyper-parameter 图中支持 'randint' 类型
+  * 使用 ComponentUpdate 来避免不必要的刷新
 
-### Bug fix and other changes
+### Bug 修复和其它更新
 
-* Bug fix that `nnictl update` has inconsistent command styles
-* Support import data for SMAC tuner
-* Bug fix that experiment state transition from ERROR back to RUNNING
-* Fix bug of table entries
-* Nested search space refinement
-* Refine 'randint' type and support lower bound
+* 修复 `nnictl update` 不一致的命令行风格
+* SMAC Tuner 支持导入数据
+* 支持 Experiment 状态从 ERROR 回到 RUNNING
+* 修复表格的 Bug
+* 优化嵌套搜索空间
+* 优化 'randint' 类型，并支持下限
 * [比较不同超参搜索调优算法](./CommunitySharings/HpoComparision.md)
 * [NAS 算法的对比](./CommunitySharings/NasComparision.md)
 * [Recommenders 上的实践](./CommunitySharings/NniPracticeSharing/RecommendersSvd.md)
 
-## Release 0.7 - 4/29/2018
+## 发布 0.7 - 4/29/2018
 
 ### 主要功能
 
@@ -60,11 +60,11 @@
 
 * 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
 * nnictl --version 不能在 make dev-install 下使用
-* All trail jobs status stays on 'waiting' for long time on OpenPAI platform
+* OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
 
-## Release 0.6 - 4/2/2019
+## 发布 0.6 - 4/2/2019
 
-### Major Features
+### 主要功能
 
 * [版本检查](https://github.com/Microsoft/nni/blob/master/docs/zh_CN/PaiMode.md#version-check) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
@@ -75,7 +75,7 @@
 * 使日志集合功能可配置
 * 为所有 Trial 增加中间结果的视图
 
-### Bug fix
+### Bug 修复
 
 * [Add shmMB config key for OpenPAI](https://github.com/Microsoft/nni/issues/842)
 * 修复在指标为 dict 时，无法显示任何结果的 Bug。
@@ -84,19 +84,19 @@
 * 修复 Web 界面中解析 Experiment 的错误格式
 * 修复 Metis Tuner 冷启动时的错误
 
-## Release 0.5.2 - 3/4/2019
+## 发布 0.5.2 - 3/4/2019
 
-### Improvements
+### 改进
 
 * 提升 Curve fitting Assessor 的性能。
 
-### Documentation
+### 文档
 
 * 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
 * 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
 * Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
 * 修复了在某些极端条件下，不能正确存储任务的取消状态。
 * 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
