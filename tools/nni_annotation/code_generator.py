@@ -26,7 +26,7 @@ import astor
 
 def parse_annotation_mutable_layers(code, lineno, nas_mode):
     """Parse the string of mutable layers in annotation.
-    Return a list of AST Expr nodes and NAS mode
+    Return a list of AST Expr nodes
     code: annotation string (excluding '@')
     nas_mode: the mode of NAS
     """
