@@ -106,7 +106,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.max_budget = max_budget
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
 
         self.n = math.ceil((s_max + 1) * eta**s / (s + 1) - _epsilon)
         self.r = max_budget / eta**s
