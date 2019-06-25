@@ -216,7 +216,7 @@ class MetisTuner(Tuner):
             if value is dict, it should have "default" key.
         """
         value = extract_scalar_reward(value)
-        if self.optimize_mode == OptimizeMode.Maximize.value:
+        if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
         logger.info("Received trial result.")
