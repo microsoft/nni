@@ -29,7 +29,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
 
     public _isMounted = false;
     public divMenu: HTMLDivElement | null;
-    public countOfMenu: number = 0;
     public selectHTML: Select | null;
 
     constructor(props: SliderProps) {
@@ -208,7 +207,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     menu = () => {
-        this.countOfMenu = 0;
         return (
             <Menu onClick={this.handleMenuClick}>
                 <Menu.Item key="1">Experiment Parameters</Menu.Item>
@@ -223,7 +221,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         const { version } = this.state;
         const feedBackLink = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
-            <Menu onClick={this.handleMenuClick} mode="inline">
+            <Menu onClick={this.handleMenuClick} className="menuModal">
                 <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
                 <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
                 <Menu.Item key="fresh">
@@ -248,18 +246,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 </SubMenu>
             </Menu>
         );
-    }
-
-    // nav bar <1299
-    showMenu = () => {
-        if (this.divMenu !== null) {
-            this.countOfMenu = this.countOfMenu + 1;
-            if (this.countOfMenu % 2 === 0) {
-                this.divMenu.setAttribute('class', 'hide');
-            } else {
-                this.divMenu.setAttribute('class', 'show');
-            }
-        }
     }
 
     select = () => {
@@ -322,7 +308,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             </li>
                             <li className="feedback">
                                 <span className="fresh" onClick={this.fresh}>
-                                    <Icon type="sync"/><span>Fresh</span>
+                                    <Icon type="sync" /><span>Fresh</span>
                                 </span>
                                 <Dropdown
                                     className="dropdown"
@@ -350,8 +336,9 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 <MediaQuery query="(max-width: 1299px)">
                     <Row className="little">
                         <Col span={6} className="menu">
-                            <Icon type="unordered-list" className="more" onClick={this.showMenu} />
-                            <div ref={div => this.divMenu = div} className="hide">{this.navigationBar()}</div>
+                            <Dropdown overlay={this.navigationBar()} trigger={['click']}>
+                                <Icon type="unordered-list" className="more" />
+                            </Dropdown>
                         </Col>
                         <Col span={10} className="logo">
                             <Link to={'/oview'}>
