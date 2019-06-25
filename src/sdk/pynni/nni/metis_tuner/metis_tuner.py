@@ -253,7 +253,7 @@ class MetisTuner(Tuner):
                    minimize_starting_points=None, minimize_constraints_fun=None):
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            warnings.simplefilter("ignore", category=ImportWarning)
 
         next_candidate = None
         candidates = []
