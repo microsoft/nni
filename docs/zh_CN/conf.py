@@ -192,3 +192,5 @@ def setup(app):
         'enable_auto_toc_tree': False,
             }, True)
     app.add_transform(AutoStructify)
+    app.add_stylesheet('../../../../_static/css/custom.css')
+    
