@@ -115,10 +115,7 @@ def oneshot_mode(
         optional_inputs = tf.nn.dropout(optional_inputs, rate=rate, noise_shape=noise_shape)
         optional_inputs = [optional_inputs[idx] for idx in range(inputs_num)]
     layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name]) for func_name, func in funcs.items()]
-    rate = 0.01 ** (1 / len(layer_outs))
-    noise_shape = [len(layer_outs)] + [1] * len(layer_outs[0].get_shape())
-    layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
-    layer_out = tf.reduce_sum(layer_outs, axis=0)
+    layer_out = tf.add_n(layer_outs)
 
     return layer_out
 
