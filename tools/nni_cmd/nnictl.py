@@ -123,6 +123,7 @@ def parse_args():
     parser_experiment_list.set_defaults(func=experiment_list)
     parser_experiment_clean = parser_experiment_subparsers.add_parser('delete', help='clean up the experiment data')
     parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
     parser_experiment_clean.set_defaults(func=experiment_clean)
 
     #parse experiment command
