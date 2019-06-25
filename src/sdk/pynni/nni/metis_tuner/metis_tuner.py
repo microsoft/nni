@@ -91,7 +91,7 @@ class MetisTuner(Tuner):
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.key_order = []
         self.cold_start_num = cold_start_num
         self.selection_num_starting_points = selection_num_starting_points
