@@ -128,17 +128,17 @@ machineList:
   
   - 说明
     
-    **authorName** is the name of the author who create the experiment.
+    **authorName** 是创建 Experiment 的作者。
     
-    TBD: add default value
+    待定: 增加默认值
 
 - **experimentName**
   
   - 说明
     
-    **experimentName** is the name of the experiment created.
+    **experimentName** 是创建的 Experiment 的名称。
     
-    TBD: add default value
+    待定: 增加默认值
 
 - **trialConcurrency**
   
