@@ -353,8 +353,10 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const indexarr: Array<number> = [];
         Object.keys(sourcePoint).map(item => {
             const items = sourcePoint[item];
-            accarr.push(items.acc.default);
-            indexarr.push(items.sequenceId);
+            if (items.acc !== undefined) {
+                accarr.push(items.acc.default);
+                indexarr.push(items.sequenceId);
+            }
         });
         const accOption = {
             // support max show 0.0000000
