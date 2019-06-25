@@ -58,6 +58,10 @@ export abstract class ClusterJobRestServer extends RestServer {
         this.port = basePort + 1;
     }
 
+    get apiRootUrl(): string {
+        return this.API_ROOT_URL;
+    }
+
     public get clusterRestServerPort(): number {
         if (this.port === undefined) {
             throw new Error('PAI Rest server port is undefined');
@@ -87,7 +91,7 @@ export abstract class ClusterJobRestServer extends RestServer {
     protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
 
     // tslint:disable: no-unsafe-any no-any
-    private createRestHandler() : Router {
+    protected createRestHandler() : Router {
         const router: Router = Router();
 
         router.use((req: Request, res: Response, next: any) => {

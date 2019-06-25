@@ -172,7 +172,7 @@ class MetisTuner(Tuner):
         return output
 
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         metis will first random generate some parameters.
@@ -203,7 +203,7 @@ class MetisTuner(Tuner):
         return results
 
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Tuner receive result from trial.
 
         Parameters
