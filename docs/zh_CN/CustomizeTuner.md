@@ -33,7 +33,7 @@ class CustomizedTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
     '''
-    Receive trial's final result.
+    接收 Trial 的最终结果。
     parameter_id: int
     parameters: 'generate_parameters()' 所创建的对象
     value: Trial 的最终指标结果
@@ -43,15 +43,15 @@ class CustomizedTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
     '''
-    Returns a set of trial (hyper-)parameters, as a serializable object
+    返回 Trial 的超参组合的序列化对象
     parameter_id: int
     '''
-    # your code implements here.
+    # 代码实现位置
     return your_parameters
     ...
 ```
 
-`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。 If `multiPhase` is set to `true` in the experiment configuration file, an additional `trial_job_id` parameter is passed to `receive_trial_result` and `generate_parameters` through the `**kwargs` parameter.
+`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。 如果在 Experiment 配置文件里 `multiPhase` 为 `true`， 会有一个附加的 `trial_job_id` 在 `**kwargs` 参数中返回给 `receive_trial_result` 和 `generate_parameters`。
 
 `generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 SDK 会将 json 对象解包给 Trial 进程。因此，Trial 进程会收到来自 Tuner 的完全相同的 `your_parameters`。
 
@@ -60,10 +60,10 @@ class CustomizedTuner(Tuner):
 ```python
 def generate_parameters(self, parameter_id, **kwargs):
     '''
-    Returns a set of trial (hyper-)parameters, as a serializable object
+    返回 Trial 的超参组合的序列化对象
     parameter_id: int
     '''
-    # your code implements here.
+    # 代码实现位置
     return {"dropout": 0.3, "learning_rate": 0.4}
 
 ```
