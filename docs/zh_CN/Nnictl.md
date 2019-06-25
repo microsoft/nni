@@ -568,12 +568,12 @@ nnictl 支持的命令：
   
   * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stderr            |
-  | --tail, -t      | False    |         | show tail lines of stderr            |
-  | --path, -p      | False    |         | show the path of stderr file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
+  | ---------- | ----- | --- | --------------------- |
+  | id         | False |     | 需要设置的 Experiment 的 ID |
+  | --head, -h | False |     | 显示 stderr 开始的若干行      |
+  | --tail, -t | False |     | 显示 stderr 结尾的若干行      |
+  | --path, -p | False |     | 显示 stderr 文件的路径       |
 
 * **nnictl log trial**
   
