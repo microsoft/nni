@@ -126,7 +126,7 @@ else:
             fixed_inputs,
             optional_inputs,
             optional_input_size,
-            mode='general',
+            mode='classic_mode',
             tf=None):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
