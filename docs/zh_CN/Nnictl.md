@@ -577,36 +577,36 @@ nnictl 支持的命令：
 
 * **nnictl log trial**
   
-  * Description
+  * 说明
     
-    Show trial log path.
+    显示 Trial 日志的路径。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log trial [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                              |
-  | --------------- | -------- | ------- | ------------------------------------------------------------------------ |
-  | id              | False    |         | Experiment ID of the trial                                               |
-  | --trial_id, -T  | False    |         | ID of the trial to be found the log path, required when id is not empty. |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                                     |
+  | -------------- | ----- | --- | -------------------------------------- |
+  | id             | False |     | Trial 的 Experiment ID                  |
+  | --trial_id, -T | False |     | 所需要找日志路径的 Trial 的 ID，当 id 不为空时，此值也为必需。 |
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理 Web 界面`
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理 TensorBoard`
 
 * **nnictl tensorboard start**
   
   * 说明
     
-    Start the tensorboard process.
+    启动 tensorboard 进程。
   
   * 用法
     
@@ -616,25 +616,25 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写          | 是否必需  | 默认值  | 说明                                   |
-  | -------------- | ----- | ---- | ------------------------------------ |
-  | id             | False |      | ID of the experiment you want to set |
-  | --trial_id, -T | False |      | ID of the trial                      |
-  | --port         | False | 6006 | The port of the tensorboard process  |
+  | 参数及缩写          | 是否必需  | 默认值  | 说明                    |
+  | -------------- | ----- | ---- | --------------------- |
+  | id             | False |      | 需要设置的 Experiment 的 id |
+  | --trial_id, -T | False |      | Trial 的 id            |
+  | --port         | False | 6006 | Tensorboard 进程的端口     |
   
-  * Detail
+  * 详细说明
     
-    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.
-    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.
-    3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-    4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-    5. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.
+    1. NNICTL 当前仅支持本机和远程平台的 Tensorboard，其它平台暂不支持。
+    2. 如果要使用 Tensorboard，需要将 Tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。
+    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 Tensorboard 进程。
+    4. 在 remote 模式中，nnictl 会创建一个 SSH 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 Tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
+    5. 如果只有一个 Trial 任务，不需要设置 Trial ID。 如果有多个运行的 Trial 任务，需要设置 Trial ID，或使用 [nnictl tensorboard start --trial_id all] 来将 --logdir 映射到所有 Trial 的路径。
 
 * **nnictl tensorboard stop**
   
   * 说明
     
-    Stop all of the tensorboard process.
+    停止所有 Tensorboard 进程。
   
   * 用法
     
@@ -642,21 +642,21 @@ nnictl 支持的命令：
     nnictl tensorboard stop
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 ID |
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage package`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理包`
 
 * **nnictl package install**
   
   * 说明
     
-    Install the packages needed in nni experiments.
+    安装 NNI 实验所需要的包。
   
   * 用法
     
@@ -664,15 +664,15 @@ nnictl 支持的命令：
     nnictl package install [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                         |
-  | --------------- | -------- | ------- | ----------------------------------- |
-  | --name          | True     |         | The name of package to be installed |
+  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
+  | ------ | ---- | --- | ------- |
+  | --name | True |     | 要安装的包名称 |
   
-  * Example
+  * 示例
     
-    > Install the packages needed in tuner SMAC
+    > 安装 SMAC Tuner 所需要的包
     
     ```bash
     nnictl package install --name=SMAC
@@ -680,11 +680,11 @@ nnictl 支持的命令：
 
 * **nnictl package show**
   
-  * Description
+  * 说明
     
-    List the packages supported.
+    列出支持的安装包
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl package show
@@ -692,15 +692,15 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
+![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
 
 * **nnictl --version**
   
-  * Description
+  * 说明
     
-    Describe the current version of NNI installed.
+    显示当前安装的 NNI 的版本。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl --version
