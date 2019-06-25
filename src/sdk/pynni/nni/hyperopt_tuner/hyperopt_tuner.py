@@ -248,7 +248,7 @@ class HyperoptTuner(Tuner):
                                 verbose=0)
         self.rval.catch_eval_exceptions = False
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """
         Returns a set of trial (hyper-)parameters, as a serializable object.
 
@@ -269,7 +269,7 @@ class HyperoptTuner(Tuner):
         params = split_index(total_params)
         return params
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
         Record an observation of the objective function
 

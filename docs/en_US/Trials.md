@@ -33,7 +33,9 @@ Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search s
 ```python
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
+
 `RECEIVED_PARAMS` is an object, for example:
+
 `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 - Report metric data periodically (optional)
@@ -41,6 +43,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 ```python
 nni.report_intermediate_result(metrics)
 ```
+
 `metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](BuiltinAssessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
 
 - Report performance of the configuration
@@ -62,7 +65,6 @@ searchSpacePath: /path/to/your/search_space.json
 You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
 
 *Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
-
 
 <a name="nni-annotation"></a>
 ## NNI Python Annotation
@@ -125,7 +127,6 @@ In the YAML configure file, you need to set *useAnnotation* to true to enable NN
 useAnnotation: true
 ```
 
-
 ## Where are my trials?
 
 ### Local Mode
@@ -133,7 +134,8 @@ useAnnotation: true
 In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
 If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
-```shell
+
+```bash
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local
@@ -149,7 +151,7 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ### Other Modes
 
-When runing trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
 For more information, please refer to [HowToDebug](HowToDebug.md)
 

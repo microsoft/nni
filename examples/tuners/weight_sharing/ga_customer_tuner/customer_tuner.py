@@ -112,7 +112,7 @@ class CustomerTuner(Tuner):
             population.append(Individual(indiv_id=self.generate_new_id(), graph_cfg=graph_tmp, result=None))
         return population
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Returns a set of trial graph config, as a serializable object.
         An example configuration:
         ```json
@@ -196,7 +196,7 @@ class CustomerTuner(Tuner):
         logger.debug("trial {} ready".format(indiv.indiv_id))
         return param_json
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         '''
         Record an observation of the objective function
         parameter_id : int

@@ -151,7 +151,7 @@ class SMACTuner(Tuner):
         else:
             self.logger.warning('update search space is not supported.')
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """receive_trial_result
 
         Parameters
@@ -209,7 +209,7 @@ class SMACTuner(Tuner):
                 converted_dict[key] = value
         return converted_dict
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """generate one instance of hyperparameters
 
         Parameters
@@ -232,7 +232,7 @@ class SMACTuner(Tuner):
                 self.total_data[parameter_id] = challenger
                 return self.convert_loguniform_categorical(challenger.get_dictionary())
 
-    def generate_multiple_parameters(self, parameter_id_list):
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """generate mutiple instances of hyperparameters
 
         Parameters

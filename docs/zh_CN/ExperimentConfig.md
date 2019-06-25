@@ -2,10 +2,10 @@
 
 创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 YAML 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-- [Experiment（实验）配置参考](#experiment-config-reference) 
-  - [模板](#template)
-  - [说明](#configuration-spec)
-  - [样例](#examples)
+- [Experiment（实验）配置参考](#Experiment-config-reference) 
+  - [模板](#Template)
+  - [说明](#Configuration-spec)
+  - [样例](#Examples)
 
 <a name="Template"></a>
 
@@ -128,13 +128,17 @@ machineList:
   
   - 说明
     
-    **authorName** 是创建 Experiment 的作者。 待定: 增加默认值
+    **authorName** 是创建 Experiment 的作者。
+    
+    待定: 增加默认值
 
 - **experimentName**
   
   - 说明
     
-    **experimentName** 是创建的 Experiment 的名称。 待定: 增加默认值
+    **experimentName** 是创建的 Experiment 的名称。
+    
+    待定: 增加默认值
 
 - **trialConcurrency**
   

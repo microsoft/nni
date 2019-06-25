@@ -35,7 +35,9 @@
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` 是一个对象，如：`{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
+`RECEIVED_PARAMS` 是一个对象，如：
+
+`{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 * 定期返回指标数据（可选）
 
@@ -138,7 +140,7 @@ Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
 如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
 
-```shell
+```bash
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local
