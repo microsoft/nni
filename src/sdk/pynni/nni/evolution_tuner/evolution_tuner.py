@@ -188,7 +188,7 @@ class EvolutionTuner(Tuner):
                 self.searchspace_json, is_rand, self.random_state)
             self.population.append(Individual(config=config))
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Returns a dict of trial (hyper-)parameters, as a serializable object.
 
         Parameters
@@ -232,7 +232,7 @@ class EvolutionTuner(Tuner):
         config = split_index(total_config)
         return config
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         '''Record the result from a trial
 
         Parameters

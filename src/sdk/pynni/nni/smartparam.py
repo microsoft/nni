@@ -23,6 +23,7 @@ import random
 
 from .env_vars import trial_env_vars
 from . import trial
+from .nas_utils import classic_mode, enas_mode, oneshot_mode
 
 
 __all__ = [
@@ -124,7 +125,9 @@ else:
             funcs_args,
             fixed_inputs,
             optional_inputs,
-            optional_input_size):
+            optional_input_size,
+            mode='classic_mode',
+            tf=None):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
@@ -144,14 +147,38 @@ else:
         fixed_inputs:
         optional_inputs: dict of optional inputs
         optional_input_size: number of candidate inputs to be chosen
+        tf: tensorflow module
         '''
-        mutable_block = _get_param(mutable_id)
-        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
-        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
-        real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
-        layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
-        
-        return layer_out
+        if mode == 'classic_mode':
+            return classic_mode(mutable_id,
+                            mutable_layer_id,
+                            funcs,
+                            funcs_args,
+                            fixed_inputs,
+                            optional_inputs,
+                            optional_input_size)
+        elif mode == 'enas_mode':
+            assert tf is not None, 'Internal Error: Tensorflow should not be None in enas_mode'
+            return enas_mode(mutable_id,
+                            mutable_layer_id,
+                            funcs,
+                            funcs_args,
+                            fixed_inputs,
+                            optional_inputs,
+                            optional_input_size,
+                            tf)
+        elif mode == 'oneshot_mode':
+            assert tf is not None, 'Internal Error: Tensorflow should not be None in oneshot_mode'
+            return oneshot_mode(mutable_id,
+                            mutable_layer_id,
+                            funcs,
+                            funcs_args,
+                            fixed_inputs,
+                            optional_inputs,
+                            optional_input_size,
+                            tf)
+        else:
+            raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):
         if trial._params is None:

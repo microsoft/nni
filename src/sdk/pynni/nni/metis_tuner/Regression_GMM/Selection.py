@@ -49,15 +49,16 @@ def selection_r(x_bounds,
                 num_starting_points=100,
                 minimize_constraints_fun=None):
     '''
-    Call selection
+    Select using different types.
     '''
-    minimize_starting_points = [lib_data.rand(x_bounds, x_types)\
-                                    for i in range(0, num_starting_points)]
+    minimize_starting_points = clusteringmodel_gmm_good.sample(n_samples=num_starting_points)
+    
     outputs = selection(x_bounds, x_types,
                         clusteringmodel_gmm_good,
                         clusteringmodel_gmm_bad,
-                        minimize_starting_points,
+                        minimize_starting_points[0],
                         minimize_constraints_fun)
+      
     return outputs
 
 def selection(x_bounds,

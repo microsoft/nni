@@ -30,14 +30,14 @@ _logger = logging.getLogger(__name__)
 class Tuner(Recoverable):
     # pylint: disable=no-self-use,unused-argument
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Returns a set of trial (hyper-)parameters, as a serializable object.
         User code must override either this function or 'generate_multiple_parameters()'.
         parameter_id: int
         """
         raise NotImplementedError('Tuner: generate_parameters not implemented')
 
-    def generate_multiple_parameters(self, parameter_id_list):
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
         Call 'generate_parameters()' by 'count' times by default.
         User code must override either this function or 'generate_parameters()'.
@@ -49,13 +49,13 @@ class Tuner(Recoverable):
         for parameter_id in parameter_id_list:
             try:
                 _logger.debug("generating param for {}".format(parameter_id))
-                res = self.generate_parameters(parameter_id)
+                res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
                 return result
             result.append(res)
         return result
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Invoked when a trial reports its final result. Must override.
         parameter_id: int
         parameters: object created by 'generate_parameters()'
@@ -63,7 +63,7 @@ class Tuner(Recoverable):
         """
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
-    def receive_customized_trial_result(self, parameter_id, parameters, value):
+    def receive_customized_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Invoked when a trial added by WebUI reports its final result. Do nothing by default.
         parameter_id: int
         parameters: object created by user
@@ -71,7 +71,7 @@ class Tuner(Recoverable):
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
 
-    def trial_end(self, parameter_id, success):
+    def trial_end(self, parameter_id, success, **kwargs):
         """Invoked when a trial is completed or terminated. Do nothing by default.
         parameter_id: int
         success: True if the trial successfully completed; False if failed or terminated
