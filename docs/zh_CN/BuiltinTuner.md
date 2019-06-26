@@ -373,21 +373,21 @@ advisor:
 
 **建议场景**
 
-作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 由于需要反转 Gram 矩阵，GP Tuner 的计算复杂度以 *O(N^3)* 的速度增长，因此不适合于需要大量 Trial 的情形。 [Detailed Description](./GPTuner.md)
+作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 由于需要反转 Gram 矩阵，GP Tuner 的计算复杂度以 *O(N^3)* 的速度增长，因此不适合于需要大量 Trial 的情形。 [详细说明](./GPTuner.md)
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The kind of utility function(acquisition function). 'ei', 'ucb' and 'poi' corresponds to 'Expected Improvement', 'Upper Confidence Bound' and 'Probability of Improvement' respectively. 
-* **kappa** (*float, optional, default = 5*) - Used by utility function 'ucb'. The bigger `kappa` is, the more the tuner will be exploratory.
-* **xi** (*float, optional, default = 0*) - Used by utility function 'ei' and 'poi'. The bigger `xi` is, the more the tuner will be exploratory.
-* **nu** (*float, optional, default = 2.5*) - Used to specify Matern kernel. The smaller nu, the less smooth the approximated function is.
-* **alpha** (*float, optional, default = 1e-6*) - Used to specify Gaussian Process Regressor. Larger values correspond to increased noise level in the observations.
-* **cold_start_num** (*int, optional, default = 10*) - Number of random exploration to perform before Gaussian Process. Random exploration can help by diversifying the exploration space.
-* **selection_num_warm_up** (*int, optional, default = 1e5*) - Number of random points to evaluate for getting the point which maximizes the acquisition function.
-* **selection_num_starting_points** (*int, optional, default = 250*) - Number of times to run L-BFGS-B from a random starting point after the warmup.
+* **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。 
+* **kappa** (*float, 可选, 默认值为 5*) - 用于 'ucb' 函数。 `kappa` 越大，Tuner 的探索性越高。
+* **xi** (*float, 可选, 默认值为 0*) - 用于 'ei' 和 'poi' 函数。 `xi` 越大，Tuner 的探索性越高。
+* **nu** (*float, 可选, 默认为 2.5*) - 用于指定 Matern 核。 nu 越小，近似函数的平滑度越低。
+* **alpha** (*float, 可选, 默认值为 1e-6*) - 用于高斯过程回归器。 值越大，表示观察中的噪声水平越高。
+* **cold_start_num** (*int, 可选, 默认值为 10*) - 在高斯过程前执行随机探索的数量。 随机探索可帮助提高探索空间的广泛性。
+* **selection_num_warm_up** (*int, 可选, 默认为 1e5*) - 用于获得最大采集函数而评估的随机点数量。
+* **selection_num_starting_points** (*int, 可选, 默认为 250*) - 预热后，从随机七十点运行 L-BFGS-B 的次数。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
