@@ -400,8 +400,9 @@ tuner:
   builtinTunerName: GPTuner
   classArgs:
     optimize_mode: maximize
-    kappa: 5
-    xi: 0
+    utility: 'ei'
+    kappa: 5.0
+    xi: 0.0
     nu: 2.5
     alpha: 1e-6
     cold_start_num: 10
