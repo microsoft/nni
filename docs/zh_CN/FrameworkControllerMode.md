@@ -105,7 +105,7 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
   * cpuNum: 容器中要使用的 CPU 数量。
   * memoryMB: 容器的内存限制。
   * image: 用来创建 pod，并运行程序的 Docker 映像。
-  * frameworkAttemptCompletionPolicy: 运行框架的策略，参考[用户手册](https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy)了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 还再运行， 完成策略用来停止 ps。
+  * frameworkAttemptCompletionPolicy: 运行框架的策略，参考[用户手册](https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy)了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 还在运行，要通过完成策略来停止 ps。
 
 ## 如何运行示例
 
