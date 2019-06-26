@@ -504,7 +504,7 @@ machineList:
   
   - **keyVault**
     
-    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2
     
     - **vaultName**
       
