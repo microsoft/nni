@@ -107,7 +107,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Naive Evolution`
+![](https://placehold.it/15/1589F0/000000?text=+) `Naïve Evolution`
 
 > Built-in Tuner Name: **Evolution**
 
