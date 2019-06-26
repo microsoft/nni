@@ -1,18 +1,31 @@
 # 内置 Tuner
 
-NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
+NNI provides state-of-the-art tuning algorithm as our built-in tuners and makes them easy to use. Below is the brief summary of NNI currently built-in tuners:
 
 注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](./CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
 
 当前支持的 Tuner：
 
-|Tuner|Brief Introduction of Algorithm| |\---|\---| |[**TPE**](#TPE)|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)| |[**Random Search**](#Random)|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters. [Reference Paper](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf)| |[**Anneal**](#Anneal)|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.| |[**Naive Evolution**](#Evolution)|Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easy to expand new features. [Reference paper](https://arxiv.org/pdf/1703.01041.pdf)| |[**SMAC**](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 Github repo. Notice, SMAC need to be installed by `nnictl package` command. [Reference Paper,](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) [Github Repo](https://github.com/automl/SMAC3)| |[**Batch tuner**](#Batch)|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.| |[**Grid Search**](#GridSearch)|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.| |[**Hyperband**](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of trial budget to find out promising one, then further training those promising ones to select several more promising one.[Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)| |[**Network Morphism**](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)| |[**Metis Tuner**](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)| |[**BOHB**](#BOHB)|BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Byesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)| |[**GP Tuner**](#GPTuner)|Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. [Reference Paper, ](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)[Github Repo](https://github.com/fmfn/BayesianOptimization)| <br />
+| Tuner                                    | Brief Introduction of Algorithm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [**TPE**](#TPE)                          | The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)                                                                                                                                 |
+| [**Random Search**](#Random)             | In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters. [Reference Paper](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf)                                                                                                                                                                                                        |
+| [**Anneal**](#Anneal)                    | This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.                                                                                                                                                                                                                                             |
+| [**Naive Evolution**](#Evolution)        | Naïve Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naïve Evolution requires many trials to works, but it's very simple and easy to expand new features. [Reference paper](https://arxiv.org/pdf/1703.01041.pdf)                                                                                           |
+| [**SMAC**](#SMAC)                        | SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC need to be installed by `nnictl package` command. [Reference Paper,](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) [Github Repo](https://github.com/automl/SMAC3)                                 |
+| [**Batch tuner**](#Batch)                | Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.                                                                                                                                                                                                                                                                                            |
+| [**Grid Search**](#GridSearch)           | Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.                                                                                                               |
+| [**Hyperband**](#Hyperband)              | Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of trial budget to find out promising one, then further training those promising ones to select several more promising one.[Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)                                                                                                                          |
+| [**Network Morphism**](#NetworkMorphism) | Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)                                                                     |
+| [**Metis Tuner**](#MetisTuner)           | Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/) |
+| [**BOHB**](#BOHB)                        | BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Byesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)                                                                                                                        |
+| [**GP Tuner**](#GPTuner)                 | Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf), [Github Repo](https://github.com/fmfn/BayesianOptimization)                                                                                                                                                                                                                                                              |
 
 ## 用法
 
-要使用 NNI 内置的 Tuner，需要在 `config.yml` 文件中添加 **builtinTunerName** 和 **classArgs**。 这一节会介绍推荐的场景、参数等详细用法以及样例。
+Use built-in tuner provided by NNI SDK requires to declare the **builtinTunerName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements and example for each tuner.
 
-注意：参考样例中的格式来创建新的 `config.yml` 文件。 一些内置的 Tuner 还需要通过 `nnictl package` 命令先安装，如 SMAC。
+Note: Please follow the format when you write your `config.yml` file. Some builtin tuner need to be installed by `nnictl package`, like SMAC.
 
 <a name="TPE"></a>
 
@@ -20,15 +33,15 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 > 名称：**TPE**
 
-**建议场景**
+**Suggested scenario**
 
-TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况下都能得到较好的结果。 特别是在计算资源有限，只能运行少量 Trial 的情况。 大量的实验表明，TPE 的性能远远优于随机搜索。 [详细说明](./HyperoptTuner.md)
+TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search. [Detailed Description](./HyperoptTuner.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**示例**
+**Usage example:**
 
 ```yaml
 # config.yml
@@ -46,15 +59,15 @@ tuner:
 
 > 名称：**Random**
 
-**建议场景**
+**Suggested scenario**
 
-在每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 或者需要均匀的探索搜索空间。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
+Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm. [Detailed Description](./HyperoptTuner.md)
 
-**参数**
+**Requirement of classArg:**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -70,15 +83,15 @@ tuner:
 
 > 名称：**Anneal**
 
-**建议场景**
+**Suggested scenario**
 
-当每个 Trial 的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。 [详细说明](./HyperoptTuner.md)
+Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -96,11 +109,11 @@ tuner:
 
 > 名称：**Evolution**
 
-**建议场景**
+**Suggested scenario**
 
-此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
+Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress. [Detailed Description](./EvolutionTuner.md)
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -118,25 +131,25 @@ tuner:
 
 > 名称：**SMAC**
 
-**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
+**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).**
 
-**安装**
+**Installation**
 
-SMAC 在第一次使用前，必须用下面的命令先安装。
+SMAC need to be installed by following command before first use.
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**建议场景**
+**Suggested scenario**
 
-与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。 [详细说明](./SmacTuner.md)
+Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -154,11 +167,11 @@ tuner:
 
 > 名称：BatchTuner
 
-**建议场景**
+**Suggested scenario**
 
-如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。 [详细说明](./BatchTuner.md)
+If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner. [Detailed Description](./BatchTuner.md)
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -168,7 +181,7 @@ tuner:
 
 <br />
 
-注意 Batch Tuner 支持的搜索空间文件如下例：
+Note that the search space that BatchTuner supported like:
 
 ```json
 {
@@ -185,7 +198,7 @@ tuner:
 }
 ```
 
-搜索空间文件使用了键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要 Experiment 的参数组合。
+The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
 
 <a name="GridSearch"></a>
 
@@ -193,13 +206,13 @@ tuner:
 
 > 名称：**Grid Search**
 
-**建议场景**
+**Suggested scenario**
 
-注意，搜索空间仅支持 `choice`, `quniform`, `qloguniform`。 `quniform` 和 `qloguniform` 中的 **数字 `q` 有不同的含义（与[搜索空间](./SearchSpaceSpec.md)说明不同）。 这里的意义是在 `low` 和 `high` 之间均匀取值的数量。</p> 
+Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
-当搜索空间比较小，能够遍历整个搜索空间。 [详细说明](./GridsearchTuner.md)
+It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space. [Detailed Description](./GridsearchTuner.md)
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -215,17 +228,17 @@ tuner:
 
 > 名称：**Hyperband**
 
-**建议场景**
+**Suggested scenario**
 
-当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 [详细说明](./HyperbandAdvisor.md)
+It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. [Detailed Description](./HyperbandAdvisor.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, 可选, 默认为 60*) - 分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
 * **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -245,15 +258,15 @@ advisor:
 
 > 名称：**NetworkMorphism**
 
-**安装**
+**Installation**
 
-必须先安装 [pyTorch](https://pytorch.org/get-started/locally)。
+NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
 
-**建议场景**
+**Suggested scenario**
 
-需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。 [详细说明](./NetworkmorphismTuner.md)
+It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain. [Detailed Description](./NetworkmorphismTuner.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域，当前仅支持视觉（cv）。
@@ -261,7 +274,7 @@ advisor:
 * **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
 * **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -283,17 +296,17 @@ tuner:
 
 > 名称：**MetisTuner**
 
-注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
+Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
 
-**建议场景**
+**Suggested scenario**
 
-与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送`精度`这样的最终结果给 Tuner。 [详细说明](./MetisTuner.md)
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK. [Detailed Description](./MetisTuner.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**示例**
+**Usage example**
 
 ```yaml
 # config.yml
@@ -307,23 +320,23 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
 
 > 名称：**BOHB**
 
-**安装**
+**Installation**
 
-BOHB Advisor 的使用依赖 [ConfigSpace](https://github.com/automl/ConfigSpace) 包，在第一次使用 BOHB 的时候，在命令行运行以下的指令来安装 ConfigSpace。
+BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package, ConfigSpace need to be installed by following command before first use.
 
 ```bash
 nnictl package install --name=BOHB
 ```
 
-**建议场景**
+**Suggested scenario**
 
-与 Hyperband 类似, 当计算资源有限但搜索空间相对较大时, 建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下, 由于贝叶斯优化使用, 它可能会收敛到更好的配置。 [详细说明](./BohbAdvisor.md)
+Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. In this case, it may converges to a better configuration due to bayesian optimization usage. [Detailed Description](./BohbAdvisor.md)
 
-**参数**
+**Requirement of classArg**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **min_budget** (*整数, 可选项, 默认值为 1*) - 运行一个试验给予的最低计算资源（budget），这里的计算资源通常使用mini-batches 或者 epochs。 该参数必须为正数。
@@ -336,9 +349,9 @@ nnictl package install --name=BOHB
 * **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议保留默认值。
 * **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议保留默认值。
 
-*目前 NNI 的浮点类型仅支持十进制表示，必须使用 0.333 来代替 1/3，0.001代替 1e-3。*
+*Please note that currently float type only support decimal representation, you have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
-**示例**
+**Usage example**
 
 ```yml
 advisor:
