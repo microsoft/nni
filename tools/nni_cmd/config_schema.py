@@ -104,6 +104,21 @@ tuner_schema_dict = {
             },
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
+    'GPTuner': {
+        'builtinTunerName': 'GPTuner',
+        'classArgs': {
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('utility'): setChoice('utility', 'ei', 'ucb', 'poi'),
+            Optional('kappa'): setType('kappa', float),
+            Optional('xi'): setType('xi', float),
+            Optional('nu'): setType('nu', float),
+            Optional('alpha'): setType('alpha', float),
+            Optional('cold_start_num'): setType('cold_start_num', int),
+            Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
+            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
+            },
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
     'customized': {
         'codeDir': setPathCheck('codeDir'),
         'classFileName': setType('classFileName', str),
@@ -181,7 +196,8 @@ common_trial_schema = {
 'trial':{
     'command': setType('command', str),
     'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999)
+    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 

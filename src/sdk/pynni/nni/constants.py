@@ -29,7 +29,8 @@ ModuleName = {
     'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
     'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner',
     'Curvefitting': 'nni.curvefitting_assessor.curvefitting_assessor',
-    'MetisTuner': 'nni.metis_tuner.metis_tuner'
+    'MetisTuner': 'nni.metis_tuner.metis_tuner',
+    'GPTuner': 'nni.gp_tuner.gp_tuner'
 }
 
 ClassName = {
@@ -42,6 +43,7 @@ ClassName = {
     'GridSearch': 'GridSearchTuner',
     'NetworkMorphism':'NetworkMorphismTuner',
     'MetisTuner':'MetisTuner',
+    'GPTuner':'GPTuner',
 
     'Medianstop': 'MedianstopAssessor',
     'Curvefitting': 'CurvefittingAssessor'
