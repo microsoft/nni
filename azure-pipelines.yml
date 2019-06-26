@@ -14,6 +14,10 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      pip install flake8
+      flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+    displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
+  - script: |
       cd test
       source unittest.sh
     displayName: 'Unit test'
