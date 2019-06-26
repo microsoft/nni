@@ -102,7 +102,7 @@
 | GP            | 0.414395     | 0.418006      | 0.420431      |
 | GP            | 0.412943     | 0.416566      | 0.418443      |
 
-In this example, all the algorithms are used with default parameters. For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
+此例中，所有算法都使用了默认参数。 Metis 算法因为其高斯计算过程的复杂度为 O(n^3) 而运行非常慢，因此仅执行了 300 次 Trial。
 
 ## RocksDB 的 'fillrandom' 和 'readrandom' 基准测试
 
