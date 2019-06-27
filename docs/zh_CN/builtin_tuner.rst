@@ -8,7 +8,7 @@
     TPE<HyperoptTuner>
     Random Search<HyperoptTuner>
     Anneal<HyperoptTuner>
-    Naive Evolution<EvolutionTuner>
+    Naïve Evolution<EvolutionTuner>
     SMAC<SmacTuner>
     Batch Tuner<BatchTuner>
     Grid Search<GridsearchTuner>
