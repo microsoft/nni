@@ -494,7 +494,7 @@ def get_platform_dir(config_content):
         host = config_content.get('paiConfig').get('host')	
         user_name = config_content.get('paiConfig').get('userName')
         output_dir = config_content.get('trial').get('outputDir')
-        dir_list.append('hdfs://{0}:9000/{1}/nni'.format(host, user_name))
+        dir_list.append('server: {0}, path: {1}/nni'.format(host, user_name))
         if output_dir:
             dir_list.append(output_dir)
     return dir_list
