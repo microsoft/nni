@@ -61,11 +61,12 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#BOHB">BOHB</a></li>
+          <li><a href="docs/zh_CN/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
         </ul>
-          <a href="docs/zh_CN/BuiltinAssessors.md">Assessor（评估器）</a> 
+          <a href="docs/zh_CN/BuiltinAssessor.md">Assessor（评估器）</a>
         <ul>
-          <li><a href="docs/zh_CN/BuiltinAssessors.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/zh_CN/BuiltinAssessors.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/zh_CN/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/zh_CN/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
@@ -101,12 +102,6 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
-
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
 **通过 pip 命令安装**
 
 * 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
@@ -131,14 +126,14 @@ python -m pip install --upgrade nni
 
 **通过源代码安装**
 
-* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。 
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
 Linux 和 macOS
 
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -148,9 +143,9 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1
+  powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
 参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
@@ -164,7 +159,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 macOS
