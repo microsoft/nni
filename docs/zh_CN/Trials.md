@@ -35,7 +35,9 @@
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` 是一个对象，如： `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
+`RECEIVED_PARAMS` 是一个对象，如：
+
+`{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 * 定期返回指标数据（可选）
 
@@ -72,10 +74,10 @@ searchSpacePath: /path/to/your/search_space.json
 
 另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
 
-* 标记需要调整的参数变量 
+* 标记需要调整的参数变量
 * 指定变量的搜索空间范围
 * 标记哪个变量需要作为中间结果范围给 `Assessor`
-* 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。 
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
 同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
@@ -119,7 +121,7 @@ with tf.Session() as sess:
 **注意**：
 
 * `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
-* `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。 
+* `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
 Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
@@ -138,7 +140,7 @@ Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
 如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
 
-```shell
+```bash
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local

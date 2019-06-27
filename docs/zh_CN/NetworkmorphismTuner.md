@@ -56,7 +56,7 @@ nni.report_final_result(best_acc)
 
 ```python
 # 1. 使用 NNI API
-## 从 Web 界面获取最佳模型的 ID 
+## 从 Web 界面获取最佳模型的 ID
 ## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
 
 ## 从 JSON 文件中读取，并使用 NNI API 来加载
@@ -64,7 +64,7 @@ with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
 
-# 2. 使用框架的 API (与具体框架相关) 
+# 2. 使用框架的 API (与具体框架相关)
 ## 2.1 Keras API
 
 ## 在 Trial 代码中使用 Keras API 保存
@@ -107,7 +107,7 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 - `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
 - `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
-  - Graph 从模型中抽取神经网络。 
+  - Graph 从模型中抽取神经网络。
   - 图中的每个节点都是层之间的中间张量。
   - 在图中，边表示层。
   - 注意，多条边可能会表示同一层。
