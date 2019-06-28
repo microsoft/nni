@@ -368,8 +368,14 @@ Debug mode will disable version check function in Trialkeeper.
   * Usage
 
     ```bash
-    nnictl experiment list
+    nnictl experiment list [OPTIONS]
     ```
+  
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--all|  False| |list all of experiments|
 
 * __nnictl experiment delete__
 
@@ -388,6 +394,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment|
+  |--all|  False| |delete all of experiments|
 
 
 
