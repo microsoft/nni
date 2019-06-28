@@ -168,10 +168,8 @@ def parse_ids(args):
             return None
     if not result_list and args.id:
         print_error('There are no experiments matched, please set correct experiment id...')
-    elif not result_list and not args.all:
-        print_error('There is no experiment running...')
     elif not result_list:
-        print_error('Cannot find experiments.')
+        print_error('There is no experiment running...')
     return result_list
 
 def get_config_filename(args):
