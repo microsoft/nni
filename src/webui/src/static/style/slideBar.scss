@@ -34,18 +34,10 @@ $drowHoverBgColor: #e2e2e2;
 
 .feedback{
     position: fixed;
-    right: 19%;
+    right: 26%;
     line-height: $barHeight;
     font-size: 16px;
     color: #fff;
-    .fresh{
-        span{
-            margin: 0 10px 0 3px;
-        }
-    }
-    .fresh:hover{
-        cursor: pointer;
-    }
     a{
         color: #fff;
         text-decoration: none;
@@ -60,6 +52,17 @@ $drowHoverBgColor: #e2e2e2;
     }
 }
 
+/* refresh button */
+.fresh{
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    padding: 0;
+}
+.fresh:hover{
+    color: #fff;
+}
+
 .link li{
     float: left;
 }
@@ -70,8 +73,10 @@ $drowHoverBgColor: #e2e2e2;
 }
 .interval{
     position: fixed;
-    right: 7%;
+    right: 6%;
     top: 12px;
+    font-size: 16px;
+    color: #fff;
     .ant-select-selection{
         background-color: transparent;
         border: none;
@@ -80,6 +85,10 @@ $drowHoverBgColor: #e2e2e2;
         font-size: 16px;
     }
     .ant-select-arrow{
+        color: #fff;
+    }
+    .ant-btn-ghost[disabled]{
+        background-color: transparent;
         color: #fff;
     }
 }
@@ -120,8 +129,9 @@ $drowHoverBgColor: #e2e2e2;
 
 /* nav style*/
 .little{
-    width: 100%;
+    width: 90%;
     .menu{
+        margin-left: 33px;
         .more{
             color: #fff;
             font-size: 24px;
@@ -132,10 +142,10 @@ $drowHoverBgColor: #e2e2e2;
         }
     }
     .logo{
-        text-align: center;
+        text-align: right;
     }
 }
 
 .menuModal{
-    width: 180px;
+    width: 198px;
 }
