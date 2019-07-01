@@ -4,7 +4,7 @@
 
 ### Major Features
 * General NAS programming interface
-    * Add `enas-mode` and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
+    * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [Gaussian Process Tuner with Matern kernel](./GPTuner.md) 
 
 * Multiphase experiment
@@ -14,13 +14,12 @@
     For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
 
 * Web Portal
-    * Enable trial comparation in Web Portal 
-    * Allow users to adjust rendering interval of Web Portal. For details, refer to [Issue #1106](https://github.com/microsoft/nni/issues/1106#issuecomment-496343367)
-    * show intermediate results more friendly 
+    * Enable trial comparation in Web Portal. For details, refer to [View trials status](WebUI.md#view-trials-status)
+    * Allow users to adjust rendering interval of Web Portal. For details, refer to [View Summary Page](WebUI.md#view-summary-page)
+    * show intermediate results more friendly. For details, refer to [View trials status](WebUI.md#view-trials-status)
 * [Commandline Interface](Nnictl.md)
-    * `nnictl experiment delete`: delete data for one or more experiments.
-    * `nnictl platform clean`: clean disk on target training service platform.
-
+    * `nnictl experiment delete`: delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+    * `nnictl platform clean`: It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
 ### Bug fix and other changes
 * Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
 * (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
