@@ -7,9 +7,11 @@
     * Add `enas-mode` and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [Gaussian Process Tuner with Matern kernel](./GPTuner.md) 
 
-* Multiphase interface
-    * Support for OpenPAI Training Service
-    * Enable all builtin tuners as multiphase tuner. For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
+* Multiphase experiment
+    
+    OpenPAI training serivice now supports multiphase experiment. Following builtin tuners can be used as multiphase tuner: TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
+    
+    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
 
 * Web Portal
     * Enable trial comparation in Web Portal 
