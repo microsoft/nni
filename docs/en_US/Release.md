@@ -24,7 +24,8 @@
 ### Bug fix and other changes
 * Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
 * (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
-* (Bug Fix) Validate file name for PAI platform - [Issue $1164](https://github.com/microsoft/nni/issues/1164)
+* (Bug Fix) Validate file name for PAI platform - [Issue #1164](https://github.com/microsoft/nni/issues/1164)
+* (Bug Fix) Update GMM evaluation in Metis Tuner
 * (Bug Fix) Negative time number rendering in Web Portal - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
 * (Bug Fix) Hyper-parameter not shown correctly in WebUI when there is only one hyper parameter - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
 
