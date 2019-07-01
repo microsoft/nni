@@ -1,5 +1,31 @@
 # ChangeLog
 
+## Release 0.9 - 7/1/2019
+
+### Major Features
+* General NAS programming interface
+    * Add `enas-mode` and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
+* [Gaussian Process Tuner with Matern kernel](./GPTuner.md) 
+
+* Multiphase interface
+    * Support for OpenPAI Training Service
+    * Enable all builtin tuners as multiphase tuner. For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
+
+* Web Portal
+    * Enable trial comparation in Web Portal 
+    * Allow users to adjust rendering interval of Web Portal. For details, refer to [Issue #1106](https://github.com/microsoft/nni/issues/1106#issuecomment-496343367)
+    * show intermediate results more friendly 
+* [Commandline Interface](Nnictl.md)
+    * `nnictl experiment delete`: delete data for one or more experiments.
+    * `nnictl platform clean`: clean disk on target training service platform.
+
+### Bug fix and other changes
+* Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
+* (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
+* (Bug Fix) Validate file name for PAI platform - [Issue $1164](https://github.com/microsoft/nni/issues/1164)
+* (Bug Fix) Negative time number rendering in Web Portal - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
+* (Bug Fix) Hyper-parameter not shown correctly in WebUI when there is only one hyper parameter - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
+
 ## Release 0.8 - 6/4/2019
 
 ### Major Features
