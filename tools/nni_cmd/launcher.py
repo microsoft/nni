@@ -377,7 +377,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
-        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path)
+        nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
+        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
         experiment_config['trial']['codeDir'] = code_dir
         search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = json.dumps(search_space)
