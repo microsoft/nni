@@ -32,9 +32,31 @@ It is pretty simple to use multi-phase in trial code, an example is shown below:
     # ...
     ```
 
-__2. Modify experiment configuration__
+__2. Experiment configuration__
 
-To enable multi-phase, you should also add `multiPhase: true` in your experiment YAML configure file. If this line is not added, `nni.get_next_parameter()` would always return the same configuration. For all the built-in tuners/advisors, you can use multi-phase in your trial code without modification of tuner/advisor spec in the YAML configure file.
+To enable multi-phase, you should also add `multiPhase: true` in your experiment YAML configure file. If this line is not added, `nni.get_next_parameter()` would always return the same configuration.
+
+Multi-phase experiment configuration example:
+
+```
+authorName: default
+experimentName: multiphase experiment
+trialConcurrency: 2
+maxExecDuration: 1h
+maxTrialNum: 8
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+multiPhase: true
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mytrial.py
+  codeDir: .
+  gpuNum: 0
+```
 
 ### Write a tuner that leverages multi-phase:
 
@@ -48,6 +70,10 @@ trial_end
 ```
 With this information, the tuner could know which trial is requesting a configuration, and which trial is reporting results. This information provides enough flexibility for your tuner to deal with different trials and different phases. For example, you may want to use the trial_job_id parameter of generate_parameters method to generate hyperparameters for a specific trial job.
 
-Of course, to use your multi-phase tuner, __you should add `multiPhase: true` in your experiment YAML configure file__.
 
-[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) is an example of a multi-phase tuner.
+### Tuners support multi-phase experiments:
+
+[TEP](BuiltinTuner.md#TPE), [Random](BuiltinTuner.md#Random), [Anneal](BuiltinTuner.md#Anneal), [Evolution](BuiltinTuner.md#Evolution), [SMAC](BuiltinTuner.md#SMAC), [NetworkMorphism](BuiltinTuner.md#NetworkMorphism), [MetisTuner](BuiltinTuner.md#MetisTuner), [ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py).
+
+### Training services support multi-phase experiment:
+[Local Machine](LocalMode.md), [Remote Servers](RemoteMachineMode.md), [OpenPAI](PaiMode.md)
