@@ -52,8 +52,4 @@ table {
 pre{
 	overflow: hidden;
 }
-@font-face { 
-	font-family: 'Segoe'; 
-	src: url('./static/font/SegoePro-Regular.ttf');
-} 
 
