@@ -32,6 +32,7 @@ import ConfigSpace.hyperparameters as CSH
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
+from nni.common import multi_phase_enabled
 
 from .config_generator import CG_BOHB
 
@@ -398,7 +399,7 @@ class BOHB(MsgDispatcherBase):
         for _ in range(self.credit):
             self._request_one_trial_job()
 
-    def _request_one_trial_job(self):
+    def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration.
 
         If this function is called, Command will be sent by BOHB:
@@ -431,6 +432,26 @@ class BOHB(MsgDispatcherBase):
             'parameters': params[1]
         }
         self.parameters[params[0]] = params[1]
+        return ret
+
+    def _request_one_trial_job(self):
+        """get one trial job, i.e., one hyperparameter configuration.
+
+        If this function is called, Command will be sent by BOHB:
+        a. If there is a parameter need to run, will return "NewTrialJob" with a dict:
+        {
+            'parameter_id': id of new hyperparameter
+            'parameter_source': 'algorithm'
+            'parameters': value of new hyperparameter
+        }
+        b. If BOHB don't have parameter waiting, will return "NoMoreTrialJobs" with
+        {
+            'parameter_id': '-1_0_0',
+            'parameter_source': 'algorithm',
+            'parameters': ''
+        }
+        """
+        ret = self._get_one_trial_job()
         send(CommandType.NewTrialJob, json_tricks.dumps(ret))
         self.credit -= 1
 
@@ -534,36 +555,47 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
 
-        assert 'value' in data
-        value = extract_scalar_reward(data['value'])
-        if self.optimize_mode is OptimizeMode.Maximize:
-            reward = -value
+        if data['type'] == 'REQUEST_PARAMETER':
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            ret = self._get_one_trial_job()
+            if data['trial_job_id'] is not None:
+                ret['trial_job_id'] = data['trial_job_id']
+            if data['parameter_index'] is not None:
+                ret['parameter_index'] = data['parameter_index']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
-            reward = value
-        assert 'parameter_id' in data
-        s, i, _ = data['parameter_id'].split('_')
+            assert 'value' in data
+            value = extract_scalar_reward(data['value'])
+            if self.optimize_mode is OptimizeMode.Maximize:
+                reward = -value
+            else:
+                reward = value
+            assert 'parameter_id' in data
+            s, i, _ = data['parameter_id'].split('_')
 
-        logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
-        s = int(s)
+            logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
+            s = int(s)
 
-        assert 'type' in data
-        if data['type'] == 'FINAL':
-            # and PERIODICAL metric are independent, thus, not comparable.
-            assert 'sequence' in data
-            self.brackets[s].set_config_perf(
-                int(i), data['parameter_id'], sys.maxsize, value)
-            self.completed_hyper_configs.append(data)
+            assert 'type' in data
+            if data['type'] == 'FINAL':
+                # and PERIODICAL metric are independent, thus, not comparable.
+                assert 'sequence' in data
+                self.brackets[s].set_config_perf(
+                    int(i), data['parameter_id'], sys.maxsize, value)
+                self.completed_hyper_configs.append(data)
 
-            _parameters = self.parameters[data['parameter_id']]
-            _parameters.pop(_KEY)
-            # update BO with loss, max_s budget, hyperparameters
-            self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
-        elif data['type'] == 'PERIODICAL':
-            self.brackets[s].set_config_perf(
-                int(i), data['parameter_id'], data['sequence'], value)
-        else:
-            raise ValueError(
-                'Data type not supported: {}'.format(data['type']))
+                _parameters = self.parameters[data['parameter_id']]
+                _parameters.pop(_KEY)
+                # update BO with loss, max_s budget, hyperparameters
+                self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
+            elif data['type'] == 'PERIODICAL':
+                self.brackets[s].set_config_perf(
+                    int(i), data['parameter_id'], data['sequence'], value)
+            else:
+                raise ValueError(
+                    'Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
         pass
