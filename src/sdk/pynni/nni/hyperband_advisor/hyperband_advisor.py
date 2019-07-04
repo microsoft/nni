@@ -30,7 +30,7 @@ import json_tricks
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.common import init_logger
+from nni.common import init_logger, multi_phase_enabled
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, randint_to_quniform
 import nni.parameter_expressions as parameter_expressions
 
@@ -277,7 +277,7 @@ class Hyperband(MsgDispatcherBase):
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     """
-    def __init__(self, R, eta=3, optimize_mode='maximize'):
+    def __init__(self, R=60, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
         self.R = R                        # pylint: disable=invalid-name
@@ -321,9 +321,10 @@ class Hyperband(MsgDispatcherBase):
             number of trial jobs
         """
         for _ in range(data):
-            self._request_one_trial_job()
+            ret = self._get_one_trial_job()
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
 
-    def _request_one_trial_job(self):
+    def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
@@ -346,7 +347,8 @@ class Hyperband(MsgDispatcherBase):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
-        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+        return ret
+
 
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
@@ -400,18 +402,29 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        value = extract_scalar_reward(data['value'])
-        bracket_id, i, _ = data['parameter_id'].split('_')
-        bracket_id = int(bracket_id)
-        if data['type'] == 'FINAL':
-            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
-            # and PERIODICAL metric are independent, thus, not comparable.
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
-            self.completed_hyper_configs.append(data)
-        elif data['type'] == 'PERIODICAL':
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+        if data['type'] == 'REQUEST_PARAMETER':
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            ret = self._get_one_trial_job()
+            if data['trial_job_id'] is not None:
+                ret['trial_job_id'] = data['trial_job_id']
+            if data['parameter_index'] is not None:
+                ret['parameter_index'] = data['parameter_index']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
-            raise ValueError('Data type not supported: {}'.format(data['type']))
+            value = extract_scalar_reward(data['value'])
+            bracket_id, i, _ = data['parameter_id'].split('_')
+            bracket_id = int(bracket_id)
+            if data['type'] == 'FINAL':
+                # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
+                # and PERIODICAL metric are independent, thus, not comparable.
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+                self.completed_hyper_configs.append(data)
+            elif data['type'] == 'PERIODICAL':
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            else:
+                raise ValueError('Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
         pass
