@@ -32,7 +32,7 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
             if (status === 'SUCCEEDED') {
                 result = `${result} (FINAL)`;
             } else {
-                result = `${result} (LATEST)`;
+                result = `${result} (#${interArr.length})`;
             }
         } else {
             result = '--';
