@@ -4,6 +4,13 @@
     margin: 0 auto;
     .right{
         text-align: right;
+        .common{
+            border-radius: 0;
+        }
+        .common:hover{
+            color: #0071BC;
+            border-radius: 0;
+        }
     }
     .entry{
         width: 120px;
@@ -31,8 +38,9 @@
     }
 }
 
+/* compare button style */
 Button.mediateBtn{
-    margin: 0 32px;
+    margin: 0 2px 0 8px;
 }
 
 /* each row's Intermediate btn -> Modal*/
