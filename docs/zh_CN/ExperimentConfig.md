@@ -19,14 +19,14 @@ experimentName:
 trialConcurrency:
 maxExecDuration:
 maxTrialNum:
-#choice: local, remote, pai, kubeflow
+#可选项: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiPhase:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
@@ -39,7 +39,7 @@ trial:
   command:
   codeDir:
   gpuNum:
-#machineList can be empty if the platform is local
+#在本地使用时，machineList 可为空
 machineList:
   - ip:
     port:
@@ -50,85 +50,85 @@ machineList:
 - **使用 Assessor**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-searchSpacePath:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiPhase:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
 - **使用 Annotation**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiPhase:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
@@ -216,11 +216,11 @@ machineList:
     
     注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
-- **multiPhase**
+- **多阶段**
   
   - 说明
     
-    **multiPhase** enable [multi-phase experiment](./MultiPhase.md).
+    **multiPhase** 启用[多阶段 Experiment](./MultiPhase.md)。
 
 - **multiThread**
   
