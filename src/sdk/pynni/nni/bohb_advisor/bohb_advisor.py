@@ -329,6 +329,13 @@ class BOHB(MsgDispatcherBase):
         # config generator
         self.cg = None
 
+        # record the latest parameter_id of the trial job trial_job_id.
+        # if there is no running parameter_id, self.job_id_para_id_map[trial_job_id] == None
+        # new trial job is added to this dict and finished trial job is removed from it.
+        self.job_id_para_id_map = dict()
+        # record the unsatisfied parameter request from trial jobs
+        self.unsatisfied_jobs = []
+
     def load_checkpoint(self):
         pass
 
@@ -423,7 +430,7 @@ class BOHB(MsgDispatcherBase):
                 'parameters': ''
             }
             send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
-            return
+            return None
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop()
         ret = {
@@ -452,8 +459,9 @@ class BOHB(MsgDispatcherBase):
         }
         """
         ret = self._get_one_trial_job()
-        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
-        self.credit -= 1
+        if ret is not None:
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            self.credit -= 1
 
     def handle_update_search_space(self, data):
         """change json format to ConfigSpace format dict<dict> -> configspace
@@ -522,21 +530,45 @@ class BOHB(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         logger.debug('Tuner handle trial end, result is %s', data)
-
         hyper_params = json_tricks.loads(data['hyper_params'])
-        s, i, _ = hyper_params['parameter_id'].split('_')
+        self._handle_trial_end(hyper_params['parameter_id'])
+        if data['trial_job_id'] in self.job_id_para_id_map:
+            del self.job_id_para_id_map[data['trial_job_id']]
+
+    def _handle_trial_end(self, parameter_id):
+        s, i, _ = parameter_id.split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
         if hyper_configs is not None:
             logger.debug(
                 'bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+            while self.unsatisfied_jobs:
+                ret = self._get_one_trial_job()
+                if ret is None:
+                    break
+                one_unsatisfied = self.unsatisfied_jobs.pop(0)
+                ret['trial_job_id'] = one_unsatisfied['trial_job_id']
+                ret['parameter_index'] = one_unsatisfied['parameter_index']
+                # update parameter_id in self.job_id_para_id_map
+                self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
+                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
             for _ in range(self.credit):
                 self._request_one_trial_job()
         # Finish this bracket and generate a new bracket
         elif self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
             self.generate_new_bracket()
+            while self.unsatisfied_jobs:
+                ret = self._get_one_trial_job()
+                if ret is None:
+                    break
+                one_unsatisfied = self.unsatisfied_jobs.pop(0)
+                ret['trial_job_id'] = one_unsatisfied['trial_job_id']
+                ret['parameter_index'] = one_unsatisfied['parameter_index']
+                # update parameter_id in self.job_id_para_id_map
+                self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
+                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
             for _ in range(self.credit):
                 self._request_one_trial_job()
 
@@ -559,12 +591,18 @@ class BOHB(MsgDispatcherBase):
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
+            logger.debug('zql: parameter_id: %s', data['trial_job_id'])
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
             ret = self._get_one_trial_job()
-            if data['trial_job_id'] is not None:
+            if ret is None:
+                self.unsatisfied_jobs.append({'trial_job_id': data['trial_job_id'], 'parameter_index': data['parameter_index']})
+            else:
                 ret['trial_job_id'] = data['trial_job_id']
-            if data['parameter_index'] is not None:
                 ret['parameter_index'] = data['parameter_index']
-            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+                # update parameter_id in self.job_id_para_id_map
+                self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
+                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
             assert 'value' in data
             value = extract_scalar_reward(data['value'])
@@ -574,9 +612,15 @@ class BOHB(MsgDispatcherBase):
                 reward = value
             assert 'parameter_id' in data
             s, i, _ = data['parameter_id'].split('_')
-
             logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
             s = int(s)
+
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # because when the first parameter_id is created, trial_job_id is not known yet.
+            if data['trial_job_id'] in self.job_id_para_id_map:
+                assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
+            else:
+                self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
 
             assert 'type' in data
             if data['type'] == 'FINAL':
