@@ -263,7 +263,7 @@ advisor:
 
 **Installation**
 
-NetworkMorphism requires [PyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+NetworkMorphism requires [PyTorch](https://pytorch.org/get-started/locally), so users should install it first. For more information, see [requirements.txt](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt).
 
 **Suggested scenario**
 
