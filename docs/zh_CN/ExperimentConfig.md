@@ -216,7 +216,7 @@ machineList:
     
     注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
-- **多阶段**
+- **multiPhase**
   
   - 说明
     
@@ -226,78 +226,78 @@ machineList:
   
   - 说明
     
-    **multiThread** enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
+    **multiThread** 如果 multiThread 设为 `true`，可启动 Dispatcher 的多线程模式。Dispatcher 会为来自 NNI 管理器的每个命令启动一个线程。
 
 - **nniManagerIp**
   
   - 说明
     
-    **nniManagerIp** set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 - **logDir**
   
   - 说明
     
-    **logDir** configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
 
 - **logLevel**
   
   - 说明
     
-    **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
 - **logCollection**
   
   - 说明
     
-    **logCollection** set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+    **logCollection** 设置在 remote, pai, kubeflow, frameworkcontroller 平台下收集日志的方法。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
 
 - **tuner**
   
-  - Description
+  - 说明
     
-    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** 指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  - **builtinTunerName** and **classArgs**
+  - **builtinTunerName** 和 **classArgs**
     
     - **builtinTunerName**
       
-      **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+      **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
+      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  - **codeDir**, **classFileName**, **className** and **classArgs**
+  - **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     - **codeDir**
       
-      **codeDir** specifies the directory of tuner code.
+      **codeDir** 指定 Tuner 代码的目录。
     
     - **classFileName**
       
-      **classFileName** specifies the name of tuner file.
+      **classFileName** 指定 Tuner 文件名。
     
     - **className**
       
-      **className** specifies the name of tuner class.
+      **className** 指定 Tuner 类名。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm.
+      **classArgs** 指定了 Tuner 算法的参数。
   
   - **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+        __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
         
-        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+        注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
         
   
   - **includeIntermediateResults**
     
-        If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
+        如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
 
 - **assessor**
@@ -468,101 +468,101 @@ machineList:
 
 - **machineList**
   
-  **machineList** should be set if **trainingServicePlatform** is set to remote, or it should be empty.
+  如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
   
   - **ip**
     
-    **ip** is the ip address of remote machine.
+    **ip** 是远程计算机的 ip 地址。
   
   - **port**
     
-    **port** is the ssh port to be used to connect machine.
+    **端口** 是用于连接远程计算机的 ssh 端口。
     
-    Note: if users set port empty, the default value will be 22.
+    注意：如果 port 设为空，则为默认值 22。
   
   - **username**
     
-    **username** is the account of remote machine.
+    **username** 是远程计算机的用户名。
   
   - **passwd**
     
-    **passwd** specifies the password of the account.
+    **passwd** 指定了账户的密码。
   
   - **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+    注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   - **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，远程计算机上只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **kubeflowConfig**:
   
   - **operator**
     
-    **operator** specify the kubeflow's operator to be used, NNI support **tf-operator** in current version.
+    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
   
   - **storage**
     
-    **storage** specify the storage type of kubeflow, including {**nfs**, **azureStorage**}. This field is optional, and the default value is **nfs**. If the config use azureStorage, this field must be completed.
+    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
   
   - **nfs**
     
-    **server** is the host of nfs server
+    **server** 是 NFS 服务器的地址
     
-    **path** is the mounted path of nfs
+    **path** 是 NFS 挂载的路径
   
   - **keyVault**
     
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2
     
     - **vaultName**
       
-      **vaultName** is the value of `--vault-name` used in az command.
+      **vaultName** 是 az 命令中 `--vault-name` 的值。
     
     - **name**
       
-      **name** is the value of `--name` used in az command.
+      **name** 是 az 命令中 `--name` 的值。
   
   - **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     - **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     - **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
 
 - **paiConfig**
   
   - **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   - **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   - **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 <a name="Examples"></a>
 
