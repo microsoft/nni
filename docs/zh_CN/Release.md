@@ -9,29 +9,29 @@
 
 * [有 Matern 核的高斯 Tuner](./GPTuner.md)
 
-* Multiphase experiment supports
+* 支持多阶段 Experiment
     
-    * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
-    * Added multiphase capability for the following builtin tuners: 
-        * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
+    * 为多阶段 Experiment 增加新的训练平台：pai 模式从 v0.9 开始支持多阶段 Experiment。
+    * 为以下内置 Tuner 增加多阶段的功能： 
+        * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
+    更多详情，参考[编写多阶段 Tuner](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)。
 
-* Web Portal
+* Web 界面
     
-    * Enable trial comparation in Web Portal. For details, refer to [View trials status](WebUI.md#view-trials-status)
-    * Allow users to adjust rendering interval of Web Portal. For details, refer to [View Summary Page](WebUI.md#view-summary-page)
-    * show intermediate results more friendly. For details, refer to [View trials status](WebUI.md#view-trials-status)
-* [Commandline Interface](Nnictl.md) 
-    * `nnictl experiment delete`: delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
-    * `nnictl platform clean`: It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+    * 在 Web 界面中可比较 Trial。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
+    * 允许用户调节 Web 界面的刷新间隔。 更多详情参考[查看概要页面](WebUI.md#view-summary-page)
+    * 更友好的显示中间结果。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
+* [命令行接口](Nnictl.md) 
+    * `nnictl experiment delete`：删除一个或多个 Experiment，包括其日志，结果，环境信息核缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
+    * `nnictl platform clean`：用于清理目标平台的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
 
 ### Bug 修复和其它更新
 
-* Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
-* (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
-* (Bug Fix) Validate file name for PAI platform - [Issue #1164](https://github.com/microsoft/nni/issues/1164)
-* (Bug Fix) Update GMM evaluation in Metis Tuner
+* 改进 Tuner 安装过程：增加 [sklearn](https://scikit-learn.org/stable/) 依赖。
+* (Bug 修复) 连接 OpenPAI 失败的 HTTP 代码 - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
+* (Bug 修复) 为 OpenPAI 平台验证文件名 - [Issue #1164](https://github.com/microsoft/nni/issues/1164)
+* (Bug 修复) 更新 Metis Tunerz 中的 GMM
 * (Bug Fix) Negative time number rendering in Web Portal - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
 * (Bug Fix) Hyper-parameter not shown correctly in WebUI when there is only one hyper parameter - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
 
