@@ -302,169 +302,169 @@ machineList:
 
 - **assessor**
   
-  - Description
+  - 说明
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了 Experiment 的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  - **builtinAssessorName** and **classArgs**
+  - **builtinAssessorName** 和 **classArgs**
     
     - **builtinAssessorName**
       
-      **builtinAssessorName** specifies the name of system assessor, NNI sdk provides one kind of assessor {**Medianstop**}
+      **builtinAssessorName** 指定了系统 Assessor 的名称， NNI 内置的 Assessor 有 {**Medianstop**，等等}。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm
+      **classArgs** 指定了 Assessor 算法的参数。
   
-  - **codeDir**, **classFileName**, **className** and **classArgs**
+  - **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     - **codeDir**
       
-      **codeDir** specifies the directory of assessor code.
+      **codeDir** 指定 Assessor 代码的目录。
     
     - **classFileName**
       
-      **classFileName** specifies the name of assessor file.
+      **classFileName** 指定 Assessor 文件名。
     
     - **className**
       
-      **className** specifies the name of assessor class.
+      **className** 指定 Assessor 类名。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm.
+      **classArgs** 指定了 Assessor 算法的参数。
   
   - **gpuNum**
     
-    **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+    **gpuNum** 指定了运行 Assessor 进程的 GPU 数量。 此字段的值必须是正整数。
     
-    Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
+    注意: 只能使用一种方法来指定 Assessor，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用 Assessor，可将其置为空。
 
-- **trial(local, remote)**
+- **trial (local, remote)**
   
   - **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   - **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   - **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
-- **trial(pai)**
+- **trial (pai)**
   
   - **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   - **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   - **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
   
   - **cpuNum**
     
-    **cpuNum** is the cpu number of cpu to be used in pai container.
+    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
   
   - **memoryMB**
     
-    **memoryMB** set the momory size to be used in pai's container.
+    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
   
   - **image**
     
-    **image** set the image to be used in pai.
+    **image** 指定了 OpenPAI 中使用的 docker 映像。
   
   - **dataDir**
     
-    **dataDir** is the data directory in hdfs to be used.
+    **dataDir** 是 HDFS 中用到的数据目录变量。
   
   - **outputDir**
     
-    **outputDir** is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
-- **trial(kubeflow)**
+- **trial (kubeflow)**
   
   - **codeDir**
     
-    **codeDir** is the local directory where the code files in.
+    **codeDir** 指定了代码文件的本机路径。
   
-  - **ps(optional)**
+  - **ps (可选)**
     
-    **ps** is the configuration for kubeflow's tensorflow-operator.
+    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     - **replicas**
       
-      **replicas** is the replica number of **ps** role.
+      **replicas** 是 **ps** 角色的副本数量。
     
     - **command**
       
-      **command** is the run script in **ps**'s container.
+      **command** 是在 **ps** 的容器中运行的脚本命令。
     
     - **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **ps** container.
+      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
     
     - **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **ps** container.
+      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
     
     - **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     - **image**
       
-      **image** set the image to be used in **ps**.
+      **image** 设置了 **ps** 使用的 docker 映像。
   
   - **worker**
     
-    **worker** is the configuration for kubeflow's tensorflow-operator.
+    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     - **replicas**
       
-      **replicas** is the replica number of **worker** role.
+      **replicas** 是 **worker** 角色的副本数量。
     
     - **command**
       
-      **command** is the run script in **worker**'s container.
+      **command** 是在 **worker** 的容器中运行的脚本命令。
     
     - **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **worker** container.
+      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
     
     - **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **worker** container.
+      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
     
     - **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     - **image**
       
-      **image** set the image to be used in **worker**.
+      **image** 设置了 **worker** 使用的 docker 映像。
 
 - **localConfig**
   
-  **localConfig** is applicable only if **trainingServicePlatform** is set to `local`, otherwise there should not be **localConfig** section in configuration file.
+  **localConfig** 仅在 **trainingServicePlatform** 设为 `local` 时有效，否则，配置文件中不应该有 **localConfig** 部分。
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **machineList**
   
