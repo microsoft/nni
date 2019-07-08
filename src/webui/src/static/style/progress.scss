@@ -4,8 +4,7 @@
     .status{
         color: #0573bc;
         font-size: 20px;
-        font-weight: bold;
-        margin-top: 5px;
+        font-weight: 600;
     }
 
     .probar{
@@ -46,7 +45,6 @@
 .basic{
 
     line-height: 24px;
-    font-family: 'Segoe';
     p{
         font-size: 14px;
         color: #212121;
@@ -95,4 +93,14 @@
 .lineBasic{
     padding-bottom: 14px;
     border-bottom: 1px solid #ccc;
+}
+
+.dynamic{
+    display: inline-block;
+    width: 73px;
+    height: 29px;
+    background: url(../img/load.gif) no-repeat;
+    background-size: 53px 52px;
+    position: relative;
+    top: -5px;
 }

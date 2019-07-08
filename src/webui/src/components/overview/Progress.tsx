@@ -158,6 +158,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const { trialProfile, trialNumber, bestAccuracy, status, errors } = this.props;
         const { isEnable, btnName, cancelSty } = this.state;
         const bar2 = trialNumber.totalCurrentTrial - trialNumber.waitTrial - trialNumber.unknowTrial;
+        const classForRunning = status === 'RUNNING' ? 'dynamic' : '';
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
         const runDuration = convertTime(trialProfile.execDuration);
@@ -196,6 +197,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                 :
                                 <span />
                         }
+                        {/* Running ... */}
+                        <span className={classForRunning} />
                     </div>
                 </Row>
                 <ProgressBar

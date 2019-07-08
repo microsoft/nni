@@ -251,14 +251,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         const { isdisabledFresh } = this.state;
         return (
             <div className="interval">
-                <Button
-                    className="fresh"
-                    onClick={this.fresh}
-                    type="ghost"
-                    disabled={isdisabledFresh}
-                >
-                    <Icon type="sync" /><span>Refresh</span>
-                </Button>
                 <Select
                     onSelect={this.getInterval}
                     defaultValue="Refresh every 10s"
@@ -269,6 +261,14 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                     <Option value="30">Refresh every 30s</Option>
                     <Option value="60">Refresh every 1min</Option>
                 </Select>
+                <Button
+                    className="fresh"
+                    onClick={this.fresh}
+                    type="ghost"
+                    disabled={isdisabledFresh}
+                >
+                    <Icon type="sync" /><span>Refresh</span>
+                </Button>
             </div>
         );
     }
