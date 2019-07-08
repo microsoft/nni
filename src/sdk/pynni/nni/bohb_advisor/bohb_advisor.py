@@ -535,6 +535,20 @@ class BOHB(MsgDispatcherBase):
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
 
+    def _send_new_trial(self):
+        while self.unsatisfied_jobs:
+            ret = self._get_one_trial_job()
+            if ret is None:
+                break
+            one_unsatisfied = self.unsatisfied_jobs.pop(0)
+            ret['trial_job_id'] = one_unsatisfied['trial_job_id']
+            ret['parameter_index'] = one_unsatisfied['parameter_index']
+            # update parameter_id in self.job_id_para_id_map
+            self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+        for _ in range(self.credit):
+            self._request_one_trial_job()
+
     def _handle_trial_end(self, parameter_id):
         s, i, _ = parameter_id.split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
@@ -543,34 +557,11 @@ class BOHB(MsgDispatcherBase):
             logger.debug(
                 'bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            while self.unsatisfied_jobs:
-                ret = self._get_one_trial_job()
-                if ret is None:
-                    break
-                one_unsatisfied = self.unsatisfied_jobs.pop(0)
-                ret['trial_job_id'] = one_unsatisfied['trial_job_id']
-                ret['parameter_index'] = one_unsatisfied['parameter_index']
-                # update parameter_id in self.job_id_para_id_map
-                self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
-                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
-            for _ in range(self.credit):
-                self._request_one_trial_job()
         # Finish this bracket and generate a new bracket
         elif self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
             self.generate_new_bracket()
-            while self.unsatisfied_jobs:
-                ret = self._get_one_trial_job()
-                if ret is None:
-                    break
-                one_unsatisfied = self.unsatisfied_jobs.pop(0)
-                ret['trial_job_id'] = one_unsatisfied['trial_job_id']
-                ret['parameter_index'] = one_unsatisfied['parameter_index']
-                # update parameter_id in self.job_id_para_id_map
-                self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
-                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
-            for _ in range(self.credit):
-                self._request_one_trial_job()
+        self._send_new_trial()
 
     def handle_report_metric_data(self, data):
         """reveice the metric data and update Bayesian optimization with final result
@@ -591,7 +582,6 @@ class BOHB(MsgDispatcherBase):
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
-            logger.debug('zql: parameter_id: %s', data['trial_job_id'])
             assert data['trial_job_id'] in self.job_id_para_id_map
             self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
             ret = self._get_one_trial_job()
