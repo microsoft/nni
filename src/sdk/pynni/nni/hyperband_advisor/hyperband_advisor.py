@@ -378,17 +378,6 @@ class Hyperband(MsgDispatcherBase):
         if hyper_configs is not None:
             _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            for _ in range(self.credit):
-                if not self.generated_hyper_configs:
-                    break
-                params = self.generated_hyper_configs.pop()
-                ret = {
-                    'parameter_id': params[0],
-                    'parameter_source': 'algorithm',
-                    'parameters': params[1]
-                }
-                send(CommandType.NewTrialJob, json_tricks.dumps(ret))
-                self.credit -= 1
 
     def handle_report_metric_data(self, data):
         """
