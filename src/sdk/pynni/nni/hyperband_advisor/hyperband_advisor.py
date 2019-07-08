@@ -296,6 +296,11 @@ class Hyperband(MsgDispatcherBase):
         # In this case, tuner increases self.credit to issue a trial config sometime later.
         self.credit = 0
 
+        # record the latest parameter_id of the trial job trial_job_id.
+        # if there is no running parameter_id, self.job_id_para_id_map[trial_job_id] == None
+        # new trial job is added to this dict and finished trial job is removed from it.
+        self.job_id_para_id_map = dict()
+
     def load_checkpoint(self):
         pass
 
@@ -362,6 +367,18 @@ class Hyperband(MsgDispatcherBase):
         randint_to_quniform(self.searchspace_json)
         self.random_state = np.random.RandomState()
 
+    def _handle_trial_end(self, parameter_id):
+        """
+        Parameters
+        ----------
+        parameter_id: parameter id of the finished config
+        """
+        bracket_id, i, _ = parameter_id.split('_')
+        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
+        if hyper_configs is not None:
+            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
+            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+
     def handle_trial_end(self, data):
         """
         Parameters
@@ -373,11 +390,9 @@ class Hyperband(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         hyper_params = json_tricks.loads(data['hyper_params'])
-        bracket_id, i, _ = hyper_params['parameter_id'].split('_')
-        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
-        if hyper_configs is not None:
-            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
-            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+        self._handle_trial_end(hyper_params['parameter_id'])
+        if data['trial_job_id'] in self.job_id_para_id_map:
+            del self.job_id_para_id_map[data['trial_job_id']]
 
     def handle_report_metric_data(self, data):
         """
@@ -395,6 +410,8 @@ class Hyperband(MsgDispatcherBase):
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
             ret = self._get_one_trial_job()
             if data['trial_job_id'] is not None:
                 ret['trial_job_id'] = data['trial_job_id']
@@ -405,6 +422,14 @@ class Hyperband(MsgDispatcherBase):
             value = extract_scalar_reward(data['value'])
             bracket_id, i, _ = data['parameter_id'].split('_')
             bracket_id = int(bracket_id)
+
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # because when the first parameter_id is created, trial_job_id is not known yet.
+            if data['trial_job_id'] in self.job_id_para_id_map:
+                assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
+            else:
+                self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
+
             if data['type'] == 'FINAL':
                 # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
                 # and PERIODICAL metric are independent, thus, not comparable.
