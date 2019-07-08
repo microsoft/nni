@@ -1,13 +1,13 @@
 # 更改日志
 
-## Release 0.9 - 7/1/2019
+## 发布 0.9 - 7/1/2019
 
 ### 主要功能
 
-* General NAS programming interface 
-    * Add `enas-mode` and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
+* 生成 NAS 编程接口 
+    * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 
-* [Gaussian Process Tuner with Matern kernel](./GPTuner.md)
+* [有 Matern 核的高斯 Tuner](./GPTuner.md)
 
 * Multiphase experiment supports
     
