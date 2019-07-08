@@ -14,7 +14,7 @@ To facilitate NAS innovations (e.g., design/implement new NAS models, compare di
 
 ### Example: choose an operator for a layer
 
-When designing the following model there might be several choices in the fourth layer that may make this model perform good. In the script of this model, we can use annotation for the fourth layer as shown in the figure. In this annotation, there are five fields in total:
+When designing the following model there might be several choices in the fourth layer that may make this model perform well. In the script of this model, we can use annotation for the fourth layer as shown in the figure. In this annotation, there are five fields in total:
 
 ![](../img/example_layerchoice.png)
 
