@@ -417,6 +417,7 @@ class Hyperband(MsgDispatcherBase):
                 ret['trial_job_id'] = data['trial_job_id']
             if data['parameter_index'] is not None:
                 ret['parameter_index'] = data['parameter_index']
+            self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
             send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
             value = extract_scalar_reward(data['value'])
