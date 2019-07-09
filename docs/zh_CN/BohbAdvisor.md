@@ -50,7 +50,7 @@ nnictl package install --name=SMAC
 
 要使用 BOHB，需要在 Experiment 的 YAML 配置文件进行如下改动：
 
-```yml
+```yaml
 advisor:
   builtinAdvisorName: BOHB
   classArgs:

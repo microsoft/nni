@@ -34,7 +34,7 @@
 
 ### 问题描述
 
-超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
+超参搜索上的非凸问题 [AutoGBDT](../GbdtExample.md)。
 
 ### 搜索空间
 

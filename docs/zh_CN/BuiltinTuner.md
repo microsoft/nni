@@ -353,7 +353,7 @@ nnictl package install --name=BOHB
 
 **示例**
 
-```yml
+```yaml
 advisor:
   builtinAdvisorName: BOHB
   classArgs:

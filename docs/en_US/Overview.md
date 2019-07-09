@@ -51,7 +51,7 @@ More details about how to run an experiment, please refer to [Get Started](Quick
 * [How to adapt your trial code on NNI?](Trials.md)
 * [What are tuners supported by NNI?](BuiltinTuner.md)
 * [How to customize your own tuner?](CustomizeTuner.md)
-* [What are assessors supported by NNI?](BuiltinAssessors.md)
+* [What are assessors supported by NNI?](BuiltinAssessor.md)
 * [How to customize your own assessor?](CustomizeAssessor.md)
 * [How to run an experiment on local?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)

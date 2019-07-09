@@ -15,13 +15,13 @@
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    更多详情，参考[编写多阶段 Tuner](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)。
+    有关详细信息，参考[编写多阶段的 Tuner](./MultiPhase.md)。
 
 * Web 界面
     
-    * 在 Web 界面中可比较 Trial。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
-    * 允许用户调节 Web 界面的刷新间隔。 更多详情参考[查看概要页面](WebUI.md#view-summary-page)
-    * 更友好的显示中间结果。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
+    * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
+    * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](WebUI.md)
+    * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
 * [命令行接口](Nnictl.md) 
     * `nnictl experiment delete`：删除一个或多个 Experiment，包括其日志，结果，环境信息核缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
     * `nnictl platform clean`：用于清理目标平台的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
@@ -74,7 +74,7 @@
 
 ### 主要功能
 
-* [支持在 Windows 上使用 NNI](./WindowsLocalMode.md) 
+* [支持在 Windows 上使用 NNI](./NniOnWindows.md) 
     * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](./BohbAdvisor.md) 
     * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
@@ -163,7 +163,7 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
@@ -283,7 +283,7 @@
 
 ### 新示例
 
-* 公共的 NNI Docker 映像：
+* 公开的 NNI Docker 映像：
     
     ```bash
     docker pull msranni/nni:latest
