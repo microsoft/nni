@@ -254,7 +254,7 @@ machineList:
     
     **logCollection** 设置在 remote, pai, kubeflow, frameworkcontroller 平台下收集日志的方法。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
 
-- **tuner**
+- **Tuner**
   
   - 说明
     
