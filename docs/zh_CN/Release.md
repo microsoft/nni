@@ -163,7 +163,7 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
@@ -283,7 +283,7 @@
 
 ### 新示例
 
-* 公共的 NNI Docker 映像：
+* 公开的 NNI Docker 映像：
     
     ```bash
     docker pull msranni/nni:latest
