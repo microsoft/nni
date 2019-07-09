@@ -10,3 +10,4 @@ numpy
 scipy
 coverage
 sklearn
+-e git+https://github.com/QuanluZhang/ConfigSpace.git#egg=ConfigSpace

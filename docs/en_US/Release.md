@@ -68,7 +68,7 @@
 
 ### Major Features
 
-* [Support NNI on Windows](./WindowsLocalMode.md)
+* [Support NNI on Windows](./NniOnWindows.md)
   * NNI running on windows for local mode
 * [New advisor: BOHB](./BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband

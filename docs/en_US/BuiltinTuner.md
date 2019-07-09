@@ -356,7 +356,7 @@ Similar to Hyperband, it is suggested when you have limited computation resource
 
 **Usage example**
 
-```yml
+```yaml
 advisor:
   builtinAdvisorName: BOHB
   classArgs:
