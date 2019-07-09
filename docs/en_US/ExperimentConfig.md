@@ -23,8 +23,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -55,8 +59,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -93,8 +101,12 @@ maxExecDuration:
 maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -193,6 +205,16 @@ machineList:
     __useAnnotation__ use annotation to analysis trial code and generate search space.
 
     Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+
+* __multiPhase__
+  * Description
+
+    __multiPhase__ enable [multi-phase experiment](./MultiPhase.md).
+
+* __multiThread__
+  * Description
+
+    __multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
 
 * __nniManagerIp__
   * Description

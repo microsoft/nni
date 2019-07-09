@@ -14,32 +14,36 @@
 - **简化版（不包含 Annotation（标记）和 Assessor）**
 
 ```yaml
-authorName: 
-experimentName: 
-trialConcurrency: 
-maxExecDuration: 
-maxTrialNum: 
+authorName:
+experimentName:
+trialConcurrency:
+maxExecDuration:
+maxTrialNum:
 #可选项: local, remote, pai, kubeflow
-trainingServicePlatform: 
-searchSpacePath: 
-#可选项: true, false
-useAnnotation: 
+trainingServicePlatform:
+searchSpacePath:
+#可选项: true, false, 默认值: false
+useAnnotation:
+#可选项: true, false, 默认值: false
+multiPhase:
+#可选项: true, false, 默认值: false
+multiThread:
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution
+  #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #可选项: maximize, minimize
+    #choice: maximize, minimize
     optimize_mode:
-  gpuNum: 
+  gpuNum:
 trial:
-  command: 
-  codeDir: 
-  gpuNum: 
+  command:
+  codeDir:
+  gpuNum:
 #在本地使用时，machineList 可为空
 machineList:
-  - ip: 
-    port: 
-    username: 
+  - ip:
+    port:
+    username:
     passwd:
 ```
 
@@ -54,8 +58,12 @@ maxTrialNum:
 #可选项: local, remote, pai, kubeflow
 trainingServicePlatform: 
 searchSpacePath: 
-#可选项: true, false
-useAnnotation: 
+#可选项: true, false, 默认值: false
+useAnnotation:
+#可选项: true, false, 默认值: false
+multiPhase:
+#可选项: true, false, 默认值: false
+multiThread:
 tuner:
   #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -92,8 +100,12 @@ maxExecDuration:
 maxTrialNum: 
 #可选项: local, remote, pai, kubeflow
 trainingServicePlatform: 
-#可选项: true, false
-useAnnotation: 
+#可选项: true, false, 默认值: false
+useAnnotation:
+#可选项: true, false, 默认值: false
+multiPhase:
+#可选项: true, false, 默认值: false
+multiThread:
 tuner:
   #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -204,6 +216,18 @@ machineList:
     
     注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
+- **multiPhase**
+  
+  - 说明
+    
+    **multiPhase** 启用[多阶段 Experiment](./MultiPhase.md)。
+
+- **multiThread**
+  
+  - 说明
+    
+    **multiThread** 如果 multiThread 设为 `true`，可启动 Dispatcher 的多线程模式。Dispatcher 会为来自 NNI 管理器的每个命令启动一个线程。
+
 - **nniManagerIp**
   
   - 说明
@@ -230,7 +254,7 @@ machineList:
     
     **logCollection** 设置在 remote, pai, kubeflow, frameworkcontroller 平台下收集日志的方法。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
 
-- **Tuner**
+- **tuner**
   
   - 说明
     
@@ -268,7 +292,7 @@ machineList:
     
         __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
         
-        注意: 只能使用一种方法来指定 Tuner，例如：设置 {tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置两者。
+        注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
         
   
   - **includeIntermediateResults**
@@ -276,7 +300,7 @@ machineList:
         如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
 
-- **Assessor**
+- **assessor**
   
   - 说明
     
@@ -290,7 +314,7 @@ machineList:
     
     - **classArgs**
       
-      **classArgs** 指定了 Assessor 算法的参数
+      **classArgs** 指定了 Assessor 算法的参数。
   
   - **codeDir**, **classFileName**, **className** 和 **classArgs**
     

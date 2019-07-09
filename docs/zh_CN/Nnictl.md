@@ -374,8 +374,14 @@ nnictl 支持的命令：
   * 用法
     
     ```bash
-    nnictl experiment list
+    nnictl experiment list [OPTIONS]
     ```
+  
+  * 选项
+  
+  | 参数及缩写 | 是否必需  | 默认值 | 说明              |
+  | ----- | ----- | --- | --------------- |
+  | --all | False |     | 列出所有 Experiment |
 
 * **nnictl experiment delete**
   
@@ -391,9 +397,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明            |
-  | ----- | ----- | --- | ------------- |
-  | id    | False |     | Experiment ID |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明              |
+  | ----- | ----- | --- | --------------- |
+  | id    | False |     | Experiment ID   |
+  | --all | False |     | 删除所有 Experiment |
 
 <a name="export"></a>
 
