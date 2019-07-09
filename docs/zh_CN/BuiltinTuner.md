@@ -260,7 +260,7 @@ advisor:
 
 **安装**
 
-必须先安装 [pyTorch](https://pytorch.org/get-started/locally)。
+NetworkMorphism requires [PyTorch](https://pytorch.org/get-started/locally) and [Keras](https://keras.io/#installation), so users should install them first. The corresponding requirements file is [here](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt).
 
 **建议场景**
 
