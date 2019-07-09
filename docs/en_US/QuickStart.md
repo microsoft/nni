@@ -53,7 +53,7 @@ The above code can only try one set of parameters at a time, if we want to tune 
 
 NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
 
-```pseudo
+```
 input: search space, trial code, config file
 output: one optimal hyperparameter configuration
 
@@ -240,7 +240,7 @@ Below is the status of the all trials. Specifically:
 ## Related Topic
 
 * [Try different Tuners](BuiltinTuner.md)
-* [Try different Assessors](BuiltinAssessors.md)
+* [Try different Assessors](BuiltinAssessor.md)
 * [How to use command line tool nnictl](Nnictl.md)
 * [How to write a trial](Trials.md)
 * [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)

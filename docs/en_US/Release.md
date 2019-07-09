@@ -12,12 +12,12 @@
     * Added multiphase capability for the following builtin tuners: 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
     
-    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)
+    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md)
 
 * Web Portal
-    * Enable trial comparation in Web Portal. For details, refer to [View trials status](WebUI.md#view-trials-status)
-    * Allow users to adjust rendering interval of Web Portal. For details, refer to [View Summary Page](WebUI.md#view-summary-page)
-    * show intermediate results more friendly. For details, refer to [View trials status](WebUI.md#view-trials-status)
+    * Enable trial comparation in Web Portal. For details, refer to [View trials status](WebUI.md)
+    * Allow users to adjust rendering interval of Web Portal. For details, refer to [View Summary Page](WebUI.md)
+    * show intermediate results more friendly. For details, refer to [View trials status](WebUI.md)
 * [Commandline Interface](Nnictl.md)
     * `nnictl experiment delete`: delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
     * `nnictl platform clean`: It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
@@ -68,7 +68,7 @@
 
 ### Major Features
 
-* [Support NNI on Windows](./WindowsLocalMode.md)
+* [Support NNI on Windows](./NniOnWindows.md)
   * NNI running on windows for local mode
 * [New advisor: BOHB](./BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
