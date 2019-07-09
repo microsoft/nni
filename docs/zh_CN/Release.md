@@ -15,13 +15,13 @@
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md)
+    有关详细信息，参考[编写多阶段的 Tuner](./MultiPhase.md)。
 
 * Web 界面
     
-    * 在 Web 界面中可比较 Trial。 For details, refer to [View trials status](WebUI.md)
-    * 允许用户调节 Web 界面的刷新间隔。 For details, refer to [View Summary Page](WebUI.md)
-    * 更友好的显示中间结果。 For details, refer to [View trials status](WebUI.md)
+    * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
+    * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](WebUI.md)
+    * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
 * [命令行接口](Nnictl.md) 
     * `nnictl experiment delete`：删除一个或多个 Experiment，包括其日志，结果，环境信息核缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
     * `nnictl platform clean`：用于清理目标平台的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
