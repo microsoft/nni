@@ -29,10 +29,10 @@ multiPhase:
 #可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
   gpuNum:
 trial:
@@ -300,7 +300,7 @@ machineList:
         如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
 
-- **assessor**
+- **Assessor**
   
   - 说明
     
