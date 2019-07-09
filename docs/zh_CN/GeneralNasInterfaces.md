@@ -14,7 +14,7 @@
 
 ### 示例：为层选择运算符
 
-When designing the following model there might be several choices in the fourth layer that may make this model perform well. 如图所示，在模型代码中可以对第四层使用 Annotation。 此 Annotation 中，共有五个字段：
+在设计此模型时，第四层的运算符有多个可能的选择，会让模型有更好的表现。 如图所示，在模型代码中可以对第四层使用 Annotation。 此 Annotation 中，共有五个字段：
 
 ![](../img/example_layerchoice.png)
 
