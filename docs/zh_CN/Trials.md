@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 This `metrics` is reported to [assessor](BuiltinAssessor.md). 通常，`指标`是损失值或精度。
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
 
 * 返回配置的最终性能
 
