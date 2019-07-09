@@ -34,7 +34,7 @@
 
 ### 问题描述
 
-超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
+Nonconvex problem on the hyper-parameter search of [AutoGBDT](../GbdtExample.md) example.
 
 ### 搜索空间
 
