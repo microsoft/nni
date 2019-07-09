@@ -15,13 +15,13 @@
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    更多详情，参考[编写多阶段 Tuner](./MultiPhase.md#write-a-tuner-that-leverages-multi-phase)。
+    For details, please refer to [Write a tuner that leverages multi-phase](./MultiPhase.md)
 
 * Web 界面
     
-    * 在 Web 界面中可比较 Trial。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
-    * 允许用户调节 Web 界面的刷新间隔。 更多详情参考[查看概要页面](WebUI.md#view-summary-page)
-    * 更友好的显示中间结果。 更多详情参考[查看 Trial 状态](WebUI.md#view-trials-status)
+    * 在 Web 界面中可比较 Trial。 For details, refer to [View trials status](WebUI.md)
+    * 允许用户调节 Web 界面的刷新间隔。 For details, refer to [View Summary Page](WebUI.md)
+    * 更友好的显示中间结果。 For details, refer to [View trials status](WebUI.md)
 * [命令行接口](Nnictl.md) 
     * `nnictl experiment delete`：删除一个或多个 Experiment，包括其日志，结果，环境信息核缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
     * `nnictl platform clean`：用于清理目标平台的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
@@ -74,7 +74,7 @@
 
 ### 主要功能
 
-* [支持在 Windows 上使用 NNI](./WindowsLocalMode.md) 
+* [支持在 Windows 上使用 NNI](./NniOnWindows.md) 
     * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](./BohbAdvisor.md) 
     * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
