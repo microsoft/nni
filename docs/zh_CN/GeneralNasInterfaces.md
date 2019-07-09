@@ -111,7 +111,7 @@ NNI 上的权重共享示例。
 
 One-Shot NAS 是流行的，能在有限的时间和资源预算内找到较好的神经网络结构的方法。 本质上，它会基于搜索空间来构建完整的图，并使用梯度下降最终找到最佳子图。 它有不同的训练方法，如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 这里会关注第一种方法，即训练子图（ENAS）。
 
-使用相同 Annotation Trial 代码，可选择 One-Shot NAS 作为执行模式。 具体来说，编译后的 Trial 代码会构建完整的图形（而不是上面演示的子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 It is supported by [NNI multi-phase](./MultiPhase.md). 因为子图训练非常快，而每次启动子图训练时都会产生开销，所以采用此方法。
+使用相同 Annotation Trial 代码，可选择 One-Shot NAS 作为执行模式。 具体来说，编译后的 Trial 代码会构建完整的图形（而不是上面演示的子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 通过 [NNI 多阶段 Experiment](./MultiPhase.md) 来支持。 因为子图训练非常快，而每次启动子图训练时都会产生开销，所以采用此方法。
 
 ![](../img/one-shot_training.png)
 
