@@ -8,5 +8,5 @@
     :maxdepth: 2
 
     NNI 经验分享<nni_practice_sharing>
-    神经网络结构搜索的对比<CommunitySharings/NasComparison>
-    超参调优算法的对比<CommunitySharings/HpoComparison>
+    Neural Architecture Search Comparison<./CommunitySharings/NasComparison>
+    Hyper-parameter Tuning Algorithm Comparsion<./CommunitySharings/HpoComparison>
