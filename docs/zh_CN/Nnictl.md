@@ -469,7 +469,7 @@ nnictl 支持的命令：
     
     当前，以下 Tuner 和 Advisor 支持导入数据：
     
-    ```yml
+    ```yaml
     内置 Tuner: TPE, Anneal, GridSearch, MetisTuner
     内置 Advisor: BOHB
     ```
