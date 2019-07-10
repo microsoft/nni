@@ -34,7 +34,7 @@ is running in docker?: no
 
 ### Problem Description
 
-Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
+Nonconvex problem on the hyper-parameter search of [AutoGBDT](../GbdtExample.md) example.
 
 ### Search Space
 

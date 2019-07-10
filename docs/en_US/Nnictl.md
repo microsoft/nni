@@ -463,7 +463,7 @@ Debug mode will disable version check function in Trialkeeper.
 
     Currently, following tuner and advisor support import data:
 
-    ```yml
+    ```yaml
     builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
     builtinAdvisorName: BOHB
     ```
