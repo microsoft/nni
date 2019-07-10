@@ -10,7 +10,7 @@ numpy
 scipy
 coverage
 sklearn
-git+https://github.com/QuanluZhang/ConfigSpace.git
+git+https://github.com/QuanluZhang/ConfigSpace.git@fix-setup-numpy
 git+https://github.com/QuanluZhang/SMAC3.git
 ConfigSpace==0.4.7
 statsmodels==0.9.0
