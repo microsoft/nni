@@ -75,4 +75,4 @@ nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config
 to start the experiment.
 
 ## version check
-NNI support version check feature in since version 0.6, [refer](PaiMode.md)
+NNI support version check feature in since version 0.6, [refer](../TrainingService/PaiMode.md)

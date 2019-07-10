@@ -16,7 +16,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
     apt-get install nfs-common
     ```
 
-7. Install **NNI**, follow the install guide [here](QuickStart.md).
+7. Install **NNI**, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ## Prerequisite for Azure Kubernetes Service
 
@@ -28,7 +28,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 
 ## Design
 
-![](../img/kubeflow_training_design.png)
+![](../../img/kubeflow_training_design.png)
 Kubeflow training service instantiates a Kubernetes rest client to interact with your K8s cluster's API server.
 
 For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumes: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in NNI config YAML file. After files are prepared, Kubeflow training service will call K8S rest API to create Kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volume into the job's pod. Output files of Kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files.

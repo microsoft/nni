@@ -3,7 +3,7 @@
 NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
 ## Setup environment
-Install NNI, follow the install guide [here](QuickStart.md).
+Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ## Run an experiment
 Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
@@ -43,7 +43,7 @@ paiConfig:
 
 Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
 
-Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
+Compared with LocalMode and [RemoteMachineMode](../Tutorial/RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 * cpuNum
     * Required key. Should be positive number based on your trial program's CPU  requirement
 * memoryMB
@@ -66,17 +66,17 @@ nnictl create --config exp_pai.yml
 ```
 to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`.
 You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
-![](../img/nni_pai_joblist.jpg)
+![](../../img/nni_pai_joblist.jpg)
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
 
 Expand a trial information in trial list view, click the logPath link like:
-![](../img/nni_webui_joblist.jpg)
+![](../../img/nni_webui_joblist.jpg)
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-![](../img/nni_trial_hdfs_output.jpg)
+![](../../img/nni_trial_hdfs_output.jpg)
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
@@ -92,4 +92,4 @@ Check policy:
 3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.
 
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
-![](../img/version_check.png)
+![](../../img/version_check.png)

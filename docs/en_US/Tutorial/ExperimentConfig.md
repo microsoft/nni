@@ -188,9 +188,9 @@ machineList:
 
     * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
 
-    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PaiMode.md)
+    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](../TrainingService/PaiMode.md)
 
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). Detail please reference [KubeflowDoc](../TrainingService/KubeflowMode.md)
 
 * __searchSpacePath__
   * Description
@@ -209,7 +209,7 @@ machineList:
 * __multiPhase__
   * Description
 
-    __multiPhase__ enable [multi-phase experiment](./MultiPhase.md).
+    __multiPhase__ enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
 
 * __multiThread__
   * Description

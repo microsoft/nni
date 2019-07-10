@@ -201,28 +201,28 @@ Click the tab "Overview".
 
 Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
 
-![](../img/QuickStart1.png)
+![](../../img/QuickStart1.png)
 
 Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
 
-![](../img/QuickStart2.png)
+![](../../img/QuickStart2.png)
 
 #### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
-![](../img/QuickStart3.png)
+![](../../img/QuickStart3.png)
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
 * You can select the percentage to see top trials.
 * Choose two axis to swap its positions
 
-![](../img/QuickStart4.png)
+![](../../img/QuickStart4.png)
 
 Click the tab "Trial Duration" to see the bar graph.
 
-![](../img/QuickStart5.png)
+![](../../img/QuickStart5.png)
 
 Below is the status of the all trials. Specifically:
 
@@ -231,20 +231,20 @@ Below is the status of the all trials. Specifically:
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
 
-![](../img/QuickStart6.png)
+![](../../img/QuickStart6.png)
 
 * Intermediate Result Graph
 
-![](../img/QuickStart7.png)
+![](../../img/QuickStart7.png)
 
 ## Related Topic
 
-* [Try different Tuners](BuiltinTuner.md)
-* [Try different Assessors](BuiltinAssessor.md)
+* [Try different Tuners](../Tuner/BuiltinTuner.md)
+* [Try different Assessors](../Assessor/BuiltinAssessor.md)
 * [How to use command line tool nnictl](Nnictl.md)
-* [How to write a trial](Trials.md)
+* [How to write a trial](../TrialExample/Trials.md)
 * [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PaiMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
+* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
