@@ -4,9 +4,9 @@ References
 ..  toctree::
     :maxdepth: 3
 
-    Command Line <Nnictl>
+    Command Line <./Tutorial/Nnictl>
     Python API <sdk_reference>
-    Annotation <AnnotationSpec>
-    Configuration<ExperimentConfig>
-    Search Space <SearchSpaceSpec>
-    TrainingService <HowToImplementTrainingService>
+    Annotation <./Tutorial/AnnotationSpec>
+    Configuration<./Tutorial/ExperimentConfig>
+    Search Space <./Tutorial/SearchSpaceSpec>
+    TrainingService <./Tutorial/HowToImplementTrainingService>
