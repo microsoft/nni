@@ -46,7 +46,7 @@
 
 ## 文档
 
-文档使用了 [sphinx](http://sphinx-doc.org/) 来生成，支持 [Markdown](https://guides.github.com/features/mastering-markdown/) 和 [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) 格式。 所有文档都在 <docs> 目录下。
+文档使用了 [sphinx](http://sphinx-doc.org/) 来生成，支持 [Markdown](https://guides.github.com/features/mastering-markdown/) 和 [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) 格式。 所有文档都在 [docs/zh_CN](docs) 目录下。
 
 * 在提交文档改动前，请先**在本地生成文档**：`cd docs/zh_CN && make html`，然后，可以在 `docs/zh_CN/_build/html` 目录下找到所有生成的网页。 请认真分析生成日志中的**每个 WARNING**，这非常有可能是或**空连接**或其它问题。
 

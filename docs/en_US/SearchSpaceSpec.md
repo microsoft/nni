@@ -85,6 +85,7 @@ All types of sampling strategies and their parameter are listed here:
 | Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
+| GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |  |  |    |     |
 
 
 Known Limitations:

@@ -4,10 +4,10 @@ A config file is needed when create an experiment, the path of the config file i
 The config file is written in YAML format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates.
 
-- [Experiment config reference](#experiment-config-reference)
-  - [Template](#template)
-  - [Configuration spec](#configuration-spec)
-  - [Examples](#examples)
+- [Experiment config reference](#Experiment-config-reference)
+  - [Template](#Template)
+  - [Configuration spec](#Configuration-spec)
+  - [Examples](#Examples)
 
 <a name="Template"></a>
 ## Template
@@ -23,8 +23,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -55,8 +59,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -93,8 +101,12 @@ maxExecDuration:
 maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -128,12 +140,14 @@ machineList:
   * Description
 
     __authorName__ is the name of the author who create the experiment.
-   TBD: add default value
+
+    TBD: add default value
 
 * __experimentName__
   * Description
 
     __experimentName__ is the name of the experiment created.
+
     TBD: add default value
 
 * __trialConcurrency__
@@ -153,7 +167,7 @@ machineList:
 * __versionCheck__
   * Description
   
-    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false. 
+    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
 * __debug__
   * Description
@@ -191,6 +205,16 @@ machineList:
     __useAnnotation__ use annotation to analysis trial code and generate search space.
 
     Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+
+* __multiPhase__
+  * Description
+
+    __multiPhase__ enable [multi-phase experiment](./MultiPhase.md).
+
+* __multiThread__
+  * Description
+
+    __multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
 
 * __nniManagerIp__
   * Description

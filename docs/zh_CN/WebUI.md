@@ -8,6 +8,7 @@
 * 支持下载 Experiment 结果。
 * 支持导出 nni-manager 和 dispatcher 的日志文件。
 * 如果有任何问题，可以点击 “Feedback” 告诉我们。
+* 如果 Experiment 包含了超过 1000 个 Trial，可改变刷新间隔。
 
 ![](../img/webui-img/over1.png)
 
@@ -58,6 +59,10 @@
 
 ![](../img/webui-img/addColumn.png)
 
+* 如果要比较某些 Trial，可选择并点击 "Compare" 来查看结果。
+
+![](../img/webui-img/compare.png)
+
 * 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
 
 ![](../img/webui-img/copyParameter.png)
@@ -68,6 +73,6 @@
 
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的 Trial。
-* 中间结果图。
+* Intermediate Result Graph: 可看到图中默认和其它的键值。
 
-![](../img/intermediate.png)
+![](../img/webui-img/intermediate.png)

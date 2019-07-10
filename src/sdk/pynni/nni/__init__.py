@@ -23,6 +23,7 @@
 
 from .trial import *
 from .smartparam import *
+from .nas_utils import reload_tensorflow_variables
 
 class NoMoreTrialError(Exception):
     def __init__(self,ErrorInfo):

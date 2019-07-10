@@ -15,6 +15,7 @@ nnictl support commands:
 * [nnictl trial](#trial)
 * [nnictl top](#top)
 * [nnictl experiment](#experiment)
+* [nnictl platform](#platform)
 * [nnictl config](#config)
 * [nnictl log](#log)
 * [nnictl webui](#webui)
@@ -367,8 +368,35 @@ Debug mode will disable version check function in Trialkeeper.
   * Usage
 
     ```bash
-    nnictl experiment list
+    nnictl experiment list [OPTIONS]
     ```
+  
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--all|  False| |list all of experiments|
+
+* __nnictl experiment delete__
+
+  * Description
+
+    Delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+
+  * Usage
+
+    ```bash
+    nnictl experiment delete [OPTIONS]
+    ```
+  
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment|
+  |--all|  False| |delete all of experiments|
+
+
 
 <a name="export"></a>
 
@@ -435,7 +463,7 @@ Debug mode will disable version check function in Trialkeeper.
 
     Currently, following tuner and advisor support import data:
 
-    ```yml
+    ```yaml
     builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
     builtinAdvisorName: BOHB
     ```
@@ -455,6 +483,32 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
+
+<a name="platform"></a>
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+
+* __nnictl platform clean__
+
+  * Description
+
+    It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+
+  * Note
+   
+    if the target platform is being used by other users, it may cause unexpected errors to others.
+
+  * Usage
+
+    ```bash
+    nnictl platform clean [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--config|  True| |the path of yaml config file used when create an experiment|
+
 
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`

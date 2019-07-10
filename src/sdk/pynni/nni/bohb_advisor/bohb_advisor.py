@@ -259,33 +259,34 @@ class BOHB(MsgDispatcherBase):
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     min_budget: float
-		The smallest budget to consider. Needs to be positive!
-	max_budget: float
-		The largest budget to consider. Needs to be larger than min_budget!
-		The budgets will be geometrically distributed
-        :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
+        The smallest budget to consider. Needs to be positive!
+    max_budget: float
+        The largest budget to consider. Needs to be larger than min_budget!
+        The budgets will be geometrically distributed
+        :math:`a^2 + b^2 = c^2 \\sim \\eta^k` for :math:`k\\in [0, 1, ... , num\\_subsets - 1]`.
     eta: int
-		In each iteration, a complete run of sequential halving is executed. In it,
-		after evaluating each configuration on the same subset size, only a fraction of
-		1/eta of them 'advances' to the next round.
-		Must be greater or equal to 2.
+        In each iteration, a complete run of sequential halving is executed. In it,
+        after evaluating each configuration on the same subset size, only a fraction of
+        1/eta of them 'advances' to the next round.
+        Must be greater or equal to 2.
     min_points_in_model: int
-		number of observations to start building a KDE. Default 'None' means
-		dim+1, the bare minimum.
+        number of observations to start building a KDE. Default 'None' means
+        dim+1, the bare minimum.
     top_n_percent: int
-		percentage ( between 1 and 99, default 15) of the observations that are considered good.
-	num_samples: int
-		number of samples to optimize EI (default 64)
-	random_fraction: float
-		fraction of purely random configurations that are sampled from the
-		prior without the model.
-	bandwidth_factor: float
-		to encourage diversity, the points proposed to optimize EI, are sampled
-		from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
-	min_bandwidth: float
-		to keep diversity, even when all (good) samples have the same value for one of the parameters,
-		a minimum bandwidth (Default: 1e-3) is used instead of zero.
+        percentage ( between 1 and 99, default 15) of the observations that are considered good.
+    num_samples: int
+        number of samples to optimize EI (default 64)
+    random_fraction: float
+    fraction of purely random configurations that are sampled from the
+        prior without the model.
+    bandwidth_factor: float
+        to encourage diversity, the points proposed to optimize EI, are sampled
+        from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
+    min_bandwidth: float
+        to keep diversity, even when all (good) samples have the same value for one of the parameters,
+        a minimum bandwidth (Default: 1e-3) is used instead of zero.
     """
+
     def __init__(self,
                  optimize_mode='maximize',
                  min_budget=1,

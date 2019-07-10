@@ -51,7 +51,7 @@ nnictl package install --name=BOHB
 
 To use BOHB, you should add the following spec in your experiment's YAML config file:
 
-```yml
+```yaml
 advisor:
   builtinAdvisorName: BOHB
   classArgs:
