@@ -134,7 +134,7 @@ class PipeLogReader(threading.Thread):
         self._is_read_completed = False
         self.process_exit = False
         self.log_collection = log_collection
-        self.log_pattern = re.compile(r'^NNISDK_MEb\'.*\'$')
+        self.log_pattern = re.compile(r'NNISDK_MEb\'.*\'$')
 
         def _populateQueue(stream, queue):
             '''
