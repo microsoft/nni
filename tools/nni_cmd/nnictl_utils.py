@@ -151,7 +151,7 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.all:
+    elif args.all != 'all':
         result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
@@ -166,7 +166,7 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list and args.id:
+    if not result_list and args.id and args.id != 'all':
         print_error('There are no experiments matched, please set correct experiment id...')
     elif not result_list:
         print_error('There is no experiment running...')
