@@ -43,7 +43,7 @@ paiConfig:
 
 Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
 
-Compared with LocalMode and [RemoteMachineMode](../Tutorial/RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
+Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 * cpuNum
     * Required key. Should be positive number based on your trial program's CPU  requirement
 * memoryMB
