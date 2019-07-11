@@ -131,7 +131,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     render() {
         const { isVisble, closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoadispatcher, isLoading } = this.state;
-        const heights: number = window.innerHeight - 48; // padding left and right
+        const heights: number = window.innerHeight - 48; // padding top and bottom
         return (
             <Row>
                 <Drawer
