@@ -54,6 +54,10 @@
     "tslint-microsoft-contrib": "^6.0.0",
     "typescript": "^3.2.2"
   },
+  "resolutions": {
+    "mem": "^4.0.0",
+    "handlebars": "^4.1.0"
+  },
   "engines": {
     "node": ">=10.0.0"
   },
