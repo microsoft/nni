@@ -10,8 +10,6 @@ if __name__ == '__main__':
             print('report intermediate result.')
         nni.report_intermediate_result(0.1*(i+1))
         time.sleep(2)
-    print('report final result')
-    if int(nni.get_sequence_id()) % 2 == 0:
-        print('test final metrics not at line start.', end='')
+    print('test final metrics not at line start.', end='')
     nni.report_final_result(1.0)
     print('done')
