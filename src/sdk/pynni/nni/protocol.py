@@ -28,6 +28,7 @@ class CommandType(Enum):
     # in
     Initialize = b'IN'
     RequestTrialJobs = b'GE'
+    ResubmitTrialJob = b'RS'
     ReportMetricData = b'ME'
     UpdateSearchSpace = b'SS'
     ImportData = b'FD'

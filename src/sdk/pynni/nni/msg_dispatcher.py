@@ -110,6 +110,14 @@ class MsgDispatcher(MsgDispatcherBase):
         # when parameters is None.
         if len(params_list) < len(ids):
             send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
+    
+    def handle_resubmit_trial_job(self, data):
+        # data: HyperParameter
+        # TODO: test
+        param_id = data['parameter_id']
+        params = data['parameters']
+
+        send(CommandType.NewTrialJob, _pack_parameter(param_id, params))
 
     def handle_update_search_space(self, data):
         self.tuner.update_search_space(data)

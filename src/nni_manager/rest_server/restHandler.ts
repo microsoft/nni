@@ -70,6 +70,7 @@ class NNIRestHandler {
         this.listTrialJobs(router);
         this.getTrialJob(router);
         this.addTrialJob(router);
+        this.resubmitTrialJob(router);
         this.cancelTrialJob(router);
         this.getMetricData(router);
         this.exportData(router);
@@ -235,6 +236,16 @@ class NNIRestHandler {
     private addTrialJob(router: Router): void {
         router.post('/trial-jobs', async (req: Request, res: Response) => {
             this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
+        });
+    }
+
+    private resubmitTrialJob(router: Router): void {
+        router.post('/resubmit', async (req: Request, res: Response) => {
+            this.nniManager.resubmitTrialJob(JSON.stringify(req.body)).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);

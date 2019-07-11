@@ -145,6 +145,7 @@ class MsgDispatcherBase(Recoverable):
             # Tunner commands:
             CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
+            CommandType.ResubmitTrialJob: self.handle_resubmit_trial_job,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
             CommandType.ImportData: self.handle_import_data,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
@@ -167,6 +168,9 @@ class MsgDispatcherBase(Recoverable):
 
     def handle_request_trial_jobs(self, data):
         raise NotImplementedError('handle_request_trial_jobs not implemented')
+
+    def handle_resubmit_trial_job(self, data):
+        raise NotImplementedError('handle_resubmit_trial_job not implemented')
 
     def handle_update_search_space(self, data):
        raise NotImplementedError('handle_update_search_space not implemented')

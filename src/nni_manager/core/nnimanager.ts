@@ -37,7 +37,7 @@ import {
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
-    ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
+    ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, RESUBMIT_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
@@ -133,6 +133,32 @@ class NNIManager implements Manager {
 
         // trial id has not been generated yet, thus use '' instead
         return this.dataStore.storeTrialJobEvent('ADD_CUSTOMIZED', '', hyperParams);
+    }
+
+    public async resubmitTrialJob(jobId: string): Promise<void> {
+        // get trail parameter id
+        const trialJobInfo = await this.getTrialJob(jobId); 
+        
+        if (this.dispatcher === undefined) {
+            return Promise.reject(
+                new Error('tuner has not been setup')
+            );
+        } 
+        if (trialJobInfo.hyperParameters === undefined) {
+            return Promise.reject(
+                new Error('no hyper parameters exist')
+            );
+        } 
+
+        let hyperParameter
+        if (trialJobInfo.hyperParameters.length == 1){
+            hyperParameter = trialJobInfo.hyperParameters[0]
+        } else {
+            hyperParameter = trialJobInfo.hyperParameters.find(hp=>JSON.parse(hp).parameter_index == 0) as string
+        }
+        let hyperParameterJson = JSON.parse(hyperParameter)        
+        
+        this.dispatcher.sendCommand(RESUBMIT_TRIAL_JOB, hyperParameterJson.parameter_id); 
     }
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
@@ -242,10 +268,8 @@ class NNIManager implements Manager {
         });
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        return Promise.resolve(
-            this.trainingService.getTrialJob(trialJobId)
-        );
+    public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
+        return this.dataStore.getTrialJob(trialJobId);
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
