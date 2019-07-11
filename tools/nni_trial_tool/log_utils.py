@@ -184,8 +184,7 @@ class PipeLogReader(threading.Thread):
             if self.log_collection != 'none':
                 self.queue.put(collect_line)
             elif metrics is not None:
-                # self.log_collection == 'none'
-                self.queue.put(metrics)
+                self.queue.put(metrics+'\n')
 
         self.pipeReader.close()
 

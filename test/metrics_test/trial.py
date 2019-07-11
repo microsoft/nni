@@ -12,7 +12,6 @@ if __name__ == '__main__':
         time.sleep(2)
     print('report final result')
     if int(nni.get_sequence_id()) % 2 == 0:
-        print('test metrics not at line start.', end='')
+        print('test final metrics not at line start.', end='')
     nni.report_final_result(1.0)
     print('done')
-
