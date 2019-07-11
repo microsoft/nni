@@ -158,9 +158,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 // user not input message
                 if (pointVal === '' || minVal === '') {
                     alert('Please input filter message');
-                    // if (this._isMounted) {
-                    //     this.setState({ isLoadconfirmBtn: false });
-                    // }
                 } else {
                     // user not input max value
                     const position = JSON.parse(pointVal);
