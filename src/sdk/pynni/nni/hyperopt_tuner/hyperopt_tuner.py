@@ -209,9 +209,9 @@ class HyperoptTuner(Tuner):
         self.rval = None
         self.supplement_data_num = 0
 
-        if parallel_optimize:
+        self.parallel = parallel_optimize
+        if self.parallel:
             self.CL_rval = None
-            self.parallel = parallel_optimize
             self.constant_liar_type = constant_liar_type
             self.running_data = []
             self.optimal_y = 0
