@@ -41,7 +41,7 @@ class OptimizeMode(Enum):
     Maximize = 'maximize'
 
 
-class NodeType():
+class NodeType:
     """Node Type class
     """
     ROOT = 'root'
@@ -51,7 +51,7 @@ class NodeType():
     NAME = '_name'
 
 
-class MetricType():
+class MetricType:
     """The types of metric data
     """
     FINAL = 'FINAL'
