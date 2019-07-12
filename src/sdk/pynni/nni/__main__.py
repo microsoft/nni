@@ -130,8 +130,6 @@ def main():
 
     if args.advisor_class_name:
         # advisor is enabled and starts to run
-        if args.multi_phase:
-            raise AssertionError('multi_phase has not been supported in advisor')
         if args.advisor_class_name in AdvisorModuleName:
             dispatcher = create_builtin_class_instance(
                 args.advisor_class_name,
