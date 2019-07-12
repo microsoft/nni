@@ -31,7 +31,7 @@ import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
+from nni.utils import OptimizeMode, MetricType, extract_scalar_reward, randint_to_quniform
 from nni.common import multi_phase_enabled
 
 from .config_generator import CG_BOHB
@@ -80,7 +80,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
     return params_id
 
 
-class Bracket():
+class Bracket(object):
     """
     A bracket in BOHB, all the information of a bracket is managed by
     an instance of this class.
@@ -336,12 +336,6 @@ class BOHB(MsgDispatcherBase):
         # record the unsatisfied parameter request from trial jobs
         self.unsatisfied_jobs = []
 
-    def load_checkpoint(self):
-        pass
-
-    def save_checkpoint(self):
-        pass
-
     def handle_initialize(self, data):
         """Initialize Tuner, including creating Bayesian optimization-based parametric models
         and search space formations
@@ -578,7 +572,7 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
 
-        if data['type'] == 'REQUEST_PARAMETER':
+        if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
@@ -613,7 +607,7 @@ class BOHB(MsgDispatcherBase):
                 self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
 
             assert 'type' in data
-            if data['type'] == 'FINAL':
+            if data['type'] == MetricType.FINAL:
                 # and PERIODICAL metric are independent, thus, not comparable.
                 assert 'sequence' in data
                 self.brackets[s].set_config_perf(
@@ -624,7 +618,7 @@ class BOHB(MsgDispatcherBase):
                 _parameters.pop(_KEY)
                 # update BO with loss, max_s budget, hyperparameters
                 self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
-            elif data['type'] == 'PERIODICAL':
+            elif data['type'] == MetricType.PERIODICAL:
                 self.brackets[s].set_config_perf(
                     int(i), data['parameter_id'], data['sequence'], value)
             else:

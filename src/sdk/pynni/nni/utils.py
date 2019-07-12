@@ -41,7 +41,7 @@ class OptimizeMode(Enum):
     Maximize = 'maximize'
 
 
-class NodeType:
+class NodeType():
     """Node Type class
     """
     ROOT = 'root'
@@ -49,6 +49,14 @@ class NodeType:
     VALUE = '_value'
     INDEX = '_index'
     NAME = '_name'
+
+
+class MetricType():
+    """The types of metric data
+    """
+    FINAL = 'FINAL'
+    PERIODICAL = 'PERIODICAL'
+    REQUEST_PARAMETER = 'REQUEST_PARAMETER'
 
 
 def split_index(params):

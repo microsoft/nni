@@ -31,7 +31,7 @@ import json_tricks
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger, multi_phase_enabled
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, randint_to_quniform
+from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward, randint_to_quniform
 import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
@@ -301,12 +301,6 @@ class Hyperband(MsgDispatcherBase):
         # new trial job is added to this dict and finished trial job is removed from it.
         self.job_id_para_id_map = dict()
 
-    def load_checkpoint(self):
-        pass
-
-    def save_checkpoint(self):
-        pass
-
     def handle_initialize(self, data):
         """data is search space
 
@@ -406,7 +400,7 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        if data['type'] == 'REQUEST_PARAMETER':
+        if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
@@ -431,12 +425,12 @@ class Hyperband(MsgDispatcherBase):
             else:
                 self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
 
-            if data['type'] == 'FINAL':
+            if data['type'] == MetricType.FINAL:
                 # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
                 # and PERIODICAL metric are independent, thus, not comparable.
                 self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
                 self.completed_hyper_configs.append(data)
-            elif data['type'] == 'PERIODICAL':
+            elif data['type'] == MetricType.PERIODICAL:
                 self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
             else:
                 raise ValueError('Data type not supported: {}'.format(data['type']))
