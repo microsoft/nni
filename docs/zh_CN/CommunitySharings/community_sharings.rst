@@ -7,6 +7,6 @@
 ..  toctree::
     :maxdepth: 2
 
-    NNI 经验分享<nni_practice_sharing>
-    神经网络结构搜索的对比<./CommunitySharings/NasComparison>
-    超参调优算法的对比<./CommunitySharings/HpoComparison>
+    Recommenders 中使用 NNI<RecommendersSvd>
+    神经网络结构搜索（NAS）的对比<NasComparision>
+    超参调优算法的对比<HpoComparision>

@@ -33,27 +33,27 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 
 每次 Experiment 执行时，用户只需要定义搜索空间，改动几行代码，就能利用 NNI 内置的 Tuner/Assessor 和训练服务来搜索最好的超参组合以及神经网络结构。 基本上分为三步：
 
-> 第一步：[定义搜索空间](SearchSpaceSpec.md)
+> 第一步：[定义搜索空间](Tutorial/SearchSpaceSpec.md)
 > 
-> 第二步：[改动模型代码](Trials.md)
+> 第二步：[改动模型代码](TrialExample/Trials.md)
 > 
-> 第三步：[定义 Experiment 配置](ExperimentConfig.md)
+> 第三步：[>定义 Experiment 配置](Tutorial/ExperimentConfig.md)
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
 </p>
 
-更多 Experiment 运行的详情，参考[快速入门](QuickStart.md)。
+更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
 ## 了解更多信息
 
-* [开始使用](QuickStart.md)
-* [如何为 NNI 调整代码？](Trials.md)
-* [NNI 支持哪些 Tuner？](BuiltinTuner.md)
-* [如何自定义 Tuner？](CustomizeTuner.md)
-* [NNI 支持哪些 Assessor？](BuiltinAssessor.md)
-* [如何自定义 Assessor？](CustomizeAssessor.md)
-* [如何在本机上运行 Experiment？](LocalMode.md)
-* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PaiMode.md)
-* [样例](MnistExamples.md)
+* [开始使用](Tutorial/QuickStart.md)
+* [如何为 NNI 调整代码？](TrialExample/Trials.md)
+* [NNI 支持哪些 Tuner？](Tuner/BuiltinTuner.md)
+* [如何自定义 Tuner？](Tuner/CustomizeTuner.md)
+* [NNI 支持哪些 Assessor？](Assessor/BuiltinAssessor.md)
+* [如何自定义 Assessor？](Assessor/CustomizeAssessor.md)
+* [如何在本机上运行 Experiment？](TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
+* [样例](TrialExample/MnistExamples.md)

@@ -88,7 +88,7 @@
 
 ## 更多
 
-* [概述](Overview.md)
+* [概述](../Overview.md)
 * [使用命令行工具 nnictl](Nnictl.md)
 * [使用 NNIBoard](WebUI.md)
 * [定制搜索空间](SearchSpaceSpec.md)

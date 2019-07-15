@@ -15,5 +15,5 @@ Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Tri
 ..  toctree::
     :maxdepth: 2
 
-    内置的 Assessor<./Assessor/BuiltinAssessor>
-    自定义 Assessor<./Assessor/CustomizeAssessor>
+    内置 Assessor<builtin_assessor>
+    自定义 Assessor<Assessor/CustomizeAssessor>
