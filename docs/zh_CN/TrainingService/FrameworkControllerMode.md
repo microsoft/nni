@@ -15,7 +15,7 @@
       ```
       
 
-6. 参考[指南](QuickStart.md)安装 **NNI**。
+6. 参考[指南](../Tutorial/QuickStart.md)安装 **NNI**。
 
 ## Azure 部署的 Kubernetes 的准备工作
 
@@ -30,7 +30,7 @@
 
 ## 设计
 
-参考[Kubeflow 训练服务](./KubeflowMode.md)，FrameworkController 服务管道非常类似。
+参考[Kubeflow 训练平台](KubeflowMode.md)的设计，FrameworkController 训练平台与其类似。
 
 ## 样例
 
@@ -109,7 +109,7 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
 
 ## 如何运行示例
 
-准备好配置文件后，通过运行 nnictl 来启动 Experiment。 在 FrameworkController 上开始 Experiment 的方法与 Kubeflow 类似，可参考[指南](./KubeflowMode.md)了解更多信息。
+准备好配置文件后，通过运行 nnictl 来启动 Experiment。 在 FrameworkController 上开始 Experiment 的方法与 Kubeflow 类似，可参考[指南](KubeflowMode.md)了解更多信息。
 
 ## 版本校验
 
