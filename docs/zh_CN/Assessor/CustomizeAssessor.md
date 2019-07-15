@@ -1,14 +1,14 @@
-# Customize Assessor
+# 自定义 Assessor
 
-NNI supports to build an assessor by yourself for tuning demand.
+NNI 支持自定义 Assessor。
 
-If you want to implement a customized Assessor, there are three things to do:
+实现自定义的 Assessor，需要如下几步：
 
-1. Inherit the base Assessor class
-2. Implement assess_trial function
-3. Configure your customized Assessor in experiment YAML config file
+1. 继承 Assessor 基类
+2. 实现 assess_trial 函数
+3. 在 Experiment 的 YAML 文件中配置好自定义的 Assessor
 
-**1. Inherit the base Assessor class**
+**1. 继承 Assessor 基类**
 
 ```python
 from nni.assessor import Assessor
@@ -18,7 +18,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**2. Implement assess trial function**
+**2. 实现 assess_trial 函数**
 
 ```python
 from nni.assessor import Assessor, AssessResult
@@ -29,32 +29,32 @@ class CustomizedAssessor(Assessor):
 
     def assess_trial(self, trial_history):
         """
-        Determines whether a trial should be killed. Must override.
-        trial_history: a list of intermediate result objects.
-        Returns AssessResult.Good or AssessResult.Bad.
+        确定是否要停止该 Trial。 必须重载。
+        trial_history: 中间结果列表对象。
+        返回 AssessResult.Good 或 AssessResult.Bad。
         """
-        # you code implement here.
+        # 代码实现于此处。
         ...
 ```
 
-**3. Configure your customized Assessor in experiment YAML config file**
+**3. 在 Experiment 的 YAML 文件中配置好自定义的 Assessor**
 
-NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
+NNI 需要定位到自定义的 Assessor 类，并实例化它，因此需要指定自定义 Assessor 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
 ```yaml
 assessor:
   codeDir: /home/abc/myassessor
   classFileName: my_customized_assessor.py
   className: CustomizedAssessor
-  # Any parameter need to pass to your Assessor class __init__ constructor
-  # can be specified in this optional classArgs field, for example
+  # 任何传入 __init__ 构造函数的参数，
+  # 都需要在 classArgs 字段中指定，如
   classArgs:
     arg1: value1
 ```
 
-Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
+注意在 **2** 中， `trial_history` 对象与 Trial 通过 `report_intermediate_result` 函数返回给 Assessor 的对象完全一致。
 
-More detail example you could see:
+更多样例，可参考：
 
 > * [medianstop-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor)
 > * [curvefitting-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/curvefitting_assessor)
