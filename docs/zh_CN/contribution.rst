@@ -3,5 +3,5 @@
 ###############################
 
 ..  toctree::
-    Development Setup<./Tutorial/SetupNniDeveloperEnvironment>
-    Contribution Guide<./Tutorial/Contributing>
+    设置开发环境<./Tutorial/SetupNniDeveloperEnvironment>
+    贡献指南<./Tutorial/Contributing>
