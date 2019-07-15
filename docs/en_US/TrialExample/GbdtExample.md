@@ -98,7 +98,7 @@ If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `baggi
 }
 ```
 
-More support variable type you could reference [here](SearchSpaceSpec.md).
+More support variable type you could reference [here](../Tutorial/SearchSpaceSpec.md).
 
 ### 3.3 Add SDK of nni into your code.
 

@@ -15,7 +15,7 @@ NNI supports running experiment using [FrameworkController](https://github.com/M
     apt-get install nfs-common
     ```
 
-6. Install **NNI**, follow the install guide [here](QuickStart.md).
+6. Install **NNI**, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ## Prerequisite for Azure Kubernetes Service
 
@@ -30,7 +30,7 @@ Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/mas
 
 ## Design
 
-Please refer the design of [Kubeflow training service](./KubeflowMode.md), FrameworkController training service pipeline is similar.
+Please refer the design of [Kubeflow training service](KubeflowMode.md), FrameworkController training service pipeline is similar.
 
 ## Example
 
@@ -109,7 +109,7 @@ Trial configuration in frameworkcontroller mode have the following configuration
 
 ## How to run example
 
-After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on FrameworkController is similar to Kubeflow, please refer the [document](./KubeflowMode.md) for more information.
+After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on FrameworkController is similar to Kubeflow, please refer the [document](KubeflowMode.md) for more information.
 
 ## version check
 
