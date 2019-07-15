@@ -7,7 +7,7 @@
 * 生成 NAS 编程接口 
     * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 
-* [有 Matern 核的高斯 Tuner](./GPTuner.md)
+* [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
 * 支持多阶段 Experiment
     
@@ -15,14 +15,14 @@
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    有关详细信息，参考[实现多阶段的 Tuner](./MultiPhase.md)。
+    For details, please refer to [Write a tuner that leverages multi-phase](AdvancedFeature/MultiPhase.md)
 
 * Web 界面
     
-    * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
-    * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](WebUI.md)
-    * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](WebUI.md)
-* [命令行接口](Nnictl.md) 
+    * 在 Web 界面中可比较 Trial。 For details, refer to [View trials status](Tutorial/WebUI.md)
+    * 允许用户调节 Web 界面的刷新间隔。 For details, refer to [View Summary Page](Tutorial/WebUI.md)
+    * 更友好的显示中间结果。 For details, refer to [View trials status](Tutorial/WebUI.md)
+* [命令行接口](Tutorial/Nnictl.md) 
     * `nnictl experiment delete`：删除一个或多个 Experiment，包括其日志，结果，环境信息核缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
     * `nnictl platform clean`：用于清理目标平台的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
 
@@ -47,7 +47,7 @@
     * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * 支持 Kubeflow v1beta2 操作符 
     * 支持 Kubeflow TFJob/PyTorchJob v1beta2
-* [生成 NAS 编程接口](./GeneralNasInterfaces.md) 
+* [生成 NAS 编程接口](AdvancedFeature/GeneralNasInterfaces.md) 
     * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
     * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
     * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
@@ -66,22 +66,22 @@
 * 修复表格的 Bug
 * 优化嵌套搜索空间
 * 优化 'randint' 类型，并支持下限
-* [比较不同超参搜索调优算法](./CommunitySharings/HpoComparision.md)
-* [NAS 算法的对比](./CommunitySharings/NasComparision.md)
-* [Recommenders 上的实践](./CommunitySharings/NniPracticeSharing/RecommendersSvd.md)
+* [比较不同超参搜索调优算法](CommunitySharings/HpoComparision.md)
+* [NAS 算法的对比](CommunitySharings/NasComparision.md)
+* [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
 
 ## 发布 0.7 - 4/29/2018
 
 ### 主要功能
 
-* [支持在 Windows 上使用 NNI](./NniOnWindows.md) 
+* [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
     * NNI 可在 Windows 上使用本机模式
-* [支持新的 Advisor: BOHB](./BohbAdvisor.md) 
+* [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
     * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
-* [支持通过 nnictl 来导入导出 Experiment 数据](./Nnictl.md#experiment) 
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
     * 在 Experiment 执行完后，可生成分析结果报告
     * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
-* [可为 NNI Trial 任务指定 GPU](./ExperimentConfig.md#localConfig) 
+* [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
     * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
 * 改进 Web 界面 
     * 在 Web 界面上使用十进制格式的指标
@@ -163,14 +163,14 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* Support [Metis tuner](Tuner/MetisTuner.md) as a new NNI tuner. **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
-* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
+* Support [Curve fitting assessor](Assessor/CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
+* Advanced Support of [Weight Sharing](AdvancedFeature/AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### 改进训练平台
 
-* [FrameworkController 训练平台](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
+* [FrameworkController 训练平台](TrainingService/FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
     * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
     * NNI 为作业定义了统一而简单的规范。
     * 如何使用 FrameworkController 的 MNIST 样例。
@@ -188,11 +188,11 @@
 
 #### 支持新的 Tuner
 
-* 支持新的 [network morphism](NetworkmorphismTuner.md) Tuner。
+* Support [network morphism](Tuner/NetworkmorphismTuner.md) as a new tuner
 
 #### 改进训练平台
 
-* 将[Kubeflow 训练平台](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Migrate [Kubeflow training service](TrainingService/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
 * Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
 * 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
@@ -219,11 +219,11 @@
 
 ### 主要功能
 
-* [Kubeflow 训练服务](./KubeflowMode.md) 
+* [Kubeflow 训练服务](TrainingService/KubeflowMode.md) 
     * 支持 tf-operator
     * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](GridsearchTuner.md)
-* [Hyperband Tuner](HyperbandAdvisor.md)
+* [网格搜索 Tuner](Tuner/GridsearchTuner.md)
+* [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
     * 支持 hyperband Tuner
@@ -257,7 +257,7 @@
     nnictl create --port 8081 --config <config file path>
     ```
 
-* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Nnictl.md) 查看完整帮助。
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 Or refer to [NNICTL Spec](Tutorial/Nnictl.md) for the fully usage of NNICTL.
 
 ### API 的新功能和更新
 
@@ -295,7 +295,7 @@
 
 ### 其它
 
-* 界面重构，参考[网页文档](WebUI.md)，了解如何使用新界面。
+* UI refactoring, refer to [WebUI doc](Tutorial/WebUI.md) for how to work with the new UI.
 * 持续集成：NNI 已切换到 Azure pipelines。
 * [0.3.0 的已知问题](https://github.com/Microsoft/nni/labels/nni030knownissues)。
 
@@ -303,10 +303,10 @@
 
 ### 主要功能
 
-* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练平台 (参考[这里](./PaiMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode) 
     * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
     * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](SmacTuner.md)，了解如何使用 SMAC Tuner) 
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Tuner/SmacTuner.md) for instructions about how to use SMAC tuner) 
     * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
