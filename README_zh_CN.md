@@ -252,7 +252,7 @@ You can use these commands to get more information about the experiment
 
 在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/Contributing.md)。
 
-我们正在实现[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
+我们正在实现[如何调试](docs/zh_CN/HowToDebug.md)的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
