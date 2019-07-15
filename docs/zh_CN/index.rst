@@ -12,11 +12,11 @@ Neural Network Intelligence（NNI）文档
     :titlesonly:
 
     概述<Overview>
-    快速入门<./Tutorial/QuickStart>
+    QuickStart<Tutorial/QuickStart>
     教程<tutorials>
     示例<examples>
     参考<reference>
-    常见问答<FAQ>
+    FAQ<Tutorial/FAQ>
     贡献<contribution>
     更改日志<Release>
-    社区经验分享<community_sharings>
+    Community Sharings<CommunitySharings/community_sharings>
