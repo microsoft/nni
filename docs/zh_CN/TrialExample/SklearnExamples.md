@@ -6,7 +6,7 @@ NNI 支持多种调优算法来为 scikit-learn 搜索最好的模型和超参�
 
 ## 1. 如何运行此样例
 
-安装 NNI 包，并使用命令行工具 `nnictl` 来启动 Experiment。 有关安装和环境准备的内容，参考[这里](QuickStart.md)。
+安装 NNI 包，并使用命令行工具 `nnictl` 来启动 Experiment。 有关安装和环境准备的内容，参考[这里](../Tutorial/QuickStart.md)。
 
 安装完 NNI 后，进入相应的目录，输入下列命令即可启动 Experiment：
 
@@ -82,7 +82,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    就可以使用这些变量来编写 scikit-learn 的代码。
+    就可以使用这些变量来实现 scikit-learn 的代码。
 
 * **第三步**
     
