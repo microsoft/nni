@@ -15,7 +15,7 @@
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
     
-    有关详细信息，参考[编写多阶段的 Tuner](./MultiPhase.md)。
+    有关详细信息，参考[实现多阶段的 Tuner](./MultiPhase.md)。
 
 * Web 界面
     
