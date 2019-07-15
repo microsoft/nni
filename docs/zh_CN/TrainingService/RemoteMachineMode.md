@@ -12,7 +12,7 @@ NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remo
 
 ## 设置 NNI 环境
 
-按照[指南](QuickStart.md)在每台计算机上安装 NNI。
+按照[指南](../Tutorial/QuickStart.md)在每台计算机上安装 NNI。
 
 ## 运行 Experiment
 

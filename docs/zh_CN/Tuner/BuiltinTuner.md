@@ -2,7 +2,7 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](./CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
+注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](../CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
 
 当前支持的 Tuner：
 
@@ -208,7 +208,7 @@ tuner:
 
 **建议场景**
 
-注意，搜索空间仅支持 `choice`, `quniform`, `qloguniform`。 `quniform` 和 `qloguniform` 中的 **数字 `q` 有不同的含义（与[搜索空间](./SearchSpaceSpec.md)说明不同）。 这里的意义是在 `low` 和 `high` 之间均匀取值的数量。</p> 
+注意，搜索空间仅支持 `choice`, `quniform`, `qloguniform`。 `quniform` 和 `qloguniform` 中的**数字 `q` 有不同的含义（与[搜索空间](../Tutorial/SearchSpaceSpec.md)说明不同）。 这里的意义是在 `low` 和 `high` 之间均匀取值的数量。</p> 
 
 当搜索空间比较小，能够遍历整个搜索空间。 [详细说明](./GridsearchTuner.md)
 

@@ -10,17 +10,17 @@
 * 如果有任何问题，可以点击 “Feedback” 告诉我们。
 * 如果 Experiment 包含了超过 1000 个 Trial，可改变刷新间隔。
 
-![](../img/webui-img/over1.png)
+![](../../img/webui-img/over1.png)
 
 * 查看最好结果的 Trial。
 
-![](../img/webui-img/over2.png)
+![](../../img/webui-img/over2.png)
 
 ## 查看任务默认指标
 
 点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
-![](../img/accuracy.png)
+![](../../img/accuracy.png)
 
 ## 查看超参
 
@@ -29,23 +29,23 @@
 * 可选择百分比查看最好的 Trial。
 * 选择两个轴来交换位置。
 
-![](../img/hyperPara.png)
+![](../../img/hyperPara.png)
 
 ## 查看 Trial 运行时间
 
 点击 "Trial Duration" 标签来查看柱状图。
 
-![](../img/trial_duration.png)
+![](../../img/trial_duration.png)
 
 ## 查看 Trial 中间结果
 
 单击 "Intermediate Result" 标签查看折线图。
 
-![](../img/webui-img/trials_intermeidate.png)
+![](../../img/webui-img/trials_intermeidate.png)
 
 该图有筛选功能。 点击筛选按钮， 在第一个输入框中输入关注点的序号， 在第二个输入框中输入中间结果的范围，选出需要的数据。
 
-![](../img/webui-img/filter_intermediate.png)
+![](../../img/webui-img/filter_intermediate.png)
 
 ## 查看 Trial 状态
 
@@ -53,26 +53,26 @@
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
-![](../img/webui-img/detail-local.png)
+![](../../img/webui-img/detail-local.png)
 
 * "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。
 
-![](../img/webui-img/addColumn.png)
+![](../../img/webui-img/addColumn.png)
 
 * 如果要比较某些 Trial，可选择并点击 "Compare" 来查看结果。
 
-![](../img/webui-img/compare.png)
+![](../../img/webui-img/compare.png)
 
 * 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
 
-![](../img/webui-img/copyParameter.png)
+![](../../img/webui-img/copyParameter.png)
 
 * 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
-![](../img/webui-img/detail-pai.png)
+![](../../img/webui-img/detail-pai.png)
 
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的 Trial。
 * Intermediate Result Graph: 可看到图中默认和其它的键值。
 
-![](../img/webui-img/intermediate.png)
+![](../../img/webui-img/intermediate.png)

@@ -225,7 +225,7 @@ You can use these commands to get more information about the experiment
 * [使用命令行工具 nnictl](docs/zh_CN/Nnictl.md)
 * [使用 NNIBoard](docs/zh_CN/WebUI.md)
 * [如何定义搜索空间](docs/zh_CN/SearchSpaceSpec.md)
-* [如何编写 Trial 代码](docs/zh_CN/Trials.md)
+* [如何实现 Trial 代码](docs/zh_CN/Trials.md)
 * [如何选择 Tuner、搜索算法](docs/zh_CN/BuiltinTuner.md)
 * [配置 Experiment](docs/zh_CN/ExperimentConfig.md)
 * [如何使用 Annotation](docs/zh_CN/Trials.md#nni-python-annotation)
@@ -252,7 +252,7 @@ You can use these commands to get more information about the experiment
 
 在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/Contributing.md)。
 
-我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
+我们正在实现[如何调试](docs/zh_CN/HowToDebug.md)的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 

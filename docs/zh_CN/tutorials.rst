@@ -6,7 +6,7 @@
     :maxdepth: 2
 
     安装<Installation>
-    编写 Trial<./TrialExample/Trials>
+    实现 Trial<./TrialExample/Trials>
     Tuner<tuners>
     Assessor<assessors>
     Web 界面<WebUI>

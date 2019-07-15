@@ -6,9 +6,9 @@ TrainingService 是与平台管理、任务调度相关的模块。 TrainingServ
 
 ## 系统架构
 
-![](../img/NNIDesign.jpg)
+![](../../img/NNIDesign.jpg)
 
-NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持本机，[远程平台](RemoteMachineMode.md)，[OpenPAI 平台](PaiMode.md)，[Kubeflow 平台](KubeflowMode.md) 以及 [FrameworkController 平台](FrameworkControllerMode.md)。
+NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持[本机](LocalMode.md)，[远程平台](RemoteMachineMode.md)，[OpenPAI 平台](PaiMode.md)，[Kubeflow 平台](KubeflowMode.md) 以及 [FrameworkController 平台](FrameworkControllerMode.md)。
 
 本文中，会介绍 TrainingService 的简要设计。 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
 
@@ -160,12 +160,12 @@ NNI 提供了 TrialKeeper 工具，用来帮助维护 Trial 任务。 可以在 
 
 TrialKeeper 的架构如下：
 
-![](../img/trialkeeper.jpg)
+![](../../img/trialkeeper.jpg)
 
 当用户需要在远程云平台上运行作业，要把作业启动的命令行传入 TrailKeeper 中，并在远程云平台上启动 TrailKeeper 进程。 注意，TrialKeeper 在远程平台中使用 RESTful 服务来和 TrainingService 进行通信，用户需要在本地机器启动一个 RESTful 服务来接受 TrialKeeper 的请求。 关于 RESTful 服务的源代码可以在 `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts` 文件夹中找到.
 
 ## 参考
 
-有关调试的进一步信息，可参考[这里](HowToDebug.md)。
+有关调试的进一步信息，可参考[这里](../Tutorial/HowToDebug.md)。
 
-如何参与贡献的指南，请参考[这里](Contributing.md)。
+如何参与贡献的指南，请参考[这里](../Tutorial/Contributing.md)。

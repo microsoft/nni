@@ -207,28 +207,28 @@ Web 地址为：[IP 地址]:8080
 
 Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来`下载信息和参数`。 可以在运行中或结束后，随时下载 Experiment 的结果。
 
-![](../img/QuickStart1.png)
+![](../../img/QuickStart1.png)
 
 前 10 个 Trial 结果也会列在 Overview 页面中，可以在 "Trials Detail" 部分浏览所有的 Trial。
 
-![](../img/QuickStart2.png)
+![](../../img/QuickStart2.png)
 
 #### 查看 Trial 详情页面
 
 点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
-![](../img/QuickStart3.png)
+![](../../img/QuickStart3.png)
 
 点击 "Hyper Parameter" 标签查看图像。
 
 * 可选择百分比查看最好的 Trial。
 * 选择两个轴来交换位置。
 
-![](../img/QuickStart4.png)
+![](../../img/QuickStart4.png)
 
 点击 "Trial Duration" 标签来查看柱状图。
 
-![](../img/QuickStart5.png)
+![](../../img/QuickStart5.png)
 
 下面是所有 Trial 的状态。 包括：
 
@@ -237,20 +237,20 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的 Trial。
 
-![](../img/QuickStart6.png)
+![](../../img/QuickStart6.png)
 
 * 中间结果图
 
-![](../img/QuickStart7.png)
+![](../../img/QuickStart7.png)
 
 ## 相关主题
 
-* [尝试不同的 Tuner](BuiltinTuner.md)
-* [尝试不同的 Assessor](BuiltinAssessor.md)
+* [尝试不同的 Tuner](../Tuner/BuiltinTuner.md)
+* [尝试不同的 Assessor](../Assessor/BuiltinAssessor.md)
 * [使用命令行工具 nnictl](Nnictl.md)
-* [如何编写 Trial 代码](Trials.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
-* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PaiMode.md)
-* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
-* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)
+* [如何实现 Trial 代码](../TrialExample/Trials.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)

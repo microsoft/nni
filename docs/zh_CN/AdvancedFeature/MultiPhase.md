@@ -12,7 +12,7 @@
 
 ## 创建多阶段的 Experiment
 
-### 编写使用多阶段的 Trial 代码：
+### 实现使用多阶段的 Trial 代码：
 
 **1. 更新 Trial 代码**
 
@@ -37,9 +37,9 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 对于所有内置的 Tuner 和 Advisor，不需要修改任何代码，就直接支持多阶段请求配置。
 
-### 编写使用多阶段的 Tuner：
+### 实现使用多阶段的 Tuner：
 
-强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始编写多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
+强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始实现多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
 
     generate_parameters
     generate_multiple_parameters

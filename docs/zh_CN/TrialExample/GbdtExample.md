@@ -103,7 +103,7 @@ if __name__ == '__main__':
 }
 ```
 
-参考[这里](SearchSpaceSpec.md)，了解更多变量类型。
+参考[这里](../Tutorial/SearchSpaceSpec.md)，了解更多变量类型。
 
 ### 3.3 在代码中使用 NNI SDK
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.4 编写配置文件并运行
+### 3.4 实现配置文件并运行
 
 在配置文件中，可以设置如下内容：
 

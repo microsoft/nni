@@ -9,7 +9,7 @@ NNI 中的日志分为三部分。 包括 NNI Manager， Dispatcher 以及 Trial
 - **Dispatcher**: Dispatcher 调用 **Tuner** 和 **Assessor** 的方法。 它的日志与 Tuner 和 Assessor 代码有关。 
     - **Tuner**: Tuner 是一个自动机器学习算法，会为下一个 Trial 生成新的配置。 新的 Trial 会使用这组配置来运行。
     - **Assessor**：Assessor 分析 Trial 的中间结果（例如，测试数据集上定期的精度），来确定 Trial 是否应该被提前终止。
-- **Trial**：Trial 的代码是用户编写的代码，每次 Trial 运行时会尝试一组新的配置（例如，一组新的超参值，或者某个神经网络结构）。
+- **Trial**：Trial 的代码是用户实现的代码，每次 Trial 运行时会尝试一组新的配置（例如，一组新的超参值，或者某个神经网络结构）。
 
 ## 日志的位置
 
@@ -53,7 +53,7 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 以后一种情况为例。 某自定义的 Tuner，*\_init*\_ 函数有名为 `optimize_mode` 的参数，但配置文件中没有提供此参数。NNI 就会因为初始化 Tuner 失败而造成 Experiment 失败。 可在 Web 界面看到如下错误：
 
-![](../img/dispatcher_error.jpg)
+![](../../img/dispatcher_error.jpg)
 
 可以看到这是一个 Dispatcher 的错误。 因此，检查 Dispatcher 的日志，可找到如下信息：
 
@@ -77,6 +77,6 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 如，其中常见的一种错误是在运行 MNIST 示例时没有安装 TensorFlow。 因为导入模块的错误（没有安装 Tensorflow，但在 Trial 代码中有 import tensorflow 的语句），每次 Trial 都会运行失败。
 
-![](../img/trial_error.jpg)
+![](../../img/trial_error.jpg)
 
 如图，每个 Trial 都有日志路径，可以从中找到 Trial 的日志和 stderr。
