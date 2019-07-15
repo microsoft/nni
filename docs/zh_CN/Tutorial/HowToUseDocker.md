@@ -51,7 +51,7 @@
 
 ## 在远程平台上运行docker
 
-NNI支持在[远程平台](RemoteMachineMode.md)上启动实验，在远程机器里运行任务。 因为docker可以运行独立的Ubuntu系统和SSH服务，因此docker容器可以作为远程平台来运行NNI.
+NNI支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动实验，在远程机器里运行任务。 因为docker可以运行独立的Ubuntu系统和SSH服务，因此docker容器可以作为远程平台来运行NNI.
 
 ### 步骤1：设置docker环境
 
@@ -82,7 +82,7 @@ SSH容器需要一个端口，你需要把docker的SSH服务端口暴露给NNI�
 
 ### 步骤三：运行NNI实验
 
-你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](RemoteMachineMode.md)。 注意你应该设置正确的`port`，`username`, `passwd`或者`sshKeyPath`。
+你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](../TrainingService/RemoteMachineMode.md)。 注意你应该设置正确的`port`，`username`, `passwd`或者`sshKeyPath`。
 
 `port`: 主机的端口，映射到docker的SSH端口中。
 
