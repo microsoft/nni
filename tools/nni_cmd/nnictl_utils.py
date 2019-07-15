@@ -151,7 +151,7 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.all == 'all':
+    elif args.id == 'all':
         result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
