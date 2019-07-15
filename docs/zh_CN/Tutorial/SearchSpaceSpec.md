@@ -107,5 +107,4 @@
 * 请注意，对于嵌套搜索空间：
   
       * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
-      
-      * 不支持嵌套搜索空间 "超参" 并行图，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
+      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
