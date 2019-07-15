@@ -4,9 +4,9 @@
 ..  toctree::
     :maxdepth: 3
 
-    命令行<./Tutorial/Nnictl>
+    Command Line <Tutorial/Nnictl>
     Python API<sdk_reference>
-    Annotation<./Tutorial/AnnotationSpec>
-    配置<./Tutorial/ExperimentConfig>
-    搜索空间<./Tutorial/SearchSpaceSpec>
-    实现训练平台<./Tutorial/HowToImplementTrainingService>
+    Annotation <Tutorial/AnnotationSpec>
+    Configuration<Tutorial/ExperimentConfig>
+    Search Space <Tutorial/SearchSpaceSpec>
+    TrainingService <TrainingService/HowToImplementTrainingService>
