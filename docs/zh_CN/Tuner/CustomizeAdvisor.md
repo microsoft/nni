@@ -22,19 +22,19 @@ class CustomizedAdvisor(MsgDispatcherBase):
 
 **2) 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**
 
-Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) for how to implement the methods.
+参考 Hyperband 的实现 ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) 来学习如何实现这些方法。
 
-**3) Configure your customized Advisor in experiment YAML config file**
+**3) 在 Experiment 的 YAML 文件中配置好自定义的 Advisor**
 
-Similar to tuner and assessor. NNI needs to locate your customized Advisor class and instantiate the class, so you need to specify the location of the customized Advisor class and pass literal values as parameters to the \_\_init__ constructor.
+与 Tuner 和 Assessor 类似。 NNI 需要定位到自定义的 Advisor 类，并实例化它，因此需要指定自定义 Advisor 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
 ```yaml
 advisor:
   codeDir: /home/abc/myadvisor
   classFileName: my_customized_advisor.py
   className: CustomizedAdvisor
-  # Any parameter need to pass to your advisor class __init__ constructor
-  # can be specified in this optional classArgs field, for example
+  # 任何传入 __init__ 构造函数的参数
+  # 都需要声明在 classArgs 字段中，如：
   classArgs:
     arg1: value1
 ```
