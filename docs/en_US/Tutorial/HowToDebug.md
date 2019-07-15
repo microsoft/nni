@@ -3,7 +3,7 @@
 
 ## Overview
 
-There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to [Overview](Overview.md).
+There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to [Overview](../Overview.md).
 
 - **NNI controller**: NNI controller (nnictl) is the nni command-line tool that is used to manage experiments (e.g., start an experiment).
 - **nnimanager**: nnimanager is the core of NNI, whose log is important when the whole experiment fails (e.g., no webUI or training service fails)

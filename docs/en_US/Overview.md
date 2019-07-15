@@ -33,27 +33,27 @@ Basically, an experiment runs as follows: Tuner receives search space and genera
 
 For each experiment, user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyperparameters and/or neural architecture. There are basically 3 steps:
 
->Step 1: [Define search space](SearchSpaceSpec.md)
+>Step 1: [Define search space](Tutorial/SearchSpaceSpec.md)
 
->Step 2: [Update model codes](Trials.md)
+>Step 2: [Update model codes](TrialExample/Trials.md)
 
->Step 3: [Define Experiment](ExperimentConfig.md)
+>Step 3: [Define Experiment](Tutorial/ExperimentConfig.md)
 
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
 </p>
 
-More details about how to run an experiment, please refer to [Get Started](QuickStart.md).
+More details about how to run an experiment, please refer to [Get Started](Tutorial/QuickStart.md).
 
 ## Learn More
-* [Get started](QuickStart.md)
-* [How to adapt your trial code on NNI?](Trials.md)
-* [What are tuners supported by NNI?](BuiltinTuner.md)
-* [How to customize your own tuner?](CustomizeTuner.md)
-* [What are assessors supported by NNI?](BuiltinAssessor.md)
-* [How to customize your own assessor?](CustomizeAssessor.md)
-* [How to run an experiment on local?](LocalMode.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PaiMode.md)
-* [Examples](MnistExamples.md)
+* [Get started](Tutorial/QuickStart.md)
+* [How to adapt your trial code on NNI?](TrialExample/Trials.md)
+* [What are tuners supported by NNI?](Tuner/BuiltinTuner.md)
+* [How to customize your own tuner?](Tuner/CustomizeTuner.md)
+* [What are assessors supported by NNI?](Assessor/BuiltinAssessor.md)
+* [How to customize your own assessor?](Assessor/CustomizeAssessor.md)
+* [How to run an experiment on local?](TrainingService/LocalMode.md)
+* [How to run an experiment on multiple machines?](TrainingService/RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](TrainingService/PaiMode.md)
+* [Examples](TrialExample/MnistExamples.md)
