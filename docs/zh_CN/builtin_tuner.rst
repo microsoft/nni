@@ -4,14 +4,14 @@
 ..  toctree::
     :maxdepth: 1
     
-    Overview<./Tuner/BuiltinTuner>
+    概述<./Tuner/BuiltinTuner>
     TPE<./Tuner/HyperoptTuner>
-    Random Search<./Tuner/HyperoptTuner>
-    Anneal<./Tuner/HyperoptTuner>
-    Naive Evolution<./Tuner/EvolutionTuner>
+    Random Search（随机搜索）<./Tuner/HyperoptTuner>
+    Anneal（退火）<./Tuner/HyperoptTuner>
+    Naïve Evolution（朴素进化）<./Tuner/EvolutionTuner>
     SMAC<./Tuner/SmacTuner>
-    Batch Tuner<./Tuner/BatchTuner>
-    Grid Search<./Tuner/GridsearchTuner>
+    Batch Tuner（批处理）<./Tuner/BatchTuner>
+    Grid Search（遍历）<./Tuner/GridsearchTuner>
     Hyperband<./Tuner/HyperbandAdvisor>
     Network Morphism<./Tuner/NetworkmorphismTuner>
     Metis Tuner<./Tuner/MetisTuner>
