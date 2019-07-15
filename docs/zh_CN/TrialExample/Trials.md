@@ -21,7 +21,7 @@
 }
 ```
 
-参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
+参考 [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
 ### 第二步：更新模型代码
 
@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
 
 * 返回配置的最终性能
 
@@ -53,7 +53,7 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](BuiltinTuner.md)。
+`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
 
 ### 第三步：启用 NNI API
 
@@ -64,7 +64,7 @@ useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
+参考[这里](../Tutorial/ExperimentConfig.md)进一步了解如何配置 Experiment。
 
 * 参考[这里](https://nni.readthedocs.io/en/latest/sdk_reference.html)，了解更多 NNI API (例如 `nni.get_sequence_id()`)。
 
@@ -123,7 +123,7 @@ with tf.Session() as sess:
 * `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
-Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
+Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpec.md)。
 
 ### 第二步：启用 Annotation
 
@@ -158,7 +158,7 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni/experiments/$experiment_id$/trials/$trial_id$/` 。
 
-详细信息，可参考[调试指南](HowToDebug.md)。
+详细信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
 
 <a name="more-examples"></a>
 
