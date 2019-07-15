@@ -33,17 +33,17 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 
 每次 Experiment 执行时，用户只需要定义搜索空间，改动几行代码，就能利用 NNI 内置的 Tuner/Assessor 和训练服务来搜索最好的超参组合以及神经网络结构。 基本上分为三步：
 
-> Step 1: [Define search space](Tutorial/SearchSpaceSpec.md)
+> 第一步：[定义搜索空间](Tutorial/SearchSpaceSpec.md)
 > 
-> Step 2: [Update model codes](TrialExample/Trials.md)
+> 第二步：[改动模型代码](TrialExample/Trials.md)
 > 
-> Step 3: [Define Experiment](Tutorial/ExperimentConfig.md)
+> 第三步：[>定义 Experiment 配置](Tutorial/ExperimentConfig.md)
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
 </p>
 
-More details about how to run an experiment, please refer to [Get Started](Tutorial/QuickStart.md).
+更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
 ## 了解更多信息
 
