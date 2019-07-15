@@ -57,7 +57,7 @@ Dispatcher fails. Usually, for some new users of NNI, it means that tuner fails.
 
 Take the later situation as an example. If you write a customized tuner who's \_\_init\_\_ function has an argument called `optimize_mode`, which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
 
-![](../img/dispatcher_error.jpg)
+![](../../img/dispatcher_error.jpg)
 
 Here we can see it is a dispatcher error. So we can check dispatcher's log, which might look like:
 
@@ -82,7 +82,7 @@ It means your trial code (which is run by NNI) fails. This kind of error is stro
 
 A common example of this would be run the mnist example without installing tensorflow. Surely there is an Import Error (that is, not installing tensorflow but trying to import it in your trial code) and thus every trial fails.
 
-![](../img/trial_error.jpg)
+![](../../img/trial_error.jpg)
 
 As it shows, every trial has a log path, where you can find trial'log and stderr.
 

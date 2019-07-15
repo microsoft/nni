@@ -12,7 +12,7 @@ Contents
     :titlesonly:
 
     Overview
-    QuickStart<QuickStart>
+    QuickStart<./Tutorial/QuickStart>
     Tutorials<tutorials>
     Examples<examples>
     Reference<reference>

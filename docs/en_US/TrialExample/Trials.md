@@ -20,7 +20,7 @@ An example is shown below:
 }
 ```
 
-Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
 
 ### Step 2 - Update model codes
 
@@ -44,14 +44,14 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](BuiltinAssessor.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
+`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](../Assessor/BuiltinAssessor.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
 
 - Report performance of the configuration
 
 ```python
 nni.report_final_result(metrics)
 ```
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](BuiltinTuner.md).
+`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](../Tuner/BuiltinTuner.md).
 
 ### Step 3 - Enable NNI API
 
@@ -62,7 +62,7 @@ useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+You can refer to [here](../Tutorial/ExperimentConfig.md) for more information about how to set up experiment configurations.
 
 *Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
 
@@ -117,7 +117,7 @@ with tf.Session() as sess:
 - `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
 - `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
 
-For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
+For more information about annotation syntax and its usage, please refer to [Annotation](../Tutorial/AnnotationSpec.md).
 
 
 ### Step 2 - Enable NNI Annotation
@@ -153,7 +153,7 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
-For more information, please refer to [HowToDebug](HowToDebug.md)
+For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md)
 
 <a name="more-examples"></a>
 ## More Trial Examples
