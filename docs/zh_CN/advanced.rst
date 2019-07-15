@@ -2,6 +2,6 @@
 =====================
 
 ..  toctree::
-    MultiPhase<./AdvancedFeature/MultiPhase>
+    多阶段<./AdvancedFeature/MultiPhase>
     AdvancedNas<./AdvancedFeature/AdvancedNas>
-    NAS Programming Interface<./AdvancedFeature/GeneralNasInterfaces>
+    NAS 编程接口<./AdvancedFeature/GeneralNasInterfaces>
