@@ -192,7 +192,7 @@ class HyperoptTuner(Tuner):
 
     def __init__(self, algorithm_name, optimize_mode='minimize', 
                  parallel_optimize=False, constant_liar_type='min'):
-        :"""
+        """
         Parameters
         ----------
         algorithm_name : str
