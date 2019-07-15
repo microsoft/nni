@@ -12,7 +12,7 @@ Below we divide introduction of the BOHB process into two parts:
 
 We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving, for more details, you can refer to the [Hyperband in NNI](HyperbandAdvisor.md) and [reference paper of Hyperband](https://arxiv.org/abs/1603.06560). This procedure is summarized by the pseudocode below.
 
-![](../img/bohb_1.png)
+![](../../img/bohb_1.png)
 
 ### BO (Bayesian Optimization)
 
@@ -20,11 +20,11 @@ The BO part of BOHB closely resembles TPE, with one major difference: we opted f
 
 Tree Parzen Estimator(TPE): uses a KDE(kernel density estimator) to model the densities.
 
-![](../img/bohb_2.png)
+![](../../img/bohb_2.png)
 
 To fit useful KDEs, we require a minimum number of data points Nmin; this is set to d + 1 for our experiments, where d is the number of hyperparameters. To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations, we choose the
 
-![](../img/bohb_3.png)
+![](../../img/bohb_3.png)
 
 best and worst configurations, respectively, to model the two densities.
 
@@ -32,14 +32,14 @@ Note that we alse sample a constant fraction named **random fraction** of the co
 
 ## 2. Workflow
 
-![](../img/bohb_6.jpg)
+![](../../img/bohb_6.jpg)
 
 This image shows the workflow of BOHB. Here we set max_budget = 9, min_budget = 1, eta = 3, others as default. In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget".
  Multidimensional KDE is used to guide the selection of configurations for the next iteration.
 
 The way of sampling procedure(use Multidimensional KDE to guide the selection) is summarized by the pseudocode below.
 
-![](../img/bohb_4.png)
+![](../../img/bohb_4.png)
 
 ## 3. Usage
 
@@ -96,6 +96,6 @@ code implementation: [examples/trials/mnist-advisor](https://github.com/Microsof
 
 We chose BOHB to build CNN on the MNIST dataset. The following is our experimental final results:
 
-![](../img/bohb_5.png)
+![](../../img/bohb_5.png)
 
 More experimental result can be found in the [reference paper](https://arxiv.org/abs/1807.01774), we can see that BOHB makes good use of previous results, and has a balance trade-off in exploration and exploitation.

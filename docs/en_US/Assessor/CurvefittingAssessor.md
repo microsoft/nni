@@ -6,15 +6,15 @@ Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It s
 
 In this algorithm, we use 12 curves to fit the learning curve, the large set of parametric curve models are chosen from [reference paper][1]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
 
-![](../img/curvefitting_learning_curve.PNG)
+![](../../img/curvefitting_learning_curve.PNG)
 
 We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
 
-![](../img/curvefitting_f_comb.gif)
+![](../../img/curvefitting_f_comb.gif)
 
 where the new combined parameter vector
 
-![](../img/curvefitting_expression_xi.gif)
+![](../../img/curvefitting_expression_xi.gif)
 
 Assuming additive a Gaussian noise and the noise parameter is initialized to its maximum likelihood estimate.
 
@@ -30,7 +30,7 @@ Concretely,this algorithm goes through three stages of learning, predicting and 
 
 The figure below is the result of our algorithm on MNIST trial history data, where the green point represents the data obtained by Assessor, the blue point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
 
-![](../img/curvefitting_example.PNG)
+![](../../img/curvefitting_example.PNG)
 
 ## 2. Usage
 To use Curve Fitting Assessor, you should add the following spec in your experiment's YAML config file:

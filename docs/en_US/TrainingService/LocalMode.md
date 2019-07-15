@@ -56,7 +56,7 @@ The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined i
     "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
 }
 ```
-Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search space.
+Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search space.
 
 >Step 3 - Define Experiment
 
@@ -83,16 +83,16 @@ Let's use a simple trial example, e.g. mnist, provided by NNI. After you install
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
 
-This command will be filled in the YAML configure file below. Please refer to [here](Trials.md) for how to write your own trial.
+This command will be filled in the YAML configure file below. Please refer to [here](../TrialExample/Trials.md) for how to write your own trial.
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizeTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](../Tuner/CustomizeTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
 
       tuner:
         builtinTunerName: TPE
         classArgs:
           optimize_mode: maximize
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here](BuiltinTuner.md)), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here](../Tuner/BuiltinTuner.md)), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
@@ -124,13 +124,13 @@ trial:
   gpuNum: 0
 ```
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](AnnotationSpec.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
+Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](../Tutorial/AnnotationSpec.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
 
 With all these steps done, we can run the experiment with the following command:
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
 
-You can refer to [here](Nnictl.md) for more usage guide of *nnictl* command line tool.
+You can refer to [here](../Tutorial/Nnictl.md) for more usage guide of *nnictl* command line tool.
 
 ## View experiment results
 The experiment has been running now. Other than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
