@@ -2,7 +2,7 @@
 
 NNI provides state-of-the-art tuning algorithm as our built-in tuners and makes them easy to use. Below is the brief summary of NNI currently built-in tuners:
 
-Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each tuner. Here is an [article](./CommunitySharings/HpoComparision.md) about the comparison of different Tuners on several problems.
+Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each tuner. Here is an [article](../CommunitySharings/HpoComparision.md) about the comparison of different Tuners on several problems.
 
 Currently we support the following algorithms:
 
@@ -211,7 +211,7 @@ The search space file including the high-level key `combine_params`. The type of
 
 **Suggested scenario**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
+Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](../Tutorial/SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
 It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space. [Detailed Description](./GridsearchTuner.md)
 

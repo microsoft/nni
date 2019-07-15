@@ -6,7 +6,7 @@ Firstly, if you are unsure or afraid of anything, just ask or submit the issue o
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
 
-Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md) guide.
+Looking for a quickstart, get acquainted with our [Get Started](QuickStart.md) guide.
 
 There are a few simple guidelines that you need to follow before providing your hacks.
 
