@@ -73,7 +73,7 @@ With this information, the tuner could know which trial is requesting a configur
 
 ### Tuners support multi-phase experiments:
 
-[TEP](BuiltinTuner.md#TPE), [Random](BuiltinTuner.md#Random), [Anneal](BuiltinTuner.md#Anneal), [Evolution](BuiltinTuner.md#Evolution), [SMAC](BuiltinTuner.md#SMAC), [NetworkMorphism](BuiltinTuner.md#NetworkMorphism), [MetisTuner](BuiltinTuner.md#MetisTuner), [ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py).
+[TPE](../Tuner/BuiltinTuner.md#TPE), [Random](../Tuner/BuiltinTuner.md#Random), [Anneal](../Tuner/BuiltinTuner.md#Anneal), [Evolution](../Tuner/BuiltinTuner.md#Evolution), [SMAC](../Tuner/BuiltinTuner.md#SMAC), [NetworkMorphism](../Tuner/BuiltinTuner.md#NetworkMorphism), [MetisTuner](../Tuner/BuiltinTuner.md#MetisTuner), [BOHB](../Tuner/BuiltinTuner.md#BOHB), [Hyperband](../Tuner/BuiltinTuner.md#Hyperband), [ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py).
 
 ### Training services support multi-phase experiment:
-[Local Machine](LocalMode.md), [Remote Servers](RemoteMachineMode.md), [OpenPAI](PaiMode.md)
+[Local Machine](../TrainingService/LocalMode.md), [Remote Servers](../TrainingService/RemoteMachineMode.md), [OpenPAI](../TrainingService/PaiMode.md)
