@@ -173,18 +173,13 @@ class PipeLogReader(threading.Thread):
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
 
-            search_result = self.log_pattern.search(line)
-            metrics = None
-            if search_result:
-                collect_line = line[0:search_result.span()[0]] + line[search_result.span()[1]:]
-                metrics = search_result.group(0)
+            if self.log_collection == 'none':
+                search_result = self.log_pattern.search(line)
+                if search_result:
+                    metrics = search_result.group(0)
+                    self.queue.put(metrics+'\n')
             else:
-                collect_line = line
-
-            if self.log_collection != 'none':
-                self.queue.put(collect_line)
-            elif metrics is not None:
-                self.queue.put(metrics+'\n')
+                self.queue.put(line)
 
         self.pipeReader.close()
 
