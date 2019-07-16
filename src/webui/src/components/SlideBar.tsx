@@ -4,9 +4,12 @@ import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import MediaQuery from 'react-responsive';
 import { DOWNLOAD_IP } from '../static/const';
-import { Row, Col, Menu, Dropdown, Icon, Select, Button } from 'antd';
+import { Row, Col, Menu, Dropdown, Icon, Select, Button, Form } from 'antd';
+import { FormComponentProps } from 'antd/lib/form';
+import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 const { SubMenu } = Menu;
 const { Option } = Select;
+const FormItem = Form.Item;
 import '../static/style/slideBar.scss';
 import '../static/style/button.scss';
 
@@ -17,7 +20,7 @@ interface SliderState {
     isdisabledFresh: boolean;
 }
 
-interface SliderProps {
+interface SliderProps extends FormComponentProps {
     changeInterval: (value: number) => void;
     changeFresh: (value: string) => void;
 }
@@ -223,9 +226,8 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         const { version } = this.state;
         const feedBackLink = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
-            <Menu onClick={this.handleMenuClick} className="menuModal">
-                <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
-                <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
+            <Menu onClick={this.handleMenuClick} className="menu-list" style={{ width: 216 }}>
+                {/* <Menu onClick={this.handleMenuClick} className="menu-list" style={{width: window.innerWidth}}> */}
                 <Menu.Item key="feedback">
                     <a href={feedBackLink} target="_blank">Feedback</a>
                 </Menu.Item>
@@ -247,8 +249,42 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
+    nniTabs = () => {
+        return (
+            <Menu className="menuModal">
+                <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
+                <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
+            </Menu>
+        );
+    }
+
+    refreshInterval = () => {
+        const {
+            form: { getFieldDecorator },
+            // form: { getFieldDecorator, getFieldValue },
+        } = this.props;
+        return (
+            <Form>
+                <FormItem style={{ marginBottom: 0 }}>
+                    {getFieldDecorator('interval', {
+                        initialValue: 'Refresh every 10s',
+                    })(
+                        <Select onSelect={this.getInterval}>
+                            <Option value="close">Disable Auto Refresh</Option>
+                            <Option value="10">Refresh every 10s</Option>
+                            <Option value="20">Refresh every 20s</Option>
+                            <Option value="30">Refresh every 30s</Option>
+                            <Option value="60">Refresh every 1min</Option>
+                        </Select>,
+                    )}
+                </FormItem>
+            </Form>
+        );
+    }
+
     select = () => {
         const { isdisabledFresh } = this.state;
+
         return (
             <div className="interval">
                 <Button
@@ -259,16 +295,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 >
                     <Icon type="sync" /><span>Refresh</span>
                 </Button>
-                <Select
-                    onSelect={this.getInterval}
-                    defaultValue="Refresh every 10s"
-                >
-                    <Option value="close">Disable Auto Refresh</Option>
-                    <Option value="10">Refresh every 10s</Option>
-                    <Option value="20">Refresh every 20s</Option>
-                    <Option value="30">Refresh every 30s</Option>
-                    <Option value="60">Refresh every 1min</Option>
-                </Select>
+                {this.refreshInterval()}
             </div>
         );
     }
@@ -285,6 +312,106 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         }
     }
 
+    desktopHTML = () => {
+        const { version, menuVisible } = this.state;
+        const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
+        return (
+            <Row className="nav">
+                <Col span={8}>
+                    <span className="desktop-logo">{NNILOGO}</span>
+                    <span className="left-right-margin">{OVERVIEWTABS}</span>
+                    <span>{DETAILTABS}</span>
+                </Col>
+                <Col span={16} className="desktop-right">
+                    <span>{this.select()}</span>
+                    <span>
+                        <Dropdown
+                            className="dropdown"
+                            overlay={this.menu()}
+                            onVisibleChange={this.handleVisibleChange}
+                            visible={menuVisible}
+                            trigger={['click']}
+                        >
+                            <a className="ant-dropdown-link" href="#">
+                                Download <Icon type="down" />
+                            </a>
+                        </Dropdown>
+                    </span>
+                    <span>
+                        <a href={feed} target="_blank">
+                            <img
+                                src={require('../static/img/icon/issue.png')}
+                                alt="NNI github issue"
+                            />
+                            Feedback
+                        </a>
+                    </span>
+                    <span>
+                        <span className="version">Version: {version}</span>
+                    </span>
+                </Col>
+            </Row>
+        );
+    }
+
+    tabeltHTML = () => {
+        return (
+            <Row className="nav">
+                <Col className="tabelt-left" span={16}>
+                    <span>
+                        <Dropdown overlay={this.navigationBar()} trigger={['click']}>
+                            <Icon type="unordered-list" className="more" />
+                        </Dropdown>
+                    </span>
+                    <span className="left-right-margin tabelt-img">{NNILOGO}</span>
+                    <span>{OVERVIEWTABS}</span>
+                    <span className="left-margin">{DETAILTABS}</span>
+                </Col>
+                <Col className="tabelt-right" span={8}>
+                    {this.select()}
+                </Col>
+            </Row>
+        );
+    }
+
+    mobileHTML = () => {
+        const { isdisabledFresh } = this.state;
+        return (
+            <Row className="nav">
+                <Col className="left" span={8}>
+                    <span>
+                        <Dropdown className="more-mobile" overlay={this.navigationBar()} trigger={['click']}>
+                            <Icon type="unordered-list" className="more" />
+                        </Dropdown>
+                    </span>
+                    <span>
+                        <Dropdown overlay={this.nniTabs()} trigger={['click']}>
+                            <a className="ant-dropdown-link" href="#">
+                                <span>NNI <Icon type="down" /></span>
+                            </a>
+                        </Dropdown>
+                    </span>
+                </Col>
+                <Col className="center" span={8}>
+                    <img
+                        src={require('../static/img/logo2.png')}
+                        alt="NNI logo"
+                    />
+                </Col>
+                <Col className="right" span={8}>
+                    <Button
+                        className="fresh"
+                        onClick={this.fresh}
+                        type="ghost"
+                        disabled={isdisabledFresh}
+                    >
+                        <Icon type="sync" /><span>Refresh</span>
+                    </Button>
+                </Col>
+            </Row>
+        );
+    }
+
     componentDidMount() {
         this._isMounted = true;
         this.getNNIversion();
@@ -295,82 +422,19 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     render() {
-        const { version, menuVisible } = this.state;
-        const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
+        const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
+        const tablet = (
+            <MediaQuery minWidth={885} maxWidth={1229}>{this.tabeltHTML()}</MediaQuery>
+        );
+        const desktop = (<MediaQuery minWidth={1230}>{this.desktopHTML()}</MediaQuery>);
         return (
-            <Row>
-                <Col span={18}>
-                    <MediaQuery query="(min-width: 1299px)">
-                        <Row className="nav">
-                            <ul className="link">
-                                <li className="logo">
-                                    <Link to={'/oview'}>
-                                        <img
-                                            src={require('../static/img/logo2.png')}
-                                            style={{ width: 88 }}
-                                            alt="NNI logo"
-                                        />
-                                    </Link>
-                                </li>
-                                <li className="tab firstTab">
-                                    <Link to={'/oview'} activeClassName="high">
-                                        Overview
-                                    </Link>
-                                </li>
-                                <li className="tab">
-                                    <Link to={'/detail'} activeClassName="high">
-                                        Trials detail
-                                    </Link>
-                                </li>
-                                <li className="feedback">
-                                    <Dropdown
-                                        className="dropdown"
-                                        overlay={this.menu()}
-                                        onVisibleChange={this.handleVisibleChange}
-                                        visible={menuVisible}
-                                        trigger={['click']}
-                                    >
-                                        <a className="ant-dropdown-link" href="#">
-                                            Download <Icon type="down" />
-                                        </a>
-                                    </Dropdown>
-                                    <a href={feed} target="_blank">
-                                        <img
-                                            src={require('../static/img/icon/issue.png')}
-                                            alt="NNI github issue"
-                                        />
-                                        Feedback
-                                </a>
-                                    <span className="version">Version: {version}</span>
-                                </li>
-                            </ul>
-                        </Row>
-                    </MediaQuery>
-                </Col>
-                <Col span={18}>
-                    <MediaQuery query="(max-width: 1299px)">
-                        <Row className="little">
-                            <Col span={1} className="menu">
-                                <Dropdown overlay={this.navigationBar()} trigger={['click']}>
-                                    <Icon type="unordered-list" className="more" />
-                                </Dropdown>
-                            </Col>
-                            <Col span={14} className="logo">
-                                <Link to={'/oview'}>
-                                    <img
-                                        src={require('../static/img/logo2.png')}
-                                        style={{ width: 80 }}
-                                        alt="NNI logo"
-                                    />
-                                </Link>
-                            </Col>
-                        </Row>
-                    </MediaQuery>
-                </Col>
-                <Col span={3}> {this.select()} </Col>
-            </Row>
+            <div>
+                {mobile}
+                {tablet}
+                {desktop}
+            </div>
         );
     }
 }
 
-export default SlideBar;
+export default Form.create<FormComponentProps>()(SlideBar);
