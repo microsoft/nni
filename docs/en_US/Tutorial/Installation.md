@@ -88,7 +88,7 @@ Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is
 
 ## Further reading
 
-* [Overview](Overview.md)
+* [Overview](../Overview.md)
 * [Use command line tool nnictl](Nnictl.md)
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
