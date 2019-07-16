@@ -29,8 +29,9 @@ from scipy.linalg import LinAlgError, cho_solve, cholesky, solve_triangular
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
+from nni.utils import OptimizeMode
 from nni.networkmorphism_tuner.graph_transformer import transform
-from nni.networkmorphism_tuner.utils import Constant, OptimizeMode
+from nni.networkmorphism_tuner.utils import Constant
 from nni.networkmorphism_tuner.layers import is_layer
 
 

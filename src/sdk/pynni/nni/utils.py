@@ -51,6 +51,14 @@ class NodeType:
     NAME = '_name'
 
 
+class MetricType:
+    """The types of metric data
+    """
+    FINAL = 'FINAL'
+    PERIODICAL = 'PERIODICAL'
+    REQUEST_PARAMETER = 'REQUEST_PARAMETER'
+
+
 def split_index(params):
     """
     Delete index infromation from params

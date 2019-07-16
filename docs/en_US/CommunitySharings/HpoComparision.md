@@ -5,15 +5,15 @@ Comparison of Hyperparameter Optimization algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
-- [Random Search](../BuiltinTuner.md)
-- [Grid Search](../BuiltinTuner.md)
-- [Evolution](../BuiltinTuner.md)
-- [Anneal](../BuiltinTuner.md)
-- [Metis](../BuiltinTuner.md)
-- [TPE](../BuiltinTuner.md)
-- [SMAC](../BuiltinTuner.md)
-- [HyperBand](../BuiltinTuner.md)
-- [BOHB](../BuiltinTuner.md)
+- [Random Search](../Tuner/BuiltinTuner.md)
+- [Grid Search](../Tuner/BuiltinTuner.md)
+- [Evolution](../Tuner/BuiltinTuner.md)
+- [Anneal](../Tuner/BuiltinTuner.md)
+- [Metis](../Tuner/BuiltinTuner.md)
+- [TPE](../Tuner/BuiltinTuner.md)
+- [SMAC](../Tuner/BuiltinTuner.md)
+- [HyperBand](../Tuner/BuiltinTuner.md)
+- [BOHB](../Tuner/BuiltinTuner.md)
 
 All algorithms run in NNI local environment.
 
@@ -34,7 +34,7 @@ is running in docker?: no
 
 ### Problem Description
 
-Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
+Nonconvex problem on the hyper-parameter search of [AutoGBDT](../TrialExample/GbdtExample.md) example.
 
 ### Search Space
 
