@@ -43,7 +43,6 @@ import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfi
 } from './kubeflowConfig';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
-import { TrialConfig } from 'training_service/common/trialConfig';
 
 // tslint:disable: no-unsafe-any no-any
 /**
