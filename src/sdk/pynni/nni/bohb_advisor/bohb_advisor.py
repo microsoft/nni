@@ -81,7 +81,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
 
 class Bracket():
     """
-    A bracket in BOHB, all the information of a bracket is managed by 
+    A bracket in BOHB, all the information of a bracket is managed by
     an instance of this class.
 
     Parameters
@@ -106,7 +106,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.max_budget = max_budget
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
 
         self.n = math.ceil((s_max + 1) * eta**s / (s + 1) - _epsilon)
         self.r = max_budget / eta**s
@@ -251,7 +251,7 @@ class BOHB(MsgDispatcherBase):
     BOHB performs robust and efficient hyperparameter optimization
     at scale by combining the speed of Hyperband searches with the
     guidance and guarantees of convergence of Bayesian Optimization.
-    Instead of sampling new configurations at random, BOHB uses 
+    Instead of sampling new configurations at random, BOHB uses
     kernel density estimators to select promising candidates.
 
     Parameters
@@ -335,7 +335,7 @@ class BOHB(MsgDispatcherBase):
         pass
 
     def handle_initialize(self, data):
-        """Initialize Tuner, including creating Bayesian optimization-based parametric models 
+        """Initialize Tuner, including creating Bayesian optimization-based parametric models
         and search space formations
 
         Parameters
@@ -403,7 +403,7 @@ class BOHB(MsgDispatcherBase):
 
         If this function is called, Command will be sent by BOHB:
         a. If there is a parameter need to run, will return "NewTrialJob" with a dict:
-        { 
+        {
             'parameter_id': id of new hyperparameter
             'parameter_source': 'algorithm'
             'parameters': value of new hyperparameter
@@ -458,30 +458,30 @@ class BOHB(MsgDispatcherBase):
                     var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
             elif _type == 'quniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     q=search_space[var]["_value"][2]))
             elif _type == 'loguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     log=True))
             elif _type == 'qloguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     q=search_space[var]["_value"][2], log=True))
             elif _type == 'normal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
                     var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
             elif _type == 'qnormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     q=search_space[var]["_value"][3]))
             elif _type == 'lognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     log=True))
             elif _type == 'qlognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     q=search_space[var]["_value"][3], log=True))
             else:
                 raise ValueError(
@@ -553,7 +553,7 @@ class BOHB(MsgDispatcherBase):
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
-       
+
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
             # update BO with loss, max_s budget, hyperparameters

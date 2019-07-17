@@ -93,7 +93,7 @@ def train(args, params):
     x_train, y_train, x_test, y_test = load_mnist_data(args)
     model = create_mnist_model(params)
 
-    # nni 
+    # nni
     model.fit(x_train, y_train, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
         validation_data=(x_test, y_test), callbacks=[SendMetrics(), TensorBoard(log_dir=TENSORBOARD_DIR)])
 

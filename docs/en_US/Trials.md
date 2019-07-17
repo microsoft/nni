@@ -7,7 +7,7 @@ To define an NNI trial, you need to firstly define the set of parameters (i.e., 
 <a name="nni-api"></a>
 ## NNI API
 
-### Step 1 - Prepare a SearchSpace parameters file. 
+### Step 1 - Prepare a SearchSpace parameters file.
 
 An example is shown below:
 
@@ -26,14 +26,16 @@ Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search s
 
 - Import NNI
 
-    Include `import nni` in your trial code to use NNI APIs. 
+    Include `import nni` in your trial code to use NNI APIs.
 
 - Get configuration from Tuner
-    
+
 ```python
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
-`RECEIVED_PARAMS` is an object, for example: 
+
+`RECEIVED_PARAMS` is an object, for example:
+
 `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 - Report metric data periodically (optional)
@@ -63,22 +65,21 @@ You can refer to [here](ExperimentConfig.md) for more information about how to s
 
 *Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
 
-
 <a name="nni-annotation"></a>
 ## NNI Python Annotation
 
 An alternative to writing a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
 
-* annotate the variables you want to tune 
+* annotate the variables you want to tune
 * specify in which range you want to tune the variables
 * annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`.
 
 Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
 
-### Step 1 - Update codes with annotations 
+### Step 1 - Update codes with annotations
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to: 
+The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:
   1. tune batch\_size and dropout\_rate
   2. report test\_acc every 100 steps
   3. at last report test\_acc as final result.
@@ -111,11 +112,11 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-**NOTE**: 
+**NOTE**:
 - `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
-- `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
+- `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
 
-For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md). 
+For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
 
 
 ### Step 2 - Enable NNI Annotation
@@ -125,7 +126,6 @@ In the YAML configure file, you need to set *useAnnotation* to true to enable NN
 useAnnotation: true
 ```
 
-
 ## Where are my trials?
 
 ### Local Mode
@@ -133,7 +133,8 @@ useAnnotation: true
 In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
 If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
-```shell
+
+```bash
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local
@@ -144,12 +145,12 @@ export NNI_TRIAL_SEQ_ID=1
 export MULTI_PHASE=false
 export CUDA_VISIBLE_DEVICES=
 eval python3 mnist.py 2>/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/stderr
-echo $? `date +%s000` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
+echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
 ```
 
 ### Other Modes
 
-When runing trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
 For more information, please refer to [HowToDebug](HowToDebug.md)
 

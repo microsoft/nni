@@ -290,7 +290,7 @@ def graph_to_network(input1,
         if topo_i == '|':
             continue
 
-        # Note: here we use the `hash_id` of layer as scope name, 
+        # Note: here we use the `hash_id` of layer as scope name,
         #       so that we can automatically load sharable weights from previous trained models
         with tf.variable_scope(p_graph.layers[topo_i].hash_id, reuse=tf.AUTO_REUSE):
             if p_graph.layers[topo_i].graph_type == LayerType.input.value:

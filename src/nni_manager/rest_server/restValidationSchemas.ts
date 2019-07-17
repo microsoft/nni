@@ -54,6 +54,7 @@ export namespace ValidationSchemas {
                 baseGraph: joi.string(),
                 outputNodeAlias: joi.string(),
                 outputName: joi.string(),
+                nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode'),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
@@ -136,7 +137,7 @@ export namespace ValidationSchemas {
                 })
             }),
             nni_manager_ip: joi.object({
-                nniManagerIp: joi.string().min(1) 
+                nniManagerIp: joi.string().min(1)
             })
         }
     };
@@ -164,7 +165,7 @@ export namespace ValidationSchemas {
                 checkpointDir: joi.string().allow('')
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

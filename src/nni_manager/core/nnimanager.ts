@@ -159,7 +159,7 @@ class NNIManager implements Manager {
         if (expParams.logCollection !== undefined) {
             this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
         }
-        
+
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
             expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
@@ -493,7 +493,7 @@ class NNIManager implements Manager {
             // If trialConcurrency does not change, requestTrialNum equals finishedTrialJobNum.
             // If trialConcurrency changes, for example, trialConcurrency increases by 2 (trialConcurrencyChange=2), then
             // requestTrialNum equals 2 + finishedTrialJobNum and trialConcurrencyChange becomes 0.
-            // If trialConcurrency changes, for example, trialConcurrency decreases by 4 (trialConcurrencyChange=-4) and 
+            // If trialConcurrency changes, for example, trialConcurrency decreases by 4 (trialConcurrencyChange=-4) and
             // finishedTrialJobNum is 2, then requestTrialNum becomes -2. No trial will be requested from tuner,
             // and trialConcurrencyChange becomes -2.
             const requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;

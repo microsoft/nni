@@ -27,10 +27,10 @@
 /* add the brother selector to increase the priority */
 #succeTable .commonTableStyle, #tableList .commonTableStyle {
 
-    tr{ 
+    tr{
         text-align: center;
         color:#212121;
-        font-family: 'Segoe';
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         font-size: 14px;
         /* background-color: #f2f2f2; */
     }
@@ -38,19 +38,19 @@
         padding: 2px;
         background-color:white !important;
         font-size: 14px;
-        font-family: 'Segoe';
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: #808080;
         border-bottom: 1px solid #d0d0d0;
         text-align: center;
     }
-    
+
 
     .ant-table-expanded-row{
         /* background-color: #f2f2f2 */
-        background-color: transparent; 
+        background-color: transparent;
     }
 
-    tr:hover{ 
+    tr:hover{
         /* cancel antd table default hover style */
         td{
             background-color: transparent;
@@ -101,4 +101,9 @@
 
 .ant-modal-title{
     font-size: 20px;
+}
+
+/*disable select all checkbox in detail page*/
+.ant-table-selection{
+    display: none;
 }

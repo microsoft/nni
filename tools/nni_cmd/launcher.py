@@ -39,6 +39,7 @@ import site
 import time
 from pathlib import Path
 from .command_utils import check_output_command, kill_command
+from .nnictl_utils import update_experiment
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -102,7 +103,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         print_error('Port %s is used by another process, please reset the port!\n' \
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
-    
+
     if (platform != 'local') and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
@@ -110,7 +111,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    
+
     entry_dir = get_nni_installation_path()
     entry_file = os.path.join(entry_dir, 'main.js')
     
@@ -125,18 +126,17 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
-    stdout_file = open(stdout_full_path, 'a+')
-    stderr_file = open(stderr_full_path, 'a+')
-    time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    #add time information in the header of log files
-    log_header = LOG_HEADER % str(time_now)
-    stdout_file.write(log_header)
-    stderr_file.write(log_header)
-    if sys.platform == 'win32':
-        from subprocess import CREATE_NEW_PROCESS_GROUP
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
-    else:
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
+    with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        #add time information in the header of log files
+        log_header = LOG_HEADER % str(time_now)
+        stdout_file.write(log_header)
+        stderr_file.write(log_header)
+        if sys.platform == 'win32':
+            from subprocess import CREATE_NEW_PROCESS_GROUP
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
+        else:
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -221,7 +221,7 @@ def setNNIManagerIp(experiment_config, port, config_file_name):
     return True, None
 
 def set_pai_config(experiment_config, port, config_file_name):
-    '''set pai configuration''' 
+    '''set pai configuration'''
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), REST_TIME_OUT)
@@ -240,7 +240,7 @@ def set_pai_config(experiment_config, port, config_file_name):
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
 def set_kubeflow_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration''' 
+    '''set kubeflow configuration'''
     kubeflow_config_data = dict()
     kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
@@ -259,7 +259,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
 def set_frameworkcontroller_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration''' 
+    '''set kubeflow configuration'''
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
@@ -310,6 +310,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     #debug mode should disable version check
     if experiment_config.get('debug') is not None:
         request_data['versionCheck'] = not experiment_config.get('debug')
+    #validate version check
+    if experiment_config.get('versionCheck') is not None:
+        request_data['versionCheck'] = experiment_config.get('versionCheck')
     if experiment_config.get('logCollection'):
         request_data['logCollection'] = experiment_config.get('logCollection')
 
@@ -326,7 +329,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
-            {'key': 'pai_config', 'value': experiment_config['paiConfig']})        
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
@@ -381,7 +384,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
-    if log_level not in ['trace', 'debug'] and args.debug:
+    if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
         log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
@@ -392,7 +395,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
-        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path)
+        nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
+        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
         experiment_config['trial']['codeDir'] = code_dir
         search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = json.dumps(search_space)
@@ -442,7 +446,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
-    
+
     #set pai config
     if experiment_config['trainingServicePlatform'] == 'pai':
         print_normal('Setting pai config...')
@@ -457,7 +461,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
-    
+
     #set kubeflow config
     if experiment_config['trainingServicePlatform'] == 'kubeflow':
         print_normal('Setting kubeflow config...')
@@ -472,8 +476,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
-
-        #set kubeflow config
+    
+    #set frameworkcontroller config
     if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
         print_normal('Setting frameworkcontroller config...')
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)
@@ -526,7 +530,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     else:
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
-    
+
     #save experiment information
     nnictl_experiment_config = Experiments()
     nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name, experiment_config['trainingServicePlatform'])
@@ -535,6 +539,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
 def resume_experiment(args):
     '''resume an experiment'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     experiment_id = None

@@ -56,7 +56,8 @@ setup(
         'scipy',
         'schema',
         'PythonWebHDFS',
-        'colorama'
+        'colorama',
+        'sklearn'
     ],
 
     entry_points = {

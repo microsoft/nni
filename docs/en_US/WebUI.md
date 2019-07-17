@@ -8,6 +8,7 @@ Click the tab "Overview".
 * Support to download the experiment result.
 * Support to export nni-manager and dispatcher log file.
 * If you have any question, you can click "Feedback" to report it.
+* If your experiment have more than 1000 trials, you can change the refresh interval on here.
 
 ![](../img/webui-img/over1.png)
 * See good performance trials.
@@ -46,7 +47,7 @@ in the scape input. Simultaneously, intermediate result inputs can limit the int
 
 ![](../img/webui-img/filter_intermediate.png)
 
-## View trials status 
+## View trials status
 
 Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
@@ -57,6 +58,10 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 * The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table.
 
 ![](../img/webui-img/addColumn.png)
+
+* If you want to compare some trials, you can select them and then click "Compare" to see the results.
+
+![](../img/webui-img/compare.png)
 
 * You can use the button named "Copy as python" to copy trial's parameters.
 
@@ -69,6 +74,6 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
-* Intermediate Result Graph.
+* Intermediate Result Graph: you can see default and other keys in this graph.
 
-![](../img/intermediate.png)
+![](../img/webui-img/intermediate.png)

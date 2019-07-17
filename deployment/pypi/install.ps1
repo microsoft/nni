@@ -68,11 +68,11 @@ if(!(Test-Path $NNI_YARN_FOLDER)){
 
 $env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
-cmd /c $NNI_YARN
-cmd /c $NNI_YARN build
-cd $CWD\..\..\src\webui 
-cmd /c $NNI_YARN
-cmd /c $NNI_YARN build
+yarn
+yarn build
+cd $CWD\..\..\src\webui
+yarn
+yarn build
 
 # Building Aether Client
 cd $CWD\..\..\src\nni_manager\training_service\aether\cslib

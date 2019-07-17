@@ -2,7 +2,7 @@
 
 NNI provides state-of-the-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
-Note: Click the **Assessor's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Assessor's installation requirements, suggested scenario and using example.
+Note: Click the **Assessor's name** to get the Assessor's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each Assessor.
 
 Currently we support the following Assessors:
 
@@ -25,7 +25,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 **Suggested scenario**
 
-It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. [Detailed Description](./MedianstopAssessor.md)
 
 **Requirement of classArg**
 
@@ -53,7 +53,7 @@ assessor:
 
 **Suggested scenario**
 
-It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
+It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance. [Detailed Description](./CurvefittingAssessor.md)
 
 **Requirement of classArg**
 

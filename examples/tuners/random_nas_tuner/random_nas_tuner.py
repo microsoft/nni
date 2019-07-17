@@ -49,12 +49,12 @@ class RandomNASTuner(Tuner):
         self.searchspace_json = search_space
         self.random_state = np.random.RandomState()
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         '''generate
         '''
         return random_archi_generator(self.searchspace_json, self.random_state)
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         '''receive
         '''
         pass

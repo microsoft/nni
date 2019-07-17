@@ -35,7 +35,7 @@ class NaiveTuner(Tuner):
         self.trial_results = [ ]
         self.search_space = None
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         # report Tuner's internal states to generated parameters,
         # so we don't need to pause the main loop
         self.param += 2
@@ -45,7 +45,7 @@ class NaiveTuner(Tuner):
             'search_space': self.search_space
         }
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, False))
 
@@ -103,11 +103,9 @@ class TunerTestCase(TestCase):
         command, data = receive()  # this one is customized
         data = json.loads(data)
         self.assertIs(command, CommandType.NewTrialJob)
-        self.assertEqual(data, {
-            'parameter_id': 2,
-            'parameter_source': 'customized',
-            'parameters': { 'param': -1 }
-        })
+        self.assertEqual(data['parameter_id'], 2)
+        self.assertEqual(data['parameter_source'], 'customized')
+        self.assertEqual(data['parameters'], { 'param': -1 })
 
         self._assert_params(3, 6, [[1,4,11,False], [2,-1,22,True]], {'name':'SS0'})
 

@@ -15,6 +15,7 @@ nnictl support commands:
 * [nnictl trial](#trial)
 * [nnictl top](#top)
 * [nnictl experiment](#experiment)
+* [nnictl platform](#platform)
 * [nnictl config](#config)
 * [nnictl log](#log)
 * [nnictl webui](#webui)
@@ -29,7 +30,7 @@ nnictl support commands:
 
 * Description
 
-  You can use this command to create a new experiment, using the configuration specified in config file. 
+  You can use this command to create a new experiment, using the configuration specified in config file.
 
   After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
 
@@ -91,7 +92,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  True| |The id of the experiment you want to resume|  
+  |id|  True| |The id of the experiment you want to resume|
   |--port, -p|  False| |Rest port of the experiment you want to resume|
   |--debug, -d|False||set debug mode|
 
@@ -170,7 +171,7 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
     ```
 
-* __nnictl update concurrency__  
+* __nnictl update concurrency__
 
   * Description
 
@@ -197,11 +198,11 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl update concurrency [experiment_id] --value [concurrency_number]
     ```
 
-* __nnictl update duration__  
+* __nnictl update duration__
 
   * Description
 
-    You can use this command to update an experiment's duration.  
+    You can use this command to update an experiment's duration.
 
   * Usage
 
@@ -224,7 +225,7 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl update duration [experiment_id] --value [duration]
     ```
 
-* __nnictl update trialnum__  
+* __nnictl update trialnum__
   * Description
 
     You can use this command to update an experiment's maxtrialnum.
@@ -312,7 +313,7 @@ Debug mode will disable version check function in Trialkeeper.
   nnictl top
   ```
 
-* Options  
+* Options
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
@@ -367,8 +368,35 @@ Debug mode will disable version check function in Trialkeeper.
   * Usage
 
     ```bash
-    nnictl experiment list
+    nnictl experiment list [OPTIONS]
     ```
+  
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--all|  False| |list all of experiments|
+
+* __nnictl experiment delete__
+
+  * Description
+
+    Delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+
+  * Usage
+
+    ```bash
+    nnictl experiment delete [OPTIONS]
+    ```
+  
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment|
+  |--all|  False| |delete all of experiments|
+
+
 
 <a name="export"></a>
 
@@ -456,6 +484,32 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
+<a name="platform"></a>
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+
+* __nnictl platform clean__
+
+  * Description
+
+    It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+
+  * Note
+   
+    if the target platform is being used by other users, it may cause unexpected errors to others.
+
+  * Usage
+
+    ```bash
+    nnictl platform clean [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--config|  True| |the path of yaml config file used when create an experiment|
+
+
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
@@ -525,12 +579,12 @@ Debug mode will disable version check function in Trialkeeper.
 * __nnictl log trial__
 
   * Description
-  
+
     Show trial log path.
-  
+
   * Usage
 
-    ```bash  
+    ```bash
     nnictl log trial [options]
     ```
 
@@ -554,7 +608,7 @@ Debug mode will disable version check function in Trialkeeper.
   * Description
 
     Start the tensorboard process.
-  
+
   * Usage
 
     ```bash
@@ -571,8 +625,8 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Detail
 
-    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.   
-    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.  
+    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.
+    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.
     3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
     4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
     5. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.

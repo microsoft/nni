@@ -1,5 +1,5 @@
 .nni{
-  font-family: 'Segoe';
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #212121;
   font-size: 14px;
   background: #f2f2f2;
@@ -10,14 +10,12 @@
   left: 0;
   top: 0;
   width: 100%;
-  height: 56px; 
+  height: 56px;
   background: #0071BC;
   border-right: 1px solid #ccc;
   z-index: 1000;
 }
-.headerCon{
-  min-width: 1024px;
-}
+
 .contentBox{
   width: 100%;
 }
@@ -29,5 +27,3 @@
   margin-bottom: 30px;
   background: #fff;
 }
-
-

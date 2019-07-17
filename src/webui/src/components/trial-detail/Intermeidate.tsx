@@ -1,16 +1,9 @@
 import * as React from 'react';
 import { Row, Col, Button, Switch } from 'antd';
-import { TooltipForIntermediate, TableObj } from '../../static/interface';
+import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
-
-interface Intermedia {
-    name: string; // id
-    type: string;
-    data: Array<number | object>; // intermediate data
-    hyperPara: object; // each trial hyperpara value
-}
 
 interface IntermediateState {
     detailSource: Array<TableObj>;
@@ -19,7 +12,7 @@ interface IntermediateState {
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
     isFilter: boolean;
-    length: number; 
+    length: number;
     clickCounts: number; // user filter intermediate click confirm btn's counts
 }
 
@@ -143,7 +136,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Scape'
+                    name: 'metric'
                 }
             };
             if (this._isMounted) {
@@ -216,7 +209,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState) {
         const { isFilter, filterSource } = nextState;
         const { whichGraph, source } = nextProps;
-        
         if (whichGraph === '4') {
             if (isFilter === true) {
                 const pointVal = this.pointInput !== null ? this.pointInput.value : '';
@@ -233,16 +225,14 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     }
 
     shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
-        const { whichGraph } = nextProps;
+        const { whichGraph, source } = nextProps;
         const beforeGraph = this.props.whichGraph;
         if (whichGraph === '4') {
-            
-            const { source } = nextProps;
             const { isFilter, length, clickCounts } = nextState;
             const beforeLength = this.state.length;
-            const beforeSource = this.state.detailSource;
+            const beforeSource = this.props.source;
             const beforeClickCounts = this.state.clickCounts;
-    
+
             if (isFilter !== this.state.isFilter) {
                 return true;
             }
@@ -250,7 +240,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             if (clickCounts !== beforeClickCounts) {
                 return true;
             }
-            
             if (isFilter === false) {
                 if (whichGraph !== beforeGraph) {
                     return true;
@@ -258,15 +247,20 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 if (length !== beforeLength) {
                     return true;
                 }
-                if (source[source.length - 1].description.intermediate.length !==
-                    beforeSource[beforeSource.length - 1].description.intermediate.length) {
+                if (beforeSource.length !== source.length) {
                     return true;
                 }
-                if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                    return true;
-                }
-                if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                    return true;
+                if (beforeSource[beforeSource.length - 1] !== undefined) {
+                    if (source[source.length - 1].description.intermediate.length !==
+                        beforeSource[beforeSource.length - 1].description.intermediate.length) {
+                        return true;
+                    }
+                    if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
+                        return true;
+                    }
+                    if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
+                        return true;
+                    }
                 }
             }
         }
@@ -298,7 +292,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             ?
                             <div>
                                 <Col span={3}>
-                                    <span>Scape</span>
+                                    <span>Step</span>
                                     <input
                                         placeholder="point"
                                         ref={input => this.pointInput = input}

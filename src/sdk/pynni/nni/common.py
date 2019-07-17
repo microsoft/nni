@@ -34,7 +34,7 @@ log_level_map = {
 }
 
 _time_format = '%m/%d/%Y, %I:%M:%S %p'
-    
+
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file
@@ -69,6 +69,7 @@ def init_logger(logger_file_path, log_level_name='info'):
     sys.stdout = _LoggerFileWrapper(logger_file)
 
 _multi_thread = False
+_multi_phase = False
 
 def enable_multi_thread():
     global _multi_thread
@@ -76,3 +77,10 @@ def enable_multi_thread():
 
 def multi_thread_enabled():
     return _multi_thread
+
+def enable_multi_phase():
+    global _multi_phase
+    _multi_phase = True
+
+def multi_phase_enabled():
+    return _multi_phase

@@ -10,11 +10,6 @@ We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, Mac
 ```
 
 #### Windows
-If you are using NNI on Windows, you need run below PowerShell command as administrator at first time.
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-Then install nni through pip:
 ```bash
     python -m pip install --upgrade nni
 ```
@@ -130,7 +125,7 @@ useAnnotation: false
 tuner:
   builtinTunerName: TPE
 # The path and the running command of trial
-trial:  
+trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0

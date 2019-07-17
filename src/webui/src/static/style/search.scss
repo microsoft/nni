@@ -1,9 +1,16 @@
-/* some buttons about trial-detail table */
+/* some buttons in trial-detail table */
 .allList{
     width: 96%;
     margin: 0 auto;
     .right{
         text-align: right;
+        .common{
+            border-radius: 0;
+        }
+        .common:hover{
+            color: #0071BC;
+            border-radius: 0;
+        }
     }
     .entry{
         width: 120px;
@@ -31,4 +38,18 @@
     }
 }
 
+/* compare button style */
+Button.mediateBtn{
+    margin: 0 2px 0 8px;
+}
+
+/* each row's Intermediate btn -> Modal*/
+.selectKeys{
+    /* intermediate result is dict, select box for keys */
+    .select{
+        width: 120px;
+        float: right;
+        margin-right: 10%;
+    }
+}
 

@@ -28,9 +28,8 @@ import json
 import importlib
 
 from .constants import ModuleName, ClassName, ClassArgs, AdvisorModuleName, AdvisorClassName
-from nni.common import enable_multi_thread
+from nni.common import enable_multi_thread, enable_multi_phase
 from nni.msg_dispatcher import MsgDispatcher
-from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 logger = logging.getLogger('nni.main')
 logger.debug('START')
 
@@ -126,6 +125,8 @@ def main():
     args = parse_args()
     if args.multi_thread:
         enable_multi_thread()
+    if args.multi_phase:
+        enable_multi_phase()
 
     if args.advisor_class_name:
         # advisor is enabled and starts to run
@@ -154,7 +155,7 @@ def main():
         assessor = None
         if args.tuner_class_name in ModuleName:
             tuner = create_builtin_class_instance(
-                args.tuner_class_name, 
+                args.tuner_class_name,
                 args.tuner_args)
         else:
             tuner = create_customized_class_instance(
@@ -180,10 +181,7 @@ def main():
             if assessor is None:
                 raise AssertionError('Failed to create Assessor instance')
 
-        if args.multi_phase:
-            dispatcher = MultiPhaseMsgDispatcher(tuner, assessor)
-        else:
-            dispatcher = MsgDispatcher(tuner, assessor)
+        dispatcher = MsgDispatcher(tuner, assessor)
 
         try:
             dispatcher.run()

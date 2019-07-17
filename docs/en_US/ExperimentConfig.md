@@ -2,12 +2,12 @@
 
 A config file is needed when create an experiment, the path of the config file is provide to nnictl.
 The config file is written in YAML format, and need to be written correctly.
-This document describes the rule to write config file, and will provide some examples and templates. 
+This document describes the rule to write config file, and will provide some examples and templates.
 
-- [Experiment config reference](#experiment-config-reference)
-  - [Template](#template)
-  - [Configuration spec](#configuration-spec)
-  - [Examples](#examples)
+- [Experiment config reference](#Experiment-config-reference)
+  - [Template](#Template)
+  - [Configuration spec](#Configuration-spec)
+  - [Examples](#Examples)
 
 <a name="Template"></a>
 ## Template
@@ -23,8 +23,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -55,8 +59,12 @@ maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -93,8 +101,12 @@ maxExecDuration:
 maxTrialNum:
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform:
-#choice: true, false
+#choice: true, false, default: false
 useAnnotation:
+#choice: true, false, default: false
+multiPhase:
+#choice: true, false, default: false
+multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
   builtinTunerName:
@@ -125,49 +137,56 @@ machineList:
 ## Configuration spec
 
 * __authorName__
-  * Description  
+  * Description
 
     __authorName__ is the name of the author who create the experiment.
-   TBD: add default value
+
+    TBD: add default value
 
 * __experimentName__
   * Description
 
-    __experimentName__ is the name of the experiment created.  
+    __experimentName__ is the name of the experiment created.
+
     TBD: add default value
 
 * __trialConcurrency__
   * Description
 
-    __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
+    __trialConcurrency__ specifies the max num of trial jobs run simultaneously.
 
     Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 
 * __maxExecDuration__
   * Description
 
-    __maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.  
+    __maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.
 
     Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+
+* __versionCheck__
+  * Description
+  
+    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
 * __debug__
   * Description
 
-    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set debug be true.
+    Debug mode will set versionCheck be False and set logLevel be 'debug'
 
 * __maxTrialNum__
   * Description
 
-   __maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.  
+   __maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
 * __trainingServicePlatform__
   * Description
 
-    __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.  
+    __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.
 
-    * __local__ run an experiment on local ubuntu machine.  
+    * __local__ run an experiment on local ubuntu machine.
 
-    * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.  
+    * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
 
     * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PaiMode.md)
 
@@ -186,6 +205,16 @@ machineList:
     __useAnnotation__ use annotation to analysis trial code and generate search space.
 
     Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+
+* __multiPhase__
+  * Description
+
+    __multiPhase__ enable [multi-phase experiment](./MultiPhase.md).
+
+* __multiThread__
+  * Description
+
+    __multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
 
 * __nniManagerIp__
   * Description
@@ -396,7 +425,7 @@ machineList:
 
   __localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
   * __gpuIndices__
-  
+
     __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
   * __maxTrialNumPerGpu__
@@ -413,11 +442,11 @@ machineList:
   __machineList__ should be set if __trainingServicePlatform__ is set to remote, or it should be empty.
 
   * __ip__
-  
+
     __ip__ is the ip address of remote machine.
 
   * __port__
-  
+
     __port__ is the ssh port to be used to connect machine.
 
      Note: if users set port empty, the default value will be 22.
@@ -439,7 +468,7 @@ machineList:
     __passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
 
   * __gpuIndices__
-  
+
     __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
   * __maxTrialNumPerGpu__
