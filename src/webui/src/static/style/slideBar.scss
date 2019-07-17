@@ -16,9 +16,12 @@ $drowHoverBgColor: #e2e2e2;
 }
 
 .dropdown{
-    margin-right: 10px;
     /* make dropdown content box position in blue bar bottom */
     padding-bottom: 14px;
+    .down-icon{
+        font-size: 20px !important;
+        padding-right: 2px;
+    }
 }
 
 .interval{
@@ -41,10 +44,19 @@ $drowHoverBgColor: #e2e2e2;
     .ant-select-arrow{
         color: #fff;
     }
+    
+    .fresh{
+        margin-right: 10px;
+    }
+    .ant-btn-ghost{
+        padding: 0 10px;
+
+    }
     .ant-btn-ghost[disabled]{
-        background-color: transparent;
+        background-color: #005b98;
         color: #fff;
     }
+    
 }
 /* set select bgcolor */
 .ant-select-dropdown-menu{
@@ -85,6 +97,23 @@ $drowHoverBgColor: #e2e2e2;
     top: 13px;
 }
 
+
+.ant-dropdown{
+    .menuModal{
+        position: relative;
+        top: 12px;
+    }
+}
+.ant-select-selection-selected-value{
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.ant-dropdown-menu-submenu-title{
+    font-size: 16px;
+}
+.ant-dropdown-menu-item:hover, .ant-dropdown-menu-submenu-title:hover{
+    background-color: transparent;
+}
 .nav{
     width: 95%;
     height: $barHeight;
@@ -99,6 +128,7 @@ $drowHoverBgColor: #e2e2e2;
         color: #fff;
         a, a:visited{
             color: #fff;
+            text-decoration: none;
         }
         .more-mobile{
             margin-right: 10%;
@@ -142,6 +172,7 @@ $drowHoverBgColor: #e2e2e2;
         top: -3px;
     }
     .desktop-right{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: right;
         line-height: $barHeight;
         font-size: 16px;
@@ -149,14 +180,18 @@ $drowHoverBgColor: #e2e2e2;
         a{
             color: #fff;
             text-decoration: none;
-            margin-left: 10px;
         }
         img{
             width: 20px;
             margin-right: 8px;
         }
+        .feedback{
+            font-size: 16px;
+            margin: 0 20px;
+        }
         .version{
-            margin-left: 16px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
         }
     }
 }
@@ -172,7 +207,8 @@ $drowHoverBgColor: #e2e2e2;
 
 /* overview and detail tabs common style */
 a.common-tabs{
-    font-size: 18px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
     color: #b8c7ce;
     text-decoration: none;
 }
@@ -182,7 +218,7 @@ a.common-tabs{
 }
 .common-tabs:hover, .high-light{
     color: #fff;
-    border-bottom: 1px solid yellow;
+    border-bottom: 1px solid #fff;
 }
 .left-right-margin{
     margin-left: 20px;

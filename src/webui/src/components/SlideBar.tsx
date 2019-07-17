@@ -148,9 +148,10 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    nniTabs = () => {
+    mobileTabs = () => {
         return (
-            <Menu className="menuModal">
+            // <Menu className="menuModal" style={{width: 880, position: 'fixed', left: 0, top: 56}}>
+            <Menu className="menuModal" style={{ padding: '0 10px' }}>
                 <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
                 <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
             </Menu>
@@ -186,6 +187,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
 
         return (
             <div className="interval">
+                {this.refreshInterval()}
                 <Button
                     className="fresh"
                     onClick={this.fresh}
@@ -194,7 +196,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 >
                     <Icon type="sync" /><span>Refresh</span>
                 </Button>
-                {this.refreshInterval()}
             </div>
         );
     }
@@ -232,11 +233,11 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             trigger={['click']}
                         >
                             <a className="ant-dropdown-link" href="#">
-                                Download <Icon type="down" />
+                                <Icon type="download" className="down-icon" /><span>Download</span><Icon type="down" />
                             </a>
                         </Dropdown>
                     </span>
-                    <span>
+                    <span className="feedback">
                         <a href={feed} target="_blank">
                             <img
                                 src={require('../static/img/icon/issue.png')}
@@ -245,9 +246,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             Feedback
                         </a>
                     </span>
-                    <span>
-                        <span className="version">Version: {version}</span>
-                    </span>
+                    <span className="version">Version: {version}</span>
                 </Col>
             </Row>
         );
@@ -256,7 +255,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     tabeltHTML = () => {
         return (
             <Row className="nav">
-                <Col className="tabelt-left" span={16}>
+                <Col className="tabelt-left" span={14}>
                     <span>
                         <Dropdown overlay={this.navigationBar()} trigger={['click']}>
                             <Icon type="unordered-list" className="more" />
@@ -266,7 +265,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                     <span>{OVERVIEWTABS}</span>
                     <span className="left-margin">{DETAILTABS}</span>
                 </Col>
-                <Col className="tabelt-right" span={8}>
+                <Col className="tabelt-right" span={10}>
                     {this.select()}
                 </Col>
             </Row>
@@ -284,7 +283,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                         </Dropdown>
                     </span>
                     <span>
-                        <Dropdown overlay={this.nniTabs()} trigger={['click']}>
+                        <Dropdown overlay={this.mobileTabs()} trigger={['click']}>
                             <a className="ant-dropdown-link" href="#">
                                 <span>NNI <Icon type="down" /></span>
                             </a>
@@ -297,7 +296,8 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                         alt="NNI logo"
                     />
                 </Col>
-                <Col className="right" span={8}>
+                {/* the class interval have other style ! */}
+                <Col className="right interval" span={8}>
                     <Button
                         className="fresh"
                         onClick={this.fresh}
