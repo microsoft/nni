@@ -1,5 +1,6 @@
 # ChangeLog
 
+
 ## Release 0.9 - 7/1/2019
 
 ### Major Features
@@ -95,7 +96,7 @@
 
 ### Major Features
 
-* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PaiMode.md#version-check)
+* [Version checking](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md)
   * check whether the version is consistent between nniManager and trialKeeper
 * [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
   * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
@@ -134,8 +135,8 @@
 
 ## Release 0.5.1 - 1/31/2018
 ### Improvements
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging
+* Making [log directory](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging
 
 ### Documentation
 * Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
@@ -301,9 +302,6 @@
   * Update ga squad example and related documentation
   * WebUI UX small enhancement and bug fix
 
-### Known Issues
-
-[Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
 
 ## Release 0.1.0 - 9/10/2018 (initial release)
 
@@ -327,6 +325,3 @@ Initial release of Neural Network Intelligence (NNI).
 * Others
   * Support simple GPU job scheduling
 
-### Known Issues
-
-[Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
