@@ -51,7 +51,7 @@ def get_hdfs_client(args):
         return _hdfs_client
     # backward compatibility
     hdfs_host = None
-    hdfs_output_dir = None
+
     if args.hdfs_host:
         hdfs_host = args.hdfs_host
     elif args.pai_hdfs_host:
@@ -83,6 +83,8 @@ def main_loop(args):
     # redirect trial keeper's stdout and stderr to syslog
     trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.log_collection)
     sys.stdout = sys.stderr = trial_keeper_syslogger
+    hdfs_output_dir = None
+
     if args.hdfs_output_dir:
         hdfs_output_dir = args.hdfs_output_dir
     elif args.pai_hdfs_output_dir:
@@ -222,7 +224,7 @@ if __name__ == '__main__':
         exit(1)
     check_version(args)
     try:
-        if is_multi_phase():
+        if NNI_PLATFORM == 'pai' and is_multi_phase():
             fetch_parameter_file(args)
         main_loop(args)
     except SystemExit as se:

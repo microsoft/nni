@@ -21,14 +21,14 @@
 
 import ast
 import astor
-from nni_cmd.common_utils import print_warning
 
 # pylint: disable=unidiomatic-typecheck
 
-def parse_annotation_mutable_layers(code, lineno):
+def parse_annotation_mutable_layers(code, lineno, nas_mode):
     """Parse the string of mutable layers in annotation.
     Return a list of AST Expr nodes
     code: annotation string (excluding '@')
+    nas_mode: the mode of NAS
     """
     module = ast.parse(code)
     assert type(module) is ast.Module, 'internal error #1'
@@ -110,6 +110,9 @@ def parse_annotation_mutable_layers(code, lineno):
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
+        target_call_args.append(ast.Str(s=nas_mode))
+        if nas_mode in ['enas_mode', 'oneshot_mode']:
+            target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)
@@ -277,10 +280,11 @@ class FuncReplacer(ast.NodeTransformer):
 class Transformer(ast.NodeTransformer):
     """Transform original code to annotated code"""
 
-    def __init__(self):
+    def __init__(self, nas_mode=None):
         self.stack = []
         self.last_line = 0
         self.annotated = False
+        self.nas_mode = nas_mode
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -316,8 +320,11 @@ class Transformer(ast.NodeTransformer):
             return node  # not an annotation, ignore it
 
         if string.startswith('@nni.get_next_parameter'):
-            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
-            print_warning(deprecated_message)
+            call_node = parse_annotation(string[1:]).value
+            if call_node.args:
+                # it is used in enas mode as it needs to retrieve the next subgraph for training
+                call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
+                return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
 
         if string.startswith('@nni.report_intermediate_result')  \
                 or string.startswith('@nni.report_final_result') \
@@ -325,7 +332,8 @@ class Transformer(ast.NodeTransformer):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.mutable_layers'):
-            return parse_annotation_mutable_layers(string[1:], node.lineno)
+            nodes = parse_annotation_mutable_layers(string[1:], node.lineno, self.nas_mode)
+            return nodes
 
         if string.startswith('@nni.variable') \
                 or string.startswith('@nni.function_choice'):
@@ -343,17 +351,18 @@ class Transformer(ast.NodeTransformer):
         return node
 
 
-def parse(code):
+def parse(code, nas_mode=None):
     """Annotate user code.
     Return annotated code (str) if annotation detected; return None if not.
-    code: original user code (str)
+    code: original user code (str),
+    nas_mode: the mode of NAS given that NAS interface is used
     """
     try:
         ast_tree = ast.parse(code)
     except Exception:
         raise RuntimeError('Bad Python code')
 
-    transformer = Transformer()
+    transformer = Transformer(nas_mode)
     try:
         transformer.visit(ast_tree)
     except AssertionError as exc:
@@ -369,5 +378,9 @@ def parse(code):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
+    # enas and oneshot modes for tensorflow need tensorflow module, so we import it here
+    if nas_mode in ['enas_mode', 'oneshot_mode']:
+        import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
+        nodes.insert(last_future_import + 1, import_tf)
 
     return astor.to_source(ast_tree)

@@ -30,8 +30,8 @@ import json_tricks
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.common import init_logger
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, randint_to_quniform
+from nni.common import init_logger, multi_phase_enabled
+from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward, randint_to_quniform
 import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ class Bracket():
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
         self.num_configs_to_run = []    # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.no_more_trial = False
 
     def is_completed(self):
@@ -277,7 +277,7 @@ class Hyperband(MsgDispatcherBase):
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     """
-    def __init__(self, R, eta=3, optimize_mode='maximize'):
+    def __init__(self, R=60, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
         self.R = R                        # pylint: disable=invalid-name
@@ -296,11 +296,10 @@ class Hyperband(MsgDispatcherBase):
         # In this case, tuner increases self.credit to issue a trial config sometime later.
         self.credit = 0
 
-    def load_checkpoint(self):
-        pass
-
-    def save_checkpoint(self):
-        pass
+        # record the latest parameter_id of the trial job trial_job_id.
+        # if there is no running parameter_id, self.job_id_para_id_map[trial_job_id] == None
+        # new trial job is added to this dict and finished trial job is removed from it.
+        self.job_id_para_id_map = dict()
 
     def handle_initialize(self, data):
         """data is search space
@@ -321,9 +320,10 @@ class Hyperband(MsgDispatcherBase):
             number of trial jobs
         """
         for _ in range(data):
-            self._request_one_trial_job()
+            ret = self._get_one_trial_job()
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
 
-    def _request_one_trial_job(self):
+    def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
@@ -346,7 +346,8 @@ class Hyperband(MsgDispatcherBase):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
-        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+        return ret
+
 
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
@@ -360,6 +361,18 @@ class Hyperband(MsgDispatcherBase):
         randint_to_quniform(self.searchspace_json)
         self.random_state = np.random.RandomState()
 
+    def _handle_trial_end(self, parameter_id):
+        """
+        Parameters
+        ----------
+        parameter_id: parameter id of the finished config
+        """
+        bracket_id, i, _ = parameter_id.split('_')
+        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
+        if hyper_configs is not None:
+            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
+            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+
     def handle_trial_end(self, data):
         """
         Parameters
@@ -371,22 +384,9 @@ class Hyperband(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         hyper_params = json_tricks.loads(data['hyper_params'])
-        bracket_id, i, _ = hyper_params['parameter_id'].split('_')
-        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
-        if hyper_configs is not None:
-            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
-            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            for _ in range(self.credit):
-                if not self.generated_hyper_configs:
-                    break
-                params = self.generated_hyper_configs.pop()
-                ret = {
-                    'parameter_id': params[0],
-                    'parameter_source': 'algorithm',
-                    'parameters': params[1]
-                }
-                send(CommandType.NewTrialJob, json_tricks.dumps(ret))
-                self.credit -= 1
+        self._handle_trial_end(hyper_params['parameter_id'])
+        if data['trial_job_id'] in self.job_id_para_id_map:
+            del self.job_id_para_id_map[data['trial_job_id']]
 
     def handle_report_metric_data(self, data):
         """
@@ -400,18 +400,40 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        value = extract_scalar_reward(data['value'])
-        bracket_id, i, _ = data['parameter_id'].split('_')
-        bracket_id = int(bracket_id)
-        if data['type'] == 'FINAL':
-            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
-            # and PERIODICAL metric are independent, thus, not comparable.
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
-            self.completed_hyper_configs.append(data)
-        elif data['type'] == 'PERIODICAL':
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+        if data['type'] == MetricType.REQUEST_PARAMETER:
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
+            ret = self._get_one_trial_job()
+            if data['trial_job_id'] is not None:
+                ret['trial_job_id'] = data['trial_job_id']
+            if data['parameter_index'] is not None:
+                ret['parameter_index'] = data['parameter_index']
+            self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
-            raise ValueError('Data type not supported: {}'.format(data['type']))
+            value = extract_scalar_reward(data['value'])
+            bracket_id, i, _ = data['parameter_id'].split('_')
+            bracket_id = int(bracket_id)
+
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # because when the first parameter_id is created, trial_job_id is not known yet.
+            if data['trial_job_id'] in self.job_id_para_id_map:
+                assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
+            else:
+                self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
+
+            if data['type'] == MetricType.FINAL:
+                # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
+                # and PERIODICAL metric are independent, thus, not comparable.
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+                self.completed_hyper_configs.append(data)
+            elif data['type'] == MetricType.PERIODICAL:
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            else:
+                raise ValueError('Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
         pass

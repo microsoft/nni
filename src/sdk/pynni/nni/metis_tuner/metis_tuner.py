@@ -20,14 +20,14 @@
 
 import copy
 import logging
+import numpy as np
 import os
 import random
 import statistics
 import sys
+import warnings
 from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
-
-import numpy as np
 
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
 import nni.metis_tuner.lib_data as lib_data
@@ -41,8 +41,6 @@ from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
-
-
 
 NONE_TYPE = ''
 CONSTRAINT_LOWERBOUND = None
@@ -93,7 +91,7 @@ class MetisTuner(Tuner):
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.key_order = []
         self.cold_start_num = cold_start_num
         self.selection_num_starting_points = selection_num_starting_points
@@ -254,6 +252,9 @@ class MetisTuner(Tuner):
                    threshold_samplessize_resampling=50, no_candidates=False,
                    minimize_starting_points=None, minimize_constraints_fun=None):
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
         next_candidate = None
         candidates = []
         samples_size_all = sum([len(i) for i in samples_y])
@@ -271,13 +272,12 @@ class MetisTuner(Tuner):
             minimize_constraints_fun=minimize_constraints_fun)
         if not lm_current:
             return None
-
-        if no_candidates is False:
-            candidates.append({'hyperparameter': lm_current['hyperparameter'],
+        logger.info({'hyperparameter': lm_current['hyperparameter'],
                                'expected_mu': lm_current['expected_mu'],
                                'expected_sigma': lm_current['expected_sigma'],
                                'reason': "exploitation_gp"})
 
+        if no_candidates is False:
             # ===== STEP 2: Get recommended configurations for exploration =====
             results_exploration = gp_selection.selection(
                 "lc",
@@ -290,34 +290,48 @@ class MetisTuner(Tuner):
 
             if results_exploration is not None:
                 if _num_past_samples(results_exploration['hyperparameter'], samples_x, samples_y) == 0:
-                    candidates.append({'hyperparameter': results_exploration['hyperparameter'],
+                    temp_candidate = {'hyperparameter': results_exploration['hyperparameter'],
                                        'expected_mu': results_exploration['expected_mu'],
                                        'expected_sigma': results_exploration['expected_sigma'],
-                                       'reason': "exploration"})
+                                       'reason': "exploration"}
+                    candidates.append(temp_candidate)
+
                     logger.info("DEBUG: 1 exploration candidate selected\n")
+                    logger.info(temp_candidate)
             else:
                 logger.info("DEBUG: No suitable exploration candidates were")
 
             # ===== STEP 3: Get recommended configurations for exploitation =====
             if samples_size_all >= threshold_samplessize_exploitation:
-                print("Getting candidates for exploitation...\n")
+                logger.info("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
-                    results_exploitation = gmm_selection.selection(
-                        x_bounds,
-                        x_types,
-                        gmm['clusteringmodel_good'],
-                        gmm['clusteringmodel_bad'],
-                        minimize_starting_points,
-                        minimize_constraints_fun=minimize_constraints_fun)
+
+                    if ("discrete_int" in x_types) or ("range_int" in x_types):
+                        results_exploitation = gmm_selection.selection(x_bounds, x_types,
+                                                                       gmm['clusteringmodel_good'],
+                                                                       gmm['clusteringmodel_bad'],
+                                                                       minimize_starting_points,
+                                                                       minimize_constraints_fun=minimize_constraints_fun)
+                    else:
+                        # If all parameters are of "range_continuous", let's use GMM to generate random starting points
+                        results_exploitation = gmm_selection.selection_r(x_bounds, x_types,
+                                                                         gmm['clusteringmodel_good'],
+                                                                         gmm['clusteringmodel_bad'],
+                                                                         num_starting_points=self.selection_num_starting_points,
+                                                                         minimize_constraints_fun=minimize_constraints_fun)
 
                     if results_exploitation is not None:
                         if _num_past_samples(results_exploitation['hyperparameter'], samples_x, samples_y) == 0:
-                            candidates.append({'hyperparameter': results_exploitation['hyperparameter'],\
-                                               'expected_mu': results_exploitation['expected_mu'],\
-                                               'expected_sigma': results_exploitation['expected_sigma'],\
-                                               'reason': "exploitation_gmm"})
+                            temp_expected_mu, temp_expected_sigma = gp_prediction.predict(results_exploitation['hyperparameter'], gp_model['model'])
+                            temp_candidate = {'hyperparameter': results_exploitation['hyperparameter'],
+                                               'expected_mu': temp_expected_mu,
+                                               'expected_sigma': temp_expected_sigma,
+                                               'reason': "exploitation_gmm"}
+                            candidates.append(temp_candidate)
+
                             logger.info("DEBUG: 1 exploitation_gmm candidate selected\n")
+                            logger.info(temp_candidate)
                     else:
                         logger.info("DEBUG: No suitable exploitation_gmm candidates were found\n")
 
@@ -338,11 +352,13 @@ class MetisTuner(Tuner):
                 if results_outliers is not None:
                     for results_outlier in results_outliers:
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
-                            candidates.append({'hyperparameter': samples_x[results_outlier['samples_idx']],\
+                            temp_candidate = {'hyperparameter': samples_x[results_outlier['samples_idx']],\
                                                'expected_mu': results_outlier['expected_mu'],\
                                                'expected_sigma': results_outlier['expected_sigma'],\
-                                               'reason': "resampling"})
+                                               'reason': "resampling"}
+                            candidates.append(temp_candidate)
                     logger.info("DEBUG: %d re-sampling candidates selected\n")
+                    logger.info(temp_candidate)
                 else:
                     logger.info("DEBUG: No suitable resampling candidates were found\n")
 

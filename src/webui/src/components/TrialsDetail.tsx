@@ -394,15 +394,13 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     </Col>
                     <Col span={14} className="right">
                         <Button
-                            type="primary"
-                            className="tableButton editStyle"
+                            className="common"
                             onClick={this.tableList ? this.tableList.addColumn : this.test}
                         >
                             Add column
                         </Button>
                         <Button
-                            type="primary"
-                            className="tableButton editStyle mediateBtn"
+                            className="mediateBtn common"
                             // use child-component tableList's function, the function is in child-component.
                             onClick={this.tableList ? this.tableList.compareBtn : this.test}
                         >

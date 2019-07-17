@@ -127,7 +127,7 @@ class Compare extends React.Component<CompareProps, {}> {
                         <td />
                         {Object.keys(idList).map(key => {
                             return (
-                                <td className="value" key={key}>{idList[key]}</td>
+                                <td className="value idList" key={key}>{idList[key]}</td>
                             );
                         })}
                     </tr>
@@ -193,6 +193,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 destroyOnClose={true}
                 maskClosable={false}
                 width="90%"
+                // centered={true}
             >
                 <Row>{this.intermediate()}</Row>
                 <Row>{this.initColumn()}</Row>

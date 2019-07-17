@@ -1,48 +1,81 @@
 # ChangeLog
 
-# Release 0.8 - 6/4/2019
-## Major Features
-* [Support NNI on Windows for PAI/Remote mode]
-    * NNI running on windows for remote mode
-    * NNI running on windows for PAI mode
-* [Advanced features for using GPU]
-   * Run multiple trial jobs on the same GPU for local and remote mode
-   * Run trial jobs on the GPU running non-NNI jobs
-* [Kubeflow v1beta2 operator]
-   * Support Kubeflow TFJob/PyTorchJob v1beta2
-* [General NAS programming interface](./GeneralNasInterfaces.md)
-   * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
-   * Provide a new command `nnictl trial codegen` for debugging the NAS code
-   * Tutorial of NAS programming interface, example of NAS on mnist, customized random tuner for NAS
-* [Support resume tuner/advisor's state for experiment resume]
-   * For experiment resume, tuner/advisor will be resumed by replaying finished trial data
-* [Web Portal]
-   * Improve the design of copying trial's parameters
-   * Support 'randint' type in hyper-parameter graph
-   * Use should ComponentUpdate to avoid unnecessary render
-## Bug fix and other changes
-* [Bug fix that `nnictl update` has inconsistent command styles]
-* [Support import data for SMAC tuner]
-* [Bug fix that experiment state transition from ERROR back to RUNNING]
-* [Fix bug of table entries]
-* [Nested search space refinement]
-* [Refine 'randint' type and support lower bound]
-* [Comparison of different hyper-parameter tuning algorithm](./CommunitySharings/HpoComparision.md)
-* [Comparison of NAS algorithm](./CommunitySharings/NasComparision.md)
-* [NNI practice on Recommenders](./CommunitySharings/NniPracticeSharing/RecommendersSvd.md)
+## Release 0.9 - 7/1/2019
+
+### Major Features
+* General NAS programming interface
+    * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
+* [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md) 
+
+* Multiphase experiment supports
+    * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
+    * Added multiphase capability for the following builtin tuners: 
+        * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
+    
+    For details, please refer to [Write a tuner that leverages multi-phase](AdvancedFeature/MultiPhase.md)
+
+* Web Portal
+    * Enable trial comparation in Web Portal. For details, refer to [View trials status](Tutorial/WebUI.md)
+    * Allow users to adjust rendering interval of Web Portal. For details, refer to [View Summary Page](Tutorial/WebUI.md)
+    * show intermediate results more friendly. For details, refer to [View trials status](Tutorial/WebUI.md)
+* [Commandline Interface](Tutorial/Nnictl.md)
+    * `nnictl experiment delete`: delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+    * `nnictl platform clean`: It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+### Bug fix and other changes
+* Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
+* (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
+* (Bug Fix) Validate file name for PAI platform - [Issue #1164](https://github.com/microsoft/nni/issues/1164)
+* (Bug Fix) Update GMM evaluation in Metis Tuner
+* (Bug Fix) Negative time number rendering in Web Portal - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
+* (Bug Fix) Hyper-parameter not shown correctly in WebUI when there is only one hyper parameter - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
+
+## Release 0.8 - 6/4/2019
+
+### Major Features
+
+* Support NNI on Windows for OpenPAI/Remote mode
+  * NNI running on windows for remote mode
+  * NNI running on windows for OpenPAI mode
+* Advanced features for using GPU
+  * Run multiple trial jobs on the same GPU for local and remote mode
+  * Run trial jobs on the GPU running non-NNI jobs
+* Kubeflow v1beta2 operator
+  * Support Kubeflow TFJob/PyTorchJob v1beta2
+* [General NAS programming interface](AdvancedFeature/GeneralNasInterfaces.md)
+  * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
+  * Provide a new command `nnictl trial codegen` for debugging the NAS code
+  * Tutorial of NAS programming interface, example of NAS on MNIST, customized random tuner for NAS
+* Support resume tuner/advisor's state for experiment resume
+* For experiment resume, tuner/advisor will be resumed by replaying finished trial data
+* Web Portal
+  * Improve the design of copying trial's parameters
+  * Support 'randint' type in hyper-parameter graph
+  * Use should ComponentUpdate to avoid unnecessary render
+
+### Bug fix and other changes
+
+* Bug fix that `nnictl update` has inconsistent command styles
+* Support import data for SMAC tuner
+* Bug fix that experiment state transition from ERROR back to RUNNING
+* Fix bug of table entries
+* Nested search space refinement
+* Refine 'randint' type and support lower bound
+* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparision.md)
+* [Comparison of NAS algorithm](CommunitySharings/NasComparision.md)
+* [NNI practice on Recommenders](CommunitySharings/RecommendersSvd.md)
 
 ## Release 0.7 - 4/29/2018
 
 ### Major Features
 
-* [Support NNI on Windows](./WindowsLocalMode.md)
+* [Support NNI on Windows](Tutorial/NniOnWindows.md)
   * NNI running on windows for local mode
-* [New advisor: BOHB](./BohbAdvisor.md)
+* [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](./Nnictl.md#experiment)
+* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment)
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
-* [Designated gpu devices for NNI trial jobs](./ExperimentConfig.md#localConfig)
+* [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig)
   * Specify GPU devices for NNI trial jobs by gpuIndices configuration, if gpuIndices is set in experiment configuration file, only the specified GPU devices are used for NNI trial jobs.
 * Web Portal enhancement
   * Decimal format of metrics other than default on the Web UI
@@ -56,7 +89,7 @@
 
 * Unable to kill all python threads after nnictl stop in async dispatcher mode
 * nnictl --version does not work with make dev-install
-* All trail jobs status stays on 'waiting' for long time on PAI platform
+* All trail jobs status stays on 'waiting' for long time on OpenPAI platform
 
 ## Release 0.6 - 4/2/2019
 
@@ -73,7 +106,7 @@
 
 ### Bug fix
 
-* [Add shmMB config key for PAI](https://github.com/Microsoft/nni/issues/842)
+* [Add shmMB config key for OpenPAI](https://github.com/Microsoft/nni/issues/842)
 * Fix the bug that doesn't show any result if metrics is dict
 * Fix the number calculation issue for float types in hyperband
 * Fix a bug in the search space conversion in SMAC tuner
@@ -118,14 +151,14 @@
 
 #### New tuner and assessor supports
 
-* Support [Metis tuner](MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+* Support [Metis tuner](Tuner/MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](./AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
+* Support [Curve fitting assessor](Assessor/CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
+* Advanced Support of [Weight Sharing](AdvancedFeature/AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
 
-* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes
+* [FrameworkController Training service](TrainingService/FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes
   * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
   * NNI provides unified and simple specification for job definition.
   * MNIST example for how to use FrameworkController.
@@ -143,11 +176,11 @@
 
 #### New tuner supports
 
-* Support [network morphism](NetworkmorphismTuner.md) as a new tuner
+* Support [network morphism](Tuner/NetworkmorphismTuner.md) as a new tuner
 
 #### Training Service improvements
 
-* Migrate [Kubeflow training service](KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
+* Migrate [Kubeflow training service](TrainingService/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
 * [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
 * Improvement on local code files uploading to OpenPAI HDFS
 * Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
@@ -174,11 +207,11 @@
 
 ### Major Features
 
-* [Kubeflow Training service](./KubeflowMode.md)
+* [Kubeflow Training service](TrainingService/KubeflowMode.md)
   * Support tf-operator
   * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](GridsearchTuner.md)
-* [Hyperband tuner](HyperbandAdvisor.md)
+* [Grid search tuner](Tuner/GridsearchTuner.md)
+* [Hyperband tuner](Tuner/HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
 * WebUI
   * UI support for hyperband tuner
@@ -213,7 +246,7 @@
   ```
 
 * Support updating max trial number.
-  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Nnictl.md) for the fully usage of NNICTL.
+  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Tutorial/Nnictl.md) for the fully usage of NNICTL.
 
 ### API new features and updates
 
@@ -250,7 +283,7 @@
 
 ### Others
 
-* UI refactoring, refer to [WebUI doc](WebUI.md) for how to work with the new UI.
+* UI refactoring, refer to [WebUI doc](Tutorial/WebUI.md) for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
 * [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
 
@@ -258,10 +291,10 @@
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PaiMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](SmacTuner.md) for instructions about how to use SMAC tuner)
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Tuner/SmacTuner.md) for instructions about how to use SMAC tuner)
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
 * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
 * Others

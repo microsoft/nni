@@ -104,6 +104,21 @@ tuner_schema_dict = {
             },
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
+    'GPTuner': {
+        'builtinTunerName': 'GPTuner',
+        'classArgs': {
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('utility'): setChoice('utility', 'ei', 'ucb', 'poi'),
+            Optional('kappa'): setType('kappa', float),
+            Optional('xi'): setType('xi', float),
+            Optional('nu'): setType('nu', float),
+            Optional('alpha'): setType('alpha', float),
+            Optional('cold_start_num'): setType('cold_start_num', int),
+            Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
+            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
+            },
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
     'customized': {
         'codeDir': setPathCheck('codeDir'),
         'classFileName': setType('classFileName', str),
@@ -181,7 +196,8 @@ common_trial_schema = {
 'trial':{
     'command': setType('command', str),
     'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999)
+    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 
@@ -199,6 +215,7 @@ pai_trial_schema = {
     Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
                          error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
     Optional('virtualCluster'): setType('virtualCluster', str),
+    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 
@@ -213,6 +230,7 @@ pai_config_schema = {
 kubeflow_trial_schema = {
 'trial':{
         'codeDir':  setPathCheck('codeDir'),
+        Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode'),
         Optional('ps'): {
             'replicas': setType('replicas', int),
             'command': setType('command', str),
