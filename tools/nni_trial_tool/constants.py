@@ -26,9 +26,12 @@ BASE_URL = 'http://{}'
 
 HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
 
-LOG_DIR = os.environ['NNI_OUTPUT_DIR']
-
 NNI_PLATFORM = os.environ['NNI_PLATFORM']
+
+if NNI_PLATFORM in ['kubeflow', 'frameworkcontroller']:
+    LOG_DIR = os.environ['NNI_TEMP_DIR']
+else:
+    LOG_DIR = os.environ['NNI_OUTPUT_DIR']
 
 STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 
