@@ -19,6 +19,11 @@ const MONACO = {
     readOnly: true,
     automaticLayout: true
 };
+const DRAWEROPTION = {
+    minimap: { enabled: false },
+    readOnly: true,
+    automaticLayout: true
+};
 const COLUMN_INDEX = [
     {
         name: 'Trial No.',
@@ -52,5 +57,5 @@ const COLUMN_INDEX = [
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation', 'Intermediate result'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus,
-    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX
+    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION
 };

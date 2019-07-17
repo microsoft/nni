@@ -1,15 +1,16 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import axios from 'axios';
-import { MANAGER_IP } from '../static/const';
+import { MANAGER_IP, DOWNLOAD_IP } from '../static/const';
 import MediaQuery from 'react-responsive';
-import { DOWNLOAD_IP } from '../static/const';
 import { Row, Col, Menu, Dropdown, Icon, Select, Button, Form } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 const { SubMenu } = Menu;
 const { Option } = Select;
 const FormItem = Form.Item;
+import LogDrawer from './Modal/LogDrawer';
+import ExperimentDrawer from './Modal/ExperimentDrawer';
 import '../static/style/slideBar.scss';
 import '../static/style/button.scss';
 
@@ -18,6 +19,9 @@ interface SliderState {
     menuVisible: boolean;
     navBarVisible: boolean;
     isdisabledFresh: boolean;
+    isvisibleLogDrawer: boolean;
+    isvisibleExperimentDrawer: boolean;
+    activeKey: string;
 }
 
 interface SliderProps extends FormComponentProps {
@@ -41,122 +45,11 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             version: '',
             menuVisible: false,
             navBarVisible: false,
-            isdisabledFresh: false
+            isdisabledFresh: false,
+            isvisibleLogDrawer: false, // download button (nnimanager·dispatcher) click -> drawer
+            isvisibleExperimentDrawer: false,
+            activeKey: 'dispatcher'
         };
-    }
-
-    downExperimentContent = () => {
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((res, res1, res2) => {
-                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
-                    if (res.data.params.searchSpace) {
-                        res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
-                    }
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    let trialMessagesArr = res1.data;
-                    const interResultList = res2.data;
-                    Object.keys(trialMessagesArr).map(item => {
-                        // transform hyperparameters as object to show elegantly
-                        trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
-                        const trialId = trialMessagesArr[item].id;
-                        // add intermediate result message
-                        trialMessagesArr[item].intermediate = [];
-                        Object.keys(interResultList).map(key => {
-                            const interId = interResultList[key].trialJobId;
-                            if (trialId === interId) {
-                                trialMessagesArr[item].intermediate.push(interResultList[key]);
-                            }
-                        });
-                    });
-                    const result = {
-                        experimentParameters: res.data,
-                        trialMessage: trialMessagesArr
-                    };
-                    const aTag = document.createElement('a');
-                    const file = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
-                    aTag.download = 'experiment.json';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.json';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            }));
-    }
-
-    downnnimanagerLog = () => {
-        axios(`${DOWNLOAD_IP}/nnimanager.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const nniLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([nniLogfile], { type: 'application/json' });
-                    aTag.download = 'nnimanagerLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'nnimanagerLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
-    }
-
-    downDispatcherlog = () => {
-        axios(`${DOWNLOAD_IP}/dispatcher.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const dispatchLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([dispatchLogfile], { type: 'application/json' });
-                    aTag.download = 'dispatcherLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'dispatcherLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
     }
 
     getNNIversion = () => {
@@ -173,17 +66,23 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     handleMenuClick = (e: EventPer) => {
         if (this._isMounted) { this.setState({ menuVisible: false }); }
         switch (e.key) {
-            // download experiment related content
+            // to see & download experiment parameters
             case '1':
-                this.downExperimentContent();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ isvisibleExperimentDrawer: true }));
+                }
                 break;
-            // download nnimanager log file
+            // to see & download nnimanager log
             case '2':
-                this.downnnimanagerLog();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ activeKey: 'nnimanager', isvisibleLogDrawer: true }));
+                }
                 break;
-            // download dispatcher log file
+            // to see & download dispatcher log
             case '3':
-                this.downDispatcherlog();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ isvisibleLogDrawer: true, activeKey: 'dispatcher' }));
+                }
                 break;
             case 'close':
             case '10':
@@ -411,6 +310,19 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             </Row>
         );
     }
+    // close log drawer (nnimanager.dispatcher)
+    closeLogDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isvisibleLogDrawer: false, activeKey: '' }));
+        }
+    }
+
+    // close download experiment parameters drawer
+    closeExpDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isvisibleExperimentDrawer: false }));
+        }
+    }
 
     componentDidMount() {
         this._isMounted = true;
@@ -427,11 +339,22 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             <MediaQuery minWidth={885} maxWidth={1229}>{this.tabeltHTML()}</MediaQuery>
         );
         const desktop = (<MediaQuery minWidth={1230}>{this.desktopHTML()}</MediaQuery>);
+        const { isvisibleLogDrawer, activeKey, isvisibleExperimentDrawer } = this.state;
         return (
             <div>
                 {mobile}
                 {tablet}
                 {desktop}
+                {/* the drawer for dispatcher & nnimanager log message */}
+                <LogDrawer
+                    isVisble={isvisibleLogDrawer}
+                    closeDrawer={this.closeLogDrawer}
+                    activeTab={activeKey}
+                />
+                <ExperimentDrawer
+                    isVisble={isvisibleExperimentDrawer}
+                    closeExpDrawer={this.closeExpDrawer}
+                />
             </div>
         );
     }
