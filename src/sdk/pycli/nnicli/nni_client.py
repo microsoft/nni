@@ -82,15 +82,11 @@ def _create_process(cmd):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
     else:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    ret = process.poll()
-    while ret is None:
+
+    while process.poll() is None:
         output = process.stdout.readline()
-        ret = process.poll()
-        if output == '' and ret is not None:
-            break
         if output:
-            print(output.decode('ascii').strip())
-    return process
+            print(output.decode('utf-8').strip())
 
 def start_nni(config_file):
     """start nni with specified configuration file"""
@@ -135,21 +131,3 @@ def get_job_metrics(trial_job_id=None):
 def export_data():
     """return exported information for all trial jobs"""
     return _nni_rest_get(EXPORT_DATA_PATH)
-
-if __name__ == '__main__':
-    import time
-    start_nni('/mnt/d/Repos/nni/examples/trials/mnist/config.yml')
-    set_endpoint('http://localhost:8080')
-    print(version())
-    #print(dir(v))
-    jobs = list_trial_jobs()
-    print(jobs)
-    print([job['id'] for job in jobs])
-
-    print(get_job_statistics())
-    print(get_experiment_status())
-    #print(get_job_metrics())
-    #print(get_job_metrics('iZ5dq'))
-    print('EXPORT------------->')
-    print(export_data())
-    stop_nni()
