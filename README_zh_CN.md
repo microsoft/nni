@@ -623,17 +623,17 @@ You can use these commands to get more information about the experiment
           在 <a href="https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">Gitter</a> 中参与讨论
         </li>
         <li>
-          Ask a question with NNI tags on <a href="https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true">Stack Overflow</a>or <a href="https://github.com/microsoft/nni/issues/new/choose">file an issue</a>on GitHub.
+          在 <a href="https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true">Stack Overflow</a> 上使用 nni 的标签提问，或<a href="https://github.com/microsoft/nni/issues/new/choose">在 Github 上提交 Issue</a>。
         </li>
         <li>
-          We are in construction of the instruction for <a href="docs/en_US/Tutorial/HowToDebug.md">How to Debug</a>, you are also welcome to contribute questions or suggestions on this area.
+          我们正在实现<a href="docs/zh_CN/Tutorial/HowToDebug.md">如何调试</a>的页面，欢迎提交建议和问题。
         </li>
       </ul>
       
       <h2>
-        <strong>License</strong>
+        <strong>许可协议</strong>
       </h2>
       
       <p>
-        The entire codebase is under <a href="LICENSE">MIT license</a>
+        代码库遵循 <a href="LICENSE">MIT 许可协议</a>
       </p>
