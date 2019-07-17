@@ -25,7 +25,7 @@ tuner:
 **Requirement of classArg**
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will target to maximize metrics. If 'minimize', tuner will target to minimize metrics.
 * **parallel_optimize** (*bool, optional, default = False*) - If True, TPE will use Constant Liar algorithm to optimize parallel hyperparameter tuning. Otherwise, TPE will not discriminate between sequential or parallel situations.
-* **constant_liar_type** (*min or max or mean, optional, default = min*) - The type of constant liar use, L will logically be determined on the basis of the values taken by y at X. Corresponding to three values, min{Y}, max{Y}, and mean{Y}.
+* **constant_liar_type** (*min or max or mean, optional, default = min*) - The type of constant liar to use, will logically be determined on the basis of the values taken by y at X. Corresponding to three values, min{Y}, max{Y}, and mean{Y}.
 
 
 ## Random Search

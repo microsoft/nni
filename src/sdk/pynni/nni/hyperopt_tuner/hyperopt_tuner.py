@@ -304,9 +304,7 @@ class HyperoptTuner(Tuner):
 
         # code for parallel
         if self.parallel:
-            constant_liar = False
-            if 'constant_liar' in kwargs:
-                constant_liar = kwargs['constant_liar']
+            constant_liar = kwargs.get('constant_liar', False)
 
             if constant_liar:
                 rval = self.CL_rval
