@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import axios from 'axios';
-import { MANAGER_IP, DOWNLOAD_IP } from '../static/const';
+import { MANAGER_IP } from '../static/const';
 import MediaQuery from 'react-responsive';
 import { Row, Col, Menu, Dropdown, Icon, Select, Button, Form } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
