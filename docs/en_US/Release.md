@@ -96,7 +96,7 @@
 
 ### Major Features
 
-* [Version checking](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md)
+* [Version checking](TrainingService/PaiMode.md)
   * check whether the version is consistent between nniManager and trialKeeper
 * [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
   * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
@@ -123,7 +123,7 @@
 ### Documentation
 * Chinese version document: https://nni.readthedocs.io/zh/latest/
 * Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
 
 ### Bug Fixes and Other Changes
 * Fix a race condition bug that does not store trial job cancel status correctly.
@@ -302,6 +302,9 @@
   * Update ga squad example and related documentation
   * WebUI UX small enhancement and bug fix
 
+### Known Issues
+
+[Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
 
 ## Release 0.1.0 - 9/10/2018 (initial release)
 
@@ -325,3 +328,6 @@ Initial release of Neural Network Intelligence (NNI).
 * Others
   * Support simple GPU job scheduling
 
+### Known Issues
+
+[Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
