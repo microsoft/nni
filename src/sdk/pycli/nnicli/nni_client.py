@@ -18,10 +18,14 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+import sys
 import os
+import subprocess
 import requests
 
 __all__ = [
+    'start_nni',
+    'stop_nni',
     'set_endpoint',
     'version',
     'get_experiment_status',
@@ -60,7 +64,7 @@ def _nni_rest_get(api_path, response_type='json'):
     _check_endpoint()
     uri = os.path.join(_api_endpoint, API_ROOT_PATH, api_path)
     res = requests.get(uri)
-    if _succeed(res.status_code):
+    if _http_succeed(res.status_code):
         if response_type == 'json':
             return res.json()
         elif response_type == 'text':
@@ -70,8 +74,33 @@ def _nni_rest_get(api_path, response_type='json'):
     else:
         return None
 
-def _succeed(status_code):
+def _http_succeed(status_code):
     return status_code // 100 == 2
+
+def _create_process(cmd):
+    if sys.platform == 'win32':
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    else:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    ret = process.poll()
+    while ret is None:
+        output = process.stdout.readline()
+        ret = process.poll()
+        if output == '' and ret is not None:
+            break
+        if output:
+            print(output.decode('ascii').strip())
+    return process
+
+def start_nni(config_file):
+    """start nni with specified configuration file"""
+    cmd = 'nnictl create --config {}'.format(config_file).split(' ')
+    _create_process(cmd)
+
+def stop_nni():
+    """stop nni experiment"""
+    cmd = 'nnictl stop'.split(' ')
+    _create_process(cmd)
 
 def version():
     """return version of nni"""
@@ -108,7 +137,9 @@ def export_data():
     return _nni_rest_get(EXPORT_DATA_PATH)
 
 if __name__ == '__main__':
-    set_endpoint('http://localhost:8080/api/v1/nni')
+    import time
+    start_nni('/mnt/d/Repos/nni/examples/trials/mnist/config.yml')
+    set_endpoint('http://localhost:8080')
     print(version())
     #print(dir(v))
     jobs = list_trial_jobs()
@@ -121,3 +152,4 @@ if __name__ == '__main__':
     #print(get_job_metrics('iZ5dq'))
     print('EXPORT------------->')
     print(export_data())
+    stop_nni()
