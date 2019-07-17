@@ -444,17 +444,17 @@ You can use these commands to get more information about the experiment
       
       <ul>
         <li>
-          在浏览器中打开 <code>Web UI url</code>，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 <a href="docs/en_US/Tutorial/WebUI.md">Here</a> are more Web UI pages.
+          在浏览器中打开 <code>Web UI url</code>，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看<a href="docs/zh_CN/Tutorial/WebUI.md">这里</a>的更多页面。
         </li>
       </ul>
       
       <table style="border: none">
         <th>
-          <img src="./docs/img/webui_overview_page.png" alt="drawing" width="395" />
+          <img src="./docs/img/webui_overview_page.png" alt="绘图" width="395" />
         </th>
         
         <th>
-          <img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410" />
+          <img src="./docs/img/webui_trialdetail_page.png" alt="绘图" width="410" />
         </th>
       </table>
       
@@ -463,7 +463,7 @@ You can use these commands to get more information about the experiment
       </h2>
       
       <p>
-        Our primary documentation is at <a href="https://nni.readthedocs.io/en/latest/Overview.html">here</a> and is generated from this repository.<br /> Maybe you want to read:
+        主要文档都可以在<a href="https://nni.readthedocs.io/cn/latest/Overview.html">这里</a>找到，文档均从本代码库生成。<br /> 点击阅读：
       </p>
       
       <ul>
@@ -474,16 +474,16 @@ You can use these commands to get more information about the experiment
           <a href="docs/en_US/Tutorial/QuickStart.md">快速入门</a>
         </li>
         <li>
-          <a href="docs/en_US/Tutorial/Contributing.md">Contributing</a>
+          <a href="docs/en_US/Tutorial/Contributing.md">贡献</a>
         </li>
         <li>
-          <a href="docs/en_US/examples.rst">Examples</a>
+          <a href="docs/en_US/examples.rst">示例</a>
         </li>
         <li>
-          <a href="docs/en_US/reference.rst">References</a>
+          <a href="docs/en_US/reference.rst">参考</a>
         </li>
         <li>
-          <a href="docs/en_US/Tutorial/WebUI.md">WebUI tutorial</a>
+          <a href="docs/en_US/Tutorial/WebUI.md">Web 界面教程</a>
         </li>
       </ul>
       
@@ -524,16 +524,16 @@ You can use these commands to get more information about the experiment
       
       <ul>
         <li>
-          <a href="docs/en_US/PaiMode.md">Run an experiment on OpenPAI?</a>
+          <a href="docs/en_US/PaiMode.md">在 OpenPAI 上运行 Experiment</a>
         </li>
         <li>
-          <a href="docs/en_US/KubeflowMode.md">Run an experiment on Kubeflow?</a>
+          <a href="docs/en_US/KubeflowMode.md">在 Kubeflow 上运行 Experiment</a>
         </li>
         <li>
-          <a href="docs/en_US/LocalMode.md">Run an experiment on local (with multiple GPUs)?</a>
+          <a href="docs/en_US/LocalMode.md">在本机运行 Experiment (支持多 GPU 卡)</a>
         </li>
         <li>
-          <a href="docs/en_US/RemoteMachineMode.md">Run an experiment on multiple machines?</a>
+          <a href="docs/en_US/RemoteMachineMode.md">在多机上运行 Experiment</a>
         </li>
         <li>
           <a href="docs/zh_CN/tuners.rst">尝试不同的 Tuner</a>
@@ -557,70 +557,70 @@ You can use these commands to get more information about the experiment
       </h2>
       
       <p>
-        This project welcomes contributions and there are many ways in which you can participate in the project, for example:
+        非常欢迎通过各种方式参与此项目，例如：
       </p>
       
       <ul>
         <li>
-          Review <a href="https://github.com/microsoft/nni/pulls">source code changes</a>
+          审查<a href="https://github.com/microsoft/nni/pulls">源代码改动</a>
         </li>
         <li>
-          Review the <a href="https://github.com/microsoft/nni/tree/master/docs">documentation</a> and make pull requests for anything from typos to new content
+          审查<a href="https://github.com/microsoft/nni/tree/master/docs">文档</a>中从拼写错误到新内容的任何内容，并提交拉取请求。
         </li>
         <li>
-          Find the issues tagged with <a href="https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">'good first issue'</a> or <a href="https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22">'help-wanted'</a>, these are simple and easy to start , we recommend new contributors to start with.
+          找到标有 <a href="https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">'good first issue'</a> 或 <a href="https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22">'help-wanted'</a> 标签的 Issue。这些都是简单的 Issue，新的贡献者可以从这些问题开始。
         </li>
       </ul>
       
       <p>
-        Before providing your hacks, there are a few simple guidelines that you need to follow:
+        在提交代码前，需要遵循以下的简单准则：
       </p>
       
       <ul>
         <li>
-          <a href="docs/en_US/Tutorial/HowToDebug.md">How to debug</a>
+          <a href="docs/en_US/Tutorial/HowToDebug.md">如何调试</a>
         </li>
         <li>
-          <a href="docs/en_US/Tutorial/Contributing.md">Code Styles & Naming Conventions</a>
+          <a href="docs/en_US/Tutorial/Contributing.md">代码风格和命名约定</a>
         </li>
         <li>
-          How to Set up <a href="docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md">NNI developer environment</a>
+          如何设置 <a href="docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md">NNI 开发环境</a>
         </li>
         <li>
-          Review the <a href="docs/en_US/Tutorial/Contributing.md">Contributing Instruction</a> and get familiar with the NNI Code Contribution Guideline
+          查看<a href="docs/en_US/Tutorial/Contributing.md">贡献说明</a>并熟悉 NNI 的代码贡献指南
         </li>
       </ul>
       
       <h2>
-        <strong>External Repositories</strong>
+        <strong>外部代码库</strong>
       </h2>
       
       <p>
-        Now we have some external usage examples run in NNI from our contributors. Thanks our lovely contributors. And welcome more and more people to join us!
+        下面是一些贡献者为 NNI 提供的使用示例 谢谢可爱的贡献者！ 欢迎越来越多的人加入我们！
       </p>
       
       <ul>
         <li>
-          Run <a href="examples/tuners/enas_nni/README.md">ENAS</a> in NNI
+          在 NNI 中运行 <a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a>
         </li>
         <li>
-          Run <a href="examples/trials/nas_cifar10/README.md">Neural Network Architecture Search</a> in NNI
+          在 NNI 中运行 <a href="examples/trials/nas_cifar10/README_zh_CN.md">神经网络架构结构搜索</a>
         </li>
       </ul>
       
       <h2>
-        <strong>Feedback</strong>
+        <strong>反馈</strong>
       </h2>
       
       <ul>
         <li>
-          Open <a href="https://github.com/microsoft/nni/issues/new/choose">bug reports</a>.<br />
+          <a href="https://github.com/microsoft/nni/issues/new/choose">报告 Bug</a>。<br />
         </li>
         <li>
-          Request a <a href="https://github.com/microsoft/nni/issues/new/choose">new feature</a>.
+          <a href="https://github.com/microsoft/nni/issues/new/choose">请求新功能</a>.
         </li>
         <li>
-          Discuss on the NNI <a href="https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">Gitter</a> in NNI
+          在 <a href="https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">Gitter</a> 中参与讨论
         </li>
         <li>
           Ask a question with NNI tags on <a href="https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true">Stack Overflow</a>or <a href="https://github.com/microsoft/nni/issues/new/choose">file an issue</a>on GitHub.
