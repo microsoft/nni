@@ -51,7 +51,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
             Caffe2
           </li>
           <li>
-            CNTK (Python language)
+            CNTK (Python 语言)
           </li>
           <li>
             Chainer
@@ -63,33 +63,33 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       </td>
       
       <td align="left">
-        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner</a> <br /> 
+        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner（调参器）</a> <br /> 
         
         <ul>
-          <b style="margin-left:-20px"><font size=4 color=#800000>General Tuner</font></b> 
+          <b style="margin-left:-20px"><font size=4 color=#800000>通用 Tuner</font></b> 
           
           <li>
-            <a href="docs/en_US/Tuner/BuiltinTuner.md#Random"><font size=2.9>Random Search</font></a>
+            <a href="docs/en_US/Tuner/BuiltinTuner.md#Random"><font size=2.9>Random Search（随机搜索）</font></a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution"><font size=2.9>Naïve Evolution</font></a>
+            <a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution"><font size=2.9>Naïve Evolution（进化算法）</font></a>
           </li>
-          <b><font size=4 color=#800000 style="margin-left:-20px">Tuner for HPO</font></b> 
+          <b><font size=4 color=#800000 style="margin-left:-20px">超参 Tuner</font></b> 
           
           <li>
             <a href="docs/en_US/Tuner/BuiltinTuner.md#TPE"><font size=2.9>TPE</font></a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal"><font size=2.9>Anneal</font></a>
+            <a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal"><font size=2.9>Anneal（退火算法）</font></a>
           </li>
           <li>
             <a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC"><font size=2.9>SMAC</font></a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/BuiltinTuner.md#Batch"><font size=2.9>Batch</font></a>
+            <a href="docs/en_US/Tuner/BuiltinTuner.md#Batch"><font size=2.9>Batch（批处理）</font></a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch"><font size=2.9>Grid Search</font></a>
+            <a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch"><font size=2.9>Grid Search（遍历搜索）</font></a>
           </li>
           <li>
             <a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband"><font size=2.9>Hyperband</font></a>
@@ -103,7 +103,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li>
             <a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner"><font size=2.9>GP Tuner</font></a>
           </li>
-          <b style="margin-left:-20px"><font size=4 color=#800000 style="margin-left:-20px">Tuner for NAS</font></b> 
+          <b style="margin-left:-20px"><font size=4 color=#800000 style="margin-left:-20px">网络结构 Tuner</font></b> 
           
           <li>
             <a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism"><font size=2.9>Network Morphism</font></a>
@@ -113,14 +113,14 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           </li>
         </ul>
         
-        <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor</a> 
+        <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor（评估器）</a> 
         
         <ul>
           <li>
-            <a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop"><font size=2.9>Median Stop</font></a>
+            <a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop"><font size=2.9>Median Stop（中位数终止）</font></a>
           </li>
           <li>
-            <a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting"><font size=2.9>Curve Fitting</font></a>
+            <a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting"><font size=2.9>Curve Fitting（曲线拟合）</font></a>
           </li>
         </ul>
       </td>
@@ -128,13 +128,13 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       <td>
         <ul>
           <li>
-            <a href="docs/en_US/TrainingService/LocalMode.md">Local Machine</a>
+            <a href="docs/en_US/TrainingService/LocalMode.md">本机</a>
           </li>
           <li>
-            <a href="docs/en_US/TrainingService/RemoteMachineMode.md">Remote Servers</a>
+            <a href="docs/en_US/TrainingService/RemoteMachineMode.md">远程计算机</a>
           </li>
           <li>
-            <b>Kubernetes based services</b>
+            <b>基于 Kubernetes 的平台</b>
           </li>
           <ul>
             <li>
@@ -144,7 +144,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
               <a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a>
             </li>
             <li>
-              <a href="docs/en_US/TrainingService/FrameworkControllerMode.md">FrameworkController on K8S (AKS etc.)</a>
+              <a href="docs/en_US/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a>
             </li>
           </ul>
         </ul>
@@ -153,15 +153,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     
     <tr align="center" valign="bottom">
       <td style="border-top:#FF0000 solid 0px;">
-        <b>References</b> <img src="docs/img/bar.png" />
+        <b>参考文档</b> <img src="docs/img/bar.png" />
       </td>
       
       <td style="border-top:#FF0000 solid 0px;">
-        <b>References</b> <img src="docs/img/bar.png" />
+        <b>参考文档</b> <img src="docs/img/bar.png" />
       </td>
       
       <td style="border-top:#FF0000 solid 0px;">
-        <b>References</b> <img src="docs/img/bar.png" />
+        <b>参考文档</b> <img src="docs/img/bar.png" />
       </td>
     </tr>
     
@@ -175,7 +175,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
             <a href="docs/en_US/Tutorial/AnnotationSpec.md">NNI Annotation</a>
           </li>
           <li>
-            <a href="docs/en_US/TrialExample/Trials.md#nni-python-annotation">Annotation tutorial</a>
+            <a href="docs/en_US/TrialExample/Trials.md#nni-python-annotation">Annotation 教程</a>
           </li>
         </ul>
       </td>
@@ -183,7 +183,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       <td style="border-top:#FF0000 solid 0px;">
         <ul>
           <li>
-            <a href="docs/en_US/tuners.rst">Try different tuners</a>
+            <a href="docs/en_US/tuners.rst">尝试不同的 Tuner</a>
           </li>
           <li>
             <a href="docs/en_US/assessors.rst">Try different assessors</a>
