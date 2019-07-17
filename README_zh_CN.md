@@ -186,25 +186,25 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
             <a href="docs/en_US/tuners.rst">尝试不同的 Tuner</a>
           </li>
           <li>
-            <a href="docs/en_US/assessors.rst">Try different assessors</a>
+            <a href="docs/en_US/assessors.rst">尝试不同的 Assessor</a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/CustomizeTuner.md">Implement a customized tuner</a>
+            <a href="docs/en_US/Tuner/CustomizeTuner.md">实现自定义 Tuner</a>
           </li>
           <li>
-            <a href="docs/en_US/Tuner/CustomizeAdvisor.md">Implement a customized advisor</a>
+            <a href="docs/en_US/Tuner/CustomizeAdvisor.md">实现自定义 Advisor</a>
           </li>
           <li>
-            <a href="docs/en_US/Assessor/CustomizeAssessor.md">Implement a customized assessor </a>
+            <a href="docs/en_US/Assessor/CustomizeAssessor.md">实现自定义 Assessor </a>
           </li>
           <li>
-            <a href="docs/en_US/CommunitySharings/HpoComparision.md">HPO Comparison</a>
+            <a href="docs/en_US/CommunitySharings/HpoComparision.md">超参优化算法的对比</a>
           </li>
           <li>
-            <a href="docs/en_US/CommunitySharings/NasComparision.md">NAS Comparison</a>
+            <a href="docs/en_US/CommunitySharings/NasComparision.md">网络结构算法的对比</a>
           </li>
           <li>
-            <a href="docs/en_US/CommunitySharings/RecommendersSvd.md">Automatically tuning SVD on NNI</a>
+            <a href="docs/en_US/CommunitySharings/RecommendersSvd.md">在 NNI 上自动调优 SVD</a>
           </li>
         </ul>
       </td>
@@ -212,19 +212,19 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       <td style="border-top:#FF0000 solid 0px;">
         <ul>
           <li>
-            <a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">Implement TrainingService in NNI</a>
+            <a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">实现 NNI 训练平台</a>
           </li>
           <li>
-            <a href="docs/en_US/TrainingService/LocalMode.md">Run an experiment on local</a>
+            <a href="docs/en_US/TrainingService/LocalMode.md">在本机运行 Experiment</a>
           </li>
           <li>
-            <a href="docs/en_US/TrainingService/KubeflowMode.md">Run an experiment on Kubeflow</a>
+            <a href="docs/en_US/TrainingService/KubeflowMode.md">在 Kubeflow 上运行 Experiment</a>
           </li>
           <li>
-            <a href="docs/en_US/TrainingService/PaiMode.md">Run an experiment on OpenPAI?</a>
+            <a href="docs/en_US/TrainingService/PaiMode.md">在 OpenPAI 上运行 Experiment</a>
           </li>
           <li>
-            <a href="docs/en_US/TrainingService/RemoteMachineMode.md">Run an experiment on multiple machines?</a>
+            <a href="docs/en_US/TrainingService/RemoteMachineMode.md">在多机上运行 Experiment</a>
           </li>
         </ul>
       </td></tbody> </table> </div> 
@@ -315,7 +315,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
         </li>
         <li>
-          If there is any error like <code>Segmentation fault</code>, please refer to <a href="docs/en_US/Tutorial/FAQ.md">FAQ</a>
+          如果遇到如<code>Segmentation fault</code> 这样的任何错误请参考<a href="docs/zh_CN/Tutorial/FAQ.md">常见问题</a>。
         </li>
       </ul>
       
@@ -360,11 +360,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 </code></pre>
       
       <p>
-        For the system requirements of NNI, please refer to <a href="docs/en_US/Tutorial/Installation.md">Install NNI</a>
+        参考<a href="docs/zh_CN/Tutorial/Installation.md">安装 NNI</a> 了解系统需求。
       </p>
       
       <p>
-        For NNI on Windows, please refer to <a href="docs/en_US/Tutorial/NniOnWindows.md">NNI on Windows</a>
+        Windows 上参考 <a href="docs/zh_CN/Tutorial/NniOnWindows.md">Windows 上使用 NNI</a>。
       </p>
       
       <p>
