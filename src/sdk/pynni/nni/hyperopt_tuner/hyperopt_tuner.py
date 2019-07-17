@@ -330,11 +330,13 @@ class HyperoptTuner(Tuner):
                     elif self.constant_liar_type == 'max':
                         self.optimal_y = max(self.optimal_y, reward)
                 logger.debug("Update optimal_y with reward, optimal_y = %s", self.optimal_y)
+        else:
+            rval = self.rval
+
 
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 
-        rval = self.rval
         domain = rval.domain
         trials = rval.trials
 
