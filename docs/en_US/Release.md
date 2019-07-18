@@ -286,7 +286,6 @@
 
 * UI refactoring, refer to [WebUI doc](Tutorial/WebUI.md) for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
-* [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
 
 ## Release 0.2.0 - 9/29/2018
 
@@ -302,9 +301,6 @@
   * Update ga squad example and related documentation
   * WebUI UX small enhancement and bug fix
 
-### Known Issues
-
-[Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
 
 ## Release 0.1.0 - 9/10/2018 (initial release)
 
@@ -328,6 +324,3 @@ Initial release of Neural Network Intelligence (NNI).
 * Others
   * Support simple GPU job scheduling
 
-### Known Issues
-
-[Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
