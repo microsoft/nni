@@ -3,10 +3,11 @@ import { Link } from 'react-router';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import MediaQuery from 'react-responsive';
-import { DOWNLOAD_IP } from '../static/const';
 import { Row, Col, Menu, Dropdown, Icon, Select, Button } from 'antd';
 const { SubMenu } = Menu;
 const { Option } = Select;
+import LogDrawer from './Modal/LogDrawer';
+import ExperimentDrawer from './Modal/ExperimentDrawer';
 import '../static/style/slideBar.scss';
 import '../static/style/button.scss';
 
@@ -15,6 +16,9 @@ interface SliderState {
     menuVisible: boolean;
     navBarVisible: boolean;
     isdisabledFresh: boolean;
+    isvisibleLogDrawer: boolean;
+    isvisibleExperimentDrawer: boolean;
+    activeKey: string;
 }
 
 interface SliderProps {
@@ -38,122 +42,11 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             version: '',
             menuVisible: false,
             navBarVisible: false,
-            isdisabledFresh: false
+            isdisabledFresh: false,
+            isvisibleLogDrawer: false, // download button (nnimanager·dispatcher) click -> drawer
+            isvisibleExperimentDrawer: false,
+            activeKey: 'dispatcher'
         };
-    }
-
-    downExperimentContent = () => {
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((res, res1, res2) => {
-                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
-                    if (res.data.params.searchSpace) {
-                        res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
-                    }
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    let trialMessagesArr = res1.data;
-                    const interResultList = res2.data;
-                    Object.keys(trialMessagesArr).map(item => {
-                        // transform hyperparameters as object to show elegantly
-                        trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
-                        const trialId = trialMessagesArr[item].id;
-                        // add intermediate result message
-                        trialMessagesArr[item].intermediate = [];
-                        Object.keys(interResultList).map(key => {
-                            const interId = interResultList[key].trialJobId;
-                            if (trialId === interId) {
-                                trialMessagesArr[item].intermediate.push(interResultList[key]);
-                            }
-                        });
-                    });
-                    const result = {
-                        experimentParameters: res.data,
-                        trialMessage: trialMessagesArr
-                    };
-                    const aTag = document.createElement('a');
-                    const file = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
-                    aTag.download = 'experiment.json';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.json';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            }));
-    }
-
-    downnnimanagerLog = () => {
-        axios(`${DOWNLOAD_IP}/nnimanager.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const nniLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([nniLogfile], { type: 'application/json' });
-                    aTag.download = 'nnimanagerLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'nnimanagerLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
-    }
-
-    downDispatcherlog = () => {
-        axios(`${DOWNLOAD_IP}/dispatcher.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const dispatchLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([dispatchLogfile], { type: 'application/json' });
-                    aTag.download = 'dispatcherLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'dispatcherLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
     }
 
     getNNIversion = () => {
@@ -170,17 +63,23 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     handleMenuClick = (e: EventPer) => {
         if (this._isMounted) { this.setState({ menuVisible: false }); }
         switch (e.key) {
-            // download experiment related content
+            // to see & download experiment parameters
             case '1':
-                this.downExperimentContent();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ isvisibleExperimentDrawer: true }));
+                }
                 break;
-            // download nnimanager log file
+            // to see & download nnimanager log
             case '2':
-                this.downnnimanagerLog();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ activeKey: 'nnimanager', isvisibleLogDrawer: true }));
+                }
                 break;
-            // download dispatcher log file
+            // to see & download dispatcher log
             case '3':
-                this.downDispatcherlog();
+                if (this._isMounted === true) {
+                    this.setState(() => ({ isvisibleLogDrawer: true, activeKey: 'dispatcher' }));
+                }
                 break;
             case 'close':
             case '10':
@@ -285,6 +184,20 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         }
     }
 
+    // close log drawer (nnimanager.dispatcher)
+    closeLogDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isvisibleLogDrawer: false, activeKey: '' }));
+        }
+    }
+
+    // close download experiment parameters drawer
+    closeExpDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isvisibleExperimentDrawer: false }));
+        }
+    }
+
     componentDidMount() {
         this._isMounted = true;
         this.getNNIversion();
@@ -295,79 +208,91 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     render() {
-        const { version, menuVisible } = this.state;
+        const { version, menuVisible, isvisibleLogDrawer, activeKey, isvisibleExperimentDrawer } = this.state;
         const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
             <Row>
-                <Col span={18}>
-                    <MediaQuery query="(min-width: 1299px)">
-                        <Row className="nav">
-                            <ul className="link">
-                                <li className="logo">
+                <Row>
+                    <Col span={18}>
+                        <MediaQuery query="(min-width: 1299px)">
+                            <Row className="nav">
+                                <ul className="link">
+                                    <li className="logo">
+                                        <Link to={'/oview'}>
+                                            <img
+                                                src={require('../static/img/logo2.png')}
+                                                style={{ width: 88 }}
+                                                alt="NNI logo"
+                                            />
+                                        </Link>
+                                    </li>
+                                    <li className="tab firstTab">
+                                        <Link to={'/oview'} activeClassName="high">
+                                            Overview
+                                    </Link>
+                                    </li>
+                                    <li className="tab">
+                                        <Link to={'/detail'} activeClassName="high">
+                                            Trials detail
+                                    </Link>
+                                    </li>
+                                    <li className="feedback">
+                                        <Dropdown
+                                            className="dropdown"
+                                            overlay={this.menu()}
+                                            onVisibleChange={this.handleVisibleChange}
+                                            visible={menuVisible}
+                                            trigger={['click']}
+                                        >
+                                            <a className="ant-dropdown-link" href="#">
+                                                Download <Icon type="down" />
+                                            </a>
+                                        </Dropdown>
+                                        <a href={feed} target="_blank">
+                                            <img
+                                                src={require('../static/img/icon/issue.png')}
+                                                alt="NNI github issue"
+                                            />
+                                            Feedback
+                                </a>
+                                        <span className="version">Version: {version}</span>
+                                    </li>
+                                </ul>
+                            </Row>
+                        </MediaQuery>
+                    </Col>
+                    <Col span={18}>
+                        <MediaQuery query="(max-width: 1299px)">
+                            <Row className="little">
+                                <Col span={1} className="menu">
+                                    <Dropdown overlay={this.navigationBar()} trigger={['click']}>
+                                        <Icon type="unordered-list" className="more" />
+                                    </Dropdown>
+                                </Col>
+                                <Col span={14} className="logo">
                                     <Link to={'/oview'}>
                                         <img
                                             src={require('../static/img/logo2.png')}
-                                            style={{ width: 88 }}
+                                            style={{ width: 80 }}
                                             alt="NNI logo"
                                         />
                                     </Link>
-                                </li>
-                                <li className="tab firstTab">
-                                    <Link to={'/oview'} activeClassName="high">
-                                        Overview
-                                    </Link>
-                                </li>
-                                <li className="tab">
-                                    <Link to={'/detail'} activeClassName="high">
-                                        Trials detail
-                                    </Link>
-                                </li>
-                                <li className="feedback">
-                                    <Dropdown
-                                        className="dropdown"
-                                        overlay={this.menu()}
-                                        onVisibleChange={this.handleVisibleChange}
-                                        visible={menuVisible}
-                                        trigger={['click']}
-                                    >
-                                        <a className="ant-dropdown-link" href="#">
-                                            Download <Icon type="down" />
-                                        </a>
-                                    </Dropdown>
-                                    <a href={feed} target="_blank">
-                                        <img
-                                            src={require('../static/img/icon/issue.png')}
-                                            alt="NNI github issue"
-                                        />
-                                        Feedback
-                                </a>
-                                    <span className="version">Version: {version}</span>
-                                </li>
-                            </ul>
-                        </Row>
-                    </MediaQuery>
-                </Col>
-                <Col span={18}>
-                    <MediaQuery query="(max-width: 1299px)">
-                        <Row className="little">
-                            <Col span={1} className="menu">
-                                <Dropdown overlay={this.navigationBar()} trigger={['click']}>
-                                    <Icon type="unordered-list" className="more" />
-                                </Dropdown>
-                            </Col>
-                            <Col span={14} className="logo">
-                                <Link to={'/oview'}>
-                                    <img
-                                        src={require('../static/img/logo2.png')}
-                                        style={{ width: 80 }}
-                                        alt="NNI logo"
-                                    />
-                                </Link>
-                            </Col>
-                        </Row>
-                    </MediaQuery>
-                </Col>
-                <Col span={3}> {this.select()} </Col>
+                                </Col>
+                            </Row>
+                        </MediaQuery>
+                    </Col>
+                    <Col span={3}> {this.select()} </Col>
+                </Row>
+                {/* the drawer for dispatcher & nnimanager log message */}
+                <LogDrawer
+                    isVisble={isvisibleLogDrawer}
+                    closeDrawer={this.closeLogDrawer}
+                    activeTab={activeKey}
+                />
+                <ExperimentDrawer
+                    isVisble={isvisibleExperimentDrawer}
+                    closeExpDrawer={this.closeExpDrawer}
+                />
             </Row>
         );
     }
