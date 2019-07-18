@@ -82,7 +82,7 @@ tuner_schema_dict = {
         'builtinTunerName': setChoice('builtinTunerName', 'Evolution'),
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            'population_size': setNumberRange('population_size', int, 0, 99999),
+            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
         },
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
