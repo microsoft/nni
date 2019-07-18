@@ -1,6 +1,6 @@
 pr:
 - master
-- dev-fix-pipeline
+- chec-fix-pipeline
 
 jobs:
 - job: 'basic_test_pr_ubuntu'
