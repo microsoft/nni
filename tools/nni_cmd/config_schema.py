@@ -80,6 +80,7 @@ tuner_schema_dict = {
     },
     ('BatchTuner', 'GridSearch', 'Random'): {
         'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'NetworkMorphism': {
@@ -91,6 +92,7 @@ tuner_schema_dict = {
             Optional('input_channel'): setType('input_channel', int),
             Optional('n_output_node'): setType('n_output_node', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'MetisTuner': {
@@ -102,6 +104,7 @@ tuner_schema_dict = {
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             Optional('cold_start_num'): setType('cold_start_num', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'GPTuner': {
@@ -117,6 +120,7 @@ tuner_schema_dict = {
             Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'customized': {
@@ -124,6 +128,7 @@ tuner_schema_dict = {
         'classFileName': setType('classFileName', str),
         'className': setType('className', str),
         Optional('classArgs'): dict,
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     }
 }
