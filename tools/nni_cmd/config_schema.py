@@ -120,7 +120,7 @@ tuner_schema_dict = {
             Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool), 
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'customized': {
