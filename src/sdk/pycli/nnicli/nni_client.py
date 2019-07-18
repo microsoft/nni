@@ -89,7 +89,7 @@ def _create_process(cmd):
             print(output.decode('utf-8').strip())
 
 def start_nni(config_file):
-    """start nni with specified configuration file"""
+    """start nni experiment with specified configuration file"""
     cmd = 'nnictl create --config {}'.format(config_file).split(' ')
     _create_process(cmd)
 
