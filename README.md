@@ -262,7 +262,7 @@ Maybe you want to read:
 * [Try different assessors](docs/en_US/Assessor/BuiltinAssessor.md)
 * [Implement a customized tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [Implement a customized assessor](docs/en_US/Assessor/CustomizeAssessor.md)
-* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
+* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](docs/en_US/TrialExample/SquadEvolutionExamples.md)
 
 ## **Contribute**
 This project welcomes contributions and there are many ways in which you can participate in the project, for example:
