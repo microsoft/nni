@@ -12,7 +12,7 @@ setuptools.setup(
 
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
-    description = 'NNI control for Neural Network Intelligence project',
+    description = 'nnicli for Neural Network Intelligence project',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 )
