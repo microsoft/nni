@@ -242,10 +242,8 @@ class NNIManager implements Manager {
         });
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        return Promise.resolve(
-            this.trainingService.getTrialJob(trialJobId)
-        );
+    public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
+        return this.dataStore.getTrialJob(trialJobId);
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
