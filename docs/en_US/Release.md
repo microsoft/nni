@@ -98,16 +98,16 @@
 
 * [Version checking](TrainingService/PaiMode.md)
   * check whether the version is consistent between nniManager and trialKeeper
-* [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
+* [Report final metrics for early stop job](https://github.com/microsoft/nni/issues/776)
   * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
-* [Separate Tuner/Assessor](https://github.com/Microsoft/nni/issues/841)
+* [Separate Tuner/Assessor](https://github.com/microsoft/nni/issues/841)
   * Adds two pipes to separate message receiving channels for tuner and assessor.
 * Make log collection feature configurable
 * Add intermediate result graph for all trials
 
 ### Bug fix
 
-* [Add shmMB config key for OpenPAI](https://github.com/Microsoft/nni/issues/842)
+* [Add shmMB config key for OpenPAI](https://github.com/microsoft/nni/issues/842)
 * Fix the bug that doesn't show any result if metrics is dict
 * Fix the number calculation issue for float types in hyperband
 * Fix a bug in the search space conversion in SMAC tuner
@@ -202,7 +202,7 @@
 ### New examples
 
 * [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
 
 ## Release 0.4 - 12/6/2018
 
@@ -210,7 +210,7 @@
 
 * [Kubeflow Training service](TrainingService/KubeflowMode.md)
   * Support tf-operator
-  * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+  * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](Tuner/GridsearchTuner.md)
 * [Hyperband tuner](Tuner/HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
@@ -257,7 +257,7 @@
   Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
 
   ```bash
-  git clone -b v0.3 https://github.com/Microsoft/nni.git
+  git clone -b v0.3 https://github.com/microsoft/nni.git
   ```
 
 * **nni.report_final_result(result)** API supports more data types for result parameter.
@@ -279,8 +279,8 @@
   docker pull msranni/nni:latest
   ```
 
-* New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
+* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ### Others
 
@@ -291,7 +291,7 @@
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
 * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Tuner/SmacTuner.md) for instructions about how to use SMAC tuner)
