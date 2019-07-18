@@ -122,7 +122,7 @@
 
 ### Documentation
 * Chinese version document: https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
+* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/Tutorial/HowToDebug.html
 * Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
 
 ### Bug Fixes and Other Changes
