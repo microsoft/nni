@@ -222,7 +222,7 @@
 * [Kubeflow 训练服务](TrainingService/KubeflowMode.md) 
     * 支持 tf-operator
     * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](Tuner/GridsearchTuner.md)
+* [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
 * [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
