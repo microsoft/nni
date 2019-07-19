@@ -20,15 +20,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
   <tbody>
     <tr align="center" valign="bottom">
       <td>
-        <b>Supported Frameworks</b>
+        <b>支持的框架</b>
         <img src="docs/img/bar.png"/>
       </td>
       <td>
-        <b>Tuning Algorithms</b>
+        <b>调优算法</b>
         <img src="docs/img/bar.png"/>
       </td>
       <td>
-        <b>Training Services</b>
+        <b>训练平台</b>
         <img src="docs/img/bar.png"/>
       </td>
     </tr>
@@ -41,46 +41,46 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li>Keras</li>
           <li>MXNet</li>
           <li>Caffe2</li>
-          <li>CNTK (Python language)</li>
+          <li>CNTK (Python 语言)</li>
           <li>Chainer</li>
           <li>Theano</li>
         </ul>
       </td>
       <td align="left">
-        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner</a>
+        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner（调参器）</a>
         <br />
         <ul>
-          <b style="margin-left:-20px">General Tuner</b>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>    
-          <b style="margin-left:-20px">Tuner for HPO</b>
+          <b style="margin-left:-20px">通用 Tuner</b>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（进化算法）</a></li>    
+          <b style="margin-left:-20px">超参 Tuner</b>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
-          <b style="margin-left:-20px">Tuner for NAS</b>
+          <b style="margin-left:-20px">网络结构 Tuner</b>
           <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
           </ul>
-          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor</a>
+          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor（评估器）</a>
           <ul>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>   
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
           </ul>  
       </td>
       <td>
       <ul>
-        <li><a href="docs/en_US/TrainingService/LocalMode.md">Local Machine</a></li>
-        <li><a href="docs/en_US/TrainingService/RemoteMachineMode.md">Remote Servers</a></li>
-        <li><b>Kubernetes based services</b></li>
+        <li><a href="docs/en_US/TrainingService/LocalMode.md">本机</a></li>
+        <li><a href="docs/en_US/TrainingService/RemoteMachineMode.md">远程计算机</a></li>
+        <li><b>基于 Kubernetes 的平台</b></li>
             <ul><li><a href="docs/en_US/TrainingService/PaiMode.md">OpenPAI</a></li>
             <li><a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a></li>
-            <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">FrameworkController on K8S (AKS etc.)</a></li>
+            <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
             </ul>
       </ul>
       </td>
@@ -245,10 +245,10 @@ You can use these commands to get more information about the experiment
 
 ## **教程**
 
-* [Run an experiment on OpenPAI](docs/en_US/TrainingService/PaiMode.md)
-* [Run an experiment on Kubeflow](docs/en_US/TrainingService/KubeflowMode.md)
-* [Run an experiment on local (with multiple GPUs)](docs/en_US/TrainingService/LocalMode.md)
-* [Run an experiment on multiple machines](docs/en_US/TrainingService/RemoteMachineMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/en_US/TrainingService/PaiMode.md)
+* [在 Kubeflow 上运行 Experiment](docs/en_US/TrainingService/KubeflowMode.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/TrainingService/LocalMode.md)
+* [在多机上运行 Experiment](docs/en_US/TrainingService/RemoteMachineMode.md)
 * [尝试不同的 Tuner](docs/en_US/Tuner/BuiltinTuner.md)
 * [尝试不同的 Assessor](docs/en_US/Assessor/BuiltinAssessor.md)
 * [实现自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
