@@ -101,18 +101,18 @@
 
 ### 主要功能
 
-* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PaiMode.md#version-check) 
+* [版本检查](TrainingService/PaiMode.md) 
     * 检查 nniManager 和 trialKeeper 的版本是否一致
-* [提前终止的任务也可返回最终指标](https://github.com/Microsoft/nni/issues/776) 
+* [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
     * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
-* [分离 Tuner/Assessor](https://github.com/Microsoft/nni/issues/841) 
+* [分离 Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
     * 增加两个管道来分离 Tuner 和 Assessor 的消息
 * 使日志集合功能可配置
 * 为所有 Trial 增加中间结果的视图
 
 ### Bug 修复
 
-* [为 OpenPAI 增加 shmMB 配置](https://github.com/Microsoft/nni/issues/842)
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/microsoft/nni/issues/842)
 * 修复在指标为 dict 时，无法显示任何结果的 Bug。
 * 修复 hyperband 中浮点类型的计算问题
 * 修复 SMAC Tuner 中搜索空间转换的错误
@@ -128,8 +128,8 @@
 ### 文档
 
 * 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
-* 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/Tutorial/HowToDebug.html
+* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
 
 ### Bug 修复和其它更新
 
@@ -144,8 +144,8 @@
 
 ### 改进
 
-* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)可配置。
-* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。
+* Making [log directory](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging
 
 ### 文档
 
@@ -212,8 +212,8 @@
 
 ### 新示例
 
-* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
-* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
+* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
+* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
 
 ## 发布 0.4 - 12/6/2018
 
@@ -221,7 +221,7 @@
 
 * [Kubeflow 训练服务](TrainingService/KubeflowMode.md) 
     * 支持 tf-operator
-    * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+    * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
 * [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
@@ -266,7 +266,7 @@
 * 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
     
     ```bash
-    git clone -b v0.3 https://github.com/Microsoft/nni.git
+    git clone -b v0.3 https://github.com/microsoft/nni.git
     ```
 
 * **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
@@ -289,21 +289,20 @@
     docker pull msranni/nni:latest
     ```
 
-* 新的 Trial 样例： [NNI Sklearn 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
+* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 
-* 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ### 其它
 
 * 界面重构，参考[网页文档](Tutorial/WebUI.md)，了解如何使用新界面。
 * 持续集成：NNI 已切换到 Azure pipelines。
-* [0.3.0 的已知问题](https://github.com/Microsoft/nni/labels/nni030knownissues)。
 
 ## 发布 0.2.0 - 9/29/2018
 
 ### 主要功能
 
-* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练平台 (参考[这里](TrainingService/PaiMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
+* Support [OpenPAI](https://github.com/microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode) 
     * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
     * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
 * 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Tuner/SmacTuner.md)，了解如何使用 SMAC Tuner) 
@@ -313,15 +312,11 @@
     * 更新 ga squad 样例与相关文档
     * 用户体验改善及 Bug 修复
 
-### 已知问题
-
-[0.2.0 的已知问题](https://github.com/Microsoft/nni/labels/nni020knownissues)。
-
 ## 发布 0.1.0 - 9/10/2018 (首个版本)
 
-首次发布 Neural Network Intelligence (NNI)。
+Initial release of Neural Network Intelligence (NNI).
 
-### 主要功能
+### Major Features
 
 * 安装和部署 
     * 支持 pip 和源代码安装
@@ -338,7 +333,3 @@
     * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
 * 其它 
     * 支持简单的 GPU 任务调度
-
-### 已知问题
-
-[0.1.0 的已知问题](https://github.com/Microsoft/nni/labels/nni010knownissues)。
