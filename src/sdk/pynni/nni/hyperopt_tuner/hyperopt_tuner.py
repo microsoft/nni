@@ -214,7 +214,7 @@ class HyperoptTuner(Tuner):
             self.CL_rval = None
             self.constant_liar_type = constant_liar_type
             self.running_data = []
-            self.optimal_y = 0
+            self.optimal_y = None
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -421,7 +421,6 @@ class HyperoptTuner(Tuner):
         """
         if self.parallel and len(self.total_data)>20 and len(self.running_data):
             self.CL_rval = copy.deepcopy(self.rval)
-            _constant_liar_y = 0
             if self.constant_liar_type == 'mean' and self.optimal_y[1]:
                     _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
             else:
