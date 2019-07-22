@@ -33,13 +33,34 @@ Trial 代码中使用多阶段非常容易，样例如下：
     ```
     
 
-**2. 修改 Experiment 配置**
+**2. Experiment configuration**
 
-要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 对于所有内置的 Tuner 和 Advisor，不需要修改任何代码，就直接支持多阶段请求配置。
+要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。
+
+Multi-phase experiment configuration example:
+
+    authorName: default
+    experimentName: multiphase experiment
+    trialConcurrency: 2
+    maxExecDuration: 1h
+    maxTrialNum: 8
+    trainingServicePlatform: local
+    searchSpacePath: search_space.json
+    multiPhase: true
+    useAnnotation: false
+    tuner:
+      builtinTunerName: TPE
+      classArgs:
+        optimize_mode: maximize
+    trial:
+      command: python3 mytrial.py
+      codeDir: .
+      gpuNum: 0
+    
 
 ### 实现使用多阶段的 Tuner：
 
-强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始实现多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
+Before writing a multi-phase tuner, we highly suggest you to go through [Customize Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html). Same as writing a normal tuner, your tuner needs to inherit from `Tuner` class. When you enable multi-phase through configuration (set `multiPhase` to true), your tuner will get an additional parameter `trial_job_id` via tuner's following methods:
 
     generate_parameters
     generate_multiple_parameters
@@ -48,8 +69,12 @@ Trial 代码中使用多阶段非常容易，样例如下：
     trial_end
     
 
-有了这个信息， Tuner 能够知道哪个 Trial 在请求配置信息， 返回的结果是哪个 Trial 的。 通过此信息，Tuner 能够灵活的为不同的 Trial 及其阶段实现功能。 例如，可在 generate_parameters 方法中使用 trial_job_id 来为特定的 Trial 任务生成超参。
+With this information, the tuner could know which trial is requesting a configuration, and which trial is reporting results. This information provides enough flexibility for your tuner to deal with different trials and different phases. For example, you may want to use the trial_job_id parameter of generate_parameters method to generate hyperparameters for a specific trial job.
 
-当然，要使用自定义的多阶段 Tuner ，也需要**在 Experiment 的 YAML 配置文件中增加`multiPhase: true`**。
+### Tuners support multi-phase experiments:
 
-[ENAS Tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 是多阶段 Tuner 的样例。
+[TPE](../Tuner/HyperoptTuner.md), [Random](../Tuner/HyperoptTuner.md), [Anneal](../Tuner/HyperoptTuner.md), [Evolution](../Tuner/EvolutionTuner.md), [SMAC](../Tuner/SmacTuner.md), [NetworkMorphism](../Tuner/NetworkmorphismTuner.md), [MetisTuner](../Tuner/MetisTuner.md), [BOHB](../Tuner/BohbAdvisor.md), [Hyperband](../Tuner/HyperbandAdvisor.md), [ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py).
+
+### Training services support multi-phase experiment:
+
+[Local Machine](../TrainingService/LocalMode.md), [Remote Servers](../TrainingService/RemoteMachineMode.md), [OpenPAI](../TrainingService/PaiMode.md)
