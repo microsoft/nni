@@ -278,12 +278,9 @@ You can use these commands to get more information about the experiment
 ## **Documentation**
 Our primary documentation is at [here](https://nni.readthedocs.io/en/latest/Overview.html) and is generated from this repository.<br/>
 Maybe you want to read:
-
 * [NNI overview](docs/en_US/Overview.md)
 * [Quick start](docs/en_US/Tutorial/QuickStart.md)
 * [Contributing](docs/en_US/Tutorial/Contributing.md)
-* [Examples](docs/en_US/examples.rst)
-* [References](docs/en_US/reference.rst)
 * [WebUI tutorial](docs/en_US/Tutorial/WebUI.md)
 
 ## **How to**
