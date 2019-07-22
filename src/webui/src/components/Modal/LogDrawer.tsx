@@ -142,10 +142,10 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     visible={isVisble}
                     width="76%"
                     height={heights}
-                    // className="logDrawer"
+                // className="logDrawer"
                 >
                     <div className="card-container log-tab-body" style={{ height: heights }}>
-                        <Tabs type="card" defaultActiveKey={activeTab}>
+                        <Tabs type="card" defaultActiveKey={activeTab} style={{ height: heights + 19 }}>
                             {/* <Tabs type="card" onTabClick={this.selectwhichLog} defaultActiveKey={activeTab}> */}
                             {/* <TabPane tab="Dispatcher Log" key="dispatcher"> */}
                             <TabPane tab={this.dispatcherHTML()} key="dispatcher">
@@ -153,7 +153,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                     <MonacoHTML content={dispatcherLogStr} loading={isLoadispatcher} />
                                 </div>
                                 <Row className="buttons">
-                                    <Col span={12}>
+                                    <Col span={12} className="download">
                                         <Button
                                             type="primary"
                                             onClick={this.downloadDispatcher}
