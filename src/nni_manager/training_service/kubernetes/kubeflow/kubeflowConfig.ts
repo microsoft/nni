@@ -135,8 +135,8 @@ export class KubeflowTrialConfig extends KubernetesTrialConfig {
 export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate {
     public readonly replicas: number;
     constructor(replicas: number, command : string, gpuNum : number,
-                cpuNum: number, memoryMB: number, image: string) {
-        super(command, gpuNum, cpuNum, memoryMB, image);
+                cpuNum: number, memoryMB: number, image: string, privateRegistryFilePath?: string) {
+        super(command, gpuNum, cpuNum, memoryMB, image, privateRegistryFilePath);
         this.replicas = replicas;
     }
 }

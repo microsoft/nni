@@ -179,6 +179,9 @@ export class KubernetesTrialConfigTemplate {
     // Docker image
     public readonly image: string;
 
+    // Private registry config file path to download docker iamge
+    public readonly privateRegistryFilePath?: string;
+
     // Trail command
     public readonly command : string;
 
@@ -186,12 +189,13 @@ export class KubernetesTrialConfigTemplate {
     public readonly gpuNum : number;
 
     constructor(command : string, gpuNum : number,
-                cpuNum: number, memoryMB: number, image: string) {
+                cpuNum: number, memoryMB: number, image: string, privateRegistryFilePath?: string) {
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
+        this.privateRegistryFilePath = privateRegistryFilePath;
     }
 }
 

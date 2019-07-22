@@ -327,5 +327,20 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
+
+    protected getBase64(filename:string, filePath: string) {
+        var reader = new FileReader();
+        var file = new File([filename], filePath);
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            console.log(reader.result);
+            console.log('------------------337-------------')
+            return reader.result;
+        };
+        reader.onerror = function (error) {
+          console.log('Error: ', error);
+        };
+     }
+     
 }
 export { KubernetesTrainingService };

@@ -381,6 +381,13 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                                                                 tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
             }
             replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {tfReplicaSpecs: replicaSpecsObj});
+            console.log('-------------------380------------------')
+            if(tensorflowTrialConfig.worker.privateRegistryFilePath !== undefined) {
+                var fileName = path.basename(tensorflowTrialConfig.worker.privateRegistryFilePath);
+                console.log(fileName)
+                const encodeData = this.getBase64(fileName, tensorflowTrialConfig.worker.privateRegistryFilePath);
+                console.log(encodeData)
+            }
         } else if (this.kubeflowTrialConfig.operatorType === 'pytorch-operator') {
             const pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             if (pytorchTrialConfig.worker !== undefined) {
