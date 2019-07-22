@@ -128,8 +128,8 @@
 ### 文档
 
 * 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/Tutorial/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
+* 调试和维护：https://nni.readthedocs.io/zh/latest/Tutorial/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/zh/latest/sdk_reference.html#tuner
 
 ### Bug 修复和其它更新
 
@@ -144,8 +144,8 @@
 
 ### 改进
 
-* Making [log directory](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging
+* 可配置[日志目录](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig_zh_CN.md)。
+* 支持[不同级别的日志](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig_zh_CN.md)，使其更易于调试。
 
 ### 文档
 
@@ -212,8 +212,8 @@
 
 ### 新示例
 
-* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
+* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 ## 发布 0.4 - 12/6/2018
 
@@ -221,7 +221,7 @@
 
 * [Kubeflow 训练服务](TrainingService/KubeflowMode.md) 
     * 支持 tf-operator
-    * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+    * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
 * [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
 * [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
@@ -289,9 +289,9 @@
     docker pull msranni/nni:latest
     ```
 
-* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
+* 新的 Trial 样例：[NNI Sklearn 样例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ### 其它
 
@@ -302,7 +302,7 @@
 
 ### 主要功能
 
-* Support [OpenPAI](https://github.com/microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode) 
+* 支持 [OpenPAI](https://github.com/microsoft/pai) (又称 pai) 训练平台 (参考[这里](TrainingService/PaiMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
     * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
     * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
 * 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Tuner/SmacTuner.md)，了解如何使用 SMAC Tuner) 
@@ -314,9 +314,9 @@
 
 ## 发布 0.1.0 - 9/10/2018 (首个版本)
 
-Initial release of Neural Network Intelligence (NNI).
+首次发布 Neural Network Intelligence (NNI)。
 
-### Major Features
+### 主要功能
 
 * 安装和部署 
     * 支持 pip 和源代码安装
