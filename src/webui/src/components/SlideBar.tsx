@@ -343,10 +343,8 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
 
     render() {
         const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
-        const tablet = (
-            <MediaQuery minWidth={885} maxWidth={1229}>{this.tabeltHTML()}</MediaQuery>
-        );
-        const desktop = (<MediaQuery minWidth={1230}>{this.desktopHTML()}</MediaQuery>);
+        const tablet = (<MediaQuery minWidth={885} maxWidth={1241}>{this.tabeltHTML()}</MediaQuery>);
+        const desktop = (<MediaQuery minWidth={1242}>{this.desktopHTML()}</MediaQuery>);
         const { isvisibleLogDrawer, activeKey, isvisibleExperimentDrawer } = this.state;
         return (
             <div>
