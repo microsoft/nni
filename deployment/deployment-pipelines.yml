@@ -42,7 +42,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ ^v[0-9](.[0-9]){1,5}$ ]]; then
         echo 'Build version match branch tag'
       else
         echo 'Build version does not match branch tag'
