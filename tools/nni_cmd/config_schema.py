@@ -163,6 +163,15 @@ advisor_schema_dict = {
     }
 }
 
+aether_trial_schema = {
+    'trial': {
+        'codeDir': os.path.exists,
+        'baseGraph': os.path.exists,
+        'outputNodeAlias': Regex('([0-9]|[a-f]){8}'),
+        'outputName': str,
+    }
+}
+
 assessor_schema_dict = {
     'Medianstop': {
         'builtinAssessorName': 'Medianstop',
@@ -193,29 +202,29 @@ assessor_schema_dict = {
 }
 
 common_trial_schema = {
-'trial':{
-    'command': setType('command', str),
-    'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 
 pai_trial_schema = {
-'trial':{
-    'command': setType('command', str),
-    'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-    'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
-    'memoryMB': setType('memoryMB', int),
-    'image': setType('image', str),
-    Optional('shmMB'): setType('shmMB', int),
-    Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                         error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
-    Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                         error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
-    Optional('virtualCluster'): setType('virtualCluster', str),
-    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
+        'memoryMB': setType('memoryMB', int),
+        'image': setType('image', str),
+        Optional('shmMB'): setType('shmMB', int),
+        Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                            error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                            error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }
 
@@ -228,7 +237,7 @@ pai_config_schema = {
 }
 
 kubeflow_trial_schema = {
-'trial':{
+    'trial':{
         'codeDir':  setPathCheck('codeDir'),
         Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode'),
         Optional('ps'): {
@@ -332,24 +341,24 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-Optional('machineList'):[Or({
-    'ip': setType('ip', str),
-    Optional('port'): setNumberRange('port', int, 1, 65535),
-    'username': setType('username', str),
-    'passwd': setType('passwd', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-    Optional('useActiveGpu'): setType('useActiveGpu', bool)
-    },{
-    'ip': setType('ip', str),
-    Optional('port'): setNumberRange('port', int, 1, 65535),
-    'username': setType('username', str),
-    'sshKeyPath': setPathCheck('sshKeyPath'),
-    Optional('passphrase'): setType('passphrase', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-    Optional('useActiveGpu'): setType('useActiveGpu', bool)
-})]
+    Optional('machineList'):[Or({
+        'ip': setType('ip', str),
+        Optional('port'): setNumberRange('port', int, 1, 65535),
+        'username': setType('username', str),
+        'passwd': setType('passwd', str),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        }, {
+            'ip': setType('ip', str),
+            Optional('port'): setNumberRange('port', int, 1, 65535),
+            'username': setType('username', str),
+            'sshKeyPath': setPathCheck('sshKeyPath'),
+            Optional('passphrase'): setType('passphrase', str),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+            Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        })]
 }
 
 LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
