@@ -233,7 +233,15 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             trigger={['click']}
                         >
                             <a className="ant-dropdown-link" href="#">
-                                <Icon type="download" className="down-icon" /><span>Download</span><Icon type="down" />
+                                <Icon type="download" className="down-icon" />
+                                <span>Download</span>
+                                {
+                                    menuVisible
+                                    ?
+                                    <Icon type="up" className="margin-icon"/>
+                                    :
+                                    <Icon type="down" className="margin-icon"/>
+                                }
                             </a>
                         </Dropdown>
                     </span>
