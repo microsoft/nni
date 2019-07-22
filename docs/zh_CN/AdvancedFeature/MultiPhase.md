@@ -75,6 +75,6 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 [TPE](../Tuner/HyperoptTuner.md), [Random](../Tuner/HyperoptTuner.md), [Anneal](../Tuner/HyperoptTuner.md), [Evolution](../Tuner/EvolutionTuner.md), [SMAC](../Tuner/SmacTuner.md), [NetworkMorphism](../Tuner/NetworkmorphismTuner.md), [MetisTuner](../Tuner/MetisTuner.md), [BOHB](../Tuner/BohbAdvisor.md), [Hyperband](../Tuner/HyperbandAdvisor.md), [ENAS Tuner ](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py).
 
-### Training services support multi-phase experiment:
+### 支持多阶段 Experiment 的训练平台：
 
-[Local Machine](../TrainingService/LocalMode.md), [Remote Servers](../TrainingService/RemoteMachineMode.md), [OpenPAI](../TrainingService/PaiMode.md)
+[本机](../TrainingService/LocalMode.md), [远程计算机](../TrainingService/RemoteMachineMode.md), [OpenPAI](../TrainingService/PaiMode.md)
