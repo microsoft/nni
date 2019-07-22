@@ -216,7 +216,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 throw new Error('azureStorageClient is not initialized');
             }
             try {
-                //upload script files to azure storage
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
                                                                 `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
                                                                 `${trialLocalTempFolder}`);

@@ -212,7 +212,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 throw new Error('azureStorageClient is not initialized');
             }
             try {
-                //upload local files to azure storage
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
                 await AzureStorageClientUtility.uploadDirectory(
                     this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
                 //upload code files to azure storage
