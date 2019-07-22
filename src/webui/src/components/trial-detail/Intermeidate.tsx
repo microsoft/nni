@@ -184,7 +184,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         this.setState({ filterSource: filterSource });
                     }
                     this.drawIntermediate(filterSource);
-                    const counts = this.state.clickCounts + 1;
+                }
+                const counts = this.state.clickCounts + 1;
+                if (this._isMounted) {
                     this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
                 }
             });
