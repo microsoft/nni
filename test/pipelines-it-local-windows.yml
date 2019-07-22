@@ -33,7 +33,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb,multi_phase_batch,multi_phase_grid
+      python config_test.py --ts local --exclude smac,bohb,multi_phase_batch,multi_phase_grid
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
