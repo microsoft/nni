@@ -30,12 +30,14 @@ __all__ = [
     'get_current_parameter',
     'report_intermediate_result',
     'report_final_result',
-    'get_sequence_id'
+    'get_sequence_id',
+    'get_trial_id'
 ]
 
 
 _params = None
 _sequence_id = platform.get_sequence_id()
+_trial_id = platform.get_trial_id()
 
 
 def get_next_parameter():
@@ -54,6 +56,9 @@ def get_current_parameter(tag):
 
 def get_sequence_id():
     return _sequence_id
+
+def get_trial_id():
+    return _trial_id
 
 _intermediate_seq = 0
 

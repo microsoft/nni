@@ -28,6 +28,9 @@ def get_next_parameter():
 def get_sequence_id():
     pass
 
+def get_trial_id():
+    pass
+
 def send_metric(string):
     metric = json_tricks.loads(string)
     if metric['type'] == 'FINAL':
