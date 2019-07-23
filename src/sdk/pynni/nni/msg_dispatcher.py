@@ -27,6 +27,7 @@ from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
 from .common import multi_thread_enabled, multi_phase_enabled
 from .env_vars import dispatcher_env_vars
+from .utils import MetricType
 
 _logger = logging.getLogger(__name__)
 
@@ -133,12 +134,12 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'value': metric value reported by nni.report_final_result()
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
-        if data['type'] == 'FINAL':
+        if data['type'] == MetricType.FINAL:
             self._handle_final_metric_data(data)
-        elif data['type'] == 'PERIODICAL':
+        elif data['type'] == MetricType.PERIODICAL:
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)
-        elif data['type'] == 'REQUEST_PARAMETER':
+        elif data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
@@ -183,7 +184,7 @@ class MsgDispatcher(MsgDispatcherBase):
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
         """
-        if data['type'] != 'PERIODICAL':
+        if data['type'] != MetricType.PERIODICAL:
             return
         if self.assessor is None:
             return
@@ -224,7 +225,7 @@ class MsgDispatcher(MsgDispatcherBase):
         trial is early stopped.
         """
         _logger.debug('Early stop notify tuner data: [%s]', data)
-        data['type'] = 'FINAL'
+        data['type'] = MetricType.FINAL
         if multi_thread_enabled():
             self._handle_final_metric_data(data)
         else:

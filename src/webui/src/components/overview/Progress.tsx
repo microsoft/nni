@@ -7,6 +7,7 @@ import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
 import { Experiment, TrialNumber } from '../../static/interface';
 import { convertTime } from '../../static/function';
 import ProgressBar from './ProgressItem';
+import LogDrawer from '../Modal/LogDrawer';
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 
@@ -24,6 +25,7 @@ interface ProgressState {
     isEnable: boolean;
     userInputVal: string; // get user input
     cancelSty: string;
+    isShowLogDrawer: boolean;
 }
 
 class Progressed extends React.Component<ProgressProps, ProgressState> {
@@ -36,7 +38,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
             btnName: 'Edit',
             isEnable: true,
             userInputVal: this.props.trialProfile.runConcurren.toString(),
-            cancelSty: 'none'
+            cancelSty: 'none',
+            isShowLogDrawer: false
         };
     }
 
@@ -139,6 +142,18 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         }
     }
 
+    isShowDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isShowLogDrawer: true }));
+        }
+    }
+
+    closeDrawer = () => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ isShowLogDrawer: false }));
+        }
+    }
+
     componentWillReceiveProps() {
         const { trialProfile } = this.props;
         if (this.conInput !== null) {
@@ -156,9 +171,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
 
     render() {
         const { trialProfile, trialNumber, bestAccuracy, status, errors } = this.props;
-        const { isEnable, btnName, cancelSty } = this.state;
+        const { isEnable, btnName, cancelSty, isShowLogDrawer } = this.state;
         const bar2 = trialNumber.totalCurrentTrial - trialNumber.waitTrial - trialNumber.unknowTrial;
-        const classForRunning = status === 'RUNNING' ? 'dynamic' : '';
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
         const runDuration = convertTime(trialProfile.execDuration);
@@ -174,6 +188,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
             errorContent = (
                 <div className="errors">
                     {errors}
+                    <div><a href="#" onClick={this.isShowDrawer}>Learn about</a></div>
                 </div>
             );
         }
@@ -197,8 +212,6 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                 :
                                 <span />
                         }
-                        {/* Running ... */}
-                        <span className={classForRunning} />
                     </div>
                 </Row>
                 <ProgressBar
@@ -285,8 +298,13 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             <div>{trialNumber.failTrial}</div>
                         </Row>
                     </Col>
-
                 </Row>
+                {/* learn about click -> default active key is dispatcher. */}
+                <LogDrawer
+                    isVisble={isShowLogDrawer}
+                    closeDrawer={this.closeDrawer}
+                    activeTab="dispatcher" 
+                />
             </Row>
         );
     }
