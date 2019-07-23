@@ -391,7 +391,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     break;
                 case 'Default':
                     showColumn.push({
-                        title: 'Default metric',
+                        title: 'Default metric (latest seq)',
                         className: 'leftTitle',
                         dataIndex: 'acc',
                         key: 'acc',
