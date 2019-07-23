@@ -317,9 +317,12 @@ This project welcomes contributions and there are many ways in which you can par
 * Find the issues tagged with ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22), these are simple and easy to start , we recommend new contributors to start with.
 
 Before providing your hacks, there are a few simple guidelines that you need to follow:
-* [How to debug](docs/en_US/Tutorial/HowToDebug.md)
-* [Code Styles & Naming Conventions](docs/en_US/Tutorial/Contributing.md)
 * How to Set up [NNI developer environment](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
+* [Code Styles & Naming Conventions](docs/en_US/Tutorial/Contributing.md)
+* [How to debug](docs/en_US/Tutorial/HowToDebug.md)
+* [Customize Your Own Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
+* [Customize Your Own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
+* [implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 * Review the [Contributing Instruction](docs/en_US/Tutorial/Contributing.md) and get familiar with the NNI Code Contribution Guideline
 
 ## **External Repositories**
