@@ -51,6 +51,7 @@ export namespace ValidationSchemas {
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
+                authFile: joi.string(),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode'),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),

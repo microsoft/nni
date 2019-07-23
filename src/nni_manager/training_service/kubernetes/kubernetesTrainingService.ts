@@ -38,6 +38,8 @@ import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
+var fs = require('fs');
+
 /**
  * Training Service implementation for Kubernetes
  */
@@ -328,19 +330,33 @@ abstract class KubernetesTrainingService {
         return Promise.resolve();
     }
 
-    protected getBase64(filename:string, filePath: string) {
-        var reader = new FileReader();
-        var file = new File([filename], filePath);
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            console.log(reader.result);
-            console.log('------------------337-------------')
-            return reader.result;
-        };
-        reader.onerror = function (error) {
-          console.log('Error: ', error);
-        };
-     }
+    protected async createRegistrySecret(filePath: string | undefined): Promise<string> {
+        if(filePath === undefined || filePath === '') {
+            return Promise.resolve('');
+        }
+        let body = fs.readFileSync(filePath).toString('base64');
+        let registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
+                                                                            .toLowerCase());
+        await this.genericK8sClient.createSecret(
+            {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: registrySecretName,
+                    namespace: 'default',
+                    labels: {
+                        app: this.NNI_KUBERNETES_TRIAL_LABEL,
+                        expId: getExperimentId()
+                    }
+                },
+                type: 'kubernetes.io/dockerconfigjson',
+                data: {
+                    '.dockerconfigjson': body
+                }
+            }
+        );
+        return Promise.resolve(registrySecretName);
+    }
      
 }
 export { KubernetesTrainingService };
