@@ -22,6 +22,7 @@ import contextlib
 import collections
 import json
 import os
+import socket
 import sys
 import subprocess
 import requests
@@ -76,10 +77,13 @@ def setup_experiment(installed=True):
             pypath = ':'.join([sdk_path, cmd_path])
         os.environ['PYTHONPATH'] = pypath
 
-def fetch_nni_log_path(experiment_url):
+def get_experiment_id(experiment_url):
+    experiment_id = requests.get(experiment_url).json()['id']
+    return experiment_id
+
+def get_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
-    experiment_profile = requests.get(experiment_url)
-    experiment_id = json.loads(experiment_profile.text)['id']
+    experiment_id = get_experiment_id(experiment_url)
     experiment_path = os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
     nnimanager_log_path = os.path.join(experiment_path, 'log', 'nnimanager.log')
 
@@ -98,7 +102,6 @@ def is_experiment_done(nnimanager_log_path):
 
 def get_experiment_status(status_url):
     nni_status = requests.get(status_url).json()
-    #print(nni_status)
     return nni_status['status']
 
 def get_succeeded_trial_num(trial_jobs_url):
@@ -139,3 +142,13 @@ def deep_update(source, overrides):
         else:
             source[key] = overrides[key]
     return source
+
+def detect_port(port):
+    '''Detect if the port is used'''
+    socket_test = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    try:
+        socket_test.connect(('127.0.0.1', int(port)))
+        socket_test.close()
+        return True
+    except:
+        return False
