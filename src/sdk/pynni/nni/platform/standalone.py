@@ -25,10 +25,13 @@ import json_tricks
 def get_next_parameter():
     pass
 
-def get_sequence_id():
+def get_experiment_id():
     pass
 
 def get_trial_id():
+    pass
+
+def get_sequence_id():
     pass
 
 def send_metric(string):
