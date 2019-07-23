@@ -80,7 +80,6 @@ def naive_test():
     assert assessor_result == expected, 'Bad assessor result'
 
     subprocess.run(['nnictl', 'stop'])
-    # Sleep here to make sure previous stopped exp has enough time to exit
     snooze()
 
 def stop_experiment_test():

@@ -26,6 +26,7 @@ import socket
 import sys
 import subprocess
 import requests
+import time
 import ruamel.yaml as yaml
 
 EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
@@ -154,5 +155,5 @@ def detect_port(port):
         return False
 
 def snooze():
-    # Sleep to make sure previous stopped exp has enough time to exit
+    '''Sleep to make sure previous stopped exp has enough time to exit'''
     time.sleep(6)
