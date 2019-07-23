@@ -201,6 +201,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
+        if (this.fcTrialConfig === undefined) {
+            throw new Error('Kubeflow trial config is not initialized');
+        }
+
         let trialJobOutputUrl: string = '';
 
         if (this.fcClusterConfig.storageType === 'azureStorage') {
@@ -208,12 +212,15 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 throw new Error('azureStorageClient is not initialized');
             }
             try {
-                //upload local files to azure storage
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
                 await AzureStorageClientUtility.uploadDirectory(
                     this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
+                //upload code files to azure storage
+                await AzureStorageClientUtility.uploadDirectory(
+                    this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${this.fcTrialConfig.codeDir}`);
 
-                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/\
-${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/` + 
+                                    `${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
             } catch (error) {
                 this.log.error(error);
 
@@ -226,7 +233,8 @@ ${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'out
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
             await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
-
+            // Copy codeDir to NFS mounted dir
+            await cpp.exec(`cp -r ${this.fcTrialConfig.codeDir}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
             const nfsConfig: NFSConfig = nfsFrameworkControllerClusterConfig.nfs;
             trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`;
         }
@@ -257,13 +265,12 @@ ${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'out
             throw new Error('frameworkcontroller trial config is not initialized');
         }
 
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${this.fcTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
+        
         const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
         // Create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         for (const taskRole of this.fcTrialConfig.taskRoles) {
             const runScriptContent: string =

@@ -1,5 +1,6 @@
 # ChangeLog
 
+
 ## Release 0.9 - 7/1/2019
 
 ### Major Features
@@ -95,18 +96,18 @@
 
 ### Major Features
 
-* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PaiMode.md#version-check)
+* [Version checking](TrainingService/PaiMode.md)
   * check whether the version is consistent between nniManager and trialKeeper
-* [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
+* [Report final metrics for early stop job](https://github.com/microsoft/nni/issues/776)
   * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
-* [Separate Tuner/Assessor](https://github.com/Microsoft/nni/issues/841)
+* [Separate Tuner/Assessor](https://github.com/microsoft/nni/issues/841)
   * Adds two pipes to separate message receiving channels for tuner and assessor.
 * Make log collection feature configurable
 * Add intermediate result graph for all trials
 
 ### Bug fix
 
-* [Add shmMB config key for OpenPAI](https://github.com/Microsoft/nni/issues/842)
+* [Add shmMB config key for OpenPAI](https://github.com/microsoft/nni/issues/842)
 * Fix the bug that doesn't show any result if metrics is dict
 * Fix the number calculation issue for float types in hyperband
 * Fix a bug in the search space conversion in SMAC tuner
@@ -121,8 +122,8 @@
 
 ### Documentation
 * Chinese version document: https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/Tutorial/HowToDebug.html
+* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
 
 ### Bug Fixes and Other Changes
 * Fix a race condition bug that does not store trial job cancel status correctly.
@@ -134,8 +135,8 @@
 
 ## Release 0.5.1 - 1/31/2018
 ### Improvements
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging
+* Making [log directory](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging
 
 ### Documentation
 * Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
@@ -200,8 +201,8 @@
 
 ### New examples
 
-* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
+* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
 
 ## Release 0.4 - 12/6/2018
 
@@ -209,7 +210,7 @@
 
 * [Kubeflow Training service](TrainingService/KubeflowMode.md)
   * Support tf-operator
-  * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+  * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](Tuner/GridsearchTuner.md)
 * [Hyperband tuner](Tuner/HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
@@ -256,7 +257,7 @@
   Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
 
   ```bash
-  git clone -b v0.3 https://github.com/Microsoft/nni.git
+  git clone -b v0.3 https://github.com/microsoft/nni.git
   ```
 
 * **nni.report_final_result(result)** API supports more data types for result parameter.
@@ -278,20 +279,19 @@
   docker pull msranni/nni:latest
   ```
 
-* New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
+* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ### Others
 
 * UI refactoring, refer to [WebUI doc](Tutorial/WebUI.md) for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
-* [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
 
 ## Release 0.2.0 - 9/29/2018
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/microsoft/pai) Training Platform (See [here](TrainingService/PaiMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
 * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Tuner/SmacTuner.md) for instructions about how to use SMAC tuner)
@@ -301,9 +301,6 @@
   * Update ga squad example and related documentation
   * WebUI UX small enhancement and bug fix
 
-### Known Issues
-
-[Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
 
 ## Release 0.1.0 - 9/10/2018 (initial release)
 
@@ -327,6 +324,3 @@ Initial release of Neural Network Intelligence (NNI).
 * Others
   * Support simple GPU job scheduling
 
-### Known Issues
-
-[Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
