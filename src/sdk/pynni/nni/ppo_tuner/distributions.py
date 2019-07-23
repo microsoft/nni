@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.python.ops import math_ops
 
-from util import fc
+from .util import fc
 
 class Pd(object):
     """

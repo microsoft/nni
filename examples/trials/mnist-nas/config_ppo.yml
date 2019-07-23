@@ -1,0 +1,20 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 100h
+maxTrialNum: 10000
+#choice: local, remote, pai
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: true
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  #codeDir: ~/nni/nni/examples/tuners/random_nas_tuner
+  builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0

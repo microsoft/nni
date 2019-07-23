@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from distributions import make_pdtype
-from util import lstm_model, fc, observation_placeholder, encode_observation, adjust_shape
+from .distributions import make_pdtype
+from .util import lstm_model, fc, observation_placeholder, encode_observation, adjust_shape
 
 
 class PolicyWithValue(object):

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from util import initialize, get_session
+from .util import initialize, get_session
 
 class Model(object):
     """

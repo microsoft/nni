@@ -162,7 +162,7 @@ export namespace ValidationSchemas {
                 checkpointDir: joi.string().allow('')
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
