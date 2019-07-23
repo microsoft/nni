@@ -152,3 +152,7 @@ def detect_port(port):
         return True
     except:
         return False
+
+def snooze():
+    # Sleep to make sure previous stopped exp has enough time to exit
+    time.sleep(6)

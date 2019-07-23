@@ -24,7 +24,7 @@ import sys
 import time
 import traceback
 
-from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port
+from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port, snooze
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 def naive_test():
@@ -81,7 +81,7 @@ def naive_test():
 
     subprocess.run(['nnictl', 'stop'])
     # Sleep here to make sure previous stopped exp has enough time to exit
-    time.sleep(6)
+    snooze()
 
 def stop_experiment_test():
     '''Test `nnictl stop` command, including `nnictl stop exp_id` and `nnictl stop all`.
@@ -94,12 +94,13 @@ def stop_experiment_test():
     experiment_id = get_experiment_id(EXPERIMENT_URL)
     proc = subprocess.run(['nnictl', 'stop', experiment_id])
     assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
+    snooze()
     assert not detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
     # test cmd `nnictl stop all`
     proc = subprocess.run(['nnictl', 'stop', 'all'])
     assert proc.returncode == 0, '`nnictl stop all` failed with code %d' % proc.returncode
-    time.sleep(6)
+    snooze()
     assert not detect_port(8888) and not detect_port(8989), '`nnictl stop all` failed to stop experiments'
 
 
