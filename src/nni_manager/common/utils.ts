@@ -60,14 +60,14 @@ function mkDirP(dirPath: string): Promise<void> {
         } else {
             const parent: string = path.dirname(dirPath);
             mkDirP(parent).then(() => {
-                fs.mkdir(dirPath, (err: Error) => {
+                fs.mkdir(dirPath, (err) => {
                     if (err) {
                         deferred.reject(err);
                     } else {
                         deferred.resolve();
                     }
                 });
-            }).catch((err: Error) => {
+            }).catch((err) => {
                 deferred.reject(err);
             });
         }
