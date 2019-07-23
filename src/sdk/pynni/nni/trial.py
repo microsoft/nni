@@ -32,7 +32,7 @@ __all__ = [
     'report_final_result',
     'get_experiment_id',
     'get_trial_id',
-    'get_sequence_id',
+    'get_sequence_id'
 ]
 
 
