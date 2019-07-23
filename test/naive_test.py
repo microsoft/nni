@@ -94,13 +94,13 @@ def stop_experiment_test():
     experiment_id = get_experiment_id(EXPERIMENT_URL)
     proc = subprocess.run(['nnictl', 'stop', experiment_id])
     assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
-    assert detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
+    assert not detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
     # test cmd `nnictl stop all`
     proc = subprocess.run(['nnictl', 'stop', 'all'])
     assert proc.returncode == 0, '`nnictl stop all` failed with code %d' % proc.returncode
     time.sleep(6)
-    assert detect_port(8888) and detect_port(8989), '`nnictl stop all` failed to stop experiments'
+    assert not detect_port(8888) and not detect_port(8989), '`nnictl stop all` failed to stop experiments'
 
 
 if __name__ == '__main__':
@@ -116,6 +116,3 @@ if __name__ == '__main__':
         print('%r' % error)
         traceback.print_exc()
         sys.exit(1)
-    finally:
-        # test cmd `nnictl stop experiment exp_id`
-        subprocess.run(['nnictl', 'stop', 'all'])
