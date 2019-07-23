@@ -69,6 +69,10 @@ export class MockedNNIManager extends Manager {
         return Promise.resolve();
     }
 
+    public resubmitTrialJob(hyperParams: string): Promise<void> {
+        return Promise.resolve();
+    }
+
     public resumeExperiment(): Promise<void> {
         return Promise.resolve();
     }

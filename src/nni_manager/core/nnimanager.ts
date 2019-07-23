@@ -135,9 +135,11 @@ class NNIManager implements Manager {
         return this.dataStore.storeTrialJobEvent('ADD_CUSTOMIZED', '', hyperParams);
     }
 
-    public async resubmitTrialJob(jobId: string): Promise<void> {
-        // get trail parameter id
-        const trialJobInfo = await this.getTrialJob(jobId); 
+    public async resubmitTrialJob(data: string): Promise<void> {
+        // get trail job info by jobId
+        const trialJobId = JSON.parse(data).job_id
+        const trialJobInfo = await this.getTrialJob(trialJobId); 
+        this.log.debug(`trialJobId: ${trialJobId}`);
         
         if (this.dispatcher === undefined) {
             return Promise.reject(
@@ -156,9 +158,10 @@ class NNIManager implements Manager {
         } else {
             hyperParameter = trialJobInfo.hyperParameters.find(hp=>JSON.parse(hp).parameter_index == 0) as string
         }
-        let hyperParameterJson = JSON.parse(hyperParameter)        
+        const parameter_id = JSON.parse(hyperParameter).parameter_id.toString()
+        this.log.debug(`parameter_id str: ${parameter_id}`);
         
-        this.dispatcher.sendCommand(RESUBMIT_TRIAL_JOB, hyperParameterJson.parameter_id); 
+        this.dispatcher.sendCommand(RESUBMIT_TRIAL_JOB, parameter_id); 
     }
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
