@@ -340,4 +340,5 @@ Now we have some external usage examples run in NNI from our contributors. Thank
 
 ## **License**
 
+The entire codebase is under [MIT license](LICENSE)
 
