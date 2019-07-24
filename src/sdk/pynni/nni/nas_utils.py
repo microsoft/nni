@@ -165,7 +165,7 @@ def darts_mode(
     return layer_out
 
 
-def reload_tensorflow_variables(session, tf):
+def reload_tensorflow_variables(tf, session):
     '''In Enas mode, this function reload every signal varaible created in `enas_mode` function so
     the whole tensorflow graph will be changed into certain subgraph recerived from Tuner.
     ---------------
@@ -189,7 +189,7 @@ def reload_tensorflow_variables(session, tf):
                 chosen_inputs, session)
 
 
-def darts_training(session, loss, feed_dict, tf):
+def darts_training(tf, session, loss, feed_dict):
     if 'optimizer' not in globals():
         global arch_logits_list
         global optimizer
@@ -199,3 +199,10 @@ def darts_training(session, loss, feed_dict, tf):
         grads_and_vars = optimizer.compute_gradients(loss, arch_logits_list)
         train_op = optimizer.apply_gradients(grads_and_vars)
     session.run(train_op)
+
+
+def training_update(nas_mode, tf=None, session=None, loss=None, feed_dict=None):
+    if nasMode == 'darts_mode':
+        darts_training(tf, session, loss, feed_dict)
+    elif nasMode == 'enas_mode':
+        reload_tensorflow_variables(tf, session)

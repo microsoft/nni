@@ -319,12 +319,11 @@ class Transformer(ast.NodeTransformer):
         else:
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.get_next_parameter'):
-            call_node = parse_annotation(string[1:]).value
-            if call_node.args:
-                # it is used in enas mode as it needs to retrieve the next subgraph for training
-                call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
-                return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
+        if string.startswith('@nni.training_update'):
+            expr = parse_annotation(string[1:])
+            call_node = expr.value
+            call_node.args.insert(0, ast.Str(s=self.nas_mode))
+            return expr
 
         if string.startswith('@nni.report_intermediate_result')  \
                 or string.startswith('@nni.report_final_result') \
