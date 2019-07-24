@@ -84,6 +84,7 @@ tuner_schema_dict = {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
         },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     ('BatchTuner', 'GridSearch', 'Random'): {
