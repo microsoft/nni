@@ -30,7 +30,12 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
                 }
             }
             if (status === 'SUCCEEDED') {
-                result = `${result} (FINAL)`;
+                // some trial haven't final result
+                if (record.acc !== undefined) {
+                    if (record.acc.default !== undefined) {
+                        result = `${result} (FINAL)`;
+                    }
+                }
             } else {
                 result = `${result} (LATEST)`;
             }
