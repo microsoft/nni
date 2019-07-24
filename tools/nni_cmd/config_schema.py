@@ -70,12 +70,20 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('TPE', 'Anneal', 'SMAC', 'Evolution'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
+    ('TPE', 'Anneal', 'SMAC'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC'),
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    ('Evolution'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'Evolution'),
+        Optional('classArgs'): {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
+        },
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     ('BatchTuner', 'GridSearch', 'Random'): {
