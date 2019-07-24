@@ -104,7 +104,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     Object.keys(trialJobs).map(item => {
                         let desc: Parameters = {
                             parameters: {},
-                            intermediate: []
+                            intermediate: [],
+                            progress: 1
                         };
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
@@ -125,6 +126,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         const tempHyper = trialJobs[item].hyperParameters;
                         if (tempHyper !== undefined) {
                             const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+                            desc.progress = tempHyper.length;
                             if (typeof getPara === 'string') {
                                 desc.parameters = JSON.parse(getPara);
                             } else {
