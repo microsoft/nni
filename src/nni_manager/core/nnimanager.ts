@@ -158,8 +158,15 @@ class NNIManager implements Manager {
         } else {
             hyperParameter = trialJobInfo.hyperParameters.find(hp=>JSON.parse(hp).parameter_index == 0) as string
         }
+
+        if(trialJobInfo.status != 'FAILED'){
+            return Promise.reject(
+                new Error('only failed trials can be resubmitted')
+            );
+        }
+
         const parameter_id = JSON.parse(hyperParameter).parameter_id.toString()
-        this.log.debug(`parameter_id str: ${parameter_id}`);
+        this.log.debug(`parameter_id: ${parameter_id}`);
         
         this.dispatcher.sendCommand(RESUBMIT_TRIAL_JOB, parameter_id); 
     }
