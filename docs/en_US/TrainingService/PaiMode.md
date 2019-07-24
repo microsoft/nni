@@ -32,8 +32,6 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-  dataDir: hdfs://10.1.1.1:9000/nni
-  outputDir: hdfs://10.1.1.1:9000/nni
 # Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
@@ -51,10 +49,6 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
 * image
     * Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
     * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
-* dataDir
-    * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
-* outputDir
-    * Optional key. It specifies the HDFS output directory for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
 * virtualCluster
     * Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
 * shmMB
