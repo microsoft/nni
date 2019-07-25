@@ -24,6 +24,7 @@ from collections import namedtuple
 
 _trial_env_var_names = [
     'NNI_PLATFORM',
+    'NNI_EXP_ID',
     'NNI_TRIAL_JOB_ID',
     'NNI_SYS_DIR',
     'NNI_OUTPUT_DIR',
