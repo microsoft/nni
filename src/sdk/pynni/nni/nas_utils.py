@@ -202,7 +202,7 @@ def darts_training(tf, session, loss, feed_dict):
 
 
 def training_update(nas_mode, tf=None, session=None, loss=None, feed_dict=None):
-    if nasMode == 'darts_mode':
+    if nas_mode == 'darts_mode':
         darts_training(tf, session, loss, feed_dict)
-    elif nasMode == 'enas_mode':
+    elif nas_mode == 'enas_mode':
         reload_tensorflow_variables(tf, session)
