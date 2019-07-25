@@ -74,9 +74,10 @@ And you will be redirected to HDFS web portal to browse the output files of that
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
-If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS.
+## data management
+If your training data is not to large, the could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the [guidance](https://github.com/microsoft/pai/blob/master/docs/user/storage.md) to mount the data folder in container.
 
-Any problems when using NNI in pai mode, please create issues on [NNI github repo](https://github.com/Microsoft/nni).
+If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS, the target path is `hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`
 
 ## version check
 NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.
@@ -87,3 +88,5 @@ Check policy:
 
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
 ![](../../img/version_check.png)
+
+Any problems when using NNI in pai mode, please create issues on [NNI github repo](https://github.com/Microsoft/nni).
