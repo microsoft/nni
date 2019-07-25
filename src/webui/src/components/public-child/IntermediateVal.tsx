@@ -15,7 +15,6 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
     render() {
         const { record } = this.props;
         const interArr = record.description.intermediate;
-        const status = record.status;
         let lastVal;
         let wei = 0;
         if (interArr !== undefined) {
@@ -29,12 +28,10 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
                     result = `${lastVal.toFixed(6)}`;
                 }
             }
-            if (status === 'SUCCEEDED') {
-                // some trial haven't final result
-                if (record.acc !== undefined) {
-                    if (record.acc.default !== undefined) {
-                        result = `${result} (FINAL)`;
-                    }
+            // some trial haven't final result
+            if (record.acc !== undefined) {
+                if (record.acc.default !== undefined) {
+                    result = `${result} (FINAL)`;
                 }
             } else {
                 result = `${result} (LATEST)`;
