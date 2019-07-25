@@ -305,7 +305,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
-          this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
+          await this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
@@ -352,7 +352,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 `run_${this.fcTrialConfig.taskRoles[index].name}.sh`,
                 podResources[index],
                 containerPort,
-                await this.createRegistrySecret(this.fcTrialConfig.taskRoles[index].privateRegistryFilePath)
+                await this.createRegistrySecret(this.fcTrialConfig.taskRoles[index].privateRegistryAuthPath)
             );
             taskRoles.push({
                 name: this.fcTrialConfig.taskRoles[index].name,

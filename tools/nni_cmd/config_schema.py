@@ -248,7 +248,7 @@ kubeflow_trial_schema = {
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
             'image': setType('image', str),
-            Optional('privateRegistryFilePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryFilePath')
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('master'): {
             'replicas': setType('replicas', int),
@@ -257,7 +257,7 @@ kubeflow_trial_schema = {
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
             'image': setType('image', str),
-            Optional('privateRegistryFilePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryFilePath')
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('worker'):{
             'replicas': setType('replicas', int),
@@ -266,7 +266,7 @@ kubeflow_trial_schema = {
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
             'image': setType('image', str),
-            Optional('privateRegistryFilePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryFilePath')
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }
     }
 }
@@ -314,7 +314,7 @@ frameworkcontroller_trial_schema = {
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
             'image': setType('image', str),
-            Optional('privateRegistryFilePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryFilePath')
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }]
     }
 }

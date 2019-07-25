@@ -56,7 +56,7 @@ export namespace ValidationSchemas {
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
-                    privateRegistryFilePath: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -66,7 +66,7 @@ export namespace ValidationSchemas {
                 ps: joi.object({
                         replicas: joi.number().min(1).required(),
                         image: joi.string().min(1),
-                        privateRegistryFilePath: joi.string().min(1),
+                        privateRegistryAuthPath: joi.string().min(1),
                         outputDir: joi.string(),
                         cpuNum: joi.number().min(1),
                         memoryMB: joi.number().min(100),
@@ -76,7 +76,7 @@ export namespace ValidationSchemas {
                 master: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
-                    privateRegistryFilePath: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -87,7 +87,7 @@ export namespace ValidationSchemas {
                     name: joi.string().min(1),
                     taskNum: joi.number().min(1).required(),
                     image: joi.string().min(1),
-                    privateRegistryFilePath: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
