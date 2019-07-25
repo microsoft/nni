@@ -288,44 +288,6 @@ Maybe you want to read:
 * [WebUI tutorial](docs/en_US/Tutorial/WebUI.md)
 * [Contributing](docs/en_US/Tutorial/Contributing.md)
 
-## **News**
-
-<b>07/01/2019</b> New example support：Add [ENAS-mode](examples/tuners/enas_nni/README.md) and One-shot mode for NAS interface.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New advisor support: [Gaussian Process Tuner with Matern kernel ](docs/en_US/Tuner/BuiltinTuner.md#GPTuner) .<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New training service support:  PAI mode supports multiphase experiment since v0.9.<br />
-<b>06/04/2019</b> New OS support:  NNI can running on [Windows](docs/en_US/Tutorial/NniOnWindows.md) for Local/PAI/Remote mode.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New training service support:  Support Kubeflow TFJob/PyTorchJob v1beta2.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New training service Support: Support [General NAS programming interface](docs/en_US/AdvancedFeature/GeneralNasInterfaces.md).<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New feature support：Support trial comparation in Web Portal.<br />
-<b>07/1/2019</b> New advisor support: [BOHB](docs/en_US/Tuner/BuiltinTuner.md#BOHB).<br />
-
-## **News**
-
-* <b>07/01/2019</b> New example support：Add [ENAS-mode](examples/tuners/enas_nni/README.md) and One-shot mode for NAS interface.<br />
-* <b>07/01/2019</b> New advisor support: [Gaussian Process Tuner with Matern kernel ](docs/en_US/Tuner/BuiltinTuner.md#GPTuner) .<br />
-* <b>07/01/2019</b> New training service support:  PAI mode supports multiphase experiment since v0.9.<br />
-* <b>06/04/2019</b> New OS support:  NNI can running on [Windows](docs/en_US/Tutorial/NniOnWindows.md) for Local/PAI/Remote mode.<br />
-* <b>06/04/2019</b>New training service support:  Support Kubeflow TFJob/PyTorchJob v1beta2.<br />
-* <b>06/04/2019</b>New training service Support: Support [General NAS programming interface](docs/en_US/AdvancedFeature/GeneralNasInterfaces.md).<br />
-* <b>06/04/2019</b>New feature support：Support trial comparation in Web Portal.<br />
-* <b>07/1/2019</b> New advisor support: [BOHB](docs/en_US/Tuner/BuiltinTuner.md#BOHB).<br />
-
-
-## **News**
-
-<b>07/01/2019</b> <br>
-* New example support：Add [ENAS-mode](examples/tuners/enas_nni/README.md) and One-shot mode for NAS interface.<br />
-* New advisor support: [Gaussian Process Tuner with Matern kernel ](docs/en_US/Tuner/BuiltinTuner.md#GPTuner) .<br />
-*  New training service support:  PAI mode supports multiphase experiment since v0.9.<br />
-
-<b>06/04/2019</b><br> 
-* New OS support:  NNI can running on [Windows](docs/en_US/Tutorial/NniOnWindows.md) for Local/PAI/Remote mode.<br />
-*  New training service support:  Support Kubeflow TFJob/PyTorchJob v1beta2.<br />
-* New training service Support: Support [General NAS programming interface](docs/en_US/AdvancedFeature/GeneralNasInterfaces.md).<br />
-* New feature support：Support trial comparation in Web Portal.<br />
-
-<b>07/1/2019</b><br>
-* New advisor support: [BOHB](docs/en_US/Tuner/BuiltinTuner.md#BOHB).<br />
 
 ## **How to**
 
