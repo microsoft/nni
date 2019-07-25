@@ -10,7 +10,7 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 下图显示了 NNI 的体系结构。
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
+<img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="绘图" width="700"/>
 </p>
 
 ## 主要概念
@@ -40,14 +40,14 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 > 第三步：[>定义 Experiment 配置](Tutorial/ExperimentConfig.md)
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
+<img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="绘图"/>
 </p>
 
 更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
 ## 了解更多信息
 
-* [开始使用](Tutorial/QuickStart.md)
+* [入门](Tutorial/QuickStart.md)
 * [如何为 NNI 调整代码？](TrialExample/Trials.md)
 * [NNI 支持哪些 Tuner？](Tuner/BuiltinTuner.md)
 * [如何自定义 Tuner？](Tuner/CustomizeTuner.md)
@@ -56,4 +56,4 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 * [如何在本机上运行 Experiment？](TrainingService/LocalMode.md)
 * [如何在多机上运行 Experiment？](TrainingService/RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
-* [样例](TrialExample/MnistExamples.md)
+* [示例](TrialExample/MnistExamples.md)

@@ -340,7 +340,7 @@ class Hyperband(MsgDispatcherBase):
             self.curr_s -= 1
 
         assert self.generated_hyper_configs
-        params = self.generated_hyper_configs.pop()
+        params = self.generated_hyper_configs.pop(0)
         ret = {
             'parameter_id': params[0],
             'parameter_source': 'algorithm',
