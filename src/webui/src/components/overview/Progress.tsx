@@ -1,7 +1,5 @@
 import * as React from 'react';
-import {
-    Row, Col, Popover, Button, message
-} from 'antd';
+import { Row, Col, Popover, Button, message } from 'antd';
 import axios from 'axios';
 import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
 import { Experiment, TrialNumber } from '../../static/interface';
@@ -303,7 +301,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 <LogDrawer
                     isVisble={isShowLogDrawer}
                     closeDrawer={this.closeDrawer}
-                    activeTab="dispatcher" 
+                    activeTab="dispatcher"
                 />
             </Row>
         );
