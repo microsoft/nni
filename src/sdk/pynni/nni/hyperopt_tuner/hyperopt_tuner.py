@@ -313,7 +313,7 @@ class HyperoptTuner(Tuner):
                 self.running_data.remove(parameter_id)
 
                 # update the reward of optimal_y
-                if self.optimal_y == 0:
+                if self.optimal_y is None:
                     if self.constant_liar_type == 'mean':
                         self.optimal_y = [reward, 1]
                     else:
@@ -419,7 +419,7 @@ class HyperoptTuner(Tuner):
         total_params : dict
             parameter suggestion
         """
-        if self.parallel and len(self.total_data)>20 and len(self.running_data):
+        if self.parallel and len(self.total_data)>20 and len(self.running_data) and self.optimal_y is not None:
             self.CL_rval = copy.deepcopy(self.rval)
             if self.constant_liar_type == 'mean' and self.optimal_y[1]:
                     _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
