@@ -1,0 +1,41 @@
+.ant-modal-body{
+    border-radius: none;
+}
+
+/* resubmit confirm modal style */
+.resubmit{
+    .title{
+        font-size: 18px;
+        i{
+            margin-right: 10px;
+        }
+    }
+    .hint{
+        padding: 15px 0;
+        color: #333;
+        margin-left: 30px;
+    }
+    .color-succ{
+        color: green;
+    }
+    .color-error{
+        color: red;
+    }
+    .buttons{
+        text-align: right;
+        .margin-cancel{
+            margin-left: 8px;
+        }
+        /**/
+        /* cancel button style*/
+        .grey-bgcolor{
+            background-color: #dadada;
+            border: none;
+            color: #333;
+        }
+        .padding-all{
+            padding: 4px 14px;
+            height: auto;
+        }
+    }
+}

@@ -6,6 +6,7 @@ import SlideBar from './components/SlideBar';
 interface AppState {
   interval: number;
   whichPageToFresh: string;
+  idListResubmit: Array<string>;
 }
 
 class App extends React.Component<{}, AppState> {
@@ -14,7 +15,8 @@ class App extends React.Component<{}, AppState> {
     super(props);
     this.state = {
       interval: 10, // sendons
-      whichPageToFresh: ''
+      whichPageToFresh: '',
+      idListResubmit: []
     };
   }
 
@@ -31,6 +33,14 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
+  changeResubmitIdList = (value: string) => {
+    const { idListResubmit } = this.state;
+    let tempArr = idListResubmit;
+    tempArr.push(value);
+    if (this._isMounted === true) {
+      this.setState(() => ({ idListResubmit: tempArr }));
+    }
+  }
   componentDidMount() {
     this._isMounted = true;
   }
@@ -39,17 +49,22 @@ class App extends React.Component<{}, AppState> {
     this._isMounted = false;
   }
   render() {
-    const { interval, whichPageToFresh } = this.state;
+    const { interval, whichPageToFresh, idListResubmit } = this.state;
     const reactPropsChildren = React.Children.map(this.props.children, child =>
-      // tslint:disable-next-line:no-any
-      React.cloneElement(child as React.ReactElement<any>, { interval, whichPageToFresh })
+      React.cloneElement(
+        // tslint:disable-next-line:no-any
+        child as React.ReactElement<any>, {
+          interval, whichPageToFresh,
+          idListResubmit, changeIdList: this.changeResubmitIdList
+        }
+      )
     );
     return (
       <Row className="nni" style={{ minHeight: window.innerHeight }}>
         <Row className="header">
           <Col span={1} />
           <Col className="headerCon" span={22}>
-            <SlideBar changeInterval={this.changeInterval} changeFresh={this.changeFresh}/>
+            <SlideBar changeInterval={this.changeInterval} changeFresh={this.changeFresh} />
           </Col>
           <Col span={1} />
         </Row>

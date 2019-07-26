@@ -36,6 +36,8 @@ interface TrialDetailState {
 interface TrialsDetailProps {
     interval: number;
     whichPageToFresh: string;
+    idListResubmit: Array<string>;
+    changeIdList: (value: string) => void;
 }
 
 class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
@@ -344,8 +346,9 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
             entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
-            whichGraph
+            whichGraph, experimentStatus
         } = this.state;
+        const { changeIdList, idListResubmit } = this.props;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
             <div>
@@ -419,11 +422,15 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
+                    idListResubmit={idListResubmit} // idlist
+                    changeidListResubmitted={changeIdList} // change idList
                     isMultiPhase={isMultiPhase}
                     platform={experimentPlatform}
+                    experimentStatus={experimentStatus}
                     updateList={this.getDetailSource}
                     logCollection={experimentLogCollection}
                     ref={(tabList) => this.tableList = tabList}
+
                 />
             </div>
         );
