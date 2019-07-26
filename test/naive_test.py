@@ -24,10 +24,10 @@ import sys
 import time
 import traceback
 
-from utils import is_experiment_done, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
+from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port, snooze
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
-def run():
+def naive_test():
     '''run naive integration test'''
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
     to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
@@ -38,7 +38,7 @@ def run():
 
     print('Spawning trials...')
 
-    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
+    nnimanager_log_path = get_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
     for _ in range(120):
@@ -79,11 +79,36 @@ def run():
     expected = set(open('naive_test/expected_assessor_result.txt'))
     assert assessor_result == expected, 'Bad assessor result'
 
+    subprocess.run(['nnictl', 'stop'])
+    snooze()
+
+def stop_experiment_test():
+    '''Test `nnictl stop` command, including `nnictl stop exp_id` and `nnictl stop all`.
+    Simple `nnictl stop` is not tested here since it is used in all other test code'''
+    subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8080'], check=True)
+    subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8888'], check=True)
+    subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8989'], check=True)
+
+    # test cmd 'nnictl stop id`
+    experiment_id = get_experiment_id(EXPERIMENT_URL)
+    proc = subprocess.run(['nnictl', 'stop', experiment_id])
+    assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
+    snooze()
+    assert not detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
+
+    # test cmd `nnictl stop all`
+    proc = subprocess.run(['nnictl', 'stop', 'all'])
+    assert proc.returncode == 0, '`nnictl stop all` failed with code %d' % proc.returncode
+    snooze()
+    assert not detect_port(8888) and not detect_port(8989), '`nnictl stop all` failed to stop experiments'
+
+
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     setup_experiment(installed)
     try:
-        run()
+        naive_test()
+        stop_experiment_test()
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:
@@ -91,5 +116,3 @@ if __name__ == '__main__':
         print('%r' % error)
         traceback.print_exc()
         sys.exit(1)
-    finally:
-        subprocess.run(['nnictl', 'stop'])
