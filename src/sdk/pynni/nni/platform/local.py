@@ -94,5 +94,11 @@ def send_metric(string):
         else:
             subprocess.run(['touch', _metric_file.name], check = True)
 
+def get_experiment_id():
+    return trial_env_vars.NNI_EXP_ID
+
+def get_trial_id():
+    return trial_env_vars.NNI_TRIAL_JOB_ID
+
 def get_sequence_id():
     return trial_env_vars.NNI_TRIAL_SEQ_ID

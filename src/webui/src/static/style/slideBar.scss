@@ -3,54 +3,6 @@ $barHeight: 56px;
 $drowBgColor: #f2f2f2;
 /* drowdown and select hover bgcolor */
 $drowHoverBgColor: #e2e2e2;
-.nav{
-    list-style: none;
-    width: 95%;
-    height: $barHeight;
-    margin: 0 auto;
-    position: relative;
-    .tab{
-        font-family: 'Segoe';
-        line-height: $barHeight;
-        a{
-            font-size: 18px;
-            color: #b8c7ce;
-            text-decoration: none;
-        }
-    }
-    .firstTab{
-        margin: 0 20px;
-    }
-    .logo{
-        margin-top: 2px;
-        max-width: 128px;
-    }
-}
-
-.tab a:hover, .tab a.high{
-    color: white;
-    border-bottom: 1px solid #fff;
-}
-
-.feedback{
-    position: fixed;
-    right: 26%;
-    line-height: $barHeight;
-    font-size: 16px;
-    color: #fff;
-    a{
-        color: #fff;
-        text-decoration: none;
-        margin-left: 10px;
-    }
-    img{
-        width: 20px;
-        margin-right: 8px;
-    }
-    .version{
-        margin-left: 16px;
-    }
-}
 
 /* refresh button */
 .fresh{
@@ -63,20 +15,25 @@ $drowHoverBgColor: #e2e2e2;
     color: #fff;
 }
 
-.link li{
-    float: left;
-}
 .dropdown{
-    margin-right: 10px;
     /* make dropdown content box position in blue bar bottom */
     padding-bottom: 14px;
+    .down-icon{
+        font-size: 20px !important;
+        padding-right: 2px;
+    }
 }
+
 .interval{
-    position: fixed;
-    right: 6%;
-    top: 12px;
+    display: inline-block;
     font-size: 16px;
     color: #fff;
+    .ant-form{
+        display: inline-block;
+    }
+    form .ant-select{
+        width: 166px;
+    }
     .ant-select-selection{
         background-color: transparent;
         border: none;
@@ -87,10 +44,19 @@ $drowHoverBgColor: #e2e2e2;
     .ant-select-arrow{
         color: #fff;
     }
+    
+    .fresh{
+        margin-right: 10px;
+    }
+    .ant-btn-ghost{
+        padding: 0 10px;
+
+    }
     .ant-btn-ghost[disabled]{
-        background-color: transparent;
+        background-color: #005b98;
         color: #fff;
     }
+    
 }
 /* set select bgcolor */
 .ant-select-dropdown-menu{
@@ -126,26 +92,141 @@ $drowHoverBgColor: #e2e2e2;
     }
 }
 
+.menu-list{
+    position: relative;
+    top: 13px;
+}
 
-/* nav style*/
-.little{
-    width: 90%;
-    .menu{
-        margin-left: 33px;
-        .more{
+
+.ant-dropdown{
+    .menuModal{
+        position: relative;
+        top: 12px;
+    }
+}
+.ant-select-selection-selected-value{
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.ant-dropdown-menu-submenu-title{
+    font-size: 16px;
+}
+.ant-dropdown-menu-item:hover, .ant-dropdown-menu-submenu-title:hover{
+    background-color: transparent;
+}
+.nav{
+    width: 95%;
+    height: $barHeight;
+    margin: 0 auto;
+    line-height: $barHeight;
+    
+    /* mobile start*/
+    .left{
+        text-align: left;
+        /* more menu */
+        font-size: 18px;
+        color: #fff;
+        a, a:visited{
             color: #fff;
-            font-size: 24px;
-            margin-top: 16px;
+            text-decoration: none;
         }
-        .more:hover{
+        .more-mobile{
+            margin-right: 10%;
+            font-size: 22px;
+            position: relative;
+            top: 1px;
+        }
+        .more-mobile:hover{
             cursor: pointer;
         }
     }
-    .logo{
+    .center{
+        text-align: center;
+        img{
+            height: 38px;
+        }
+    }
+    .right{
         text-align: right;
+        button{
+            margin-top: 12px;
+        }
+    }
+    /* mobile end */
+
+    /* tabelt mode */
+    .tabelt-left{
+        height: $barHeight;
+        .tabelt-img img{
+            position: relative;
+            top: -5px;
+        }
+    }
+    .tabelt-right{
+        text-align: right;
+    }
+    
+    /* desktop mode */
+    .desktop-logo{
+        position: relative;
+        top: -3px;
+    }
+    .desktop-right{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: right;
+        line-height: $barHeight;
+        font-size: 16px;
+        color: #fff;
+        a{
+            color: #fff;
+            text-decoration: none;
+        }
+        img{
+            width: 20px;
+            margin-right: 8px;
+        }
+        .feedback{
+            font-size: 16px;
+            margin: 0 20px;
+        }
+        .version{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+        .margin-icon{
+            margin-left: 8px;
+        }
     }
 }
 
-.menuModal{
-    width: 198px;
+/* public style in nav in threee mode*/
+.more{
+    color: #fff;
+    font-size: 24px;
+}
+.more:hover{
+    cursor: pointer;
+}
+
+/* overview and detail tabs common style */
+a.common-tabs{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    color: #b8c7ce;
+    text-decoration: none;
+}
+.common-tabs:visited, .high-light:hover{
+    color: #fff;
+    text-decoration: none;
+}
+.common-tabs:hover, .high-light{
+    color: #fff;
+    border-bottom: 1px solid #fff;
+}
+.left-right-margin{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+.left-margin{
+    margin-left: 20px;
 }

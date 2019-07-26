@@ -201,6 +201,10 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
+        if (this.kubeflowTrialConfig === undefined) {
+            throw new Error('Kubeflow Trial config is not initialized');
+        }
+
         let trialJobOutputUrl: string = '';
 
         assert(this.kubeflowClusterConfig.storage === undefined
@@ -212,13 +216,17 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 throw new Error('azureStorageClient is not initialized');
             }
             try {
-                //upload local files to azure storage
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
                                                                 `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
                                                                 `${trialLocalTempFolder}`);
+                //upload code files to azure storage
+                await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                                                                `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                                                                `${this.kubeflowTrialConfig.codeDir}`);
 
-                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}\
-                /${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
+                                    `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
             } catch (error) {
                 this.log.error(error);
 
@@ -228,9 +236,10 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             // Creat work dir for current trial in NFS directory
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
-            // Copy code files from local dir to NFS mounted dir
+            // Copy script files from local dir to NFS mounted dir
             await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
-
+            // Copy codeDir to NFS mounted dir
+            await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
             const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
             trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`;
         }
@@ -255,13 +264,10 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-        // Create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         // Write worker file content run_worker.sh to local tmp folders
         if (kubeflowTrialConfig.worker !== undefined) {

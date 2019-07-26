@@ -8,6 +8,8 @@ Trial
 ..  autofunction:: nni.get_current_parameter
 ..  autofunction:: nni.report_intermediate_result
 ..  autofunction:: nni.report_final_result
+..  autofunction:: nni.get_experiment_id
+..  autofunction:: nni.get_trial_id
 ..  autofunction:: nni.get_sequence_id
 
 
