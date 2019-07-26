@@ -39,7 +39,7 @@
     "lodash": "^4.17.13",
     "lodash.template": "^4.5.0",
     "js-yaml": "^3.13.1",
-    "webpack-dev-server": "^3.1.11",
+    "webpack-dev-server": "3.0.0",
     "merge": "^1.2.1",
     "cryptiles": "^4.1.2",
     "hoek": "^4.2.1"
