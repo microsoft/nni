@@ -43,9 +43,8 @@ class GridSearchTuner(Tuner):
 
     Type 'choice' will select one of the options. Note that it can also be nested.
 
-    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly.
-    Note that q should be at least 2.
-    It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
+    It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger that the value in front of it.
 
     Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)]
     and sample and then change the sampled value back.
@@ -95,19 +94,16 @@ class GridSearchTuner(Tuner):
 
     def _parse_quniform(self, param_value):
         '''parse type of quniform parameter and return a list'''
-        if param_value[2] < 2:
-            raise RuntimeError("The number of values sampled (q) should be at least 2")
-        low, high, count = param_value[0], param_value[1], param_value[2]
-        interval = (high - low) / (count - 1)
-        return [float(low + interval * i) for i in range(count)]
+        low, high, interval = param_value[0], param_value[1], param_value[2]
+        count = int(np.floor((high - low) / interval)) + 1
+        return [low + interval * i for i in range(count)]
 
     def parse_qtype(self, param_type, param_value):
         '''parse type of quniform or qloguniform'''
-        if param_type == 'quniform':
-            return self._parse_quniform(param_value)
-        if param_type == 'qloguniform':
-            param_value[:2] = np.log(param_value[:2])
-            return list(np.exp(self._parse_quniform(param_value)))
+        if param_type in ['quniform', 'qloguniform']: 
+            # qloguniform has no difference from quniform, 
+            # since grid search does not consider possibility distribution
+            return self._parse_quniform(param_value) 
 
         raise RuntimeError("Not supported type: %s" % param_type)
 
