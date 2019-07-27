@@ -135,11 +135,10 @@ class NNIManager implements Manager {
         return this.dataStore.storeTrialJobEvent('ADD_CUSTOMIZED', '', hyperParams);
     }
 
-    public async resubmitTrialJob(data: string): Promise<void> {
+    public async resubmitTrialJob(trialJobId: string): Promise<void> {
         // get trail job info by jobId
-        const trialJobId = JSON.parse(data).job_id
+        this.log.info(`trialJobId: ${trialJobId}`);
         const trialJobInfo = await this.getTrialJob(trialJobId); 
-        this.log.debug(`trialJobId: ${trialJobId}`);
         
         if (this.dispatcher === undefined) {
             return Promise.reject(
@@ -151,6 +150,11 @@ class NNIManager implements Manager {
                 new Error('no hyper parameters exist')
             );
         } 
+        if(trialJobInfo.status != 'FAILED'){
+            return Promise.reject(
+                new Error('only failed trials can be resubmitted')
+            );
+        }
 
         let hyperParameter
         if (trialJobInfo.hyperParameters.length == 1){
@@ -159,14 +163,8 @@ class NNIManager implements Manager {
             hyperParameter = trialJobInfo.hyperParameters.find(hp=>JSON.parse(hp).parameter_index == 0) as string
         }
 
-        if(trialJobInfo.status != 'FAILED'){
-            return Promise.reject(
-                new Error('only failed trials can be resubmitted')
-            );
-        }
-
         const parameter_id = JSON.parse(hyperParameter).parameter_id.toString()
-        this.log.debug(`parameter_id: ${parameter_id}`);
+        this.log.info(`parameter_id: ${parameter_id}`);
         
         this.dispatcher.sendCommand(RESUBMIT_TRIAL_JOB, parameter_id); 
     }

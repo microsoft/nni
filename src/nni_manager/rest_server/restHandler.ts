@@ -245,7 +245,7 @@ class NNIRestHandler {
 
     private resubmitTrialJob(router: Router): void {
         router.post('/resubmit', async (req: Request, res: Response) => {
-            this.nniManager.resubmitTrialJob(JSON.stringify(req.body)).then(() => {
+            this.nniManager.resubmitTrialJob(req.body.job_id).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);
