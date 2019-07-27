@@ -57,7 +57,7 @@ def quniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.round(uniform(low, high, random_state) / q) * q
+    return randint(np.floor((high-low)/q)+1, random_state) * q + low
 
 
 def loguniform(low, high, random_state):
