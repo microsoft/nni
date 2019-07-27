@@ -16,19 +16,19 @@ class Model(object):
     - Save load the model
     """
     def __init__(self, *, policy, ob_space, ac_space, nbatch_act, nbatch_train,
-                nsteps, ent_coef, vf_coef, max_grad_norm, mpi_rank_weight=1, comm=None, microbatch_size=None):
+                nsteps, ent_coef, vf_coef, max_grad_norm, mpi_rank_weight=1, comm=None, microbatch_size=None, np_mask=None):
         self.sess = sess = get_session()
 
         with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
             # CREATE OUR TWO MODELS
             # act_model that is used for sampling
-            act_model = policy(nbatch_act, 1, sess)
+            act_model = policy(nbatch_act, 1, sess, np_mask=np_mask, is_act_model=True)
 
             # Train model for training
             if microbatch_size is None:
-                train_model = policy(nbatch_train, nsteps, sess)
+                train_model = policy(nbatch_train, nsteps, sess, np_mask=np_mask, is_act_model=False)
             else:
-                train_model = policy(microbatch_size, nsteps, sess)
+                train_model = policy(microbatch_size, nsteps, sess, np_mask=np_mask, is_act_model=False)
 
         # CREATE THE PLACEHOLDERS
         self.A = A = train_model.pdtype.sample_placeholder([None])

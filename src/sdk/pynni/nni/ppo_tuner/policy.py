@@ -1,6 +1,7 @@
 import tensorflow as tf
+import numpy as np
 
-from .distributions import make_pdtype
+from .distri import CategoricalPdType
 from .util import lstm_model, fc, observation_placeholder, encode_observation, adjust_shape
 
 
@@ -9,7 +10,7 @@ class PolicyWithValue(object):
     Encapsulates fields and methods for RL policy and value function estimation with shared parameters
     """
 
-    def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, **tensors):
+    def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, np_mask=None, is_act_model=False, **tensors):
         """
         Parameters:
         ----------
@@ -38,9 +39,13 @@ class PolicyWithValue(object):
         latent = tf.layers.flatten(latent)
 
         # Based on the action space, will select what probability distribution type
-        self.pdtype = make_pdtype(env.action_space)
+        #self.pdtype = make_pdtype(env.action_space)
+        self.pdtype = CategoricalPdType(env.action_space.n, env.nsteps, np_mask, is_act_model)
 
-        self.pd, self.pi = self.pdtype.pdfromlatent(latent, init_scale=0.01)
+        self.act_latent = latent
+        self.nh = env.action_space.n
+
+        self.pd, self.pi, self.mask = self.pdtype.pdfromlatent(latent, init_scale=0.01)
 
         # Take an action
         self.action = self.pd.sample()
@@ -57,10 +62,14 @@ class PolicyWithValue(object):
             self.vf = fc(vf_latent, 'vf', 1)
             self.vf = self.vf[:,0]
 
+        if is_act_model:
+            self._build_model_for_step()
+
     def _evaluate(self, variables, observation, **extra_feed):
         sess = self.sess
         feed_dict = {self.X: adjust_shape(self.X, observation)}
         for inpt_name, data in extra_feed.items():
+            #print("zql: self.__dict__: ", self.__dict__.keys())
             if inpt_name in self.__dict__.keys():
                 inpt = self.__dict__[inpt_name]
                 if isinstance(inpt, tf.Tensor) and inpt._op.type == 'Placeholder':
@@ -68,7 +77,50 @@ class PolicyWithValue(object):
 
         return sess.run(variables, feed_dict)
 
-    def step(self, observation, **extra_feed):
+    def _build_model_for_step(self):
+        # multiply with weight and apply mask on self.act_latent to generate 
+        self.act_step = step = tf.placeholder(shape=(), dtype=tf.int64, name='act_step')
+        with tf.variable_scope('pi', reuse=tf.AUTO_REUSE):
+            from .util import ortho_init
+            nin = self.act_latent.get_shape()[1].value
+            w = tf.get_variable("w", [nin, self.nh], initializer=ortho_init(0.01))
+            b = tf.get_variable("b", [self.nh], initializer=tf.constant_initializer(0.0))
+            logits = tf.matmul(self.act_latent, w)+b
+            piece = tf.slice(self.mask, [step, 0], [1, self.nh])
+            re_piece = tf.reshape(piece, [-1])
+            masked_logits = tf.math.multiply(logits, re_piece)
+
+        def sample(logits):
+            u = tf.random_uniform(tf.shape(logits), dtype=logits.dtype)
+            return tf.argmax(logits - tf.log(-tf.log(u)), axis=-1)
+
+        def neglogp(logits, x):
+            # return tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=x)
+            # Note: we can't use sparse_softmax_cross_entropy_with_logits because
+            #       the implementation does not allow second-order derivatives...
+            if x.dtype in {tf.uint8, tf.int32, tf.int64}:
+                # one-hot encoding
+                x_shape_list = x.shape.as_list()
+                logits_shape_list = logits.get_shape().as_list()[:-1]
+                for xs, ls in zip(x_shape_list, logits_shape_list):
+                    if xs is not None and ls is not None:
+                        assert xs == ls, 'shape mismatch: {} in x vs {} in logits'.format(xs, ls)
+    
+                x = tf.one_hot(x, logits.get_shape().as_list()[-1])
+            else:
+                # already encoded
+                assert x.shape.as_list() == logits.shape.as_list()
+    
+            return tf.nn.softmax_cross_entropy_with_logits_v2(
+                logits=logits,
+                labels=x)
+
+
+        self.act_action = sample(masked_logits)
+        self.act_neglogp = neglogp(masked_logits, self.act_action)
+
+
+    def step(self, step, observation, **extra_feed):
         """
         Compute next action(s) given the observation(s)
 
@@ -83,8 +135,10 @@ class PolicyWithValue(object):
         -------
         (action, value estimate, next state, negative log likelihood of the action under current policy parameters) tuple
         """
-
-        a, v, state, neglogp = self._evaluate([self.action, self.vf, self.state, self.neglogp], observation, **extra_feed)
+        #print("zql: extra_feed: ", extra_feed)
+        extra_feed['act_step'] = step
+        #print("zql: extra_feed after change: ", extra_feed)
+        a, v, state, neglogp = self._evaluate([self.act_action, self.vf, self.state, self.act_neglogp], observation, **extra_feed)
         if state.size == 0:
             state = None
         return a, v, state, neglogp
@@ -110,7 +164,7 @@ class PolicyWithValue(object):
 def build_lstm_policy(model_config, value_network=None,  normalize_observations=False, estimate_q=False, **policy_kwargs):
     policy_network = lstm_model(**policy_kwargs)
 
-    def policy_fn(nbatch=None, nsteps=None, sess=None, observ_placeholder=None):
+    def policy_fn(nbatch=None, nsteps=None, sess=None, observ_placeholder=None, np_mask=None, is_act_model=False):
         ob_space = model_config.observation_space
 
         X = observ_placeholder if observ_placeholder is not None else observation_placeholder(ob_space, batch_size=nbatch)
@@ -119,11 +173,13 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
 
         print('zql: not normalize_observations')
 
-        encoded_x = encode_observation(ob_space, X)
+        # encode_observation is not necessary anymore as we use embedding_lookup
+        #encoded_x = encode_observation(ob_space, X)
+        encoded_x = X
 
         with tf.variable_scope('pi', reuse=tf.AUTO_REUSE):
             print('zql: start policy_network')
-            policy_latent = policy_network(encoded_x)
+            policy_latent = policy_network(encoded_x, 1, model_config.observation_space.n)
             print('zql: finish policy_network')
             if isinstance(policy_latent, tuple):
                 policy_latent, recurrent_tensors = policy_latent
@@ -133,7 +189,7 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
                     nenv = nbatch // nsteps
                     print('zql: nenv', nenv)
                     assert nenv > 0, 'Bad input for recurrent policy: batch size {} smaller than nsteps {}'.format(nbatch, nsteps)
-                    policy_latent, recurrent_tensors = policy_network(encoded_x, nenv)
+                    policy_latent, recurrent_tensors = policy_network(encoded_x, nenv, model_config.observation_space.n)
                     extra_tensors.update(recurrent_tensors)
 
 
@@ -149,6 +205,8 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
             vf_latent=vf_latent,
             sess=sess,
             estimate_q=estimate_q,
+            np_mask=np_mask,
+            is_act_model=is_act_model,
             **extra_tensors
         )
         return policy

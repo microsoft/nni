@@ -91,7 +91,12 @@ def lstm_model(nlstm=128, layer_norm=False):
     function that builds LSTM with a given input tensor / placeholder
     """
 
-    def network_fn(X, nenv=1):
+    def network_fn(X, nenv=1, obs_size=-1):
+        # TODO: add embedding for X
+        with tf.variable_scope("emb", reuse=tf.AUTO_REUSE):
+            w_emb = tf.get_variable("w_emb", [obs_size+1, 32])
+            X = tf.nn.embedding_lookup(w_emb, X)
+
         nbatch = X.shape[0]
         nsteps = nbatch // nenv
         print('zql: nsteps, nbatch', nsteps, nbatch, X.shape)
@@ -219,6 +224,7 @@ def initialize():
     """Initialize all the uninitialized variables in the global scope."""
     new_variables = set(tf.global_variables()) - ALREADY_INITIALIZED
     get_session().run(tf.variables_initializer(new_variables))
+    
     ALREADY_INITIALIZED.update(new_variables)
 
 

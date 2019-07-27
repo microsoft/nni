@@ -66,6 +66,8 @@ class ModelConfig(object):
         self.noptepochs = 4 # number of training epochs per update
         self.total_timesteps = 5000 # number of timesteps (i.e. number of actions taken in the environment)
 
+        self.embedding_size = None # the embedding is for each action
+
 class TrialsInfo(object):
     def __init__(self, obs, actions, values, neglogpacs, dones, last_value):
         self.iter = 0
@@ -113,11 +115,12 @@ class TrialsInfo(object):
 class PPOModel(object):
     """
     """
-    def __init__(self, model_config):
+    def __init__(self, model_config, mask):
         self.model_config = model_config
         self.states = None
         self.nupdates = None
         self.cur_update = 1
+        self.np_mask = mask
 
         set_global_seeds(None)
         assert isinstance(self.model_config.lr, float)
@@ -144,7 +147,7 @@ class PPOModel(object):
         # Instantiate the model object (that creates act_model and train_model)
         self.model = Model(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=nenvs, nbatch_train=nbatch_train,
                         nsteps=model_config.nsteps, ent_coef=model_config.ent_coef, vf_coef=model_config.vf_coef,
-                        max_grad_norm=model_config.max_grad_norm)
+                        max_grad_norm=model_config.max_grad_norm, np_mask=self.np_mask)
 
         self.states = self.model.initial_state
 
@@ -154,8 +157,9 @@ class PPOModel(object):
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[]
         # initial observation
-        # TODO: ====================
-        obs = [random.randint(1, 6) for _ in range(num)]
+        # use the (n+1)th embedding to represent the first step action
+        first_step_ob = self.model_config.action_space.n
+        obs = [first_step_ob for _ in range(num)]
         dones = [True for _ in range(num)]
         states = self.states
         # For n in range number of steps
@@ -163,7 +167,7 @@ class PPOModel(object):
             # Given observations, get action value and neglopacs
             # We already have self.obs because Runner superclass run self.obs[:] = env.reset() on init
             #print('=============zql: obs, type', self.obs.shape, type(self.obs), type(self.obs[0]))
-            actions, values, states, neglogpacs = self.model.step(obs, S=states, M=dones)
+            actions, values, states, neglogpacs = self.model.step(cur_step, obs, S=states, M=dones)
             #print('=============zql: actions, type', actions.shape, type(actions), type(actions[0]), actions)
             mb_obs.append(obs.copy())
             mb_actions.append(actions)
@@ -222,7 +226,7 @@ class PPOModel(object):
     def train(self, trials_info, nenvs):
         """
         """
-        assert self.cur_update <= self.nupdates
+        assert self.cur_update <= self.nupdates # TODO:
         frac = 1.0 - (self.cur_update - 1.0) / self.nupdates
         lrnow = self.lr(frac)
         cliprangenow = self.cliprange(frac)
@@ -271,9 +275,92 @@ class PPOTuner(Tuner):
         self.credit = 0 # record the unsatisfied trial requests
         self.param_ids = []
         self.finished_trials = 0
+        self.chosen_arch_template = {}
+
+        self.all_trials = {} # used to dedup the same trial, key: config, value: final result
 
         self.model_config.num_envs = self.inf_batch_size
         logger.info('zql: finished PPOTuner initialization')
+
+    def _process_one_nas_space(self, block_name, block_space):
+        """
+        process nas space to determine observation space and action space
+
+        Parameters:
+        ----------
+        block_name: the name of the mutable block
+        block_space: search space of this mutable block
+
+        Returns:
+        ----------
+        """
+        actions_spaces = []
+        actions_to_config = []
+
+        # TODO: currently optional_input_size is not allowed than 1
+        block_arch_temp = {}
+        for l_name, layer in block_space.items():
+            chosen_layer_temp = {}
+
+            if len(layer['layer_choice']) > 1:
+                actions_spaces.append(layer['layer_choice'])
+                actions_to_config.append((block_name, l_name, 'layer_choice'))
+                chosen_layer_temp['layer_choice'] = None
+            else:
+                assert len(layer['layer_choice']) == 1
+                chosen_layer_temp['layer_choice'] = layer['layer_choice'][0]
+
+            assert layer['optional_input_size'] in [0, 1, [0, 1]]
+            if isinstance(layer['optional_input_size'], list):
+                actions_spaces.append(["None", *layer['optional_inputs']])
+                actions_to_config.append((block_name, l_name, 'optional_inputs'))
+                chosen_layer_temp['chosen_inputs'] = None
+            elif layer['optional_input_size'] == 1:
+                actions_spaces.append(layer['optional_inputs'])
+                actions_to_config.append((block_name, l_name, 'optional_inputs'))
+                chosen_layer_temp['chosen_inputs'] = None
+            elif layer['optional_input_size'] == 0:
+                chosen_layer_temp['chosen_inputs'] = []
+            else:
+                raise ValueError('invalid type and value of optional_input_size')
+
+            block_arch_temp[l_name] = chosen_layer_temp
+
+        self.chosen_arch_template[block_name] = block_arch_temp
+
+        return actions_spaces, actions_to_config
+
+    def _process_nas_space(self, search_space):
+        # TODO: 
+        actions_spaces = []
+        actions_to_config = []
+        for b_name, block in search_space.items():
+            act, act_map = self._process_one_nas_space(b_name, block)
+            actions_spaces.extend(act)
+            actions_to_config.extend(act_map)
+
+        # calculate observation space
+        dedup = {}
+        for step in actions_spaces:
+            for action in step:
+                dedup[action] = 1
+        full_act_space = [act for act, _ in dedup.items()]
+        assert len(full_act_space) == len(dedup)
+        observation_space = len(full_act_space)
+
+        nsteps = len(actions_spaces)
+
+        return actions_spaces, actions_to_config, full_act_space, observation_space, nsteps
+
+    def _generate_action_mask(self):
+        mask = []
+        for acts in self.actions_spaces:
+            one_mask = [0 for _ in range(len(self.full_act_space))]
+            for act in acts:
+                idx = self.full_act_space.index(act)
+                one_mask[idx] = 1
+            mask.append(one_mask)
+        return np.asarray(mask, dtype=np.float32)
 
     def update_search_space(self, search_space):
         """
@@ -293,12 +380,22 @@ class PPOTuner(Tuner):
         # TODO: determine observation/action space based on search_space
         assert self.model_config.observation_space is None
         assert self.model_config.action_space is None
-        self.model_config.observation_space = spaces.Discrete(6)
-        self.model_config.action_space = spaces.Discrete(6)
-        self.model_config.nsteps = 4
+
+        self.actions_spaces, self.actions_to_config, self.full_act_space, obs_space, nsteps = self._process_nas_space(search_space)
+        
+        self.model_config.observation_space = spaces.Discrete(obs_space)
+        self.model_config.action_space = spaces.Discrete(obs_space)
+        self.model_config.nsteps = nsteps
+
+        # generate mask in numpy
+        mask = self._generate_action_mask()
 
         assert self.model is None
-        self.model = PPOModel(self.model_config)
+        self.model = PPOModel(self.model_config, mask)
+
+    def _trial_dedup(self):
+        # TODO:
+        pass
 
     def _actions_to_config(self, actions):
         new_config = {}
