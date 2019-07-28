@@ -47,15 +47,12 @@ class Tuner(Recoverable):
         """
         result = []
         for parameter_id in parameter_id_list:
-            had_exception = False
             try:
                 _logger.debug("generating param for {}".format(parameter_id))
                 res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
-                #return result
-                had_exception = True
-            if not had_exception:
-                result.append(res)
+                return result
+            result.append(res)
         return result
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):

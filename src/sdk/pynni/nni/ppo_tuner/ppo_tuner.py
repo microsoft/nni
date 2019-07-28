@@ -433,6 +433,27 @@ class PPOTuner(Tuner):
                 raise ValueError("unrecognized key: %s".format(key))
         return chosen_arch
 
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
+        """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
+        Call 'generate_parameters()' by 'count' times by default.
+        User code must override either this function or 'generate_parameters()'.
+        If there's no more trial, user should raise nni.NoMoreTrialError exception in generate_parameters().
+        If so, this function will only return sets of trial (hyper-)parameters that have already been collected.
+        parameter_id_list: list of int
+        """
+        result = []
+        for parameter_id in parameter_id_list:
+            had_exception = False
+            try:
+                _logger.debug("generating param for {}".format(parameter_id))
+                res = self.generate_parameters(parameter_id, **kwargs)
+            except nni.NoMoreTrialError:
+                #return result
+                had_exception = True
+            if not had_exception:
+                result.append(res)
+        return result
+
     def generate_parameters(self, parameter_id, **kwargs):
         """
         """
