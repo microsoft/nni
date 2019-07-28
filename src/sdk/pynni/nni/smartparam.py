@@ -20,6 +20,7 @@
 
 
 import random
+import numpy as np
 
 from .env_vars import trial_env_vars
 from . import trial
