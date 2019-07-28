@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 from .distri import CategoricalPdType
-from .util import lstm_model, fc, observation_placeholder, encode_observation, adjust_shape
+from .util import lstm_model, fc, observation_placeholder, adjust_shape
 
 
 class PolicyWithValue(object):
@@ -179,7 +179,6 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
         print('zql: not normalize_observations')
 
         # encode_observation is not necessary anymore as we use embedding_lookup
-        #encoded_x = encode_observation(ob_space, X)
         encoded_x = X
 
         with tf.variable_scope('pi', reuse=tf.AUTO_REUSE):
