@@ -40,12 +40,13 @@ class PolicyWithValue(object):
 
         # Based on the action space, will select what probability distribution type
         #self.pdtype = make_pdtype(env.action_space)
+        self.np_mask = np_mask
         self.pdtype = CategoricalPdType(env.action_space.n, env.nsteps, np_mask, is_act_model)
 
         self.act_latent = latent
         self.nh = env.action_space.n
 
-        self.pd, self.pi, self.mask = self.pdtype.pdfromlatent(latent, init_scale=0.01)
+        self.pd, self.pi, self.mask, self.mask_npinf = self.pdtype.pdfromlatent(latent, init_scale=0.01)
 
         # Take an action
         self.action = self.pd.sample()
@@ -90,9 +91,13 @@ class PolicyWithValue(object):
             re_piece = tf.reshape(piece, [-1])
             masked_logits = tf.math.multiply(logits, re_piece)
 
-        def sample(logits):
-            u = tf.random_uniform(tf.shape(logits), dtype=logits.dtype)
-            return tf.argmax(logits - tf.log(-tf.log(u)), axis=-1)
+            npinf_piece = tf.slice(self.mask_npinf, [step, 0], [1, self.nh])
+            re_npinf_piece = tf.reshape(npinf_piece, [-1])
+
+        def sample(logits, mask_npinf):
+            new_logits = tf.math.add(logits, mask_npinf)
+            u = tf.random_uniform(tf.shape(new_logits), dtype=logits.dtype)
+            return tf.argmax(new_logits - tf.log(-tf.log(u)), axis=-1)
 
         def neglogp(logits, x):
             # return tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=x)
@@ -116,7 +121,7 @@ class PolicyWithValue(object):
                 labels=x)
 
 
-        self.act_action = sample(masked_logits)
+        self.act_action = sample(masked_logits, re_npinf_piece)
         self.act_neglogp = neglogp(masked_logits, self.act_action)
 
 

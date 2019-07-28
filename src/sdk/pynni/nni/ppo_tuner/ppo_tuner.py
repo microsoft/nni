@@ -304,20 +304,20 @@ class PPOTuner(Tuner):
 
             if len(layer['layer_choice']) > 1:
                 actions_spaces.append(layer['layer_choice'])
-                actions_to_config.append((block_name, l_name, 'layer_choice'))
-                chosen_layer_temp['layer_choice'] = None
+                actions_to_config.append((block_name, l_name, 'chosen_layer'))
+                chosen_layer_temp['chosen_layer'] = None
             else:
                 assert len(layer['layer_choice']) == 1
-                chosen_layer_temp['layer_choice'] = layer['layer_choice'][0]
+                chosen_layer_temp['chosen_layer'] = layer['layer_choice'][0]
 
             assert layer['optional_input_size'] in [0, 1, [0, 1]]
             if isinstance(layer['optional_input_size'], list):
                 actions_spaces.append(["None", *layer['optional_inputs']])
-                actions_to_config.append((block_name, l_name, 'optional_inputs'))
+                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
                 chosen_layer_temp['chosen_inputs'] = None
             elif layer['optional_input_size'] == 1:
                 actions_spaces.append(layer['optional_inputs'])
-                actions_to_config.append((block_name, l_name, 'optional_inputs'))
+                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
                 chosen_layer_temp['chosen_inputs'] = None
             elif layer['optional_input_size'] == 0:
                 chosen_layer_temp['chosen_inputs'] = []
@@ -353,6 +353,8 @@ class PPOTuner(Tuner):
         return actions_spaces, actions_to_config, full_act_space, observation_space, nsteps
 
     def _generate_action_mask(self):
+        two_masks = []
+
         mask = []
         for acts in self.actions_spaces:
             one_mask = [0 for _ in range(len(self.full_act_space))]
@@ -360,7 +362,20 @@ class PPOTuner(Tuner):
                 idx = self.full_act_space.index(act)
                 one_mask[idx] = 1
             mask.append(one_mask)
-        return np.asarray(mask, dtype=np.float32)
+        print("zql: generated mask: ", self.full_act_space, mask)
+        two_masks.append(mask)
+
+        mask = []
+        for acts in self.actions_spaces:
+            one_mask = [-np.inf for _ in range(len(self.full_act_space))]
+            for act in acts:
+                idx = self.full_act_space.index(act)
+                one_mask[idx] = 0
+            mask.append(one_mask)
+        print("zql: generated mask: ", self.full_act_space, mask)
+        two_masks.append(mask)
+
+        return np.asarray(two_masks, dtype=np.float32)
 
     def update_search_space(self, search_space):
         """
@@ -398,31 +413,25 @@ class PPOTuner(Tuner):
         pass
 
     def _actions_to_config(self, actions):
-        new_config = {}
-        for b_name, block in self.search_space.items():
-            new_config[b_name] = {}
-            for l_name, layer in block.items():
-                chosen_layer = {}
-                new_config[b_name][l_name] = chosen_layer
-                if l_name == 'mutable_layer_0':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][actions[0]]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs']
-                elif l_name == 'mutable_layer_1':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][0]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs']
-                elif l_name == 'mutable_layer_2':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][actions[1]]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs']
-                elif l_name == 'mutable_layer_3':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][actions[2]]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs']
-                elif l_name == 'mutable_layer_4':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][0]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs']
-                elif l_name == 'mutable_layer_5':
-                    chosen_layer['chosen_layer'] = layer['layer_choice'][actions[3]]
-                    chosen_layer['chosen_inputs'] = layer['optional_inputs'][1:]
-        return new_config
+        import copy
+        chosen_arch = copy.deepcopy(self.chosen_arch_template)
+        #self.chosen_arch_template[block_name] = block_arch_temp
+        self.actions_spaces, self.actions_to_config, self.full_act_space
+        for cnt, act in enumerate(actions):
+            act_name = self.full_act_space[act]
+            print("zql: action to config: ", cnt, act, act_name, self.actions_spaces[cnt])
+            idx = self.actions_spaces[cnt].index(act_name)
+            (block_name, layer_name, key) = self.actions_to_config[cnt]
+            if key == 'chosen_inputs':
+                if act_name == 'None':
+                    chosen_arch[block_name][layer_name][key] = []
+                else:
+                    chosen_arch[block_name][layer_name][key] = [act_name]
+            elif key == 'chosen_layer':
+                chosen_arch[block_name][layer_name][key] = act_name
+            else:
+                raise ValueError("unrecognized key: %s".format(key))
+        return chosen_arch
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
@@ -434,6 +443,8 @@ class PPOTuner(Tuner):
             self.first_inf = False
 
         trial_info_idx, actions = self.trials_info.get_next()
+        print("zql: === all actions: ", self.trials_info.actions)
+        print("zql: ===actions: ", actions)
         if trial_info_idx is None:
             self.credit += 1
             self.param_ids.append(parameter_id)

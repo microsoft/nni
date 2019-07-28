@@ -38,8 +38,8 @@ class PdType(object):
     """
     def pdclass(self):
         raise NotImplementedError
-    def pdfromflat(self, flat):
-        return self.pdclass()(flat)
+    def pdfromflat(self, flat, mask, nsteps, size, is_act_model):
+        return self.pdclass()(flat, mask, nsteps, size, is_act_model)
     def pdfromlatent(self, latent_vector, init_scale, init_bias):
         raise NotImplementedError
     def param_shape(self):
@@ -55,8 +55,12 @@ class PdType(object):
         return tf.placeholder(dtype=self.sample_dtype(), shape=prepend_shape+self.sample_shape(), name=name)
 
 class CategoricalPd(Pd):
-    def __init__(self, logits):
+    def __init__(self, logits, mask_npinf, nsteps, size, is_act_model):
         self.logits = logits
+        self.mask_npinf = mask_npinf
+        self.nsteps = nsteps
+        self.size = size
+        self.is_act_model = is_act_model
     def flatparam(self):
         return self.logits
     def mode(self):
@@ -101,8 +105,16 @@ class CategoricalPd(Pd):
         p0 = ea0 / z0
         return tf.reduce_sum(p0 * (tf.log(z0) - a0), axis=-1)
     def sample(self):
-        u = tf.random_uniform(tf.shape(self.logits), dtype=self.logits.dtype)
-        return tf.argmax(self.logits - tf.log(-tf.log(u)), axis=-1)
+        if not self.is_act_model:
+            re_res = tf.reshape(self.logits, [-1, self.nsteps, self.size])
+            masked_res = tf.math.add(re_res, self.mask_npinf)
+            re_masked_res = tf.reshape(masked_res, [-1, self.size])
+
+            u = tf.random_uniform(tf.shape(re_masked_res), dtype=self.logits.dtype)
+            return tf.argmax(re_masked_res - tf.log(-tf.log(u)), axis=-1)
+        else:
+            u = tf.random_uniform(tf.shape(self.logits), dtype=self.logits.dtype)
+            return tf.argmax(self.logits - tf.log(-tf.log(u)), axis=-1)
     @classmethod
     def fromflat(cls, flat):
         return cls(flat)
@@ -116,8 +128,8 @@ class CategoricalPdType(PdType):
     def pdclass(self):
         return CategoricalPd
     def pdfromlatent(self, latent_vector, init_scale=1.0, init_bias=0.0):
-        pdparam, mask = _matching_fc(latent_vector, 'pi', self.ncat, self.nsteps, init_scale=init_scale, init_bias=init_bias, np_mask=self.np_mask, is_act_model=self.is_act_model)
-        return self.pdfromflat(pdparam), pdparam, mask
+        pdparam, mask, mask_npinf = _matching_fc(latent_vector, 'pi', self.ncat, self.nsteps, init_scale=init_scale, init_bias=init_bias, np_mask=self.np_mask, is_act_model=self.is_act_model)
+        return self.pdfromflat(pdparam, mask_npinf, self.nsteps, self.ncat, self.is_act_model), pdparam, mask, mask_npinf
 
     def param_shape(self):
         return [self.ncat]
@@ -131,14 +143,16 @@ def _matching_fc(tensor, name, size, nsteps, init_scale, init_bias, np_mask, is_
         assert False
         return tensor
     else:
-        mask = tf.get_variable("act_mask", dtype=tf.float32, initializer=np_mask) #[nsteps, size],
+        mask = tf.get_variable("act_mask", dtype=tf.float32, initializer=np_mask[0], trainable=False) #[nsteps, size],
+        mask_npinf = tf.get_variable("act_mask_npinf", dtype=tf.float32, initializer=np_mask[1], trainable=False) #[nsteps, size],
         res = fc(tensor, name, size, init_scale=init_scale, init_bias=init_bias)
         print("zql: res shape: ", res.get_shape())
         print("zql: nsteps, size", nsteps, size)
         if not is_act_model:
             re_res = tf.reshape(res, [-1, nsteps, size])
+            #masked_res = tf.math.multiply(re_res, mask)
             masked_res = tf.math.multiply(re_res, mask)
             re_masked_res = tf.reshape(masked_res, [-1, size])
-            return re_masked_res, mask
+            return re_masked_res, mask, mask_npinf
         else:
-            return res, mask
+            return res, mask, mask_npinf
