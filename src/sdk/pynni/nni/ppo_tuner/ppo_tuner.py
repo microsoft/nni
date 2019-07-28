@@ -445,7 +445,7 @@ class PPOTuner(Tuner):
         for parameter_id in parameter_id_list:
             had_exception = False
             try:
-                _logger.debug("generating param for {}".format(parameter_id))
+                logger.debug("generating param for {}".format(parameter_id))
                 res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
                 #return result
