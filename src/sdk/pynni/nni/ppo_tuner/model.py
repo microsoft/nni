@@ -107,9 +107,6 @@ class Model(object):
         self.value = act_model.value
         self.initial_state = act_model.initial_state
 
-        #self.save = functools.partial(save_variables, sess=sess)
-        #self.load = functools.partial(load_variables, sess=sess)
-
         initialize()
         global_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="")
 

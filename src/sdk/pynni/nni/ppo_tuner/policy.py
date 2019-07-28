@@ -39,7 +39,6 @@ class PolicyWithValue(object):
         latent = tf.layers.flatten(latent)
 
         # Based on the action space, will select what probability distribution type
-        #self.pdtype = make_pdtype(env.action_space)
         self.np_mask = np_mask
         self.pdtype = CategoricalPdType(env.action_space.n, env.nsteps, np_mask, is_act_model)
 
@@ -70,7 +69,6 @@ class PolicyWithValue(object):
         sess = self.sess
         feed_dict = {self.X: adjust_shape(self.X, observation)}
         for inpt_name, data in extra_feed.items():
-            #print("zql: self.__dict__: ", self.__dict__.keys())
             if inpt_name in self.__dict__.keys():
                 inpt = self.__dict__[inpt_name]
                 if isinstance(inpt, tf.Tensor) and inpt._op.type == 'Placeholder':
@@ -140,9 +138,7 @@ class PolicyWithValue(object):
         -------
         (action, value estimate, next state, negative log likelihood of the action under current policy parameters) tuple
         """
-        #print("zql: extra_feed: ", extra_feed)
         extra_feed['act_step'] = step
-        #print("zql: extra_feed after change: ", extra_feed)
         a, v, state, neglogp = self._evaluate([self.act_action, self.vf, self.state, self.act_neglogp], observation, **extra_feed)
         if state.size == 0:
             state = None
@@ -182,16 +178,13 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
         encoded_x = X
 
         with tf.variable_scope('pi', reuse=tf.AUTO_REUSE):
-            print('zql: start policy_network')
             policy_latent = policy_network(encoded_x, 1, model_config.observation_space.n)
-            print('zql: finish policy_network')
             if isinstance(policy_latent, tuple):
                 policy_latent, recurrent_tensors = policy_latent
 
                 if recurrent_tensors is not None:
                     # recurrent architecture, need a few more steps
                     nenv = nbatch // nsteps
-                    print('zql: nenv', nenv)
                     assert nenv > 0, 'Bad input for recurrent policy: batch size {} smaller than nsteps {}'.format(nbatch, nsteps)
                     policy_latent, recurrent_tensors = policy_network(encoded_x, nenv, model_config.observation_space.n)
                     extra_tensors.update(recurrent_tensors)

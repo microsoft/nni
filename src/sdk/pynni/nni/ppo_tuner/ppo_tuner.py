@@ -97,7 +97,6 @@ class TrialsInfo(object):
         self.returns = returns
 
     def convert_shape(self):
-        # obs, returns, masks, actions, values, neglogpacs, states = runner.run()
         def sf01(arr):
             """
             swap and then flatten axes 0 and 1
@@ -137,8 +136,6 @@ class PPOModel(object):
         ob_space = model_config.observation_space
         ac_space = model_config.action_space
 
-        print('zql: ob_space shape', ob_space, ac_space)
-
         # Calculate the batch_size
         self.nbatch = nbatch = nenvs * model_config.nsteps
         nbatch_train = nbatch // model_config.nminibatches
@@ -151,7 +148,7 @@ class PPOModel(object):
 
         self.states = self.model.initial_state
 
-        logger.info('zql: finished PPOModel initialization')
+        logger.info('=== finished PPOModel initialization')
 
     def inference(self, num):
         # Here, we init the lists that will contain the mb of experiences
@@ -166,9 +163,7 @@ class PPOModel(object):
         for cur_step in range(self.model_config.nsteps):
             # Given observations, get action value and neglopacs
             # We already have self.obs because Runner superclass run self.obs[:] = env.reset() on init
-            #print('=============zql: obs, type', self.obs.shape, type(self.obs), type(self.obs[0]))
             actions, values, states, neglogpacs = self.model.step(cur_step, obs, S=states, M=dones)
-            #print('=============zql: actions, type', actions.shape, type(actions), type(actions[0]), actions)
             mb_obs.append(obs.copy())
             mb_actions.append(actions)
             mb_values.append(values)
@@ -177,17 +172,12 @@ class PPOModel(object):
 
             # Take actions in env and look the results
             # Infos contains a ton of useful informations
-            #obs[:], rewards, self.dones, infos = self.env.step(actions)
             obs[:] = actions
-            #rewards
             if cur_step == self.model_config.nsteps - 1:
                 dones = [True for _ in range(num)]
             else:
                 dones = [False for _ in range(num)]
-            #for info in infos:
-            #    maybeepinfo = info.get('episode')
-            #    if maybeepinfo: epinfos.append(maybeepinfo)
-            #mb_rewards.append(rewards)
+
         #batch of steps to batch of rollouts
         np_obs = np.asarray(obs)
         mb_obs = np.asarray(mb_obs, dtype=np_obs.dtype)
@@ -197,7 +187,7 @@ class PPOModel(object):
         mb_dones = np.asarray(mb_dones, dtype=np.bool)
         last_values = self.model.value(np_obs, S=states, M=dones)
 
-        return mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values#, states
+        return mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values
 
     def compute_rewards(self, trials_info, trials_result):
         """
@@ -236,7 +226,6 @@ class PPOModel(object):
 
         mblossvals = []
         assert states is not None # recurrent version
-        print('zql: recurrent version')
         assert nenvs % self.model_config.nminibatches == 0
         envsperbatch = nenvs // self.model_config.nminibatches
         envinds = np.arange(nenvs)
@@ -252,8 +241,8 @@ class PPOModel(object):
                 mblossvals.append(self.model.train(lrnow, cliprangenow, *slices, mbstates))
 
         # Feedforward --> get losses --> update
+        # TODO: can remove
         lossvals = np.mean(mblossvals, axis=0)
-        print('zql: lossvals: ', lossvals)
 
 
 class PPOTuner(Tuner):
@@ -266,8 +255,6 @@ class PPOTuner(Tuner):
         self.model = None
         self.search_space = None
         self.running_trials = {} # key: parameter_id, value: actions/states/etc.
-        #self.ntrials_to_train = 20 # the number of new trials are finished, then start the next training
-        #self.finished_trials = [] # finished trials after the previous training
         self.inf_batch_size = 20 # number of trials to generate in one inference
         self.first_inf = True # indicate whether it is the first time to inference new trials
         self.trials_result = [None for _ in range(self.inf_batch_size)] # results of finished trials
@@ -280,7 +267,7 @@ class PPOTuner(Tuner):
         self.all_trials = {} # used to dedup the same trial, key: config, value: final result
 
         self.model_config.num_envs = self.inf_batch_size
-        logger.info('zql: finished PPOTuner initialization')
+        logger.info('=== finished PPOTuner initialization')
 
     def _process_one_nas_space(self, block_name, block_space):
         """
@@ -362,7 +349,6 @@ class PPOTuner(Tuner):
                 idx = self.full_act_space.index(act)
                 one_mask[idx] = 1
             mask.append(one_mask)
-        print("zql: generated mask: ", self.full_act_space, mask)
         two_masks.append(mask)
 
         mask = []
@@ -372,7 +358,6 @@ class PPOTuner(Tuner):
                 idx = self.full_act_space.index(act)
                 one_mask[idx] = 0
             mask.append(one_mask)
-        print("zql: generated mask: ", self.full_act_space, mask)
         two_masks.append(mask)
 
         return np.asarray(two_masks, dtype=np.float32)
@@ -389,7 +374,7 @@ class PPOTuner(Tuner):
         -------
         no return
         """
-        logger.info('zql: update search space %s', search_space)
+        logger.info('=== update search space %s', search_space)
         assert self.search_space is None
         self.search_space = search_space
         # TODO: determine observation/action space based on search_space
@@ -419,7 +404,6 @@ class PPOTuner(Tuner):
         self.actions_spaces, self.actions_to_config, self.full_act_space
         for cnt, act in enumerate(actions):
             act_name = self.full_act_space[act]
-            print("zql: action to config: ", cnt, act, act_name, self.actions_spaces[cnt])
             idx = self.actions_spaces[cnt].index(act_name)
             (block_name, layer_name, key) = self.actions_to_config[cnt]
             if key == 'chosen_inputs':
@@ -464,8 +448,6 @@ class PPOTuner(Tuner):
             self.first_inf = False
 
         trial_info_idx, actions = self.trials_info.get_next()
-        print("zql: === all actions: ", self.trials_info.actions)
-        print("zql: ===actions: ", actions)
         if trial_info_idx is None:
             self.credit += 1
             self.param_ids.append(parameter_id)
@@ -497,18 +479,17 @@ class PPOTuner(Tuner):
         assert trial_info_idx is not None
 
         value = extract_scalar_reward(value)
+        # TODO: support optimize_mode
         #if self.optimize_mode == OptimizeMode.Minimize:
         #    value = -value
 
         self.trials_result[trial_info_idx] = value
-        #self.finished_trials.append(trial_info_idx)
         self.finished_trials += 1
 
         if self.finished_trials == self.inf_batch_size:
             self.finished_trials = 0
             self.model.compute_rewards(self.trials_info, self.trials_result)
             self.model.train(self.trials_info, self.inf_batch_size)
-            #self.finished_trials = []
             self.running_trials = {}
             # generate new trials
             self.trials_result = [None for _ in range(self.inf_batch_size)]
