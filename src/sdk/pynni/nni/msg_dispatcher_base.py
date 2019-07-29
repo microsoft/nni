@@ -173,7 +173,7 @@ class MsgDispatcherBase(Recoverable):
         raise NotImplementedError('handle_resubmit_trial_job not implemented')
 
     def handle_update_search_space(self, data):
-       raise NotImplementedError('handle_update_search_space not implemented')
+        raise NotImplementedError('handle_update_search_space not implemented')
 
     def handle_import_data(self, data):
         raise NotImplementedError('handle_import_data not implemented')
