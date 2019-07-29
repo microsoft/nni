@@ -114,8 +114,15 @@ Debug mode will disable version check function in Trialkeeper.
 * Usage
 
   ```bash
-  nnictl stop [id]
+  nnictl stop [Options]
   ```
+
+* Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |The id of the experiment you want to stop|
+  |--port, -p|  False| |Rest port of the experiment you want to stop|
 
 * Details & Examples
 
@@ -131,15 +138,21 @@ Debug mode will disable version check function in Trialkeeper.
       nnictl stop [experiment_id]
       ```
 
-  3. Users could use 'nnictl stop all' to stop all experiments.
+  3. If there is a port specified, and an experiment is running on that port, the experiment will be stopped.
+
+      ```bash
+      nnictl stop --port 8080
+      ```
+
+  4. Users could use 'nnictl stop all' to stop all experiments.
 
       ```bash
       nnictl stop all
       ```
 
-  4. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-  5. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-  6. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+  5. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+  6. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+  7. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
 
 <a name="update"></a>
 
