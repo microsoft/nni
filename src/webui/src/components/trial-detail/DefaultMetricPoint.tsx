@@ -62,7 +62,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             }
         } else {
             const resultList: Array<number | string>[] = [];
-            const lineListDefault: Array<number> = [];
+            const lineListDefault: Array<number | string> = [];
             Object.keys(showSource).map(item => {
                 const temp = showSource[item];
                 if (temp.acc !== undefined) {
@@ -78,12 +78,28 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 }
             });
             // deal with best metric line
-            const realDefault: Array<number> = []; // 真正的line图数据
+            const realDefault: Array<number | string> = []; // 真正的line图数据
             realDefault.push(lineListDefault[0]); // 放进来第一个值
-            Object.keys(lineListDefault).map(index => {
-                const val = lineListDefault[index];
-                if(val > ){}
-            });
+            let realNum = lineListDefault[0]; // 当前数组最后一个number
+            for (let i = 1; i < lineListDefault.length; i++) {
+                const val = lineListDefault[i];
+                if (realDefault[realDefault.length - 1] === '') {
+                    if (val >= realNum) {
+                        realDefault.push(val);
+                        realNum = val;
+                    } else {
+                        realDefault.push('');
+                    }
+                } else {
+                    if (val >= realDefault[realDefault.length - 1]) {
+                        realDefault.push(val);
+                        realNum = val;
+                    } else {
+                        realDefault.push('');
+                    }
+                }
+            }
+            console.info('want', realDefault);
             Object.keys(accSource).map(item => {
                 const items = accSource[item];
                 let temp: Array<number | string>;
@@ -135,7 +151,8 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     lineStyle: {
                         color: 'red'
                     },
-                    data: lineListDefault
+                    connectNulls: true, // avoid break point in line
+                    data: realDefault
                 }]
             };
             if (this._isMounted === true) {
