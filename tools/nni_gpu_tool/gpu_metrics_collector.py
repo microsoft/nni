@@ -21,6 +21,7 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 
 from xml.dom import minidom
 
@@ -33,7 +34,7 @@ def check_ready_to_run():
         pidList.remove(os.getpid())
         return len(pidList) == 0
     else:
-        pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
+        pgrep_output = subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
         pidList = []
         for pid in pgrep_output.splitlines():
             pidList.append(int(pid))
@@ -48,11 +49,13 @@ def main(argv):
     with open(os.path.join(metrics_output_dir, "gpu_metrics"), "w") as outputFile:
         pass
     os.chmod(os.path.join(metrics_output_dir, "gpu_metrics"), 0o777)
-    cmd = 'nvidia-smi -q -x'
+    cmd = 'nvidia-smi -q -x'.split()
     while(True):
         try:
-            smi_output = subprocess.check_output(cmd, shell=True)
+            smi_output = subprocess.check_output(cmd)
             parse_nvidia_smi_result(smi_output, metrics_output_dir)
+        except FileNotFoundError:
+            gen_empty_gpu_metric(smi_output)
         except:
             exception = sys.exc_info()
             for e in exception:
@@ -85,6 +88,19 @@ def parse_nvidia_smi_result(smi, outputDir):
     except :
         e_info = sys.exc_info()
         print('xmldoc paring error')
+
+def gen_empty_gpu_metric(outputDir):
+    try:
+        with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
+            outPut = {}
+            outPut["Timestamp"] = time.asctime(time.localtime())
+            outPut["gpuCount"] = 0
+            outPut["gpuInfos"] = []
+            print(outPut)
+            outputFile.write("{}\n".format(json.dumps(outPut, sort_keys=True)))
+            outputFile.flush()
+    except Exception:
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
