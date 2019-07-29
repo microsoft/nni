@@ -321,9 +321,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'sequenceId',
                         width: 120,
                         className: 'tableHead',
-                        sorter:
-                            (a: TableObj, b: TableObj) =>
-                                (a.sequenceId as number) - (b.sequenceId as number)
+                        sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number)
                     });
                     break;
                 case 'ID':

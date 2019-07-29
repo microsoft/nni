@@ -11,6 +11,21 @@
             color: #0071BC;
             border-radius: 0;
         }
+        .filter{
+            width: 100px;
+            margin-left: 8px;
+        }
+        .search-input{
+            height: 32px;
+            outline: none;
+            border: 1px solid #d9d9d9;
+            border-left: none;
+            padding-left: 8px;
+            color: #333;
+        }
+        .search-input::-webkit-input-placeholder{
+            color: DarkGray;
+        }
     }
     .entry{
         width: 120px;
