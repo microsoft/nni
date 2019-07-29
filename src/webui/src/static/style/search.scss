@@ -14,6 +14,9 @@
         .filter{
             width: 100px;
             margin-left: 8px;
+            .ant-select-selection-selected-value{
+                font-size: 14px;
+            }
         }
         .search-input{
             height: 32px;
