@@ -57,14 +57,14 @@ if trial_env_vars.NNI_PLATFORM is None:
 
     def quniform(low, high, q, name=None):
         assert high > low, 'Upper bound must be larger than lower bound'
-        return round(random.uniform(low, high) / q) * q
+        return randint(np.floor((high-low)/q)+1) * q + low
 
     def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
         return np.exp(random.uniform(np.log(low), np.log(high)))
 
     def qloguniform(low, high, q, name=None):
-        return round(loguniform(low, high) / q) * q
+        return np.floor((loguniform(low, high) - low) / q) * q + low
 
     def normal(mu, sigma, name=None):
         return random.gauss(mu, sigma)

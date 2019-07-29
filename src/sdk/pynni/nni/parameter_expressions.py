@@ -57,6 +57,7 @@ def quniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
+    assert high > low, 'Upper bound must be larger than lower bound'
     return randint(np.floor((high-low)/q)+1, random_state) * q + low
 
 
