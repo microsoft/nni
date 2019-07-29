@@ -26,7 +26,7 @@
             padding-left: 8px;
             color: #333;
         }
-        .search-input::-webkit-input-placeholder{
+        .search-input::placeholder{
             color: DarkGray;
         }
     }
