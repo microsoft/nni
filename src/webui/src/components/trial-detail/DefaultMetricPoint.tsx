@@ -62,11 +62,13 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             }
         } else {
             const resultList: Array<number | string>[] = [];
+            const lineListDefault: Array<number> = [];
             Object.keys(showSource).map(item => {
                 const temp = showSource[item];
                 if (temp.acc !== undefined) {
                     if (temp.acc.default !== undefined) {
                         const searchSpace = temp.description.parameters;
+                        lineListDefault.push(temp.acc.default);
                         accSource.push({
                             acc: temp.acc.default,
                             index: temp.sequenceId,
@@ -74,6 +76,13 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                         });
                     }
                 }
+            });
+            // deal with best metric line
+            const realDefault: Array<number> = []; // 真正的line图数据
+            realDefault.push(lineListDefault[0]); // 放进来第一个值
+            Object.keys(lineListDefault).map(index => {
+                const val = lineListDefault[index];
+                if(val > ){}
             });
             Object.keys(accSource).map(item => {
                 const items = accSource[item];
@@ -119,6 +128,14 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     symbolSize: 6,
                     type: 'scatter',
                     data: resultList
+                },
+                // add line graph
+                {
+                    type: 'line',
+                    lineStyle: {
+                        color: 'red'
+                    },
+                    data: lineListDefault
                 }]
             };
             if (this._isMounted === true) {
@@ -131,7 +148,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
     // update parent component state
     componentWillReceiveProps(nextProps: DefaultPointProps) {
-       
+
         const { whichGraph, showSource } = nextProps;
         if (whichGraph === '1') {
             this.defaultMetric(showSource);
@@ -173,7 +190,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     }}
                     theme="my_theme"
                     notMerge={true} // update now
-                    // lazyUpdate={true}
+                // lazyUpdate={true}
                 />
                 <div className="showMess">{accNodata}</div>
             </div>
