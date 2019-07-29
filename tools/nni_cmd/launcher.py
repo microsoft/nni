@@ -364,8 +364,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
                 check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=stdout_file, stderr=stderr_file)
         except CalledProcessError as e:
+            print_error('some errors happen when import package %s.' %(package_name))
             print_log_content(config_file_name)
-            print_error('%s should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
+            print_error('If %s is not installed, it should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
