@@ -54,13 +54,9 @@ class PolicyWithValue(object):
         self.neglogp = self.pd.neglogp(self.action)
         self.sess = sess or tf.get_default_session()
 
-        if estimate_q:
-            assert isinstance(env.action_space, gym.spaces.Discrete)
-            self.q = fc(vf_latent, 'q', env.action_space.n)
-            self.vf = self.q
-        else:
-            self.vf = fc(vf_latent, 'vf', 1)
-            self.vf = self.vf[:,0]
+        assert estimate_q is False
+        self.vf = fc(vf_latent, 'vf', 1)
+        self.vf = self.vf[:,0]
 
         if is_act_model:
             self._build_model_for_step()

@@ -25,6 +25,7 @@ ppo_tuner.py including:
 import numpy as np
 import logging
 import random
+import json_tricks
 
 import nni
 from nni.tuner import Tuner
@@ -461,7 +462,7 @@ class PPOTuner(Tuner):
         """
         """
         def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
-            _trial_params[parameter_id] = params
+            #_trial_params[parameter_id] = params
             ret = {
                 'parameter_id': parameter_id,
                 'parameter_source': 'customized' if customized else 'algorithm',
@@ -498,11 +499,12 @@ class PPOTuner(Tuner):
             # check credit and submit new trials
             for i in range(self.credit):
                 trial_info_idx, actions = self.trial_info.get_next()
-                assert trial_info_idx is not None
+                assert trial_info_idx is not None # TODO: not true anymore
                 assert self.param_ids
                 param_id = self.param_ids.pop()
                 new_config = self._actions_to_config(actions)
                 send(CommandType.NewTrialJob, _pack_parameter(param_id, new_config))
+                self.credit -= 1
 
     def import_data(self, data):
         """
