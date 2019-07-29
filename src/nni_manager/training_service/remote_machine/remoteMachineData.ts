@@ -22,7 +22,7 @@
 import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 
 /**
@@ -82,20 +82,18 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
-    public sequenceId: number;
+    public form: TrialJobApplicationForm;
     public rmMeta?: RemoteMachineMeta;
     public isEarlyStopped?: boolean;
     public gpuIndices: GPUInfo[];
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+                workingDirectory: string, form: TrialJobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.sequenceId = sequenceId;
         this.tags = [];
         this.gpuIndices = [];
     }

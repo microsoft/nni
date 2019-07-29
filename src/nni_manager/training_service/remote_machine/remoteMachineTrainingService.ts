@@ -30,11 +30,11 @@ import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
-    HostJobApplicationForm, HyperParameters, JobApplicationForm, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
+    HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {
@@ -172,9 +172,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const deferred: Deferred<TrialJobDetail[]> = new Deferred<TrialJobDetail[]>();
 
         for (const [key, value] of this.trialJobsMap) {
-            if (value.form.jobType === 'TRIAL') {
-                jobs.push(await this.getTrialJob(key));
-            }
+            jobs.push(await this.getTrialJob(key));
         }
         deferred.resolve(jobs);
 
@@ -228,33 +226,26 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param form trial job description form
      */
     // tslint:disable-next-line:informative-docs
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
 
-        if (form.jobType === 'HOST') {
-            return this.runHostJob(<HostJobApplicationForm>form);
-        } else if (form.jobType === 'TRIAL') {
-            // Generate trial job id(random)
-            const trialJobId: string = uniqueString(5);
-            const trialWorkingFolder: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId);
+        // Generate trial job id(random)
+        const trialJobId: string = uniqueString(5);
+        const trialWorkingFolder: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId);
 
-            const trialJobDetail: RemoteMachineTrialJobDetail = new RemoteMachineTrialJobDetail(
-                trialJobId,
-                'WAITING',
-                Date.now(),
-                trialWorkingFolder,
-                form,
-                this.generateSequenceId()
-            );
-            this.jobQueue.push(trialJobId);
-            this.trialJobsMap.set(trialJobId, trialJobDetail);
+        const trialJobDetail: RemoteMachineTrialJobDetail = new RemoteMachineTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingFolder,
+            form
+        );
+        this.jobQueue.push(trialJobId);
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
 
-            return Promise.resolve(trialJobDetail);
-        } else {
-            return Promise.reject(new Error(`Job form not supported: ${JSON.stringify(form)}, jobType should be HOST or TRIAL.`));
-        }
+        return Promise.resolve(trialJobDetail);
     }
 
     /**
@@ -262,20 +253,16 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param trialJobId trial job id
      * @param form job application form
      */
-    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
-        if (form.jobType === 'TRIAL') {
-            const rmMeta: RemoteMachineMeta | undefined = (<RemoteMachineTrialJobDetail>trialJobDetail).rmMeta;
-            if (rmMeta !== undefined) {
-                await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters, rmMeta);
-            } else {
-                throw new Error(`updateTrialJob failed: ${trialJobId} rmMeta not found`);
-            }
+        const rmMeta: RemoteMachineMeta | undefined = (<RemoteMachineTrialJobDetail>trialJobDetail).rmMeta;
+        if (rmMeta !== undefined) {
+            await this.writeParameterFile(trialJobId, form.hyperParameters, rmMeta);
         } else {
-            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
+            throw new Error(`updateTrialJob failed: ${trialJobId} rmMeta not found`);
         }
 
         return trialJobDetail;
@@ -554,7 +541,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             await this.allocateSSHClientForTrial(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
-                trialJobId, trialWorkingFolder, <TrialJobApplicationForm>trialJobDetail.form, rmScheduleInfo);
+                trialJobId, trialWorkingFolder, trialJobDetail.form, rmScheduleInfo);
 
             trialJobDetail.status = 'RUNNING';
             trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.ip}:${trialWorkingFolder}`;
@@ -620,7 +607,7 @@ class RemoteMachineTrainingService implements TrainingService {
             trialWorkingFolder,
             trialJobId,
             getExperimentId(),
-            trialJobDetail.sequenceId.toString(),
+            trialJobDetail.form.sequenceId.toString(),
             this.isMultiPhase,
             unixPathJoin(trialWorkingFolder, '.nni', 'jobpid'),
             command,
@@ -647,38 +634,6 @@ class RemoteMachineTrainingService implements TrainingService {
         // Execute command in remote machine
         // tslint:disable-next-line: no-floating-promises
         SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
-    }
-
-    private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
-        const rmMeta: RemoteMachineMeta = this.getRmMetaByHost(form.host);
-        const sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(rmMeta);
-        if (sshClientManager === undefined) {
-            throw new Error('sshClient not found.');
-        }
-        const sshClient: Client = sshClientManager.getFirstSSHClient();
-        const jobId: string = uniqueString(5);
-        const localDir: string = path.join(this.expRootDir, 'hostjobs-local', jobId);
-        const remoteDir: string = this.getHostJobRemoteDir(jobId);
-        await cpp.exec(`mkdir -p ${localDir}`);
-        await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteDir}`, sshClient);
-        const runScriptContent: string = String.Format(
-            HOST_JOB_SHELL_FORMAT, remoteDir, path.join(remoteDir, 'jobpid'), form.cmd, path.join(remoteDir, 'code')
-        );
-        await fs.promises.writeFile(path.join(localDir, 'run.sh'), runScriptContent, { encoding: 'utf8' });
-        await SSHClientUtility.copyFileToRemote(
-            path.join(localDir, 'run.sh'), unixPathJoin(remoteDir, 'run.sh'), sshClient);
-        // tslint:disable-next-line: no-floating-promises
-        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteDir, 'run.sh')}`, sshClient);
-
-        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(
-            jobId, 'RUNNING', Date.now(), remoteDir, form, this.generateSequenceId()
-        );
-        jobDetail.rmMeta = rmMeta;
-        jobDetail.startTime = Date.now();
-        this.trialJobsMap.set(jobId, jobDetail);
-        this.log.debug(`runHostJob: return: ${JSON.stringify(jobDetail)} `);
-
-        return jobDetail;
     }
 
     private getRmMetaByHost(host: string): RemoteMachineMeta {
@@ -756,16 +711,7 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, `Invalid job detail information for trial job ${jobId}`);
         }
 
-        let jobpidPath: string;
-        if (trialJobDetail.form.jobType === 'TRIAL') {
-            jobpidPath = unixPathJoin(trialJobDetail.workingDirectory, '.nni', 'jobpid');
-        } else if (trialJobDetail.form.jobType === 'HOST') {
-            jobpidPath = unixPathJoin(this.getHostJobRemoteDir(jobId), 'jobpid');
-        } else {
-            throw new Error(`Job type not supported: ${trialJobDetail.form.jobType}`);
-        }
-
-        return jobpidPath;
+        return unixPathJoin(trialJobDetail.workingDirectory, '.nni', 'jobpid');
     }
 
     private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters, rmMeta: RemoteMachineMeta): Promise<void> {
@@ -782,14 +728,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
 
         await SSHClientUtility.copyFileToRemote(localFilepath, unixPathJoin(trialWorkingFolder, fileName), sshClient);
-    }
-
-    private generateSequenceId(): number {
-        if (this.trialSequenceId === -1) {
-            this.trialSequenceId = getInitTrialSequenceId();
-        }
-
-        return this.trialSequenceId++;
     }
 }
 

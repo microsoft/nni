@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
@@ -186,8 +186,6 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
-
-        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
@@ -436,11 +434,7 @@ class NNIManager implements Manager {
                 case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -453,11 +447,7 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -556,7 +546,7 @@ class NNIManager implements Manager {
                     }
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
-                        jobType: 'TRIAL',
+                        sequenceId: this.experimentProfile.nextSequenceId++,
                         hyperParameters: {
                             value: hyperParams,
                             index: 0
@@ -564,7 +554,8 @@ class NNIManager implements Manager {
                     };
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
-                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
+                    await this.storeExperimentProfile();
+
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
@@ -683,7 +674,7 @@ class NNIManager implements Manager {
                 assert(tunerCommand.trial_job_id !== undefined);
 
                 const trialJobForm: TrialJobApplicationForm = {
-                    jobType: 'TRIAL',
+                    sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
                         value: content,
                         index: tunerCommand.parameter_index
@@ -734,7 +725,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getExperimentRootDir(),
-            maxSequenceId: 0,
+            nextSequenceId: 1,  // FIXME: maybe zero?
             params: {
                 authorName: '',
                 experimentName: '',
@@ -764,13 +755,6 @@ class NNIManager implements Manager {
         }
 
         return Promise.resolve(chkpDir);
-    }
-
-    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
-        if (sequenceId > this.experimentProfile.maxSequenceId) {
-            this.experimentProfile.maxSequenceId = sequenceId;
-            await this.storeExperimentProfile();
-        }
     }
 }
 

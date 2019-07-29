@@ -30,10 +30,10 @@ import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import { MethodNotImplementedError } from '../../common/errors';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    HyperParameters, JobApplicationForm, NNIManagerIpConfig, TrainingService,
+    HyperParameters, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName,
@@ -113,9 +113,7 @@ class PAITrainingService implements TrainingService {
         const jobs: TrialJobDetail[] = [];
 
         for (const [key, value] of this.trialJobsMap) {
-            if (value.form.jobType === 'TRIAL') {
-                jobs.push(await this.getTrialJob(key));
-            }
+            jobs.push(await this.getTrialJob(key));
         }
 
         return Promise.resolve(jobs);
@@ -143,7 +141,7 @@ class PAITrainingService implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
         if (this.hdfsBaseDir === undefined) {
             throw new Error('hdfsBaseDir is not initialized');
@@ -180,17 +178,12 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
-        if (form.jobType === 'TRIAL') {
-                await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters);
-        } else {
-            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
-        }
-
+        await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters);
         return trialJobDetail;
     }
 
@@ -551,7 +544,7 @@ class PAITrainingService implements TrainingService {
 
     private generateSequenceId(): number {
         if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = getInitTrialSequenceId();
+            this.nextTrialSequenceId = 1;  // FIXME: 0?
         }
 
         return this.nextTrialSequenceId++;

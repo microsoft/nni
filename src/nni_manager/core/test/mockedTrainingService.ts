@@ -40,10 +40,13 @@ class MockedTrainingService extends TrainingService {
         tags: ['test'],
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
-        form: {
-            jobType: 'TRIAL'
+        form: { // FIXME
+            sequenceId: 0,
+            hyperParameters: {
+                value: '',
+                index: 0,
+            },
         },
-        sequenceId: 0
     };
     public jobDetail2: TrialJobDetail = {
         id: '3456',
@@ -55,9 +58,12 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
-            jobType: 'TRIAL'
+            sequenceId: 0,
+            hyperParameters: {
+                value: '',
+                index: 0,
+            },
         },
-        sequenceId: 0
     };
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {

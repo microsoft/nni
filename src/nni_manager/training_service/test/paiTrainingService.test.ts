@@ -24,6 +24,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
+import { TrialJobApplicationForm } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAITrainingService } from '../pai/paiTrainingService';
@@ -85,7 +86,14 @@ describe('Unit Test for PAITrainingService', () => {
         await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.PAI_CLUSTER_CONFIG, paiCluster);
         await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, paiTrialConfig);
         try {
-            const trialDetail = await paiTrainingService.submitTrialJob({jobType : 'TRIAL'});
+            const form: TrialJobApplicationForm = {
+                sequenceId: 0,
+                hyperParameters: {
+                    value: '',
+                    index: 0
+                }
+            };
+            const trialDetail = await paiTrainingService.submitTrialJob(form);
             chai.expect(trialDetail.status).to.be.equals('WAITING');
         } catch(error) {
             console.log('Submit job failed:' + error);

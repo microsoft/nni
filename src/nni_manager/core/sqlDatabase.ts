@@ -54,7 +54,7 @@ create table ExperimentProfile (
     startTime integer,
     endTime integer,
     logDir text,
-    maxSequenceId integer,
+    nextSequenceId integer,
     revision integer);
 create index ExperimentProfile_id on ExperimentProfile(id);
 `;
@@ -67,7 +67,7 @@ function loadExperimentProfile(row: any): ExperimentProfile {
         startTime: row.startTime === null ? undefined : row.startTime,
         endTime: row.endTime === null ? undefined : row.endTime,
         logDir: row.logDir === null ? undefined : row.logDir,
-        maxSequenceId: row.maxSequenceId,
+        nextSequenceId: row.nextSequenceId,
         revision: row.revision
     };
 }
@@ -144,7 +144,7 @@ class SqlDB implements Database {
             exp.startTime === undefined ? null : exp.startTime,
             exp.endTime === undefined ? null : exp.endTime,
             exp.logDir === undefined ? null : exp.logDir,
-            exp.maxSequenceId,
+            exp.nextSequenceId,
             exp.revision
         ];
         this.log.trace(`storeExperimentProfile: SQL: ${sql}, args: ${JSON.stringify(args)}`);
@@ -183,7 +183,7 @@ class SqlDB implements Database {
         event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
         const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
         const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
-        const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.sequenceId;
+        const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.form.sequenceId;
         const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
 
         this.log.trace(`storeTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);

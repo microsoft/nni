@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
+    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
@@ -77,7 +77,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
     }
 
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontrollerClusterConfig is not initialized');
         }
@@ -260,7 +260,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string,
-                                   trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
+                                   trialWorkingFolder: string, form: TrialJobApplicationForm): Promise<void> {
         if (this.fcTrialConfig === undefined) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }

@@ -141,7 +141,7 @@ class Logger {
         buffer.write(format(param));
         buffer.write('\n');
         buffer.end();
-        this.bufferSerialEmitter.feed(buffer.getContents());
+        this.bufferSerialEmitter.feed(buffer.getContents() as Buffer);
     }
 }
 

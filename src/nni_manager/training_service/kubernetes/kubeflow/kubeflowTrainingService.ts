@@ -27,7 +27,7 @@ import * as component from '../../../common/component';
 
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
+    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
@@ -84,7 +84,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         this.log.info('Kubeflow training service exit.');
     }
 
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.kubernetesCRDClient === undefined) {
             throw new Error('Kubeflow job operator client is undefined');
         }
@@ -248,7 +248,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
     }
 
     private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number,
-                                   form: JobApplicationForm): Promise<void> {
+                                   form: TrialJobApplicationForm): Promise<void> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }

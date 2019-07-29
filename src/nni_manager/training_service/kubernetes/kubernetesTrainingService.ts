@@ -26,7 +26,7 @@ import * as azureStorage from 'azure-storage';
 import { EventEmitter } from 'events';
 import { Base64 } from 'js-base64';
 import { String } from 'typescript-string-operations';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
@@ -90,9 +90,7 @@ abstract class KubernetesTrainingService {
         const jobs: TrialJobDetail[] = [];
 
         for (const [key, value] of this.trialJobsMap) {
-            if (value.form.jobType === 'TRIAL') {
-                jobs.push(await this.getTrialJob(key));
-            }
+            jobs.push(await this.getTrialJob(key));
         }
 
         return Promise.resolve(jobs);
@@ -221,7 +219,7 @@ abstract class KubernetesTrainingService {
 
     protected generateSequenceId(): number {
         if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = getInitTrialSequenceId();
+            this.nextTrialSequenceId = 1;  // FIXME: 0?
         }
 
         return this.nextTrialSequenceId++;

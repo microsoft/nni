@@ -30,7 +30,6 @@ class ExperimentStartupInfo {
     private newExperiment: boolean = true;
     private basePort: number = -1;
     private initialized: boolean = false;
-    private initTrialSequenceID: number = 0;
     private logDir: string = '';
     private logLevel: string = '';
 
@@ -83,17 +82,6 @@ class ExperimentStartupInfo {
 
         return this.logLevel;
     }
-
-    public setInitTrialSequenceId(initSequenceId: number): void {
-        assert(this.initialized);
-        this.initTrialSequenceID = initSequenceId;
-    }
-
-    public getInitTrialSequenceId(): number {
-        assert(this.initialized);
-
-        return this.initTrialSequenceID;
-    }
 }
 
 function getExperimentId(): string {
@@ -108,14 +96,6 @@ function isNewExperiment(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
 }
 
-function setInitTrialSequenceId(initSequenceId: number): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setInitTrialSequenceId(initSequenceId);
-}
-
-function getInitTrialSequenceId(): number {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
-}
-
 function getExperimentStartupInfo(): ExperimentStartupInfo {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo);
 }
@@ -127,4 +107,4 @@ function setExperimentStartupInfo(
 }
 
 export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
-    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };
+    setExperimentStartupInfo };
