@@ -422,7 +422,7 @@ class HyperoptTuner(Tuner):
         if self.parallel and len(self.total_data)>20 and len(self.running_data) and self.optimal_y is not None:
             self.CL_rval = copy.deepcopy(self.rval)
             if self.constant_liar_type == 'mean':
-                    _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
+                _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
             else:
                 _constant_liar_y = self.optimal_y
             for _parameter_id in self.running_data:
