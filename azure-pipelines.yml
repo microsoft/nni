@@ -67,5 +67,5 @@ jobs:
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 cli_test.py
     displayName: 'nnicli test'
