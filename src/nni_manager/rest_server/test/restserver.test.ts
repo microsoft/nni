@@ -180,4 +180,15 @@ describe('Unit test for rest server', () => {
             done();
         });
     });
+
+    it('Test GET resubmit/:reqId', (done: Mocha.Done) => {
+        request.get(`${ROOT_URL}/resubmit/1`, (err: Error, res: request.Response, body: any) => {
+            if (err) {
+                assert.fail(err.message);
+            } else {
+                expect(res.statusCode).to.equal(200);
+            }
+            done();
+        });
+    });
 });

@@ -28,6 +28,9 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
+      PATH=$HOME/.local/bin:$PATH python3 resubmit_test.py
+  - script: |
+      cd test
       PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
   - script: |

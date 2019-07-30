@@ -165,8 +165,8 @@ class LocalTrainingService implements TrainingService {
         const jobs: TrialJobDetail[] = [];
         for (const key of this.jobMap.keys()) {
             const trialJob: TrialJobDetail = await this.getTrialJob(key);
+            jobs.push(trialJob);
         }
-
         return jobs;
     }
 

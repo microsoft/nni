@@ -69,6 +69,7 @@ class NNIRestHandler {
         this.setClusterMetaData(router);
         this.listTrialJobs(router);
         this.getTrialJob(router);
+        this.resubmitTrialJob(router);
         this.addTrialJob(router);
         this.cancelTrialJob(router);
         this.getMetricData(router);
@@ -226,6 +227,16 @@ class NNIRestHandler {
             this.nniManager.getTrialJob(req.params.id).then((jobDetail: TrialJobInfo) => {
                 const jobInfo: TrialJobInfo = this.setErrorPathForFailedJob(jobDetail);
                 res.send(jobInfo);
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
+        });
+    }
+
+    private resubmitTrialJob(router: Router): void {
+        router.get('/resubmit/:seqId', async (req: Request, res: Response) => {
+            this.nniManager.resubmitTrialJob(Number(req.params.seqId)).then(() => {
+                res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);
             });

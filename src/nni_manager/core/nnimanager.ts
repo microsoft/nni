@@ -123,14 +123,15 @@ class NNIManager implements Manager {
         return this.dataStore.exportTrialHpConfigs();
     }
 
-    public resubmitTrialJob(sequenceId: number): Promise<void> {
-        for (const trialJob of this.trialJobs.values()) {
+    public async resubmitTrialJob(sequenceId: number): Promise<void> {
+        const trialJobs: TrialJobDetail[] = await this.trainingService.listTrialJobs();
+        for (const trialJob of trialJobs) { // TODO: should we track trials in NNI manager?
             if (trialJob.form.sequenceId == sequenceId) {
                 this.waitingTrials.push(trialJob.form);
                 return Promise.resolve();
             }
         }
-        return Promise.reject('invalid sequenceId');
+        return Promise.reject(new Error(`invalid sequenceId: ${sequenceId}`));
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
@@ -551,6 +552,7 @@ class NNIManager implements Manager {
                         break;
                     }
                     const trialJobAppForm = this.waitingTrials.shift() as TrialJobApplicationForm;
+                    this.currSubmittedTrialNum++;  // TODO: do we increase this counter for resubmitted trials?
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     await this.storeExperimentProfile();

@@ -108,6 +108,10 @@ def parse_args():
     parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
     parser_trial_codegen.set_defaults(func=trial_codegen)
+    parser_trial_resubmit = parser_trial_subparsers.add_parser('resubmit', help='resubmit a trial')
+    parser_trial_resubmit.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_resubmit.add_argument('--seq_id', '-S', required=True, dest='seq_id', help='the sequence id of trial')
+    parser_trial_resubmit.set_defaults(func=trial_resubmit)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')

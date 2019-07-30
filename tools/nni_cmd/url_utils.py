@@ -35,6 +35,8 @@ CHECK_STATUS_API = '/check-status'
 
 TRIAL_JOBS_API = '/trial-jobs'
 
+RESUBMIT_API = '/resubmit'
+
 EXPORT_DATA_API = '/export-data'
 
 TENSORBOARD_API = '/tensorboard'
@@ -68,6 +70,10 @@ def trial_jobs_url(port):
 def trial_job_id_url(port, job_id):
     '''get trial_jobs with id url'''
     return '{0}:{1}{2}{3}/{4}'.format(BASE_URL, port, API_ROOT_URL, TRIAL_JOBS_API, job_id)
+
+
+def resubmit_url(port, seq_id):
+    return '{0}:{1}{2}{3}/{4}'.format(BASE_URL, port, API_ROOT_URL, RESUBMIT_API, seq_id)
 
 
 def export_data_url(port):

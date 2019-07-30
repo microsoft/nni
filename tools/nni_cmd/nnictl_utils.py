@@ -31,7 +31,7 @@ import shutil
 from subprocess import call, check_output
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, resubmit_url
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
@@ -280,11 +280,29 @@ def trial_kill(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
+        response = rest_get(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
         else:
             print_error('Kill trial job failed...')
+    else:
+        print_error('Restful server is not running...')
+
+def trial_resubmit(args):
+    '''Resubmit trial'''
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(resubmit_url(rest_port, args.seq_id), REST_TIME_OUT)
+        if response and check_response(response):
+            print(response.text)
+        else:
+            print_error('Resubmit trial job failed...')
     else:
         print_error('Restful server is not running...')
 
