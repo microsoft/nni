@@ -453,28 +453,20 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     mountPath: '/mnt/frameworkbarrier'
                 }]
         }];
-        let spec: any;
+        
+        let spec: any = {
+            containers: containers,
+            initContainers: initContainers,
+            restartPolicy: 'OnFailure',
+            volumes: volumeSpecMap.get('nniVolumes'),
+            hostNetwork: false
+        };
         if(privateRegistrySecretName) {
-            spec = {
-                containers: containers,
-                imagePullSecrets: [
-                   {
-                       name: privateRegistrySecretName 
-                   }
-                ],
-                initContainers: initContainers,
-                restartPolicy: 'OnFailure',
-                volumes: volumeSpecMap.get('nniVolumes'),
-                hostNetwork: false
-            };
-        } else {
-            spec = {
-                containers: containers,
-                initContainers: initContainers,
-                restartPolicy: 'OnFailure',
-                volumes: volumeSpecMap.get('nniVolumes'),
-                hostNetwork: false
-            };
+            spec.imagePullSecrets = [
+                {
+                    name: privateRegistrySecretName 
+                }
+             ]
         }
 
         if (this.fcClusterConfig.serviceAccountName !== undefined) {

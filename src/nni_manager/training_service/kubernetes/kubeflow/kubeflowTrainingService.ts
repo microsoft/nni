@@ -479,41 +479,26 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 resources: podResources
             }
         ]);
-
-        if(privateRegistrySecretName) {
-            return {
-                replicas: replicaNumber,
-                template: {
-                    metadata: {
-                        // tslint:disable-next-line:no-null-keyword
-                        creationTimestamp: null
-                    },
-                    spec: {
-                        containers: containersSpecMap.get('containers'),
-                        imagePullSecrets: [
-                        {
-                            name: privateRegistrySecretName
-                        }],
-                        restartPolicy: 'ExitCode',
-                        volumes: volumeSpecMap.get('nniVolumes')
-                    }
-                }
-            };
-        } else {
-            return {
-                replicas: replicaNumber,
-                template: {
-                    metadata: {
-                        // tslint:disable-next-line:no-null-keyword
-                        creationTimestamp: null
-                    },
-                    spec: {
-                        containers: containersSpecMap.get('containers'),
-                        restartPolicy: 'ExitCode',
-                        volumes: volumeSpecMap.get('nniVolumes')
-                    }
-                }
-            };
+        let spec: any = {
+            containers: containersSpecMap.get('containers'),
+            restartPolicy: 'ExitCode',
+            volumes: volumeSpecMap.get('nniVolumes')
+        }
+        if (privateRegistrySecretName) {
+            spec.imagePullSecrets = [
+                {
+                    name: privateRegistrySecretName
+                }]
+        }
+        return {
+            replicas: replicaNumber,
+            template: {
+                metadata: {
+                    // tslint:disable-next-line:no-null-keyword
+                    creationTimestamp: null
+                },
+                spec: spec
+            }
         }
     }
 }
