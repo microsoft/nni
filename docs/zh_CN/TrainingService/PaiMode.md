@@ -13,15 +13,15 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# 并发运行的 Trial 数量
+# how many trials could be concurrently running
 trialConcurrency: 2
-# Experiment 的最长持续运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
-# 空表示一直运行
+# empty means never stop
 maxTrialNum: 100
-# 可选项: local, remote, pai
+# choice: local, remote, pai
 trainingServicePlatform: pai
-# 可选项: true, false
+# choice: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -34,7 +34,7 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# 配置访问的 OpenPAI 集群
+# Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
   passWord: your_pai_password
@@ -53,9 +53,9 @@ paiConfig:
     * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。
 * virtualCluster 
-    * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认的虚拟集群。
+    * 可选。 Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
 * shmMB 
-    * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
+    * 可选。 Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
@@ -74,11 +74,13 @@ paiConfig:
 
 在输出目录中可以看到三个文件：stderr, stdout, 以及 trial.log
 
-如果希望将 Trial 的模型数据等其它输出保存到HDFS中，可在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从 Trial 的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
+## data management
 
-如果在使用 pai 模式时遇到任何问题，请到 [NNI Github](https://github.com/Microsoft/nni) 中创建问题。
+If your training data is not too large, it could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the [guidance](https://github.com/microsoft/pai/blob/master/docs/user/storage.md) to mount the data folder in container.
 
-## 版本校验
+If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS, the target path is `hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`
+
+## version check
 
 从 0.6 开始，NNI 支持版本校验。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。 检查策略：
 
