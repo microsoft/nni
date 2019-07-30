@@ -18,6 +18,26 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+""" A python wrapper for nni rest api
+
+Example:
+
+import nnicli as nc
+
+nc.start_nni('../../../../examples/trials/mnist/config.yml')
+
+nc.set_endpoint('http://localhost:8080')
+
+print(nc.version())
+print(nc.get_experiment_status())
+
+print(nc.get_job_statistics())
+print(nc.list_trial_jobs())
+
+nc.stop_nni()
+
+"""
+
 import sys
 import os
 import subprocess
@@ -62,7 +82,7 @@ def _check_endpoint():
 
 def _nni_rest_get(api_path, response_type='json'):
     _check_endpoint()
-    uri = os.path.join(_api_endpoint, API_ROOT_PATH, api_path)
+    uri = '{}/{}/{}'.format(_api_endpoint, API_ROOT_PATH, api_path)
     res = requests.get(uri)
     if _http_succeed(res.status_code):
         if response_type == 'json':
@@ -79,14 +99,10 @@ def _http_succeed(status_code):
 
 def _create_process(cmd):
     if sys.platform == 'win32':
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        process = subprocess.Popen(cmd, stdout=None, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
     else:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-
-    while process.poll() is None:
-        output = process.stdout.readline()
-        if output:
-            print(output.decode('utf-8').strip())
+        process = subprocess.Popen(cmd, stdout=None)
+    process.wait()
 
 def start_nni(config_file):
     """start nni experiment with specified configuration file"""
