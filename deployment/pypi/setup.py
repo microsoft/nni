@@ -59,7 +59,8 @@ setuptools.setup(
         'nni_cmd': '../../tools/nni_cmd',
         'nni_trial_tool': '../../tools/nni_trial_tool',
         'nni_gpu_tool': '../../tools/nni_gpu_tool',
-        'nni': '../../src/sdk/pynni/nni'
+        'nni': '../../src/sdk/pynni/nni',
+        'nnicli': '../../src/sdk/pycli/nnicli'
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
