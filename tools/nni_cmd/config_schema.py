@@ -210,7 +210,7 @@ common_trial_schema = {
 'trial':{
     'command': setType('command', str),
     'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
     }
 }

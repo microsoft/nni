@@ -601,12 +601,15 @@ class RemoteMachineTrainingService implements TrainingService {
         let command: string;
         // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
         // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
-        if (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
-            command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
+        if (this.trialConfig.gpuNum === undefined) {
+            command = this.trialConfig.command;
         } else {
-            command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
+            if (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
+                command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
+            } else {
+                command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
+            }
         }
-
         // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         if (this.remoteRestServerPort === undefined) {

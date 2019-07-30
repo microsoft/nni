@@ -49,6 +49,9 @@ export class GPUScheduler {
      * @param requiredGPUNum required GPU number
      */
     public scheduleMachine(requiredGPUNum: number, trialJobDetail : RemoteMachineTrialJobDetail) : RemoteMachineScheduleResult {
+        if(requiredGPUNum === undefined) {
+            requiredGPUNum = 0;
+        }
         assert(requiredGPUNum >= 0);
         const allRMs: RemoteMachineMeta[] = Array.from(this.machineSSHClientMap.keys());
         assert(allRMs.length > 0);
