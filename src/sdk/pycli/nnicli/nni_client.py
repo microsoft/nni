@@ -99,10 +99,14 @@ def _http_succeed(status_code):
 
 def _create_process(cmd):
     if sys.platform == 'win32':
-        process = subprocess.Popen(cmd, stdout=None, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
     else:
-        process = subprocess.Popen(cmd, stdout=None)
-    process.wait()
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+    while process.poll() is None:
+        output = process.stdout.readline()
+        if output:
+            print(output.decode('utf-8').strip())
 
 def start_nni(config_file):
     """start nni experiment with specified configuration file"""
