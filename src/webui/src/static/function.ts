@@ -138,7 +138,29 @@ const filterDuration = (item: TableObj) => {
     return item.status !== 'WAITING';
 };
 
+const downFile = (content: string, fileName: string) => {
+    const aTag = document.createElement('a');
+    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
+    const file = new Blob([content], { type: 'application/json' });
+    aTag.download = fileName;
+    aTag.href = URL.createObjectURL(file);
+    aTag.click();
+    if (!isEdge) {
+        URL.revokeObjectURL(aTag.href);
+    }
+    if (navigator.userAgent.indexOf('Firefox') > -1) {
+        const downTag = document.createElement('a');
+        downTag.addEventListener('click', function () {
+            downTag.download = fileName;
+            downTag.href = URL.createObjectURL(file);
+        });
+        let eventMouse = document.createEvent('MouseEvents');
+        eventMouse.initEvent('click', false, false);
+        downTag.dispatchEvent(eventMouse);
+    }
+};
+
 export {
-    convertTime, convertDuration, getFinalResult, getFinal, 
+    convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration
 };

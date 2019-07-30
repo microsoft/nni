@@ -56,7 +56,11 @@
   },
   "resolutions": {
     "mem": "^4.0.0",
-    "handlebars": "^4.1.0"
+    "handlebars": "^4.1.0",
+    "lodash": "^4.17.13",
+    "lodash.merge": "^4.6.2",
+    "node.extend": "^1.1.7",
+    "hoek": "^4.2.1"
   },
   "engines": {
     "node": ">=10.0.0"
