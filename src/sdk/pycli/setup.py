@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name = 'nnicli',
     version = '999.0.0-developing',
-    packages = setuptools.find_packages(exclude=['*test*']),
+    packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',
     install_requires = [
