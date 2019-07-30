@@ -70,9 +70,6 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 --pai_hdfs_output_dir '{9}' --pai_hdfs_host '{10}' --pai_user_name {11} --nni_hdfs_exp_dir '{12}' --webhdfs_path '/webhdfs/api/v1' \
 --nni_manager_version '{13}' --log_collection '{14}'`;
 
-export const PAI_OUTPUT_DIR_FORMAT: string =
-`hdfs://{0}:9000/`;
-
 // tslint:disable:no-http-string
 export const PAI_LOG_PATH_FORMAT: string =
 `http://{0}/webhdfs/explorer.html#{1}`;
