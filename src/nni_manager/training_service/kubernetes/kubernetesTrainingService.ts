@@ -50,7 +50,6 @@ abstract class KubernetesTrainingService {
     protected readonly trialLocalNFSTempFolder: string;
     protected stopping: boolean = false;
     protected experimentId! : string;
-    protected nextTrialSequenceId: number;
     protected kubernetesRestServerPort?: number;
     protected readonly CONTAINER_MOUNT_PATH: string;
     protected azureStorageClient?: azureStorage.FileService;
@@ -71,7 +70,6 @@ abstract class KubernetesTrainingService {
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();
-        this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
         this.logCollection = 'none';
@@ -215,14 +213,6 @@ abstract class KubernetesTrainingService {
         }
 
         return Promise.resolve();
-    }
-
-    protected generateSequenceId(): number {
-        if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = 1;  // FIXME: 0?
-        }
-
-        return this.nextTrialSequenceId++;
     }
 
     // tslint:disable: no-unsafe-any no-any

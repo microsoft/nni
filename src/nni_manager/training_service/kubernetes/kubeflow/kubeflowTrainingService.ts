@@ -59,7 +59,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         super();
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
-        this.nextTrialSequenceId = -1;
         this.log.info('Construct Kubeflow training service.');
     }
 
@@ -96,10 +95,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const kubeflowJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
-        const curTrialSequenceId: number = this.generateSequenceId();
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //prepare the runscript
-        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, curTrialSequenceId, form);
+        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
         //upload files to sotrage
         const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
         const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
@@ -109,7 +107,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             trialWorkingFolder,
             form,
             kubeflowJobName,
-            curTrialSequenceId,
             trialJobOutputUrl
         );
 
@@ -247,7 +244,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobOutputUrl);
     }
 
-    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number,
+    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string,
                                    form: TrialJobApplicationForm): Promise<void> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
@@ -273,7 +270,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         if (kubeflowTrialConfig.worker !== undefined) {
            const workerRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                kubeflowTrialConfig.worker.command,
-                                                                               curTrialSequenceId.toString(), 'worker',
+                                                                               form.sequenceId.toString(), 'worker',
                                                                                kubeflowTrialConfig.worker.gpuNum);
            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
@@ -283,7 +280,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
            if (tensorflowTrialConfig.ps !== undefined) {
                const psRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                tensorflowTrialConfig.ps.command,
-                                                                               curTrialSequenceId.toString(),
+                                                                               form.sequenceId.toString(),
                                                                                'ps', tensorflowTrialConfig.ps.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
            }
@@ -292,7 +289,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
            if (pytorchTrialConfig.master !== undefined) {
                const masterRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                    pytorchTrialConfig.master.command,
-                                                                                   curTrialSequenceId.toString(), 'master',
+                                                                                   form.sequenceId.toString(), 'master',
                                                                                    pytorchTrialConfig.master.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
            }

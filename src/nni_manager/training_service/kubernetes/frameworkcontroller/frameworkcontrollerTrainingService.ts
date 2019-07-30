@@ -55,7 +55,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         super();
         this.fcJobInfoCollector = new FrameworkControllerJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
-        this.nextTrialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -91,14 +90,13 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
 
         const trialJobId: string = uniqueString(5);
-        const curTrialSequenceId: number = this.generateSequenceId();
         // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
         //Generate the port used for taskRole
         this.generateContainerPort();
-        await this.prepareRunScript(trialLocalTempFolder, curTrialSequenceId, trialJobId, trialWorkingFolder, form);
+        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
 
         //upload code files
         const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
@@ -110,7 +108,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             trialWorkingFolder,
             form,
             frameworkcontrollerJobName,
-            curTrialSequenceId,
             trialJobOutputUrl
         );
 
@@ -259,7 +256,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
 
-    private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string,
+    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string,
                                    trialWorkingFolder: string, form: TrialJobApplicationForm): Promise<void> {
         if (this.fcTrialConfig === undefined) {
             throw new Error('frameworkcontroller trial config is not initialized');
@@ -275,7 +272,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for (const taskRole of this.fcTrialConfig.taskRoles) {
             const runScriptContent: string =
               await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder,
-                                           this.generateCommandScript(taskRole.command), curTrialSequenceId.toString(),
+                                           this.generateCommandScript(taskRole.command), form.sequenceId.toString(),
                                            taskRole.name, taskRole.gpuNum);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
         }

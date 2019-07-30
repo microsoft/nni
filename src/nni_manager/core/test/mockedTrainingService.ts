@@ -40,7 +40,7 @@ class MockedTrainingService extends TrainingService {
         tags: ['test'],
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
-        form: { // FIXME
+        form: {
             sequenceId: 0,
             hyperParameters: {
                 value: '',
@@ -58,7 +58,7 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
-            sequenceId: 0,
+            sequenceId: 1,
             hyperParameters: {
                 value: '',
                 index: 0,

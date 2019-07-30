@@ -725,7 +725,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getExperimentRootDir(),
-            nextSequenceId: 1,  // FIXME: maybe zero?
+            nextSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
