@@ -35,7 +35,7 @@ setup(
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
-    packages = find_packages('src/sdk', exclude=['tests']) + find_packages('tools'),
+    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('src/sdk/pycli') + find_packages('tools'),
     package_dir = {
         'nni': 'src/sdk/pynni/nni',
         'nnicli': 'src/sdk/pycli/nnicli',

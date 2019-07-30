@@ -53,7 +53,9 @@ setuptools.setup(
     long_description_content_type = 'text/markdown',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
-    packages = setuptools.find_packages('../../tools') + setuptools.find_packages('../../src/sdk', exclude=['tests']),
+    packages = setuptools.find_packages('../../tools') \
+        + setuptools.find_packages('../../src/sdk/pynni', exclude=['tests']) \
+        + setuptools.find_packages('../../src/sdk/pycli'),
     package_dir = {
         'nni_annotation': '../../tools/nni_annotation',
         'nni_cmd': '../../tools/nni_cmd',
