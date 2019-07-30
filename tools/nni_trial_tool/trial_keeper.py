@@ -33,7 +33,6 @@ from pyhdfs import HdfsClient
 import pkg_resources
 from .rest_utils import rest_post, rest_get
 from .url_utils import gen_send_stdout_url, gen_send_version_url, gen_parameter_meta_url
-from distutils.dir_util import copy_tree
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, \
     MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
@@ -106,9 +105,9 @@ def main_loop(args):
         # child worker process exits and all stdout data is read
         if retCode is not None and log_pipe_stdout.set_process_exit() and log_pipe_stdout.is_read_completed == True:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
             if hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
+                nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:
                     if copyDirectoryToHdfs(nni_local_output_dir, hdfs_output_dir, hdfs_client):
                         nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, hdfs_output_dir))
@@ -117,8 +116,7 @@ def main_loop(args):
                 except Exception as e:
                     nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
                     raise e
-            if NNI_PLATFORM in ['kubeflow', 'frameworkcontroller']:
-                copy_tree(LOG_DIR, nni_local_output_dir)
+
             ## Exit as the retCode of subprocess(trial)
             exit(retCode)
             break
