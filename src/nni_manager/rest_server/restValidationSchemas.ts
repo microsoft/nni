@@ -198,7 +198,7 @@ export namespace ValidationSchemas {
             startTime: joi.number(),
             endTime: joi.number(),
             logDir: joi.string(),
-            maxSequenceId: joi.number()
+            nextSequenceId: joi.number()
         }
     };
 }

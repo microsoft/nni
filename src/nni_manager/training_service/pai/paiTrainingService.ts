@@ -73,7 +73,6 @@ class PAITrainingService implements TrainingService {
     private readonly hdfsDirPattern: string;
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
-    private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
@@ -91,7 +90,6 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
-        this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.logCollection = 'none';
         this.log.info('Construct OpenPAI training service.');
@@ -150,7 +148,6 @@ class PAITrainingService implements TrainingService {
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
-        const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
@@ -168,7 +165,6 @@ class PAITrainingService implements TrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            trialSequenceId,
             hdfsLogPath);
 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -451,7 +447,7 @@ class PAITrainingService implements TrainingService {
             `$PWD/${trialJobId}/nnioutput`,
             trialJobId,
             this.experimentId,
-            trialJobDetail.sequenceId,
+            trialJobDetail.form.sequenceId,  // TODO: check if this is required
             this.isMultiPhase,
             this.paiTrialConfig.command,
             nniManagerIp,
@@ -540,14 +536,6 @@ class PAITrainingService implements TrainingService {
         });
 
         return deferred.promise;
-    }
-
-    private generateSequenceId(): number {
-        if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = 1;  // FIXME: 0?
-        }
-
-        return this.nextTrialSequenceId++;
     }
 
     private async statusCheckingLoop(): Promise<void> {
