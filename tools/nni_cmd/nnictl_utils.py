@@ -520,9 +520,9 @@ def platform_clean(args):
     if platform not in ['remote', 'pai']:
         print_normal('platform {0} not supported.'.format(platform))
         exit(0)
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    update_experiment()
     id_list = list(experiment_dict.keys())
     dir_list = get_platform_dir(config_content)
     if not dir_list:
@@ -553,12 +553,12 @@ def platform_clean(args):
 
 def experiment_list(args):
     '''get the information of all experiments'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print_normal('Cannot find experiments.')
         exit(1)
-    update_experiment()
     experiment_id_list = []
     if args.all:
         for key in experiment_dict.keys():
@@ -595,12 +595,12 @@ def get_time_interval(time1, time2):
 
 def show_experiment_info():
     '''show experiment information in monitor'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print('There is no experiment running...')
         exit(1)
-    update_experiment()
     experiment_id_list = []
     for key in experiment_dict.keys():
         if experiment_dict[key]['status'] != 'STOPPED':
