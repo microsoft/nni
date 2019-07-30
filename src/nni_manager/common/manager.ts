@@ -102,6 +102,7 @@ abstract class Manager {
     public abstract importData(data: string): Promise<void>;
     public abstract exportData(): Promise<string>;
 
+    public abstract resubmitTrialJob(sequenceId: number): Promise<void>;
     public abstract addCustomizedTrialJob(hyperParams: string): Promise<void>;
     public abstract cancelTrialJobByUser(trialJobId: string): Promise<void>;
 

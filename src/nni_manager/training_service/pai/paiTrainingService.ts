@@ -179,7 +179,7 @@ class PAITrainingService implements TrainingService {
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
-        await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters);
+        await this.writeParameterFile(trialJobId, form.hyperParameters);
         return trialJobDetail;
     }
 
@@ -447,7 +447,7 @@ class PAITrainingService implements TrainingService {
             `$PWD/${trialJobId}/nnioutput`,
             trialJobId,
             this.experimentId,
-            trialJobDetail.form.sequenceId,  // TODO: check if this is required
+            trialJobDetail.form.sequenceId,
             this.isMultiPhase,
             this.paiTrialConfig.command,
             nniManagerIp,

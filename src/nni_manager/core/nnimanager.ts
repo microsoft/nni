@@ -56,7 +56,7 @@ class NNIManager implements Manager {
     private experimentProfile: ExperimentProfile;
     private dispatcherPid: number;
     private status: NNIManagerStatus;
-    private waitingTrials: string[];
+    private waitingTrials: TrialJobApplicationForm[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
 
@@ -121,6 +121,16 @@ class NNIManager implements Manager {
 
     public async exportData(): Promise<string> {
         return this.dataStore.exportTrialHpConfigs();
+    }
+
+    public resubmitTrialJob(sequenceId: number): Promise<void> {
+        for (const trialJob of this.trialJobs.values()) {
+            if (trialJob.form.sequenceId == sequenceId) {
+                this.waitingTrials.push(trialJob.form);
+                return Promise.resolve();
+            }
+        }
+        return Promise.reject('invalid sequenceId');
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
@@ -540,18 +550,7 @@ class NNIManager implements Manager {
                         this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
                         break;
                     }
-                    const hyperParams: string | undefined = this.waitingTrials.shift();
-                    if (hyperParams === undefined) {
-                        throw new Error(`Error: invalid hyper-parameters for job submission: ${hyperParams}`);
-                    }
-                    this.currSubmittedTrialNum++;
-                    const trialJobAppForm: TrialJobApplicationForm = {
-                        sequenceId: this.experimentProfile.nextSequenceId++,
-                        hyperParameters: {
-                            value: hyperParams,
-                            index: 0
-                        }
-                    };
+                    const trialJobAppForm = this.waitingTrials.shift() as TrialJobApplicationForm;
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     await this.storeExperimentProfile();
@@ -559,8 +558,8 @@ class NNIManager implements Manager {
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
-                        await this.dataStore.storeTrialJobEvent(
-                            trialJobDetailSnapshot.status, trialJobDetailSnapshot.id, hyperParams, trialJobDetailSnapshot);
+                        await this.dataStore.storeTrialJobEvent(trialJobDetailSnapshot.status,
+                            trialJobDetailSnapshot.id, trialJobAppForm.hyperParameters.value, trialJobDetailSnapshot);
                     } else {
                         assert(false, `undefined trialJobDetail in trialJobs: ${trialJobDetail.id}`);
                     }
@@ -666,7 +665,14 @@ class NNIManager implements Manager {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
                 }
-                this.waitingTrials.push(content);
+                const form: TrialJobApplicationForm = {
+                    sequenceId: this.experimentProfile.nextSequenceId++,
+                    hyperParameters: {
+                        value: content,
+                        index: 0
+                    }
+                };
+                this.waitingTrials.push(form);
                 break;
             case SEND_TRIAL_JOB_PARAMETER:
                 const tunerCommand: any = JSON.parse(content);
@@ -674,7 +680,7 @@ class NNIManager implements Manager {
                 assert(tunerCommand.trial_job_id !== undefined);
 
                 const trialJobForm: TrialJobApplicationForm = {
-                    sequenceId: this.experimentProfile.nextSequenceId++,
+                    sequenceId: -1,
                     hyperParameters: {
                         value: content,
                         index: tunerCommand.parameter_index

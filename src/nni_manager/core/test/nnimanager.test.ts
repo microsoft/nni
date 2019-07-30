@@ -119,6 +119,9 @@ describe('Unit test for nnimanager', function () {
     })
 
 
+    // FIXME: unit test for resubmitTrialJob
+    //it('test resubmitTrialJob', () => {
+    //}
 
     it('test addCustomizedTrialJob', () => {
         return nniManager.addCustomizedTrialJob('hyperParams').then(() => {

@@ -22,6 +22,7 @@
 import { ExperimentProfile, TrialJobStatistics } from './manager';
 import { TrialJobDetail, TrialJobStatus } from './trainingService';
 
+// TODO: add a RESUBMIT event?
 type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED' | 'ADD_HYPERPARAMETER' | 'IMPORT_DATA';
 type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM' | 'REQUEST_PARAMETER';
 
