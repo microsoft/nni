@@ -107,16 +107,19 @@ def _create_process(cmd):
         output = process.stdout.readline()
         if output:
             print(output.decode('utf-8').strip())
+    return process.returncode
 
 def start_nni(config_file):
     """start nni experiment with specified configuration file"""
     cmd = 'nnictl create --config {}'.format(config_file).split(' ')
-    _create_process(cmd)
+    if _create_process(cmd) != 0:
+        raise RuntimeError('Failed to start nni.')
 
 def stop_nni():
     """stop nni experiment"""
     cmd = 'nnictl stop'.split(' ')
-    _create_process(cmd)
+    if _create_process(cmd) != 0:
+        raise RuntimeError('Failed to stop nni.')
 
 def version():
     """return version of nni"""
