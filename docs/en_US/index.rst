@@ -12,11 +12,11 @@ Contents
     :titlesonly:
 
     Overview
-    QuickStart<QuickStart>
+    QuickStart<Tutorial/QuickStart>
     Tutorials<tutorials>
     Examples<examples>
     Reference<reference>
-    FAQ
+    FAQ<Tutorial/FAQ>
     Contribution<contribution>
     Changelog<Release>
-    Community Sharings<community_sharings>
+    Community Sharings<CommunitySharings/community_sharings>
