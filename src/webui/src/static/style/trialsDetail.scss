@@ -76,12 +76,12 @@
     text-align: right;
     margin-top: 15px;
     .position{
-        position: relative;
-        top: 2px;
         color: #333;
-        .bold span{
-            font-weight: 600;
-            margin-right: 10px;
+        .bold{
+            span{
+                font-weight: 600;
+                margin-right: 10px;
+            }
         }
     }
 }
