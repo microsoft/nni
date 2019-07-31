@@ -163,7 +163,7 @@ Specifically, for trials using tensorflow, we create and use tensorflow variable
 
 Below is the figure to show where dropout is added to the full graph for one layer in `nni.mutable_layers`, input 1-k are candidate inputs, the four ops are candidate ops.
 
-![](../img/oneshot_mode.png)
+![](../../img/oneshot_mode.png)
 
 As suggested in the [paper][6], a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here]() is an example for oneshot_mode.
 
@@ -173,7 +173,7 @@ As suggested in the [paper][6], a dropout method is implemented to the inputs fo
 
 Below is the figure to show where architecture weights are added to the full graph for one layer in `nni.mutable_layers`, output of each candidate op is multiplied by a weight which is called architecture weight.
 
-![](../img/darts_mode.png)
+![](../../img/darts_mode.png)
 
 In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here]() is an example for darts_mode.
 
@@ -183,7 +183,7 @@ One-Shot NAS usually has only one trial job with the full graph. However, runnin
 
 NNI natively supports running multiple such trial jobs. The figure below shows how multiple trial jobs run on NNI.
 
-![](../img/one-shot_training.png)
+![](../../img/one-shot_training.png)
 
 =============================================================
 
@@ -208,24 +208,6 @@ Sharing weights among chosen architectures (i.e., trials) could speedup model se
 We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
 
 Example of weight sharing on NNI.
-
-<<<<<<< HEAD:docs/en_US/GeneralNasInterfaces.md
-=======
-### [__TODO__] Support of One-Shot NAS
-
-One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)][1], [training full graph through dropout][6], [training with architecture weights (regularization)][3]. Here we focus on the first approach, i.e., training subgraphs (ENAS).
-
-With the same annotated trial code, users could choose One-Shot NAS as execution mode on NNI. Specifically, the compiled trial code builds the full graph (rather than subgraph demonstrated above), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](MultiPhase.md). We support this training approach because training a subgraph is very fast, building the graph every time training a subgraph induces too much overhead.
-
-![](../../img/one-shot_training.png)
-
-The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usually only has one trial job with full graph. NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchronous parameter-server mode). This may speedup converge.
-
-Example of One-Shot NAS on NNI.
-
-
-## [__TODO__] General tuning algorithms for NAS
->>>>>>> 410ab1ca20ceeb8237d608446a9265b6f24a418f:docs/en_US/AdvancedFeature/GeneralNasInterfaces.md
 
 ## General tuning algorithms for NAS
 
