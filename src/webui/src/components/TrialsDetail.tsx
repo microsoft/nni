@@ -14,14 +14,17 @@ import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';
 
+interface ExperimentInfo {
+    platform: string;
+    optimizeMode: string;
+}
+
 interface TrialDetailState {
     accSource: object;
     accNodata: string;
     tableListSource: Array<TableObj>;
     searchResultSource: Array<TableObj>;
     isHasSearch: boolean;
-    experimentStatus: string;
-    experimentPlatform: string;
     experimentLogCollection: boolean;
     entriesTable: number; // table components val
     entriesInSelect: string;
@@ -31,6 +34,7 @@ interface TrialDetailState {
     hyperCounts: number; // user click the hyper-parameter counts
     durationCounts: number;
     intermediateCounts: number;
+    experimentInfo: ExperimentInfo;
 }
 
 interface TrialsDetailProps {
@@ -74,8 +78,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             accNodata: '',
             tableListSource: [],
             searchResultSource: [],
-            experimentStatus: '',
-            experimentPlatform: '',
             experimentLogCollection: false,
             entriesTable: 20,
             entriesInSelect: '20',
@@ -85,7 +87,11 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             isMultiPhase: false,
             hyperCounts: 0,
             durationCounts: 0,
-            intermediateCounts: 0
+            intermediateCounts: 0,
+            experimentInfo: {
+                platform: '',
+                optimizeMode: 'maximize'
+            }
         };
     }
 
@@ -289,7 +295,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         })
             .then(res => {
                 if (res.status === 200) {
-                    const trainingPlatform = res.data.params.trainingServicePlatform !== undefined
+                    const trainingPlatform: string = res.data.params.trainingServicePlatform !== undefined
                         ?
                         res.data.params.trainingServicePlatform
                         :
@@ -299,12 +305,24 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     let expLogCollection: boolean = false;
                     const isMultiy: boolean = res.data.params.multiPhase !== undefined
                         ? res.data.params.multiPhase : false;
+                    const tuner = res.data.params.tuner;
+                    // I'll set optimize is maximize if user not set optimize
+                    let optimize: string = 'maximize';
+                    if (tuner !== undefined) {
+                        if (tuner.classArgs !== undefined) {
+                            if (tuner.classArgs.optimize_mode !== undefined) {
+                                if (tuner.classArgs.optimize_mode !== 'maximize') {
+                                    optimize = 'other';
+                                }
+                            }
+                        }
+                    }
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
                     if (this._isMounted) {
                         this.setState({
-                            experimentPlatform: trainingPlatform,
+                            experimentInfo: { platform: trainingPlatform, optimizeMode: optimize },
                             searchSpace: res.data.params.searchSpace,
                             experimentLogCollection: expLogCollection,
                             isMultiPhase: isMultiy
@@ -343,7 +361,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
 
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
-            entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
+            entriesTable, experimentInfo, searchSpace, experimentLogCollection,
             whichGraph
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
@@ -354,9 +372,10 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
-                                    height={432}
+                                    height={402}
                                     showSource={source}
                                     whichGraph={whichGraph}
+                                    optimize={experimentInfo.optimizeMode}
                                 />
                             </Row>
                         </TabPane>
@@ -420,7 +439,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     entries={entriesTable}
                     tableSource={source}
                     isMultiPhase={isMultiPhase}
-                    platform={experimentPlatform}
+                    platform={experimentInfo.platform}
                     updateList={this.getDetailSource}
                     logCollection={experimentLogCollection}
                     ref={(tabList) => this.tableList = tabList}

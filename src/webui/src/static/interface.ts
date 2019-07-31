@@ -59,7 +59,7 @@ interface AccurPoint {
 interface DetailAccurPoint {
     acc: number;
     index: number;
-    searchSpace: string;
+    searchSpace: object;
 }
 
 interface TooltipForIntermediate {
