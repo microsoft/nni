@@ -171,10 +171,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 data: resultList
             }, {
                 type: 'line',
-                // smooth: true,
-                lineStyle: {
-                    color: '#0071BC'
-                },
+                lineStyle: { color: '#FF6600' },
                 data: realDefault
             }]
         };

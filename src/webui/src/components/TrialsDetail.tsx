@@ -343,8 +343,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     if (tuner !== undefined) {
                         if (tuner.classArgs !== undefined) {
                             if (tuner.classArgs.optimize_mode !== undefined) {
-                                if (tuner.classArgs.optimize_mode !== 'maximize') {
-                                    optimize = 'other';
+                                if (tuner.classArgs.optimize_mode === 'minimize') {
+                                    optimize = 'minimize';
                                 }
                             }
                         }
