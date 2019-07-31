@@ -43,7 +43,7 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../common/util';
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
-import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
+import { PAI_LOG_PATH_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer, ParameterFileMeta } from './paiJobRestServer';
 
@@ -70,9 +70,6 @@ class PAITrainingService implements TrainingService {
     private readonly paiTokenUpdateInterval: number;
     private readonly experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
-    private readonly hdfsDirPattern: string;
-    private hdfsBaseDir: string | undefined;
-    private hdfsOutputHost: string | undefined;
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
@@ -80,6 +77,8 @@ class PAITrainingService implements TrainingService {
     private versionCheck: boolean = true;
     private logCollection: string;
     private isMultiPhase: boolean = false;
+    private hdfsCodeDir?: string;
+    private hdfsOutputDir?: string;
 
     constructor() {
         this.log = getLogger();
@@ -90,7 +89,6 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
-        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.logCollection = 'none';
@@ -144,10 +142,10 @@ class PAITrainingService implements TrainingService {
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
-        if (this.hdfsBaseDir === undefined) {
-            throw new Error('hdfsBaseDir is not initialized');
+        if (this.paiClusterConfig === undefined) {
+            throw new Error(`paiClusterConfig not initialized!`);
         }
+        const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -156,12 +154,14 @@ class PAITrainingService implements TrainingService {
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
+        this.hdfsCodeDir = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        this.hdfsOutputDir = unixPathJoin(this.hdfsCodeDir, 'nnioutput');
 
-        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
-            this.hdfsOutputHost,
-            hdfsOutputDir);
+            this.paiClusterConfig.host,
+            this.hdfsOutputDir
+            );
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -278,14 +278,6 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
-                //paiTrialConfig.outputDir could be null if it is not set in nnictl
-                if (this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null) {
-                    this.paiTrialConfig.outputDir = String.Format(
-                        PAI_OUTPUT_DIR_FORMAT,
-                        this.paiClusterConfig.host
-                    )
-                    .replace(/\r\n|\n|\r/gm, '');
-                }
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
@@ -295,43 +287,7 @@ class PAITrainingService implements TrainingService {
                     deferred.reject(new Error(error));
                     break;
                 }
-
-                const hdfsDirContent: any = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
-
-                if (hdfsDirContent === null) {
-                    throw new Error('Trial outputDir format Error');
-                }
-                const groups: any = hdfsDirContent.groups;
-                if (groups === undefined) {
-                    throw new Error('Trial outputDir format Error');
-                }
-                this.hdfsOutputHost = groups.host;
-                //TODO: choose to use /${username} as baseDir
-                this.hdfsBaseDir = groups.baseDir;
-                if (this.hdfsBaseDir === undefined) {
-                    this.hdfsBaseDir = '/';
-                }
-
-                let dataOutputHdfsClient: any;
-                if (this.paiClusterConfig.host === this.hdfsOutputHost && this.hdfsClient) {
-                    dataOutputHdfsClient = this.hdfsClient;
-                } else {
-                    dataOutputHdfsClient = WebHDFS.createClient({
-                        user: this.paiClusterConfig.userName,
-                        port: 50070,
-                        host: this.hdfsOutputHost
-                    });
-                }
-
-                try {
-                    const exist : boolean = await HDFSClientUtility.pathExists('/', dataOutputHdfsClient);
-                    if (!exist) {
-                        deferred.reject(new Error(`Please check hdfsOutputDir host!`));
-                    }
-                } catch (error) {
-                    deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
-                }
-
+           
                 // Copy experiment files from local folder to HDFS
                 this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(
                     this.paiTrialConfig.codeDir,
@@ -409,12 +365,12 @@ class PAITrainingService implements TrainingService {
             throw new Error('PAI token is not initialized');
         }
 
-        if (this.hdfsBaseDir === undefined) {
-            throw new Error('hdfsBaseDir is not initialized');
+        if (this.hdfsCodeDir === undefined) {
+            throw new Error('hdfsCodeDir is not initialized');
         }
 
-        if (this.hdfsOutputHost === undefined) {
-            throw new Error('hdfsOutputHost is not initialized');
+        if (this.hdfsOutputDir === undefined) {
+            throw new Error('hdfsOutputDir is not initialized');
         }
 
         if (this.paiRestServerPort === undefined) {
@@ -428,8 +384,6 @@ class PAITrainingService implements TrainingService {
         }
 
         // Step 1. Prepare PAI job configuration
-        const hdfsOutputDir : string = unixPathJoin(this.hdfsBaseDir, this.experimentId, trialJobId);
-        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
@@ -463,8 +417,8 @@ class PAITrainingService implements TrainingService {
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
-            hdfsOutputDir,
-            this.hdfsOutputHost,
+            this.hdfsOutputDir,
+            this.paiClusterConfig.host,
             this.paiClusterConfig.userName,
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
             version,
@@ -497,12 +451,8 @@ class PAITrainingService implements TrainingService {
             trialJobDetail.paiJobName,
             // Docker image
             this.paiTrialConfig.image,
-            // dataDir
-            this.paiTrialConfig.dataDir,
-            // outputDir
-            this.paiTrialConfig.outputDir,
             // codeDir
-            `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`,
+            `$PAI_DEFAULT_FS_URI${this.hdfsCodeDir}`,
             // PAI Task roles
             paiTaskRoles,
             // Add Virutal Cluster
@@ -513,9 +463,9 @@ class PAITrainingService implements TrainingService {
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
-            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
+            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, this.hdfsCodeDir, this.hdfsClient);
         } catch (error) {
-            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
+            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${this.hdfsCodeDir} failed, error is ${error}`);
             trialJobDetail.status = 'FAILED';
             deferred.resolve(true);
 
