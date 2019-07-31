@@ -88,6 +88,7 @@ def stop_experiment_test():
     subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8080'], check=True)
     subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8888'], check=True)
     subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8989'], check=True)
+    subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml', '--port', '8990'], check=True)
 
     # test cmd 'nnictl stop id`
     experiment_id = get_experiment_id(EXPERIMENT_URL)
@@ -95,6 +96,12 @@ def stop_experiment_test():
     assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
     snooze()
     assert not detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
+
+    # test cmd `nnictl stop --port`
+    proc = subprocess.run(['nnictl', 'stop', '--port', '8990'])
+    assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
+    snooze()
+    assert not detect_port(8990), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
     # test cmd `nnictl stop all`
     proc = subprocess.run(['nnictl', 'stop', 'all'])

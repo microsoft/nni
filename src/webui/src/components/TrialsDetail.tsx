@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
-import { Row, Col, Tabs, Input, Select, Button, Icon } from 'antd';
+import { Row, Col, Tabs, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
 import { TableObj, Parameters } from '../static/interface';
 import { getFinal } from '../static/function';
@@ -13,6 +13,7 @@ import Intermediate from './trial-detail/Intermeidate';
 import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';
+import '../static/style/search.scss';
 
 interface ExperimentInfo {
     platform: string;
@@ -35,6 +36,8 @@ interface TrialDetailState {
     durationCounts: number;
     intermediateCounts: number;
     experimentInfo: ExperimentInfo;
+    searchFilter: string;
+    searchPlaceHolder: string;
 }
 
 interface TrialsDetailProps {
@@ -50,6 +53,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
     public interAllTableList = 2;
 
     public tableList: TableList | null;
+    public searchInput: HTMLInputElement | null;
 
     private titleOfacc = (
         <Title1 text="Default metric" icon="3.png" />
@@ -91,7 +95,9 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             experimentInfo: {
                 platform: '',
                 optimizeMode: 'maximize'
-            }
+            },
+            searchFilter: 'id',
+            searchPlaceHolder: 'Search by id'
         };
     }
 
@@ -218,15 +224,33 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 }));
             }
         } else {
-            const { tableListSource } = this.state;
+            const { tableListSource, searchFilter } = this.state;
             const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
-                if (item.sequenceId.toString() === targetValue
-                    || item.id.includes(targetValue)
-                    || item.status.toUpperCase().includes(targetValue.toUpperCase())
-                ) {
-                    searchResultList.push(item);
+                switch (searchFilter) {
+                    case 'id':
+                        if (item.id.toUpperCase().includes(targetValue.toUpperCase())) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'Trial No.':
+                        if (item.sequenceId.toString() === targetValue) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'status':
+                        if (item.status.toUpperCase().includes(targetValue.toUpperCase())) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'parameters':
+                        const strParameters = JSON.stringify(item.description.parameters, null, 4);
+                        if (strParameters.includes(targetValue)) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    default:
                 }
             });
             if (this._isMounted) {
@@ -286,6 +310,19 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
 
     test = () => {
         alert('TableList component was not properly initialized.');
+    }
+
+    getSearchFilter = (value: string) => {
+        // clear input value and re-render table
+        if (this.searchInput !== null) {
+            this.searchInput.value = '';
+            if (this._isMounted === true) {
+                this.setState(() => ({ isHasSearch: false }));
+            }
+        }
+        if (this._isMounted === true) {
+            this.setState(() => ({ searchFilter: value, searchPlaceHolder: `Search by ${value}` }));
+        }
     }
 
     // get and set logCollection val
@@ -362,7 +399,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
             entriesTable, experimentInfo, searchSpace, experimentLogCollection,
-            whichGraph
+            whichGraph, searchPlaceHolder
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
@@ -427,11 +464,19 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         >
                             Compare
                         </Button>
-                        <Input
+                        <Select defaultValue="id" className="filter" onSelect={this.getSearchFilter}>
+                            <Option value="id">Id</Option>
+                            <Option value="Trial No.">Trial No.</Option>
+                            <Option value="status">Status</Option>
+                            <Option value="parameters">Parameters</Option>
+                        </Select>
+                        <input
                             type="text"
-                            placeholder="Search by id, trial No. or status"
+                            className="search-input"
+                            placeholder={searchPlaceHolder}
                             onChange={this.searchTrial}
-                            style={{ width: 230, marginLeft: 6 }}
+                            style={{ width: 230 }}
+                            ref={text => (this.searchInput) = text}
                         />
                     </Col>
                 </Row>

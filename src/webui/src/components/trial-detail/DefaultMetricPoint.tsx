@@ -192,7 +192,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     }
                 },
                 formatter: function (data: TooltipForAccuracy) {
-                    console.info('data', data);
                     const result = '<div class="tooldetailAccuracy">' +
                         '<div>Trial No.: ' + data.data[0] + '</div>' +
                         '<div>Default metric: ' + data.data[1] + '</div>' +
@@ -225,7 +224,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         const { showSource } = this.props;
         if (this._isDefaultMounted === true) {
             this.defaultMetric(showSource, checked);
-            // deal with data and then update view layer
+            // ** deal with data and then update view layer
             this.setState(() => ({ isViewBestCurve: checked }));
         }
     }
