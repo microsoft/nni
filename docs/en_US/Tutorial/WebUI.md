@@ -43,7 +43,7 @@ Click the tab "Intermediate Result" to see the lines graph.
 ![](../../img/webui-img/trials_intermeidate.png)
 
 We set a filter function for the intermediate result because that your trials may have many intermediate results.
-You can use it if you want to see the trend of some trial. In the step input, input your focus intermediate result's step, and then input the metric's min and max value you focus. Final, you can filter some trials to see the trend.
+You can use it if you want to see the trend of some trial. Import your focus intermediate result's step in the step input and then import the metric's min and max value you focus. Final, you can filter some trials to see the trend...
 
 ![](../../img/webui-img/filter_intermediate.png)
 
