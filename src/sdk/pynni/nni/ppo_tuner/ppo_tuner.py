@@ -48,6 +48,9 @@ def constfn(val):
 
 
 class ModelConfig(object):
+    """
+    Configurations of the PPO model
+    """
     def __init__(self):
         self.observation_space = None
         self.action_space = None
@@ -61,15 +64,17 @@ class ModelConfig(object):
         self.gamma = 0.99
         self.lam = 0.95
         self.cliprange = 0.2
+        self.embedding_size = None  # the embedding is for each action
         
-        self.nminibatches = 4 # number of training minibatches per update. For recurrent policies,
-                              # should be smaller or equal than number of environments run in parallel.
-        self.noptepochs = 4 # number of training epochs per update
+        self.noptepochs = 4         # number of training epochs per update
         self.total_timesteps = 5000 # number of timesteps (i.e. number of actions taken in the environment)
-
-        self.embedding_size = None # the embedding is for each action
+        self.nminibatches = 4       # number of training minibatches per update. For recurrent policies,
+                                    # should be smaller or equal than number of environments run in parallel.
 
 class TrialsInfo(object):
+    """
+    Informations of each trial from one model inference
+    """
     def __init__(self, obs, actions, values, neglogpacs, dones, last_value):
         self.iter = 0
         self.obs = obs
@@ -85,6 +90,9 @@ class TrialsInfo(object):
         #self.states = None
 
     def get_next(self):
+        """
+        get actions of the next trial
+        """
         if self.iter >= self.actions.size:
             return None, None
         actions = []
@@ -94,6 +102,9 @@ class TrialsInfo(object):
         return self.iter - 1, actions
 
     def update_rewards(self, rewards, returns):
+        """
+        after the trial is finished, reward and return of this trial is updated
+        """
         self.rewards = rewards
         self.returns = returns
 
@@ -114,13 +125,14 @@ class TrialsInfo(object):
 
 class PPOModel(object):
     """
+    PPO Model
     """
     def __init__(self, model_config, mask):
         self.model_config = model_config
-        self.states = None
-        self.nupdates = None
-        self.cur_update = 1
-        self.np_mask = mask
+        self.states = None    # initial state of lstm in policy/value network
+        self.nupdates = None  # the number of func train is invoked, used to tune lr and cliprange
+        self.cur_update = 1   # record the current update
+        self.np_mask = mask   # record the mask of each action within one trial
 
         set_global_seeds(None)
         assert isinstance(self.model_config.lr, float)
@@ -128,6 +140,7 @@ class PPOModel(object):
         assert isinstance(self.model_config.cliprange, float)
         self.cliprange = constfn(self.model_config.cliprange)
 
+        # build lstm policy network, value share the same network
         policy = build_lstm_policy(model_config)
 
         # Get the nb of env
@@ -152,6 +165,14 @@ class PPOModel(object):
         logger.info('=== finished PPOModel initialization')
 
     def inference(self, num):
+        """
+        generate actions along with related info from policy network. 
+        observation is the action of the last step.
+
+        Parameters:
+        ----------
+        num             the number of trials to generate
+        """
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[]
         # initial observation
@@ -192,6 +213,13 @@ class PPOModel(object):
 
     def compute_rewards(self, trials_info, trials_result):
         """
+        compute the rewards of the trials in trials_info based on trials_result,
+        and update the rewards in trials_info
+
+        Parameters:
+        ----------
+        trials_info             info of the generated trials
+        trials_result           final results (e.g., acc) of the generated trials
         """
         mb_rewards = np.asarray([trials_result for _ in trials_info.actions], dtype=np.float32)
         # discount/bootstrap off value fn
@@ -216,9 +244,18 @@ class PPOModel(object):
 
     def train(self, trials_info, nenvs):
         """
+        train the policy/value network using trials_info
+
+        Parameters:
+        ----------
+        trials_info             complete info of the generated trials from the previous inference
+        nenvs                   the batch size of the (previous) inference
         """
-        assert self.cur_update <= self.nupdates # TODO:
-        frac = 1.0 - (self.cur_update - 1.0) / self.nupdates
+        if self.cur_update <= self.nupdates:
+            frac = 1.0 - (self.cur_update - 1.0) / self.nupdates
+        else:
+            logger.warning('current update (self.cur_update) %d has exceeded total updates (self.nupdates) %d', self.cur_update, self.nupdates)
+            frac = 1.0 - (self.nupdates - 1.0) / self.nupdates
         lrnow = self.lr(frac)
         cliprangenow = self.cliprange(frac)
         self.cur_update += 1
@@ -251,13 +288,23 @@ class PPOTuner(Tuner):
     PPOTuner
     """
 
-    def __init__(self, optimize_mode):
+    def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4):
+        """
+        initialization, PPO model is not initialized here as search space is not received yet.
+
+        Parameters:
+        ----------
+        optimize_mode:         maximize or minimize
+        trials_per_update:     number of trials to have for each model update
+        epochs_per_update:     number of epochs to run for each model update
+        """
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
         self.model = None
         self.search_space = None
-        self.running_trials = {} # key: parameter_id, value: actions/states/etc.
-        self.inf_batch_size = 20 # number of trials to generate in one inference
-        self.first_inf = True # indicate whether it is the first time to inference new trials
+        self.running_trials = {}            # key: parameter_id, value: actions/states/etc.
+        self.inf_batch_size = trials_per_update   # number of trials to generate in one inference
+        self.first_inf = True               # indicate whether it is the first time to inference new trials
         self.trials_result = [None for _ in range(self.inf_batch_size)] # results of finished trials
 
         self.credit = 0 # record the unsatisfied trial requests
@@ -268,6 +315,7 @@ class PPOTuner(Tuner):
         self.all_trials = {} # used to dedup the same trial, key: config, value: final result
 
         self.model_config.num_envs = self.inf_batch_size
+        self.model_config.noptepochs = epochs_per_update
         logger.info('=== finished PPOTuner initialization')
 
     def _process_one_nas_space(self, block_name, block_space):
@@ -276,16 +324,17 @@ class PPOTuner(Tuner):
 
         Parameters:
         ----------
-        block_name: the name of the mutable block
-        block_space: search space of this mutable block
+        block_name:              the name of the mutable block
+        block_space:             search space of this mutable block
 
         Returns:
         ----------
+        actions_spaces:          list of the space of each action
+        actions_to_config:       the mapping from action to generated configuration
         """
         actions_spaces = []
         actions_to_config = []
 
-        # TODO: currently optional_input_size is not allowed than 1
         block_arch_temp = {}
         for l_name, layer in block_space.items():
             chosen_layer_temp = {}
@@ -298,7 +347,9 @@ class PPOTuner(Tuner):
                 assert len(layer['layer_choice']) == 1
                 chosen_layer_temp['chosen_layer'] = layer['layer_choice'][0]
 
-            assert layer['optional_input_size'] in [0, 1, [0, 1]]
+            if layer['optional_input_size'] not in [0, 1, [0, 1]]:
+                logger.error('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s', layer['optional_input_size'])
+                raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s', layer['optional_input_size'])
             if isinstance(layer['optional_input_size'], list):
                 actions_spaces.append(["None", *layer['optional_inputs']])
                 actions_to_config.append((block_name, l_name, 'chosen_inputs'))
@@ -319,7 +370,9 @@ class PPOTuner(Tuner):
         return actions_spaces, actions_to_config
 
     def _process_nas_space(self, search_space):
-        # TODO: 
+        """
+        TODO: 
+        """
         actions_spaces = []
         actions_to_config = []
         for b_name, block in search_space.items():
@@ -341,6 +394,10 @@ class PPOTuner(Tuner):
         return actions_spaces, actions_to_config, full_act_space, observation_space, nsteps
 
     def _generate_action_mask(self):
+        """
+        different step could have different action space. to deal with this case, we merge all the 
+        possible actions into one action space, and use mask to indicate available actions for each step
+        """
         two_masks = []
 
         mask = []
@@ -378,7 +435,7 @@ class PPOTuner(Tuner):
         logger.info('=== update search space %s', search_space)
         assert self.search_space is None
         self.search_space = search_space
-        # TODO: determine observation/action space based on search_space
+
         assert self.model_config.observation_space is None
         assert self.model_config.action_space is None
 
@@ -395,13 +452,14 @@ class PPOTuner(Tuner):
         self.model = PPOModel(self.model_config, mask)
 
     def _trial_dedup(self):
-        # TODO:
         pass
 
     def _actions_to_config(self, actions):
+        """
+        given actions, to generate the corresponding trial configuration
+        """
         import copy
         chosen_arch = copy.deepcopy(self.chosen_arch_template)
-        #self.chosen_arch_template[block_name] = block_arch_temp
         self.actions_spaces, self.actions_to_config, self.full_act_space
         for cnt, act in enumerate(actions):
             act_name = self.full_act_space[act]
@@ -419,12 +477,8 @@ class PPOTuner(Tuner):
         return chosen_arch
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
-        """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
-        Call 'generate_parameters()' by 'count' times by default.
-        User code must override either this function or 'generate_parameters()'.
-        If there's no more trial, user should raise nni.NoMoreTrialError exception in generate_parameters().
-        If so, this function will only return sets of trial (hyper-)parameters that have already been collected.
-        parameter_id_list: list of int
+        """
+        Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
         """
         result = []
         for parameter_id in parameter_id_list:
@@ -433,7 +487,6 @@ class PPOTuner(Tuner):
                 logger.debug("generating param for {}".format(parameter_id))
                 res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
-                #return result
                 had_exception = True
             if not had_exception:
                 result.append(res)
@@ -441,6 +494,7 @@ class PPOTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
+        generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
         """
         if self.first_inf:
             self.trials_result = [None for _ in range(self.inf_batch_size)]
@@ -460,9 +514,10 @@ class PPOTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
+        receive trial's result. if the number of finished trials equals self.inf_batch_size, start the next update to 
+        train the model
         """
         def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
-            #_trial_params[parameter_id] = params
             ret = {
                 'parameter_id': parameter_id,
                 'parameter_source': 'customized' if customized else 'algorithm',
@@ -480,9 +535,8 @@ class PPOTuner(Tuner):
         assert trial_info_idx is not None
 
         value = extract_scalar_reward(value)
-        # TODO: support optimize_mode
-        #if self.optimize_mode == OptimizeMode.Minimize:
-        #    value = -value
+        if self.optimize_mode == OptimizeMode.Minimize:
+            value = -value
 
         self.trials_result[trial_info_idx] = value
         self.finished_trials += 1
