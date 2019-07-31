@@ -1,6 +1,6 @@
 # General Programming Interface for Neural Architecture Search (experimental feature)
 
-_*This is an experimental feature, currently, we only implemented the general NAS programming interface. Weight sharing and one-shot NAS based on this programming interface will be supported in the following releases._
+_*This is an experimental feature, currently, we only implemented the general NAS programming interface. Weight sharing will be supported in the following releases._
 
 Automatic neural architecture search is taking an increasingly important role on finding better models. Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually designed and tuned models. Some of representative works are [NASNet][2], [ENAS][1], [DARTS][3], [Network Morphism][4], and [Evolution][5]. There are new innovations keeping emerging. However, it takes great efforts to implement those algorithms, and it is hard to reuse code base of one algorithm for implementing another.
 
@@ -104,18 +104,20 @@ trial:
 +   #choice: classic_mode, enas_mode, oneshot_mode
 +   nasMode: enas_mode
 ```
-Similar to classic_mode, in enas_mode you need to specify a tuner for nas, as it also needs to receive subgraphs from tuner (or controller using the terminology in the paper). Since this trial job needs to receive multiple subgraphs from tuner, each one for a mini-batch, two lines need to be added to the trial code to receive the next subgraph and report the report the result of the current subgraph. Below is an example:
+Similar to classic_mode, in enas_mode you need to specify a tuner for nas, as it also needs to receive subgraphs from tuner (or controller using the terminology in the paper). Since this trial job needs to receive multiple subgraphs from tuner, each one for a mini-batch, two lines need to be added to the trial code to receive the next subgraph (i.e., `nni.training_update`) and report the report the result of the current subgraph. Below is an example:
 ```python
 for _ in range(num):
-    """@nni.get_next_parameter(self.session)"""
+    # here receives and enables a new subgraph
+    """@nni.training_update(tf=tf, session=self.session)"""
     loss, _ = self.session.run([loss_op, train_op])
+    # report the loss of this mini-batch
     """@nni.report_final_result(loss)"""
 ```
-Here, `get_next_parameter` needs an arg which is the session variable that you use to train your model.
+Here, `nni.training_update` is to do some update on the full graph. In enas_mode, the update means receiving a subgraph and enabling it on the next mini-batch. While in darts_mode, the update means training the architecture weights (details in darts_mode). In enas_mode, you need to pass the imported tensorflow package to `tf` and the session to `session`.
 
 **oneshot_mode**: following the training approach in [this paper][6]. Different from enas_mode which trains the full graph by training large numbers of subgraphs, in oneshot_mode the full graph is built and dropout is added to candidate inputs and also added to candidate ops' outputs. Then this full graph is trained like other DL models. [Detailed Description](#OneshotMode). (currently only supported on tensorflow). 
 
-To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file in v0.9, not anymore in future releases.)
+To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file in v0.9/v1.0, not anymore in future releases.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 ```diff
 trial:
     command: your command to run the trial
@@ -125,9 +127,9 @@ trial:
 +   nasMode: oneshot_mode
 ```
 
-**darts_mode**: following the training approach in [this paper][3]. It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode). (not supported yet). 
+**darts_mode**: following the training approach in [this paper][3]. It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode).
 
-To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner.
+To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file in v0.9/v1.0, not anymore in future releases.)
 ```diff
 trial:
     command: your command to run the trial
@@ -135,6 +137,14 @@ trial:
     gpuNum: the number of GPUs that one trial job needs
 +   #choice: classic_mode, enas_mode, oneshot_mode
 +   nasMode: darts_mode
+```
+
+When using darts_mode, you need to call `nni.training_update` as shown below when architecture weights should be updated. Updating architecture weights need `loss` for updating the weights as well as the training data (i.e., `feed_dict`) for it.
+```python
+for _ in range(num):
+    # here trains the architecture weights
+    """@nni.training_update(tf=tf, session=self.session, loss=loss, feed_dict=feed_dict)"""
+    loss, _ = self.session.run([loss_op, train_op])
 ```
 
 **Note:** for enas_mode, oneshot_mode, and darts_mode, NNI only works on the training phase. They also have their own inference phase which is not handled by NNI. For enas_mode, the inference phase is to generate new subgraphs through the controller. For oneshot_mode, the inference phase is sampling new subgraphs randomly and choosing good ones. For darts_mode, the inference phase is pruning a proportion of candidates ops based on architecture weights.
@@ -145,7 +155,7 @@ trial:
 
 In enas_mode, the compiled trial code builds the full graph (rather than subgraph), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md).
 
-Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals.
+Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals. [Here]() is an example for enas_mode.
 
 <a name="OneshotMode"></a>
 
@@ -155,7 +165,7 @@ Below is the figure to show where dropout is added to the full graph for one lay
 
 ![](../img/oneshot_mode.png)
 
-As suggested in the [paper][6], a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way.
+As suggested in the [paper][6], a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here]() is an example for oneshot_mode.
 
 <a name="DartsMode"></a>
 
@@ -165,11 +175,11 @@ Below is the figure to show where architecture weights are added to the full gra
 
 ![](../img/darts_mode.png)
 
-More detailed description after this mode is supported.
+In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here]() is an example for darts_mode.
 
-### Multiple trial jobs for one-shot NAS
+### [__TODO__] Multiple trial jobs for One-Shot NAS
 
-One-Shot NAS usually has only one trial job with the full graph. However, running multiple such trial jobs leads to benefits. For example, in enas_mode multiple trial jobs could share the weights of the full graph to speedup the model training (or converge). Some one-shot approaches are not stable, running multiple trial jobs increase the possibility of finding better models.
+One-Shot NAS usually has only one trial job with the full graph. However, running multiple such trial jobs leads to benefits. For example, in enas_mode multiple trial jobs could share the weights of the full graph to speedup the model training (or converge). Some One-Shot approaches are not stable, running multiple trial jobs increase the possibility of finding better models.
 
 NNI natively supports running multiple such trial jobs. The figure below shows how multiple trial jobs run on NNI.
 
@@ -200,11 +210,9 @@ We believe weight sharing (transferring) plays a key role on speeding up NAS, wh
 Example of weight sharing on NNI.
 
 
-## [__TODO__] General tuning algorithms for NAS
+## General tuning algorithms for NAS
 
-Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
-
-More tuning algorithms for NAS.
+Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have an [RL tuner based on PPO algorithm](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/ppo_tuner) for NAS. We expect efforts from community to design and implement better NAS algorithms.
 
 ## [__TODO__] Export best neural architecture and code
 
