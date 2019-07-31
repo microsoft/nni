@@ -59,53 +59,53 @@
   * 在 hyper-parameter 图中支持 'randint' 类型
   * 使用 ComponentUpdate 来避免不必要的刷新
 
-### Bug fix and other changes
+### Bug 修复和其它更新
 
-* Bug fix that `nnictl update` has inconsistent command styles
-* Support import data for SMAC tuner
-* Bug fix that experiment state transition from ERROR back to RUNNING
-* Fix bug of table entries
-* Nested search space refinement
-* Refine 'randint' type and support lower bound
-* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparision.md)
-* [Comparison of NAS algorithm](CommunitySharings/NasComparision.md)
-* [NNI practice on Recommenders](CommunitySharings/RecommendersSvd.md)
+* 修复 `nnictl update` 不一致的命令行风格
+* SMAC Tuner 支持导入数据
+* 支持 Experiment 状态从 ERROR 回到 RUNNING
+* 修复表格的 Bug
+* 优化嵌套搜索空间
+* 优化 'randint' 类型，并支持下限
+* [比较不同超参搜索调优算法](CommunitySharings/HpoComparision.md)
+* [NAS 算法的对比](CommunitySharings/NasComparision.md)
+* [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
 
-## Release 0.7 - 4/29/2018
+## 发布 0.7 - 4/29/2018
 
-### Major Features
+### 主要功能
 
-* [Support NNI on Windows](Tutorial/NniOnWindows.md) 
-  * NNI running on windows for local mode
-* [New advisor: BOHB](Tuner/BohbAdvisor.md) 
-  * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment) 
-  * Generate analysis results report after the experiment execution
-  * Support import data to tuner and advisor for tuning
-* [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig) 
-  * Specify GPU devices for NNI trial jobs by gpuIndices configuration, if gpuIndices is set in experiment configuration file, only the specified GPU devices are used for NNI trial jobs.
-* Web Portal enhancement 
-  * Decimal format of metrics other than default on the Web UI
-  * Hints in WebUI about Multi-phase
-  * Enable copy/paste for hyperparameters as python dict
-  * Enable early stopped trials data for tuners.
-* NNICTL provide better error message 
-  * nnictl provide more meaningful error message for YAML file format error
+* [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
+  * NNI 可在 Windows 上使用本机模式
+* [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
+  * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
+  * 在 Experiment 执行完后，可生成分析结果报告
+  * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
+* [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
+  * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
+* 改进 Web 界面 
+  * 在 Web 界面上使用十进制格式的指标
+  * 添加多阶段训练相关的提示
+  * 可将超参复制为 Python dict 格式
+  * 可将提前终止的 Trial 数据传入 Tuner。
+* 为 nnictl 提供更友好的错误消息 
+  * 为 YAML 文件格式错误提供更有意义的错误信息
 
-### Bug fix
+### Bug 修复
 
-* Unable to kill all python threads after nnictl stop in async dispatcher mode
-* nnictl --version does not work with make dev-install
-* All trail jobs status stays on 'waiting' for long time on OpenPAI platform
+* 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
+* nnictl --version 不能在 make dev-install 下使用
+* OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
 
-## Release 0.6 - 4/2/2019
+## 发布 0.6 - 4/2/2019
 
-### Major Features
+### 主要功能
 
-* [Version checking](TrainingService/PaiMode.md) 
-  * check whether the version is consistent between nniManager and trialKeeper
-* [Report final metrics for early stop job](https://github.com/microsoft/nni/issues/776) 
-  * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
+* [版本检查](TrainingService/PaiMode.md) 
+  * 检查 nniManager 和 trialKeeper 的版本是否一致
+* [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 The default value of includeIntermediateResults is false.
 * [Separate Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
   * Adds two pipes to separate message receiving channels for tuner and assessor.
 * Make log collection feature configurable
@@ -195,70 +195,70 @@
 
 * 将 [Kubeflow 训练平台](TrainingService/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
 * Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
-* Improvement on local code files uploading to OpenPAI HDFS
-* Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
+* 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
+* 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
-#### NNICTL improvements
+#### 改进 NNICTL
 
-* Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
+* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 可使用 **nnictl -v** 来显示安装的 NNI 版本。
 
-#### WebUI improvements
+#### 改进 WEB 界面
 
-* Enable modify concurrency number during experiment
-* Add feedback link to NNI github 'create issue' page
-* Enable customize top 10 trials regarding to metric numbers (largest or smallest)
-* Enable download logs for dispatcher & nnimanager
-* Enable automatic scaling of axes for metric number
-* Update annotation to support displaying real choice in searchspace
+* 在 Experiment 运行中可修改并发数量
+* 增加指向 NNI Github 的反馈链接，可直接创建问题
+* 可根据指标，定制选择（最大或最小）的前 10 个 Trial。
+* 为 dispatcher 和 nnimanager 提供下载日志的功能
+* 为指标数值图提供自动缩放的数轴
+* 改进 Annotation，支持在搜索空间中显示实际的选项
 
-### New examples
+### 新示例
 
-* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
+* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
-## Release 0.4 - 12/6/2018
+## 发布 0.4 - 12/6/2018
 
-### Major Features
+### 主要功能
 
-* [Kubeflow Training service](TrainingService/KubeflowMode.md) 
-  * Support tf-operator
-  * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](Tuner/GridsearchTuner.md)
-* [Hyperband tuner](Tuner/HyperbandAdvisor.md)
-* Support launch NNI experiment on MAC
-* WebUI 
-  * UI support for hyperband tuner
-  * Remove tensorboard button
-  * Show experiment error message
-  * Show line numbers in search space and trial profile
-  * Support search a specific trial by trial number
-  * Show trial's hdfsLogPath
-  * Download experiment parameters
+* [Kubeflow 训练平台](TrainingService/KubeflowMode.md) 
+  * 支持 tf-operator
+  * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+* [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
+* [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
+* 支持在 MAC 上运行 NNI Experiment
+* Web 界面 
+  * 支持 hyperband Tuner
+  * 移除 tensorboard 按钮
+  * 显示 Experiment 的错误消息
+  * 显示搜索空间和 Trial 配置的行号
+  * 支持通过指定的 Trial id 来搜索
+  * 显示 Trial 的 hdfsLogPath
+  * 下载 Experiment 参数
 
-### Others
+### 其它
 
-* Asynchronous dispatcher
-* Docker file update, add pytorch library
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API.
-* OpenPAI training service bug fix 
-  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device
-  * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
-  * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
-  * Add timestamp at the beginning of each log entry in trial keeper.
+* 异步调度
+* 更新 Docker 文件，增加 pytorch 库
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API.
+* 修复 OpenPAI 训练服务的 Bug 
+  * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。
+  * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
+  * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。
+  * 在 Trial keeper 的开始增加时间戳。
 
-## Release 0.3.0 - 11/2/2018
+## 发布 0.3.0 - 11/2/2018
 
-### NNICTL new features and updates
+### NNICTL 的新功能和更新
 
-* Support running multiple experiments simultaneously.
+* 支持同时运行多个 Experiment。
     
-    Before v0.3, NNI only supports running single experiment once a time. After this release, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
+    在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
     
     ```bash
     nnictl create --port 8081 --config <config file path>
     ```
 
-* Support updating max trial number. use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Tutorial/Nnictl.md) for the fully usage of NNICTL.
+* 支持更新最大 Trial 的数量。 use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Tutorial/Nnictl.md) for the fully usage of NNICTL.
 
 ### API new features and updates
 
