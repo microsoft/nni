@@ -3,7 +3,7 @@ import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import { Row, Col, Tabs, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
-import { TableObj, Parameters } from '../static/interface';
+import { TableObj, Parameters, ExperimentInfo } from '../static/interface';
 import { getFinal } from '../static/function';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
@@ -14,11 +14,6 @@ import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';
 import '../static/style/search.scss';
-
-interface ExperimentInfo {
-    platform: string;
-    optimizeMode: string;
-}
 
 interface TrialDetailState {
     accSource: object;
