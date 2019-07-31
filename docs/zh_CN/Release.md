@@ -105,20 +105,20 @@
 * [版本检查](TrainingService/PaiMode.md) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
-  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 The default value of includeIntermediateResults is false.
-* [Separate Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
-  * Adds two pipes to separate message receiving channels for tuner and assessor.
-* Make log collection feature configurable
-* Add intermediate result graph for all trials
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+* [分离 Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
+  * 增加两个管道来分离 Tuner 和 Assessor 的消息
+* 使日志集合功能可配置
+* 为所有 Trial 增加中间结果的视图
 
-### Bug fix
+### Bug 修复
 
-* [Add shmMB config key for OpenPAI](https://github.com/microsoft/nni/issues/842)
-* Fix the bug that doesn't show any result if metrics is dict
-* Fix the number calculation issue for float types in hyperband
-* Fix a bug in the search space conversion in SMAC tuner
-* Fix the WebUI issue when parsing experiment.json with illegal format
-* Fix cold start issue in Metis Tuner
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/microsoft/nni/issues/842)
+* 修复在指标为 dict 时，无法显示任何结果的 Bug。
+* 修复 hyperband 中浮点类型的计算问题
+* 修复 SMAC Tuner 中搜索空间转换的错误
+* 修复 Web 界面中解析 Experiment 的错误格式
+* 修复 Metis Tuner 冷启动时的错误
 
 ## 发布 0.5.2 - 3/4/2019
 
@@ -258,46 +258,46 @@
     nnictl create --port 8081 --config <config file path>
     ```
 
-* 支持更新最大 Trial 的数量。 use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Tutorial/Nnictl.md) for the fully usage of NNICTL.
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Tutorial/Nnictl.md) 查看完整帮助。
 
-### API new features and updates
+### API 的新功能和更新
 
-* <span style="color:red"><strong>breaking change</strong></span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
+* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
-* New API **nni.get_sequence_id()**. Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
+* 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
     
     ```bash
     git clone -b v0.3 https://github.com/microsoft/nni.git
     ```
 
-* **nni.report_final_result(result)** API supports more data types for result parameter.
+* **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
     
-    It can be of following types:
+    可用类型：
     
   * int
   * float
-  * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain any other key value pairs.
+  * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
 
-### New tuner support
+### 支持新的 Tuner
 
-* **Batch Tuner** which iterates all parameter combination, can be used to submit batch trial jobs.
+* **Batch Tuner（批处理调参器）** 会执行所有超参组合，可被用来批量提交 Trial 任务。
 
-### New examples
+### 新示例
 
-* A NNI Docker image for public usage:
+* 公开的 NNI Docker 映像：
     
     ```bash
     docker pull msranni/nni:latest
     ```
 
-* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
+* 新的 Trial 样例：[NNI Sklearn 样例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
-### Others
+### 其它
 
-* UI refactoring, refer to [WebUI doc](Tutorial/WebUI.md) for how to work with the new UI.
-* Continuous Integration: NNI had switched to Azure pipelines
+* 界面重构，参考[网页文档](Tutorial/WebUI.md)，了解如何使用新界面。
+* 持续集成：NNI 已切换到 Azure pipelines。
 
 ## Release 0.2.0 - 9/29/2018
 
@@ -327,10 +327,10 @@ Initial release of Neural Network Intelligence (NNI).
   * Support assessor(early stop) algorithms including: medianstop algorithm
   * Provide Python API for user defined tuners and assessors
   * Provide Python API for user to wrap trial code as NNI deployable codes
-* Experiments 
-  * Provide a command line toolkit 'nnictl' for experiments management
-  * Provide a WebUI for viewing experiments details and managing experiments
-* Continuous Integration 
-  * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu
-* Others 
-  * Support simple GPU job scheduling
+* Experiment 
+  * 提供命令行工具 'nnictl' 来管理 Experiment
+  * 提供网页界面来查看并管理 Experiment
+* 持续集成 
+  * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
+* 其它 
+  * 支持简单的 GPU 任务调度
