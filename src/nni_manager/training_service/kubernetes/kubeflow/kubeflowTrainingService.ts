@@ -383,7 +383,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.worker.replicas,
                                                                 tensorflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             if (tensorflowTrialConfig.ps !== undefined) {
-                let privateRegistrySecretName: string = await this.createRegistrySecret(tensorflowTrialConfig.ps.privateRegistryAuthPath);
+                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(tensorflowTrialConfig.ps.privateRegistryAuthPath);
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas,
                                                                 tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources, privateRegistrySecretName);
             }
@@ -391,11 +391,11 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         } else if (this.kubeflowTrialConfig.operatorType === 'pytorch-operator') {
             const pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             if (pytorchTrialConfig.worker !== undefined) {
-                let privateRegistrySecretName: string = await this.createRegistrySecret(pytorchTrialConfig.worker.privateRegistryAuthPath);
+                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.worker.privateRegistryAuthPath);
                 replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.worker.replicas,
                                                                     pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             }
-            let privateRegistrySecretName: string = await this.createRegistrySecret(pytorchTrialConfig.master.privateRegistryAuthPath);
+            let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.master.privateRegistryAuthPath);
             replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas,
                                                                 pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources, privateRegistrySecretName);
 
@@ -427,7 +427,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
      * @param podResources pod resource config section
      */
     private generateReplicaConfig(trialWorkingFolder: string, replicaNumber: number, replicaImage: string, runScriptFile: string,
-                                  podResources: any, privateRegistrySecretName: string): any {
+                                  podResources: any, privateRegistrySecretName: string | undefined): any {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }

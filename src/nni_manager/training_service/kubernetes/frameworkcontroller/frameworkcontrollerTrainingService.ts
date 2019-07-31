@@ -385,7 +385,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     private  generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string,
-                                   podResources: any, containerPort: number, privateRegistrySecretName: string): any {
+                                   podResources: any, containerPort: number, privateRegistrySecretName: string | undefined): any {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }

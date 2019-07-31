@@ -330,9 +330,9 @@ abstract class KubernetesTrainingService {
         return Promise.resolve();
     }
 
-    protected async createRegistrySecret(filePath: string | undefined): Promise<string> {
+    protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
         if(filePath === undefined || filePath === '') {
-            return '';
+            return undefined;
         }
         let body = fs.readFileSync(filePath).toString('base64');
         let registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
