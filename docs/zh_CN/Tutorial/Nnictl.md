@@ -114,8 +114,15 @@ nnictl 支持的命令：
 * 用法
   
   ```bash
-  nnictl stop [id]
+  nnictl stop [Options]
   ```
+
+* 选项
+  
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | False |     | 要停止的 Experiment 标识               |
+  | --port, -p | False |     | 要停止的 Experiment 使用的 RESTful 服务端口 |
 
 * 详细信息及样例
   
@@ -133,17 +140,24 @@ nnictl 支持的命令：
         ```
         
   
-  3. 可使用 'nnictl stop all' 来停止所有的 Experiment。
+  3. 如果指定了端口，并且此端口有正在运行的 Experiment，则会停止此 Experiment。
+    
+        ```bash
+        nnictl stop --port 8080
+        ```
+        
+  
+  4. 可使用 'nnictl stop all' 来停止所有的 Experiment。
     
         ```bash
         nnictl stop all
         ```
         
   
-  4. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
+  5. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
   
-  5. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
-  6. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
+  6. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
+  7. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
 
 <a name="update"></a>
 
