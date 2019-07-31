@@ -8,7 +8,7 @@ def random_archi_generator(nas_ss, random_state):
     chosen_archi = {}
     print("zql: nas search space: ", nas_ss)
     for block_name, block_value in nas_ss.items():
-        assert block_value['_type'] is "mutable_layer", "Random NAS Tuner only receives NAS search space"
+        assert block_value['_type'] == "mutable_layer", "Random NAS Tuner only receives NAS search space"
         block = block_value['_value']
         tmp_block = {}
         for layer_name, layer in block.items():
