@@ -569,4 +569,4 @@ class PPOTuner(Tuner):
         data:
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        pass
+        logger.warning('PPOTuner cannot leverage imported data.')

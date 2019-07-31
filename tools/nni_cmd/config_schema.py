@@ -121,9 +121,12 @@ tuner_schema_dict = {
     },
     'PPOTuner': {
         'builtinTunerName': 'PPOTuner',
-        Optional('classArgs'): {
+        'classArgs': {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('trials_per_update'): setNumberRange('trials_per_update', int, 0, 99999),
+            Optional('epochs_per_update'): setNumberRange('epochs_per_update', int, 0, 99999),
         },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'customized': {
