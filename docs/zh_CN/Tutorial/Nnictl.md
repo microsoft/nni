@@ -117,12 +117,12 @@ nnictl 支持的命令：
   nnictl stop [Options]
   ```
 
-* Options
+* 选项
   
-  | Name, shorthand | Required | Default | Description                                  |
-  | --------------- | -------- | ------- | -------------------------------------------- |
-  | id              | False    |         | The id of the experiment you want to stop    |
-  | --port, -p      | False    |         | Rest port of the experiment you want to stop |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                                           |
+  | ---------- | ----- | --- | -------------------------------------------- |
+  | id         | False |     | The id of the experiment you want to stop    |
+  | --port, -p | False |     | Rest port of the experiment you want to stop |
 
 * Details & Examples
   
