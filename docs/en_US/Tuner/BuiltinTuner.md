@@ -42,6 +42,8 @@ TPE, as a black-box optimization, can be used in various scenarios and shows goo
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 
+Note: We have optimized the parallelism of TPE for large-scale trial-concurrency. For the principle of optimization or turn-on optimization, please refer to [TPE document](HyperoptTuner.md).
+
 **Usage example:**
 
 ```yaml

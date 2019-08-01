@@ -34,6 +34,10 @@ jobs:
       cd test
       PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+    displayName: 'nnicli test'
 
 - job: 'basic_test_pr_macOS'
   pool:
@@ -61,3 +65,7 @@ jobs:
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
+  - script: |
+      cd test
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 cli_test.py
+    displayName: 'nnicli test'
