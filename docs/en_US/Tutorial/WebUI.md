@@ -44,11 +44,11 @@ Click the tab "Intermediate Result" to see the lines graph.
 
 We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide three data if you want to use the filter button to see the trend of some trial.
 
-What data should be written in the first input? Maybe you find a step those trials became better or worse. In other word, it's an important and concerned step. Just input it into the first input.
+What data should be written in the first input? Maybe you find an epoch those trials became better or worse. In other word, it's an important and concerned epoch. Just input it into the first input.
 
-After selecting the step, you should input your focus metric's range on this step. Yes, it's the min and max value. Like this picture, I choose the step is 13 and the metric's range is 20-60.
+After selecting the epoch, you should input your focus metric's range on this epoch. Yes, it's the min and max value. Like this picture, I choose the epoch is 13 and the metric's range is 20-60.
 
-As a result, I filter these trials the metric's range is 20-60 on the 13 step.
+As a result, I filter these trials the metric's range is 20-60 on the 13 epoch.
 
 ![](../../img/webui-img/filter_intermediate.png)
 
