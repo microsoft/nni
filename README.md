@@ -336,6 +336,7 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 Now we have some external usage examples run in NNI from our contributors. Thanks our lovely contributors. And welcome more and more people to join us!
 * Run [ENAS](examples/tuners/enas_nni/README.md) in NNI
 * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) in NNI 
+* [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) in NNI
 
 ## **Feedback**
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI
