@@ -127,7 +127,7 @@ class GridSearchTuner(Tuner):
 
     def update_search_space(self, search_space):
         '''
-        Check if the search space is valid and expand it: only contains 'choice', 'randint', ''
+        Check if the search space is valid and expand it: support only 'choice', 'quniform', randint'
         '''
         self.expanded_search_space = self.json2parameter(search_space)
 
