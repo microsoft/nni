@@ -348,7 +348,7 @@ class PPOTuner(Tuner):
                 chosen_layer_temp['chosen_layer'] = layer['layer_choice'][0]
 
             if layer['optional_input_size'] not in [0, 1, [0, 1]]:
-                raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s', layer['optional_input_size'])
+                raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'%(layer['optional_input_size']))
             if isinstance(layer['optional_input_size'], list):
                 actions_spaces.append(["None", *layer['optional_inputs']])
                 actions_to_config.append((block_name, l_name, 'chosen_inputs'))
@@ -375,8 +375,8 @@ class PPOTuner(Tuner):
         actions_spaces = []
         actions_to_config = []
         for b_name, block in search_space.items():
-            if block['_type'] is not 'mutable_layer':
-                raise ValueError('PPOTuner only accept mutable_layer type in search space, but the current one is %s', block['_type'])
+            if block['_type'] != 'mutable_layer':
+                raise ValueError('PPOTuner only accept mutable_layer type in search space, but the current one is %s'%(block['_type']))
             block = block['_value']
             act, act_map = self._process_one_nas_space(b_name, block)
             actions_spaces.extend(act)

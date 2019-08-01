@@ -188,8 +188,6 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
 
         extra_tensors = {}
 
-        print('zql: not normalize_observations')
-
         # encode_observation is not necessary anymore as we use embedding_lookup
         encoded_x = X
 

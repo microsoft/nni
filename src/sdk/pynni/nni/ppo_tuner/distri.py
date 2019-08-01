@@ -166,8 +166,6 @@ def _matching_fc(tensor, name, size, nsteps, init_scale, init_bias, np_mask, is_
         mask = tf.get_variable("act_mask", dtype=tf.float32, initializer=np_mask[0], trainable=False)
         mask_npinf = tf.get_variable("act_mask_npinf", dtype=tf.float32, initializer=np_mask[1], trainable=False)
         res = fc(tensor, name, size, init_scale=init_scale, init_bias=init_bias)
-        print("zql: res shape: ", res.get_shape())
-        print("zql: nsteps, size", nsteps, size)
         if not is_act_model:
             re_res = tf.reshape(res, [-1, nsteps, size])
             masked_res = tf.math.multiply(re_res, mask)
