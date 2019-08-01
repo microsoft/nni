@@ -167,6 +167,7 @@ dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
 	mkdir -p build
 	ln -sf ../src/sdk/pynni/nni build/nni
+	ln -sf ../src/sdk/pynni/nnicli build/nnicli
 	ln -sf ../tools/nni_annotation build/nni_annotation
 	ln -sf ../tools/nni_cmd build/nni_cmd
 	ln -sf ../tools/nni_trial_tool build/nni_trial_tool

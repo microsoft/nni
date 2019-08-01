@@ -114,6 +114,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 yAxis: {
                     name: 'Default metric',
                     type: 'value',
+                    scale: true
                 },
                 series: [{
                     symbolSize: 6,

@@ -103,7 +103,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     height={heights}
                 >
                     <div className="card-container log-tab-body" style={{ height: heights }}>
-                        <Tabs type="card">
+                        <Tabs type="card" style={{ height: heights + 19 }}>
                             <TabPane tab="Experiment Parameters" key="Experiment">
                                 <div className="just-for-log">
                                     <MonacoEditor
@@ -115,7 +115,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                                     />
                                 </div>
                                 <Row className="buttons">
-                                    <Col span={12}>
+                                    <Col span={12}  className="download">
                                         <Button
                                             type="primary"
                                             onClick={this.downExperimentParameters}
