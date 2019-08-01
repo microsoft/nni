@@ -46,7 +46,7 @@ class GridSearchTuner(Tuner):
     Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
     It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger than the value in front of it.
 
-    Type 'randint' gives all possible intergers in range(low, high). Note that 'high' is not included.
+    Type 'randint' gives all possible intergers in range[low, high). Note that 'high' is not included.
     '''
 
     def __init__(self):
