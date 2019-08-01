@@ -18,3 +18,4 @@ trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
+  nasMode: oneshot_mode
