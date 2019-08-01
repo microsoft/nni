@@ -10,3 +10,4 @@
     Recommenders 中使用 NNI<RecommendersSvd>
     神经网络结构搜索（NAS）的对比<NasComparision>
     超参调优算法的对比<HpoComparision>
+    Parallelizing Optimization for TPE <ParallelizingTpeSearch>
