@@ -78,6 +78,12 @@
   * 这表示变量值会类似于 round(exp(normal(mu, sigma)) / q) * q
   * 适用于值是“平滑”的离散变量，但某一边有界。
 
+* {"_type":"mutable_layer","_value":{mutable_layer_infomation}}
+  
+  * Type for [Neural Architecture Search Space](../AdvancedFeature/GeneralNasInterfaces.md). Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
+  * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
+  * For detailed usage, please refer to [General NAS Interfaces](../AdvancedFeature/GeneralNasInterfaces.md).
+
 ## 每种 Tuner 支持的搜索空间类型
 
 |                     |  choice  | randint  | uniform  | quniform | loguniform | qloguniform |  normal  | qnormal  | lognormal | qlognormal |
