@@ -233,6 +233,8 @@ pai_trial_schema = {
     'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
     'memoryMB': setType('memoryMB', int),
     'image': setType('image', str),
+    Optional('authFile'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                         error='ERROR: authFile format error, authFile format is hdfs://xxx.xxx.xxx.xxx:xxx'),
     Optional('shmMB'): setType('shmMB', int),
     Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
                          error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
@@ -261,7 +263,8 @@ kubeflow_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('master'): {
             'replicas': setType('replicas', int),
@@ -269,7 +272,8 @@ kubeflow_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('worker'):{
             'replicas': setType('replicas', int),
@@ -277,7 +281,8 @@ kubeflow_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }
     }
 }
@@ -324,7 +329,8 @@ frameworkcontroller_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }]
     }
 }

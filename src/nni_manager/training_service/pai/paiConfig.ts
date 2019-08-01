@@ -71,6 +71,8 @@ export class PAIJobConfig {
     public readonly image: string;
     // Code directory on HDFS
     public readonly codeDir: string;
+    //authentication file used for private Docker registry 
+    public readonly authFile?: string;
 
     // List of taskRole, one task role at least
     public taskRoles: PAITaskRole[];
@@ -87,12 +89,13 @@ export class PAIJobConfig {
      * @param taskRoles List of taskRole, one task role at least
      */
     constructor(jobName: string, image : string, codeDir : string,
-                taskRoles : PAITaskRole[], virtualCluster: string) {
+                taskRoles : PAITaskRole[], virtualCluster: string, authFile?: string) {
         this.jobName = jobName;
         this.image = image;
         this.codeDir = codeDir;
         this.taskRoles = taskRoles;
         this.virtualCluster = virtualCluster;
+        this.authFile = authFile;
     }
 }
 
@@ -129,14 +132,17 @@ export class NNIPAITrialConfig extends TrialConfig {
     public virtualCluster?: string;
     //Shared memory for one task in the task role
     public shmMB?: number;
+    //authentication file used for private Docker registry 
+    public authFile?: string;
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
-                image: string, virtualCluster?: string, shmMB?: number) {
+                image: string, virtualCluster?: string, shmMB?: number, authFile?: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
         this.virtualCluster = virtualCluster;
         this.shmMB = shmMB;
+        this.authFile = authFile;
     }
 }
