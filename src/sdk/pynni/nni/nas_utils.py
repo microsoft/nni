@@ -133,7 +133,7 @@ def oneshot_mode(
                   for func_name, func in funcs.items()]
     output_num = len(layer_outs)
     rate = 0.01 ** (1 / output_num)
-    noise_shape = [output_num] + [1] * len(optional_inputs[0].get_shape())
+    noise_shape = [output_num] + [1] * len(layer_outs[0].get_shape())
     layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
     layer_out = tf.reduce_sum(layer_outs, axis=0)
 
