@@ -29,7 +29,7 @@ Here is a simulation of the TPE algorithm in a two-dimensional search space. The
 
 ![](../../img/parallel_tpe_search_ei2.PNG)
 
-TPE perfors well when we use it in sequential, but if we provide a larger concurrency, then **there will be a large number of points produced in the same EI state**, too concentrated points will reduce the exploration ability of the tuner, resulting in resources waste.
+TPE performs well when we use it in sequential, but if we provide a larger concurrency, then **there will be a large number of points produced in the same EI state**, too concentrated points will reduce the exploration ability of the tuner, resulting in resources waste.
 
 Here is the simulation figure when we set `concurrency=60`, It can be seen that this phenomenon is obvious.
 

@@ -198,9 +198,11 @@ class HyperoptTuner(Tuner):
         algorithm_name : str
             algorithm_name includes "tpe", "random_search" and anneal".
         optimize_mode : str
-        parallel_optimize : bool
+        parallel_optimize : bool 
+            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
         constant_liar_type : str
             constant_liar_type including "min", "max" and "mean"
+            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
         """
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
