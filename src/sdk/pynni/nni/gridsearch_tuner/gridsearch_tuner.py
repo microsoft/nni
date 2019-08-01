@@ -44,7 +44,7 @@ class GridSearchTuner(Tuner):
     Type 'choice' will select one of the options. Note that it can also be nested.
 
     Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
-    It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger that the value in front of it.
+    It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger than the value in front of it.
 
     Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)]
     and sample and then change the sampled value back.
