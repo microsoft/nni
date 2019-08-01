@@ -442,7 +442,7 @@ class PAITrainingService implements TrainingService {
                 // Task command
                 nniPaiTrialCommand,
                 // Task shared memory
-                this.paiTrialConfig.shmMB
+                this.paiTrialConfig.shmMB,
             )
         ];
 
@@ -456,7 +456,9 @@ class PAITrainingService implements TrainingService {
             // PAI Task roles
             paiTaskRoles,
             // Add Virutal Cluster
-            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString()
+            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
+            //Task auth File
+            this.paiTrialConfig.authFile
         );
 
         // Step 2. Upload code files in codeDir onto HDFS
