@@ -192,8 +192,10 @@ Kubeflow 模式的配置有下列主键：
   * image 
     * 必填。 在 kubeflow 模式中，Kubernetes 会安排 Trial 程序在 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) 中执行。 此键用来指定 Trial 程序的 pod 使用的 Docker 映像。
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。
+  * privateRegistryAuthPath 
+    * Optional field, specify `config.json` file path that holds an authorization token of docker registry, used to pull image from private registry. [Refer](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
   * apiVersion 
-    * 必填。 Kubeflow 的 API 版本。
+    * Required key. The API version of your Kubeflow.
 * ps (可选)。 此部分用于配置 TensorFlow 的 parameter 服务器角色。
 * master (可选)。 此部分用于配置 PyTorch 的 parameter 服务器角色。
 
