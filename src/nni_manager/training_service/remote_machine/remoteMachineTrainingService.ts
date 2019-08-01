@@ -601,6 +601,7 @@ class RemoteMachineTrainingService implements TrainingService {
         let command: string;
         // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
         // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
+        // If gpuNum is undefined, will not set CUDA_VISIBLE_DEVICES in script
         if (this.trialConfig.gpuNum === undefined) {
             command = this.trialConfig.command;
         } else {

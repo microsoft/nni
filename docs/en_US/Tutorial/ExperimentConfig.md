@@ -266,7 +266,7 @@ machineList:
 
   * __gpuNum__
 
-      __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number. If the field is not set, NNI will not set `CUDA_VISIBLE_DEVICE` in script, and will not manage gpu resource.
+      __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number. If the field is not set, NNI will not set `CUDA_VISIBLE_DEVICES` in script (that is, will not control the visibility of GPUs on trial command through `CUDA_VISIBLE_DEVICES`), and will not manage gpu resource.
 
       Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
 

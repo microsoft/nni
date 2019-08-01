@@ -48,7 +48,7 @@ export class GPUScheduler {
      * Schedule a machine according to the constraints (requiredGPUNum)
      * @param requiredGPUNum required GPU number
      */
-    public scheduleMachine(requiredGPUNum: number, trialJobDetail : RemoteMachineTrialJobDetail) : RemoteMachineScheduleResult {
+    public scheduleMachine(requiredGPUNum: number | undefined, trialJobDetail : RemoteMachineTrialJobDetail) : RemoteMachineScheduleResult {
         if(requiredGPUNum === undefined) {
             requiredGPUNum = 0;
         }
@@ -58,7 +58,7 @@ export class GPUScheduler {
 
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
         const eligibleRM: RemoteMachineMeta[] = allRMs.filter((rmMeta : RemoteMachineMeta) =>
-                 rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || rmMeta.gpuSummary.gpuCount >= requiredGPUNum);
+                 rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && rmMeta.gpuSummary.gpuCount >= requiredGPUNum));
         if (eligibleRM.length === 0) {
             // If the required gpu number exceeds the upper limit of all machine's GPU number
             // Return REQUIRE_EXCEED_TOTAL directly
