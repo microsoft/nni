@@ -55,13 +55,16 @@ After finishing the trial code through the annotation above, users have implicit
 ```javascript
 {
     "mutable_1": {
-        "layer_1": {
-            "layer_choice": ["conv(ch=128)", "pool", "identity"],
-            "optional_inputs": ["out1", "out2", "out3"],
-            "optional_input_size": 2
-        },
-        "layer_2": {
-            ...
+        "_type": "mutable_layer",
+        "_value": {
+            "layer_1": {
+                "layer_choice": ["conv(ch=128)", "pool", "identity"],
+                "optional_inputs": ["out1", "out2", "out3"],
+                "optional_input_size": 2
+            },
+            "layer_2": {
+                ...
+            }
         }
     }
 }
@@ -104,7 +107,7 @@ trial:
 +   #choice: classic_mode, enas_mode, oneshot_mode
 +   nasMode: enas_mode
 ```
-Similar to classic_mode, in enas_mode you need to specify a tuner for nas, as it also needs to receive subgraphs from tuner (or controller using the terminology in the paper). Since this trial job needs to receive multiple subgraphs from tuner, each one for a mini-batch, two lines need to be added to the trial code to receive the next subgraph (i.e., `nni.training_update`) and report the report the result of the current subgraph. Below is an example:
+Similar to classic_mode, in enas_mode you need to specify a tuner for nas, as it also needs to receive subgraphs from tuner (or controller using the terminology in the paper). Since this trial job needs to receive multiple subgraphs from tuner, each one for a mini-batch, two lines need to be added to the trial code to receive the next subgraph (i.e., `nni.training_update`) and report the result of the current subgraph. Below is an example:
 ```python
 for _ in range(num):
     # here receives and enables a new subgraph
@@ -117,7 +120,7 @@ Here, `nni.training_update` is to do some update on the full graph. In enas_mode
 
 **\*oneshot_mode\***: following the training approach in [this paper][6]. Different from enas_mode which trains the full graph by training large numbers of subgraphs, in oneshot_mode the full graph is built and dropout is added to candidate inputs and also added to candidate ops' outputs. Then this full graph is trained like other DL models. [Detailed Description](#OneshotMode). (currently only supported on tensorflow). 
 
-To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file in v0.9/v1.0, not anymore in future releases.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
+To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 ```diff
 trial:
     command: your command to run the trial
@@ -129,7 +132,7 @@ trial:
 
 **\*darts_mode\***: following the training approach in [this paper][3]. It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode).
 
-To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file in v0.9/v1.0, not anymore in future releases.)
+To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.)
 ```diff
 trial:
     command: your command to run the trial
