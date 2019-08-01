@@ -305,7 +305,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
-          this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
+          await this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
@@ -329,8 +329,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
      * @param frameworkcontrollerJobName job name
      * @param podResources  pod template
      */
-    private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
-                                                 frameworkcontrollerJobName : string, podResources : any) : any {
+    private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
+                                                 frameworkcontrollerJobName : string, podResources : any) : Promise<any> {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -345,12 +345,14 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             if (containerPort === undefined) {
                 throw new Error('Container port is not initialized');
             }
+            
             const taskRole: any = this.generateTaskRoleConfig(
                 trialWorkingFolder,
                 this.fcTrialConfig.taskRoles[index].image,
                 `run_${this.fcTrialConfig.taskRoles[index].name}.sh`,
                 podResources[index],
-                containerPort
+                containerPort,
+                await this.createRegistrySecret(this.fcTrialConfig.taskRoles[index].privateRegistryAuthPath)
             );
             taskRoles.push({
                 name: this.fcTrialConfig.taskRoles[index].name,
@@ -363,7 +365,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             });
         }
 
-        return {
+        return Promise.resolve({
             apiVersion: `frameworkcontroller.microsoft.com/v1`,
             kind: 'Framework',
             metadata: {
@@ -379,11 +381,11 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 executionType: 'Start',
                 taskRoles: taskRoles
             }
-        };
+        });
     }
 
-    private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string,
-                                   podResources: any, containerPort: number): any {
+    private  generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string,
+                                   podResources: any, containerPort: number, privateRegistrySecretName: string | undefined): any {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -451,13 +453,22 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     mountPath: '/mnt/frameworkbarrier'
                 }]
         }];
-        const spec: any = {
-                containers: containers,
-                initContainers: initContainers,
-                restartPolicy: 'OnFailure',
-                volumes: volumeSpecMap.get('nniVolumes'),
-                hostNetwork: false
+        
+        let spec: any = {
+            containers: containers,
+            initContainers: initContainers,
+            restartPolicy: 'OnFailure',
+            volumes: volumeSpecMap.get('nniVolumes'),
+            hostNetwork: false
         };
+        if(privateRegistrySecretName) {
+            spec.imagePullSecrets = [
+                {
+                    name: privateRegistrySecretName 
+                }
+             ]
+        }
+
         if (this.fcClusterConfig.serviceAccountName !== undefined) {
             spec.serviceAccountName = this.fcClusterConfig.serviceAccountName;
         }
