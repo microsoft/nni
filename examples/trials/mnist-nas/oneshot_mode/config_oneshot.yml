@@ -15,7 +15,7 @@ tuner:
   classFileName: random_nas_tuner.py
   className: RandomNASTuner
 trial:
-  command: python3 mnist.py
+  command: python3 mnist-oneshot.py
   codeDir: .
   gpuNum: 0
   nasMode: oneshot_mode

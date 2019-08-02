@@ -73,7 +73,7 @@ def avg_pool(inputs, size=-1):
     """avg_pool downsamples a feature map."""
     x_input = sum_op(inputs)
     if size in [3, 5, 7]:
-        return tf.nn.avg_pool(x_input, ksize=[1, size, size, 1], strides=[1, size, size, 1], padding='SAME')
+        return tf.nn.avg_pool(x_input, ksize=[1, size, size, 1], strides=[1, 1, 1, 1], padding='SAME')
     else:
         raise Exception("Unknown filter size: %d." % size)
 
@@ -81,7 +81,7 @@ def max_pool(inputs, size=-1):
     """max_pool downsamples a feature map."""
     x_input = sum_op(inputs)
     if size in [3, 5, 7]:
-        return tf.nn.max_pool(x_input, ksize=[1, size, size, 1], strides=[1, size, size, 1], padding='SAME')
+        return tf.nn.max_pool(x_input, ksize=[1, size, size, 1], strides=[1, 1, 1, 1], padding='SAME')
     else:
         raise Exception("Unknown filter size: %d." % size)
 
