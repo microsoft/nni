@@ -149,17 +149,13 @@ class PPOModel:
         # Get the nb of env
         nenvs = model_config.num_envs
 
-        # Get state_space and action_space
-        ob_space = model_config.observation_space
-        ac_space = model_config.action_space
-
         # Calculate the batch_size
         self.nbatch = nbatch = nenvs * model_config.nsteps
         nbatch_train = nbatch // model_config.nminibatches
         self.nupdates = self.model_config.total_timesteps//self.nbatch
 
         # Instantiate the model object (that creates act_model and train_model)
-        self.model = Model(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=nenvs, nbatch_train=nbatch_train,
+        self.model = Model(policy=policy, nbatch_act=nenvs, nbatch_train=nbatch_train,
                            nsteps=model_config.nsteps, ent_coef=model_config.ent_coef, vf_coef=model_config.vf_coef,
                            max_grad_norm=model_config.max_grad_norm, np_mask=self.np_mask)
 

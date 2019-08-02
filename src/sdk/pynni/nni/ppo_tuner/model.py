@@ -25,7 +25,7 @@ import tensorflow as tf
 
 from .util import initialize, get_session
 
-class Model(object):
+class Model:
     """
     We use this object to :
     __init__:
@@ -38,8 +38,11 @@ class Model(object):
     save/load():
     - Save load the model
     """
-    def __init__(self, *, policy, ob_space, ac_space, nbatch_act, nbatch_train,
-                nsteps, ent_coef, vf_coef, max_grad_norm, mpi_rank_weight=1, comm=None, microbatch_size=None, np_mask=None):
+    def __init__(self, *, policy, nbatch_act, nbatch_train,
+                 nsteps, ent_coef, vf_coef, max_grad_norm, microbatch_size=None, np_mask=None):
+        """
+        init
+        """
         self.sess = sess = get_session()
 
         with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
@@ -131,11 +134,13 @@ class Model(object):
         self.initial_state = act_model.initial_state
 
         initialize()
-        global_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="")
 
     def train(self, lr, cliprange, obs, returns, masks, actions, values, neglogpacs, states=None):
-        # Here we calculate advantage A(s,a) = R + yV(s') - V(s)
-        # Returns = R + yV(s')
+        """
+        train the model.
+        Here we calculate advantage A(s,a) = R + yV(s') - V(s)
+        Returns = R + yV(s')
+        """
         advs = returns - values
 
         # Normalize the advantages
@@ -159,4 +164,3 @@ class Model(object):
             self.stats_list + [self._train_op],
             td_map
         )[:-1]
-
