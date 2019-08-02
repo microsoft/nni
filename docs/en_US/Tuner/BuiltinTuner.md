@@ -421,7 +421,7 @@ Note that the only acceptable type of search space is `mutable_layer`. `optional
 
 **Suggested scenario**
 
-When you are using NNI NAS interface in your trial code to do neural architecture search, PPOTuner is recommended. It has relatively high data efficiency. [Detailed Description](./PPOTuner.md)
+When you are using NNI NAS interface in your trial code to do neural architecture search, PPOTuner is recommended. It has relatively high data efficiency but is suggested when you have large amount of computation resource. You could try it on very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [Detailed Description](./PPOTuner.md)
 
 **Requirement of classArg**
 
