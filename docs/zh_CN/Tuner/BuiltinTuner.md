@@ -41,9 +41,9 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-Note: We have optimized the parallelism of TPE for large-scale trial-concurrency. For the principle of optimization or turn-on optimization, please refer to [TPE document](HyperoptTuner.md).
+注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 [TPE 文档](HyperoptTuner.md)。
 
-**Usage example:**
+**示例**
 
 ```yaml
 # config.yml
@@ -61,15 +61,15 @@ tuner:
 
 > 名称：**Random**
 
-**Suggested scenario**
+**建议场景**
 
-Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm. [Detailed Description](./HyperoptTuner.md)
+在每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 或者需要均匀的探索搜索空间。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
 
-**Requirement of classArg:**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -85,15 +85,15 @@ tuner:
 
 > 名称：**Anneal**
 
-**Suggested scenario**
+**建议场景**
 
-Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
+当每个 Trial 的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。 [详细说明](./HyperoptTuner.md)
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -111,11 +111,11 @@ tuner:
 
 > 名称：**Evolution**
 
-**Suggested scenario**
+**建议场景**
 
-Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress. [Detailed Description](./EvolutionTuner.md)
+此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -133,25 +133,25 @@ tuner:
 
 > 名称：**SMAC**
 
-**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
 
-**Installation**
+**安装**
 
-SMAC need to be installed by following command before first use.
+SMAC 在第一次使用前，必须用下面的命令先安装。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。 [详细说明](./SmacTuner.md)
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -169,9 +169,9 @@ tuner:
 
 > 名称：BatchTuner
 
-**Suggested scenario**
+**建议场景**
 
-If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner. [Detailed Description](./BatchTuner.md)
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。 [详细说明](./BatchTuner.md)
 
 **Usage example**
 
