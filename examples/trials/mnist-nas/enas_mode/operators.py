@@ -16,6 +16,8 @@ def sum_op(inputs):
     """sum_op"""
     fixed_input = inputs[0][0]
     optional_input = tf.reduce_sum(inputs[1], axis=0)
+    if len(optional_input.get_shape()) < 1:
+        return fixed_input
     fixed_shape = fixed_input.get_shape().as_list()
     optional_shape = optional_input.get_shape().as_list()
     assert fixed_shape[1] == fixed_shape[2]
@@ -38,10 +40,7 @@ def conv2d(inputs, size=-1, in_ch=-1, out_ch=-1):
 
 def twice_conv2d(inputs, size=-1, in_ch=-1, out_ch=-1):
     """twice_conv2d"""
-    if not inputs[1]:
-        x_input = inputs[0][0]
-    else:
-        x_input = sum_op(inputs)
+    x_input = sum_op(inputs)
     if size in  [3, 7]:
         w_matrix1 = weight_variable([1, size, in_ch, int(out_ch/2)])
         out = tf.nn.conv2d(x_input, w_matrix1, strides=[1, 1, 1, 1], padding='SAME')

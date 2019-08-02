@@ -11,7 +11,7 @@ tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
   #SMAC (SMAC should be installed through nnictl)
   #codeDir: ~/nni/nni/examples/tuners/random_nas_tuner
-  codeDir: ../../tuners/random_nas_tuner
+  codeDir: ../../../tuners/random_nas_tuner
   classFileName: random_nas_tuner.py
   className: RandomNASTuner
 trial:
