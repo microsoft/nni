@@ -7,7 +7,7 @@ __nnictl_update_searchspace_cmds="--filename"
 __nnictl_update_concurrency_cmds="--value"
 __nnictl_update_duration_cmds="--value"
 __nnictl_update_trialnum_cmds="--value"
-__nnictl_stop_cmds="--port"
+__nnictl_stop_cmds="--port all"
 __nnictl_trial_cmds="ls kill codegen"
 __nnictl_trial_kill_cmds="--trial_id"
 __nnictl_trial_codegen_cmds="--trial_id"
@@ -30,12 +30,6 @@ __nnictl_tensorboard_cmds="start stop"
 __nnictl_tensorboard_start_cmds="--trial_id --port"
 __nnictl_top_cmds="--time"
 
-# list of arguments that accept a file name
-__nnictl_file_args=" --config -c --filename -f "
-
-# list of arguments that accept a trial ID
-__nnictl_trial_args=" --trial_id -t "
-
 # list of commands that accept an experiment ID as second argument
 __nnictl_2st_expid_cmds=" resume stop import export "
 # list of commands that accept an experiment ID as third argument
@@ -48,15 +42,27 @@ __nnictl_remain_args()
     local ret=${!1}  # ret = $__nnictl_xxx_cmds
     # for arg in COMP_WORDS[:-1]:
     for arg in "${COMP_WORDS[@]::${#COMP_WORDS[@]}-1}"; do
-        if [[ $arg == --* ]]; then
-            local ret=${ret/$arg/}  # remove it from $ret
-        fi
+        local ret=${ret/$arg/}  # remove it from $ret
     done
     echo $ret
 }
 
+# complete files with specific extension
+__nnictl_complete_extension()
+{
+    COMPREPLY=($(compgen -f -X "!*.$1" -- ${COMP_WORDS[-1]}))
+    if [[ -z "${COMPREPLY[*]}" ]]; then
+        # if there is no matching file here, search in sub-directories
+        COMPREPLY=($(compgen -d -S "/" -- ${COMP_WORDS[-1]}))
+        compopt -o nospace
+    fi
+}
+
 _nnictl()
 {
+    local cur=${COMP_WORDS[-1]}
+    local last=${COMP_WORDS[-2]}
+
     if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
         # completing frst argument from __nnictl_cmds
         COMPREPLY=($(compgen -W "$__nnictl_cmds" -- "${COMP_WORDS[1]}"))
@@ -69,30 +75,49 @@ _nnictl()
         # add experiment IDs to candidates if desired
         if [[ " resume stop import export " =~ " ${COMP_WORDS[1]} " ]]; then
             local experiments=$(ls ~/nni/experiments 2>/dev/null)
-            COMPREPLY+=($(compgen -W "$experiments" -- "${COMP_WORDS[-1]}"))
+            COMPREPLY+=($(compgen -W "$experiments" -- $cur))
         fi
 
-    elif [[ ${COMP_WORDS[-2]} != -* ]]; then
+    elif [[ $last != -* || $last == --debug ]]; then
         # last argument does not starts with "-", so this one is likely to be "--xxx"
         local args=__nnictl_${COMP_WORDS[1]}_${COMP_WORDS[2]}_cmds
-        if [[ $args =~ "-" || -v ${!args} ]]; then
+        if [[ $args =~ "-" || -z ${!args} ]]; then
             # the second argument starts with "-", use __nnictl_${FirstArg}_cmds
             local args=__nnictl_${COMP_WORDS[1]}_cmds
         fi
         # remove already set arguments from candidates
         local remain_args=$(__nnictl_remain_args ${args})
-        COMPREPLY=($(compgen -W "$remain_args" -- "${COMP_WORDS[-1]}"))
+        COMPREPLY=($(compgen -W "$remain_args" -- $cur))
 
         # if this is 3rd arguments, try adding experiment IDs to candidates
         if [[ ${#COMP_WORDS[@]} -eq 4 ]]; then
             if [[ $__nnictl_3rd_expid_cmds =~ " ${COMP_WORDS[1]} " && ${COMP_WORDS[2]} != "list" ]]; then
                 local experiments=$(ls ~/nni/experiments 2>/dev/null)
-                COMPREPLY+=($(compgen -W "$experiments" -- "${COMP_WORDS[-1]}"))
+                COMPREPLY+=($(compgen -W "$experiments" -- $cur))
             fi
         fi
 
-    elif [[ $__nnictl_trial_args =~ " ${COMP_WORDS[-2]} " ]]; then
-        # complete trial IDs
+    elif [[ ${COMP_WORDS[1]} == "export" ]]; then
+        # "export" command is somewhat unique
+        if [[ " --type -t " =~ " $last " ]]; then
+            COMPREPLY=($(compgen -W "json csv" -- $cur))
+
+        elif [[ " --filename -f " =~ " $last " ]]; then
+            # try to detect whether complete CSV file or JSON file
+            [[ "$COMP_LINE" =~ "csv" ]] && local export_csv=1
+            [[ "$COMP_LINE" =~ "json" ]] && local export_json=1
+            if [[ -n $export_csv && -z $export_json ]]; then
+                local ext="csv"         # CSV only
+            elif [[ -n $export_json && -z $export_csv ]]; then
+                local ext="json"        # JSON only
+            else
+                local ext="@(csv|json)" # both
+            fi
+            __nnictl_complete_extension "$ext"
+        fi
+
+    elif [[ " --trial_id -t " =~ " $last " ]]; then
+        # complete trial ID
         if [[ -e ${HOME}/nni/experiments/${COMP_WORDS[2]} ]]; then
             local trials=$(ls -d ~/nni/experiments/${COMP_WORDS[2]}/trials/* 2>/dev/null | grep -o '[^/]*$')
         elif [[ -e "${HOME}/nni/experiments/${COMP_WORDS[3]}" ]]; then
@@ -100,11 +125,15 @@ _nnictl()
         else
             local trials=$(ls -d ~/nni/experiments/*/trials/* 2>/dev/null | grep -o '[^/]*$')
         fi
-        COMPREPLY=($(compgen -W "$trials" -- "${COMP_WORDS[-1]}"))
+        COMPREPLY=($(compgen -W "$trials" -- $cur))
 
-    elif [[ $__nnictl_file_args =~ " ${COMP_WORDS[-2]} " ]]; then
-        # complete file names
-        COMPREPLY=($(compgen -f "${COMP_WORDS[-1]}"))
+    elif [[ " --config -c " =~ " $last " ]]; then
+        # complete YAML file
+        __nnictl_complete_extension "@(yml|yaml)"
+
+    elif [[ " --filename -f " =~ " $last " ]]; then
+        # complete JSON file
+        __nnictl_complete_extension "json"
 
     fi
 }
