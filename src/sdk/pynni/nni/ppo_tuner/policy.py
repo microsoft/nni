@@ -22,13 +22,12 @@ build policy/value network from model
 """
 
 import tensorflow as tf
-import numpy as np
 
 from .distri import CategoricalPdType
 from .util import lstm_model, fc, observation_placeholder, adjust_shape
 
 
-class PolicyWithValue(object):
+class PolicyWithValue:
     """
     Encapsulates fields and methods for RL policy and value function estimation with shared parameters
     """
@@ -73,7 +72,7 @@ class PolicyWithValue(object):
 
         assert estimate_q is False
         self.vf = fc(vf_latent, 'vf', 1)
-        self.vf = self.vf[:,0]
+        self.vf = self.vf[:, 0]
 
         if is_act_model:
             self._build_model_for_step()
@@ -90,7 +89,7 @@ class PolicyWithValue(object):
         return sess.run(variables, feed_dict)
 
     def _build_model_for_step(self):
-        # multiply with weight and apply mask on self.act_latent to generate 
+        # multiply with weight and apply mask on self.act_latent to generate
         self.act_step = step = tf.placeholder(shape=(), dtype=tf.int64, name='act_step')
         with tf.variable_scope('pi', reuse=tf.AUTO_REUSE):
             from .util import ortho_init
@@ -121,12 +120,12 @@ class PolicyWithValue(object):
                 for xs, ls in zip(x_shape_list, logits_shape_list):
                     if xs is not None and ls is not None:
                         assert xs == ls, 'shape mismatch: {} in x vs {} in logits'.format(xs, ls)
-    
+
                 x = tf.one_hot(x, logits.get_shape().as_list()[-1])
             else:
                 # already encoded
                 assert x.shape.as_list() == logits.shape.as_list()
-    
+
             return tf.nn.softmax_cross_entropy_with_logits_v2(
                 logits=logits,
                 labels=x)
@@ -171,7 +170,11 @@ class PolicyWithValue(object):
         return self._evaluate(self.vf, ob, *args, **kwargs)
 
 
-def build_lstm_policy(model_config, value_network=None,  normalize_observations=False, estimate_q=False, **policy_kwargs):
+def build_lstm_policy(model_config, value_network=None, estimate_q=False, **policy_kwargs):
+    """
+    build lstm policy and value network, they share the same lstm network.
+    the parameters all use their default values.
+    """
     policy_network = lstm_model(**policy_kwargs)
 
     def policy_fn(nbatch=None, nsteps=None, sess=None, observ_placeholder=None, np_mask=None, is_act_model=False):
@@ -196,7 +199,6 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
                     policy_latent, recurrent_tensors = policy_network(encoded_x, nenv, model_config.observation_space.n)
                     extra_tensors.update(recurrent_tensors)
 
-
         _v_net = value_network
 
         assert _v_net is None or _v_net == 'shared'
@@ -216,4 +218,3 @@ def build_lstm_policy(model_config, value_network=None,  normalize_observations=
         return policy
 
     return policy_fn
-
