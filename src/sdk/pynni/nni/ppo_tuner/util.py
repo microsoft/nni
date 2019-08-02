@@ -130,7 +130,6 @@ def lstm_model(nlstm=128, layer_norm=False):
 
     return network_fn
 
-
 def ortho_init(scale=1.0):
     """init approach"""
     def _ortho_init(shape, dtype, partition_info=None):
@@ -157,14 +156,12 @@ def fc(x, scope, nh, *, init_scale=1.0, init_bias=0.0):
         b = tf.get_variable("b", [nh], initializer=tf.constant_initializer(init_bias))
         return tf.matmul(x, w)+b
 
-
 def _check_shape(placeholder_shape, data_shape):
     """
     check if two shapes are compatible (i.e. differ only by dimensions of size 1, or by the batch dimension)
     """
 
     return True
-
 
 # ================================================================
 # Shape adjustment for feeding into tf placeholders
@@ -181,7 +178,6 @@ def adjust_shape(placeholder, data):
     Returns:
     reshaped data
     """
-
     if not isinstance(data, np.ndarray) and not isinstance(data, list):
         return data
     if isinstance(data, list):
@@ -193,7 +189,6 @@ def adjust_shape(placeholder, data):
         'Shape of data {} is not compatible with shape of the placeholder {}'.format(data.shape, placeholder_shape)
 
     return np.reshape(data, placeholder_shape)
-
 
 # ================================================================
 # Global session
@@ -230,7 +225,6 @@ def initialize():
     get_session().run(tf.variables_initializer(new_variables))
 
     ALREADY_INITIALIZED.update(new_variables)
-
 
 def observation_placeholder(ob_space, batch_size=None, name='Ob'):
     """

@@ -115,6 +115,7 @@ class CategoricalPd(Pd):
         return tf.nn.softmax_cross_entropy_with_logits_v2(
             logits=self.logits,
             labels=x)
+
     def kl(self, other):
         """kl"""
         a0 = self.logits - tf.reduce_max(self.logits, axis=-1, keepdims=True)
@@ -125,6 +126,7 @@ class CategoricalPd(Pd):
         z1 = tf.reduce_sum(ea1, axis=-1, keepdims=True)
         p0 = ea0 / z0
         return tf.reduce_sum(p0 * (a0 - tf.log(z0) - a1 + tf.log(z1)), axis=-1)
+
     def entropy(self):
         """compute entropy"""
         a0 = self.logits - tf.reduce_max(self.logits, axis=-1, keepdims=True)
@@ -132,6 +134,7 @@ class CategoricalPd(Pd):
         z0 = tf.reduce_sum(ea0, axis=-1, keepdims=True)
         p0 = ea0 / z0
         return tf.reduce_sum(p0 * (tf.log(z0) - a0), axis=-1)
+
     def sample(self):
         """sample from logits"""
         if not self.is_act_model:
@@ -144,6 +147,7 @@ class CategoricalPd(Pd):
         else:
             u = tf.random_uniform(tf.shape(self.logits), dtype=self.logits.dtype)
             return tf.argmax(self.logits - tf.log(-tf.log(u)), axis=-1)
+
     @classmethod
     def fromflat(cls, flat):
         return cls(flat)
@@ -159,6 +163,7 @@ class CategoricalPdType(PdType):
         self.is_act_model = is_act_model
     def pdclass(self):
         return CategoricalPd
+
     def pdfromlatent(self, latent_vector, init_scale=1.0, init_bias=0.0):
         """add fc and create CategoricalPd"""
         pdparam, mask, mask_npinf = _matching_fc(latent_vector, 'pi', self.ncat, self.nsteps,

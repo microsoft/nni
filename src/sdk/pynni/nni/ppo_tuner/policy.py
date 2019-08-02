@@ -130,7 +130,6 @@ class PolicyWithValue:
                 logits=logits,
                 labels=x)
 
-
         self.act_action = sample(masked_logits, re_npinf_piece)
         self.act_neglogp = neglogp(masked_logits, self.act_action)
 
