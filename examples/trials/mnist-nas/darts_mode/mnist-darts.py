@@ -211,7 +211,7 @@ def main(params):
             feed_dict={mnist_network.images: batch[0],
                         mnist_network.labels: batch[1],
                         mnist_network.keep_prob: 1 - params['dropout_rate']}
-            mnist_network.train_step.run(feed_dict=feed_idct)
+            mnist_network.train_step.run(feed_dict=feed_dict)
 
             if i % 100 == 0:
                 test_acc = mnist_network.accuracy.eval(
