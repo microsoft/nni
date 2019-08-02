@@ -80,7 +80,7 @@
 
 * {"_type":"mutable_layer","_value":{mutable_layer_infomation}}
   
-  * Type for [Neural Architecture Search Space](../AdvancedFeature/GeneralNasInterfaces.md). Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
+  * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
   * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
   * For detailed usage, please refer to [General NAS Interfaces](../AdvancedFeature/GeneralNasInterfaces.md).
 
@@ -94,23 +94,17 @@
 |   Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     SMAC Tuner      | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |             |          |          |           |            |
 |     Batch Tuner     | &#10003; |          |          |          |            |             |          |          |           |            |
-|  Grid Search Tuner  | &#10003; |          |          | &#10003; |            |  &#10003;   |          |          |           |            |
+|  Grid Search Tuner  | &#10003; | &#10003; |          | &#10003; |            |             |          |          |           |            |
 |  Hyperband Advisor  | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 |      GP Tuner       | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   |          |          |           |            |
 
 已知的局限：
 
-* 注意，在 Grid Search Tuner 中，为了使用方便 `quniform` 和 `qloguniform` 的定义也有所改变，其中的 q 表示采样值的数量。 详情如下：
-  
-      * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
-      
-      * 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
-      
+* Note that Metis Tuner only supports numerical `choice` now
 
-* 注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
-
-* 请注意，对于嵌套搜索空间：
+* Note that for nested search space:
   
-      * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
-      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
+      * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
+      
+      * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
