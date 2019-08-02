@@ -10,3 +10,4 @@ In addtion to the official tutorilas and examples, we encourage community contri
     NNI in Recommenders <RecommendersSvd>
     Neural Architecture Search Comparison <NasComparision>
     Hyper-parameter Tuning Algorithm Comparsion <HpoComparision>
+    Parallelizing Optimization for TPE <ParallelizingTpeSearch>
