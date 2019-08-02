@@ -15,7 +15,7 @@ def bias_variable(shape):
 def sum_op(inputs):
     """sum_op"""
     fixed_input = inputs[0][0]
-    optional_input = tf.reduce_sum(inputs[1], axis=0)
+    optional_input = inputs[1][0]
     fixed_shape = fixed_input.get_shape().as_list()
     optional_shape = optional_input.get_shape().as_list()
     assert fixed_shape[1] == fixed_shape[2]
@@ -29,7 +29,10 @@ def sum_op(inputs):
 
 def conv2d(inputs, size=-1, in_ch=-1, out_ch=-1):
     """conv2d returns a 2d convolution layer with full stride."""
-    x_input = sum_op(inputs)
+    if not inputs[1]:
+        x_input = inputs[0][0]
+    else:
+        x_input = sum_op(inputs)
     if size in [1, 3]:
         w_matrix = weight_variable([size, size, in_ch, out_ch])
         return tf.nn.conv2d(x_input, w_matrix, strides=[1, 1, 1, 1], padding='SAME')
@@ -52,7 +55,10 @@ def twice_conv2d(inputs, size=-1, in_ch=-1, out_ch=-1):
 
 def dilated_conv(inputs, size=3, in_ch=-1, out_ch=-1):
     """dilated_conv"""
-    x_input = sum_op(inputs)
+    if not inputs[1]:
+        x_input = inputs[0][0]
+    else:
+        x_input = sum_op(inputs)
     if size == 3:
         w_matrix = weight_variable([size, size, in_ch, out_ch])
         return tf.nn.atrous_conv2d(x_input, w_matrix, rate=2, padding='SAME')
@@ -61,7 +67,10 @@ def dilated_conv(inputs, size=3, in_ch=-1, out_ch=-1):
 
 def separable_conv(inputs, size=-1, in_ch=-1, out_ch=-1):
     """separable_conv"""
-    x_input = sum_op(inputs)
+    if not inputs[1]:
+        x_input = inputs[0][0]
+    else:
+        x_input = sum_op(inputs)
     if size in [3, 5, 7]:
         depth_matrix = weight_variable([size, size, in_ch, 1])
         point_matrix = weight_variable([1, 1, 1*in_ch, out_ch])
@@ -72,17 +81,23 @@ def separable_conv(inputs, size=-1, in_ch=-1, out_ch=-1):
 
 def avg_pool(inputs, size=-1):
     """avg_pool downsamples a feature map."""
-    x_input = sum_op(inputs)
+    if not inputs[1]:
+        x_input = inputs[0][0]
+    else:
+        x_input = sum_op(inputs)
     if size in [3, 5, 7]:
-        return tf.nn.avg_pool(x_input, ksize=[1, size, size, 1], strides=[1, size, size, 1], padding='SAME')
+        return tf.nn.avg_pool(x_input, ksize=[1, size, size, 1], strides=[1, 1, 1, 1], padding='SAME')
     else:
         raise Exception("Unknown filter size: %d." % size)
 
 def max_pool(inputs, size=-1):
     """max_pool downsamples a feature map."""
-    x_input = sum_op(inputs)
+    if not inputs[1]:
+        x_input = inputs[0][0]
+    else:
+        x_input = sum_op(inputs)
     if size in [3, 5, 7]:
-        return tf.nn.max_pool(x_input, ksize=[1, size, size, 1], strides=[1, size, size, 1], padding='SAME')
+        return tf.nn.max_pool(x_input, ksize=[1, size, size, 1], strides=[1, 1, 1, 1], padding='SAME')
     else:
         raise Exception("Unknown filter size: %d." % size)
 
