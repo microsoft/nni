@@ -33,7 +33,7 @@ __all__ = ['generate_search_space', 'expand_annotations']
 
 slash = '/'
 if sys.platform == "win32":
-    slash = '\\'        
+    slash = '\\'
 
 def generate_search_space(code_dir):
     """Generate search space from Python source code.
@@ -41,7 +41,7 @@ def generate_search_space(code_dir):
     code_dir: directory path of source files (str)
     """
     search_space = {}
-    
+
     if code_dir.endswith(slash):
         code_dir = code_dir[:-1]
 
@@ -76,15 +76,16 @@ def _generate_file_search_space(path, module):
     return search_space
 
 
-def expand_annotations(src_dir, dst_dir, exp_id='', trial_id=''):
+def expand_annotations(src_dir, dst_dir, exp_id='', trial_id='', nas_mode=None):
     """Expand annotations in user code.
     Return dst_dir if annotation detected; return src_dir if not.
     src_dir: directory path of user code (str)
     dst_dir: directory to place generated files (str)
+    nas_mode: the mode of NAS given that NAS interface is used
     """
     if src_dir[-1] == slash:
         src_dir = src_dir[:-1]
-    
+
     if dst_dir[-1] == slash:
         dst_dir = dst_dir[:-1]
 
@@ -108,7 +109,7 @@ def expand_annotations(src_dir, dst_dir, exp_id='', trial_id=''):
             dst_path = os.path.join(dst_subdir, file_name)
             if file_name.endswith('.py'):
                 if trial_id == '':
-                    annotated |= _expand_file_annotations(src_path, dst_path)
+                    annotated |= _expand_file_annotations(src_path, dst_path, nas_mode)
                 else:
                     module = package + file_name[:-3]
                     annotated |= _generate_specific_file(src_path, dst_path, exp_id, trial_id, module)
@@ -120,10 +121,10 @@ def expand_annotations(src_dir, dst_dir, exp_id='', trial_id=''):
 
     return dst_dir if annotated else src_dir
 
-def _expand_file_annotations(src_path, dst_path):
+def _expand_file_annotations(src_path, dst_path, nas_mode):
     with open(src_path) as src, open(dst_path, 'w') as dst:
         try:
-            annotated_code = code_generator.parse(src.read())
+            annotated_code = code_generator.parse(src.read(), nas_mode)
             if annotated_code is None:
                 shutil.copyfile(src_path, dst_path)
                 return False

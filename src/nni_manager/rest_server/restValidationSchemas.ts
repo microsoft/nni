@@ -51,9 +51,12 @@ export namespace ValidationSchemas {
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
+                authFile: joi.string(),
+                nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode'),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -63,6 +66,7 @@ export namespace ValidationSchemas {
                 ps: joi.object({
                         replicas: joi.number().min(1).required(),
                         image: joi.string().min(1),
+                        privateRegistryAuthPath: joi.string().min(1),
                         outputDir: joi.string(),
                         cpuNum: joi.number().min(1),
                         memoryMB: joi.number().min(100),
@@ -72,6 +76,7 @@ export namespace ValidationSchemas {
                 master: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -82,6 +87,7 @@ export namespace ValidationSchemas {
                     name: joi.string().min(1),
                     taskNum: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -133,7 +139,7 @@ export namespace ValidationSchemas {
                 })
             }),
             nni_manager_ip: joi.object({
-                nniManagerIp: joi.string().min(1) 
+                nniManagerIp: joi.string().min(1)
             })
         }
     };
@@ -161,7 +167,7 @@ export namespace ValidationSchemas {
                 checkpointDir: joi.string().allow('')
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

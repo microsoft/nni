@@ -28,12 +28,6 @@
 
 ## **在 Windows 上安装**
 
-在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
 推荐使用 Anaconda 或 Miniconda。
 
 * **通过 pip 命令安装 NNI**
@@ -48,12 +42,10 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
     
     先决条件：`python >=3.5`, `git`, `PowerShell`
     
-    然后可以使用管理员或当前用户安装 NNI：
-    
     ```bash
     git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
-    powershell .\install.ps1
+    powershell -ExecutionPolicy Bypass -file install.ps1
     ```
 
 ## **系统需求**

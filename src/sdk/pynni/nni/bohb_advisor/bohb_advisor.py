@@ -31,7 +31,8 @@ import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
+from nni.utils import OptimizeMode, MetricType, extract_scalar_reward, randint_to_quniform
+from nni.common import multi_phase_enabled
 
 from .config_generator import CG_BOHB
 
@@ -79,9 +80,9 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
     return params_id
 
 
-class Bracket():
+class Bracket(object):
     """
-    A bracket in BOHB, all the information of a bracket is managed by 
+    A bracket in BOHB, all the information of a bracket is managed by
     an instance of this class.
 
     Parameters
@@ -106,7 +107,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.max_budget = max_budget
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
 
         self.n = math.ceil((s_max + 1) * eta**s / (s + 1) - _epsilon)
         self.r = max_budget / eta**s
@@ -251,7 +252,7 @@ class BOHB(MsgDispatcherBase):
     BOHB performs robust and efficient hyperparameter optimization
     at scale by combining the speed of Hyperband searches with the
     guidance and guarantees of convergence of Bayesian Optimization.
-    Instead of sampling new configurations at random, BOHB uses 
+    Instead of sampling new configurations at random, BOHB uses
     kernel density estimators to select promising candidates.
 
     Parameters
@@ -259,33 +260,34 @@ class BOHB(MsgDispatcherBase):
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     min_budget: float
-		The smallest budget to consider. Needs to be positive!
-	max_budget: float
-		The largest budget to consider. Needs to be larger than min_budget!
-		The budgets will be geometrically distributed
-        :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
+        The smallest budget to consider. Needs to be positive!
+    max_budget: float
+        The largest budget to consider. Needs to be larger than min_budget!
+        The budgets will be geometrically distributed
+        :math:`a^2 + b^2 = c^2 \\sim \\eta^k` for :math:`k\\in [0, 1, ... , num\\_subsets - 1]`.
     eta: int
-		In each iteration, a complete run of sequential halving is executed. In it,
-		after evaluating each configuration on the same subset size, only a fraction of
-		1/eta of them 'advances' to the next round.
-		Must be greater or equal to 2.
+        In each iteration, a complete run of sequential halving is executed. In it,
+        after evaluating each configuration on the same subset size, only a fraction of
+        1/eta of them 'advances' to the next round.
+        Must be greater or equal to 2.
     min_points_in_model: int
-		number of observations to start building a KDE. Default 'None' means
-		dim+1, the bare minimum.
+        number of observations to start building a KDE. Default 'None' means
+        dim+1, the bare minimum.
     top_n_percent: int
-		percentage ( between 1 and 99, default 15) of the observations that are considered good.
-	num_samples: int
-		number of samples to optimize EI (default 64)
-	random_fraction: float
-		fraction of purely random configurations that are sampled from the
-		prior without the model.
-	bandwidth_factor: float
-		to encourage diversity, the points proposed to optimize EI, are sampled
-		from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
-	min_bandwidth: float
-		to keep diversity, even when all (good) samples have the same value for one of the parameters,
-		a minimum bandwidth (Default: 1e-3) is used instead of zero.
+        percentage ( between 1 and 99, default 15) of the observations that are considered good.
+    num_samples: int
+        number of samples to optimize EI (default 64)
+    random_fraction: float
+    fraction of purely random configurations that are sampled from the
+        prior without the model.
+    bandwidth_factor: float
+        to encourage diversity, the points proposed to optimize EI, are sampled
+        from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
+    min_bandwidth: float
+        to keep diversity, even when all (good) samples have the same value for one of the parameters,
+        a minimum bandwidth (Default: 1e-3) is used instead of zero.
     """
+
     def __init__(self,
                  optimize_mode='maximize',
                  min_budget=1,
@@ -328,14 +330,15 @@ class BOHB(MsgDispatcherBase):
         # config generator
         self.cg = None
 
-    def load_checkpoint(self):
-        pass
-
-    def save_checkpoint(self):
-        pass
+        # record the latest parameter_id of the trial job trial_job_id.
+        # if there is no running parameter_id, self.job_id_para_id_map[trial_job_id] == None
+        # new trial job is added to this dict and finished trial job is removed from it.
+        self.job_id_para_id_map = dict()
+        # record the unsatisfied parameter request from trial jobs
+        self.unsatisfied_jobs = []
 
     def handle_initialize(self, data):
-        """Initialize Tuner, including creating Bayesian optimization-based parametric models 
+        """Initialize Tuner, including creating Bayesian optimization-based parametric models
         and search space formations
 
         Parameters
@@ -398,12 +401,12 @@ class BOHB(MsgDispatcherBase):
         for _ in range(self.credit):
             self._request_one_trial_job()
 
-    def _request_one_trial_job(self):
+    def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration.
 
         If this function is called, Command will be sent by BOHB:
         a. If there is a parameter need to run, will return "NewTrialJob" with a dict:
-        { 
+        {
             'parameter_id': id of new hyperparameter
             'parameter_source': 'algorithm'
             'parameters': value of new hyperparameter
@@ -422,17 +425,38 @@ class BOHB(MsgDispatcherBase):
                 'parameters': ''
             }
             send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
-            return
+            return None
         assert self.generated_hyper_configs
-        params = self.generated_hyper_configs.pop()
+        params = self.generated_hyper_configs.pop(0)
         ret = {
             'parameter_id': params[0],
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
         self.parameters[params[0]] = params[1]
-        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
-        self.credit -= 1
+        return ret
+
+    def _request_one_trial_job(self):
+        """get one trial job, i.e., one hyperparameter configuration.
+
+        If this function is called, Command will be sent by BOHB:
+        a. If there is a parameter need to run, will return "NewTrialJob" with a dict:
+        {
+            'parameter_id': id of new hyperparameter
+            'parameter_source': 'algorithm'
+            'parameters': value of new hyperparameter
+        }
+        b. If BOHB don't have parameter waiting, will return "NoMoreTrialJobs" with
+        {
+            'parameter_id': '-1_0_0',
+            'parameter_source': 'algorithm',
+            'parameters': ''
+        }
+        """
+        ret = self._get_one_trial_job()
+        if ret is not None:
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            self.credit -= 1
 
     def handle_update_search_space(self, data):
         """change json format to ConfigSpace format dict<dict> -> configspace
@@ -458,30 +482,30 @@ class BOHB(MsgDispatcherBase):
                     var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
             elif _type == 'quniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     q=search_space[var]["_value"][2]))
             elif _type == 'loguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     log=True))
             elif _type == 'qloguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
                     q=search_space[var]["_value"][2], log=True))
             elif _type == 'normal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
                     var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
             elif _type == 'qnormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     q=search_space[var]["_value"][3]))
             elif _type == 'lognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     log=True))
             elif _type == 'qlognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
                     q=search_space[var]["_value"][3], log=True))
             else:
                 raise ValueError(
@@ -501,23 +525,38 @@ class BOHB(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         logger.debug('Tuner handle trial end, result is %s', data)
-
         hyper_params = json_tricks.loads(data['hyper_params'])
-        s, i, _ = hyper_params['parameter_id'].split('_')
+        self._handle_trial_end(hyper_params['parameter_id'])
+        if data['trial_job_id'] in self.job_id_para_id_map:
+            del self.job_id_para_id_map[data['trial_job_id']]
+
+    def _send_new_trial(self):
+        while self.unsatisfied_jobs:
+            ret = self._get_one_trial_job()
+            if ret is None:
+                break
+            one_unsatisfied = self.unsatisfied_jobs.pop(0)
+            ret['trial_job_id'] = one_unsatisfied['trial_job_id']
+            ret['parameter_index'] = one_unsatisfied['parameter_index']
+            # update parameter_id in self.job_id_para_id_map
+            self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+        for _ in range(self.credit):
+            self._request_one_trial_job()
+
+    def _handle_trial_end(self, parameter_id):
+        s, i, _ = parameter_id.split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
         if hyper_configs is not None:
             logger.debug(
                 'bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            for _ in range(self.credit):
-                self._request_one_trial_job()
         # Finish this bracket and generate a new bracket
         elif self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
             self.generate_new_bracket()
-            for _ in range(self.credit):
-                self._request_one_trial_job()
+        self._send_new_trial()
 
     def handle_report_metric_data(self, data):
         """reveice the metric data and update Bayesian optimization with final result
@@ -534,36 +573,58 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
 
-        assert 'value' in data
-        value = extract_scalar_reward(data['value'])
-        if self.optimize_mode is OptimizeMode.Maximize:
-            reward = -value
+        if data['type'] == MetricType.REQUEST_PARAMETER:
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
+            ret = self._get_one_trial_job()
+            if ret is None:
+                self.unsatisfied_jobs.append({'trial_job_id': data['trial_job_id'], 'parameter_index': data['parameter_index']})
+            else:
+                ret['trial_job_id'] = data['trial_job_id']
+                ret['parameter_index'] = data['parameter_index']
+                # update parameter_id in self.job_id_para_id_map
+                self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
+                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
-            reward = value
-        assert 'parameter_id' in data
-        s, i, _ = data['parameter_id'].split('_')
+            assert 'value' in data
+            value = extract_scalar_reward(data['value'])
+            if self.optimize_mode is OptimizeMode.Maximize:
+                reward = -value
+            else:
+                reward = value
+            assert 'parameter_id' in data
+            s, i, _ = data['parameter_id'].split('_')
+            logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
+            s = int(s)
 
-        logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
-        s = int(s)
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # because when the first parameter_id is created, trial_job_id is not known yet.
+            if data['trial_job_id'] in self.job_id_para_id_map:
+                assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
+            else:
+                self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
 
-        assert 'type' in data
-        if data['type'] == 'FINAL':
-            # and PERIODICAL metric are independent, thus, not comparable.
-            assert 'sequence' in data
-            self.brackets[s].set_config_perf(
-                int(i), data['parameter_id'], sys.maxsize, value)
-            self.completed_hyper_configs.append(data)
-       
-            _parameters = self.parameters[data['parameter_id']]
-            _parameters.pop(_KEY)
-            # update BO with loss, max_s budget, hyperparameters
-            self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
-        elif data['type'] == 'PERIODICAL':
-            self.brackets[s].set_config_perf(
-                int(i), data['parameter_id'], data['sequence'], value)
-        else:
-            raise ValueError(
-                'Data type not supported: {}'.format(data['type']))
+            assert 'type' in data
+            if data['type'] == MetricType.FINAL:
+                # and PERIODICAL metric are independent, thus, not comparable.
+                assert 'sequence' in data
+                self.brackets[s].set_config_perf(
+                    int(i), data['parameter_id'], sys.maxsize, value)
+                self.completed_hyper_configs.append(data)
+
+                _parameters = self.parameters[data['parameter_id']]
+                _parameters.pop(_KEY)
+                # update BO with loss, max_s budget, hyperparameters
+                self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
+            elif data['type'] == MetricType.PERIODICAL:
+                self.brackets[s].set_config_perf(
+                    int(i), data['parameter_id'], data['sequence'], value)
+            else:
+                raise ValueError(
+                    'Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
         pass

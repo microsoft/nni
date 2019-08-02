@@ -27,6 +27,7 @@ interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
     intermediate: Array<number>;
+    progress?: number;
 }
 
 interface Experiment {
@@ -97,6 +98,7 @@ interface Dimobj {
     axisTick?: object;
     axisLabel?: object;
     axisLine?: object;
+    nameTextStyle?: object;
 }
 
 interface ParaObj {
@@ -108,10 +110,15 @@ interface FinalResult {
     data: string;
 }
 
+interface Intermedia {
+    name: string; // id
+    type: string;
+    data: Array<number | object>; // intermediate data
+    hyperPara: object; // each trial hyperpara value
+}
+
 export {
-    TableObj, Parameters, Experiment, 
-    AccurPoint, TrialNumber, TrialJob,
-    DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, Dimobj, FinalResult, FinalType,
-    TooltipForIntermediate, SearchSpace
+    TableObj, Parameters, Experiment, AccurPoint, TrialNumber, TrialJob,
+    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalResult, FinalType,
+    TooltipForIntermediate, SearchSpace, Intermedia
 };

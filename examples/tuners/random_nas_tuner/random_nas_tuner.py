@@ -7,7 +7,9 @@ def random_archi_generator(nas_ss, random_state):
     '''
     chosen_archi = {}
     print("zql: nas search space: ", nas_ss)
-    for block_name, block in nas_ss.items():
+    for block_name, block_value in nas_ss.items():
+        assert block_value['_type'] == "mutable_layer", "Random NAS Tuner only receives NAS search space whose _type is 'mutable_layer'"
+        block = block_value['_value']
         tmp_block = {}
         for layer_name, layer in block.items():
             tmp_layer = {}
@@ -49,12 +51,12 @@ class RandomNASTuner(Tuner):
         self.searchspace_json = search_space
         self.random_state = np.random.RandomState()
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         '''generate
         '''
         return random_archi_generator(self.searchspace_json, self.random_state)
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         '''receive
         '''
         pass

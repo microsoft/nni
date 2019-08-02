@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
-import { Row, Col, Tabs, Input, Select, Button, Icon } from 'antd';
+import { Row, Col, Tabs, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
 import { TableObj, Parameters } from '../static/interface';
 import { getFinal } from '../static/function';
@@ -13,6 +13,7 @@ import Intermediate from './trial-detail/Intermeidate';
 import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';
+import '../static/style/search.scss';
 
 interface TrialDetailState {
     accSource: object;
@@ -31,9 +32,16 @@ interface TrialDetailState {
     hyperCounts: number; // user click the hyper-parameter counts
     durationCounts: number;
     intermediateCounts: number;
+    searchFilter: string;
+    searchPlaceHolder: string;
 }
 
-class TrialsDetail extends React.Component<{}, TrialDetailState> {
+interface TrialsDetailProps {
+    interval: number;
+    whichPageToFresh: string;
+}
+
+class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
 
     public _isMounted = false;
     public interAccuracy = 0;
@@ -41,6 +49,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     public interAllTableList = 2;
 
     public tableList: TableList | null;
+    public searchInput: HTMLInputElement | null;
 
     private titleOfacc = (
         <Title1 text="Default metric" icon="3.png" />
@@ -61,7 +70,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         </div>
     );
 
-    constructor(props: {}) {
+    constructor(props: TrialsDetailProps) {
         super(props);
 
         this.state = {
@@ -80,7 +89,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             isMultiPhase: false,
             hyperCounts: 0,
             durationCounts: 0,
-            intermediateCounts: 0
+            intermediateCounts: 0,
+            searchFilter: 'id',
+            searchPlaceHolder: 'Search by id'
         };
     }
 
@@ -99,7 +110,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     Object.keys(trialJobs).map(item => {
                         let desc: Parameters = {
                             parameters: {},
-                            intermediate: []
+                            intermediate: [],
+                            progress: 1
                         };
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
@@ -120,6 +132,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         const tempHyper = trialJobs[item].hyperParameters;
                         if (tempHyper !== undefined) {
                             const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+                            desc.progress = tempHyper.length;
                             if (typeof getPara === 'string') {
                                 desc.parameters = JSON.parse(getPara);
                             } else {
@@ -139,7 +152,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             const items = metricSource[key];
                             if (items.trialJobId === id) {
                                 // succeed trial, last intermediate result is final result
-                                // final result format may be object 
+                                // final result format may be object
                                 if (typeof JSON.parse(items.data) === 'object') {
                                     mediate.push(JSON.parse(items.data).default);
                                 } else {
@@ -205,15 +218,33 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 }));
             }
         } else {
-            const { tableListSource } = this.state;
+            const { tableListSource, searchFilter } = this.state;
             const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
-                if (item.sequenceId.toString() === targetValue
-                    || item.id.includes(targetValue)
-                    || item.status.toUpperCase().includes(targetValue.toUpperCase())
-                ) {
-                    searchResultList.push(item);
+                switch (searchFilter) {
+                    case 'id':
+                        if (item.id.toUpperCase().includes(targetValue.toUpperCase())) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'Trial No.':
+                        if (item.sequenceId.toString() === targetValue) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'status':
+                        if (item.status.toUpperCase().includes(targetValue.toUpperCase())) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    case 'parameters':
+                        const strParameters = JSON.stringify(item.description.parameters, null, 4);
+                        if (strParameters.includes(targetValue)) {
+                            searchResultList.push(item);
+                        }
+                        break;
+                    default:
                 }
             });
             if (this._isMounted) {
@@ -227,21 +258,24 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     // close timer
     isOffIntervals = () => {
-        axios(`${MANAGER_IP}/check-status`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    switch (res.data.status) {
-                        case 'DONE':
-                        case 'ERROR':
-                        case 'STOPPED':
+        const { interval } = this.props;
+        if (interval === 0) {
+            window.clearInterval(this.interTableList);
+            return;
+        } else {
+            axios(`${MANAGER_IP}/check-status`, {
+                method: 'GET'
+            })
+                .then(res => {
+                    if (res.status === 200 && this._isMounted) {
+                        const expStatus = res.data.status;
+                        if (expStatus === 'DONE' || expStatus === 'ERROR' || expStatus === 'STOPPED') {
                             window.clearInterval(this.interTableList);
-                            break;
-                        default:
+                            return;
+                        }
                     }
-                }
-            });
+                });
+        }
     }
 
     handleEntriesSelect = (value: string) => {
@@ -270,6 +304,19 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     test = () => {
         alert('TableList component was not properly initialized.');
+    }
+
+    getSearchFilter = (value: string) => {
+        // clear input value and re-render table
+        if (this.searchInput !== null) {
+            this.searchInput.value = '';
+            if (this._isMounted === true) {
+                this.setState(() => ({ isHasSearch: false }));
+            }
+        }
+        if (this._isMounted === true) {
+            this.setState(() => ({ searchFilter: value, searchPlaceHolder: `Search by ${value}` }));
+        }
     }
 
     // get and set logCollection val
@@ -304,11 +351,23 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             });
     }
 
+    componentWillReceiveProps(nextProps: TrialsDetailProps) {
+        const { interval, whichPageToFresh } = nextProps;
+        window.clearInterval(this.interTableList);
+        if (interval !== 0) {
+            this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
+        }
+        if (whichPageToFresh.includes('/detail')) {
+            this.getDetailSource();
+        }
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
+        const { interval } = this.props;
         this.getDetailSource();
-        this.interTableList = window.setInterval(this.getDetailSource, 10000);
+        this.interTableList = window.setInterval(this.getDetailSource, interval * 1000);
         this.checkExperimentPlatform();
     }
 
@@ -322,14 +381,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
             entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
-            whichGraph
+            whichGraph, searchPlaceHolder
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
             <div>
                 <div className="trial" id="tabsty">
                     <Tabs type="card" onChange={this.handleWhichTabs}>
-                        {/* <TabPane tab={this.titleOfacc} key="1" destroyInactiveTabPane={true}> */}
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
@@ -350,7 +408,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
                             <Duration source={source} whichGraph={whichGraph} />
-                            {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
                             <Intermediate source={source} whichGraph={whichGraph} />
@@ -360,7 +417,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 {/* trial table list */}
                 <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
-                    <Col span={12}>
+                    <Col span={10}>
                         <span>Show</span>
                         <Select
                             className="entry"
@@ -374,26 +431,34 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </Select>
                         <span>entries</span>
                     </Col>
-                    <Col span={12} className="right">
-                        <Row>
-                            <Col span={12}>
-                                <Button
-                                    type="primary"
-                                    className="tableButton editStyle"
-                                    onClick={this.tableList ? this.tableList.addColumn : this.test}
-                                >
-                                    Add column
-                                </Button>
-                            </Col>
-                            <Col span={12}>
-                                <Input
-                                    type="text"
-                                    placeholder="Search by id, trial No. or status"
-                                    onChange={this.searchTrial}
-                                    style={{ width: 230, marginLeft: 6 }}
-                                />
-                            </Col>
-                        </Row>
+                    <Col span={14} className="right">
+                        <Button
+                            className="common"
+                            onClick={this.tableList ? this.tableList.addColumn : this.test}
+                        >
+                            Add column
+                        </Button>
+                        <Button
+                            className="mediateBtn common"
+                            // use child-component tableList's function, the function is in child-component.
+                            onClick={this.tableList ? this.tableList.compareBtn : this.test}
+                        >
+                            Compare
+                        </Button>
+                        <Select defaultValue="id" className="filter" onSelect={this.getSearchFilter}>
+                            <Option value="id">Id</Option>
+                            <Option value="Trial No.">Trial No.</Option>
+                            <Option value="status">Status</Option>
+                            <Option value="parameters">Parameters</Option>
+                        </Select>
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder={searchPlaceHolder}
+                            onChange={this.searchTrial}
+                            style={{ width: 230 }}
+                            ref={text => (this.searchInput) = text}
+                        />
                     </Col>
                 </Row>
                 <TableList

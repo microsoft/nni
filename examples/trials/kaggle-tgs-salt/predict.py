@@ -71,7 +71,7 @@ def do_tta_predict(args, model, ckp_path, tta_num=4):
             outputs = np.flip(outputs, 1)
         #print(outputs.shape)
         preds.append(outputs)
-    
+
     parent_dir = ckp_path+'_out'
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
@@ -133,7 +133,7 @@ def generate_preds(outputs, target_size, pad_mode, threshold=0.5):
         if pad_mode == 'resize':
             cropped = resize_image(output, target_size=target_size)
         else:
-            cropped = crop_image_softmax(output, target_size=target_size)
+            cropped = crop_image(output, target_size=target_size)
         pred = binarize(cropped, threshold)
         preds.append(pred)
 
@@ -142,9 +142,9 @@ def generate_preds(outputs, target_size, pad_mode, threshold=0.5):
 
 def ensemble_predict(args):
     model = eval(args.model_name)(args.layers, num_filters=args.nf)
-    
+
     checkpoints = [
-        r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_5.pth', 
+        r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_5.pth',
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_6.pth',
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_8.pth',
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_9.pth'
@@ -160,7 +160,7 @@ def ensemble_np_results(args):
     np_files6 = glob.glob(r'D:\data\salt\models\ensemble\*.npy')
     np_files = np_files1 + np_files2 + np_files3 + np_files6
     print(np_files)
-    ensemble_np(args, np_files) 
+    ensemble_np(args, np_files)
 
 def predict_model(args):
     model = eval(args.model_name)(args.layers, num_filters=args.nf)

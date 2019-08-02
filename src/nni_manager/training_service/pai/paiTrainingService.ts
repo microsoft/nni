@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -23,6 +22,7 @@
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
+// tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
 import * as component from '../../common/component';
 
@@ -33,22 +33,21 @@ import { MethodNotImplementedError } from '../../common/errors';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrainingService,
+    HyperParameters, JobApplicationForm, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString } from '../../common/utils';
+    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir, execMkdir } from '../common/util';
-import { unixPathJoin } from '../../common/utils'
+import { execMkdir, validateCodeDir } from '../common/util';
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
-import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
+import { PAI_LOG_PATH_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
-import { PAIJobRestServer } from './paiJobRestServer';
+import { PAIJobRestServer, ParameterFileMeta } from './paiJobRestServer';
 
-const WebHDFS = require('webhdfs');
+import * as WebHDFS from 'webhdfs';
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -62,23 +61,24 @@ class PAITrainingService implements TrainingService {
     private readonly expRootDir: string;
     private paiTrialConfig: NNIPAITrialConfig | undefined;
     private paiClusterConfig?: PAIClusterConfig;
-    private jobQueue: string[];
+    private readonly jobQueue: string[];
     private stopping: boolean = false;
+    // tslint:disable-next-line:no-any
     private hdfsClient: any;
     private paiToken? : string;
     private paiTokenUpdateTime?: number;
-    private paiTokenUpdateInterval: number;
-    private experimentId! : string;
+    private readonly paiTokenUpdateInterval: number;
+    private readonly experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
-    private readonly hdfsDirPattern: string;
-    private hdfsBaseDir: string | undefined;
-    private hdfsOutputHost: string | undefined;
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck: boolean = true;
     private logCollection: string;
+    private isMultiPhase: boolean = false;
+    private hdfsCodeDir?: string;
+    private hdfsOutputDir?: string;
 
     constructor() {
         this.log = getLogger();
@@ -89,7 +89,6 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
-        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.logCollection = 'none';
@@ -121,13 +120,13 @@ class PAITrainingService implements TrainingService {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        if (!this.paiClusterConfig) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
 
         const paiTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
-        if (!paiTrialJob) {
+        if (paiTrialJob === undefined) {
             return Promise.reject(`trial job ${trialJobId} not found`);
         }
 
@@ -143,10 +142,10 @@ class PAITrainingService implements TrainingService {
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
-        if (!this.hdfsBaseDir) {
-            throw new Error('hdfsBaseDir is not initialized');
+        if (this.paiClusterConfig === undefined) {
+            throw new Error(`paiClusterConfig not initialized!`);
         }
+        const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -155,12 +154,14 @@ class PAITrainingService implements TrainingService {
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
+        this.hdfsCodeDir = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        this.hdfsOutputDir = unixPathJoin(this.hdfsCodeDir, 'nnioutput');
 
-        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
-            this.hdfsOutputHost,
-            hdfsOutputDir);
+            this.paiClusterConfig.host,
+            this.hdfsOutputDir
+            );
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -179,32 +180,44 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
+        }
+        if (form.jobType === 'TRIAL') {
+                await this.writeParameterFile(trialJobId, (<TrialJobApplicationForm>form).hyperParameters);
+        } else {
+            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
+        }
+
+        return trialJobDetail;
     }
 
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
+    // tslint:disable:no-http-string
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
-        if (!trialJobDetail) {
+        if (trialJobDetail === undefined) {
             this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
 
             return Promise.reject();
         }
 
-        if (!this.paiClusterConfig) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
-        if (!this.paiToken) {
+        if (this.paiToken === undefined) {
             throw new Error('PAI token is not initialized');
         }
 
         const stopJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs/${trialJobDetail.paiJobName}/executionType`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
+/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
             body: {value: 'STOP'},
@@ -217,10 +230,12 @@ class PAITrainingService implements TrainingService {
         // Set trialjobDetail's early stopped field, to mark the job's cancellation source
         trialJobDetail.isEarlyStopped = isEarlyStopped;
 
+        // tslint:disable-next-line:no-any
         request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
-            if (error || response.statusCode >= 400) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
-                deferred.reject(error ? error.message : `Stop trial failed, http code: ${response.statusCode}`);
+                deferred.reject((error !== undefined && error !== null) ? error.message :
+                 `Stop trial failed, http code: ${response.statusCode}`);
             } else {
                 deferred.resolve();
             }
@@ -229,6 +244,7 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
+    // tslint:disable: no-unsafe-any no-any
     // tslint:disable-next-line:max-func-body-length
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
@@ -256,66 +272,22 @@ class PAITrainingService implements TrainingService {
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (!this.paiClusterConfig) {
+                if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
                     deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
-                //paiTrialConfig.outputDir could be null if it is not set in nnictl
-                if (this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
-                    this.paiTrialConfig.outputDir = String.Format(
-                        PAI_OUTPUT_DIR_FORMAT,
-                        this.paiClusterConfig.host
-                    ).replace(/\r\n|\n|\r/gm, '');
-                }
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.paiTrialConfig.codeDir);
-                } catch(error) {
+                } catch (error) {
                     this.log.error(error);
                     deferred.reject(new Error(error));
                     break;
                 }
-
-                const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
-
-                if (hdfsDirContent === null) {
-                    throw new Error('Trial outputDir format Error');
-                }
-                const groups = hdfsDirContent.groups;
-                if (groups === undefined) {
-                    throw new Error('Trial outputDir format Error');
-                }
-
-                this.hdfsOutputHost = groups['host'];
-                //TODO: choose to use /${username} as baseDir
-                this.hdfsBaseDir = groups['baseDir'];
-                if(this.hdfsBaseDir === undefined) {
-                    this.hdfsBaseDir = '/';
-                }
-
-                let dataOutputHdfsClient;
-                if (this.paiClusterConfig.host === this.hdfsOutputHost && this.hdfsClient) {
-                    dataOutputHdfsClient = this.hdfsClient;
-                } else {
-                    dataOutputHdfsClient = WebHDFS.createClient({
-                        user: this.paiClusterConfig.userName,
-                        port: 50070,
-                        host: this.hdfsOutputHost
-                    });
-                }
-
-                try {
-                    const exist : boolean = await HDFSClientUtility.pathExists('/', dataOutputHdfsClient);
-                    if (!exist) {
-                        deferred.reject(new Error(`Please check hdfsOutputDir host!`));
-                    }
-                } catch (error) {
-                    deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
-                }
-
+           
                 // Copy experiment files from local folder to HDFS
                 this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(
                     this.paiTrialConfig.codeDir,
@@ -331,6 +303,9 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.logCollection = value;
                 break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -338,6 +313,7 @@ class PAITrainingService implements TrainingService {
 
         return deferred.promise;
     }
+    // tslint:enable: no-unsafe-any
 
     public getClusterMetadata(key: string): Promise<string> {
         const deferred : Deferred<string> = new Deferred<string>();
@@ -358,6 +334,7 @@ class PAITrainingService implements TrainingService {
             deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
+            // tslint:disable-next-line: no-unsafe-any
             this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
             deferred.reject(error);
         }
@@ -374,41 +351,39 @@ class PAITrainingService implements TrainingService {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
-        if (!trialJobDetail) {
+        if (trialJobDetail === undefined) {
             throw new Error(`Failed to find PAITrialJobDetail for job ${trialJobId}`);
         }
 
-        if (!this.paiClusterConfig) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
-        if (!this.paiTrialConfig) {
+        if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        if (!this.paiToken) {
+        if (this.paiToken === undefined) {
             throw new Error('PAI token is not initialized');
         }
 
-        if (!this.hdfsBaseDir) {
-            throw new Error('hdfsBaseDir is not initialized');
+        if (this.hdfsCodeDir === undefined) {
+            throw new Error('hdfsCodeDir is not initialized');
         }
 
-        if (!this.hdfsOutputHost) {
-            throw new Error('hdfsOutputHost is not initialized');
+        if (this.hdfsOutputDir === undefined) {
+            throw new Error('hdfsOutputDir is not initialized');
         }
 
-        if (!this.paiRestServerPort) {
+        if (this.paiRestServerPort === undefined) {
             const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
             this.paiRestServerPort = restServer.clusterRestServerPort;
         }
 
         // Make sure experiment code files is copied from local to HDFS
-        if (this.copyExpCodeDirPromise) {
+        if (this.copyExpCodeDirPromise !== undefined) {
             await this.copyExpCodeDirPromise;
         }
 
         // Step 1. Prepare PAI job configuration
-        const hdfsOutputDir : string = unixPathJoin(this.hdfsBaseDir, this.experimentId, trialJobId);
-        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
@@ -420,13 +395,14 @@ class PAITrainingService implements TrainingService {
 
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>trialJobDetail.form);
-        if (trialForm) {
+        if (trialForm !== undefined) {
             await fs.promises.writeFile(
                 path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)),
                 trialForm.hyperParameters.value, { encoding: 'utf8' }
             );
         }
 
+        // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const nniPaiTrialCommand : string = String.Format(
@@ -437,17 +413,20 @@ class PAITrainingService implements TrainingService {
             trialJobId,
             this.experimentId,
             trialJobDetail.sequenceId,
+            this.isMultiPhase,
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
-            hdfsOutputDir,
-            this.hdfsOutputHost,
+            this.hdfsOutputDir,
+            this.paiClusterConfig.host,
             this.paiClusterConfig.userName,
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
             version,
             this.logCollection
-        ).replace(/\r\n|\n|\r/gm, '');
+        )
+        .replace(/\r\n|\n|\r/gm, '');
 
+        // tslint:disable-next-line:no-console
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles : PAITaskRole[] = [
             new PAITaskRole(
@@ -463,7 +442,7 @@ class PAITrainingService implements TrainingService {
                 // Task command
                 nniPaiTrialCommand,
                 // Task shared memory
-                this.paiTrialConfig.shmMB
+                this.paiTrialConfig.shmMB,
             )
         ];
 
@@ -472,24 +451,25 @@ class PAITrainingService implements TrainingService {
             trialJobDetail.paiJobName,
             // Docker image
             this.paiTrialConfig.image,
-            // dataDir
-            this.paiTrialConfig.dataDir,
-            // outputDir
-            this.paiTrialConfig.outputDir,
             // codeDir
-            `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`,
+            `$PAI_DEFAULT_FS_URI${this.hdfsCodeDir}`,
             // PAI Task roles
             paiTaskRoles,
             // Add Virutal Cluster
-            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString()
+            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
+            //Task auth File
+            this.paiTrialConfig.authFile
         );
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
-            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
+            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, this.hdfsCodeDir, this.hdfsClient);
         } catch (error) {
-            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
-            throw new Error(error.message);
+            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${this.hdfsCodeDir} failed, error is ${error}`);
+            trialJobDetail.status = 'FAILED';
+            deferred.resolve(true);
+
+            return deferred.promise;
         }
 
         // Step 3. Submit PAI job via Rest call
@@ -504,13 +484,14 @@ class PAITrainingService implements TrainingService {
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
+        // tslint:disable:no-any no-unsafe-any
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
-            if (error || response.statusCode >= 400) {
-                const errorMessage : string = error ? error.message :
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
+                const errorMessage : string = (error !== undefined && error !== null) ? error.message :
                     `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
                 this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
-                deferred.reject(new Error(errorMessage));
+                deferred.resolve(true);
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(true);
@@ -530,18 +511,18 @@ class PAITrainingService implements TrainingService {
 
     private async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            try{
+            try {
                 await this.updatePaiToken();
-            }catch(error){
+            } catch (error) {
                 this.log.error(`${error}`);
                 //only throw error when initlize paiToken first time
-                if(!this.paiToken) {
+                if (this.paiToken === undefined) {
                     throw new Error(error);
                 }
             }
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-            if (restServer.getErrorMessage) {
+            if (restServer.getErrorMessage !== undefined) {
                 throw new Error(restServer.getErrorMessage);
             }
             await delay(3000);
@@ -572,17 +553,17 @@ class PAITrainingService implements TrainingService {
 
         const currentTime: number = new Date().getTime();
         //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval){
+        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
             return Promise.resolve();
         }
 
-        if (!this.paiClusterConfig) {
+        if (this.paiClusterConfig === undefined) {
             const paiClusterConfigError: string = `pai cluster config not initialized!`;
             this.log.error(`${paiClusterConfigError}`);
             throw Error(`${paiClusterConfigError}`);
         }
 
-        const authentication_req: request.Options = {
+        const authenticationReq: request.Options = {
             uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
             method: 'POST',
             json: true,
@@ -592,12 +573,12 @@ class PAITrainingService implements TrainingService {
             }
         };
 
-        request(authentication_req, (error: Error, response: request.Response, body: any) => {
-            if (error) {
+        request(authenticationReq, (error: Error, response: request.Response, body: any) => {
+            if (error !== undefined && error !== null) {
                 this.log.error(`Get PAI token failed: ${error.message}`);
                 deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
             } else {
-                if (response.statusCode !== 200){
+                if (response.statusCode !== 200) {
                     this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
                     deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
                 }
@@ -616,7 +597,51 @@ class PAITrainingService implements TrainingService {
         });
 
         return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => clearTimeout(timeoutId));
+            .finally(() => { clearTimeout(timeoutId); });
+    }
+
+    private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
+        if (this.paiClusterConfig === undefined) {
+            throw new Error('PAI Cluster config is not initialized');
+        }
+        if (this.paiTrialConfig === undefined) {
+            throw new Error('PAI trial config is not initialized');
+        }
+
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const hpFileName: string = generateParamFileName(hyperParameters);
+        const localFilepath: string = path.join(trialLocalTempFolder, hpFileName);
+        await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        const hdfsHpFilePath: string = path.join(hdfsCodeDir, hpFileName);
+
+        await HDFSClientUtility.copyFileToHdfs(localFilepath, hdfsHpFilePath, this.hdfsClient);
+
+        await this.postParameterFileMeta({
+            experimentId: this.experimentId,
+            trialId: trialJobId,
+            filePath: hdfsHpFilePath
+        });
+    }
+
+    private postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
+        const deferred : Deferred<void> = new Deferred<void>();
+        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
+        const req: request.Options = {
+            uri: `${restServer.endPoint}${restServer.apiRootUrl}/parameter-file-meta`,
+            method: 'POST',
+            json: true,
+            body: parameterFileMeta
+        };
+        request(req, (err: Error, res: request.Response) => {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve();
+            }
+        });
+
+        return deferred.promise;
     }
 }
 

@@ -15,6 +15,7 @@ nnictl 支持的命令：
 * [nnictl trial](#trial)
 * [nnictl top](#top)
 * [nnictl experiment](#experiment)
+* [nnictl platform](#platform)
 * [nnictl config](#config)
 * [nnictl log](#log)
 * [nnictl webui](#webui)
@@ -111,10 +112,17 @@ nnictl 支持的命令：
   使用此命令来停止正在运行的单个或多个 Experiment。
 
 * 用法
-  
+ 
   ```bash
-  nnictl stop [id]
+  nnictl stop [OPTIONS]
   ```
+
+* 选项
+
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                               |
+  | ----------- | ----- | --- | -------------------------------- |
+  | id          | 否 |     | 要停止的 Experiment 标识               |
+  | --port, -p  | 否 |     | 要停止的 Experiment 使用的 RESTful 服务端口 |
 
 * 详细信息及样例
   
@@ -130,19 +138,24 @@ nnictl 支持的命令：
         ```bash
         nnictl stop [experiment_id]
         ```
-        
-  
-  3. 可使用 'nnictl stop all' 来停止所有的 Experiment。
+
+  3. 如果指定了端口，并且有运行中的 Experiment 正在使用该端口，那么这个 Experiment 将会停止。
+
+        ```bash
+        nnictl stop --port 8080
+        ````
+
+  4. 可使用 'nnictl stop all' 来停止所有的 Experiment。
     
         ```bash
         nnictl stop all
         ```
         
   
-  4. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
+  5. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
   
-  5. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
-  6. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
+  6. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
+  7. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
 
 <a name="update"></a>
 
@@ -376,6 +389,24 @@ nnictl 支持的命令：
     nnictl experiment list
     ```
 
+* **nnictl experiment delete**
+  
+  * 说明
+    
+    删除一个或所有 Experiment，包括日志、结果、环境信息和缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
+  
+  * 用法
+    
+    ```bash
+    nnictl experiment delete [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写 | 是否必需  | 默认值 | 说明            |
+  | ----- | ----- | --- | ------------- |
+  | id    | False |     | Experiment ID |
+
 <a name="export"></a>
 
 * **nnictl experiment export**
@@ -464,6 +495,31 @@ nnictl 支持的命令：
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
+<a name="platform"></a>
+![](https://placehold.it/15/1589F0/000000?text=+) `管理平台的信息`
+
+* **nnictl platform clean**
+  
+  * 说明
+    
+    用于清理目标平台上的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
+  
+  * 注意
+    
+    如果目标平台正在被别人使用，可能会造成他人的意外错误。
+  
+  * 用法
+    
+    ```bash
+    nnictl platform clean [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写    | 是否必需 | 默认值 | 说明                            |
+  | -------- | ---- | --- | ----------------------------- |
+  | --config | True |     | 创建 Experiment 时的 YAML 配置文件路径。 |
+
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
@@ -497,12 +553,12 @@ nnictl 支持的命令：
   
   | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
   | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 id |
+  | id         | False |     | 需要设置的 Experiment 的 ID |
   | --head, -h | False |     | 显示 stdout 开始的若干行      |
   | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
   | --path, -p | False |     | 显示 stdout 文件的路径       |
   
-  * 样例
+  * 示例
     
     > 显示 stdout 结尾的若干行
     
@@ -526,7 +582,7 @@ nnictl 支持的命令：
   
   | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
   | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 id |
+  | id         | False |     | 需要设置的 Experiment 的 ID |
   | --head, -h | False |     | 显示 stderr 开始的若干行      |
   | --tail, -t | False |     | 显示 stderr 结尾的若干行      |
   | --path, -p | False |     | 显示 stderr 文件的路径       |
@@ -574,23 +630,23 @@ nnictl 支持的命令：
   
   | 参数及缩写          | 是否必需  | 默认值  | 说明                    |
   | -------------- | ----- | ---- | --------------------- |
-  | id             | False |      | 需要设置的 Experiment 的 ID |
+  | id             | False |      | 需要设置的 Experiment 的 id |
   | --trial_id, -T | False |      | Trial 的 id            |
   | --port         | False | 6006 | Tensorboard 进程的端口     |
   
   * 详细说明
     
-    1. NNICTL 当前仅支持本机和远程平台的 tensorboard，其它平台暂不支持。 
-    2. 如果要使用 tensorboard，需要将 tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。 
-    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 tensorboard 进程。
-    4. 在 remote 模式中，nnictl 会创建一个 ssh 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
-    5. 如果只有一个 Trial 任务，不需要设置 Trial ID。 如果有多个运行的 Trial 作业，需要设置 Trial ID，或使用 [nnictl tensorboard start --trial_id all] 来将 --logdir 映射到所有 Trial 的路径。
+    1. NNICTL 当前仅支持本机和远程平台的 Tensorboard，其它平台暂不支持。
+    2. 如果要使用 Tensorboard，需要将 Tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。
+    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 Tensorboard 进程。
+    4. 在 remote 模式中，nnictl 会创建一个 SSH 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 Tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
+    5. 如果只有一个 Trial 任务，不需要设置 Trial ID。 如果有多个运行的 Trial 任务，需要设置 Trial ID，或使用 [nnictl tensorboard start --trial_id all] 来将 --logdir 映射到所有 Trial 的路径。
 
 * **nnictl tensorboard stop**
   
   * 说明
     
-    停止所有 tensorboard 进程。
+    停止所有 Tensorboard 进程。
   
   * 用法
     
@@ -602,7 +658,7 @@ nnictl 支持的命令：
   
   | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
   | ----- | ----- | --- | --------------------- |
-  | id    | False |     | 需要设置的 Experiment 的 id |
+  | id    | False |     | 需要设置的 Experiment 的 ID |
 
 <a name="package"></a>
 
@@ -626,7 +682,7 @@ nnictl 支持的命令：
   | ------ | ---- | --- | ------- |
   | --name | True |     | 要安装的包名称 |
   
-  * 样例
+  * 示例
     
     > 安装 SMAC Tuner 所需要的包
     

@@ -1,7 +1,7 @@
-Advanced Features 
+Advanced Features
 =====================
 
 ..  toctree::
-    MultiPhase<MultiPhase>
-    AdvancedNas<AdvancedNas>
-    NAS Programming Interface<GeneralNasInterfaces>
+    MultiPhase<./AdvancedFeature/MultiPhase>
+    AdvancedNas<./AdvancedFeature/AdvancedNas>
+    NAS Programming Interface<./AdvancedFeature/GeneralNasInterfaces>

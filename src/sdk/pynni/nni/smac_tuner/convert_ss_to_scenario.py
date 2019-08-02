@@ -24,12 +24,12 @@ import numpy as np
 
 def get_json_content(file_path):
     """Load json file content
-    
+
     Parameters
     ----------
     file_path:
         path to the file
-    
+
     Raises
     ------
     TypeError
@@ -43,9 +43,9 @@ def get_json_content(file_path):
         return None
 
 def generate_pcs(nni_search_space_content):
-    """Generate the Parameter Configuration Space (PCS) which defines the 
+    """Generate the Parameter Configuration Space (PCS) which defines the
     legal ranges of the parameters to be optimized and their default values.
-    
+
     Generally, the format is:
     # parameter_name categorical {value_1, ..., value_N} [default value]
     # parameter_name ordinal {value_1, ..., value_N} [default value]
@@ -53,14 +53,14 @@ def generate_pcs(nni_search_space_content):
     # parameter_name integer [min_value, max_value] [default value] log
     # parameter_name real [min_value, max_value] [default value]
     # parameter_name real [min_value, max_value] [default value] log
-    
+
     Reference: https://automl.github.io/SMAC3/stable/options.html
 
     Parameters
     ----------
     nni_search_space_content: search_space
         The search space in this experiment in nni
-    
+
     Returns
     -------
     Parameter Configuration Space (PCS)
@@ -81,8 +81,8 @@ def generate_pcs(nni_search_space_content):
                         if search_space[key]['_type'] == 'choice':
                             choice_len = len(search_space[key]['_value'])
                             pcs_fd.write('%s categorical {%s} [%s]\n' % (
-                                key, 
-                                json.dumps(list(range(choice_len)))[1:-1], 
+                                key,
+                                json.dumps(list(range(choice_len)))[1:-1],
                                 json.dumps(0)))
                             if key in categorical_dict:
                                 raise RuntimeError('%s has already existed, please make sure search space has no duplicate key.' % key)
@@ -90,19 +90,19 @@ def generate_pcs(nni_search_space_content):
                         elif search_space[key]['_type'] == 'randint':
                             # TODO: support lower bound in randint
                             pcs_fd.write('%s integer [0, %d] [%d]\n' % (
-                                key, 
-                                search_space[key]['_value'][0], 
+                                key,
+                                search_space[key]['_value'][0],
                                 search_space[key]['_value'][0]))
                         elif search_space[key]['_type'] == 'uniform':
                             pcs_fd.write('%s real %s [%s]\n' % (
-                                key, 
+                                key,
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
                             # use np.round here to ensure that the rounded defaut value is in the range, which will be rounded in configure_space package
                             search_space[key]['_value'] = list(np.round(np.log(search_space[key]['_value']), 10))
                             pcs_fd.write('%s real %s [%s]\n' % (
-                                key, 
+                                key,
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'quniform' \
@@ -122,9 +122,9 @@ def generate_pcs(nni_search_space_content):
     return None
 
 def generate_scenario(ss_content):
-    """Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and 
+    """Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and
     can be constructed either by providing an actual scenario-object, or by specifing the options in a scenario file.
-    
+
     Reference: https://automl.github.io/SMAC3/stable/options.html
 
     The format of the scenario file is one option per line:
@@ -135,7 +135,7 @@ def generate_scenario(ss_content):
     Parameters
     ----------
     abort_on_first_run_crash: bool
-        If true, SMAC will abort if the first run of the target algorithm crashes. Default: True, 
+        If true, SMAC will abort if the first run of the target algorithm crashes. Default: True,
         because trials reported to nni tuner would always in success state
     algo: function
         Specifies the target algorithm call that SMAC will optimize. Interpreted as a bash-command.

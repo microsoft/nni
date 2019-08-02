@@ -24,20 +24,21 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
+import * as tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, uniqueString, isAlive, getNewLine } from '../../common/utils';
-import { execMkdir, getScriptName, execScript, setEnvironmentVariable, execNewFile } from '../common/util'
+import {
+    delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
+} from '../../common/utils';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
-
-const tkill = require('tree-kill');
 
 /**
  * Decode a command
@@ -46,7 +47,7 @@ const tkill = require('tree-kill');
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
-// tslint:disable-next-line:informative-docs
+// tslint:disable:newline-per-chained-call informative-docs
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
@@ -61,6 +62,7 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
 
     return [true, commandType, content, remain];
 }
+// tslint:enable:newline-per-chained-call informative-docs
 
 /**
  * LocalTrialJobDetail
@@ -117,21 +119,22 @@ class LocalConfig {
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
-    private eventEmitter: EventEmitter;
-    private jobMap: Map<string, LocalTrialJobDetail>;
-    private jobQueue: string[];
+    private readonly eventEmitter: EventEmitter;
+    private readonly jobMap: Map<string, LocalTrialJobDetail>;
+    private readonly jobQueue: string[];
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
     private trialSequenceId: number;
+    private readonly experimentId! : string;
     private gpuScheduler!: GPUScheduler;
-    private occupiedGpuIndexNumMap: Map<number, number>;
+    private readonly occupiedGpuIndexNumMap: Map<number, number>;
     private designatedGpuIndices!: Set<number>;
-    private log: Logger;
+    private readonly log: Logger;
     private localTrailConfig?: TrialConfig;
     private localConfig?: LocalConfig;
     private isMultiPhase: boolean;
-    private jobStreamMap: Map<string, ts.Stream>;
+    private readonly jobStreamMap: Map<string, ts.Stream>;
     private maxTrialNumPerGpu: number;
     private useActiveGpu: boolean;
 
@@ -143,6 +146,7 @@ class LocalTrainingService implements TrainingService {
         this.stopping = false;
         this.log = getLogger();
         this.trialSequenceId = -1;
+        this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
         this.occupiedGpuIndexNumMap = new Map<number, number>();
@@ -182,7 +186,7 @@ class LocalTrainingService implements TrainingService {
             return this.getHostJob(trialJobId);
         }
         if (trialJob.status === 'RUNNING') {
-            let alive: boolean = await isAlive(trialJob.pid);
+            const alive: boolean = await isAlive(trialJob.pid);
             if (!alive) {
                 trialJob.endTime = Date.now();
                 this.setTrialJobStatus(trialJob, 'FAILED');
@@ -276,7 +280,7 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         if (trialJob.form.jobType === 'TRIAL') {
-            await tkill(trialJob.pid, 'SIGKILL');
+            tkill(trialJob.pid, 'SIGKILL');
         } else if (trialJob.form.jobType === 'HOST') {
             await cpp.exec(`pkill -9 -P ${trialJob.pid}`);
         } else {
@@ -290,7 +294,8 @@ class LocalTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
-            if(!fs.existsSync(this.rootDir)){
+            // tslint:disable-next-line:non-literal-fs-path
+            if (!fs.existsSync(this.rootDir)) {
                 await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
             }
             this.initialized = true;
@@ -299,7 +304,7 @@ class LocalTrainingService implements TrainingService {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.localTrailConfig = <TrialConfig>JSON.parse(value);
                 // Parse trial config failed, throw Error
-                if (!this.localTrailConfig) {
+                if (this.localTrailConfig === undefined) {
                     throw new Error('trial config parsed failed');
                 }
                 this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
@@ -336,10 +341,10 @@ class LocalTrainingService implements TrainingService {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 let getResult: Promise<string>;
-                if (!this.localTrailConfig) {
+                if (this.localTrailConfig === undefined) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
-                    getResult = Promise.resolve(!this.localTrailConfig ? '' : JSON.stringify(this.localTrailConfig));
+                    getResult = Promise.resolve(JSON.stringify(this.localTrailConfig));
                 }
 
                 return getResult;
@@ -352,7 +357,8 @@ class LocalTrainingService implements TrainingService {
         this.log.info('Stopping local machine training service...');
         this.stopping = true;
         for (const stream of this.jobStreamMap.values()) {
-            stream.destroy();
+            stream.end(0)
+            stream.emit('end')
         }
         if (this.gpuScheduler !== undefined) {
             await this.gpuScheduler.stop();
@@ -366,23 +372,25 @@ class LocalTrainingService implements TrainingService {
         if (['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(trialJob.status)) {
             if (this.jobStreamMap.has(trialJob.id)) {
                 const stream: ts.Stream | undefined = this.jobStreamMap.get(trialJob.id);
-                if (!stream) {
+                if (stream === undefined) {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
-                stream.destroy();
+                //Refer https://github.com/Juul/tail-stream/issues/20
+                stream.end(0)
+                stream.emit('end')
                 this.jobStreamMap.delete(trialJob.id);
             }
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
-                    let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-                    if(num === undefined) {
+                    const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+                    if (num === undefined) {
                         throw new Error(`gpu resource schedule error`);
-                    } else if(num === 1) {
+                    } else if (num === 1) {
                         this.occupiedGpuIndexNumMap.delete(index);
                     } else {
-                        this.occupiedGpuIndexNumMap.set(index, num - 1)
+                        this.occupiedGpuIndexNumMap.set(index, num - 1);
                     }
                 }
             }
@@ -394,6 +402,7 @@ class LocalTrainingService implements TrainingService {
         resource: { gpuIndices: number[] }): { key: string; value: string }[] {
         const envVariables: { key: string; value: string }[] = [
             { key: 'NNI_PLATFORM', value: 'local' },
+            { key: 'NNI_EXP_ID', value: this.experimentId },
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
             { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
@@ -424,10 +433,10 @@ class LocalTrainingService implements TrainingService {
         }
 
         let selectedGPUIndices: number[] = [];
-        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
-        for(let index of availableGpuIndices) {
-            let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-            if(num === undefined || num < this.maxTrialNumPerGpu) {
+        const availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
+        for (const index of availableGpuIndices) {
+            const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+            if (num === undefined || num < this.maxTrialNumPerGpu) {
                 selectedGPUIndices.push(index);
             }
         }
@@ -461,11 +470,11 @@ class LocalTrainingService implements TrainingService {
     private occupyResource(resource: {gpuIndices: number[]}): void {
         if (this.gpuScheduler !== undefined) {
             for (const index of resource.gpuIndices) {
-                let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-                if(num === undefined) {
-                    this.occupiedGpuIndexNumMap.set(index, 1)
+                const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+                if (num === undefined) {
+                    this.occupiedGpuIndexNumMap.set(index, 1);
                 } else {
-                    this.occupiedGpuIndexNumMap.set(index, num + 1)
+                    this.occupiedGpuIndexNumMap.set(index, num + 1);
                 }
             }
         }
@@ -498,20 +507,20 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
-    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string[]{
-        let script: string[] = [];
-        if (process.platform === "win32") {
+    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string[] {
+        const script: string[] = [];
+        if (process.platform === 'win32') {
             script.push(
                 `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
-        }
-        else{
+        } else {
             script.push(
                 `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
                 `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
         }
+
         return script;
     }
 
@@ -519,28 +528,29 @@ class LocalTrainingService implements TrainingService {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
         const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
 
-        if (!this.localTrailConfig) {
+        if (this.localTrailConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const runScriptLines: string[] = [];
-        if (process.platform !== "win32"){
-            runScriptLines.push('#!/bin/bash');
+        const runScriptContent: string[] = [];
+        if (process.platform !== 'win32') {
+            runScriptContent.push('#!/bin/bash');
         }
-        runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
+        runScriptContent.push(`cd ${this.localTrailConfig.codeDir}`);
         for (const variable of variables) {
-            runScriptLines.push(setEnvironmentVariable(variable));
+            runScriptContent.push(setEnvironmentVariable(variable));
         }
         const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
-        scripts.forEach(script => {
-            runScriptLines.push(script); 
+        scripts.forEach((script: string) => {
+            runScriptContent.push(script);
         });
         await execMkdir(trialJobDetail.workingDirectory);
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
         await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName), runScriptLines.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName),
+                                    runScriptContent.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        const trialJobProcess: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
+        const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
         trialJobDetail.pid = trialJobProcess.pid;
@@ -563,7 +573,6 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
-
         this.jobStreamMap.set(trialJobDetail.id, stream);
     }
 

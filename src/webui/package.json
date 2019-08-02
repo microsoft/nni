@@ -4,16 +4,17 @@
   "private": true,
   "dependencies": {
     "antd": "^3.8.1",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "babel-polyfill": "^6.26.0",
     "copy-to-clipboard": "^3.0.8",
     "echarts": "^4.1.0",
     "echarts-for-react": "^2.0.14",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
+    "react": "^16.7.0-alpha.2",
+    "react-dom": "^16.7.0-alpha.2",
     "react-json-tree": "^0.11.0",
     "react-monaco-editor": "^0.22.0",
     "react-router": "3.2.1",
+    "react-responsive": "^7.0.0",
     "react-scripts-ts-antd": "2.17.0"
   },
   "scripts": {
@@ -28,7 +29,19 @@
     "@types/react": "^16.4.17",
     "@types/react-dom": "^16.0.7",
     "@types/react-json-tree": "^0.6.8",
+    "@types/react-responsive": "^3.0.3",
     "@types/react-router": "3.0.15",
     "typescript": "^3.0.1"
+  },
+  "resolutions": {
+    "mem": "^4.0.0",
+    "handlebars": "^4.1.0",
+    "lodash": "^4.17.13",
+    "lodash.template": "^4.5.0",
+    "js-yaml": "^3.13.1",
+    "webpack-dev-server": "3.0.0",
+    "merge": "^1.2.1",
+    "cryptiles": "^4.1.2",
+    "hoek": "^4.2.1"
   }
 }

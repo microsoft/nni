@@ -38,9 +38,15 @@ class TrialTestCase(TestCase):
         nni.get_next_parameter()
         self.assertEqual(nni.get_current_parameter('x'), 123)
 
+    def test_get_experiment_id(self):
+        self.assertEqual(nni.get_experiment_id(), 'fakeidex')
+
+    def test_get_trial_id(self):
+        self.assertEqual(nni.get_trial_id(), 'fakeidtr')
+    
     def test_get_sequence_id(self):
         self.assertEqual(nni.get_sequence_id(), 0)
-        
+
     def test_report_intermediate_result(self):
         nni.report_intermediate_result(123)
         self.assertEqual(test_platform.get_last_metric(), {

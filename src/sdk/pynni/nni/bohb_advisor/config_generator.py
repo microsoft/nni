@@ -117,7 +117,7 @@ class CG_BOHB(object):
         seperated by budget. This function sample a configuration from
         largest budget. Firstly we sample "num_samples" configurations,
         then prefer one with the largest l(x)/g(x).
-        
+
         Parameters:
         -----------
         info_dict: dict
