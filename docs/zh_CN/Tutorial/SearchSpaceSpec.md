@@ -80,9 +80,9 @@
 
 * {"_type":"mutable_layer","_value":{mutable_layer_infomation}}
   
-  * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
-  * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
-  * For detailed usage, please refer to [General NAS Interfaces](../AdvancedFeature/GeneralNasInterfaces.md).
+  * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
+  * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
+  * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
 
 ## 每种 Tuner 支持的搜索空间类型
 
@@ -101,10 +101,9 @@
 
 已知的局限：
 
-* Note that Metis Tuner only supports numerical `choice` now
+* 注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
 
-* Note that for nested search space:
+* 请注意，对于嵌套搜索空间：
   
-      * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
-      
-      * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+      * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
+      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
