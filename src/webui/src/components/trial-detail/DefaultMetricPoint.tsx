@@ -267,18 +267,12 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
     render() {
         const { height } = this.props;
-        const { defaultSource, accNodata, isViewBestCurve } = this.state;
+        const { defaultSource, accNodata } = this.state;
         return (
             <div>
                 <div className="default-metric">
                     <div className="position">
-                        {
-                            isViewBestCurve
-                                ?
-                                <span className="bold">Click here to show <span>default curve</span></span>
-                                :
-                                <span className="bold">Click here to show <span>optimization curve</span></span>
-                        }
+                        <span className="bold">optimization curve</span>
                         <Switch defaultChecked={false} onChange={this.loadDefault} />
                     </div>
                 </div>
