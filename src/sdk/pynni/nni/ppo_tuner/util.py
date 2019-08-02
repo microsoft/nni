@@ -17,6 +17,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+util functions
+"""
 
 import os
 import random
@@ -26,21 +29,12 @@ from gym.spaces import Discrete, Box, MultiDiscrete
 import multiprocessing
 
 def set_global_seeds(i):
-    try:
-        import MPI
-        rank = MPI.COMM_WORLD.Get_rank()
-    except ImportError:
-        rank = 0
-
+    rank = 0
     myseed = i  + 1000 * rank if i is not None else None
-    try:
-        import tensorflow as tf
-        tf.set_random_seed(myseed)
-    except ImportError:
-        pass
+    import tensorflow as tf
+    tf.set_random_seed(myseed)
     np.random.seed(myseed)
     random.seed(myseed)
-
 
 def batch_to_seq(h, nbatch, nsteps, flat=False):
     if flat:
@@ -99,14 +93,11 @@ def lstm_model(nlstm=128, layer_norm=False):
 
     Parameters:
     ----------
-
     nlstm: int          LSTM hidden state size
-
     layer_norm: bool    if True, layer-normalized version of LSTM is used
 
     Returns:
     -------
-
     function that builds LSTM with a given input tensor / placeholder
     """
 
@@ -177,12 +168,11 @@ def adjust_shape(placeholder, data):
     If shape is incompatible, AssertionError is thrown
 
     Parameters:
-        placeholder     tensorflow input placeholder
-
-        data            input data to be (potentially) reshaped to be fed into placeholder
+    placeholder:     tensorflow input placeholder
+    data:            input data to be (potentially) reshaped to be fed into placeholder
 
     Returns:
-        reshaped data
+    reshaped data
     '''
 
     if not isinstance(data, np.ndarray) and not isinstance(data, list):

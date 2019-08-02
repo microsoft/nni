@@ -17,6 +17,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+build policy/value network from model
+"""
 
 import tensorflow as tf
 import numpy as np
@@ -34,18 +37,12 @@ class PolicyWithValue(object):
         """
         Parameters:
         ----------
-        env             RL environment
-
-        observations    tensorflow placeholder in which the observations will be fed
-
-        latent          latent state from which policy distribution parameters should be inferred
-
-        vf_latent       latent state from which value function should be inferred (if None, then latent is used)
-
-        sess            tensorflow session to run calculations in (if None, default session is used)
-
-        **tensors       tensorflow tensors for additional attributes such as state or mask
-
+        env:             RL environment
+        observations:    tensorflow placeholder in which the observations will be fed
+        latent:          latent state from which policy distribution parameters should be inferred
+        vf_latent:       latent state from which value function should be inferred (if None, then latent is used)
+        sess:            tensorflow session to run calculations in (if None, default session is used)
+        **tensors:       tensorflow tensors for additional attributes such as state or mask
         """
 
         self.X = observations
@@ -145,10 +142,8 @@ class PolicyWithValue(object):
 
         Parameters:
         ----------
-
-        observation     observation data (either single or a batch)
-
-        **extra_feed    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation:     observation data (either single or a batch)
+        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
         Returns:
         -------
@@ -166,10 +161,8 @@ class PolicyWithValue(object):
 
         Parameters:
         ----------
-
-        observation     observation data (either single or a batch)
-
-        **extra_feed    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation:     observation data (either single or a batch)
+        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
         Returns:
         -------

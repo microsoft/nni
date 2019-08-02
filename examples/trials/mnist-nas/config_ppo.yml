@@ -1,4 +1,4 @@
-authorName: default
+authorName: NNI-example
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 100h
