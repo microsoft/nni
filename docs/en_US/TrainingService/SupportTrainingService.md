@@ -1,8 +1,9 @@
 # Support TrainingService
 
-TrainingService is a concept of training platform that run trial jobs on the corresponding platform. NNI support [local](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/LocalMode.md), [remote](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md), [pai](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md), [kubeflow](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/KubeflowMode.md) and [frameworkcontroller](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/FrameworkControllerMode.md) training service. 
+TrainingService is a concept of training platform that run trial jobs on the corresponding platform. NNI support [local](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/LocalMode.md), [remote](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md), [pai](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md), [kubeflow](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/KubeflowMode.md) and [frameworkcontroller](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/FrameworkControllerMode.md) training service.   
+NNI not only provides few built-in training service options, but also provides a method for customers to build their own training service easily.
 
-
+## Built-in TrainingService
 |TrainingService|Brief Introduction|
 |---|---|
 |[__local__](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/LocalMode.md)|Local mode means that NNI will run the trial jobs and nniManager process in local machine.|
