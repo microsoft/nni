@@ -38,6 +38,7 @@ build:
 	cd $(CWD)../../src/webui && $(NNI_YARN) && $(NNI_YARN) build
 	rm -rf $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni
+	ls $(CWD)nni
 	cp -r $(CWD)../../src/webui/build $(CWD)nni/static
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
