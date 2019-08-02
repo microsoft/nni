@@ -22,13 +22,11 @@ functions for sampling from hidden state
 """
 
 import tensorflow as tf
-import numpy as np
-from tensorflow.python.ops import math_ops
 
 from .util import fc
 
 
-class Pd(object):
+class Pd:
     """
     A particular probability distribution
     """
@@ -55,7 +53,7 @@ class Pd(object):
     def __getitem__(self, idx):
         return self.__class__(self.flatparam()[idx])
 
-class PdType(object):
+class PdType:
     """
     Parametrized family of probability distributions
     """
@@ -78,6 +76,9 @@ class PdType(object):
         return tf.placeholder(dtype=self.sample_dtype(), shape=prepend_shape+self.sample_shape(), name=name)
 
 class CategoricalPd(Pd):
+    """
+    categorical prossibility distribution
+    """
     def __init__(self, logits, mask_npinf, nsteps, size, is_act_model):
         self.logits = logits
         self.mask_npinf = mask_npinf
@@ -93,9 +94,11 @@ class CategoricalPd(Pd):
     def mean(self):
         return tf.nn.softmax(self.logits)
     def neglogp(self, x):
-        # return tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=x)
-        # Note: we can't use sparse_softmax_cross_entropy_with_logits because
-        #       the implementation does not allow second-order derivatives...
+        """
+        return tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=x)
+        Note: we can't use sparse_softmax_cross_entropy_with_logits because
+              the implementation does not allow second-order derivatives...
+        """
         if x.dtype in {tf.uint8, tf.int32, tf.int64}:
             # one-hot encoding
             x_shape_list = x.shape.as_list()
@@ -113,6 +116,7 @@ class CategoricalPd(Pd):
             logits=self.logits,
             labels=x)
     def kl(self, other):
+        """kl"""
         a0 = self.logits - tf.reduce_max(self.logits, axis=-1, keepdims=True)
         a1 = other.logits - tf.reduce_max(other.logits, axis=-1, keepdims=True)
         ea0 = tf.exp(a0)
@@ -122,12 +126,14 @@ class CategoricalPd(Pd):
         p0 = ea0 / z0
         return tf.reduce_sum(p0 * (a0 - tf.log(z0) - a1 + tf.log(z1)), axis=-1)
     def entropy(self):
+        """compute entropy"""
         a0 = self.logits - tf.reduce_max(self.logits, axis=-1, keepdims=True)
         ea0 = tf.exp(a0)
         z0 = tf.reduce_sum(ea0, axis=-1, keepdims=True)
         p0 = ea0 / z0
         return tf.reduce_sum(p0 * (tf.log(z0) - a0), axis=-1)
     def sample(self):
+        """sample from logits"""
         if not self.is_act_model:
             re_res = tf.reshape(self.logits, [-1, self.nsteps, self.size])
             masked_res = tf.math.add(re_res, self.mask_npinf)
@@ -143,6 +149,9 @@ class CategoricalPd(Pd):
         return cls(flat)
 
 class CategoricalPdType(PdType):
+    """
+    to create CategoricalPd
+    """
     def __init__(self, ncat, nsteps, np_mask, is_act_model):
         self.ncat = ncat
         self.nsteps = nsteps
@@ -151,7 +160,10 @@ class CategoricalPdType(PdType):
     def pdclass(self):
         return CategoricalPd
     def pdfromlatent(self, latent_vector, init_scale=1.0, init_bias=0.0):
-        pdparam, mask, mask_npinf = _matching_fc(latent_vector, 'pi', self.ncat, self.nsteps, init_scale=init_scale, init_bias=init_bias, np_mask=self.np_mask, is_act_model=self.is_act_model)
+        """add fc and create CategoricalPd"""
+        pdparam, mask, mask_npinf = _matching_fc(latent_vector, 'pi', self.ncat, self.nsteps,
+                                                 init_scale=init_scale, init_bias=init_bias,
+                                                 np_mask=self.np_mask, is_act_model=self.is_act_model)
         return self.pdfromflat(pdparam, mask_npinf, self.nsteps, self.ncat, self.is_act_model), pdparam, mask, mask_npinf
 
     def param_shape(self):
@@ -162,6 +174,9 @@ class CategoricalPdType(PdType):
         return tf.int32
 
 def _matching_fc(tensor, name, size, nsteps, init_scale, init_bias, np_mask, is_act_model):
+    """
+    add fc op, and add mask op when not in action mode
+    """
     if tensor.shape[-1] == size:
         assert False
         return tensor
