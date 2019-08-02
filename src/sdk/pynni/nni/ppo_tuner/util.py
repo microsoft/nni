@@ -23,36 +23,39 @@ util functions
 
 import os
 import random
+import multiprocessing
 import numpy as np
 import tensorflow as tf
 from gym.spaces import Discrete, Box, MultiDiscrete
-import multiprocessing
 
 def set_global_seeds(i):
+    """set global seeds"""
     rank = 0
     myseed = i  + 1000 * rank if i is not None else None
-    import tensorflow as tf
     tf.set_random_seed(myseed)
     np.random.seed(myseed)
     random.seed(myseed)
 
 def batch_to_seq(h, nbatch, nsteps, flat=False):
+    """convert from batch to sequence"""
     if flat:
         h = tf.reshape(h, [nbatch, nsteps])
     else:
         h = tf.reshape(h, [nbatch, nsteps, -1])
     return [tf.squeeze(v, [1]) for v in tf.split(axis=1, num_or_size_splits=nsteps, value=h)]
 
-def seq_to_batch(h, flat = False):
+def seq_to_batch(h, flat=False):
+    """convert from sequence to batch"""
     shape = h[0].get_shape().as_list()
     if not flat:
-        assert(len(shape) > 1)
+        assert len(shape) > 1
         nh = h[0].get_shape()[-1].value
         return tf.reshape(tf.concat(axis=1, values=h), [-1, nh])
     else:
         return tf.reshape(tf.stack(values=h, axis=1), [-1])
 
 def lstm(xs, ms, s, scope, nh, init_scale=1.0):
+    """lstm cell"""
     nbatch, nin = [v.value for v in xs[0].get_shape()]
     with tf.variable_scope(scope):
         wx = tf.get_variable("wx", [nin, nh*4], initializer=ortho_init(init_scale))
@@ -129,6 +132,7 @@ def lstm_model(nlstm=128, layer_norm=False):
 
 
 def ortho_init(scale=1.0):
+    """init approach"""
     def _ortho_init(shape, dtype, partition_info=None):
         #lasagne ortho init for tf
         shape = tuple(shape)
@@ -146,6 +150,7 @@ def ortho_init(scale=1.0):
     return _ortho_init
 
 def fc(x, scope, nh, *, init_scale=1.0, init_bias=0.0):
+    """fully connected op"""
     with tf.variable_scope(scope):
         nin = x.get_shape()[1].value
         w = tf.get_variable("w", [nin, nh], initializer=ortho_init(init_scale))
@@ -154,7 +159,9 @@ def fc(x, scope, nh, *, init_scale=1.0, init_bias=0.0):
 
 
 def _check_shape(placeholder_shape, data_shape):
-    ''' check if two shapes are compatible (i.e. differ only by dimensions of size 1, or by the batch dimension)'''
+    """
+    check if two shapes are compatible (i.e. differ only by dimensions of size 1, or by the batch dimension)
+    """
 
     return True
 
@@ -163,7 +170,7 @@ def _check_shape(placeholder_shape, data_shape):
 # Shape adjustment for feeding into tf placeholders
 # ================================================================
 def adjust_shape(placeholder, data):
-    '''
+    """
     adjust shape of the data to the shape of the placeholder if possible.
     If shape is incompatible, AssertionError is thrown
 
@@ -173,7 +180,7 @@ def adjust_shape(placeholder, data):
 
     Returns:
     reshaped data
-    '''
+    """
 
     if not isinstance(data, np.ndarray) and not isinstance(data, list):
         return data
@@ -221,30 +228,26 @@ def initialize():
     """Initialize all the uninitialized variables in the global scope."""
     new_variables = set(tf.global_variables()) - ALREADY_INITIALIZED
     get_session().run(tf.variables_initializer(new_variables))
-    
+
     ALREADY_INITIALIZED.update(new_variables)
 
 
 def observation_placeholder(ob_space, batch_size=None, name='Ob'):
-    '''
+    """
     Create placeholder to feed observations into of the size appropriate to the observation space
 
     Parameters:
     ----------
-
     ob_space: gym.Space     observation space
-
     batch_size: int         size of the batch to be fed into input. Can be left None in most cases.
-
     name: str               name of the placeholder
 
     Returns:
     -------
-
     tensorflow placeholder tensor
-    '''
+    """
 
-    assert isinstance(ob_space, Discrete) or isinstance(ob_space, Box) or isinstance(ob_space, MultiDiscrete), \
+    assert isinstance(ob_space, (Discrete, Box, MultiDiscrete)), \
         'Can only deal with Discrete and Box observation spaces for now'
 
     dtype = ob_space.dtype
@@ -253,7 +256,7 @@ def observation_placeholder(ob_space, batch_size=None, name='Ob'):
 
     return tf.placeholder(shape=(batch_size,) + ob_space.shape, dtype=dtype, name=name)
 
-def explained_variance(ypred,y):
+def explained_variance(ypred, y):
     """
     Computes fraction of variance that ypred explains about y.
     Returns 1 - Var[y-ypred] / Var[y]
@@ -266,4 +269,4 @@ def explained_variance(ypred,y):
     """
     assert y.ndim == 1 and ypred.ndim == 1
     vary = np.var(y)
-    return np.nan if vary==0 else 1 - np.var(y-ypred)/vary
+    return np.nan if vary == 0 else 1 - np.var(y-ypred)/vary
