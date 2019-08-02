@@ -15,13 +15,13 @@ def bias_variable(shape):
 def sum_op(inputs):
     """sum_op"""
     fixed_input = inputs[0][0]
-    optional_input = inputs[1][0]
+    optional_input = tf.concat(inputs[1], axis=3)
     fixed_shape = fixed_input.get_shape().as_list()
     optional_shape = optional_input.get_shape().as_list()
     assert fixed_shape[1] == fixed_shape[2]
     assert optional_shape[1] == optional_shape[2]
     pool_size = math.ceil(optional_shape[1] / fixed_shape[1])
-    pool_out = tf.nn.avg_pool(optional_input, ksize=[1, pool_size, pool_size, 1], strides=[1, pool_size, pool_size, 1], padding='SAME')
+    pool_out = tf.nn.avg_pool(inputs[1][0], ksize=[1, pool_size, pool_size, 1], strides=[1, pool_size, pool_size, 1], padding='SAME')
     conv_matrix = weight_variable([1, 1, optional_shape[3], fixed_shape[3]])
     conv_out = tf.nn.conv2d(pool_out, conv_matrix, strides=[1, 1, 1, 1], padding='SAME')
     return fixed_input + conv_out

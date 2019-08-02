@@ -15,7 +15,7 @@ def bias_variable(shape):
 def sum_op(inputs):
     """sum_op"""
     fixed_input = inputs[0][0]
-    optional_input = inputs[1][0]
+    optional_input = tf.concat(inputs[1], axis=3)
     fixed_shape = fixed_input.get_shape().as_list()
     optional_shape = optional_input.get_shape().as_list()
     assert fixed_shape[1] == fixed_shape[2]
