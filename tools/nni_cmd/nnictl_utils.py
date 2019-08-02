@@ -118,12 +118,14 @@ def check_experiment_id(args, update=True):
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
-    1.If there is an id specified, return the corresponding id
-    2.If there is no id specified, and there is an experiment running, return the id, or return Error
-    3.If the id matches an experiment, nnictl will return the id.
-    4.If the id ends with *, nnictl will match all ids matchs the regular
-    5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
-    6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
+    1.If port is provided and id is not specified, return the id who owns the port
+    2.If both port and id are provided, return the id if it owns the port, otherwise fail
+    3.If there is an id specified, return the corresponding id
+    4.If there is no id specified, and there is an experiment running, return the id, or return Error
+    5.If the id matches an experiment, nnictl will return the id.
+    6.If the id ends with *, nnictl will match all ids matchs the regular
+    7.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
+    8.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''
     update_experiment()
     experiment_config = Experiments()
@@ -140,7 +142,14 @@ def parse_ids(args):
         elif isinstance(experiment_dict[key], list):
             # if the config file is old version, remove the configuration from file
             experiment_config.remove_experiment(key)
-    if not args.id:
+    if args.port is not None:
+        for key in running_experiment_list:
+            if str(experiment_dict[key]['port']) == args.port:
+                result_list.append(key)
+        if args.id and result_list and args.id != result_list[0]:
+            print_error('Experiment id and resful server port not match')
+            exit(1)
+    elif not args.id:
         if len(running_experiment_list) > 1:
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
@@ -151,7 +160,7 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.all:
+    elif args.id == 'all':
         result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
@@ -166,8 +175,8 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list and args.id:
-        print_error('There are no experiments matched, please set correct experiment id...')
+    if not result_list and ((args.id and args.id != 'all') or args.port):
+        print_error('There are no experiments matched, please set correct experiment id or restful server port')
     elif not result_list:
         print_error('There is no experiment running...')
     return result_list
@@ -511,9 +520,9 @@ def platform_clean(args):
     if platform not in ['remote', 'pai']:
         print_normal('platform {0} not supported.'.format(platform))
         exit(0)
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    update_experiment()
     id_list = list(experiment_dict.keys())
     dir_list = get_platform_dir(config_content)
     if not dir_list:
@@ -544,12 +553,12 @@ def platform_clean(args):
 
 def experiment_list(args):
     '''get the information of all experiments'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print_normal('Cannot find experiments.')
         exit(1)
-    update_experiment()
     experiment_id_list = []
     if args.all:
         for key in experiment_dict.keys():
@@ -586,12 +595,12 @@ def get_time_interval(time1, time2):
 
 def show_experiment_info():
     '''show experiment information in monitor'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print('There is no experiment running...')
         exit(1)
-    update_experiment()
     experiment_id_list = []
     for key in experiment_dict.keys():
         if experiment_dict[key]['status'] != 'STOPPED':

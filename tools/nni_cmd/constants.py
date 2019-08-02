@@ -34,12 +34,12 @@ DEFAULT_REST_PORT = 8080
 REST_TIME_OUT = 20
 
 EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fore.RESET + \
-                          '-----------------------------------------------------------------------\n' \
+                          '------------------------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
                           'The Web UI urls are: %s\n' \
-                          '-----------------------------------------------------------------------\n\n' \
+                          '------------------------------------------------------------------------------------\n\n' \
                           'You can use these commands to get more information about the experiment\n' \
-                          '-----------------------------------------------------------------------\n' \
+                          '------------------------------------------------------------------------------------\n' \
                           '         commands                       description\n' \
                           '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
@@ -49,7 +49,9 @@ EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fo
                           '6. nnictl stop                   stop an experiment\n' \
                           '7. nnictl trial kill             kill a trial job by id\n' \
                           '8. nnictl --help                 get help information about nnictl\n' \
-                          '-----------------------------------------------------------------------\n' \
+                          '------------------------------------------------------------------------------------\n' \
+                          'Command reference document https://nni.readthedocs.io/en/latest/Tutorial/Nnictl.html\n' \
+                          '------------------------------------------------------------------------------------\n'
 
 LOG_HEADER = '-----------------------------------------------------------------------\n' \
              '                Experiment start time %s\n' \

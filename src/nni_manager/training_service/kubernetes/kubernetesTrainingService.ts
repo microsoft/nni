@@ -38,6 +38,8 @@ import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
+var fs = require('fs');
+
 /**
  * Training Service implementation for Kubernetes
  */
@@ -327,5 +329,34 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
+
+    protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
+        if(filePath === undefined || filePath === '') {
+            return undefined;
+        }
+        let body = fs.readFileSync(filePath).toString('base64');
+        let registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
+                                                                            .toLowerCase());
+        await this.genericK8sClient.createSecret(
+            {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: registrySecretName,
+                    namespace: 'default',
+                    labels: {
+                        app: this.NNI_KUBERNETES_TRIAL_LABEL,
+                        expId: getExperimentId()
+                    }
+                },
+                type: 'kubernetes.io/dockerconfigjson',
+                data: {
+                    '.dockerconfigjson': body
+                }
+            }
+        );
+        return registrySecretName;
+    }
+     
 }
 export { KubernetesTrainingService };

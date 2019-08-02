@@ -7,6 +7,7 @@ In addtion to the official tutorilas and examples, we encourage community contri
 ..  toctree::
     :maxdepth: 2
 
-    NNI Practice Sharing<nni_practice_sharing>
-    Neural Architecture Search Comparison<./CommunitySharings/NasComparison>
-    Hyper-parameter Tuning Algorithm Comparsion<./CommunitySharings/HpoComparison>
+    NNI in Recommenders <RecommendersSvd>
+    Neural Architecture Search Comparison <NasComparision>
+    Hyper-parameter Tuning Algorithm Comparsion <HpoComparision>
+    Parallelizing Optimization for TPE <ParallelizingTpeSearch>
