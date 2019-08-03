@@ -1,4 +1,4 @@
-# NNI support frameworks and libraries
+# NNI Support Frameworks and Libraries
 NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help.
 
 
