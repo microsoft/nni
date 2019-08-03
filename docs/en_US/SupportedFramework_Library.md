@@ -38,34 +38,7 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
 </table>
 
 
-## Supported Frameworks
-<ul>
-    <li><i>Numpy</li>
-    <li>Pandas</li>
-    <li>GBDT</li>
-    <li>Matplotlib</li>
-    <li>Ctypes</li>
-    <li>Smtplib</li> 
-    <li>Scrapy</li>
-    <li>Pillow</li>
-    <li>SQLAlchemy</li>
-    <li>Scapy</li>
-    <li>IPython</i></li>
-    <li>...</li>
-</ul>
 
-## Supported Librarys
-<ul>
-    <li><i>PyTorch</li>
-    <li>TensorFlow</li>
-    <li>Keras</li>
-    <li>MXNet</li>
-    <li>Caffe2</li>
-    <li>CNTK (Python language)</li>
-    <li>Chainer</li>
-    <li>Theano</i></li>
-    <li>...</li>
-</ul>
 
 ## Related Examples
 
@@ -82,3 +55,34 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
 * [Scikit-learn](TrialExample/Cifar10Examples.md)
 
 If you want to learn how to write trial yourself and run on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help.
+
+
+
+## Supported Frameworks
+<ul>
+  <li><i>PyTorch</li>
+    <li>TensorFlow</li>
+    <li>Keras</li>
+    <li>MXNet</li>
+    <li>Caffe2</li>
+    <li>CNTK (Python language)</li>
+    <li>Chainer</li>
+    <li>Theano</i></li>
+    <li>...</li>  
+</ul>
+
+## Supported Librarys
+<ul>
+<li><i>Numpy</li>
+    <li>Pandas</li>
+    <li>GBDT</li>
+    <li>Matplotlib</li>
+    <li>Ctypes</li>
+    <li>Smtplib</li> 
+    <li>Scrapy</li>
+    <li>Pillow</li>
+    <li>SQLAlchemy</li>
+    <li>Scapy</li>
+    <li>IPython</i></li>
+    <li>...</li>
+</ul>
