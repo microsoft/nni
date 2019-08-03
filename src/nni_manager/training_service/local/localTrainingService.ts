@@ -307,9 +307,11 @@ class LocalTrainingService implements TrainingService {
                 if (this.localTrailConfig === undefined) {
                     throw new Error('trial config parsed failed');
                 }
-                this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
-                if (this.gpuScheduler === undefined && this.localTrailConfig.gpuNum > 0) {
-                    this.gpuScheduler = new GPUScheduler();
+                if (this.localTrailConfig.gpuNum !== undefined) {
+                    this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
+                    if (this.gpuScheduler === undefined && this.localTrailConfig.gpuNum > 0) {
+                        this.gpuScheduler = new GPUScheduler();
+                    }
                 }
                 break;
             case TrialConfigMetadataKey.LOCAL_CONFIG:
@@ -399,7 +401,8 @@ class LocalTrainingService implements TrainingService {
 
     private getEnvironmentVariables(
         trialJobDetail: TrialJobDetail,
-        resource: { gpuIndices: number[] }): { key: string; value: string }[] {
+        resource: { gpuIndices: number[] },
+        gpuNum: number | undefined): { key: string; value: string }[] {
         const envVariables: { key: string; value: string }[] = [
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_EXP_ID', value: this.experimentId },
@@ -409,11 +412,12 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
-
-        envVariables.push({
-            key: 'CUDA_VISIBLE_DEVICES',
-            value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
-        });
+        if (gpuNum !== undefined) {
+            envVariables.push({
+                key: 'CUDA_VISIBLE_DEVICES',
+                value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
+            });
+        }
 
         return envVariables;
     }
@@ -490,6 +494,7 @@ class LocalTrainingService implements TrainingService {
                     if (!success) {
                         break;
                     }
+                    
                     this.occupyResource(resource);
                     await this.runTrialJob(trialJobId, resource);
                 }
@@ -526,7 +531,10 @@ class LocalTrainingService implements TrainingService {
 
     private async runTrialJob(trialJobId: string, resource: {gpuIndices: number[]}): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
+        if (this.localTrailConfig === undefined) {
+            throw new Error(`localTrialConfig not initialized!`);
+        }
+        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource, this.localTrailConfig.gpuNum);
 
         if (this.localTrailConfig === undefined) {
             throw new Error('trial config is not initialized');

@@ -253,6 +253,14 @@ def validate_pai_trial_conifg(experiment_config):
         experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')
             exit(1)
+        #backward compatibility
+        warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
+        please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
+        for the practices of how to get data and output model in trial code'
+        if experiment_config.get('trial').get('dataDir'):
+            print_warning(warning_information.format('dataDir'))
+        if experiment_config.get('trial').get('outputDir'):
+            print_warning(warning_information.format('outputDir'))
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''

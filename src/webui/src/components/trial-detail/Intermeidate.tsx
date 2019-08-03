@@ -114,7 +114,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'metric'
+                    name: 'Metric'
                 },
                 series: trialIntermediate
             };
@@ -136,7 +136,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'metric'
+                    name: 'Metric'
                 }
             };
             if (this._isMounted) {
@@ -283,9 +283,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 {/* style in para.scss */}
                 <Row className="meline intermediate">
                     <Col span={8} />
-                    <Col span={3} style={{ height: 34 }}>
+                    <Col span={3} className="inter-filter-btn">
                         {/* filter message */}
-                        <span>filter</span>
+                        <span>Filter</span>
                         <Switch
                             defaultChecked={false}
                             onChange={this.switchTurn}

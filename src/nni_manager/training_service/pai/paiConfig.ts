@@ -69,12 +69,10 @@ export class PAIJobConfig {
     public readonly jobName: string;
     // URL pointing to the Docker image for all tasks in the job
     public readonly image: string;
-    // Data directory existing on HDFS
-    public readonly dataDir: string;
-    // Output directory on HDFS
-    public readonly outputDir: string;
     // Code directory on HDFS
     public readonly codeDir: string;
+    //authentication file used for private Docker registry 
+    public readonly authFile?: string;
 
     // List of taskRole, one task role at least
     public taskRoles: PAITaskRole[];
@@ -90,15 +88,14 @@ export class PAIJobConfig {
      * @param outputDir Output directory on HDFS
      * @param taskRoles List of taskRole, one task role at least
      */
-    constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string,
-                taskRoles : PAITaskRole[], virtualCluster: string) {
+    constructor(jobName: string, image : string, codeDir : string,
+                taskRoles : PAITaskRole[], virtualCluster: string, authFile?: string) {
         this.jobName = jobName;
         this.image = image;
-        this.dataDir = dataDir;
-        this.outputDir = outputDir;
         this.codeDir = codeDir;
         this.taskRoles = taskRoles;
         this.virtualCluster = virtualCluster;
+        this.authFile = authFile;
     }
 }
 
@@ -130,23 +127,22 @@ export class NNIPAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;
-    public readonly dataDir: string;
-    public outputDir: string;
 
     //The virtual cluster job runs on. If omitted, the job will run on default virtual cluster
     public virtualCluster?: string;
     //Shared memory for one task in the task role
     public shmMB?: number;
+    //authentication file used for private Docker registry 
+    public authFile?: string;
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
-                image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
+                image: string, virtualCluster?: string, shmMB?: number, authFile?: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
-        this.dataDir = dataDir;
-        this.outputDir = outputDir;
         this.virtualCluster = virtualCluster;
         this.shmMB = shmMB;
+        this.authFile = authFile;
     }
 }
