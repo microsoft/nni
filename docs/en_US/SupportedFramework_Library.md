@@ -4,8 +4,8 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
 
 <table>
   <tr width="300">
-    <th width="300"><b>Supported Frameworks</b></th>
-    <th width="300"><b>Supported Librarys</b></th>
+    <th width="230"><b>Supported Frameworks</b></th>
+    <th width="230"><b>Supported Librarys</b></th>
   </tr>
   <tr>
     <td valign="top"><ul>
