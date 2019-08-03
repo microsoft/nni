@@ -1,7 +1,7 @@
 # NNI support frameworks and libraries
 NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are some common frameworks and libraries.
 
-## Supported Framework
+## Supported Frameworks
 <ul>
     <li><i>Numpy</li>
     <li>Pandas</li>
@@ -17,7 +17,7 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
     <li>...</li>
 </ul>
 
-## Supported Library
+## Supported Librarys
 <ul>
     <li><i>PyTorch</li>
     <li>TensorFlow</li>
