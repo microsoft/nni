@@ -13,8 +13,8 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
     <li>Pillow</li>
     <li>SQLAlchemy</li>
     <li>Scapy</li>
-    <li>IPython</li>
-    <li>...</li></i>
+    <li>IPython</i></li>
+    <li>...</li>
 </ul>
 
 ## Supported Library
@@ -26,7 +26,11 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
     <li>Caffe2</li>
     <li>CNTK (Python language)</li>
     <li>Chainer</li>
-    <li>Theano</li>
-    <li>...</li></i>
+    <li>Theano</i></li>
+    <li>...</li>
 </ul>
 
+## Related Examples
+
+
+* [auto-feature-engineering]()
