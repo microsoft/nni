@@ -2,7 +2,7 @@
 NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are some common frameworks and libraries.
 
 
-<table border="1">
+<table >
   <tr width="300">
     <th width="200"><b>Supported Frameworks</b></th>
     <th width="200"><b>Supported Librarys</b></th>
