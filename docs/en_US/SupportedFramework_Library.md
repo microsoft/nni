@@ -46,13 +46,13 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
 * [MNIST-tensorflow](../../examples/trials/mnist-distributed)
 * [MNIST-keras](../../examples/trials/mnist-keras)
 * [GBDT](TrialExample/GbdtExample.md)
-* [Cifar10](TrialExample/Cifar10Examples.md)
+* [CIFAR-10](TrialExample/Cifar10Examples.md)
 * [Auto-feature-engineering](../../examples/trials/auto-feature-engineering/README.md)
 * [Squad](../../examples/trials/ga_squad/README.md)
 * [TGS Salt Identification Chanllenge](../../examples/trials/kaggle-tgs-salt/README.md)
 * [NAS_cifar10](../../examples/trials/nas_cifar10/README.md)
 * [Network_Morphism](../../examples/trials/network_morphism/README.md)
-* [Scikit-learn](TrialExample/Cifar10Examples.md)
+* [Scikit-learn](TrialExample/SklearnExamples.md)
 
 
 
