@@ -49,8 +49,8 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
 * [CIFAR-10](TrialExample/Cifar10Examples.md)
 * [Auto-feature-engineering](../../examples/trials/auto-feature-engineering/README.md)
 * [Squad](../../examples/trials/ga_squad/README.md)
-* [TGS Salt Identification Chanllenge](../../examples/trials/kaggle-tgs-salt/README.md)
-* [Network_Morphism](../../examples/trials/network_morphism/README.md)
+* [TGS salt identification chanllenge](../../examples/trials/kaggle-tgs-salt/README.md)
+* [Network_morphism](../../examples/trials/network_morphism/README.md)
 * [Scikit-learn](TrialExample/SklearnExamples.md)
 
 
