@@ -1,5 +1,5 @@
 # NNI support frameworks and libraries
-NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are some common frameworks and libraries.
+NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are some common frameworks and libraries.If you want to learn how to write trial yourself and run on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help.
 
 
 <table>
@@ -54,7 +54,7 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.Here are so
 * [Network_Morphism](../../examples/trials/network_morphism/README.md)
 * [Scikit-learn](TrialExample/Cifar10Examples.md)
 
-If you want to learn how to write trial yourself and run on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help.
+
 
 
 
