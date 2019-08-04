@@ -4,29 +4,30 @@
 
 Click the tab "Overview".
 
-* See the experiment trial profile/search space message and good performance trials.
+* See the experiment trial profile/search space and performanced good trials.
 
 ![](../../img/webui-img/over1.png)
 ![](../../img/webui-img/over2.png)
-* Support to download the experiment result and export nni-manager/dispatcher log file from the download.
+* If your experiment have many trials, you can change the refresh interval on here.
+
+![](../../img/webui-img/refresh-interval.png)
+* Support to review and download the experiment result and nni-manager/dispatcher log file from the download.
 
 ![](../../img/webui-img/download.png)
-* You can click the learn about to track experiment log message if the experiment's status is error.
+* You can click the learn about in the error box to track experiment log message if the experiment's status is error.
 
 ![](../../img/webui-img/log-error.png)
 ![](../../img/webui-img/review-log.png)
 
-* If your experiment have more than 1000 trials, you can change the refresh interval on here.
-
-![](../../img/webui-img/refresh-interval.png)
-* If you have any question, you can click "Feedback" to report it.
+* You can click "Feedback" to report it if you have any questions.
 
 ## View job default metric
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+* Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
 ![](../../img/webui-img/default-metric.png)
-Click the switch named "optimization curve" to see the experiment's optimization curve.
+
+* Click the switch named "optimization curve" to see the experiment's optimization curve.
 
 ![](../../img/webui-img/best-curve.png)
 
@@ -48,13 +49,14 @@ Click the tab "Trial Duration" to see the bar graph.
 Click the tab "Intermediate Result" to see the lines graph.
 
 ![](../../img/webui-img/trials_intermeidate.png)
-We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide three data if you want to use the filter button to see the trend of some trial.
+
+We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide data if you want to use the filter button to see the trend of some trial.
 
 What data should be written in the first input? Maybe you find an intermediate count those trials became better or worse. In other word, it's an important and concerned intermediate count. Just input it into the first input.
 
 After selecting the intermeidate count, you should input your focus metric's range on this intermediate count. Yes, it's the min and max value. Like this picture, I choose the intermeidate count is 9 and the metric's range is 60-80.
 
-As a result, I filter these trials the metric's range is 20-60 on the 13 intermediate count.
+As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
 
 ![](../../img/webui-img/filter_intermediate.png)
 ## View trials status
@@ -71,17 +73,20 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 ![](../../img/webui-img/select-trial.png)
 ![](../../img/webui-img/compare.png)
+* Support to search for a specific trial by it's id, status, Trial No. and parameters.
+
+![](../../img/webui-img/search-trial.png)
 * You can use the button named "Copy as python" to copy trial's parameters.
 
 ![](../../img/webui-img/copyParameter.png)
 * If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../../img/webui-img/detail-pai.png)
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial by it's id, status, Trial No. and parameters.
-
-![](../../img/webui-img/search-trial.png)
 * Intermediate Result Graph: you can see default and other keys in this graph by click the operation column button.
 
 ![](../../img/webui-img/intermediate-btn.png)
 ![](../../img/webui-img/intermediate.png)
+* Kill: you can kill a job that status is running.
+
+![](../../img/webui-img/kill-running.png)
+![](../../img/webui-img/canceled.png)
