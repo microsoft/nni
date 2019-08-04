@@ -198,7 +198,7 @@ class Compare extends React.Component<CompareProps, {}> {
                     {this.intermediate()}
                     <Row className="compare-yAxis"># Intermeidate</Row>
                 </Row>
-                <Row className="">{this.initColumn()}</Row>
+                <Row>{this.initColumn()}</Row>
             </Modal>
         );
     }
