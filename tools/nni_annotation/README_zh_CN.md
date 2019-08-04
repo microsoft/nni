@@ -27,7 +27,7 @@ NNI 中，有 4 种类型的 Annotation；
 
 **参数**
 
-- **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](https://nni.readthedocs.io/zh/latest/SearchSpaceSpec.html)。
+- **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见[搜索空间](https://nni.readthedocs.io/zh/latest/SearchSpaceSpec.html)。
 - **name**: 将被赋值的变量名称。 注意，此参数应该与下面一行等号左边的值相同。
 
 NNI 支持如下 10 种类型来表示搜索空间：

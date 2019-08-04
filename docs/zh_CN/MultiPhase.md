@@ -39,7 +39,7 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 ### 编写使用多阶段的 Tuner：
 
-强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始编写多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
+强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/zh/latest/CustomizeTuner.html)，再开始编写多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
 
     generate_parameters
     generate_multiple_parameters

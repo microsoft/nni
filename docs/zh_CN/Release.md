@@ -93,8 +93,8 @@
 ### 文档
 
 * 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
-* 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* 调试和维护：https://nni.readthedocs.io/zh/latest/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/zh/latest/sdk_reference.html#tuner
 
 ### Bug 修复和其它更新
 
