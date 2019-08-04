@@ -27,23 +27,23 @@
 
 /* Intermediate Result Style */
 .intermediate{
+    width: 90%;
+    text-align: right;
    /* border: 1px solid blue; */
     input{
-        width: 80px;
+        width: 64px;
         height: 32px;
         padding-left: 8px;
     }
     .strange{
         margin-top: 2px;
+        margin-right: 15px;
     }
-    .inter-filter-btn{
-        height: 34px;
-        line-height: 34px;
+    .heng{
+        margin-left: 6px;
+        margin-right: 6px;
     }
-    .range{
-        .heng{
-            margin-left: 6px;
-            margin-right: 6px;
-        }
+    .filter-x{
+        margin-left: 15px;
     }
 }

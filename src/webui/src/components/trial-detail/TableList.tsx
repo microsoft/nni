@@ -1,10 +1,10 @@
 import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
-import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select } from 'antd';
+import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select, Icon } from 'antd';
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
+import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
@@ -192,7 +192,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermediate result':
+                case 'Intermeidate count':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -285,7 +285,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
-        let showTitle = COLUMN;
+        let showTitle = COLUMNPro;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         const showColumn: Array<object> = [];
@@ -295,13 +295,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 if (this._isMounted) {
                     // concat default column and finalkeys
                     const item = Object.keys(temp);
-                    const want: Array<string> = [];
-                    Object.keys(item).map(key => {
-                        if (item[key] !== 'default') {
-                            want.push(item[key]);
-                        }
-                    });
-                    showTitle = COLUMN.concat(want);
+                    if (item.length <= 1) {
+                        const want: Array<string> = [];
+                        Object.keys(item).map(key => {
+                            if (item[key] !== 'default') {
+                                want.push(item[key]);
+                            }
+                        });
+                        showTitle = COLUMNPro.concat(want);
+                    }
                 }
             }
         }
@@ -345,7 +347,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Duration',
                         dataIndex: 'duration',
                         key: 'duration',
-                        width: 140,
+                        width: 100,
                         // the sort of number
                         sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
                         render: (text: string, record: TableObj) => {
@@ -387,6 +389,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
+                case 'Intermeidate count':
+                    showColumn.push({
+                        title: 'Intermediate count',
+                        dataIndex: 'progress',
+                        key: 'progress',
+                        width: 86,
+                        render: (text: string, record: TableObj) => {
+                            return (
+                                <span>{`#${record.description.intermediate.length}`}</span>
+                            );
+                        },
+                    });
+                    break;
                 case 'Default':
                     showColumn.push({
                         title: 'Default metric',
@@ -415,37 +430,37 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Operation',
                         dataIndex: 'operation',
                         key: 'operation',
-                        width: 90,
+                        width: 120,
                         render: (text: string, record: TableObj) => {
                             let trialStatus = record.status;
-                            let flagKill = false;
-                            if (trialStatus === 'RUNNING') {
-                                flagKill = true;
-                            } else {
-                                flagKill = false;
-                            }
+                            const flag: boolean = trialStatus === 'RUNNING' ? false : true;
                             return (
-                                flagKill
-                                    ?
-                                    (
-                                        <Popconfirm
-                                            title="Are you sure to cancel this trial?"
-                                            onConfirm={killJob.
-                                                bind(this, record.key, record.id, record.status, updateList)}
-                                        >
-                                            <Button type="primary" className="tableButton">Kill</Button>
-                                        </Popconfirm>
-                                    )
-                                    :
-                                    (
+                                <Row id="detail-button">
+                                    {/* see intermediate result graph */}
+                                    <Button
+                                        type="primary"
+                                        className="common-style"
+                                        onClick={this.showIntermediateModal.bind(this, record.id)}
+                                        title="Intermediate"
+                                    >
+                                        <Icon type="line-chart" />
+                                    </Button>
+                                    {/* kill job */}
+                                    <Popconfirm
+                                        title="Are you sure to cancel this trial?"
+                                        onConfirm={killJob.
+                                            bind(this, record.key, record.id, record.status, updateList)}
+                                    >
                                         <Button
-                                            type="primary"
-                                            className="tableButton"
-                                            disabled={true}
+                                            type="default"
+                                            disabled={flag}
+                                            className="margin-mediate special"
+                                            title="kill"
                                         >
-                                            Kill
+                                            <Icon type="stop" />
                                         </Button>
-                                    )
+                                    </Popconfirm>
+                                </Row>
                             );
                         },
                     });

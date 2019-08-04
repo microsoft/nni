@@ -83,3 +83,14 @@
             }
     }
 }
+
+/* for # intermediate in intermeidate graph*/
+.intermeidate-graph{
+    position: relative;
+    .yAxis{
+        color: #333;
+        position: absolute;
+        left: 45%;
+        top: 86%;
+    }
+}
