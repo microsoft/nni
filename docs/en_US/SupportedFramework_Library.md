@@ -38,44 +38,6 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
 </table>
 
 
-<table>
-  <tr width="300">
-    <th width="230"><b>Supported Frameworks and Librarys</b></th>
-    <th width="230"><b>Detail</b></th>
-  </tr>
-    <th><i>PyTorch</i></th>
-    <th>ba</th>
-  </tr>
-    <th><i>TensorFlow</i></th>
-  <th>ba</th>
-  </tr>
-    <th><i>Keras</i></th>
-    <th>ba</th>
-  </tr>
-    <th><i>MXNet</i></th>
-     <th>ba</th>
-  </tr>
-    <th><i>CNTK (Python language)</i></th>
-   <th>ba</th>
-  </tr>
-   <th><i>Chainer</i></th>
-  <th>ba</th>
-  </tr>
-   <th><i>Theano</i></th>
-   <th>ba</th>
-  </tr>
-   <th><i>GBDT</i></th>
-    <th>ba</th>
-  </tr>
-   <th><i>GBDT</i></th>
-     <th>ba</th>
-  </tr>
-   </td>
-  </tr>
-</table>
-
-
-
 ## Related Examples
 
 * [MNIST-pytorch](../../examples/trials/mnist-distributed-pytorch)
