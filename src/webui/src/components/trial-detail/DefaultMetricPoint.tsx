@@ -37,8 +37,8 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     defaultMetric = (succeedSource: Array<TableObj>, isCurve: boolean) => {
         const { optimize } = this.props;
         const accSource: Array<DetailAccurPoint> = [];
-        const showSource: Array<TableObj> = succeedSource.filter(filterByStatus);
-        const lengthOfSource = showSource.length;
+        const drawSource: Array<TableObj> = succeedSource.filter(filterByStatus);
+        const lengthOfSource = drawSource.length;
         const tooltipDefault = lengthOfSource === 0 ? 'No data' : '';
         if (this._isDefaultMounted === true) {
             this.setState(() => ({
@@ -67,13 +67,14 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             }
         } else {
             const resultList: Array<number | object>[] = [];
-            const lineListDefault: Array<number> = [];
-            Object.keys(showSource).map(item => {
-                const temp = showSource[item];
+            // lineListDefault: [[sequenceId, default metric], []]
+            const lineListDefault: Array<number>[] = [];
+            Object.keys(drawSource).map(item => {
+                const temp = drawSource[item];
                 if (temp.acc !== undefined) {
                     if (temp.acc.default !== undefined) {
                         const searchSpace = temp.description.parameters;
-                        lineListDefault.push(temp.acc.default);
+                        lineListDefault.push([temp.sequenceId, temp.acc.default]);
                         accSource.push({
                             acc: temp.acc.default,
                             index: temp.sequenceId,
@@ -84,25 +85,25 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             });
             // deal with best metric line
             const bestCurve: Array<number | object>[] = []; // best curve data source
-            bestCurve.push([0, lineListDefault[0], accSource[0].searchSpace]); // push the first value
+            bestCurve.push([lineListDefault[0][0], lineListDefault[0][1], accSource[0].searchSpace]);
             if (optimize === 'maximize') {
                 for (let i = 1; i < lineListDefault.length; i++) {
-                    const val = lineListDefault[i];
+                    const val = lineListDefault[i][1];
                     const latest = bestCurve[bestCurve.length - 1][1];
                     if (val >= latest) {
-                        bestCurve.push([i, val, accSource[i].searchSpace]);
+                        bestCurve.push([lineListDefault[i][0], val, accSource[i].searchSpace]);
                     } else {
-                        bestCurve.push([i, latest, accSource[i].searchSpace]);
+                        bestCurve.push([lineListDefault[i][0], latest, accSource[i].searchSpace]);
                     }
                 }
             } else {
                 for (let i = 1; i < lineListDefault.length; i++) {
-                    const val = lineListDefault[i];
+                    const val = lineListDefault[i][1];
                     const latest = bestCurve[bestCurve.length - 1][1];
                     if (val <= latest) {
-                        bestCurve.push([i, val, accSource[i].searchSpace]);
+                        bestCurve.push([lineListDefault[i][0], val, accSource[i].searchSpace]);
                     } else {
-                        bestCurve.push([i, latest, accSource[i].searchSpace]);
+                        bestCurve.push([lineListDefault[i][0], latest, accSource[i].searchSpace]);
                     }
                 }
             }
@@ -165,15 +166,30 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 type: 'value',
                 scale: true
             },
-            series: [{
-                symbolSize: 6,
-                type: 'scatter',
-                data: resultList
-            }, {
-                type: 'line',
-                lineStyle: { color: '#FF6600' },
-                data: realDefault
-            }]
+            series: [
+                {
+                    symbolSize: 6,
+                    type: 'scatter',
+                    data: resultList
+                },
+                {
+                    type: 'line',
+                    lineStyle: { color: '#FF6600' },
+                    data: realDefault
+                }
+            ]
+            // series: [
+            //     {
+            //         type: 'line',
+            //         lineStyle: { color: '#FF6600' },
+            //         data: realDefault
+            //     }, 
+            //     {
+            //         symbolSize: 6,
+            //         type: 'scatter',
+            //         data: resultList
+            //     }   
+            // ]
         };
     }
 
