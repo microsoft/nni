@@ -20,7 +20,7 @@
 
 l(x) 是通过观察 {x(i)} 来形成的密度，使得相应的损失 f(x(i)) 小于 y∗，而 g(x) 是使用剩余的观测值来形成的密度。 TPE 算法取决于 y∗ 大于观测到的最好的 f(x)，这样可以使用一些点来形成 l(x)。 TPE 算法选择了 y* 来作为一些观测值 y 的分位数 γ，因此 p(y<`y∗`) = γ，但不需要为特定的 p(y) 建模。 l 和 g 的树形结构使得根据 l 来计算多个候选项变得容易，可根据 g(x)/l(x) 来进行评估。 在每次迭代中，算法返回了具有最大 EI 的候选 x*。
 
-这是 TPE 算法在二维搜索空间上的模拟。 不同的背景色表示了不同的值。 可以看出，TPE 在探索和挖掘方面都很好。 （黑色表示此轮样本的点，黄色表示历史点。）
+这是 TPE 算法在二维搜索空间上的模拟。 不同的背景色表示了不同的值。 可以看出，TPE 在探索（exploration）和挖掘（exploitation）方面的表现都很好。 （黑色表示此轮样本的点，黄色表示历史点。）
 
 ![](../../img/parallel_tpe_search1.gif)
 
@@ -28,29 +28,29 @@ l(x) 是通过观察 {x(i)} 来形成的密度，使得相应的损失 f(x(i)) �
 
 ![](../../img/parallel_tpe_search_ei2.PNG)
 
-TPE performs well when we use it in sequential, but if we provide a larger concurrency, then **there will be a large number of points produced in the same EI state**, too concentrated points will reduce the exploration ability of the tuner, resulting in resources waste.
+TPE 在顺序执行时表现很好，但当并发性较大时，会**在相同的 EI 状态下产生大量的点**，过于集中的点会减少 Tuner 探索的能力，造成了资源的浪费。
 
-Here is the simulation figure when we set `concurrency=60`, It can be seen that this phenomenon is obvious.
+这是当 `concurrency=60` 时的模拟图，这种现象非常明显。
 
 ![](../../img/parallel_tpe_search2.gif)
 
-## Research solution
+## 研究的解决方案
 
-### Approximated q-EI Maximization
+### 近似 q-EI 最大化
 
-The multi-points criterion that we have presented below can potentially be used to deliver an additional design of experiments in one step through the resolution of the optimization problem.
+下面介绍的多点标准的新的 Experiment 设计一步解决此优化问题。
 
 ![](../../img/parallel_tpe_search_qEI.PNG)
 
-However, the computation of q-EI becomes intensive as q increases. After our research, there are four popular greedy strategies that approach the result of problem while avoiding its numerical cost.
+但是，当 q 增加时，q-EI 的计算变得很密集。 研究发现，四种流行的贪心策略可在解决此问题时，减少计算成本。
 
-#### Solution 1: Believing the OK Predictor: The KB(Kriging Believer) Heuristic Strategy
+#### 方案 1: Believing the OK Predictor: KB(Kriging Believer) 启发式策略
 
-The Kriging Believer strategy replaces the conditional knowledge about the responses at the sites chosen within the last iterations by deterministic values equal to the expectation of the Kriging predictor. Keeping the same notations as previously, the strategy can be summed up as follows:
+Kriging Believer 策略用等价于 Kriging 预测期望值的确定性值替换在最后一次迭代中选择的位置的响应的条件知识。 保持与上次相同的记号，此策略可归纳如下：
 
 ![](../../img/parallel_tpe_search_kb.PNG)
 
-This sequential strategy delivers a q-points design and is computationally affordable since it relies on the analytically known EI, optimized in d dimensions. However, there is a risk of failure, since believing an OK predictor that overshoots the observed data may lead to a sequence that gets trapped in a non-optimal region for many iterations. We now propose a second strategy that reduces this risk.
+这种顺序策略使用了 q-points 设计，在计算量上是可承受的，因为它依赖于分析已知的 EI，在 d 维上进行了优化。 However, there is a risk of failure, since believing an OK predictor that overshoots the observed data may lead to a sequence that gets trapped in a non-optimal region for many iterations. We now propose a second strategy that reduces this risk.
 
 #### Solution 2: The CL(Constant Liar) Heuristic Strategy
 
