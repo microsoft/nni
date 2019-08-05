@@ -58,7 +58,7 @@
 
 * {"_type":"qloguniform","_value":[low, high, q]}
   
-  * 变量值为 clip(round(loguniform(low, high) / q) * q, low, high)，clip 操作用于约束生成值的边界。
+  * Which means the variable value is a value like clip(round(loguniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
   * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
 * {"_type":"normal","_value":[mu, sigma]}
