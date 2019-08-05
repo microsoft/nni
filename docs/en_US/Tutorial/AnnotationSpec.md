@@ -41,11 +41,11 @@ There are 10 types to express your search space as follows:
 * `@nni.variable(nni.uniform(low, high),name=variable)`
   Which means the variable value is a value uniformly between low and high.
 * `@nni.variable(nni.quniform(low, high, q),name=variable)`
-  Which means the variable value is a value like round(uniform(low, high) / q) * q
+  Which means the variable value is a value like clip(round(uniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
 * `@nni.variable(nni.loguniform(low, high),name=variable)`
   Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
 * `@nni.variable(nni.qloguniform(low, high, q),name=variable)`
-  Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+  Which means the variable value is a value like clip(round(loguniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
 * `@nni.variable(nni.normal(mu, sigma),name=variable)`
   Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma.
 * `@nni.variable(nni.qnormal(mu, sigma, q),name=variable)`
