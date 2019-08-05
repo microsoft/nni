@@ -4,6 +4,8 @@ NNI provides Python API, supporting all framework models and libraries written i
 
 
 ## Support Framework:
+NNI supports all frameworks, as long as they are written in PYTHON. Some common frameworks are listed below, including NNI case tutorials based on them.
+
 * [PyTorch]https://github.com/pytorch/pytorch
     <ul> 
       <li><a href="../../examples/trials/mnist-distributed-pytorch">MNIST-pytorch</a><br/></li>
@@ -33,12 +35,15 @@ NNI provides Python API, supporting all framework models and libraries written i
 * [Theano]https://pypi.org/project/Theano/
 
 ## Support Library:
+NNI also supports all libraries written in python.Here are some algorithms based on the GBDT library and an example of LIGHTGBM algorithms.
+
 * [XGBoost]https://xgboost.readthedocs.io/en/latest/
+* [CatBoost]https://catboost.ai/
 * [LightGBM]https://lightgbm.readthedocs.io/en/latest/
     <ul>
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
 
 
-If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help. In addition to these existing examples, we also welcome more and more users to apply NNI to your experiment.If you are interested in NNI, we are also welcome you to join us, whether it is the sharing of examples or the writing of Tuner, we are looking forward to your participation, for more information, please refer to [here](Tutorial/Contributing.md).
-
+If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial](TrialExample/Trials.md) for more help. <br/>
+In addition to these experiments, we also welcome more and more users to apply NNI to your own experiment. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
