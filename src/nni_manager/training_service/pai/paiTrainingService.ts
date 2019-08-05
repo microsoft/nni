@@ -77,8 +77,6 @@ class PAITrainingService implements TrainingService {
     private versionCheck: boolean = true;
     private logCollection: string;
     private isMultiPhase: boolean = false;
-    private hdfsCodeDir?: string;
-    private hdfsOutputDir?: string;
 
     constructor() {
         this.log = getLogger();
@@ -154,13 +152,13 @@ class PAITrainingService implements TrainingService {
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
-        this.hdfsCodeDir = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
-        this.hdfsOutputDir = unixPathJoin(this.hdfsCodeDir, 'nnioutput');
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        const hdfsOutputDir: string = unixPathJoin(hdfsCodeDir, 'nnioutput');
 
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
             this.paiClusterConfig.host,
-            this.hdfsOutputDir
+            hdfsOutputDir
             );
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
@@ -365,14 +363,6 @@ class PAITrainingService implements TrainingService {
             throw new Error('PAI token is not initialized');
         }
 
-        if (this.hdfsCodeDir === undefined) {
-            throw new Error('hdfsCodeDir is not initialized');
-        }
-
-        if (this.hdfsOutputDir === undefined) {
-            throw new Error('hdfsOutputDir is not initialized');
-        }
-
         if (this.paiRestServerPort === undefined) {
             const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
             this.paiRestServerPort = restServer.clusterRestServerPort;
@@ -401,7 +391,8 @@ class PAITrainingService implements TrainingService {
                 trialForm.hyperParameters.value, { encoding: 'utf8' }
             );
         }
-
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
+        const hdfsOutputDir: string = unixPathJoin(hdfsCodeDir, 'nnioutput');
         // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
@@ -417,7 +408,7 @@ class PAITrainingService implements TrainingService {
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
-            this.hdfsOutputDir,
+            hdfsOutputDir,
             this.paiClusterConfig.host,
             this.paiClusterConfig.userName,
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
@@ -452,7 +443,7 @@ class PAITrainingService implements TrainingService {
             // Docker image
             this.paiTrialConfig.image,
             // codeDir
-            `$PAI_DEFAULT_FS_URI${this.hdfsCodeDir}`,
+            `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`,
             // PAI Task roles
             paiTaskRoles,
             // Add Virutal Cluster
@@ -463,9 +454,9 @@ class PAITrainingService implements TrainingService {
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
-            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, this.hdfsCodeDir, this.hdfsClient);
+            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
         } catch (error) {
-            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${this.hdfsCodeDir} failed, error is ${error}`);
+            this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
             trialJobDetail.status = 'FAILED';
             deferred.resolve(true);
 
