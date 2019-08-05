@@ -57,8 +57,7 @@ def quniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    assert high > low, 'Upper bound must be larger than lower bound'
-    return randint(np.floor((high-low)/q)+1, random_state) * q + low
+    return np.clip(np.round(uniform(low, high, random_state) / q) * q, low, high)
 
 
 def loguniform(low, high, random_state):
@@ -78,7 +77,7 @@ def qloguniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.floor((loguniform(low, high, random_state) - low) / q) * q + low
+    return np.clip(np.round(loguniform(low, high, random_state) / q) * q, low, high)
 
 
 def normal(mu, sigma, random_state):
