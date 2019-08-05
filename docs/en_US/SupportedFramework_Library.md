@@ -45,5 +45,5 @@ NNI also supports all libraries written in python.Here are some algorithms based
     </ul>
 
 
-If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial](TrialExample/Trials.md) for more help. <br/>
-In addition to these experiments, we also welcome more and more users to apply NNI to your own experiment. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
+
+In addition to these experiments, we also welcome more and more users to apply NNI to your own experiment, if you have any doubts, please refer [Write a Trial Run on NNI](TrialExample/Trials.md). In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
