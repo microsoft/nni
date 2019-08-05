@@ -6,11 +6,11 @@
 
 ### 基于顺序模型的全局优化
 
-基于顺序模型的全局优化（SMBO）算法已经用于许多应用中，但适应度函数的评估成本比较高。 在应用中，真实的适应度函数 f: X → R 评估成本较高，通过采用基于模型算法近似的 f 来替代，可降低其评估成本。 通常，在 SMBO 算法内层循环是用数值优化或其它转换方式来替代。 The point x∗ that maximizes the surrogate (or its transformation) becomes the proposal for where the true function f should be evaluated. This active-learning-like algorithm template is summarized in the figure below. SMBO algorithms differ in what criterion they optimize to obtain x∗ given a model (or surrogate) of f, and in they model f via observation history H.
+基于顺序模型的全局优化（SMBO）算法已经用于许多应用中，但适应度函数的评估成本比较高。 在应用中，真实的适应度函数 f: X → R 评估成本较高，通过采用基于模型算法近似的 f 来替代，可降低其评估成本。 通常，在 SMBO 算法内层循环是用数值优化或其它转换方式来替代。 点 x* 最大化的替代项（或它的转换形式）作为真实函数 f 评估的替代值。 这种类似于主动学习的算法模板总结如下。 SMBO 算法的不同之处在于，给定一个 f 的模型（或替代项）的情况下，获得 x* 的优化的标准，以及通过观察历史 H 来模拟 f。
 
 ![](../../img/parallel_tpe_search4.PNG)
 
-The algorithms in this work optimize the criterion of Expected Improvement (EI). Other criteria have been suggested, such as Probability of Improvement and Expected Improvement, minimizing the Conditional Entropy of the Minimizer, and the bandit-based criterion. We chose to use the EI criterion in TPE because it is intuitive, and has been shown to work well in a variety of settings. Expected improvement is the expectation under some model M of f : X → RN that f(x) will exceed (negatively) some threshold y∗:
+本算法优化了预期改进（Expected Improvement，EI）的标准。 其它建议的标准包括，概率改进（Probability of Improvement）、预期改进（Expected Improvement）最小化条件熵（minimizing the Conditional Entropy of the Minimizer）、以及 bandit-based 的标准。 在 TPE 中考虑到直观，选择了 EI，其在多种设置下都展示了较好的效果。 预期改进（EI）是在模型 M 下，当 f(x) （负向）超过某个阈值 y* 时，对 f 的预期：X → RN。
 
 ![](../../img/parallel_tpe_search_ei.PNG)
 
