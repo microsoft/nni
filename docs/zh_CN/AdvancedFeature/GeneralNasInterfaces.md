@@ -168,7 +168,7 @@ for _ in range(num):
 
 在 enas_mode 中，编译后的 Trial 代码会构建完整的图形（而不是子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 它通过 [NNI 多阶段 Experiment](./multiPhase.md) 来支持。
 
-具体来说，使用 TensorFlow 的 Trial，通过 TensorFlow 变量来作为信号，并使用 TensorFlow 的条件函数来控制搜索空间（全图）来提高灵活性。这意味着根据这些信号，可以变为不同的多个子图。 [Here]() is an example for enas_mode.
+具体来说，使用 TensorFlow 的 Trial，通过 TensorFlow 变量来作为信号，并使用 TensorFlow 的条件函数来控制搜索空间（全图）来提高灵活性。这意味着根据这些信号，可以变为不同的多个子图。 [这是 enas_mode]() 的示例。
 
 <a name="OneshotMode"></a>
 
@@ -200,7 +200,7 @@ NNI natively supports running multiple such trial jobs. The figure below shows h
 
 =============================================================
 
-## System design of NAS on NNI
+## NNI 上 NAS 的系统设计
 
 ### Experiment 执行的基本流程
 
