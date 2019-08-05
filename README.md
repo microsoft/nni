@@ -296,12 +296,13 @@ Maybe you want to read:
 
 * [Install NNI](docs/en_US/Tutorial/Installation.md)
 * [Use command line tool nnictl](docs/en_US/Tutorial/Nnictl.md)
-* [Use NNIBoard](docs/en_US/Tutorial/WebUI.md)
-* [How to define search space](docs/en_US/Tutorial/SearchSpaceSpec.md)
-* [How to define a trial](docs/en_US/TrialExample/Trials.md)
-* [How to choose tuner/search-algorithm](docs/en_US/Tuner/BuiltinTuner.md)
+* [Define a trial](docs/en_US/TrialExample/Trials.md)
 * [Config an experiment](docs/en_US/Tutorial/ExperimentConfig.md)
-* [How to use annotation](docs/en_US/TrialExample/Trials.md#nni-python-annotation)
+* [Define search space](docs/en_US/Tutorial/SearchSpaceSpec.md)
+* [choose tuner/search-algorithm](docs/en_US/Tuner/BuiltinTuner.md)
+* [Use annotation](docs/en_US/TrialExample/Trials.md#nni-python-annotation)
+* [Use NNIBoard](docs/en_US/Tutorial/WebUI.md)
+
 
 
 ## **Tutorials**
@@ -314,7 +315,9 @@ Maybe you want to read:
 * [Try different assessors](docs/en_US/Assessor/BuiltinAssessor.md)
 * [Implement a customized tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [Implement a customized assessor](docs/en_US/Assessor/CustomizeAssessor.md)
+* [Implement TrainingService in NNI](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 * [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](docs/en_US/TrialExample/SquadEvolutionExamples.md)
+* [Advanced Neural Architecture Search](docs/en_US/AdvancedFeature/AdvancedNas.md)
 
 
 ## **Contribute**
