@@ -1,20 +1,22 @@
 # 神经网络架构搜索的通用编程接口（测试版）
 
-** 这是一个测试中的功能，目前只实现了通用的 NAS 编程接口。 接下来的版本会基于此接口支持权重共享和 one-shot NAS。*
+** 这是一个测试中的功能，目前只实现了通用的 NAS 编程接口。 Weight sharing will be supported in the following releases.*
 
 自动化的神经网络架构（NAS）搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动化 NAS 的可行性，并发现了一些超越手动设计和调整的模型。 代表算法有 [NASNet](https://arxiv.org/abs/1707.07012)，[ENAS](https://arxiv.org/abs/1802.03268)，[DARTS](https://arxiv.org/abs/1806.09055)，[Network Morphism](https://arxiv.org/abs/1806.10282)，以及 [Evolution](https://arxiv.org/abs/1703.01041) 等。 新的算法还在不断涌现。 然而，实现这些算法需要很大的工作量，且很难重用其它算法的代码库来实现。
 
 要促进 NAS 创新（例如，设计实现新的 NAS 模型，并列比较不同的 NAS 模型），易于使用且灵活的编程接口非常重要。
 
+<a name="ProgInterface"></a>
+
 ## 编程接口
 
-在两种场景下需要用于设计和搜索模型的新的编程接口。 1) 在设计神经网络时，层、子模型或连接有多个可能，并且不确定哪一个或哪种组合表现最好。 如果有一种简单的方法来表达想要尝试的候选层、子模型，将会很有价值。 2) 研究自动化 NAS 时，需要统一的方式来表达神经网络架构的搜索空间， 并在不改变 Trial 代码的情况下来使用不同的搜索算法。
+A new programming interface for designing and searching for a model is often demanded in two scenarios. 1) When designing a neural network, the designer may have multiple choices for a layer, sub-model, or connection, and not sure which one or a combination performs the best. It would be appealing to have an easy way to express the candidate layers/sub-models they want to try. 2) For the researchers who are working on automatic NAS, they want to have an unified way to express the search space of neural architectures. And making unchanged trial code adapted to different searching algorithms.
 
-本文基于 [NNI Annotation](../Tutorial/AnnotationSpec.md) 实现了简单灵活的编程接口 。 通过以下示例来详细说明。
+We designed a simple and flexible programming interface based on [NNI annotation](../Tutorial/AnnotationSpec.md). It is elaborated through examples below.
 
 ### 示例：为层选择运算符
 
-在设计此模型时，第四层的运算符有多个可能的选择，会让模型有更好的表现。 如图所示，在模型代码中可以对第四层使用 Annotation。 此 Annotation 中，共有五个字段：
+When designing the following model there might be several choices in the fourth layer that may make this model perform well. In the script of this model, we can use annotation for the fourth layer as shown in the figure. In this annotation, there are five fields in total:
 
 ![](../../img/example_layerchoice.png)
 
@@ -24,48 +26,51 @@
 * **optional_input_size** ：它表示从 `input_candidates` 中选择多少个输入。 它可以是一个数字，也可以是一个范围。 范围 [1, 3] 表示选择 1、2 或 3 个输入。
 * **layer_output** ：表示输出的名称。本例中，表示 `layer_choice` 选择的函数的返回值。 这是一个变量名，可以在随后的 Python 代码或 `nni.mutable_layer` 中使用。
 
-此示例有两种写 Annotation 的方法。 对于上面的示例，输入函数的形式是 `[[], [out3]]` 。 对于下面的示例，输入的形式是 `[[out3], []]`。
+There are two ways to write annotation for this example. For the upper one, input of the function calls is `[[],[out3]]`. For the bottom one, input is `[[out3],[]]`.
 
-**调试**：`nnictl trial codegen` 命令可帮助调试 NAS 编程接口。 如果 Experiment `YYY` 中的 Trial 的 `XXX` 出错了，可以运行 `nnictl trial codegen YYY --trial_id XXX` 在当前目录下生成这个 Trial 的可执行代码。 通过运行此代码，可以不需要 NNI 就能调试 Trial 失败的原因。 此命令会编译 Trial 代码，并用实际选择的层次和输入来替换 NNI 的 NAS 代码。
+**Debugging**: We provided an `nnictl trial codegen` command to help debugging your code of NAS programming on NNI. If your trial with trial_id `XXX` in your experiment `YYY` is failed, you could run `nnictl trial codegen YYY --trial_id XXX` to generate an executable code for this trial under your current directory. With this code, you can directly run the trial command without NNI to check why this trial is failed. Basically, this command is to compile your trial code and replace the NNI NAS code with the real chosen layers and inputs.
 
 ### 示例：为层选择输入的连接
 
-设计层的连接对于制作高性能模型至关重要。 通过此接口，可选择一个层可以采用哪些连接来作为输入。 可以从一组连接中选择几个。 下面的示例从三个候选输入中为 `concat` 这个函数选择两个输入 。 `concat` 还会使用 `fixed_inputs` 获取其上一层的输出 。
+Designing connections of layers is critical for making a high performance model. With our provided interface, users could annotate which connections a layer takes (as inputs). They could choose several ones from a set of connections. Below is an example which chooses two inputs from three candidate inputs for `concat`. Here `concat` always takes the output of its previous layer using `fixed_inputs`.
 
 ![](../../img/example_connectchoice.png)
 
 ### 示例：同时选择运算符和连接
 
-此示例从三个运算符中选择一个，并为其选择两个连接作为输入。 由于输入会有多个变量,，在函数的开头需要调用 `concat` 。
+In this example, we choose one from the three operators and choose two connections for it. As there are multiple variables in inputs, we call `concat` at the beginning of the functions.
 
 ![](../../img/example_combined.png)
 
 ### 示例：[ENAS](https://arxiv.org/abs/1802.03268) 宏搜索空间
 
-为了证明编程接口带来的便利，使用该接口来实现 “ENAS + 宏搜索空间” 的 Trial 代码。 左图是 ENAS 论文中的宏搜索空间。
+To illustrate the convenience of the programming interface, we use the interface to implement the trial code of "ENAS + macro search space". The left figure is the macro search space in ENAS paper.
 
 ![](../../img/example_enas.png)
 
 ## 统一的 NAS 搜索空间说明
 
-通过上面的 Annotation 更新 Trial 代码后，即在代码中隐式指定了神经网络架构的搜索空间。 基于该代码，NNI 将自动生成一个搜索空间文件，可作为调优算法的输入。 搜索空间文件遵循以下 JSON 格式。
+After finishing the trial code through the annotation above, users have implicitly specified the search space of neural architectures in the code. Based on the code, NNI will automatically generate a search space file which could be fed into tuning algorithms. This search space file follows the following JSON format.
 
 ```javascript
 {
     "mutable_1": {
-        "layer_1": {
-            "layer_choice": ["conv(ch=128)", "pool", "identity"],
-            "optional_inputs": ["out1", "out2", "out3"],
-            "optional_input_size": 2
-        },
-        "layer_2": {
-            ...
+        "_type": "mutable_layer",
+        "_value": {
+            "layer_1": {
+                "layer_choice": ["conv(ch=128)", "pool", "identity"],
+                "optional_inputs": ["out1", "out2", "out3"],
+                "optional_input_size": 2
+            },
+            "layer_2": {
+                ...
+            }
         }
     }
 }
 ```
 
-相应生成的神经网络结构（由调优算法生成）如下：
+Accordingly, a specified neural architecture (generated by tuning algorithm) is expressed as follows:
 
 ```javascript
 {
@@ -81,56 +86,152 @@
 }
 ```
 
-通过对搜索空间格式和体系结构选择 (choice) 表达式的说明，可以自由地在 NNI 上实现神经体系结构搜索的各种或通用的调优算法。 接下来的工作会提供一个通用的 NAS 算法。
+With the specification of the format of search space and architecture (choice) expression, users are free to implement various (general) tuning algorithms for neural architecture search on NNI. One future work is to provide a general NAS algorithm.
 
-=============================================================
+## Support of One-Shot NAS
 
-## 神经网络结构搜索在 NNI 上的应用
+One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268), [training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf), [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055).
 
-### Experiment 执行的基本流程
+NNI has supported the general NAS as demonstrated above. From users' point of view, One-Shot NAS and NAS have the same search space specification, thus, they could share the same programming interface as demonstrated above, just different training modes. NNI provides four training modes:
 
-NNI 的 Annotation 编译器会将 Trial 代码转换为可以接收架构选择并构建相应模型（如图）的代码。 NAS 的搜索空间可以看作是一个完整的图（在这里，完整的图意味着允许所有提供的操作符和连接来构建图），调优算法所选择的是其子图。 默认情况下，编译时 Trial 代码仅构建并执行子图。
+***classic_mode***: this mode is described [above](#ProgInterface), in this mode, each subgraph runs as a trial job. To use this mode, you should enable NNI annotation and specify a tuner for nas in experiment config file. [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) is an example to show how to write trial code and the config file. And [here](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner) is a simple tuner for nas.
 
-![](../../img/nas_on_nni.png)
+***enas_mode***: following the training approach in [enas paper](https://arxiv.org/abs/1802.03268). It builds the full graph based on neural architrecture search space, and only activate one subgraph that generated by the controller for each mini-batch. [Detailed Description](#ENASMode). (currently only supported on tensorflow).
 
-上图显示了 Trial 代码如何在 NNI 上运行。 `nnictl` 处理 Trial 代码，并生成搜索空间文件和编译后的 Trial 代码。 前者会输入 Tuner，后者会在 Trial 代码运行时使用。
+To use enas_mode, you should add one more field in the `trial` config as shown below.
 
-[使用 NAS 的简单示例](https://github.com/microsoft/nni/tree/v0.8/examples/trials/mnist-nas)。
+```diff
+trial:
+    command: your command to run the trial
+    codeDir: the directory where the trial's code is located
+    gpuNum: the number of GPUs that one trial job needs
 
-### [**待实现**] 权重共享
++   #choice: classic_mode, enas_mode, oneshot_mode
++   nasMode: enas_mode
+```
 
-在所选择的架构（即 Trial）之间共享权重可以加速模型搜索。 例如，适当地继承已完成 Trial 的权重可加速新 Trial 的收敛。 One-shot NAS（例如，ENAS，Darts）更为激进，不同架构（即子图）的训练会在完整图中共享相同的权重。
+Similar to classic_mode, in enas_mode you need to specify a tuner for nas, as it also needs to receive subgraphs from tuner (or controller using the terminology in the paper). Since this trial job needs to receive multiple subgraphs from tuner, each one for a mini-batch, two lines need to be added to the trial code to receive the next subgraph (i.e., `nni.training_update`) and report the result of the current subgraph. Below is an example:
 
-![](../../img/nas_weight_share.png)
+```python
+for _ in range(num):
+    # here receives and enables a new subgraph
+    """@nni.training_update(tf=tf, session=self.session)"""
+    loss, _ = self.session.run([loss_op, train_op])
+    # report the loss of this mini-batch
+    """@nni.report_final_result(loss)"""
+```
 
-权重分配（转移）在加速 NAS 中有关键作用，而找到有效的权重共享方式仍是热门的研究课题。 NNI 提供了一个键值存储，用于存储和加载权重。 Tuner 和 Trial 使用 KV 客户端库来访问存储。
+Here, `nni.training_update` is to do some update on the full graph. In enas_mode, the update means receiving a subgraph and enabling it on the next mini-batch. While in darts_mode, the update means training the architecture weights (details in darts_mode). In enas_mode, you need to pass the imported tensorflow package to `tf` and the session to `session`.
 
-NNI 上的权重共享示例。
+***oneshot_mode***: following the training approach in [this paper](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf). Different from enas_mode which trains the full graph by training large numbers of subgraphs, in oneshot_mode the full graph is built and dropout is added to candidate inputs and also added to candidate ops' outputs. Then this full graph is trained like other DL models. [Detailed Description](#OneshotMode). (currently only supported on tensorflow).
 
-### [**待实现**] 支持 One-Shot NAS
+To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 
-One-Shot NAS 是流行的，能在有限的时间和资源预算内找到较好的神经网络结构的方法。 本质上，它会基于搜索空间来构建完整的图，并使用梯度下降最终找到最佳子图。 它有不同的训练方法，如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 这里会关注第一种方法，即训练子图（ENAS）。
+```diff
+trial:
+    command: your command to run the trial
+    codeDir: the directory where the trial's code is located
+    gpuNum: the number of GPUs that one trial job needs
 
-使用相同 Annotation Trial 代码，可选择 One-Shot NAS 作为执行模式。 具体来说，编译后的 Trial 代码会构建完整的图形（而不是上面演示的子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 通过 [NNI 多阶段 Experiment](MultiPhase.md) 来支持。 因为子图训练非常快，而每次启动子图训练时都会产生开销，所以采用此方法。
++   #choice: classic_mode, enas_mode, oneshot_mode
++   nasMode: oneshot_mode
+```
+
+***darts_mode***: following the training approach in [this paper](https://arxiv.org/abs/1806.09055). It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode).
+
+To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.)
+
+```diff
+trial:
+    command: your command to run the trial
+    codeDir: the directory where the trial's code is located
+    gpuNum: the number of GPUs that one trial job needs
+
++   #choice: classic_mode, enas_mode, oneshot_mode
++   nasMode: darts_mode
+```
+
+When using darts_mode, you need to call `nni.training_update` as shown below when architecture weights should be updated. Updating architecture weights need `loss` for updating the weights as well as the training data (i.e., `feed_dict`) for it.
+
+```python
+for _ in range(num):
+    # here trains the architecture weights
+    """@nni.training_update(tf=tf, session=self.session, loss=loss, feed_dict=feed_dict)"""
+    loss, _ = self.session.run([loss_op, train_op])
+```
+
+**Note:** for enas_mode, oneshot_mode, and darts_mode, NNI only works on the training phase. They also have their own inference phase which is not handled by NNI. For enas_mode, the inference phase is to generate new subgraphs through the controller. For oneshot_mode, the inference phase is sampling new subgraphs randomly and choosing good ones. For darts_mode, the inference phase is pruning a proportion of candidates ops based on architecture weights.
+
+<a name="ENASMode"></a>
+
+### enas_mode
+
+In enas_mode, the compiled trial code builds the full graph (rather than subgraph), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md).
+
+Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals. [Here]() is an example for enas_mode.
+
+<a name="OneshotMode"></a>
+
+### oneshot_mode
+
+Below is the figure to show where dropout is added to the full graph for one layer in `nni.mutable_layers`, input 1-k are candidate inputs, the four ops are candidate ops.
+
+![](../../img/oneshot_mode.png)
+
+As suggested in the [paper](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf), a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here]() is an example for oneshot_mode.
+
+<a name="DartsMode"></a>
+
+### darts_mode
+
+Below is the figure to show where architecture weights are added to the full graph for one layer in `nni.mutable_layers`, output of each candidate op is multiplied by a weight which is called architecture weight.
+
+![](../../img/darts_mode.png)
+
+In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here]() is an example for darts_mode.
+
+### [**TODO**] Multiple trial jobs for One-Shot NAS
+
+One-Shot NAS usually has only one trial job with the full graph. However, running multiple such trial jobs leads to benefits. For example, in enas_mode multiple trial jobs could share the weights of the full graph to speedup the model training (or converge). Some One-Shot approaches are not stable, running multiple trial jobs increase the possibility of finding better models.
+
+NNI natively supports running multiple such trial jobs. The figure below shows how multiple trial jobs run on NNI.
 
 ![](../../img/one-shot_training.png)
 
-One-Shot NAS 的设计如上图所示。 One-Shot NAS 通常只有一个带有完整图的 Trial 任务。 NNI 支持运行多个此类 Trial 任务，每个任务都独立运行。 由于 One-Shot NAS 不够稳定，运行多个实例有助于找到更好的模型。 此外，Trial 任务之间也能在运行时同步权重（即，只有一份权重数据，如异步的参数 — 服务器模式）。 这样有可能加速收敛。
+=============================================================
 
-One-Shot NAS 示例。
+## System design of NAS on NNI
 
-## [**待实现**] NAS 的一般调优算法。
+### Basic flow of experiment execution
 
-与超参数调优一样，NAS 也需要相对通用的算法。 通用编程接口使其更容易。 贡献者为 NAS 提供了基于 RL 的调参算法。 期待社区努力设计和实施更好的 NAS 调优算法。
+NNI's annotation compiler transforms the annotated trial code to the code that could receive architecture choice and build the corresponding model (i.e., graph). The NAS search space can be seen as a full graph (here, full graph means enabling all the provided operators and connections to build a graph), the architecture chosen by the tuning algorithm is a subgraph in it. By default, the compiled trial code only builds and executes the subgraph.
 
-NAS 的一般调优算法。
+![](../../img/nas_on_nni.png)
 
-## [**待实现**] 导出最佳神经网络架构和代码
+The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trials.
 
-Experiment 完成后，可通过 `nnictl experiment export --code` 来导出用最好的神经网络结构和 Trial 代码。
+[Simple example of NAS on NNI](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas).
 
-## 结论和未来的工作
+### [**TODO**] Weight sharing
 
-如本文所示，不同的 NAS 算法和执行模式，可通过相同的编程接口来支持。
+Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
 
-在这一领域有许多系统和机器学习方向的有趣的研究主题。
+![](../../img/nas_weight_share.png)
+
+We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
+
+Example of weight sharing on NNI.
+
+## General tuning algorithms for NAS
+
+Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have an [RL tuner based on PPO algorithm](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/ppo_tuner) for NAS. We expect efforts from community to design and implement better NAS algorithms.
+
+## [**TODO**] Export best neural architecture and code
+
+After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+
+## Conclusion and Future work
+
+There could be different NAS algorithms and execution modes, but they could be supported with the same programming interface as demonstrated above.
+
+There are many interesting research topics in this area, both system and machine learning.
