@@ -24,7 +24,7 @@ import numpy as np
 
 from .env_vars import trial_env_vars
 from . import trial
-from .nas_utils import classic_mode, enas_mode, oneshot_mode
+from .nas_utils import classic_mode, enas_mode, oneshot_mode, darts_mode
 
 
 __all__ = [
@@ -158,8 +158,8 @@ else:
                             fixed_inputs,
                             optional_inputs,
                             optional_input_size)
-        elif mode == 'enas_mode':
-            assert tf is not None, 'Internal Error: Tensorflow should not be None in enas_mode'
+        assert tf is not None, 'Internal Error: Tensorflow should not be None in modes other than classic_mode'
+        if mode == 'enas_mode':
             return enas_mode(mutable_id,
                             mutable_layer_id,
                             funcs,
@@ -168,8 +168,7 @@ else:
                             optional_inputs,
                             optional_input_size,
                             tf)
-        elif mode == 'oneshot_mode':
-            assert tf is not None, 'Internal Error: Tensorflow should not be None in oneshot_mode'
+        if mode == 'oneshot_mode':
             return oneshot_mode(mutable_id,
                             mutable_layer_id,
                             funcs,
@@ -178,8 +177,16 @@ else:
                             optional_inputs,
                             optional_input_size,
                             tf)
-        else:
-            raise RuntimeError('Unrecognized mode: %s' % mode)
+        if mode == 'darts_mode':
+            return darts_mode(mutable_id,
+                            mutable_layer_id,
+                            funcs,
+                            funcs_args,
+                            fixed_inputs,
+                            optional_inputs,
+                            optional_input_size,
+                            tf)
+        raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):
         if trial._params is None:
