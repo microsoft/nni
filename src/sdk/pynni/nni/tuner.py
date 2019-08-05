@@ -116,5 +116,5 @@ def rewrite_nas_space(func):
     @functools.wraps(func)
     def wrap(self, search_space):
         search_space = convert_nas_search_space(search_space)
-        return wrap(self, search_space)
+        return func(self, search_space)
     return wrap
