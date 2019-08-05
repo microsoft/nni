@@ -6,15 +6,15 @@
 
 超参数优化算法如下：
 
-- [Random Search（随机搜索）](../BuiltinTuner.md)
-- [Grid Search（遍历搜索）](../BuiltinTuner.md)
-- [Evolution](../BuiltinTuner.md)
-- [Anneal（退火算法）](../BuiltinTuner.md)
-- [Metis](../BuiltinTuner.md)
-- [TPE](../BuiltinTuner.md)
-- [SMAC](../BuiltinTuner.md)
-- [HyperBand](../BuiltinTuner.md)
-- [BOHB](../BuiltinTuner.md)
+- [Random Search（随机搜索）](../Tuner/BuiltinTuner.md)
+- [Grid Search（遍历搜索）](../Tuner/BuiltinTuner.md)
+- [Evolution](../Tuner/BuiltinTuner.md)
+- [Anneal（退火算法）](../Tuner/BuiltinTuner.md)
+- [Metis](../Tuner/BuiltinTuner.md)
+- [TPE](../Tuner/BuiltinTuner.md)
+- [SMAC](../Tuner/BuiltinTuner.md)
+- [HyperBand](../Tuner/BuiltinTuner.md)
+- [BOHB](../Tuner/BuiltinTuner.md)
 
 所有算法都在 NNI 本机环境下运行。
 
@@ -34,7 +34,7 @@
 
 ### 问题描述
 
-超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
+超参搜索上的非凸问题 [AutoGBDT](../TrialExample/GbdtExample.md)。
 
 ### 搜索空间
 
