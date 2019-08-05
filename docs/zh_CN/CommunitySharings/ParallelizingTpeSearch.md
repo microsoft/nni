@@ -78,21 +78,21 @@ a, b, c, r, s 以及 t 的推荐值分别为：a = 1, b = 5.1 ⁄ (4π2), c = 5 
 
 ![](../../img/parallel_tpe_search_result.PNG)
 
-正如图中所见，，CL[max] 和 CL[min] 与随机相比，产生了更好的 q-EI 结果，特别是 q 值很小时。
+正如图中所见，，CL[max] 和 CL[min] 与随机相比，产生了更好的 q-EI 结果，尤其是 q 值很小时。
 
-### Gaussian Mixed Model function
+### 高斯混合模型函数（Gaussian Mixed Model function）
 
-We also compared the case of using parallel optimization and not using parallel optimization. A two-dimensional multimodal Gaussian Mixed distribution is used to simulate, the following is our result:
+以下比较了使用和不使用并行优化的情况。 二维多模的高斯混合分布的模拟结果如下：
 
-|                               | concurrency=80               | concurrency=60               | concurrency=40               | concurrency=20               | concurrency=10               |
-| ----------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
-| Without parallel optimization | avg = 0.4841   
+|         | concurrency=80               | concurrency=60               | concurrency=40               | concurrency=20               | concurrency=10               |
+| ------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
+| 未使用并行优化 | avg = 0.4841   
 var = 0.1953 | avg = 0.5155   
 var = 0.2219 | avg = 0.5773   
 var = 0.2570 | avg = 0.4680   
 var = 0.1994 | avg = 0.2774   
 var = 0.1217 |
-| With parallel optimization    | avg = 0.2132   
+| 使用了并行优化 | avg = 0.2132   
 var = 0.0700 | avg = 0.2177  
 var = 0.0796  | avg = 0.1835   
 var = 0.0533 | avg = 0.1671   
@@ -100,12 +100,12 @@ var = 0.0413 | avg = 0.1918
 var = 0.0697 |
 
 
-Note: The total number of samples per test is 240 (ensure that the budget is equal). The trials in each form were repeated 1000 times, the value is the average and variance of the best results in 1000 trials.
+注意：每次测试的样本总数为 240（确保成本相等）。 每种形式下的 Trial 重复了 1000 次，表中值为 1000 个 Trial 中最好结果的平均值和方差。
 
-## References
+## 参考
 
-[1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. "Algorithms for Hyper-Parameter Optimization". [Link](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
+[1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. "Algorithms for Hyper-Parameter Optimization". [链接](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 
-[2] Meng-Hiot Lim, Yew-Soon Ong. "Computational Intelligence in Expensive Optimization Problems". [Link](https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf)
+[2] Meng-Hiot Lim, Yew-Soon Ong. "Computational Intelligence in Expensive Optimization Problems". [链接](https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf)
 
-[3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. "Pattern Recognition and Machine Learning". [Link](http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf)
+[3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. "Pattern Recognition and Machine Learning". [链接](http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf)
