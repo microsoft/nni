@@ -58,7 +58,7 @@ After selecting the intermeidate count, you should input your focus metric's ran
 
 As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
 
-![](../../img/webui-img/filter_intermediate.png)
+![](../../img/webui-img/filter-intermediate.png)
 ## View trials status
 
 Click the tab "Trials Detail" to see the status of the all trials. Specifically:
