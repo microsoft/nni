@@ -202,9 +202,9 @@ def parse_args():
     parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
     parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
     parser_tensorboard_start.set_defaults(func=start_tensorboard)
-    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
-    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_start.set_defaults(func=stop_tensorboard)
+    parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
+    parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_stop.set_defaults(func=stop_tensorboard)
 
     #parse top command
     parser_top = subparsers.add_parser('top', help='monitor the experiment')
