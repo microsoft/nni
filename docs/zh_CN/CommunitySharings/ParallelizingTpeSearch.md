@@ -74,11 +74,11 @@ L 应在逻辑上根据 y 在 X 处获取的值来确定，可考虑使用的三
 
 a, b, c, r, s 以及 t 的推荐值分别为：a = 1, b = 5.1 ⁄ (4π2), c = 5 ⁄ π, r = 6, s = 10, t = 1 ⁄ (8π)。 此函数有三个全局最小值点 (-3.14, 12.27), (3.14, 2.27), (9.42, 2.47)。
 
-Next is the comparaison of the q-EI associated with the q first points (q ∈ [1,10]) given by the constant liar strategies (min and max), 2000 q-points designs uniformly drawn for every q, and 2000 q-points LHS designs taken at random for every q.
+下表为给定 constant liar 策略（最小、最大值）下，比较了前 q 个点（q ∈ [1,10]）。每个 q 绘制 2000 个 q 点，这 2000 个 q 点随机采用 LHS。
 
 ![](../../img/parallel_tpe_search_result.PNG)
 
-As we can seen on figure, CL[max] and CL[min] offer very good q-EI results compared to random designs, especially for small values of q.
+正如图中所见，，CL[max] 和 CL[min] 与随机相比，产生了更好的 q-EI 结果，特别是 q 值很小时。
 
 ### Gaussian Mixed Model function
 
