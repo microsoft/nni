@@ -178,7 +178,7 @@ for _ in range(num):
 
 ![](../../img/oneshot_mode.png)
 
-如[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的建议，应该为每层的输入实现 Dropout 方法。 当 0 < r < 1 是模型超参的取值范围（默认值为 0.01），k 是某层可选超参的数量，Dropout 比率设为 r^(1/k)。 fan-in 越高，每个输入被丢弃的可能性越大。 但某层丢弃所有可选输入的概率是常数，与 fan-in 无关。 假设 r = 0.05。 If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here]() is an example for oneshot_mode.
+如[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的建议，应该为每层的输入实现 Dropout 方法。 当 0 < r < 1 是模型超参的取值范围（默认值为 0.01），k 是某层可选超参的数量，Dropout 比率设为 r^(1/k)。 fan-in 越高，每个输入被丢弃的可能性越大。 但某层丢弃所有可选输入的概率是常数，与 fan-in 无关。 假设 r = 0.05。 如果某层有 k = 2 个可选的输入，每个输入都会以独立的 0.051/2 ≈ 0.22 的概率被丢弃，也就是说有 0.78 的概率被保留。 如果某层有 k = 7 个可选的输入，每个输入都会以独立的 0.051/7 ≈ 0.65 的概率被丢弃，也就是说有 0.35 的概率被保留。 在这两种情况下，丢弃所有可选输入的概率是 5%。 候选操作的输出会通过同样的方法被丢弃。 [这里]()是 oneshot_mode 的示例。
 
 <a name="DartsMode"></a>
 
