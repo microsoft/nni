@@ -1,9 +1,7 @@
 # Framework and Library Supported 
-NNI provides Python API, supporting all framework models and libraries written in python (`version >= 3.5`).
+NNI provides Python API, supporting all framework models and libraries written in python (`version >= 3.5`), and we have implemented many related examples and detailed their principles and running steps.
 
-  
-  </tr>
-</table>
+
 
 ## Support Framework:
 * [PyTorch]https://github.com/pytorch/pytorch
@@ -38,8 +36,9 @@ NNI provides Python API, supporting all framework models and libraries written i
 * [XGBoost]https://xgboost.readthedocs.io/en/latest/
 * [LightGBM]https://lightgbm.readthedocs.io/en/latest/
     <ul>
-    <li><a href="TrialExample/GbdtExample.md">GBDT</a><br/></li>
+    <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
 
-If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help.
+
+If you want to learn how to write a trial and run it on NNI, you can refer to the [Tutorial documentation ](TrialExample/Trials.md)for more help. In addition to these existing examples, we also welcome more and more users to apply NNI to your experiment.If you are interested in NNI, we are also welcome you to join us, whether it is the sharing of examples or the writing of Tuner, we are looking forward to your participation, for more information, please refer to [here](Tutorial/Contributing.md).
 
