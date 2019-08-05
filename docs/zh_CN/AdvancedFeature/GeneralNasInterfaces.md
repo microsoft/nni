@@ -121,11 +121,11 @@ for _ in range(num):
     """@nni.report_final_result(loss)"""
 ```
 
-Here, `nni.training_update` is to do some update on the full graph. In enas_mode, the update means receiving a subgraph and enabling it on the next mini-batch. While in darts_mode, the update means training the architecture weights (details in darts_mode). In enas_mode, you need to pass the imported tensorflow package to `tf` and the session to `session`.
+在这里，`nni.training_update`用来在全图上进行更新。 在 enas_mode 中，更新表示接收一个子图，并在下一个 mini-batch 中启用它。 在 darts_mode 中，更新表示训练架构权重（参考 darts_mode 中的详细说明）。 在 enas_mode 中，需要将导入的 TensorFlow 包传入 `tf`，并将会话传入 `session`。
 
-***oneshot_mode***: following the training approach in [this paper](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf). Different from enas_mode which trains the full graph by training large numbers of subgraphs, in oneshot_mode the full graph is built and dropout is added to candidate inputs and also added to candidate ops' outputs. Then this full graph is trained like other DL models. [详细说明](#OneshotMode)。 （当前仅支持 TensorFlow）。
+***oneshot_mode***: 遵循[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的训练方法。 与 enas_mode 通过训练大量子图来训练全图有所不同，oneshot_mode 中构建了全图，并将 dropout 添加到候选的输入以及候选的输出操作中。 然后像其它深度学习模型一样进行训练。 [详细说明](#OneshotMode)。 （当前仅支持 TensorFlow）。
 
-要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
+要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 
 ```diff
 trial:
