@@ -109,3 +109,56 @@ class Tuner(Recoverable):
 
     def _on_error(self):
         pass
+
+    @staticmethod
+    def convert_nas_search_space(search_space):
+        """
+        :param search_space: raw search space
+        :return: the new search space, mutable_layers will be converted into choice
+        """
+        ret = dict()
+        for k, v in search_space.items():
+            if "_type" not in v:
+                # this should not happen
+                _logger.warning("There is no _type in one of your search space values with key '%s'"
+                                ". Please check your search space" % k)
+                ret[k] = v
+            elif v["_type"] != "mutable_layer":
+                ret[k] = v
+            else:
+                _logger.info("Converting mutable_layer search space with key '%s'" % k)
+                # v["_value"] looks like {'mutable_layer_1': {'layer_choice': ...} ...}
+                values = v["_value"]
+                for layer_name, layer_data in values.items():
+                    # there should be at most layer_choice, optional_inputs, optional_input_size in layer_data
+                    layer_key = k + "/" + layer_name
+
+                    if layer_data.get("layer_choice"):  # filter out empty choice and no choice
+                        layer_choice = layer_data["layer_choice"]
+                    else:
+                        raise ValueError("No layer choice found in %s" % layer_key)
+
+                    if layer_data.get("optional_inputs") and layer_data.get("optional_input_size"):
+                        input_choice = []
+                        input_size = layer_data["optional_input_size"]
+                        if isinstance(input_size, int):
+                            input_size = [input_size, input_size]
+                        input_pool = layer_data["optional_inputs"]
+                        for chosen_size in range(max(input_size[0], 0), input_size[1] + 1):
+                            if chosen_size == 0:
+                                input_choice.append([])
+                                continue
+                            # enumerate all the possible situations
+                            for i in range(0, len(input_pool) ** chosen_size):
+                                tmp_state, tmp_chosen = i, []
+                                for j in range(chosen_size):
+                                    tmp_chosen.append(input_pool[tmp_state % len(input_pool)])
+                                    tmp_state //= len(input_pool)
+                    else:
+                        _logger.info("Optional input choices are set to empty by default")
+                        input_choice = [[]]
+
+                    ret[layer_key + "/layer_choice"] = layer_choice
+                    ret[layer_key + "/input_choice"] = input_choice
+
+        return ret
