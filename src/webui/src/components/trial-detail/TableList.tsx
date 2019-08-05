@@ -5,7 +5,7 @@ import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select, Icon } from 'a
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX, COLUMNPro } from '../../static/const';
-import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
+import { convertDuration, intermediateGraphOption, killJob, filterByStatus } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
@@ -180,7 +180,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // checkbox for coloumn
     selectedColumn = (checkedValues: Array<string>) => {
-        let count = 6;
+        // 7: because have seven common column, "Intermediate count" is not shown by default
+        let count = 7;
         const want: Array<object> = [];
         const finalKeys: Array<string> = [];
         const wantResult: Array<string> = [];
@@ -289,17 +290,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         const showColumn: Array<object> = [];
-        if (tableSource.length >= 1) {
-            const temp = tableSource[0].acc;
+        // only succeed trials have final keys
+        if (tableSource.filter(filterByStatus).length >= 1) {
+            const temp = tableSource.filter(filterByStatus)[0].acc;
             if (temp !== undefined && typeof temp === 'object') {
                 if (this._isMounted) {
                     // concat default column and finalkeys
                     const item = Object.keys(temp);
-                    if (item.length <= 1) {
+                    // item: ['default', 'other-keys', 'maybe loss']
+                    if (item.length > 1) {
                         const want: Array<string> = [];
-                        Object.keys(item).map(key => {
-                            if (item[key] !== 'default') {
-                                want.push(item[key]);
+                        item.forEach(value => {
+                            if (value !== 'default') {
+                                want.push(value);
                             }
                         });
                         showTitle = COLUMNPro.concat(want);
@@ -433,7 +436,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         width: 120,
                         render: (text: string, record: TableObj) => {
                             let trialStatus = record.status;
-                            const flag: boolean = trialStatus === 'RUNNING' ? false : true;
+                            const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
                             return (
                                 <Row id="detail-button">
                                     {/* see intermediate result graph */}

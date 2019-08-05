@@ -303,7 +303,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                     // placeholder="range"
                                     ref={input => this.minValInput = input}
                                 />
-                                <span className="heng">-</span>
+                                <span className="hyphen">-</span>
                                 <input
                                     // placeholder="range"
                                     ref={input => this.maxValInput = input}
