@@ -47,9 +47,9 @@
 
 * {"_type":"quniform","_value":[low, high, q]}
   
-  * Which means the variable value is a value like clip(round(uniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound. For example, for _value specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For _value specified as [2, 10, 5], possible values are [2, 5, 10].
+  * 变量值为 clip(round(uniform(low, high) / q) * q, low, high)，clip 操作用于约束生成值的边界。 例如，_value 为 [0, 10, 2.5]，可取的值为 [0, 2.5, 5.0, 7.5, 10.0]; _value 为 [2, 10, 5]，可取的值为 [2, 5, 10]。
   
-  * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
+  * 适用于离散，同时反映了某种"平滑"的数值，但上下限都有限制。 如果需要从范围 [low, high] 中均匀选择整数，可以如下定义 `_value`：`[low, high, 1]`。
 
 * {"_type":"loguniform","_value":[low, high]}
   
@@ -58,7 +58,7 @@
 
 * {"_type":"qloguniform","_value":[low, high, q]}
   
-  * Which means the variable value is a value like clip(round(loguniform(low, high)) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
+  * 变量值为 clip(round(loguniform(low, high) / q) * q, low, high)，clip 操作用于约束生成值的边界。
   * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
 * {"_type":"normal","_value":[mu, sigma]}
