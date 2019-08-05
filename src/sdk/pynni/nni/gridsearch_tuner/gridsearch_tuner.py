@@ -97,9 +97,8 @@ class GridSearchTuner(Tuner):
 
     def _parse_quniform(self, param_value):
         '''parse type of quniform parameter and return a list'''
-        low, high, interval = param_value[0], param_value[1], param_value[2]
-        count = int(np.floor((high - low) / interval)) + 1
-        return [low + interval * i for i in range(count)]
+        low, high, q = param_value[0], param_value[1], param_value[2]
+        return np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
 
     def _parse_randint(self, param_value):
         '''parse type of randint parameter and return a list'''
