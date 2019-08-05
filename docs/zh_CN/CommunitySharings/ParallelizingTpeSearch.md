@@ -1,4 +1,4 @@
-# Parallelizing a Sequential Algorithm TPE
+# 并行化顺序算法：TPE
 
 TPE approaches were actually run asynchronously in order to make use of multiple compute nodes and to avoid wasting time waiting for trial evaluations to complete. For the TPE approach, the so-called constant liar approach was used: each time a candidate point x∗ was proposed, a fake fitness evaluation of the y was assigned temporarily, until the evaluation completed and reported the actual loss f(x∗).
 
