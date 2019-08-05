@@ -58,9 +58,9 @@ Kriging Believer 策略用等价于 Kriging 预测期望值的确定性值替换
 
 ![](../../img/parallel_tpe_search_cl.PNG)
 
-L 应在逻辑上根据 y 在 X 处获取的值来确定。这里需要考虑三个值，min{Y}, mean{Y}, 以及 max{Y}。 **L 越大，算法的探索性就越大，反之亦然。**
+L 应在逻辑上根据 y 在 X 处获取的值来确定，可考虑使用的三个值：min{Y}, mean{Y}, 以及 max{Y}。 **L 越大，算法的探索性就越大，反之亦然。**
 
-根据上述方法进行模拟。 The following figure shows the result of using mean value liars to maximize q-EI. We find that the points we have taken have begun to be scattered.
+根据上述方法进行模拟。 下图显示了使用均值 liar，来最大化 q-EI。 能看到这些点开始分散了。
 
 ![](../../img/parallel_tpe_search3.gif)
 
@@ -68,11 +68,11 @@ L 应在逻辑上根据 y 在 X 处获取的值来确定。这里需要考虑三
 
 ### Branin-Hoo
 
-The four optimization strtigeies presented in the last section are now complared on the Branin-Hoo function which is a classical test-case in global optimization.
+最后一章介绍的四种优化方法通过 Branin-Hoo 函数进行了比较，这是全局优化中的经典测试用例。
 
 ![](../../img/parallel_tpe_search_branin.PNG)
 
-The recommended values of a, b, c, r, s and t are: a = 1, b = 5.1 ⁄ (4π2), c = 5 ⁄ π, r = 6, s = 10 and t = 1 ⁄ (8π). This function has three global minimizers(-3.14, 12.27), (3.14, 2.27), (9.42, 2.47).
+a, b, c, r, s 以及 t 的推荐值分别为：a = 1, b = 5.1 ⁄ (4π2), c = 5 ⁄ π, r = 6, s = 10, t = 1 ⁄ (8π)。 此函数有三个全局最小值点 (-3.14, 12.27), (3.14, 2.27), (9.42, 2.47)。
 
 Next is the comparaison of the q-EI associated with the q first points (q ∈ [1,10]) given by the constant liar strategies (min and max), 2000 q-points designs uniformly drawn for every q, and 2000 q-points LHS designs taken at random for every q.
 
