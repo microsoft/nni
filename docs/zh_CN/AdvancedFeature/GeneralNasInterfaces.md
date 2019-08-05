@@ -125,7 +125,7 @@ for _ in range(num):
 
 ***oneshot_mode***: 遵循[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的训练方法。 与 enas_mode 通过训练大量子图来训练全图有所不同，oneshot_mode 中构建了全图，并将 dropout 添加到候选的输入以及候选的输出操作中。 然后像其它深度学习模型一样进行训练。 [详细说明](#OneshotMode)。 （当前仅支持 TensorFlow）。
 
-要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
+要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 （注意，当前仍然需要在配置文件中指定任一一个 Tuner。）此模式下也不需要添加 `nni.training_update`，因为在训练过程中不需要特别的更新过程。
 
 ```diff
 trial:
@@ -137,9 +137,9 @@ trial:
 +   nasMode: oneshot_mode
 ```
 
-***darts_mode***: 参考 [论文](https://arxiv.org/abs/1806.09055)中的训练方法。 与 oneshot_mode 类似。 There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [详细说明](#DartsMode)。
+***darts_mode***: 参考 [论文](https://arxiv.org/abs/1806.09055)中的训练方法。 与 oneshot_mode 类似。 有两个不同之处，首先 darts_mode 只将架构权重添加到候选操作的输出中，另外是交错的来训练模型权重和架构权重。 [详细说明](#DartsMode)。
 
-要使用 darts_mode，需要在配置的 `trial` 部分增加如下字段。 In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.)
+要使用 darts_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 （注意，当前仍需要在配置文件中指定任意一个 Tuner。）
 
 ```diff
 trial:
@@ -151,7 +151,7 @@ trial:
 +   nasMode: darts_mode
 ```
 
-When using darts_mode, you need to call `nni.training_update` as shown below when architecture weights should be updated. Updating architecture weights need `loss` for updating the weights as well as the training data (i.e., `feed_dict`) for it.
+在使用 darts_mode 时，需要按照如下所示调用 `nni.training_update`，来更新架构权重。 更新架构权重时，和训练数据一样也需要`损失值`（即, `feed_dict`）。
 
 ```python
 for _ in range(num):
