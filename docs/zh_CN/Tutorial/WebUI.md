@@ -4,75 +4,97 @@
 
 点击标签 "Overview"。
 
-* 查看 Experiment 的配置和搜索空间内容。
-* 支持下载 Experiment 结果。
-* 支持导出 nni-manager 和 dispatcher 的日志文件。
-* 如果有任何问题，可以点击 “Feedback” 告诉我们。
-* 如果 Experiment 包含了超过 1000 个 Trial，可改变刷新间隔。
+* See the experiment trial profile/search space and performanced good trials.
 
-![](../../img/webui-img/over1.png)
+![](../../img/webui-img/over1.png) ![](../../img/webui-img/over2.png)
 
-* 查看最好结果的 Trial。
+* If your experiment have many trials, you can change the refresh interval on here.
 
-![](../../img/webui-img/over2.png)
+![](../../img/webui-img/refresh-interval.png)
+
+* Support to review and download the experiment result and nni-manager/dispatcher log file from the download.
+
+![](../../img/webui-img/download.png)
+
+* You can click the learn about in the error box to track experiment log message if the experiment's status is error.
+
+![](../../img/webui-img/log-error.png) ![](../../img/webui-img/review-log.png)
+
+* You can click "Feedback" to report it if you have any questions.
 
 ## 查看任务默认指标
 
-点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
+* Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
-![](../../img/accuracy.png)
+![](../../img/webui-img/default-metric.png)
+
+* Click the switch named "optimization curve" to see the experiment's optimization curve.
+
+![](../../img/webui-img/best-curve.png)
 
 ## 查看超参
 
-点击 "Hyper Parameter" 标签查看图像。
+Click the tab "Hyper Parameter" to see the parallel graph.
 
-* 可选择百分比查看最好的 Trial。
-* 选择两个轴来交换位置。
+* You can select the percentage to see top trials.
+* Choose two axis to swap its positions
 
 ![](../../img/hyperPara.png)
 
 ## 查看 Trial 运行时间
 
-点击 "Trial Duration" 标签来查看柱状图。
+Click the tab "Trial Duration" to see the bar graph.
 
 ![](../../img/trial_duration.png)
 
 ## 查看 Trial 中间结果
 
-单击 "Intermediate Result" 标签查看折线图。
+Click the tab "Intermediate Result" to see the lines graph.
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-该图有筛选功能。 点击筛选按钮， 在第一个输入框中输入关注点的序号， 在第二个输入框中输入中间结果的范围，选出需要的数据。
+We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide data if you want to use the filter button to see the trend of some trial.
 
-![](../../img/webui-img/filter_intermediate.png)
+What data should be written in the first input? Maybe you find an intermediate count those trials became better or worse. In other word, it's an important and concerned intermediate count. Just input it into the first input.
+
+After selecting the intermeidate count, you should input your focus metric's range on this intermediate count. Yes, it's the min and max value. Like this picture, I choose the intermeidate count is 9 and the metric's range is 60-80.
+
+As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
+
+![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 特别是：
+Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
-* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
 
 ![](../../img/webui-img/detail-local.png)
 
-* "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。
+* The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
 
 ![](../../img/webui-img/addColumn.png)
 
-* 如果要比较某些 Trial，可选择并点击 "Compare" 来查看结果。
+* If you want to compare some trials, you can select them and then click "Compare" to see the results.
 
-![](../../img/webui-img/compare.png)
+![](../../img/webui-img/select-trial.png) ![](../../img/webui-img/compare.png)
 
-* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
+* Support to search for a specific trial by it's id, status, Trial No. and parameters.
+
+![](../../img/webui-img/search-trial.png)
+
+* You can use the button named "Copy as python" to copy trial's parameters.
 
 ![](../../img/webui-img/copyParameter.png)
 
-* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
+* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../../img/webui-img/detail-pai.png)
 
-* Kill: 可终止正在运行的任务。
-* 支持搜索某个特定的 Trial。
-* Intermediate Result Graph: 可看到图中默认和其它的键值。
+* Intermediate Result Graph: you can see default and other keys in this graph by click the operation column button.
 
-![](../../img/webui-img/intermediate.png)
+![](../../img/webui-img/intermediate-btn.png) ![](../../img/webui-img/intermediate.png)
+
+* Kill: you can kill a job that status is running.
+
+![](../../img/webui-img/kill-running.png) ![](../../img/webui-img/canceled.png)
