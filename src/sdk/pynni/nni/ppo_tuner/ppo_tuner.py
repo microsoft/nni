@@ -560,6 +560,7 @@ class PPOTuner(Tuner):
                     break
                 assert self.param_ids
                 param_id = self.param_ids.pop()
+                self.running_trials[param_id] = trial_info_idx
                 new_config = self._actions_to_config(actions)
                 send(CommandType.NewTrialJob, _pack_parameter(param_id, new_config))
                 self.credit -= 1
