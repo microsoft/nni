@@ -66,7 +66,7 @@ searchSpacePath: /path/to/your/search_space.json
 
 参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
 
-* 参考[这里](https://nni.readthedocs.io/zh/latest/sdk_reference.html)，了解更多 NNI API (例如 `nni.get_sequence_id()`)。
+* 参考[这里](https://nni.readthedocs.io/en/latest/sdk_reference.html)，了解更多 NNI API (例如 `nni.get_sequence_id()`)。
 
 <a name="nni-annotation"></a>
 
