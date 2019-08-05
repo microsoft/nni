@@ -32,8 +32,8 @@ NNI supports all frameworks, as long as they are written in PYTHON. Some common 
     </ul>
 * [Spark MLlib]http://spark.apache.org/mllib/
 * [Chainer]https://chainer.org/
-* [Theano]https://pypi.org/project/Theano/
-
+* [Theano]https://pypi.org/project/Theano/ <br/>
+...
 ## Support Library:
 NNI also supports all libraries written in python.Here are some algorithms based on the GBDT library and an example of LIGHTGBM algorithms.
 
@@ -43,6 +43,7 @@ NNI also supports all libraries written in python.Here are some algorithms based
     <ul>
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
+    ...
 
 
 
