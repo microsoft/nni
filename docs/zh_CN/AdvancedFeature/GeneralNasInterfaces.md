@@ -184,17 +184,17 @@ for _ in range(num):
 
 ### darts_mode
 
-Below is the figure to show where architecture weights are added to the full graph for one layer in `nni.mutable_layers`, output of each candidate op is multiplied by a weight which is called architecture weight.
+下图显示了通过 `nni.mutable_layers` 在全图中为某层加入架构权重，每个候选操作的输出会乘以架构权重。
 
 ![](../../img/darts_mode.png)
 
-In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here]() is an example for darts_mode.
+在 `nni.training_update` 中，TensorFlow 的 MomentumOptimizer 通过传递的 `loss` 和 `feed_dict` 来训练架构权重。 [这是 darts_mode]() 的示例。
 
-### [**TODO**] Multiple trial jobs for One-Shot NAS
+### [**待实现**] One-Shot NAS 的多 Trial 任务。
 
-One-Shot NAS 通常只有一个带有完整图的 Trial 任务。 However, running multiple such trial jobs leads to benefits. For example, in enas_mode multiple trial jobs could share the weights of the full graph to speedup the model training (or converge). Some One-Shot approaches are not stable, running multiple trial jobs increase the possibility of finding better models.
+One-Shot NAS 通常只有一个带有完整图的 Trial 任务。 但是，同时运行多个 Trial 任务会很有用。 例如，在 enas_mode 中，多个 Trial 任务可以共享全图的权重来加速模型训练或收敛。 一些 One-Shot 不够稳定，运行多个 Trial 任务可以提升找到更好模型的概率。
 
-NNI natively supports running multiple such trial jobs. The figure below shows how multiple trial jobs run on NNI.
+NNI 原生支持运行多个 Trial 任务。 下图显示了 NNI 上如何运行多个 Trial 任务。
 
 ![](../../img/one-shot_training.png)
 
@@ -224,7 +224,7 @@ NNI 上的权重共享示例。
 
 ## 通用的 NAS 调优算法
 
-与超参数调优一样，NAS 也需要相对通用的算法。 通用编程接口使其更容易。 We have an [RL tuner based on PPO algorithm](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/ppo_tuner) for NAS. 期待社区努力设计和实施更好的 NAS 调优算法。
+与超参数调优一样，NAS 也需要相对通用的算法。 通用编程接口使其更容易。 这是 NAS 上[基于 PPO 算法的 RL Tuner](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/ppo_tuner)。 期待社区努力设计和实施更好的 NAS 调优算法。
 
 ## [**待实现**] 导出最佳神经网络架构和代码
 
