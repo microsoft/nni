@@ -54,7 +54,7 @@ Kriging Believer 策略用等价于 Kriging 预测期望值的确定性值替换
 
 #### 方案 2: CL(Constant Liar) 启发式策略
 
-Let us now consider a sequential strategy in which the metamodel is updated (still without hyperparameter re-estimation) at each iteration with a value L exogenously fixed by the user, here called a ”lie”. The strategy referred to as the Constant Liar consists in lying with the same value L at every iteration: maximize EI (i.e. find xn+1), actualize the model as if y(xn+1) = L, and so on always with the same L ∈ R:
+考虑一种顺序策略，在每次迭代时会更新元模型（但不会重新估计超参），其中值 L 来自外部固定值，称为”lie（谎言）”。 The strategy referred to as the Constant Liar consists in lying with the same value L at every iteration: maximize EI (i.e. find xn+1), actualize the model as if y(xn+1) = L, and so on always with the same L ∈ R:
 
 ![](../../img/parallel_tpe_search_cl.PNG)
 
