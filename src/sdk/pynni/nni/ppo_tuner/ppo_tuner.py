@@ -22,6 +22,8 @@ ppo_tuner.py including:
     class PPOTuner
 """
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import copy
 import logging
 import numpy as np
@@ -75,7 +77,7 @@ class TrialsInfo:
     """
     Informations of each trial from one model inference
     """
-    def __init__(self, obs, actions, values, neglogpacs, dones, last_value):
+    def __init__(self, obs, actions, values, neglogpacs, dones, last_value, inf_batch_size):
         self.iter = 0
         self.obs = obs
         self.actions = actions
@@ -87,13 +89,14 @@ class TrialsInfo:
         self.rewards = None
         self.returns = None
 
+        self.inf_batch_size = inf_batch_size
         #self.states = None
 
     def get_next(self):
         """
         get actions of the next trial
         """
-        if self.iter >= self.actions.size:
+        if self.iter >= self.inf_batch_size:
             return None, None
         actions = []
         for step in self.actions:
@@ -496,7 +499,8 @@ class PPOTuner(Tuner):
         if self.first_inf:
             self.trials_result = [None for _ in range(self.inf_batch_size)]
             mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values = self.model.inference(self.inf_batch_size)
-            self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values)
+            self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs,
+                                          mb_dones, last_values, self.inf_batch_size)
             self.first_inf = False
 
         trial_info_idx, actions = self.trials_info.get_next()
@@ -546,7 +550,8 @@ class PPOTuner(Tuner):
             # generate new trials
             self.trials_result = [None for _ in range(self.inf_batch_size)]
             mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values = self.model.inference(self.inf_batch_size)
-            self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values)
+            self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs,
+                                          mb_dones, last_values, self.inf_batch_size)
             # check credit and submit new trials
             for _ in range(self.credit):
                 trial_info_idx, actions = self.trials_info.get_next()
