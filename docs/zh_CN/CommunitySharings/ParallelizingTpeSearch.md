@@ -2,7 +2,7 @@
 
 为了利用多个计算节点，TPE 方法是异步运行的，这样能避免浪费时间等待 Trial 评估的完成。 TPE 方法使用了叫做 constant liar 的方法：每次候选点 x* 生成时，会临时分配一个假的评估结果 y。在评估完成后，用返回的真实损失值 f(x*) 来替换假的评估结果。
 
-## 介绍和问题
+## Introduction and Problems
 
 ### 基于顺序模型的全局优化
 
@@ -18,7 +18,7 @@
 
 ![](../../img/parallel_tpe_search_tpe.PNG)
 
-l(x) 是通过观察 {x(i)} 来形成的密度，使得相应的损失 f(x(i)) 小于 y∗，而 g(x) 是使用剩余的观测值来形成的密度。 TPE 算法取决于 y∗ 大于观测到的最好的 f(x)，这样可以使用一些点来形成 l(x)。 TPE 算法选择了 y* 来作为一些观测值 y 的分位数 γ，因此 p(y<`y∗`) = γ，但不需要为特定的 p(y) 建模。 l 和 g 的树形结构使得根据 l 来计算多个候选项变得容易，可根据 g(x)/l(x) 来进行评估。 在每次迭代中，算法返回了具有最大 EI 的候选 x*。
+l(x) 是通过观察 {x(i)} 来形成的密度，使得相应的损失 f(x(i)) 小于 y∗，而 g(x) 是使用剩余的观测值来形成的密度。 TPE 算法取决于 y∗ 大于观测到的最好的 f(x)，这样可以使用一些点来形成 l(x)。 TPE 算法选择了 y* 来作为一些观测值 y 的分位数 γ，因此 p(y<`y∗`) = γ，但不需要为特定的 p(y) 建模。 The tree-structured form of l and g makes it easy to draw many candidates according to l and evaluate them according to g(x)/l(x). 在每次迭代中，算法返回了具有最大 EI 的候选 x*。
 
 这是 TPE 算法在二维搜索空间上的模拟。 不同的背景色表示了不同的值。 可以看出，TPE 在探索（exploration）和挖掘（exploitation）方面的表现都很好。 （黑色表示此轮样本的点，黄色表示历史点。）
 
@@ -68,13 +68,13 @@ L 应在逻辑上根据 y 在 X 处获取的值来确定，可考虑使用的三
 
 ### Branin-Hoo
 
-最后一章介绍的四种优化方法通过 Branin-Hoo 函数进行了比较，这是全局优化中的经典测试用例。
+The four optimization strategies presented in the last section are now compared on the Branin-Hoo function which is a classical test-case in global optimization.
 
 ![](../../img/parallel_tpe_search_branin.PNG)
 
 a, b, c, r, s 以及 t 的推荐值分别为：a = 1, b = 5.1 ⁄ (4π2), c = 5 ⁄ π, r = 6, s = 10, t = 1 ⁄ (8π)。 此函数有三个全局最小值点 (-3.14, 12.27), (3.14, 2.27), (9.42, 2.47)。
 
-下表为给定 constant liar 策略（最小、最大值）下，比较了前 q 个点（q ∈ [1,10]）。每个 q 绘制 2000 个 q 点，这 2000 个 q 点随机采用 LHS。
+Next is the comparison of the q-EI associated with the q first points (q ∈ [1,10]) given by the constant liar strategies (min and max), 2000 q-points designs uniformly drawn for every q, and 2000 q-points LHS designs taken at random for every q.
 
 ![](../../img/parallel_tpe_search_result.PNG)
 
