@@ -31,14 +31,12 @@
         text-align: center;
         color:#212121;
         font-size: 14px;
-        /* background-color: #f2f2f2; */
     }
     th{
         padding: 2px;
         background-color:white !important;
         font-size: 14px;
         color: #808080;
-        border-bottom: 1px solid #d0d0d0;
         text-align: center;
     }
 
@@ -104,4 +102,10 @@
 /*disable select all checkbox in detail page*/
 .ant-table-selection{
     display: none;
+}
+
+/* fix the border-bottom bug in firefox and edge */
+.ant-table-thead > tr > th .ant-table-column-sorters::before{
+    padding-bottom: 25px;
+    border-bottom: 1px solid #e8e8e8;
 }

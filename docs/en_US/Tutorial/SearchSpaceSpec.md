@@ -73,6 +73,11 @@ All types of sampling strategies and their parameter are listed here:
   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 
+* {"_type":"mutable_layer","_value":{mutable_layer_infomation}}
+  * Type for [Neural Architecture Search Space][1]. Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
+  * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
+  * For detailed usage, please refer to [General NAS Interfaces][1].
+
 ## Search Space Types Supported by Each Tuner
 
 |                   | choice  | randint | uniform | quniform | loguniform | qloguniform | normal  | qnormal | lognormal | qlognormal |
@@ -83,19 +88,13 @@ All types of sampling strategies and their parameter are listed here:
 | Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
 | Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
-| Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
+| Grid Search Tuner | &#10003; | &#10003; |  | &#10003;  |     | |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
 | GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |  |  |    |     |
 
 
 Known Limitations:
-
-* Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
-
-    * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
-
-    * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
 
 * Note that Metis Tuner only supports numerical `choice` now
 
@@ -104,3 +103,5 @@ Known Limitations:
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
 
     * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+
+[1]: ../AdvancedFeature/GeneralNasInterfaces.md
