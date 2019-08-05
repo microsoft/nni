@@ -4,8 +4,8 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
 
 <table>
   <tr>
-    <th width="250"><b>Supported Frameworks and Librarys</b></th>
-    <th width="250"><b>Related Examples</b></th>
+    <th width="280"><b>Supported Frameworks and Librarys</b></th>
+    <th width="280"><b>Related Examples</b></th>
   </tr>
   <tr>
     <td valign="top"><ul>
@@ -25,17 +25,17 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
     </ul></td>
     <td valign="top">
     <ul>
-    <a href="../../examples/trials/mnist-distributed-pytorch">MNIST-pytorch</a><br/>
-    <a href="../../examples/trials/mnist-distributed">MNIST-tensorflow</a><br/>
-    <a href="../../examples/trials/mnist-keras">MNIST-keras</a><br/>
-    <a href="TrialExample/Cifar10Examples.md">CIFAR-10</a><br/>
-    <a href="TrialExample/GbdtExample.md">GBDT</a><br/>
-    <a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/>
-    <a href="../../examples/trials/auto-feature-engineering/README.md">Auto-feature-engineering</a><br/>
-    <a href="../../examples/trials/ga_squad/README.md">Squad</a><br/>
-    <a href="CommunitySharings/RecommendersSvd.md">Automatically tuning SVD on NNI</a><br/>
-    <a href="../../examples/trials/kaggle-tgs-salt/README.md">TGS salt identification chanllenge</a><br/>
-    <a href="../../examples/trials/network_morphism/README.md">Network_morphism</a><br/>
+    <li><a href="../../examples/trials/mnist-distributed-pytorch">MNIST-pytorch</a><br/></li>
+    <li><a href="../../examples/trials/mnist-distributed">MNIST-tensorflow</a><br/></li>
+    <li><a href="../../examples/trials/mnist-keras">MNIST-keras</a><br/></li>
+    <li><a href="TrialExample/Cifar10Examples.md">CIFAR-10</a><br/></li>
+    <li><a href="TrialExample/GbdtExample.md">GBDT</a><br/></li>
+    <li><a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/></li>
+    <li><a href="../../examples/trials/auto-feature-engineering/README.md">Auto-feature-engineering</a><br/></li>
+    <li><a href="../../examples/trials/ga_squad/README.md">Squad</a><br/></li>
+    <li><a href="CommunitySharings/RecommendersSvd.md">Automatically tuning SVD on NNI</a><br/></li>
+    <li><a href="../../examples/trials/kaggle-tgs-salt/README.md">TGS salt identification chanllenge</a><br/></li>
+    <li><a href="../../examples/trials/network_morphism/README.md">Network_morphism</a><br/></li>
     </ul></td>
   </tr>
 </table>
