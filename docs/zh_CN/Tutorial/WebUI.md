@@ -59,35 +59,35 @@
 
 选择了中间结果序号后，要输入需要了解的该中间结果序号的指标范围。 即其最小值和最大值。 如此图中，中间结果点为 9，指标范围为 60 至 80。
 
-As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
+Trial 中指标范围在 20 至 60 的 13 个结果就被过滤掉了。
 
 ![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+点击 "Trials Detail" 标签查看所有 Trial 的状态。 包括：
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
 ![](../../img/webui-img/detail-local.png)
 
-* The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
+* "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 可选择 "Intermediate count" 列来查看 Trial 进度。
 
 ![](../../img/webui-img/addColumn.png)
 
-* If you want to compare some trials, you can select them and then click "Compare" to see the results.
+* 如果要比较某些 Trial，可选择并点击 "Compare" 来查看结果。
 
 ![](../../img/webui-img/select-trial.png) ![](../../img/webui-img/compare.png)
 
-* Support to search for a specific trial by it's id, status, Trial No. and parameters.
+* 支持通过 id，状态，Trial 编号， 以及参数来搜索。
 
 ![](../../img/webui-img/search-trial.png)
 
-* You can use the button named "Copy as python" to copy trial's parameters.
+* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
 
 ![](../../img/webui-img/copyParameter.png)
 
-* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
 ![](../../img/webui-img/detail-pai.png)
 
