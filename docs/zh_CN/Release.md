@@ -240,7 +240,7 @@
 * 异步调度
 * 更新 Docker 文件，增加 pytorch 库
 * 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API.
-* 修复 OpenPAI 训练服务的 Bug 
+* 修复 OpenPAI 训练平台的 Bug 
   * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。
   * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
   * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。

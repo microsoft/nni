@@ -290,9 +290,9 @@ machineList:
   
   - **gpuNum**
     
-        __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
+        __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。 如果此字段没有设置，NNI不会在脚本中添加 `CUDA_VISIBLE_DEVICES` （也就是说，不会通过 `CUDA_VISIBLE_DEVICES` 来控制 GPU 在 Trial 中是否可见），也不会管理 GPU 资源。
         
-        注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
+        注意: 只能使用一种方法来指定 Tuner，例如：设置 {tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置两者。
         
   
   - **includeIntermediateResults**

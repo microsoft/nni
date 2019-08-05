@@ -56,6 +56,8 @@ paiConfig:
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
 * shmMB 
     * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
+* authFile 
+    * 可选，设置在使用 OpenPAI 时的私有 Docker 认证文件路径。[参考文档](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 

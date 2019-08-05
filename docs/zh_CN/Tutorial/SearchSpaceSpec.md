@@ -47,7 +47,8 @@
 
 * {"_type":"quniform","_value":[low, high, q]}
   
-  * 这表示变量值会类似于 round(uniform(low, high) / q) * q
+  * 变量值为 clip(round(uniform(low, high) / q) * q, low, high)，clip 操作用于约束生成值的边界。 例如，_value 为 [0, 10, 2.5]，可取的值为 [0, 2.5, 5.0, 7.5, 10.0]; _value 为 [2, 10, 5]，可取的值为 [2, 5, 10]。
+  
   * 适用于离散，同时反映了某种"平滑"的数值，但上下限都有限制。 如果需要从范围 [low, high] 中均匀选择整数，可以如下定义 `_value`：`[low, high, 1]`。
 
 * {"_type":"loguniform","_value":[low, high]}
@@ -57,7 +58,7 @@
 
 * {"_type":"qloguniform","_value":[low, high, q]}
   
-  * 这表示变量值会类似于 round(loguniform(low, high)) / q) * q
+  * 变量值为 clip(round(loguniform(low, high) / q) * q, low, high)，clip 操作用于约束生成值的边界。
   * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
 * {"_type":"normal","_value":[mu, sigma]}
@@ -78,6 +79,12 @@
   * 这表示变量值会类似于 round(exp(normal(mu, sigma)) / q) * q
   * 适用于值是“平滑”的离散变量，但某一边有界。
 
+* {"_type":"mutable_layer","_value":{mutable_layer_infomation}}
+  
+  * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
+  * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
+  * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
+
 ## 每种 Tuner 支持的搜索空间类型
 
 |                     |  choice  | randint  | uniform  | quniform | loguniform | qloguniform |  normal  | qnormal  | lognormal | qlognormal |
@@ -88,19 +95,12 @@
 |   Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     SMAC Tuner      | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |             |          |          |           |            |
 |     Batch Tuner     | &#10003; |          |          |          |            |             |          |          |           |            |
-|  Grid Search Tuner  | &#10003; |          |          | &#10003; |            |  &#10003;   |          |          |           |            |
+|  Grid Search Tuner  | &#10003; | &#10003; |          | &#10003; |            |             |          |          |           |            |
 |  Hyperband Advisor  | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 |      GP Tuner       | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   |          |          |           |            |
 
 已知的局限：
-
-* 注意，在 Grid Search Tuner 中，为了使用方便 `quniform` 和 `qloguniform` 的定义也有所改变，其中的 q 表示采样值的数量。 详情如下：
-  
-      * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
-      
-      * 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
-      
 
 * 注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
 
