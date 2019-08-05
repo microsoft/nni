@@ -18,10 +18,10 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
         <li>LightGBM</li>
         <li>CNTK (Python language)</li>
         <li>Chainer</li>
-        <li>Theano</i></li>
-        <li>GBDT</li>
+        <li>Theano</li>
         <li>Scikit-learn</li>
-        <li>...</li>
+        <li>GBDT</li>
+        All python-based frameworks and library...</i>
     </ul></td>
     <td valign="top">
     <ul>
