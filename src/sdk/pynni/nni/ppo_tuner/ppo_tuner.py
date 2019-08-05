@@ -33,7 +33,6 @@ from gym import spaces
 import nni
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
-from nni.protocol import CommandType, send
 
 from .model import Model
 from .util import set_global_seeds
@@ -286,7 +285,7 @@ class PPOTuner(Tuner):
     PPOTuner
     """
 
-    def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4):
+    def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4, minibatch_size=4):
         """
         initialization, PPO model is not initialized here as search space is not received yet.
 
@@ -295,6 +294,7 @@ class PPOTuner(Tuner):
         optimize_mode:         maximize or minimize
         trials_per_update:     number of trials to have for each model update
         epochs_per_update:     number of epochs to run for each model update
+        minibatch_size:        minibatch size (number of trials) for the update
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
@@ -319,6 +319,9 @@ class PPOTuner(Tuner):
 
         self.model_config.num_envs = self.inf_batch_size
         self.model_config.noptepochs = epochs_per_update
+        self.model_config.nminibatches = minibatch_size
+
+        self.send_trial_callback = None
         logger.info('=== finished PPOTuner initialization')
 
     def _process_one_nas_space(self, block_name, block_space):
@@ -481,6 +484,7 @@ class PPOTuner(Tuner):
         Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
         """
         result = []
+        self.send_trial_callback = kwargs['st_callback']
         for parameter_id in parameter_id_list:
             had_exception = False
             try:
@@ -518,20 +522,6 @@ class PPOTuner(Tuner):
         receive trial's result. if the number of finished trials equals self.inf_batch_size, start the next update to
         train the model
         """
-        def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
-            ret = {
-                'parameter_id': parameter_id,
-                'parameter_source': 'customized' if customized else 'algorithm',
-                'parameters': params
-            }
-            if trial_job_id is not None:
-                ret['trial_job_id'] = trial_job_id
-            if parameter_index is not None:
-                ret['parameter_index'] = parameter_index
-            else:
-                ret['parameter_index'] = 0
-            return json_tricks.dumps(ret)
-
         trial_info_idx = self.running_trials.pop(parameter_id, None)
         assert trial_info_idx is not None
 
@@ -562,7 +552,7 @@ class PPOTuner(Tuner):
                 param_id = self.param_ids.pop()
                 self.running_trials[param_id] = trial_info_idx
                 new_config = self._actions_to_config(actions)
-                send(CommandType.NewTrialJob, _pack_parameter(param_id, new_config))
+                self.send_trial_callback(param_id, new_config)
                 self.credit -= 1
 
     def import_data(self, data):
