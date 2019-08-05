@@ -14,11 +14,11 @@
 
 ![](../../img/parallel_tpe_search_ei.PNG)
 
-Since calculation of p(y|x) is expensive, TPE approach modeled p(y|x) by p(x|y) and p(y).The TPE defines p(x|y) using two such densities:
+由于 p(y|x) 计算成本较高，TPE 通过 p(x|y) 和 p(y) 来为 p(y|x) 建模。TPE 通过下列两个密度来定义 p(x|y)：
 
 ![](../../img/parallel_tpe_search_tpe.PNG)
 
-where l(x) is the density formed by using the observations {x(i)} such that corresponding loss f(x(i)) was less than y∗ and g(x) is the density formed by using the remaining observations. TPE algorithm depends on a y∗ that is larger than the best observed f(x) so that some points can be used to form l(x). The TPE algorithm chooses y∗ to be some quantile γ of the observed y values, so that p(y<`y∗`) = γ, but no specific model for p(y) is necessary. The tree-structured form of l and g makes it easy to draw manycandidates according to l and evaluate them according to g(x)/l(x). On each iteration, the algorithm returns the candidate x∗ with the greatest EI.
+l(x) 是通过观察 {x(i)} 来形成的密度，使得相应的损失 f(x(i)) 小于 y∗，而 g(x) 是使用剩余的观测值来形成的密度。 TPE 算法取决于 y∗ 大于观测到的最好的 f(x)，这样可以使用一些点来形成 l(x)。 TPE 算法选择了 y* 来作为一些观测值 y 的分位数 γ，因此 p(y<`y∗`) = γ，但不需要为特定的 p(y) 建模。 l 和 g 的树形结构使得根据 l 来计算多个候选项变得容易，可根据 g(x)/l(x) 来进行评估。 On each iteration, the algorithm returns the candidate x∗ with the greatest EI.
 
 Here is a simulation of the TPE algorithm in a two-dimensional search space. The difference of background color represents different values. It can be seen that TPE combines exploration and exploitation very well. (Black indicates the points of this round samples, and yellow indicates the points has been taken in the history.)
 
