@@ -73,10 +73,10 @@ h_pooling = max_pool(hidden_layer, pool_size)
 
 `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` 用来返回中间结果，这和 [Trials.md](../TrialExample/Trials.md) 中的 `nni.report_intermediate_result` 用法一样。
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in the doc of [Write a trial run on NNI](../TrialExample/Trials.md)
 
 ### 4. 最终结果
 
 `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和[Trials.md](../TrialExample/Trials.md) 中的 `nni.report_final_result` 用法一样。
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in the doc of [Write a trial run on NNI](../TrialExample/Trials.md)
