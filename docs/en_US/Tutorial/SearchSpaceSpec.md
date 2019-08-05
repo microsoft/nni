@@ -54,7 +54,7 @@ All types of sampling strategies and their parameter are listed here:
   * When optimizing, this variable is constrained to be positive.
 
 * {"_type":"qloguniform","_value":[low, high, q]}
-  * Which means the variable value is a value like clip(round(loguniform(low, high)) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
+  * Which means the variable value is a value like clip(round(loguniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 
 * {"_type":"normal","_value":[mu, sigma]}
