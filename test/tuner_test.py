@@ -23,15 +23,11 @@ import sys
 import time
 import traceback
 
-from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, is_experiment_done
-
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
+from utils import get_yml_content, dump_yml_content, setup_experiment, get_nni_log_path, is_experiment_done
+from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 TUNER_LIST = ['GridSearch', 'BatchTuner', 'TPE', 'Random', 'Anneal', 'Evolution']
 ASSESSOR_LIST = ['Medianstop']
-EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
 
 def switch(dispatch_type, dispatch_name):
@@ -63,7 +59,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     proc = subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
-    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
+    nnimanager_log_path = get_nni_log_path(EXPERIMENT_URL)
 
     for _ in range(20):
         time.sleep(3)

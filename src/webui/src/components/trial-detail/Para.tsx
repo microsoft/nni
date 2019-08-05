@@ -78,7 +78,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     getParallelAxis =
         (
             dimName: Array<string>, parallelAxis: Array<Dimobj>,
-            accPara: Array<number>, eachTrialParams: Array<string>, 
+            accPara: Array<number>, eachTrialParams: Array<string>,
             lengthofTrials: number
         ) => {
             // get data for every lines. if dim is choice type, number -> toString()
@@ -87,13 +87,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                 let temp: Array<number> = [];
                 for (let i = 0; i < dimName.length; i++) {
                     if ('type' in parallelAxis[i]) {
-                        temp.push(
-                            eachTrialParams[item][dimName[i]].toString()
-                        );
+                        temp.push(eachTrialParams[item][dimName[i]].toString());
                     } else {
-                        temp.push(
-                            eachTrialParams[item][dimName[i]]
-                        );
+                        // default metric
+                        temp.push(eachTrialParams[item][dimName[i]]);
                     }
                 }
                 paraYdata.push(temp);
@@ -199,11 +196,18 @@ class Para extends React.Component<ParaProps, ParaState> {
                     break;
                 // support log distribute
                 case 'loguniform':
-                    parallelAxis.push({
-                        dim: i,
-                        name: dimName[i],
-                        type: 'log',
-                    });
+                    if (lenOfDataSource > 1) {
+                        parallelAxis.push({
+                            dim: i,
+                            name: dimName[i],
+                            type: 'log',
+                        });
+                    } else {
+                        parallelAxis.push({
+                            dim: i,
+                            name: dimName[i]
+                        });
+                    }
                     break;
 
                 default:
@@ -276,7 +280,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                 }
             });
             if (this._isMounted) {
-                this.setState({ max: Math.max(...accPara), min: Math.min(...accPara) }, () => {
+                // if not return final result
+                const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
+                const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
+                this.setState({ max: maxVal, min: minVal }, () => {
                     this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
                 });
             }
