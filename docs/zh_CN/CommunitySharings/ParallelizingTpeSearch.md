@@ -50,9 +50,9 @@ Kriging Believer 策略用等价于 Kriging 预测期望值的确定性值替换
 
 ![](../../img/parallel_tpe_search_kb.PNG)
 
-这种顺序策略使用了 q-points 设计，在计算量上是可承受的，因为它依赖于分析已知的 EI，在 d 维上进行了优化。 However, there is a risk of failure, since believing an OK predictor that overshoots the observed data may lead to a sequence that gets trapped in a non-optimal region for many iterations. We now propose a second strategy that reduces this risk.
+这种顺序策略使用了 q-points 设计，在计算量上是可承受的，因为它依赖于分析已知的 EI，在 d 维上进行了优化。 但此方法有失败的风险，因为相信 OK Predictor 可以预测超过观察到的数据，可能导致多轮迭代中的序列会陷入非最优区域。 第二种策略可降低这种风险。
 
-#### Solution 2: The CL(Constant Liar) Heuristic Strategy
+#### 方案 2: CL(Constant Liar) 启发式策略
 
 Let us now consider a sequential strategy in which the metamodel is updated (still without hyperparameter re-estimation) at each iteration with a value L exogenously fixed by the user, here called a ”lie”. The strategy referred to as the Constant Liar consists in lying with the same value L at every iteration: maximize EI (i.e. find xn+1), actualize the model as if y(xn+1) = L, and so on always with the same L ∈ R:
 
