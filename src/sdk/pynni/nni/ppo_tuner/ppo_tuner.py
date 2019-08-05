@@ -517,6 +517,31 @@ class PPOTuner(Tuner):
         new_config = self._actions_to_config(actions)
         return new_config
 
+    def _next_round_inference(self):
+        """
+        """
+        self.finished_trials = 0
+        self.model.compute_rewards(self.trials_info, self.trials_result)
+        self.model.train(self.trials_info, self.inf_batch_size)
+        self.running_trials = {}
+        # generate new trials
+        self.trials_result = [None for _ in range(self.inf_batch_size)]
+        mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values = self.model.inference(self.inf_batch_size)
+        self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs,
+                                        mb_dones, last_values, self.inf_batch_size)
+        # check credit and submit new trials
+        for _ in range(self.credit):
+            trial_info_idx, actions = self.trials_info.get_next()
+            if trial_info_idx is None:
+                logger.warning('No enough trial config, trials_per_update is suggested to be larger than trialConcurrency')
+                break
+            assert self.param_ids
+            param_id = self.param_ids.pop()
+            self.running_trials[param_id] = trial_info_idx
+            new_config = self._actions_to_config(actions)
+            self.send_trial_callback(param_id, new_config)
+            self.credit -= 1
+
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
         receive trial's result. if the number of finished trials equals self.inf_batch_size, start the next update to
@@ -533,27 +558,24 @@ class PPOTuner(Tuner):
         self.finished_trials += 1
 
         if self.finished_trials == self.inf_batch_size:
-            self.finished_trials = 0
-            self.model.compute_rewards(self.trials_info, self.trials_result)
-            self.model.train(self.trials_info, self.inf_batch_size)
-            self.running_trials = {}
-            # generate new trials
-            self.trials_result = [None for _ in range(self.inf_batch_size)]
-            mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values = self.model.inference(self.inf_batch_size)
-            self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs,
-                                          mb_dones, last_values, self.inf_batch_size)
-            # check credit and submit new trials
-            for _ in range(self.credit):
-                trial_info_idx, actions = self.trials_info.get_next()
-                if trial_info_idx is None:
-                    logger.warning('No enough trial config, trials_per_update is suggested to be larger than trialConcurrency')
-                    break
-                assert self.param_ids
-                param_id = self.param_ids.pop()
-                self.running_trials[param_id] = trial_info_idx
-                new_config = self._actions_to_config(actions)
-                self.send_trial_callback(param_id, new_config)
-                self.credit -= 1
+            self._next_round_inference()
+
+    def trial_end(self, parameter_id, success, **kwargs):
+        """
+        to deal with trial failure
+        """
+        if not success:
+            if parameter_id not in self.running_trials:
+                logger.warning('The trial is failed, but self.running_trial does not have this trial')
+                return
+            trial_info_idx = self.running_trials.pop(parameter_id, None)
+            assert trial_info_idx is not None
+            # use mean of finished trials as the result of this failed trial
+            values = [val for val in self.trials_result if val is not None]
+            self.trials_result[trial_info_idx] = sum(values) / len(values)
+            self.finished_trials += 1
+            if self.finished_trials == self.inf_batch_size:
+                self._next_round_inference()
 
     def import_data(self, data):
         """
