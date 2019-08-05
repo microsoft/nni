@@ -168,28 +168,15 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             },
             series: [
                 {
-                    symbolSize: 6,
-                    type: 'scatter',
-                    data: resultList
-                },
-                {
                     type: 'line',
                     lineStyle: { color: '#FF6600' },
                     data: realDefault
-                }
-            ]
-            // series: [
-            //     {
-            //         type: 'line',
-            //         lineStyle: { color: '#FF6600' },
-            //         data: realDefault
-            //     }, 
-            //     {
-            //         symbolSize: 6,
-            //         type: 'scatter',
-            //         data: resultList
-            //     }   
-            // ]
+                },
+                {
+                    symbolSize: 6,
+                    type: 'scatter',
+                    data: resultList
+                }]
         };
     }
 
