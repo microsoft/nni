@@ -54,13 +54,13 @@ Kriging Believer 策略用等价于 Kriging 预测期望值的确定性值替换
 
 #### 方案 2: CL(Constant Liar) 启发式策略
 
-考虑一种顺序策略，在每次迭代时会更新元模型（但不会重新估计超参），其中值 L 来自外部固定值，称为”lie（谎言）”。 The strategy referred to as the Constant Liar consists in lying with the same value L at every iteration: maximize EI (i.e. find xn+1), actualize the model as if y(xn+1) = L, and so on always with the same L ∈ R:
+考虑一种顺序策略，在每次迭代时会更新元模型（但不会重新估计超参），其中值 L 来自外部固定值，称为”lie（谎言）”。 Constant Liar 策略在每次迭代时使用相同的值 L：最大化 EI（即找到 xn+1），将模型实现为 y(xn+1) = L，始终使用 L∈R：
 
 ![](../../img/parallel_tpe_search_cl.PNG)
 
-L should logically be determined on the basis of the values taken by y at X. Three values, min{Y}, mean{Y}, and max{Y} are considered here. **The larger L is, the more explorative the algorithm will be, and vice versa.**
+L 应在逻辑上根据 y 在 X 处获取的值来确定。这里需要考虑三个值，min{Y}, mean{Y}, 以及 max{Y}。 **L 越大，算法的探索性就越大，反之亦然。**
 
-We have simulated the method above. The following figure shows the result of using mean value liars to maximize q-EI. We find that the points we have taken have begun to be scattered.
+根据上述方法进行模拟。 The following figure shows the result of using mean value liars to maximize q-EI. We find that the points we have taken have begun to be scattered.
 
 ![](../../img/parallel_tpe_search3.gif)
 
