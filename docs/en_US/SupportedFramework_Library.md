@@ -14,6 +14,8 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
         <li>Keras</li>
         <li>MXNet</li>
         <li>Caffe2</li>
+        <li>XGBoost</li>
+        <li>LightGBM</li>
         <li>CNTK (Python language)</li>
         <li>Chainer</li>
         <li>Theano</i></li>
@@ -31,7 +33,6 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
         <li>Pillow</li>
         <li>SQLAlchemy</li>
         <li>Scapy</li>
-        <li>IPython</i></li>
         <li>...</li>
     </ul></td>
   </tr>
