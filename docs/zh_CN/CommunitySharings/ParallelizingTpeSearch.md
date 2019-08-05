@@ -1,12 +1,12 @@
 # 并行化顺序算法：TPE
 
-为了利用多个计算节点，TPE 方法是异步运行的，这样能避免浪费时间等待 Trial 评估的完成。 For the TPE approach, the so-called constant liar approach was used: each time a candidate point x∗ was proposed, a fake fitness evaluation of the y was assigned temporarily, until the evaluation completed and reported the actual loss f(x∗).
+为了利用多个计算节点，TPE 方法是异步运行的，这样能避免浪费时间等待 Trial 评估的完成。 TPE 方法使用了叫做 constant liar 的方法：每次候选点 x* 生成时，会临时分配一个假的评估结果 y。在评估完成后，用返回的真实损失值 f(x*) 来替换假的评估结果。
 
-## Introducion and Problems
+## 介绍和问题
 
-### Sequential Model-based Global Optimization
+### 基于顺序模型的全局优化
 
-Sequential Model-Based Global Optimization (SMBO) algorithms have been used in many applications where evaluation of the fitness function is expensive. In an application where the true fitness function f: X → R is costly to evaluate, model-based algorithms approximate f with a surrogate that is cheaper to evaluate. Typically the inner loop in an SMBO algorithm is the numerical optimization of this surrogate, or some transformation of the surrogate. The point x∗ that maximizes the surrogate (or its transformation) becomes the proposal for where the true function f should be evaluated. This active-learning-like algorithm template is summarized in the figure below. SMBO algorithms differ in what criterion they optimize to obtain x∗ given a model (or surrogate) of f, and in they model f via observation history H.
+基于顺序模型的全局优化（SMBO）算法已经用于许多应用中，但适应度函数的评估成本比较高。 在应用中，真实的适应度函数 f: X → R 评估成本较高，通过采用基于模型算法近似的 f 来替代，可降低其评估成本。 Typically the inner loop in an SMBO algorithm is the numerical optimization of this surrogate, or some transformation of the surrogate. The point x∗ that maximizes the surrogate (or its transformation) becomes the proposal for where the true function f should be evaluated. This active-learning-like algorithm template is summarized in the figure below. SMBO algorithms differ in what criterion they optimize to obtain x∗ given a model (or surrogate) of f, and in they model f via observation history H.
 
 ![](../../img/parallel_tpe_search4.PNG)
 
