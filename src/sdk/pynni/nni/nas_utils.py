@@ -39,39 +39,11 @@ def classic_mode(
     without touching the full model graph.'''
     if trial._params is None:
         trial.get_next_parameter()
-    try:
-        mutable_block = trial.get_current_parameter(mutable_id)
-        # Great! There is a NAS tuner
-        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
-        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
-        real_chosen_inputs = [optional_inputs[input_name]
-                              for input_name in chosen_inputs]
-    except KeyError:
-        # Try to find converted NAS parameters
-        params = trial.get_current_parameter()
-        expected_prefix = _MUTABLE_LAYER_SPACE_PREFIX + "/" + mutable_id + "/" + mutable_layer_id
-        chosen_layer = params[expected_prefix + "/layer_choice"]
 
-        # find how many to choose
-        optional_input_size = int(params[expected_prefix + "/optional_input_size"])  # convert from float (uniform) to int
-        total_state_size = len(optional_inputs) ** optional_input_size
-
-        # find who to choose, can duplicate
-        optional_input_state = int(params[expected_prefix + "/optional_input_chosen_state"] * total_state_size)
-        real_chosen_inputs, real_chosen_input_names = [], []
-        # make sure dict -> list produce stable result by sorting
-        optional_inputs_keys = sorted(optional_inputs.keys())
-        optional_inputs_list = [optional_inputs[k] for k in optional_inputs_keys]
-        for i in range(optional_input_size):
-            real_chosen_inputs.append(optional_inputs_list[optional_input_state % len(optional_inputs)])
-            real_chosen_input_names.append(optional_inputs_keys[optional_input_state % len(optional_inputs)])
-            optional_input_state //= len(optional_inputs)
-
-        _logger.info("%s_%s: layer: %s, optional inputs: %s" % (mutable_id, mutable_layer_id,
-                                                                chosen_layer, real_chosen_input_names))
-
-    layer_out = funcs[chosen_layer](
-        [fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
+    chosen_layer, chosen_inputs = _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id,
+                                                                   list(optional_inputs.keys()))
+    real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
+    layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
 
     return layer_out
 
@@ -189,6 +161,42 @@ def reload_tensorflow_variables(session, tf=None):
             tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
             tf_variables[name_prefix]['optional_inputs'].load(
                 chosen_inputs, session)
+
+
+def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inputs,
+                                     download=True):
+    # optional_inputs should be name(key)s of the optional inputs
+    try:
+        if not download:
+            raise KeyError  # skip over this
+
+        mutable_block = trial.get_current_parameter(mutable_id)
+
+        # Great! There is a NAS tuner
+        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
+        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
+    except KeyError:
+        # Try to find converted NAS parameters
+        params = trial.get_current_parameter()
+        expected_prefix = _MUTABLE_LAYER_SPACE_PREFIX + "/" + mutable_id + "/" + mutable_layer_id
+        chosen_layer = params[expected_prefix + "/layer_choice"]
+
+        # find how many to choose
+        optional_input_size = int(params[expected_prefix + "/optional_input_size"])  # convert uniform to randint
+        total_state_size = len(optional_inputs) ** optional_input_size
+
+        # find who to choose, can duplicate
+        optional_input_state = int(params[expected_prefix + "/optional_input_chosen_state"] * total_state_size)
+        chosen_inputs = []
+        # make sure dict -> list produce stable result by sorting
+        optional_inputs_keys = sorted(optional_inputs)
+        for i in range(optional_input_size):
+            chosen_inputs.append(optional_inputs_keys[optional_input_state % len(optional_inputs)])
+            optional_input_state //= len(optional_inputs)
+
+    _logger.info("%s_%s: layer: %s, optional inputs: %s" % (mutable_id, mutable_layer_id,
+                                                            chosen_layer, chosen_inputs))
+    return chosen_layer, chosen_inputs
 
 
 def convert_nas_search_space(search_space):
