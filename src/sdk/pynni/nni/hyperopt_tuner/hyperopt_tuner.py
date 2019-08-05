@@ -26,7 +26,7 @@ import logging
 
 import hyperopt as hp
 import numpy as np
-from nni.tuner import Tuner
+from nni.tuner import Tuner, rewrite_nas_space
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
 
 logger = logging.getLogger('hyperopt_AutoML')
@@ -233,6 +233,7 @@ class HyperoptTuner(Tuner):
             return hp.anneal.suggest
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """
         Update search space definition in tuner by search_space in parameters.

@@ -17,8 +17,12 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
+import logging
 
 from . import trial
+
+
+_logger = logging.getLogger(__name__)
 
 
 def classic_mode(
@@ -34,11 +38,26 @@ def classic_mode(
     without touching the full model graph.'''
     if trial._params is None:
         trial.get_next_parameter()
-    mutable_block = trial.get_current_parameter(mutable_id)
-    chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
-    chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
-    real_chosen_inputs = [optional_inputs[input_name]
-                          for input_name in chosen_inputs]
+    try:
+        mutable_block = trial.get_current_parameter(mutable_id)
+        # Great! There is a NAS tuner
+        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
+        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
+        real_chosen_inputs = [optional_inputs[input_name]
+                              for input_name in chosen_inputs]
+    except KeyError:
+        # Try to find converted NAS parameters
+        params = trial.get_current_parameter(mutable_id)
+        expected_prefix = "_mutable_layer/" + mutable_id + "/" + mutable_layer_id
+        chosen_layer = params[expected_prefix + "/layer_choice"]
+        optional_input_size = int(params[expected_prefix + "/optional_input_size"])  # convert from float (uniform) to int
+        total_state_size = len(optional_inputs) ** optional_input_size
+        optional_input_state = int(params["optional_input_chosen_state"] * total_state_size)
+        real_chosen_inputs = []
+        for i in range(optional_input_size):
+            real_chosen_inputs.append(optional_inputs[optional_input_state % len(optional_inputs)])
+            optional_input_state //= len(optional_inputs)
+
     layer_out = funcs[chosen_layer](
         [fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
 
@@ -158,3 +177,58 @@ def reload_tensorflow_variables(session, tf=None):
             tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
             tf_variables[name_prefix]['optional_inputs'].load(
                 chosen_inputs, session)
+
+
+def convert_nas_search_space(search_space):
+    """
+    :param search_space: raw search space
+    :return: the new search space, mutable_layers will be converted into choice
+    """
+    ret = dict()
+    for k, v in search_space.items():
+        if "_type" not in v:
+            # this should not happen
+            _logger.warning("There is no _type in one of your search space values with key '%s'"
+                            ". Please check your search space" % k)
+            ret[k] = v
+        elif v["_type"] != "mutable_layer":
+            ret[k] = v
+        else:
+            _logger.info("Converting mutable_layer search space with key '%s'" % k)
+            # v["_value"] looks like {'mutable_layer_1': {'layer_choice': ...} ...}
+            values = v["_value"]
+            for layer_name, layer_data in values.items():
+                # there should be at most layer_choice, optional_inputs, optional_input_size in layer_data
+
+                # add "_mutable_layers" as prefix so that they can be recovered later
+                layer_key = "_mutable_layers/" + k + "/" + layer_name
+
+                if layer_data.get("layer_choice"):  # filter out empty choice and no choice
+                    layer_choice = layer_data["layer_choice"]
+                else:
+                    raise ValueError("No layer choice found in %s" % layer_key)
+
+                if layer_data.get("optional_inputs") and layer_data.get("optional_input_size"):
+                    input_size = layer_data["optional_input_size"]
+                    if isinstance(input_size, int):
+                        input_size = [input_size, input_size]
+                    if input_size[0] > input_size[1] or input_size[0] < 0:
+                        _logger.error("Might not be able to handle optional_input_size < 0, please double check")
+                    input_size[1] += 1
+                else:
+                    _logger.info("Optional input choices are set to empty by default")
+                    input_size = [0, 1]
+
+                ret[layer_key + "/layer_choice"] = {
+                    "_type": "choice", "_value": layer_choice
+                }
+                # there still appears to be some problems in randint, using uniform to convert here
+                ret[layer_key + "/optional_input_size"] = {
+                    "_type": "uniform", "_value": input_size
+                }
+                # map all possible options into a real number in [0, 1)
+                ret[layer_key + "/optional_input_chosen_state"] = {
+                    "_type": "uniform", "_value": [0, 1]
+                }
+
+    return ret
