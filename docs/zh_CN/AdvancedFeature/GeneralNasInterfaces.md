@@ -155,12 +155,12 @@ trial:
 
 ```python
 for _ in range(num):
-    # here trains the architecture weights
+    # 训练架构权重
     """@nni.training_update(tf=tf, session=self.session, loss=loss, feed_dict=feed_dict)"""
     loss, _ = self.session.run([loss_op, train_op])
 ```
 
-**Note:** for enas_mode, oneshot_mode, and darts_mode, NNI only works on the training phase. They also have their own inference phase which is not handled by NNI. For enas_mode, the inference phase is to generate new subgraphs through the controller. For oneshot_mode, the inference phase is sampling new subgraphs randomly and choosing good ones. For darts_mode, the inference phase is pruning a proportion of candidates ops based on architecture weights.
+**注意**：对于 enas_mode、oneshot_mode、以及 darts_mode，NNI 仅能在训练阶段时有用。 NNI 不处理它们的推理阶段。 对于 enas_mode，推理阶段需要通过 Controller 来生成新的子图。 对于 oneshot_mode，推理阶段会随机采样生成新的子图，并选择其中好的子图。 对于 darts_mode，推理过程会根据架构权重来修剪掉一些候选的操作。
 
 <a name="ENASMode"></a>
 
@@ -168,7 +168,7 @@ for _ in range(num):
 
 在 enas_mode 中，编译后的 Trial 代码会构建完整的图形（而不是子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 它通过 [NNI 多阶段 Experiment](./multiPhase.md) 来支持。
 
-Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals. [Here]() is an example for enas_mode.
+具体来说，使用 TensorFlow 的 Trial，通过 TensorFlow 变量来作为信号，并使用 TensorFlow 的条件函数来控制搜索空间（全图）来提高灵活性。这意味着根据这些信号，可以变为不同的多个子图。 [Here]() is an example for enas_mode.
 
 <a name="OneshotMode"></a>
 
