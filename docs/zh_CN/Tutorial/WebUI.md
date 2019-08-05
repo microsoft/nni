@@ -4,52 +4,52 @@
 
 点击标签 "Overview"。
 
-* See the experiment trial profile/search space and performanced good trials.
+* 查看 Experiment Trial 配置、搜索空间以及结果好的 Trial。
 
 ![](../../img/webui-img/over1.png) ![](../../img/webui-img/over2.png)
 
-* If your experiment have many trials, you can change the refresh interval on here.
+* 如果 Experiment 包含了较多 Trial，可改变刷新间隔。
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* Support to review and download the experiment result and nni-manager/dispatcher log file from the download.
+* 支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
 
 ![](../../img/webui-img/download.png)
 
-* You can click the learn about in the error box to track experiment log message if the experiment's status is error.
+* 如果 Experiment 状态为 ERROR，可点击图标，查看 Experiment 错误日志。
 
 ![](../../img/webui-img/log-error.png) ![](../../img/webui-img/review-log.png)
 
-* You can click "Feedback" to report it if you have any questions.
+* 点击 "Feedback" 反馈问题。
 
 ## 查看任务默认指标
 
-* Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+* 点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
 ![](../../img/webui-img/default-metric.png)
 
-* Click the switch named "optimization curve" to see the experiment's optimization curve.
+* 点击开关 "optimization curve" 来查看 Experiment 的优化曲线。
 
 ![](../../img/webui-img/best-curve.png)
 
 ## 查看超参
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
+* 可选择百分比查看最好的 Trial。
+* 选择两个轴来交换位置。
 
 ![](../../img/hyperPara.png)
 
 ## 查看 Trial 运行时间
 
-Click the tab "Trial Duration" to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](../../img/trial_duration.png)
 
 ## 查看 Trial 中间结果
 
-Click the tab "Intermediate Result" to see the lines graph.
+单击 "Intermediate Result" 标签查看折线图。
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
