@@ -91,10 +91,10 @@ Trial 中指标范围在 20 至 60 的 13 个结果就被过滤掉了。
 
 ![](../../img/webui-img/detail-pai.png)
 
-* Intermediate Result Graph: you can see default and other keys in this graph by click the operation column button.
+* 中间结果图：可在此图中通过点击 operation 中的按钮来查看默认和其它键值。
 
 ![](../../img/webui-img/intermediate-btn.png) ![](../../img/webui-img/intermediate.png)
 
-* Kill: you can kill a job that status is running.
+* Kill: 可终止正在运行的任务。
 
 ![](../../img/webui-img/kill-running.png) ![](../../img/webui-img/canceled.png)
