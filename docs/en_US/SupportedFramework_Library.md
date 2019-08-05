@@ -30,12 +30,12 @@ NNI supports all <i>python-based frameworks</i> and <i>libraries</i>.If you want
     <a href="../../examples/trials/mnist-keras">MNIST-keras</a><br/>
     <a href="TrialExample/Cifar10Examples.md">CIFAR-10</a><br/>
     <a href="../../examples/trials/auto-feature-engineering/README.md">Auto-feature-engineering</a><br/>
+    <a href="TrialExample/GbdtExample.md">GBDT</a><br/>
+    <a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/>
     <a href="../../examples/trials/ga_squad/README.md">Squad</a><br/>
     <a href="CommunitySharings/RecommendersSvd.md">Automatically tuning SVD on NNI</a><br/>
     <a href="../../examples/trials/kaggle-tgs-salt/README.md">TGS salt identification chanllenge</a><br/>
     <a href="../../examples/trials/network_morphism/README.md">Network_morphism</a><br/>
-    <a href="TrialExample/GbdtExample.md">GBDT</a><br/>
-    <a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/>
     </ul></td>
   </tr>
 </table>
