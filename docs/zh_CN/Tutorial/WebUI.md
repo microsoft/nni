@@ -53,11 +53,11 @@
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide data if you want to use the filter button to see the trend of some trial.
+由于训练中可能有非常多的中间结果，因此中间结果图提供了过滤功能。 如果要使用过滤按钮查看部分 Trial，则需要提供数据。
 
-What data should be written in the first input? Maybe you find an intermediate count those trials became better or worse. In other word, it's an important and concerned intermediate count. Just input it into the first input.
+第一个输入框应该填入什么？ 可能会发现一个 Trial 的中间结果点变得更好或者更差。 换句话说，这可能是非常重要的中间结果点。 只需将其输入第一个输入框中。
 
-After selecting the intermeidate count, you should input your focus metric's range on this intermediate count. Yes, it's the min and max value. Like this picture, I choose the intermeidate count is 9 and the metric's range is 60-80.
+选择了中间结果序号后，要输入需要了解的该中间结果序号的指标范围。 即其最小值和最大值。 如此图中，中间结果点为 9，指标范围为 60 至 80。
 
 As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
 
