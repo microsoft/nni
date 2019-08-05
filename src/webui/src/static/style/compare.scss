@@ -23,3 +23,13 @@
         font-weight: 600;
     }
 }
+
+.compare-intermeidate{
+    position: relative;
+    .compare-yAxis{
+        color: #333;
+        position: absolute;
+        top: 87%;
+        left: 45%;
+    }
+}
