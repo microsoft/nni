@@ -45,7 +45,7 @@ NNI also supports all libraries written in python.Here are some algorithms based
     <ul>
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
- Here is a simple list of the libraries we know. If you are interested in NNI, you can refer to the [tutorial](TrialExample/Trials.md) to complete your own hacks.
+Here is just a small list of libraries that supported by NNI. If you are interested in NNI, you can refer to the [tutorial](TrialExample/Trials.md) to complete your own hacks.
 
 
 
