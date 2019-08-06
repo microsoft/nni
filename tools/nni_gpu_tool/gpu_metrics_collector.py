@@ -55,7 +55,7 @@ def main(argv):
             smi_output = subprocess.check_output(cmd)
             parse_nvidia_smi_result(smi_output, metrics_output_dir)
         except FileNotFoundError:
-            gen_empty_gpu_metric(smi_output)
+            gen_empty_gpu_metric(metrics_output_dir)
         except:
             exception = sys.exc_info()
             for e in exception:
