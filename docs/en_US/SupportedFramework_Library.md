@@ -29,7 +29,7 @@ With the built-in Python API, NNI naturally supports the hyper parameter tuning 
 
 You are encouraged to [contribute more examples](Tutorial/Contributing.md) for other NNI users. 
 
-## Support Library:
+## Supported Library:
 NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
 * [Scikit-learn]https://scikit-learn.org/stable/
     <ul>
