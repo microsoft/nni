@@ -27,18 +27,17 @@ NNI supports all frameworks, as long as they are written in PYTHON. Some common 
 * [MXNet]https://github.com/apache/incubator-mxnet
 * [Caffe2]https://github.com/BVLC/caffe
 * [CNTK (Python language)]https://github.com/microsoft/CNTK
-* [Scikit-learn]https://scikit-learn.org/stable/
-    <ul>
-    <li><a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/></li>
-    </ul>
 * [Spark MLlib]http://spark.apache.org/mllib/
 * [Chainer]https://chainer.org/
 * [Theano]https://pypi.org/project/Theano/ <br/>
 
 In addition to these, other frameworks written in python are also supported by NNI.
 ## Support Library:
-NNI also supports all libraries written in python.Here are some algorithms based on the GBDT library and an example of LIGHTGBM algorithms.
-
+NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
+* [Scikit-learn]https://scikit-learn.org/stable/
+    <ul>
+    <li><a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/></li>
+    </ul>
 * [XGBoost]https://xgboost.readthedocs.io/en/latest/
 * [CatBoost]https://catboost.ai/
 * [LightGBM]https://lightgbm.readthedocs.io/en/latest/
