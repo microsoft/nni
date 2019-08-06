@@ -45,7 +45,8 @@ All types of sampling strategies and their parameter are listed here:
   * When optimizing, this variable is constrained to a two-sided interval.
 
 * {"_type":"quniform","_value":[low, high, q]}
-  * Which means the variable value is a value like round(uniform(low, high) / q) * q
+  * Which means the variable value is a value like clip(round(uniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound. For example, for _value specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For _value specified as [2, 10, 5], possible values are [2, 5, 10].
+
   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
 
 * {"_type":"loguniform","_value":[low, high]}
@@ -53,7 +54,7 @@ All types of sampling strategies and their parameter are listed here:
   * When optimizing, this variable is constrained to be positive.
 
 * {"_type":"qloguniform","_value":[low, high, q]}
-  * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
+  * Which means the variable value is a value like clip(round(loguniform(low, high) / q) * q, low, high), where the clip operation is used to constraint the generated value in the bound.
   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 
 * {"_type":"normal","_value":[mu, sigma]}
@@ -87,19 +88,13 @@ All types of sampling strategies and their parameter are listed here:
 | Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
 | Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
-| Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
+| Grid Search Tuner | &#10003; | &#10003; |  | &#10003;  |     | |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
 | GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |  |  |    |     |
 
 
 Known Limitations:
-
-* Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
-
-    * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
-
-    * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
 
 * Note that Metis Tuner only supports numerical `choice` now
 
