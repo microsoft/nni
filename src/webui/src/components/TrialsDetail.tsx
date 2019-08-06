@@ -9,7 +9,7 @@ import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
 import Para from './trial-detail/Para';
-import Intermediate from './trial-detail/Intermeidate';
+import Intermediate from './trial-detail/Intermediate';
 import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';

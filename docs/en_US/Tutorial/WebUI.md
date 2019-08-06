@@ -50,13 +50,11 @@ Click the tab "Intermediate Result" to see the lines graph.
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-We set a filter function for the intermediate result graph because that the trials may have many intermediate results in the training progress. You need to provide data if you want to use the filter button to see the trend of some trial.
+The trial may have many intermediate results in the training progress. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
 
-What data should be written in the first input? Maybe you find an intermediate count those trials became better or worse. In other word, it's an important and concerned intermediate count. Just input it into the first input.
+Maybe you will find that these trials will get better or worse at some intermediate node. In other words, this is an important and relevant intermediate node. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
 
-After selecting the intermeidate count, you should input your focus metric's range on this intermediate count. Yes, it's the min and max value. Like this picture, I choose the intermeidate count is 9 and the metric's range is 60-80.
-
-As a result, I filter these trials that the metric's range is 20-60 on the 13 intermediate count.
+After selecting the value of #Intermediate, you need to enter the range of the Metrics for its ordinate. Like this picture, I choose the #intermediate is 4 and the metric's range is 0.8-1.
 
 ![](../../img/webui-img/filter-intermediate.png)
 ## View trials status

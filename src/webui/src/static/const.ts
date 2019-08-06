@@ -1,4 +1,5 @@
-const MANAGER_IP = `/api/v1/nni`;
+const MANAGER_IP = `http://10.170.69.50:8080/api/v1/nni`;
+// const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
     'UNKNOWN',
@@ -42,7 +43,7 @@ const COLUMN_INDEX = [
         index: 4
     },
     {
-        name: 'Intermeidate count',
+        name: 'Intermediate count',
         index: 5
     },
     {
@@ -57,7 +58,7 @@ const COLUMN_INDEX = [
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation'];
 // all choice column !dictory final
-const COLUMNPro = ['Trial No.', 'ID', 'Duration', 'Status', 'Intermeidate count', 'Default', 'Operation'];
+const COLUMNPro = ['Trial No.', 'ID', 'Duration', 'Status', 'Intermediate count', 'Default', 'Operation'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,
     CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION
