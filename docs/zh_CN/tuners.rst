@@ -13,6 +13,6 @@ Tuner 从 Trial 接收指标结果，来评估一组超参或网络结构的性�
 ..  toctree::
     :maxdepth: 2
 
-    内置 Tuner<BuiltinTuner>
-    自定义 Tuner<CustomizeTuner>
-    自定义 Advisor<CustomizeAdvisor>
+    内置 Tuner<builtin_tuner>
+    自定义 Tuner<Tuner/CustomizeTuner>
+    自定义 Advisor<Tuner/CustomizeAdvisor>

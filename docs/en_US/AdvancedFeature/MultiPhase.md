@@ -60,7 +60,7 @@ trial:
 
 ### Write a tuner that leverages multi-phase:
 
-Before writing a multi-phase tuner, we highly suggest you to go through  [Customize Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html). Same as writing a normal tuner, your tuner needs to inherit from `Tuner` class. When you enable multi-phase through configuration (set `multiPhase` to true), your tuner will get an additional parameter `trial_job_id` via tuner's following methods:
+Before writing a multi-phase tuner, we highly suggest you to go through [Customize Tuner](https://nni.readthedocs.io/en/latest/Tuner/CustomizeTuner.html). Same as writing a normal tuner, your tuner needs to inherit from `Tuner` class. When you enable multi-phase through configuration (set `multiPhase` to true), your tuner will get an additional parameter `trial_job_id` via tuner's following methods:
 ```
 generate_parameters
 generate_multiple_parameters
