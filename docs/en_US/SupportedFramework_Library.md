@@ -5,7 +5,7 @@ NNI provides Python API, supporting all frameworks and libraries written in pyth
 
 ## Support Framework:
 
-NNI supports all frameworks, as long as they are written in PYTHON. Some common frameworks are listed below, including NNI example tutorials based on them.
+NNI supports all frameworks, as long as they are written in python. Some common frameworks are listed below, including NNI example tutorials based on them.
 
 * [PyTorch]https://github.com/pytorch/pytorch
     <ul> 
