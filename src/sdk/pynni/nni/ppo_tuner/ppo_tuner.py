@@ -572,7 +572,8 @@ class PPOTuner(Tuner):
             assert trial_info_idx is not None
             # use mean of finished trials as the result of this failed trial
             values = [val for val in self.trials_result if val is not None]
-            self.trials_result[trial_info_idx] = sum(values) / len(values) if len(values) > 0 else 0
+            logger.warning('zql values: {0}'.format(values))
+            self.trials_result[trial_info_idx] = (sum(values) / len(values)) if len(values) > 0 else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
                 self._next_round_inference()
