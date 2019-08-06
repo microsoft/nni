@@ -4,7 +4,8 @@ NNI provides Python API, supporting all framework models and libraries written i
 
 
 ## Support Framework:
-NNI supports all frameworks, as long as they are written in PYTHON. Some common frameworks are listed below, including NNI case tutorials based on them.
+
+NNI supports all frameworks, as long as they are written in PYTHON. Some common frameworks are listed below, including NNI example tutorials based on them.
 
 * [PyTorch]https://github.com/pytorch/pytorch
     <ul> 
@@ -33,7 +34,7 @@ NNI supports all frameworks, as long as they are written in PYTHON. Some common 
 * [Spark MLlib]http://spark.apache.org/mllib/
 * [Chainer]https://chainer.org/
 * [Theano]https://pypi.org/project/Theano/ <br/>
-...
+In addition to these, other frameworks written in python are also supported by NNI.
 ## Support Library:
 NNI also supports all libraries written in python.Here are some algorithms based on the GBDT library and an example of LIGHTGBM algorithms.
 
@@ -43,7 +44,7 @@ NNI also supports all libraries written in python.Here are some algorithms based
     <ul>
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
-    ...
+    Here is a simple list of the libraries we know. If you are interested in NNI, you can refer to the [tutorial](TrialExample/Trials.md) to complete your own hacks.
 
 
 
