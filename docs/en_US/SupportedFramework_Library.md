@@ -1,5 +1,5 @@
 # Framework and Library Supported 
-NNI provides Python API, supporting all framework models and libraries written in python (`version >= 3.5`), and we have implemented many related examples and detailed their principles and running steps.
+NNI provides Python API, supporting all frameworks and libraries written in python (`version >= 3.5`), and we have implemented many related examples and detailed their principles and running steps.
 
 
 
