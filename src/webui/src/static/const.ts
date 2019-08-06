@@ -1,5 +1,4 @@
-const MANAGER_IP = `http://10.170.69.50:8080/api/v1/nni`;
-// const MANAGER_IP = `/api/v1/nni`;
+const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
     'UNKNOWN',
