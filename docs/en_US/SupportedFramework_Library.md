@@ -45,4 +45,4 @@ Here is just a small list of libraries that supported by NNI. If you are interes
 
 
 
-In addition to these experiments, we also welcome more and more users to apply NNI to your own experiment, if you have any doubts, please refer [Write a Trial Run on NNI](TrialExample/Trials.md). In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
+In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer [Write a Trial Run on NNI](TrialExample/Trials.md). In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
