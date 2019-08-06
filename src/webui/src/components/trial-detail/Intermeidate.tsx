@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Row, Col, Button, Switch } from 'antd';
+import { Row, Button, Switch } from 'antd';
 import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 require('echarts/lib/component/tooltip');
@@ -108,13 +108,13 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 xAxis: {
                     type: 'category',
-                    name: 'Step',
+                    // name: '# Intermediate',
                     boundaryGap: false,
                     data: xAxis
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'metric'
+                    name: 'Metric'
                 },
                 series: trialIntermediate
             };
@@ -136,7 +136,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'metric'
+                    name: 'Metric'
                 }
             };
             if (this._isMounted) {
@@ -184,7 +184,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         this.setState({ filterSource: filterSource });
                     }
                     this.drawIntermediate(filterSource);
-                    const counts = this.state.clickCounts + 1;
+                }
+                const counts = this.state.clickCounts + 1;
+                if (this._isMounted) {
                     this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
                 }
             });
@@ -280,58 +282,52 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             <div>
                 {/* style in para.scss */}
                 <Row className="meline intermediate">
-                    <Col span={8} />
-                    <Col span={3} style={{ height: 34 }}>
-                        {/* filter message */}
-                        <span>filter</span>
-                        <Switch
-                            defaultChecked={false}
-                            onChange={this.switchTurn}
-                        />
-                    </Col>
+                    {/* filter message */}
+                    <span>Filter</span>
+                    <Switch
+                        defaultChecked={false}
+                        onChange={this.switchTurn}
+                    />
                     {
                         isFilter
                             ?
-                            <div>
-                                <Col span={3}>
-                                    <span>Step</span>
-                                    <input
-                                        placeholder="point"
-                                        ref={input => this.pointInput = input}
-                                        className="strange"
-                                    />
-                                </Col>
-                                <Col className="range" span={10}>
-                                    <span>Intermediate result</span>
-                                    <input
-                                        placeholder="number"
-                                        ref={input => this.minValInput = input}
-                                    />
-                                    <span className="heng">-</span>
-                                    <input
-                                        placeholder="number"
-                                        ref={input => this.maxValInput = input}
-                                    />
-                                    <Button
-                                        type="primary"
-                                        className="changeBtu tableButton"
-                                        onClick={this.filterLines}
-                                        disabled={isLoadconfirmBtn}
-                                    >
-                                        Confirm
-                                    </Button>
-                                </Col>
-                            </div>
+                            <span>
+                                <span className="filter-x"># Intermeidate</span>
+                                <input
+                                    // placeholder="point"
+                                    ref={input => this.pointInput = input}
+                                    className="strange"
+                                />
+                                <span>Metric range</span>
+                                <input
+                                    // placeholder="range"
+                                    ref={input => this.minValInput = input}
+                                />
+                                <span className="hyphen">-</span>
+                                <input
+                                    // placeholder="range"
+                                    ref={input => this.maxValInput = input}
+                                />
+                                <Button
+                                    type="primary"
+                                    className="changeBtu tableButton"
+                                    onClick={this.filterLines}
+                                    disabled={isLoadconfirmBtn}
+                                >
+                                    Confirm
+                                </Button>
+                            </span>
                             :
-                            <Col />
+                            null
                     }
                 </Row>
-                <Row>
+                <Row className="intermeidate-graph">
                     <ReactEcharts
                         option={interSource}
                         style={{ width: '100%', height: 418, margin: '0 auto' }}
                         notMerge={true} // update now
                     />
+                    <div className="yAxis"># Intermediate</div>
                 </Row>
             </div>
         );

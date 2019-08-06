@@ -70,16 +70,36 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('TPE', 'Anneal', 'SMAC', 'Evolution'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
+    ('TPE', 'Anneal', 'SMAC'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC'),
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
+    ('Evolution'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'Evolution'),
+        Optional('classArgs'): {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
     ('BatchTuner', 'GridSearch', 'Random'): {
         'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'TPE': {
+        'builtinTunerName': 'TPE',
+        'classArgs': {
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('parallel_optimize'): setType('parallel_optimize', bool),
+            Optional('constant_liar_type'): setChoice('constant_liar_type', 'min', 'max', 'mean')
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'NetworkMorphism': {
@@ -91,6 +111,7 @@ tuner_schema_dict = {
             Optional('input_channel'): setType('input_channel', int),
             Optional('n_output_node'): setType('n_output_node', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'MetisTuner': {
@@ -102,6 +123,7 @@ tuner_schema_dict = {
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             Optional('cold_start_num'): setType('cold_start_num', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'GPTuner': {
@@ -117,6 +139,7 @@ tuner_schema_dict = {
             Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool), 
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'customized': {
@@ -124,6 +147,7 @@ tuner_schema_dict = {
         'classFileName': setType('classFileName', str),
         'className': setType('className', str),
         Optional('classArgs'): dict,
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     }
 }
@@ -196,8 +220,8 @@ common_trial_schema = {
 'trial':{
     'command': setType('command', str),
     'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
+    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode')
     }
 }
 
@@ -209,13 +233,15 @@ pai_trial_schema = {
     'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
     'memoryMB': setType('memoryMB', int),
     'image': setType('image', str),
+    Optional('authFile'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                         error='ERROR: authFile format error, authFile format is hdfs://xxx.xxx.xxx.xxx:xxx'),
     Optional('shmMB'): setType('shmMB', int),
     Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
                          error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
     Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
                          error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
     Optional('virtualCluster'): setType('virtualCluster', str),
-    Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode')
+    Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode')
     }
 }
 
@@ -230,14 +256,15 @@ pai_config_schema = {
 kubeflow_trial_schema = {
 'trial':{
         'codeDir':  setPathCheck('codeDir'),
-        Optional('nasMode'): setChoice('classic_mode', 'enas_mode', 'oneshot_mode'),
+        Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('ps'): {
             'replicas': setType('replicas', int),
             'command': setType('command', str),
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('master'): {
             'replicas': setType('replicas', int),
@@ -245,7 +272,8 @@ kubeflow_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
         Optional('worker'):{
             'replicas': setType('replicas', int),
@@ -253,7 +281,8 @@ kubeflow_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }
     }
 }
@@ -300,7 +329,8 @@ frameworkcontroller_trial_schema = {
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
             'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
             'memoryMB': setType('memoryMB', int),
-            'image': setType('image', str)
+            'image': setType('image', str),
+            Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         }]
     }
 }

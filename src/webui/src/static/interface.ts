@@ -27,6 +27,7 @@ interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
     intermediate: Array<number>;
+    progress?: number;
 }
 
 interface Experiment {
@@ -58,7 +59,7 @@ interface AccurPoint {
 interface DetailAccurPoint {
     acc: number;
     index: number;
-    searchSpace: string;
+    searchSpace: object;
 }
 
 interface TooltipForIntermediate {
@@ -116,8 +117,13 @@ interface Intermedia {
     hyperPara: object; // each trial hyperpara value
 }
 
+interface ExperimentInfo {
+    platform: string;
+    optimizeMode: string;
+}
+
 export {
     TableObj, Parameters, Experiment, AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalResult, FinalType,
-    TooltipForIntermediate, SearchSpace, Intermedia
+    TooltipForIntermediate, SearchSpace, Intermedia, ExperimentInfo
 };
