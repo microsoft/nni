@@ -52,7 +52,7 @@ Click the tab "Intermediate Result" to see the lines graph.
 
 The trial may have many intermediate results in the training progress. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
 
-You may find that these trials will get better or worse at one of intermediate results. In other words, this is an important and relevant intermediate node. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
+You may find that these trials will get better or worse at one of intermediate results. In other words, this is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
 
 And then input the range of metrics on this intermedia result. Like below picture, it chooses No. 4 intermediate result and set the range of metrics to 0.8-1.
 
