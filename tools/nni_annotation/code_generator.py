@@ -111,7 +111,7 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
         target_call_args.append(ast.Str(s=nas_mode))
-        if nas_mode in ['enas_mode', 'oneshot_mode']:
+        if nas_mode in ['enas_mode', 'oneshot_mode', 'darts_mode']:
             target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
@@ -319,12 +319,11 @@ class Transformer(ast.NodeTransformer):
         else:
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.get_next_parameter'):
-            call_node = parse_annotation(string[1:]).value
-            if call_node.args:
-                # it is used in enas mode as it needs to retrieve the next subgraph for training
-                call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
-                return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
+        if string.startswith('@nni.training_update'):
+            expr = parse_annotation(string[1:])
+            call_node = expr.value
+            call_node.args.insert(0, ast.Str(s=self.nas_mode))
+            return expr
 
         if string.startswith('@nni.report_intermediate_result')  \
                 or string.startswith('@nni.report_final_result') \
@@ -378,8 +377,8 @@ def parse(code, nas_mode=None):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
-    # enas and oneshot modes for tensorflow need tensorflow module, so we import it here
-    if nas_mode in ['enas_mode', 'oneshot_mode']:
+    # enas, oneshot and darts modes for tensorflow need tensorflow module, so we import it here
+    if nas_mode in ['enas_mode', 'oneshot_mode', 'darts_mode']:
         import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
         nodes.insert(last_future_import + 1, import_tf)
 
