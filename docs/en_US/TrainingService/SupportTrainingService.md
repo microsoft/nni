@@ -1,6 +1,6 @@
-# Support TrainingService
+# TrainingService
 
-TrainingService is a concept of service that used to maintain a training platform for running trial jobs. NNI supports [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md), [kubeflow](./KubeflowMode.md) and [frameworkcontroller](./FrameworkControllerMode.md) built-in training services.   
+NNI TrainingService provides the training platform for running NNI trial jobs. NNI supports [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md), [kubeflow](./KubeflowMode.md) and [frameworkcontroller](./FrameworkControllerMode.md) built-in training services.   
 NNI not only provides few built-in training service options, but also provides a method for customers to build their own training service easily.
 
 ## Built-in TrainingService
