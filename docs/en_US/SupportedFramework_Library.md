@@ -1,11 +1,7 @@
-# Framework and Library Supported 
-NNI provides Python API, supporting all frameworks and libraries written in python (`version >= 3.5`), and we have implemented many related examples and detailed their principles and running steps.
+# Framework and Library Supports 
+With the built-in Python API, NNI naturally supports the hyper parameter tuning and neural network search for all the AI frameworks and libraries who support Python models(`version >= 3.5`). NNI had also provided a set of examples and tutorials for some of the popular scenarios to make jump start easier.
 
-
-
-## Support Framework:
-
-NNI supports all frameworks, as long as they are written in python. Some common frameworks are listed below, including NNI example tutorials based on them.
+## Supported AI Frameworks:
 
 * [PyTorch]https://github.com/pytorch/pytorch
     <ul> 
@@ -31,7 +27,8 @@ NNI supports all frameworks, as long as they are written in python. Some common 
 * [Chainer]https://chainer.org/
 * [Theano]https://pypi.org/project/Theano/ <br/>
 
-In addition to these, other frameworks written in python are also supported by NNI.
+You are encouraged to [contribute more examples](Tutorial/Contributing.md) for other NNI users. 
+
 ## Support Library:
 NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
 * [Scikit-learn]https://scikit-learn.org/stable/
