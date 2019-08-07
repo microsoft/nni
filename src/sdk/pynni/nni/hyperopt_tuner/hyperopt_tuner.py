@@ -91,7 +91,10 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
                                    name=name + '[%d]' % _index)
                 }
             else:
-                out_y = parameter[name]
+                if _type in ['quniform', 'qloguniform']:
+                    out_y = np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1])
+                else:
+                    out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():

@@ -134,12 +134,41 @@ def oneshot_mode(
         optional_inputs = [optional_inputs[idx] for idx in range(inputs_num)]
     layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name])
                   for func_name, func in funcs.items()]
-    layer_out = tf.add_n(layer_outs)
+    output_num = len(layer_outs)
+    rate = 0.01 ** (1 / output_num)
+    noise_shape = [output_num] + [1] * len(layer_outs[0].get_shape())
+    layer_outs = tf.nn.dropout(layer_outs, rate=rate, noise_shape=noise_shape)
+    layer_out = tf.reduce_sum(layer_outs, axis=0)
 
     return layer_out
 
 
-def reload_tensorflow_variables(session, tf=None):
+def darts_mode(
+        mutable_id,
+        mutable_layer_id,
+        funcs,
+        funcs_args,
+        fixed_inputs,
+        optional_inputs,
+        optional_input_size,
+        tf):
+    optional_inputs = list(optional_inputs.values())
+    layer_outs = [func([fixed_inputs, optional_inputs], **funcs_args[func_name])
+                  for func_name, func in funcs.items()]
+    # Create architecture weights for every func(op)
+    var_name = "{}_{}_".format(mutable_id, mutable_layer_id, "arch_weights")
+    if 'arch_logits_list' not in globals():
+        global arch_logits_list
+        arch_logits_list = list()
+    arch_logits = tf.get_variable(var_name, shape=[len[funcs]], trainable=False)
+    arch_logits_list.append(arch_logits)
+    arch_weights = tf.nn.softmax(arch_logits)
+    layer_out = tf.add_n([arch_weights[idx] * out for idx, out in enumerate(layer_outs)])
+
+    return layer_out
+
+
+def reload_tensorflow_variables(tf, session):
     '''In Enas mode, this function reload every signal varaible created in `enas_mode` function so
     the whole tensorflow graph will be changed into certain subgraph recerived from Tuner.
     ---------------
@@ -161,6 +190,25 @@ def reload_tensorflow_variables(session, tf=None):
             tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
             tf_variables[name_prefix]['optional_inputs'].load(
                 chosen_inputs, session)
+
+
+def darts_training(tf, session, loss, feed_dict):
+    if 'optimizer' not in globals():
+        global arch_logits_list
+        global optimizer
+        global train_op
+        optimizer = tf.MomentumOptimizer(learning_rate=0.025)
+        # TODO: Calculate loss
+        grads_and_vars = optimizer.compute_gradients(loss, arch_logits_list)
+        train_op = optimizer.apply_gradients(grads_and_vars)
+    session.run(train_op)
+
+
+def training_update(nas_mode, tf=None, session=None, loss=None, feed_dict=None):
+    if nas_mode == 'darts_mode':
+        darts_training(tf, session, loss, feed_dict)
+    elif nas_mode == 'enas_mode':
+        reload_tensorflow_variables(tf, session)
 
 
 def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inputs,
