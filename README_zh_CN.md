@@ -251,9 +251,9 @@ You can use these commands to get more information about the experiment
 * [在多机上运行 Experiment](docs/zh_CN/TrainingService/RemoteMachineMode.md)
 * [尝试不同的 Tuner](docs/zh_CN/Tuner/BuiltinTuner.md)
 * [尝试不同的 Assessor](docs/zh_CN/Assessor/BuiltinAssessor.md)
-* [实现自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
-* [实现自定义 Assessor](docs/en_US/Assessor/CustomizeAssessor.md)
-* [使用进化算法为阅读理解任务找到好模型](docs/en_US/TrialExample/SquadEvolutionExamples.md)
+* [实现自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
+* [实现自定义 Assessor](docs/zh_CN/Assessor/CustomizeAssessor.md)
+* [使用进化算法为阅读理解任务找到好模型](docs/zh_CN/TrialExample/SquadEvolutionExamples.md)
 
 ## **贡献**
 
@@ -265,8 +265,8 @@ You can use these commands to get more information about the experiment
 
 在提交代码前，需要遵循以下的简单准则：
 
-* [如何调试](docs/en_US/Tutorial/HowToDebug.md)
-* [代码风格和命名约定](docs/en_US/Tutorial/Contributing.md)
+* [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
+* [代码风格和命名约定](docs/zh_CN/Tutorial/Contributing.md)
 * 如何设置 [NNI 开发环境](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
 * 查看[贡献说明](docs/zh_CN/Tutorial/Contributing.md)并熟悉 NNI 的代码贡献指南
 
