@@ -100,11 +100,16 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
 
+    def send_trial_callback(self, id, params):
+        """For tuner to issue trial config when the config is generated
+        """
+        send(CommandType.NewTrialJob, _pack_parameter(id, params))
+
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         _logger.debug("requesting for generating params of {}".format(ids))
-        params_list = self.tuner.generate_multiple_parameters(ids)
+        params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
             send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))

@@ -80,7 +80,8 @@ TRIAL_MONITOR_TAIL = '----------------------------------------------------------
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner',
-    'BOHB': 'bohb_advisor'
+    'BOHB': 'bohb_advisor',
+    'PPOTuner': 'ppo_tuner'
 }
 
 TUNERS_SUPPORTING_IMPORT_DATA = {
