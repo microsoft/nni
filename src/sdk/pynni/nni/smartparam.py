@@ -24,7 +24,7 @@ import numpy as np
 
 from .env_vars import trial_env_vars
 from . import trial
-from .nas_utils import classic_mode, enas_mode, oneshot_mode
+from .nas_utils import classic_mode, enas_mode, oneshot_mode, darts_mode
 
 
 __all__ = [
@@ -57,14 +57,14 @@ if trial_env_vars.NNI_PLATFORM is None:
 
     def quniform(low, high, q, name=None):
         assert high > low, 'Upper bound must be larger than lower bound'
-        return round(random.uniform(low, high) / q) * q
+        return np.clip(round(random.uniform(low, high) / q) * q, low, high)
 
     def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
         return np.exp(random.uniform(np.log(low), np.log(high)))
 
     def qloguniform(low, high, q, name=None):
-        return round(loguniform(low, high) / q) * q
+        return np.clip(round(loguniform(low, high) / q) * q, low, high)
 
     def normal(mu, sigma, name=None):
         return random.gauss(mu, sigma)
@@ -158,8 +158,8 @@ else:
                             fixed_inputs,
                             optional_inputs,
                             optional_input_size)
-        elif mode == 'enas_mode':
-            assert tf is not None, 'Internal Error: Tensorflow should not be None in enas_mode'
+        assert tf is not None, 'Internal Error: Tensorflow should not be None in modes other than classic_mode'
+        if mode == 'enas_mode':
             return enas_mode(mutable_id,
                             mutable_layer_id,
                             funcs,
@@ -168,8 +168,7 @@ else:
                             optional_inputs,
                             optional_input_size,
                             tf)
-        elif mode == 'oneshot_mode':
-            assert tf is not None, 'Internal Error: Tensorflow should not be None in oneshot_mode'
+        if mode == 'oneshot_mode':
             return oneshot_mode(mutable_id,
                             mutable_layer_id,
                             funcs,
@@ -178,8 +177,16 @@ else:
                             optional_inputs,
                             optional_input_size,
                             tf)
-        else:
-            raise RuntimeError('Unrecognized mode: %s' % mode)
+        if mode == 'darts_mode':
+            return darts_mode(mutable_id,
+                            mutable_layer_id,
+                            funcs,
+                            funcs_args,
+                            fixed_inputs,
+                            optional_inputs,
+                            optional_input_size,
+                            tf)
+        raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):
         if trial._params is None:
