@@ -9,13 +9,15 @@ import TrialsDetail from './components/TrialsDetail';
 import './index.css';
 
 ReactDOM.render(
-    <Router history={browserHistory}>
-        <Route path="/" component={App}>
-            <IndexRedirect to="/oview" />
-            <Route path="/oview" component={Overview} />
-            <Route path="/detail" component={TrialsDetail} />
-        </Route>
-    </Router>,
+    (
+        <Router history={browserHistory}>
+            <Route path="/" component={App}>
+                <IndexRedirect to="/oview" />
+                <Route path="/oview" component={Overview} />
+                <Route path="/detail" component={TrialsDetail} />
+            </Route>
+        </Router>
+    ),
     document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();
