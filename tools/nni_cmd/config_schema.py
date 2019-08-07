@@ -142,6 +142,17 @@ tuner_schema_dict = {
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool), 
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
+    'PPOTuner': {
+        'builtinTunerName': 'PPOTuner',
+        'classArgs': {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('trials_per_update'): setNumberRange('trials_per_update', int, 0, 99999),
+            Optional('epochs_per_update'): setNumberRange('epochs_per_update', int, 0, 99999),
+            Optional('minibatch_size'): setNumberRange('minibatch_size', int, 0, 99999),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
     'customized': {
         'codeDir': setPathCheck('codeDir'),
         'classFileName': setType('classFileName', str),

@@ -30,7 +30,8 @@ ModuleName = {
     'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner',
     'Curvefitting': 'nni.curvefitting_assessor.curvefitting_assessor',
     'MetisTuner': 'nni.metis_tuner.metis_tuner',
-    'GPTuner': 'nni.gp_tuner.gp_tuner'
+    'GPTuner': 'nni.gp_tuner.gp_tuner',
+    'PPOTuner': 'nni.ppo_tuner.ppo_tuner'
 }
 
 ClassName = {
@@ -44,6 +45,7 @@ ClassName = {
     'NetworkMorphism':'NetworkMorphismTuner',
     'MetisTuner':'MetisTuner',
     'GPTuner':'GPTuner',
+    'PPOTuner': 'PPOTuner',
 
     'Medianstop': 'MedianstopAssessor',
     'Curvefitting': 'CurvefittingAssessor'

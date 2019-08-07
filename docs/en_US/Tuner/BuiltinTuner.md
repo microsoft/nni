@@ -20,6 +20,7 @@ Currently we support the following algorithms:
 |[__Metis Tuner__](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)|
 |[__BOHB__](#BOHB)|BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Bayesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)|
 |[__GP Tuner__](#GPTuner)|Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf), [Github Repo](https://github.com/fmfn/BayesianOptimization)|
+|[__PPO Tuner__](#PPOTuner)|PPO Tuner is an Reinforcement Learning tuner based on PPO algorithm. [Reference Paper](https://arxiv.org/abs/1707.06347)|
 
 ## Usage of Built-in Tuners
 
@@ -408,4 +409,33 @@ tuner:
     cold_start_num: 10
     selection_num_warm_up: 100000
     selection_num_starting_points: 250
+```
+
+<a name="PPOTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
+
+> Built-in Tuner Name: **PPOTuner**
+
+Note that the only acceptable type of search space is `mutable_layer`. `optional_input_size` can only be 0, 1, or [0, 1].
+
+**Suggested scenario**
+
+PPOTuner is a Reinforcement Learning tuner based on PPO algorithm. When you are using NNI NAS interface in your trial code to do neural architecture search, PPOTuner is recommended. It has relatively high data efficiency but is suggested when you have large amount of computation resource. You could try it on very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [Detailed Description](./PPOTuner.md)
+
+**Requirement of classArg**
+
+* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **trials_per_update** (*int, optional, default = 20*) - The number of trials to be used for one update. This number is recommended to be larger than `trialConcurrency` and `trialConcurrency` be a aliquot devisor of  `trials_per_update`.
+* **epochs_per_update** (*int, optional, default = 4*) - The number of epochs for one update.
+* **minibatch_size** (*int, optional, default = 4*) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that, trials_per_update should be divisible of minibatch_size.
+
+**Usage example**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
 ```
