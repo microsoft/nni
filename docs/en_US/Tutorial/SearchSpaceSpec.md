@@ -36,8 +36,8 @@ All types of sampling strategies and their parameter are listed here:
     - Anneal
     - Evolution
 
-* {"_type":"randint","_value":[lower, upper]}
-
+* {"_type":"randint","_value":[low, high]}
+  * Which means choosing a random integer from `low` (inclusive) to `high` (exclusive).
   * For now, we implement the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)). The type of chosen value is float. If you want to use integer value, please convert it explicitly.
 
 * {"_type":"uniform","_value":[low, high]}

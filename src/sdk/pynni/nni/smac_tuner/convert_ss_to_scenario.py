@@ -88,10 +88,10 @@ def generate_pcs(nni_search_space_content):
                                 raise RuntimeError('%s has already existed, please make sure search space has no duplicate key.' % key)
                             categorical_dict[key] = search_space[key]['_value']
                         elif search_space[key]['_type'] == 'randint':
-                            # TODO: support lower bound in randint
-                            pcs_fd.write('%s integer [0, %d] [%d]\n' % (
+                            pcs_fd.write('%s integer [%d, %d] [%d]\n' % (
                                 key,
                                 search_space[key]['_value'][0],
+                                search_space[key]['_value'][1] - 1,
                                 search_space[key]['_value'][0]))
                         elif search_space[key]['_type'] == 'uniform':
                             pcs_fd.write('%s real %s [%s]\n' % (
