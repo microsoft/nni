@@ -23,7 +23,6 @@ from . import trial
 
 
 _logger = logging.getLogger(__name__)
-_MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
 
 
 def classic_mode(
@@ -176,20 +175,44 @@ def reload_tensorflow_variables(tf, session):
     tf: tensorflow module
     '''
     subgraph_from_tuner = trial.get_next_parameter()
-    for mutable_id, mutable_block in subgraph_from_tuner.items():
+    mutable_layers = []
+    for subgraph_key in subgraph_from_tuner:
+        if "/" in subgraph_key:
+            # has to remove the last, could be layer_choice or whatever
+            mutable_id, mutable_layer_id = _decompose_general_key(subgraph_key[:subgraph_key.rfind("/")])
+            if mutable_id is not None:
+                mutable_layers.append((mutable_id, mutable_layer_id))
+    for mutable_id, mutable_layer_id in mutable_layers:
         if mutable_id not in name_space:
             continue
-        for mutable_layer_id, mutable_layer in mutable_block.items():
-            name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
-            # extract layer information from the subgraph sampled by tuner
-            chosen_layer = name_space[name_prefix]['funcs'].index(
-                mutable_layer["chosen_layer"])
-            chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
-                             else 0 for inp in name_space[name_prefix]['optional_inputs']]
-            # load these information into pre-defined tensorflow variables
-            tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
-            tf_variables[name_prefix]['optional_inputs'].load(
-                chosen_inputs, session)
+        name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
+        # get optional inputs names
+        optional_inputs = name_space[name_prefix]['optional_inputs']
+        # extract layer information from the subgraph sampled by tuner
+        chosen_layer, chosen_inputs = _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inputs)
+        chosen_layer = name_space[name_prefix]['funcs'].index(chosen_layer)
+        chosen_inputs = [1 if inp in chosen_inputs else 0 for inp in optional_inputs]
+        # load these information into pre-defined tensorflow variables
+        tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
+        tf_variables[name_prefix]['optional_inputs'].load(
+            chosen_inputs, session)
+
+
+def _construct_general_key(mutable_id, mutable_layer_id):
+    # Mutable layer key in a general (search space) format
+    # that is, prefix/mutable_id/mutable_layer_id
+    _MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
+    return _MUTABLE_LAYER_SPACE_PREFIX + "/" + mutable_id + "/" + mutable_layer_id
+
+
+def _decompose_general_key(key):
+    # inverse operation of above
+    _MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
+    if not key.startswith(_MUTABLE_LAYER_SPACE_PREFIX):
+        return None, None
+    else:
+        _, mutable_id, mutable_layer_id = key.split("/", maxsplit=2)
+        return mutable_id, mutable_layer_id
 
 
 def darts_training(tf, session, loss, feed_dict):
@@ -226,7 +249,7 @@ def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inpu
     except KeyError:
         # Try to find converted NAS parameters
         params = trial.get_current_parameter()
-        expected_prefix = _MUTABLE_LAYER_SPACE_PREFIX + "/" + mutable_id + "/" + mutable_layer_id
+        expected_prefix = _construct_general_key(mutable_id, mutable_layer_id)
         chosen_layer = params[expected_prefix + "/layer_choice"]
 
         # find how many to choose
@@ -269,7 +292,7 @@ def convert_nas_search_space(search_space):
                 # there should be at most layer_choice, optional_inputs, optional_input_size in layer_data
 
                 # add "_mutable_layer" as prefix so that they can be recovered later
-                layer_key = _MUTABLE_LAYER_SPACE_PREFIX + "/" + k + "/" + layer_name
+                layer_key = _construct_general_key(k, layer_name)
 
                 if layer_data.get("layer_choice"):  # filter out empty choice and no choice
                     layer_choice = layer_data["layer_choice"]
