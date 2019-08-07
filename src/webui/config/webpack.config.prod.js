@@ -12,7 +12,6 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-//const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const loaders = require('./loaders');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
@@ -183,43 +182,6 @@ module.exports = {
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
-    // Minify the code.
-    //new UglifyJsPlugin({
-    //  uglifyOptions: {
-    //    parse: {
-    //      // we want uglify-js to parse ecma 8 code. However we want it to output
-    //      // ecma 5 compliant code, to avoid issues with older browsers, this is
-    //      // whey we put `ecma: 5` to the compress and output section
-    //      // https://github.com/facebook/create-react-app/pull/4234
-    //      ecma: 8,
-    //    },
-    //    compress: {
-    //      ecma: 5,
-    //      warnings: false,
-    //      // Disabled because of an issue with Uglify breaking seemingly valid code:
-    //      // https://github.com/facebook/create-react-app/issues/2376
-    //      // Pending further investigation:
-    //      // https://github.com/mishoo/UglifyJS2/issues/2011
-    //      comparisons: false,
-    //    },
-    //    mangle: {
-    //      safari10: true,
-    //    },
-    //    output: {
-    //      ecma: 5,
-    //      comments: false,
-    //      // Turned on because emoji and regex is not minified properly using default
-    //      // https://github.com/facebook/create-react-app/issues/2488
-    //      ascii_only: true,
-    //    },
-    //  },
-    //  // Use multi-process parallel running to improve the build speed
-    //  // Default number of concurrent runs: os.cpus().length - 1
-    //  parallel: true,
-    //  // Enable file caching
-    //  cache: true,
-    //  sourceMap: shouldUseSourceMap,
-    //}), // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new MiniCssExtractPlugin({
       filename: cssFilename,
     }),

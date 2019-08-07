@@ -45,7 +45,6 @@
     "tsconfig-paths-webpack-plugin": "^3.2.0",
     "tslint": "^5.7.0",
     "tslint-react": "^4.0.0",
-    "uglifyjs-webpack-plugin": "1.3.0",
     "url-loader": "^2.1.0",
     "webpack": "^4.39.1",
     "webpack-dev-server": "^3.7.2",
