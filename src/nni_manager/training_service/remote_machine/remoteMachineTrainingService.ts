@@ -511,13 +511,13 @@ class RemoteMachineTrainingService implements TrainingService {
         // tslint:disable-next-line: no-floating-promises
         SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
 
-        const disposable = this.timer.subscribe(
+        const disposable: Rx.IDisposable = this.timer.subscribe(
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
                     `tail -n 1 ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
                 if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
-                    if (rmMeta.gpuSummary.gpuCount == 0) {
+                    if (rmMeta.gpuSummary.gpuCount === 0) {
                         this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
                         this.timer.unsubscribe(disposable);
                     }
