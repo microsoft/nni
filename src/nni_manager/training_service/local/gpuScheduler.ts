@@ -97,7 +97,7 @@ class GPUScheduler {
      * used to run in remote machine, and will be deleted after uploaded from local.
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
-        await execMkdir(this.gpuMetricCollectorScriptFolder);
+        await execMkdir(this.gpuMetricCollectorScriptFolder, true);
         //generate gpu_metrics_collector script
         const gpuMetricsCollectorScriptPath: string =
             path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
