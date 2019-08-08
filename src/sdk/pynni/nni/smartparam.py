@@ -47,39 +47,39 @@ __all__ = [
 
 if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
-        return param_exp.choice(options, np.random)
+        return param_exp.choice(options, np.random.RandomState())
 
     def randint(lower, high, name=None):
-        return param_exp.randint(lower, high, np.random)
+        return param_exp.randint(lower, high, np.random.RandomState())
 
     def uniform(low, high, name=None):
-        return param_exp.uniform(low, high, np.random)
+        return param_exp.uniform(low, high, np.random.RandomState())
 
     def quniform(low, high, q, name=None):
         assert high > low, 'Upper bound must be larger than lower bound'
-        return param_exp.quniform(low, high, q, np.random)
+        return param_exp.quniform(low, high, q, np.random.RandomState())
 
     def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
-        return param_exp.loguniform(low, high, np.random)
+        return param_exp.loguniform(low, high, np.random.RandomState())
 
     def qloguniform(low, high, q, name=None):
-        return param_exp.qloguniform(low, high, q, np.random)
+        return param_exp.qloguniform(low, high, q, np.random.RandomState())
 
     def normal(mu, sigma, name=None):
-        return param_exp.normal(mu, sigma, np.random)
+        return param_exp.normal(mu, sigma, np.random.RandomState())
 
     def qnormal(mu, sigma, q, name=None):
-        return param_exp.qnormal(mu, sigma, q, np.random)
+        return param_exp.qnormal(mu, sigma, q, np.random.RandomState())
 
     def lognormal(mu, sigma, name=None):
-        return param_exp.lognormal(mu, sigma, np.random)
+        return param_exp.lognormal(mu, sigma, np.random.RandomState())
 
     def qlognormal(mu, sigma, q, name=None):
-        return param_exp.qlognormal(mu, sigma, q, np.random)
+        return param_exp.qlognormal(mu, sigma, q, np.random.RandomState())
 
     def function_choice(*funcs, name=None):
-        return param_exp.choice(funcs, np.random)()
+        return param_exp.choice(funcs, np.random.RandomState())()
 
     def mutable_layer():
         raise RuntimeError('Cannot call nni.mutable_layer in this mode')
