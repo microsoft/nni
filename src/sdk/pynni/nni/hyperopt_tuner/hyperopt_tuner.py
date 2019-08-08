@@ -52,7 +52,7 @@ def json2space(in_x, name=NodeType.ROOT):
             if _type == 'choice':
                 out_y = eval('hp.hp.choice')(name, _value)
             elif _type == 'randint':
-                out_y = hp.hp.uniform(name, *_value)
+                out_y = hp.hp.randint(name, _value[1] - _value[0])
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
@@ -96,7 +96,7 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
                 if _type in ['quniform', 'qloguniform']:
                     out_y = np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1])
                 elif _type == 'randint':
-                    out_y = int(parameter[name])
+                    out_y = parameter[name] + in_x[NodeType.VALUE][0]
                 else:
                     out_y = parameter[name]
         else:
