@@ -193,7 +193,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermeidate count':
+                case 'Intermediate count':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -392,7 +392,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
-                case 'Intermeidate count':
+                case 'Intermediate count':
                     showColumn.push({
                         title: 'Intermediate count',
                         dataIndex: 'progress',

@@ -54,7 +54,7 @@ NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
 NNI_YARN_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn
-NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
+NNI_YARN ?= PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
 NNI_VERSION_VALUE = $(shell git describe --tags)
