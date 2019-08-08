@@ -70,8 +70,8 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('TPE', 'Anneal', 'SMAC'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC'),
+    ('Anneal', 'SMAC'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'Anneal', 'SMAC'),
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         },
