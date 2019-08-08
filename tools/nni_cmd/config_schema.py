@@ -94,7 +94,7 @@ tuner_schema_dict = {
     },
     'TPE': {
         'builtinTunerName': 'TPE',
-        'classArgs': {
+        Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('parallel_optimize'): setType('parallel_optimize', bool),
             Optional('constant_liar_type'): setChoice('constant_liar_type', 'min', 'max', 'mean')
