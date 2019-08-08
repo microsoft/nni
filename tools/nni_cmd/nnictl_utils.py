@@ -142,6 +142,8 @@ def parse_ids(args):
         elif isinstance(experiment_dict[key], list):
             # if the config file is old version, remove the configuration from file
             experiment_config.remove_experiment(key)
+    if args.all is not None:
+        return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
             if str(experiment_dict[key]['port']) == args.port:
@@ -160,8 +162,6 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.id == 'all':
-        result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
             if id.startswith(args.id[:-1]):
@@ -225,6 +225,9 @@ def check_rest(args):
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
+    if args.id and args.id == 'all':
+        print_warning('\'nnictl stop all\' is abolished, please use \'nnictl stop --all\' to stop all of experiments!')
+        exit(1)
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
         experiment_config = Experiments()

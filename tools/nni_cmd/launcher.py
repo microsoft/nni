@@ -519,7 +519,7 @@ def resume_experiment(args):
     #find the latest stopped experiment
     if not args.id:
         print_error('Please set experiment id! \nYou could use \'nnictl resume {id}\' to resume a stopped experiment!\n' \
-        'You could use \'nnictl experiment list all\' to show all of stopped experiments!')
+        'You could use \'nnictl experiment list --all\' to show all of stopped experiments!')
         exit(1)
     else:
         if experiment_dict.get(args.id) is None:
