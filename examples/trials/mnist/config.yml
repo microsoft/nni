@@ -18,4 +18,4 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 1
