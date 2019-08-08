@@ -142,7 +142,7 @@ def parse_ids(args):
         elif isinstance(experiment_dict[key], list):
             # if the config file is old version, remove the configuration from file
             experiment_config.remove_experiment(key)
-    if args.all is not None:
+    if args.all:
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
@@ -175,7 +175,7 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list and ((args.id and args.id != 'all') or args.port):
+    if not result_list and (args.id  or args.port):
         print_error('There are no experiments matched, please set correct experiment id or restful server port')
     elif not result_list:
         print_error('There is no experiment running...')
