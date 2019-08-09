@@ -38,6 +38,10 @@ All types of sampling strategies and their parameter are listed here:
 
 * `{"_type": "randint", "_value": [lower, upper]}`
   * Choosing a random integer from `lower` (inclusive) to `upper` (exclusive).
+  * Note: Different tuners may interpret `randint` differently. For example, grid search and tuners based on hyperopt
+    treats integers from lower to upper as an unordered set, but BOHB cares about the ordinal information among these
+    integers. This is because these tuners use different search space from different libraries. For `nni.randint`, you can
+    expect a wrapper of `numpy.random.randint`.
 
 * `{"_type": "uniform", "_value": [low, high]}`
   * Which means the variable value is a value uniformly between low and high.
