@@ -42,8 +42,6 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     let trialMessagesArr = res1.data;
                     const interResultList = res2.data;
                     Object.keys(trialMessagesArr).map(item => {
-                        // transform hyperparameters as object to show elegantly
-                // trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters[0]);
                         const trialId = trialMessagesArr[item].id;
                         // add intermediate result message
                         trialMessagesArr[item].intermediate = [];

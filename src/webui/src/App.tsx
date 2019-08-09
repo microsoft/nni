@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { Row, Col } from 'antd';
-import { COLUMN, COLUMNPro } from './static/const';
+import axios from 'axios';
+import { COLUMN, MANAGER_IP } from './static/const';
 import './App.css';
 import SlideBar from './components/SlideBar';
 
 interface AppState {
   interval: number;
   whichPageToFresh: string;
-  columnNormal: Array<string>;
-  columnPro: Array<string>;
   columnList: Array<string>;
+  concurrency: number;
 }
 
 class App extends React.Component<{}, AppState> {
@@ -19,9 +19,8 @@ class App extends React.Component<{}, AppState> {
     this.state = {
       interval: 10, // sendons
       whichPageToFresh: '',
-      columnNormal: COLUMN,
-      columnPro: COLUMNPro,
-      columnList: COLUMN
+      columnList: COLUMN,
+      concurrency: 1
     };
   }
 
@@ -44,21 +43,44 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
+  changeConcurrency = (val: number) => {
+    if (this._isMounted === true) {
+      this.setState(() => ({ concurrency: val }));
+    }
+  }
+
+  // show session
+  getConcurrency = () => {
+    axios(`${MANAGER_IP}/experiment`, {
+      method: 'GET'
+    })
+      .then(res => {
+        if (res.status === 200) {
+          const params = res.data.params;
+          if (this._isMounted) {
+            this.setState(() => ({ concurrency: params.trialConcurrency }));
+          }
+        }
+      });
+  }
+
   componentDidMount() {
     this._isMounted = true;
+    this.getConcurrency();
   }
 
   componentWillUnmount() {
     this._isMounted = false;
   }
   render() {
-    const { interval, whichPageToFresh, columnList } = this.state;
+    const { interval, whichPageToFresh, columnList, concurrency } = this.state;
     const reactPropsChildren = React.Children.map(this.props.children, child =>
       React.cloneElement(
         // tslint:disable-next-line:no-any
         child as React.ReactElement<any>, {
           interval, whichPageToFresh,
-          columnList, changeColumn: this.changeColumn
+          columnList, changeColumn: this.changeColumn,
+          concurrency, changeConcurrency: this.changeConcurrency
         })
     );
     return (

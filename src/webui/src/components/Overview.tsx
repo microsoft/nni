@@ -25,7 +25,6 @@ interface OverviewState {
     status: string;
     errorStr: string;
     trialProfile: Experiment;
-    concurrency: number;
     option: object;
     noData: string;
     accuracyData: object;
@@ -43,6 +42,8 @@ interface OverviewState {
 interface OverviewProps {
     interval: number; // user select
     whichPageToFresh: string;
+    concurrency: number;
+    changeConcurrency: (val: number) => void;
 }
 
 class Overview extends React.Component<OverviewProps, OverviewState> {
@@ -88,18 +89,8 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
             },
             isTop10: true,
             isLogCollection: false,
-            isMultiPhase: false,
-            concurrency: 1
+            isMultiPhase: false
         };
-    }
-
-    // when user set new concurrency val
-    changeConcurrency = (concurrency: number) => {
-        if (this._isMounted) {
-            this.setState({
-                concurrency: concurrency
-            });
-        }
     }
 
     // show session
@@ -196,6 +187,9 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             isLogCollection: expLogCollection,
                             isMultiPhase: isMultiy
                         });
+                    }
+                    if (tempara.trialConcurrency !== undefined) {
+                        this.props.changeConcurrency(tempara.trialConcurrency);
                     }
                 }
             });
@@ -471,17 +465,11 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     render() {
 
         const {
-            trialProfile, searchSpace, tableData, accuracyData, concurrency,
+            trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy, isMultiPhase,
             titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
-        // experimentAPI['params']['trialConcurrency'] = concurrency;
-        // experimentAPI.params.trialConcurrency = concurrency;
-        // if (experimentAPI.hasOwnProperty('params')) {
-        //     if (experimentAPI['params'].hasOwnProperty('trialConcurrency')) {
-        //         experimentAPI['params']['trialConcurrency'] = concurrency;
-        //     }
-        // }
+        const { concurrency } = this.props;
         trialProfile.runConcurren = concurrency;
         Object.keys(experimentAPI).map(item => {
             if (item === 'params') {
@@ -512,8 +500,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             status={status}
                             errors={errorStr}
                             concurrency={concurrency}
-                            changeConcurrency={this.changeConcurrency}
-                        // updateFile={this.showSessionPro}
+                            changeConcurrency={this.props.changeConcurrency}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}

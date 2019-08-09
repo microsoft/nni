@@ -85,10 +85,6 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             message.destroy();
                                             message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()}
                                             successfully`);
-                                            // rerender trial profile message
-                                            // const { updateFile } = this.props;
-                                            // updateFile();
-                                            // const { changeConcurrency } = this.props;
                                             this.props.changeConcurrency(parseInt(userInputVal, 10));
                                         }
                                     })
