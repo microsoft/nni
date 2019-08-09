@@ -44,7 +44,7 @@ All types of sampling strategies and their parameter are listed here:
   * When optimizing, this variable is constrained to a two-sided interval.
 
 * `{"_type": "quniform", "value": [low, high, q]}`
-  * Which means the variable value is a value like `clip(round(uniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound. For example, for _value specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For _value specified as [2, 10, 5], possible values are [2, 5, 10].
+  * Which means the variable value is a value like `clip(round(uniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound. For example, for `_value` specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For `_value` specified as [2, 10, 5], possible values are [2, 5, 10].
   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
 
 * `{"_type": "loguniform", "value": [low, high]}`
