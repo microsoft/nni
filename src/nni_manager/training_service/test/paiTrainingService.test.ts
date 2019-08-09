@@ -86,6 +86,7 @@ describe('Unit Test for PAITrainingService', () => {
         await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.PAI_CLUSTER_CONFIG, paiCluster);
         await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, paiTrialConfig);
         const form: TrialJobApplicationForm = {
+            sequenceId: 0,
             hyperParameters: { value: '', index: 0 }
         };
         try {

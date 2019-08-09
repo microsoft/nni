@@ -83,19 +83,17 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: TrialJobApplicationForm;
-    public sequenceId: number;
     public rmMeta?: RemoteMachineMeta;
     public isEarlyStopped?: boolean;
     public gpuIndices: GPUInfo[];
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: TrialJobApplicationForm, sequenceId: number) {
+                workingDirectory: string, form: TrialJobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.sequenceId = sequenceId;
         this.tags = [];
         this.gpuIndices = [];
     }

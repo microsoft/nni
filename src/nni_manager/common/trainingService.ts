@@ -38,6 +38,7 @@ interface HyperParameters {
  * define TrialJobApplicationForm
  */
 interface TrialJobApplicationForm {
+    readonly sequenceId: number;
     readonly hyperParameters: HyperParameters;
 }
 
@@ -54,7 +55,6 @@ interface TrialJobDetail {
     readonly url?: string;
     readonly workingDirectory: string;
     readonly form: TrialJobApplicationForm;
-    readonly sequenceId: number;
     isEarlyStopped?: boolean;
 }
 

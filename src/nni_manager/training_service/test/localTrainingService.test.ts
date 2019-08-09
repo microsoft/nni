@@ -76,6 +76,7 @@ describe('Unit Test for LocalTrainingService', () => {
 
         // submit job
         const form: TrialJobApplicationForm = {
+            sequenceId: 0,
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0
@@ -94,6 +95,7 @@ describe('Unit Test for LocalTrainingService', () => {
 
         // submit job
         const form: TrialJobApplicationForm = {
+            sequenceId: 0,
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0

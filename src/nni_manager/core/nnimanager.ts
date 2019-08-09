@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
@@ -186,8 +186,6 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
-
-        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
@@ -568,6 +566,7 @@ class NNIManager implements Manager {
                     }
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
+                        sequenceId: this.experimentProfile.nextSequenceId++,
                         hyperParameters: {
                             value: hyperParams,
                             index: 0
@@ -575,7 +574,7 @@ class NNIManager implements Manager {
                     };
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
-                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
+                    await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
@@ -694,6 +693,7 @@ class NNIManager implements Manager {
                 assert(tunerCommand.trial_job_id !== undefined);
 
                 const trialJobForm: TrialJobApplicationForm = {
+                    sequenceId: -1,  // FIXME: multi-phase tuner should use sequence ID instead of trial job ID
                     hyperParameters: {
                         value: content,
                         index: tunerCommand.parameter_index
@@ -747,7 +747,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getExperimentRootDir(),
-            maxSequenceId: 0,
+            nextSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
@@ -777,13 +777,6 @@ class NNIManager implements Manager {
         }
 
         return Promise.resolve(chkpDir);
-    }
-
-    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
-        if (sequenceId > this.experimentProfile.maxSequenceId) {
-            this.experimentProfile.maxSequenceId = sequenceId;
-            await this.storeExperimentProfile();
-        }
     }
 }
 

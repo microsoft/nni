@@ -30,7 +30,7 @@ import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
@@ -240,8 +240,7 @@ class RemoteMachineTrainingService implements TrainingService {
             'WAITING',
             Date.now(),
             trialWorkingFolder,
-            form,
-            this.generateSequenceId()
+            form
         );
         this.jobQueue.push(trialJobId);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -616,7 +615,7 @@ class RemoteMachineTrainingService implements TrainingService {
             trialWorkingFolder,
             trialJobId,
             getExperimentId(),
-            trialJobDetail.sequenceId.toString(),
+            trialJobDetail.form.sequenceId.toString(),
             this.isMultiPhase,
             unixPathJoin(trialWorkingFolder, '.nni', 'jobpid'),
             command,
@@ -740,14 +739,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
 
         await SSHClientUtility.copyFileToRemote(localFilepath, unixPathJoin(trialWorkingFolder, fileName), sshClient);
-    }
-
-    private generateSequenceId(): number {
-        if (this.trialSequenceId === -1) {
-            this.trialSequenceId = getInitTrialSequenceId();
-        }
-
-        return this.trialSequenceId++;
     }
 }
 

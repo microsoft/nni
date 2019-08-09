@@ -79,7 +79,7 @@ interface ExperimentProfile {
     logDir?: string;
     startTime?: number;
     endTime?: number;
-    maxSequenceId: number;
+    nextSequenceId: number;
     revision: number;
 }
 

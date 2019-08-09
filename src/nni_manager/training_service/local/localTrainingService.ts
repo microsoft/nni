@@ -26,7 +26,7 @@ import * as path from 'path';
 import * as ts from 'tail-stream';
 import * as tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
@@ -77,20 +77,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: TrialJobApplicationForm;
-    public sequenceId: number;
     public pid?: number;
     public gpuIndices?: number[];
 
     constructor(
         id: string, status: TrialJobStatus, submitTime: number,
-        workingDirectory: string, form: TrialJobApplicationForm, sequenceId: number) {
+        workingDirectory: string, form: TrialJobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.url = `file://localhost:${workingDirectory}`;
-        this.sequenceId = sequenceId;
         this.gpuIndices = [];
     }
 }
@@ -125,7 +123,6 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
-    private trialSequenceId: number;
     private readonly experimentId! : string;
     private gpuScheduler!: GPUScheduler;
     private readonly occupiedGpuIndexNumMap: Map<number, number>;
@@ -145,7 +142,6 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
-        this.trialSequenceId = -1;
         this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
@@ -221,8 +217,7 @@ class LocalTrainingService implements TrainingService {
             'WAITING',
             Date.now(),
             path.join(this.rootDir, 'trials', trialJobId),
-            form,
-            this.generateSequenceId()
+            form
         );
         this.jobQueue.push(trialJobId);
         this.jobMap.set(trialJobId, trialJobDetail);
@@ -388,7 +383,7 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
             { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
-            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
+            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
         if (gpuNum !== undefined) {
@@ -571,14 +566,6 @@ class LocalTrainingService implements TrainingService {
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
         const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
-    }
-
-    private generateSequenceId(): number {
-        if (this.trialSequenceId === -1) {
-            this.trialSequenceId = getInitTrialSequenceId();
-        }
-
-        return this.trialSequenceId++;
     }
 }
 

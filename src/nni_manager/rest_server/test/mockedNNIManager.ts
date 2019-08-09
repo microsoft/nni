@@ -85,8 +85,8 @@ export class MockedNNIManager extends Manager {
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
-            sequenceId: 0,
             form: {
+                sequenceId: 0,
                 hyperParameters: { value: '', index: 0 }
             }
         };
@@ -151,7 +151,7 @@ export class MockedNNIManager extends Manager {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
-            maxSequenceId: 0,
+            nextSequenceId: 0,
             revision: 0
         };
 

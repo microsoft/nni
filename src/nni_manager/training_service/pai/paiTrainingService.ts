@@ -30,7 +30,7 @@ import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import { MethodNotImplementedError } from '../../common/errors';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
@@ -70,7 +70,6 @@ class PAITrainingService implements TrainingService {
     private readonly paiTokenUpdateInterval: number;
     private readonly experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
-    private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
@@ -90,7 +89,6 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
-        this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.logCollection = 'none';
         this.log.info('Construct OpenPAI training service.');
@@ -149,7 +147,6 @@ class PAITrainingService implements TrainingService {
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
-        const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
@@ -169,7 +166,6 @@ class PAITrainingService implements TrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            trialSequenceId,
             hdfsLogPath);
 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -409,7 +405,7 @@ class PAITrainingService implements TrainingService {
             `$PWD/${trialJobId}/nnioutput`,
             trialJobId,
             this.experimentId,
-            trialJobDetail.sequenceId,
+            trialJobDetail.form.sequenceId,
             this.isMultiPhase,
             this.paiTrialConfig.command,
             nniManagerIp,
@@ -498,14 +494,6 @@ class PAITrainingService implements TrainingService {
         });
 
         return deferred.promise;
-    }
-
-    private generateSequenceId(): number {
-        if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = getInitTrialSequenceId();
-        }
-
-        return this.nextTrialSequenceId++;
     }
 
     private async statusCheckingLoop(): Promise<void> {

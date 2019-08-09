@@ -41,9 +41,9 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
+            sequenceId: 0,
             hyperParameters: { value: '', index: 0 }
         },
-        sequenceId: 0
     };
     public jobDetail2: TrialJobDetail = {
         id: '3456',
@@ -55,9 +55,9 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
+            sequenceId: 1,
             hyperParameters: { value: '', index: 1 }
         },
-        sequenceId: 0
     };
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {
