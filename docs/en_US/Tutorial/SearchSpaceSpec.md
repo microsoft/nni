@@ -10,11 +10,11 @@ To define a search space, users should define the name of variable, the type of 
 
 ```yaml
 {
-    "dropout_rate": {"_type": "uniform", "value": [0.1, 0.5]},
-    "conv_size": {"_type": "choice", "value": [2, 3, 5, 7]},
-    "hidden_size": {"_type": "choice", "value": [124, 512, 1024]},
-    "batch_size": {"_type": "choice", "value": [50, 250, 500]},
-    "learning_rate": {"_type": "uniform", "value": [0.0001, 0.1]}
+    "dropout_rate": {"_type": "uniform", "_value": [0.1, 0.5]},
+    "conv_size": {"_type": "choice", "_value": [2, 3, 5, 7]},
+    "hidden_size": {"_type": "choice", "_value": [124, 512, 1024]},
+    "batch_size": {"_type": "choice", "_value": [50, 250, 500]},
+    "learning_rate": {"_type": "uniform", "_value": [0.0001, 0.1]}
 }
 
 ```
@@ -25,7 +25,7 @@ Take the first line as an example. `dropout_rate` is defined as a variable whose
 
 All types of sampling strategies and their parameter are listed here:
 
-* `{"_type": "choice", "value": options}`
+* `{"_type": "choice", "_value": options}`
 
   * Which means the variable's value is one of the options. Here 'options' should be a list. Each element of options is a number of string. It could also be a nested sub-search-space, this sub-search-space takes effect only when the corresponding element is chosen. The variables in this sub-search-space could be seen as conditional variables.
 
@@ -36,40 +36,40 @@ All types of sampling strategies and their parameter are listed here:
     - Anneal
     - Evolution
 
-* `{"_type": "randint", "value": [lower, upper]}`
+* `{"_type": "randint", "_value": [lower, upper]}`
   * Choosing a random integer from `lower` (inclusive) to `upper` (exclusive).
 
-* `{"_type": "uniform", "value": [low, high]}`
+* `{"_type": "uniform", "_value": [low, high]}`
   * Which means the variable value is a value uniformly between low and high.
   * When optimizing, this variable is constrained to a two-sided interval.
 
-* `{"_type": "quniform", "value": [low, high, q]}`
+* `{"_type": "quniform", "_value": [low, high, q]}`
   * Which means the variable value is a value like `clip(round(uniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound. For example, for `_value` specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For `_value` specified as [2, 10, 5], possible values are [2, 5, 10].
   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
 
-* `{"_type": "loguniform", "value": [low, high]}`
+* `{"_type": "loguniform", "_value": [low, high]}`
   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.
   * When optimizing, this variable is constrained to be positive.
 
-* `{"_type": "qloguniform", "value": [low, high, q]}`
+* `{"_type": "qloguniform", "_value": [low, high, q]}`
   * Which means the variable value is a value like `clip(round(loguniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound.
   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 
-* `{"_type": "normal", "value": [mu, sigma]}`
+* `{"_type": "normal", "_value": [mu, sigma]}`
   * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.
 
-* `{"_type": "qnormal", "value": [mu, sigma, q]}`
+* `{"_type": "qnormal", "_value": [mu, sigma, q]}`
   * Which means the variable value is a value like `round(normal(mu, sigma) / q) * q`
   * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.
 
-* `{"_type": "lognormal", "value": [mu, sigma]}`
+* `{"_type": "lognormal", "_value": [mu, sigma]}`
   * Which means the variable value is a value drawn according to `exp(normal(mu, sigma))` so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
 
-* `{"_type": "qlognormal", "value": [mu, sigma, q]}`
+* `{"_type": "qlognormal", "_value": [mu, sigma, q]}`
   * Which means the variable value is a value like `round(exp(normal(mu, sigma)) / q) * q`
   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 
-* `{"_type": "mutable_layer", "value": {mutable_layer_infomation}}`
+* `{"_type": "mutable_layer", "_value": {mutable_layer_infomation}}`
   * Type for [Neural Architecture Search Space][1]. Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
   * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
   * For detailed usage, please refer to [General NAS Interfaces][1].
