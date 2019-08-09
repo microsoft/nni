@@ -360,9 +360,14 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         module_name = AdvisorModuleName.get(package_name)
     if package_name and module_name:
         try:
-            check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=PIPE, stderr=PIPE)
+            stdout_full_path, stderr_full_path = get_log_path(config_file_name)
+            with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
+                check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=stdout_file, stderr=stderr_file)
         except CalledProcessError as e:
-            print_error('%s should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
+            print_error('some errors happen when import package %s.' %(package_name))
+            print_log_content(config_file_name)
+            if package_name in PACKAGE_REQUIREMENTS:
+                print_error('If %s is not installed, it should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
@@ -521,7 +526,7 @@ def resume_experiment(args):
             print_error('Id %s not exist!' % args.id)
             exit(1)
         if experiment_dict[args.id]['status'] != 'STOPPED':
-            print_error('Experiment %s is running!' % args.id)
+            print_error('Only stopped experiments can be resumed!')
             exit(1)
         experiment_id = args.id
     print_normal('Resuming experiment %s...' % experiment_id)

@@ -3,45 +3,77 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "antd": "^3.8.1",
-    "axios": "^0.18.1",
+    "antd": "3.10.9",
+    "autoprefixer": "^9.6.1",
+    "axios": "^0.19.0",
+    "babel-loader": "^8.0.6",
     "babel-polyfill": "^6.26.0",
+    "chalk": "^2.4.2",
     "copy-to-clipboard": "^3.0.8",
+    "css-loader": "0.28.7",
+    "dotenv": "^8.0.0",
     "echarts": "^4.1.0",
     "echarts-for-react": "^2.0.14",
-    "react": "^16.7.0-alpha.2",
-    "react-dom": "^16.7.0-alpha.2",
-    "react-json-tree": "^0.11.0",
-    "react-monaco-editor": "^0.22.0",
-    "react-router": "3.2.1",
+    "file-loader": "^4.1.0",
+    "fork-ts-checker-webpack-plugin": "^1.5.0",
+    "fs-extra": "^8.1.0",
+    "html-webpack-plugin": "^4.0.0-beta.8",
+    "less": "^3.9.0",
+    "less-loader": "^5.0.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "monaco-editor": "^0.17.1",
+    "object-assign": "^4.1.1",
+    "postcss-flexbugs-fixes": "^4.1.0",
+    "postcss-loader": "^3.0.0",
+    "postcss-scss": "^2.0.0",
+    "precss": "^4.0.0",
+    "promise": "^8.0.3",
+    "raf": "^3.4.1",
+    "react": "^16.8.6",
+    "react-dev-utils": "^9.0.1",
+    "react-dom": "^16.8.5",
+    "react-json-tree": "^0.11.2",
+    "react-monaco-editor": "^0.28.0",
     "react-responsive": "^7.0.0",
-    "react-scripts-ts-antd": "2.17.0"
+    "react-router": "^3.2.3",
+    "resolve": "^1.6.0",
+    "source-map-loader": "^0.2.1",
+    "style-loader": "^0.23.1",
+    "sw-precache-webpack-plugin": "^0.11.5",
+    "ts-import-plugin": "^1.4.3",
+    "ts-loader": "^6.0.4",
+    "tsconfig-paths-webpack-plugin": "^3.2.0",
+    "tslint": "^5.7.0",
+    "tslint-react": "^4.0.0",
+    "url-loader": "^2.1.0",
+    "webpack": "^4.39.1",
+    "webpack-dev-server": "^3.7.2",
+    "webpack-manifest-plugin": "^2.0.4",
+    "whatwg-fetch": "^3.0.0"
   },
   "scripts": {
-    "start": "react-scripts-ts-antd start",
-    "build": "react-scripts-ts-antd build",
-    "test": "react-scripts-ts-antd test --env=jsdom",
-    "eject": "react-scripts-ts-antd eject"
+    "build": "node scripts/build.js",
+    "start": "node --trace-warnings scripts/start.js"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.5",
-    "@types/node": "^10.7.0",
-    "@types/react": "^16.4.17",
+    "@types/node": "^10.14.14",
+    "@types/react": "16.4.17",
     "@types/react-dom": "^16.0.7",
-    "@types/react-json-tree": "^0.6.8",
+    "@types/react-json-tree": "^0.6.11",
     "@types/react-responsive": "^3.0.3",
-    "@types/react-router": "3.0.15",
-    "typescript": "^3.0.1"
+    "@types/react-router": "^3.0.20",
+    "typescript": "^3.5.3"
   },
   "resolutions": {
-    "mem": "^4.0.0",
-    "handlebars": "^4.1.0",
-    "lodash": "^4.17.13",
-    "lodash.template": "^4.5.0",
-    "js-yaml": "^3.13.1",
-    "webpack-dev-server": "3.0.0",
-    "merge": "^1.2.1",
-    "cryptiles": "^4.1.2",
-    "hoek": "^4.2.1"
-  }
+    "@types/react": "16.4.17",
+    "js-yaml": "^3.13.1"
+  },
+  "babel": {
+    "presets": [
+      "react-app"
+    ]
+  },
+  "browserslist": [
+    "defaults"
+  ]
 }

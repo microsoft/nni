@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Row, Modal } from 'antd';
 import ReactEcharts from 'echarts-for-react';
-import  IntermediateVal from '../public-child/IntermediateVal';
+import IntermediateVal from '../public-child/IntermediateVal';
 import '../../static/style/compare.scss';
 import { TableObj, Intermedia, TooltipForIntermediate } from 'src/static/interface';
 
@@ -83,13 +83,13 @@ class Compare extends React.Component<CompareProps, {}> {
             },
             xAxis: {
                 type: 'category',
-                name: 'Step',
+                // name: '# Intermediate',
                 boundaryGap: false,
                 data: xAxis
             },
             yAxis: {
                 type: 'value',
-                name: 'metric'
+                name: 'Metric'
             },
             series: trialIntermediate
         };
@@ -137,7 +137,7 @@ class Compare extends React.Component<CompareProps, {}> {
                             const temp = compareRows[index];
                             return (
                                 <td className="value" key={index}>
-                                    <IntermediateVal record={temp}/>
+                                    <IntermediateVal record={temp} />
                                 </td>
                             );
                         })}
@@ -193,9 +193,11 @@ class Compare extends React.Component<CompareProps, {}> {
                 destroyOnClose={true}
                 maskClosable={false}
                 width="90%"
-                // centered={true}
             >
-                <Row>{this.intermediate()}</Row>
+                <Row className="compare-intermediate">
+                    {this.intermediate()}
+                    <Row className="compare-yAxis"># Intermediate</Row>
+                </Row>
                 <Row>{this.initColumn()}</Row>
             </Modal>
         );
