@@ -31,13 +31,13 @@ You are encouraged to [contribute more examples](Tutorial/Contributing.md) for o
 
 ## Supported Library
 NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
-* [Scikit-learn]https://scikit-learn.org/stable/
+* <b>[Scikit-learn]</b> https://scikit-learn.org/stable/
     <ul>
     <li><a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/></li>
     </ul>
-* [XGBoost]https://xgboost.readthedocs.io/en/latest/
-* [CatBoost]https://catboost.ai/
-* [LightGBM]https://lightgbm.readthedocs.io/en/latest/
+* <b>[XGBoost]</b> https://xgboost.readthedocs.io/en/latest/
+* <b>[CatBoost]</b> https://catboost.ai/
+* <b>[LightGBM]</b> https://lightgbm.readthedocs.io/en/latest/
     <ul>
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>
