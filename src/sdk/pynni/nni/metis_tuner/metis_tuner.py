@@ -121,7 +121,7 @@ class MetisTuner(Tuner):
                 key_range = search_space[key]['_value']
                 idx = self.key_order.index(key)
                 if key_type == 'quniform':
-                    if key_range[2] == 1 and key_range[0].is_interger() and key_range[1].is_interger():
+                    if key_range[2] == 1 and key_range[0].is_integer() and key_range[1].is_integer():
                         self.x_bounds[idx] = [key_range[0], key_range[1]+1]
                         self.x_types[idx] = 'range_int'
                     else:
