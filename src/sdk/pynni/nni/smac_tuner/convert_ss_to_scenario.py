@@ -105,13 +105,13 @@ def generate_pcs(nni_search_space_content):
                                 key,
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
-                        elif search_space[key]['_type'] == 'quniform' \
-                            and search_space[key]['_value'][2] == 1:
-                            pcs_fd.write('%s integer [%d, %d] [%d]\n' % (
+                        elif search_space[key]['_type'] == 'quniform':
+                            low, high, q = search_space[key]['_value'][0:3]
+                            vals = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
+                            pcs_fd.write('%s ordinal {%s} [%s]\n' % (
                                 key,
-                                search_space[key]['_value'][0],
-                                search_space[key]['_value'][1],
-                                search_space[key]['_value'][0]))
+                                json.dumps(vals)[1:-1],
+                                json.dumps(vals[0])))
                         else:
                             raise RuntimeError('unsupported _type %s' % search_space[key]['_type'])
                     except:
