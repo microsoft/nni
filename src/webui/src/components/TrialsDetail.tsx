@@ -38,6 +38,8 @@ interface TrialDetailState {
 interface TrialsDetailProps {
     interval: number;
     whichPageToFresh: string;
+    columnList: Array<string>;
+    changeColumn: (val: Array<string>) => void;
 }
 
 class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
@@ -112,7 +114,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         let desc: Parameters = {
                             parameters: {},
                             intermediate: [],
-                            progress: 1
+                            multiProgress: 1
                         };
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
@@ -133,7 +135,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         const tempHyper = trialJobs[item].hyperParameters;
                         if (tempHyper !== undefined) {
                             const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
-                            desc.progress = tempHyper.length;
+                            desc.multiProgress = tempHyper.length;
                             if (typeof getPara === 'string') {
                                 desc.parameters = JSON.parse(getPara);
                             } else {
@@ -397,6 +399,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             whichGraph, searchPlaceHolder
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
+        const { columnList, changeColumn } = this.props;
         return (
             <div>
                 <div className="trial" id="tabsty">
@@ -482,6 +485,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     platform={experimentInfo.platform}
                     updateList={this.getDetailSource}
                     logCollection={experimentLogCollection}
+                    columnList={columnList}
+                    changeColumn={changeColumn}
                     ref={(tabList) => this.tableList = tabList}
                 />
             </div>

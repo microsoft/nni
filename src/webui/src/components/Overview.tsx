@@ -25,6 +25,7 @@ interface OverviewState {
     status: string;
     errorStr: string;
     trialProfile: Experiment;
+    concurrency: number;
     option: object;
     noData: string;
     accuracyData: object;
@@ -61,7 +62,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                 id: '',
                 author: '',
                 experName: '',
-                runConcurren: 0,
+                runConcurren: 1,
                 maxDuration: 0,
                 execDuration: 0,
                 MaxTrialNum: 0,
@@ -87,8 +88,18 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
             },
             isTop10: true,
             isLogCollection: false,
-            isMultiPhase: false
+            isMultiPhase: false,
+            concurrency: 1
         };
+    }
+
+    // when user set new concurrency val
+    changeConcurrency = (concurrency: number) => {
+        if (this._isMounted) {
+            this.setState({
+                concurrency: concurrency
+            });
+        }
     }
 
     // show session
@@ -264,7 +275,8 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                                 profile.succTrial += 1;
                                 const desJobDetail: Parameters = {
                                     parameters: {},
-                                    intermediate: []
+                                    intermediate: [],
+                                    multiProgress: 1
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                                 const acc = getFinal(tableData[item].finalMetricData);
@@ -273,6 +285,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                                 if (tempara !== undefined) {
                                     const tempLength = tempara.length;
                                     const parameters = JSON.parse(tempara[tempLength - 1]).parameters;
+                                    desJobDetail.multiProgress = tempara.length;
                                     if (typeof parameters === 'string') {
                                         desJobDetail.parameters = JSON.parse(parameters);
                                     } else {
@@ -458,10 +471,28 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     render() {
 
         const {
-            trialProfile, searchSpace, tableData, accuracyData,
+            trialProfile, searchSpace, tableData, accuracyData, concurrency,
             accNodata, status, errorStr, trialNumber, bestAccuracy, isMultiPhase,
             titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
+        // experimentAPI['params']['trialConcurrency'] = concurrency;
+        // experimentAPI.params.trialConcurrency = concurrency;
+        // if (experimentAPI.hasOwnProperty('params')) {
+        //     if (experimentAPI['params'].hasOwnProperty('trialConcurrency')) {
+        //         experimentAPI['params']['trialConcurrency'] = concurrency;
+        //     }
+        // }
+        trialProfile.runConcurren = concurrency;
+        Object.keys(experimentAPI).map(item => {
+            if (item === 'params') {
+                const temp = experimentAPI[item];
+                Object.keys(temp).map(index => {
+                    if (index === 'trialConcurrency') {
+                        temp[index] = concurrency;
+                    }
+                });
+            }
+        });
 
         return (
             <div className="overview">
@@ -480,7 +511,9 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             bestAccuracy={bestAccuracy}
                             status={status}
                             errors={errorStr}
-                            updateFile={this.showSessionPro}
+                            concurrency={concurrency}
+                            changeConcurrency={this.changeConcurrency}
+                        // updateFile={this.showSessionPro}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
