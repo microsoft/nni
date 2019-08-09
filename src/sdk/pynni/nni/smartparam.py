@@ -49,8 +49,8 @@ if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return param_exp.choice(options, np.random.RandomState())
 
-    def randint(lower, high, name=None):
-        return param_exp.randint(lower, high, np.random.RandomState())
+    def randint(lower, upper, name=None):
+        return param_exp.randint(lower, upper, np.random.RandomState())
 
     def uniform(low, high, name=None):
         return param_exp.uniform(low, high, np.random.RandomState())
