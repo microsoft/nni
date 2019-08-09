@@ -54,6 +54,9 @@ class GPUScheduler {
             } catch (error) {
                 this.log.error('Read GPU summary failed with error: ', error);
             }
+            if (this.gpuSummary !== undefined && this.gpuSummary.gpuCount === 0) {
+                throw new Error('GPU not available. Please check your CUDA configuration');
+            }
             await delay(5000);
         }
     }
