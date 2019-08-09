@@ -53,14 +53,11 @@ def main(argv):
     while(True):
         try:
             smi_output = subprocess.check_output(cmd)
-            parse_nvidia_smi_result(smi_output, metrics_output_dir)
-        except FileNotFoundError:
+        except Exception:
+            traceback.print_exc()
             gen_empty_gpu_metric(metrics_output_dir)
             break
-        except:
-            exception = sys.exc_info()
-            for e in exception:
-                print("job exporter error {}".format(e))
+        parse_nvidia_smi_result(smi_output, metrics_output_dir)
         # TODO: change to sleep time configurable via arguments
         time.sleep(5)
 
