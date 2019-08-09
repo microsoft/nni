@@ -206,10 +206,10 @@ def convert_time_stamp_to_date(content):
     start_time_stamp = content.get('startTime')
     end_time_stamp = content.get('endTime')
     if start_time_stamp:
-        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).astimezone().strftime("%Y/%m/%d %H:%M:%S")
         content['startTime'] = str(start_time)
     if end_time_stamp:
-        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).astimezone().strftime("%Y/%m/%d %H:%M:%S")
         content['endTime'] = str(end_time)
     return content
 
