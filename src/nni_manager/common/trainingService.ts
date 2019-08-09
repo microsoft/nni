@@ -23,18 +23,10 @@
  * define TrialJobStatus
  */
 type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
-type JobType = 'TRIAL' | 'HOST';
 
 interface TrainingServiceMetadata {
     readonly key: string;
     readonly value: string;
-}
-
-/**
- * define JobApplicationForm
- */
-interface JobApplicationForm {
-    readonly jobType: JobType;
 }
 
 interface HyperParameters {
@@ -45,16 +37,8 @@ interface HyperParameters {
 /**
  * define TrialJobApplicationForm
  */
-interface TrialJobApplicationForm extends JobApplicationForm {
+interface TrialJobApplicationForm {
     readonly hyperParameters: HyperParameters;
-}
-
-/**
- * define HostJobApplicationForm
- */
-interface HostJobApplicationForm extends JobApplicationForm {
-    readonly host: string;
-    readonly cmd: string;
 }
 
 /**
@@ -69,7 +53,7 @@ interface TrialJobDetail {
     readonly tags?: string[];
     readonly url?: string;
     readonly workingDirectory: string;
-    readonly form: JobApplicationForm;
+    readonly form: TrialJobApplicationForm;
     readonly sequenceId: number;
     isEarlyStopped?: boolean;
 }
@@ -112,8 +96,8 @@ abstract class TrainingService {
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
     public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
-    public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
+    public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
+    public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract get isMultiPhaseJobSupported(): boolean;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
@@ -135,5 +119,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    HostJobApplicationForm, JobApplicationForm, JobType, NNIManagerIpConfig
+    NNIManagerIpConfig
 };

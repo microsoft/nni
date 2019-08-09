@@ -19,7 +19,7 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
 /**
  * KubeflowTrialJobDetail
@@ -33,13 +33,13 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
+    public form: TrialJobApplicationForm;
     public kubernetesJobName: string;
     public sequenceId: number;
     public queryJobFailedCount: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm,
+                workingDirectory: string, form: TrialJobApplicationForm,
                 kubernetesJobName: string, sequenceId: number, url: string) {
         this.id = id;
         this.status = status;

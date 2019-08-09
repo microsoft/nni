@@ -61,7 +61,7 @@ class NNIManager implements Manager {
     private trialDataForTuner: string;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
-    
+
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
@@ -383,7 +383,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
-        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener); 
+        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
         this.dispatcher.sendCommand(TERMINATE);
         let tunerAlive: boolean = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -456,11 +456,7 @@ class NNIManager implements Manager {
                 case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -473,11 +469,7 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -576,7 +568,6 @@ class NNIManager implements Manager {
                     }
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
-                        jobType: 'TRIAL',
                         hyperParameters: {
                             value: hyperParams,
                             index: 0
@@ -703,7 +694,6 @@ class NNIManager implements Manager {
                 assert(tunerCommand.trial_job_id !== undefined);
 
                 const trialJobForm: TrialJobApplicationForm = {
-                    jobType: 'TRIAL',
                     hyperParameters: {
                         value: content,
                         index: tunerCommand.parameter_index

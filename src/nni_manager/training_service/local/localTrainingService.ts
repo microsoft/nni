@@ -29,7 +29,7 @@ import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm,
+    HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import {
@@ -76,14 +76,14 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
+    public form: TrialJobApplicationForm;
     public sequenceId: number;
     public pid?: number;
     public gpuIndices?: number[];
 
     constructor(
         id: string, status: TrialJobStatus, submitTime: number,
-        workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+        workingDirectory: string, form: TrialJobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -169,9 +169,7 @@ class LocalTrainingService implements TrainingService {
         const jobs: TrialJobDetail[] = [];
         for (const key of this.jobMap.keys()) {
             const trialJob: TrialJobDetail = await this.getTrialJob(key);
-            if (trialJob.form.jobType === 'TRIAL') {
-                jobs.push(trialJob);
-            }
+            jobs.push(trialJob);
         }
 
         return jobs;
@@ -181,9 +179,6 @@ class LocalTrainingService implements TrainingService {
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
-        }
-        if (trialJob.form.jobType === 'HOST') {
-            return this.getHostJob(trialJobId);
         }
         if (trialJob.status === 'RUNNING') {
             const alive: boolean = await isAlive(trialJob.pid);
@@ -219,28 +214,22 @@ class LocalTrainingService implements TrainingService {
         this.eventEmitter.off('metric', listener);
     }
 
-    public submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        if (form.jobType === 'HOST') {
-            return this.runHostJob(<HostJobApplicationForm>form);
-        } else if (form.jobType === 'TRIAL') {
-            const trialJobId: string = uniqueString(5);
-            const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
-                trialJobId,
-                'WAITING',
-                Date.now(),
-                path.join(this.rootDir, 'trials', trialJobId),
-                form,
-                this.generateSequenceId()
-            );
-            this.jobQueue.push(trialJobId);
-            this.jobMap.set(trialJobId, trialJobDetail);
+    public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobId: string = uniqueString(5);
+        const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            path.join(this.rootDir, 'trials', trialJobId),
+            form,
+            this.generateSequenceId()
+        );
+        this.jobQueue.push(trialJobId);
+        this.jobMap.set(trialJobId, trialJobDetail);
 
-            this.log.debug(`submitTrialJob: return: ${JSON.stringify(trialJobDetail)} `);
+        this.log.debug(`submitTrialJob: return: ${JSON.stringify(trialJobDetail)} `);
 
-            return Promise.resolve(trialJobDetail);
-        } else {
-            return Promise.reject(new Error(`Job form not supported: ${JSON.stringify(form)}`));
-        }
+        return Promise.resolve(trialJobDetail);
     }
 
     /**
@@ -248,16 +237,12 @@ class LocalTrainingService implements TrainingService {
      * @param trialJobId trial job id
      * @param form job application form
      */
-    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobDetail: undefined | TrialJobDetail = this.jobMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
-        if (form.jobType === 'TRIAL') {
-            await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>form).hyperParameters);
-        } else {
-            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
-        }
+        await this.writeParameterFile(trialJobDetail.workingDirectory, form.hyperParameters);
 
         return trialJobDetail;
     }
@@ -279,13 +264,7 @@ class LocalTrainingService implements TrainingService {
 
             return Promise.resolve();
         }
-        if (trialJob.form.jobType === 'TRIAL') {
-            tkill(trialJob.pid, 'SIGKILL');
-        } else if (trialJob.form.jobType === 'HOST') {
-            await cpp.exec(`pkill -9 -P ${trialJob.pid}`);
-        } else {
-            throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
-        }
+        tkill(trialJob.pid, 'SIGKILL');
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
@@ -562,7 +541,7 @@ class LocalTrainingService implements TrainingService {
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName),
                                     runScriptContent.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
-        await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
+        await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
         const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
@@ -587,48 +566,6 @@ class LocalTrainingService implements TrainingService {
             }
         });
         this.jobStreamMap.set(trialJobDetail.id, stream);
-    }
-
-    private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
-        const jobId: string = uniqueString(5);
-        const workDir: string = path.join(this.rootDir, 'hostjobs', jobId);
-        await cpp.exec(`mkdir -p ${workDir}`);
-        const wrappedCmd: string = `cd ${workDir} && ${form.cmd}>stdout 2>stderr`;
-        this.log.debug(`runHostJob: command: ${wrappedCmd}`);
-        const process: cp.ChildProcess = cp.exec(wrappedCmd);
-        const jobDetail: LocalTrialJobDetail = {
-            id: jobId,
-            status: 'RUNNING',
-            submitTime: Date.now(),
-            workingDirectory: workDir,
-            form: form,
-            sequenceId: this.generateSequenceId(),
-            pid: process.pid
-        };
-        this.jobMap.set(jobId, jobDetail);
-        this.log.debug(`runHostJob: return: ${JSON.stringify(jobDetail)} `);
-
-        return jobDetail;
-    }
-
-    private async getHostJob(jobId: string): Promise<TrialJobDetail> {
-        const jobDetail: LocalTrialJobDetail | undefined = this.jobMap.get(jobId);
-        if (jobDetail === undefined) {
-            throw new NNIError(NNIErrorNames.NOT_FOUND, `Host Job not found: ${jobId}`);
-        }
-        try {
-            await cpp.exec(`kill -0 ${jobDetail.pid}`);
-
-            return jobDetail;
-        } catch (error) {
-            if (error instanceof Error) {
-                this.log.debug(`getHostJob: error: ${error.message}`);
-                this.jobMap.delete(jobId);
-                throw new NNIError(NNIErrorNames.NOT_FOUND, `Host Job not found: ${error.message}`);
-            } else {
-                throw error;
-            }
-        }
     }
 
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {

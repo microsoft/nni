@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
+    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
@@ -77,7 +77,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
     }
 
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontrollerClusterConfig is not initialized');
         }
@@ -249,7 +249,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string,
-                                   trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
+                                   trialWorkingFolder: string, form: TrialJobApplicationForm): Promise<void> {
         if (this.fcTrialConfig === undefined) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
@@ -271,9 +271,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form);
-        if (trialForm !== undefined && trialForm.hyperParameters !== undefined) {
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)),
-                                        trialForm.hyperParameters.value, { encoding: 'utf8' });
+        if (form !== undefined) {
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(form.hyperParameters)),
+                                        form.hyperParameters.value, { encoding: 'utf8' });
         }
     }
 

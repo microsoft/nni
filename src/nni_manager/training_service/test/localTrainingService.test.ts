@@ -76,7 +76,6 @@ describe('Unit Test for LocalTrainingService', () => {
 
         // submit job
         const form: TrialJobApplicationForm = {
-            jobType: 'TRIAL',
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0
@@ -95,7 +94,6 @@ describe('Unit Test for LocalTrainingService', () => {
 
         // submit job
         const form: TrialJobApplicationForm = {
-            jobType: 'TRIAL',
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0

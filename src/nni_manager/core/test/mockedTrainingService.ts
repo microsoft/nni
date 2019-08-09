@@ -41,7 +41,7 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
-            jobType: 'TRIAL'
+            hyperParameters: { value: '', index: 0 }
         },
         sequenceId: 0
     };
@@ -55,7 +55,7 @@ class MockedTrainingService extends TrainingService {
         url: 'http://test',
         workingDirectory: '/tmp/mocked',
         form: {
-            jobType: 'TRIAL'
+            hyperParameters: { value: '', index: 1 }
         },
         sequenceId: 0
     };

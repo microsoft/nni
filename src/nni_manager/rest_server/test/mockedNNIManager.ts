@@ -87,7 +87,7 @@ export class MockedNNIManager extends Manager {
             workingDirectory: '/tmp/mocked',
             sequenceId: 0,
             form: {
-                jobType: 'TRIAL'
+                hyperParameters: { value: '', index: 0 }
             }
         };
         deferred.resolve(jobDetail);

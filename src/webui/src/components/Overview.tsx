@@ -169,8 +169,6 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     }
 
     private generateAccuracyGraph(bestTrials: Trial[]): object {
-        const bestTrialIds = new Set(bestTrials.map(trial => trial.id));
-
         const xSequence = bestTrials.map(trial => trial.sequenceId);
         const ySequence = bestTrials.map(trial => trial.accuracy);
 
