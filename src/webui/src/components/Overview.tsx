@@ -188,9 +188,6 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             isMultiPhase: isMultiy
                         });
                     }
-                    if (tempara.trialConcurrency !== undefined) {
-                        this.props.changeConcurrency(tempara.trialConcurrency);
-                    }
                 }
             });
         this.checkStatus();

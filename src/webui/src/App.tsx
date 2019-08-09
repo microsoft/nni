@@ -49,7 +49,6 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
-  // show session
   getConcurrency = () => {
     axios(`${MANAGER_IP}/experiment`, {
       method: 'GET'

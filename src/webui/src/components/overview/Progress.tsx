@@ -16,7 +16,6 @@ interface ProgressProps {
     bestAccuracy: number;
     status: string;
     errors: string;
-    // updateFile: Function;
     changeConcurrency: (val: number) => void;
 }
 
