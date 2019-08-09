@@ -517,7 +517,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     `tail -n 1 ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
                 if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
-                    if (rmMeta.gpuSummary !== undefined && rmMeta.gpuSummary.gpuCount === 0) {
+                    if (rmMeta.gpuSummary.gpuCount === 0) {
                         this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
                         this.timer.unsubscribe(disposable);
                     }
