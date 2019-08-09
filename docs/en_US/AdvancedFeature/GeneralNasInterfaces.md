@@ -132,7 +132,7 @@ trial:
 
 **\*darts_mode\***: following the training approach in [this paper][3]. It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode).
 
-To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, though there is no need to specify tuner, you still need to specify a tuner (any tuner) in the config file for now.
+To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, though there is no need to use tuner, you still need to specify a tuner (any tuner) in the config file for now.
 ```diff
 trial:
     command: your command to run the trial
