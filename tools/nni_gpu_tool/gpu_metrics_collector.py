@@ -46,9 +46,6 @@ def main(argv):
     if check_ready_to_run() == False:
         # GPU metrics collector is already running. Exit
         exit(2)
-    with open(os.path.join(metrics_output_dir, "gpu_metrics"), "w") as outputFile:
-        pass
-    os.chmod(os.path.join(metrics_output_dir, "gpu_metrics"), 0o777)
     cmd = 'nvidia-smi -q -x'.split()
     while(True):
         try:
@@ -63,6 +60,7 @@ def main(argv):
 
 def parse_nvidia_smi_result(smi, outputDir):
     try:
+        old_umask = os.umask(0)
         xmldoc = minidom.parseString(smi)
         gpuList = xmldoc.getElementsByTagName('gpu')
         with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
@@ -86,9 +84,12 @@ def parse_nvidia_smi_result(smi, outputDir):
     except :
         e_info = sys.exc_info()
         print('xmldoc paring error')
+    finally:
+        os.umask(old_umask)
 
 def gen_empty_gpu_metric(outputDir):
     try:
+        old_umask = os.umask(0)
         with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
             outPut = {}
             outPut["Timestamp"] = time.asctime(time.localtime())
@@ -99,6 +100,8 @@ def gen_empty_gpu_metric(outputDir):
             outputFile.flush()
     except Exception:
         traceback.print_exc()
+    finally:
+        os.umask(old_umask)
 
 
 if __name__ == "__main__":
