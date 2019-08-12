@@ -175,13 +175,14 @@ def reload_tensorflow_variables(tf, session):
     tf: tensorflow module
     '''
     subgraph_from_tuner = trial.get_next_parameter()
-    mutable_layers = []
+    mutable_layers = set()
     for subgraph_key in subgraph_from_tuner:
         if "/" in subgraph_key:
             # has to remove the last, could be layer_choice or whatever
             mutable_id, mutable_layer_id = _decompose_general_key(subgraph_key[:subgraph_key.rfind("/")])
             if mutable_id is not None:
-                mutable_layers.append((mutable_id, mutable_layer_id))
+                mutable_layers.add((mutable_id, mutable_layer_id))
+    mutable_layers = sorted(list(mutable_layers))
     for mutable_id, mutable_layer_id in mutable_layers:
         if mutable_id not in name_space:
             continue
