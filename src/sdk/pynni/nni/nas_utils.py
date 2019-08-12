@@ -32,7 +32,7 @@ def classic_mode(
     '''Execute the chosen function and inputs directly.
     In this mode, the trial code is only running the chosen subgraph (i.e., the chosen ops and inputs),
     without touching the full model graph.'''
-    if trial._params is None:
+    if trial.get_current_parameter() is None:
         trial.get_next_parameter()
     mutable_block = trial.get_current_parameter(mutable_id)
     chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
@@ -118,7 +118,7 @@ def oneshot_mode(
     The difference is that oneshot mode does not receive subgraph.
     Instead, it uses dropout to randomly dropout inputs and ops.'''
     # NNI requires to get_next_parameter before report a result. But the parameter will not be used in this mode
-    if trial._params is None:
+    if trial.get_current_parameter() is None:
         trial.get_next_parameter()
     optional_inputs = list(optional_inputs.values())
     inputs_num = len(optional_inputs)

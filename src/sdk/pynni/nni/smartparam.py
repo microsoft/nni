@@ -189,6 +189,6 @@ else:
         raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):
-        if trial._params is None:
+        if trial.get_current_parameter() is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)
