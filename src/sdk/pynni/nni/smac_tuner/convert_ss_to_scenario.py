@@ -107,7 +107,7 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'quniform':
                             low, high, q = search_space[key]['_value'][0:3]
-                            vals = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
+                            vals = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high).tolist()
                             pcs_fd.write('%s ordinal {%s} [%s]\n' % (
                                 key,
                                 json.dumps(vals)[1:-1],
