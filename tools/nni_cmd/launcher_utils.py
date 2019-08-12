@@ -56,6 +56,8 @@ def parse_path(experiment_config, config_path):
     expand_path(experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         expand_path(experiment_config['trial'], 'codeDir')
+        if experiment_config['trial'].get('authFile'):
+            expand_path(experiment_config['trial'], 'authFile')
     if experiment_config.get('tuner'):
         expand_path(experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
@@ -69,6 +71,8 @@ def parse_path(experiment_config, config_path):
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
+        if experiment_config['trial'].get('authFile'):
+            parse_relative_path(root_path, experiment_config['trial'], 'authFile')
     if experiment_config.get('tuner'):
         parse_relative_path(root_path, experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
