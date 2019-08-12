@@ -142,6 +142,8 @@ def parse_ids(args):
         elif isinstance(experiment_dict[key], list):
             # if the config file is old version, remove the configuration from file
             experiment_config.remove_experiment(key)
+    if args.all:
+        return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
             if str(experiment_dict[key]['port']) == args.port:
@@ -160,8 +162,6 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.id == 'all':
-        result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
             if id.startswith(args.id[:-1]):
@@ -175,7 +175,7 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list and ((args.id and args.id != 'all') or args.port):
+    if not result_list and (args.id  or args.port):
         print_error('There are no experiments matched, please set correct experiment id or restful server port')
     elif not result_list:
         print_error('There is no experiment running...')
@@ -225,6 +225,9 @@ def check_rest(args):
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
+    if args.id and args.id == 'all':
+        print_warning('\'nnictl stop all\' is abolished, please use \'nnictl stop --all\' to stop all of experiments!')
+        exit(1)
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
         experiment_config = Experiments()
@@ -568,7 +571,7 @@ def experiment_list(args):
             if experiment_dict[key]['status'] != 'STOPPED':
                 experiment_id_list.append(key)
         if not experiment_id_list:
-            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all stopped experiments.')
+            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
