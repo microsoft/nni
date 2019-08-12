@@ -55,7 +55,7 @@ def rand(x_bounds, x_types):
             temp = x_bounds[i][random.randint(0, len(x_bounds[i]) - 1)]
             outputs.append(temp)
         elif x_types[i] == "range_int":
-            temp = random.randint(x_bounds[i][0], x_bounds[i][1])
+            temp = random.randint(x_bounds[i][0], x_bounds[i][1] -1)
             outputs.append(temp)
         elif x_types[i] == "range_continuous":
             temp = random.uniform(x_bounds[i][0], x_bounds[i][1])

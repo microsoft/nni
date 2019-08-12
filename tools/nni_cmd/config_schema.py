@@ -94,7 +94,7 @@ tuner_schema_dict = {
     },
     'TPE': {
         'builtinTunerName': 'TPE',
-        'classArgs': {
+        Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('parallel_optimize'): setType('parallel_optimize', bool),
             Optional('constant_liar_type'): setChoice('constant_liar_type', 'min', 'max', 'mean')
@@ -104,7 +104,7 @@ tuner_schema_dict = {
     },
     'NetworkMorphism': {
         'builtinTunerName': 'NetworkMorphism',
-        'classArgs': {
+        Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('task'): setChoice('task', 'cv','nlp','common'),
             Optional('input_width'): setType('input_width', int),
@@ -116,7 +116,7 @@ tuner_schema_dict = {
     },
     'MetisTuner': {
         'builtinTunerName': 'MetisTuner',
-        'classArgs': {
+        Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('no_resampling'): setType('no_resampling', bool),
             Optional('no_candidates'): setType('no_candidates', bool),
@@ -128,7 +128,7 @@ tuner_schema_dict = {
     },
     'GPTuner': {
         'builtinTunerName': 'GPTuner',
-        'classArgs': {
+        Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('utility'): setChoice('utility', 'ei', 'ucb', 'poi'),
             Optional('kappa'): setType('kappa', float),
@@ -233,8 +233,7 @@ pai_trial_schema = {
     'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
     'memoryMB': setType('memoryMB', int),
     'image': setType('image', str),
-    Optional('authFile'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                         error='ERROR: authFile format error, authFile format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+    Optional('authFile'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'authFile'),
     Optional('shmMB'): setType('shmMB', int),
     Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
                          error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
