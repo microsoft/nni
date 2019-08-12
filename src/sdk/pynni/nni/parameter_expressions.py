@@ -34,7 +34,7 @@ def choice(options, random_state):
 
 def randint(lower, upper, random_state):
     '''
-    Generate a random integer from `low` (inclusive) to `high` (exclusive).
+    Generate a random integer from `lower` (inclusive) to `upper` (exclusive).
     lower: an int that represent an lower bound
     upper: an int that represent an upper bound
     random_state: an object of numpy.random.RandomState
