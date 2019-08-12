@@ -49,7 +49,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 #
 # update pip
 #
-RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools==39.1.0
 
 # numpy 1.14.3  scipy 1.1.0
 RUN python3 -m pip --no-cache-dir install \
