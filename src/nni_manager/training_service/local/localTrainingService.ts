@@ -521,9 +521,14 @@ class LocalTrainingService implements TrainingService {
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
         } else {
-            script.push(
-                `eval ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            script.push(`eval ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            if (process.platform === 'darwin') {
+                // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
+                // Considering the worst case, write 999 to avoid negative duration
+                script.push(`echo $? \`date +%s999\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            } else {
+                script.push(`echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            }
         }
 
         return script;

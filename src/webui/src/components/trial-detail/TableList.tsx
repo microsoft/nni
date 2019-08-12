@@ -4,7 +4,7 @@ import ReactEcharts from 'echarts-for-react';
 import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select, Icon } from 'antd';
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX, COLUMNPro } from '../../static/const';
+import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob, filterByStatus } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
@@ -32,6 +32,8 @@ interface TableListProps {
     platform: string;
     logCollection: boolean;
     isMultiPhase: boolean;
+    columnList: Array<string>; // user select columnKeys
+    changeColumn: (val: Array<string>) => void;
 }
 
 interface TableListState {
@@ -39,7 +41,6 @@ interface TableListState {
     modalVisible: boolean;
     isObjFinal: boolean;
     isShowColumn: boolean;
-    columnSelected: Array<string>; // user select columnKeys
     selectRows: Array<TableObj>;
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
@@ -69,7 +70,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isObjFinal: false,
             isShowColumn: false,
             isShowCompareModal: false,
-            columnSelected: COLUMN,
             selectRows: [],
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
@@ -120,6 +120,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
+    // intermediate button click -> intermediate graph for each trial
+    // support intermediate is dict
     selectOtherKeys = (value: string) => {
 
         const isShowDefault: boolean = value === 'default' ? true : false;
@@ -226,7 +228,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
 
         if (this._isMounted) {
-            this.setState(() => ({ columnSelected: wantResult }));
+            this.props.changeColumn(wantResult);
         }
     }
 
@@ -277,8 +279,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, updateList } = this.props;
-        const { intermediateOption, modalVisible, isShowColumn, columnSelected,
+        const { entries, tableSource, updateList, columnList } = this.props;
+        const { intermediateOption, modalVisible, isShowColumn,
             selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
@@ -316,8 +318,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 value: item
             });
         });
-        Object.keys(columnSelected).map(key => {
-            const item = columnSelected[key];
+        Object.keys(columnList).map(key => {
+            const item = columnList[key];
             switch (item) {
                 case 'Trial No.':
                     showColumn.push({
@@ -413,13 +415,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'acc',
                         width: 120,
                         sorter: (a: TableObj, b: TableObj) => {
-                            const aa = a.description.intermediate;
-                            const bb = b.description.intermediate;
-                            if (aa !== undefined && bb !== undefined) {
-                                return aa[aa.length - 1] - bb[bb.length - 1];
-                            } else {
-                                return NaN;
-                            }
+                            const oneArr = a.description.intermediate;
+                            const otherArr = b.description.intermediate;
+                            const one = (oneArr[oneArr.length - 1] !== undefined) ? oneArr[oneArr.length - 1] : 0;
+                            const other = (otherArr[otherArr.length - 1] !== undefined)
+                                ? otherArr[otherArr.length - 1] : 0;
+                            return one - other;
                         },
                         render: (text: string, record: TableObj) => {
                             return (
@@ -581,7 +582,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 >
                     <CheckboxGroup
                         options={showTitle}
-                        defaultValue={columnSelected}
+                        defaultValue={columnList}
+                        // defaultValue={columnSelected}
                         onChange={this.selectedColumn}
                         className="titleColumn"
                     />

@@ -25,7 +25,7 @@ from unittest import TestCase, main
 
 import hyperopt as hp
 
-from nni.hyperopt_tuner.hyperopt_tuner import json2space, json2parameter, json2vals
+from nni.hyperopt_tuner.hyperopt_tuner import json2space, json2parameter, json2vals, HyperoptTuner
 
 
 class HyperoptTunerTestCase(TestCase):
@@ -98,6 +98,29 @@ class HyperoptTunerTestCase(TestCase):
         json2vals(json_search_space, vals, out_y)
         self.assertEqual(out_y["root[optimizer]-choice"], 0)
         self.assertEqual(out_y["root[learning_rate]-choice"], 1)
+
+    def test_tuner_generate(self):
+        for algorithm in ["tpe", "random_search", "anneal"]:
+            tuner = HyperoptTuner(algorithm)
+            choice_list = ["a", "b", 1, 2]
+            tuner.update_search_space({
+                "a": {
+                    "_type": "randint",
+                    "_value": [1, 3]
+                },
+                "b": {
+                    "_type": "choice",
+                    "_value": choice_list
+                }
+            })
+            for k in range(30):
+                # sample multiple times
+                param = tuner.generate_parameters(k)
+                print(param)
+                self.assertIsInstance(param["a"], int)
+                self.assertGreaterEqual(param["a"], 1)
+                self.assertLessEqual(param["a"], 2)
+                self.assertIn(param["b"], choice_list)
 
 
 if __name__ == '__main__':
