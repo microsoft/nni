@@ -317,6 +317,7 @@ class HyperoptTuner(Tuner):
                 rval = self.rval
                 # ignore duplicated reported final result (due to aware of intermedate result)
                 if parameter_id not in self.running_data:
+                    logger.info("Received duplicated final result with parameter id: %s", parameter_id)
                     return
                 self.running_data.remove(parameter_id)
 
