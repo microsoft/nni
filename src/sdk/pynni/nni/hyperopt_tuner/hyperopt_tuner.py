@@ -315,6 +315,9 @@ class HyperoptTuner(Tuner):
                 rval = self.CL_rval
             else:
                 rval = self.rval
+                # ignore duplicated reported final result (due to aware of intermedate result)
+                if parameter_id not in self.running_data:
+                    return
                 self.running_data.remove(parameter_id)
 
                 # update the reward of optimal_y
