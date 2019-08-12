@@ -436,7 +436,20 @@ class PAITrainingService implements TrainingService {
                 this.paiTrialConfig.shmMB,
             )
         ];
+        // Upload authFile to hdfs
+        let authFileHdfsDir: string | undefined = undefined;
+        if (this.paiTrialConfig.authFile) {
+            try {
+                authFileHdfsDir = unixPathJoin(hdfsCodeDir, 'authFile');
+                await HDFSClientUtility.copyFileToHdfs(this.paiTrialConfig.authFile, authFileHdfsDir, this.hdfsClient);
+            } catch (error) {
+                this.log.error(`PAI Training service: copy ${this.paiTrialConfig.authFile} to HDFS ${authFileHdfsDir} failed, error is ${error}`);
+                trialJobDetail.status = 'FAILED';
+                deferred.resolve(true);
 
+                return deferred.promise;
+            }
+        }
         const paiJobConfig : PAIJobConfig = new PAIJobConfig(
             // Job name
             trialJobDetail.paiJobName,
@@ -449,7 +462,7 @@ class PAITrainingService implements TrainingService {
             // Add Virutal Cluster
             this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
             //Task auth File
-            this.paiTrialConfig.authFile
+            authFileHdfsDir
         );
 
         // Step 2. Upload code files in codeDir onto HDFS
