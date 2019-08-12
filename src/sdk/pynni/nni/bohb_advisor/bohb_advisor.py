@@ -475,7 +475,7 @@ class BOHB(MsgDispatcherBase):
                     var, choices=search_space[var]["_value"]))
             elif _type == 'randint':
                 cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] + 1))
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
             elif _type == 'uniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
                     var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
