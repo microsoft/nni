@@ -385,8 +385,6 @@ class PAITrainingService implements TrainingService {
         if (this.paiTrialConfig.authFile) {
             await this.copyAuthFilePromise;
         }
-        console.log('-----------------------388---------------')
-        console.log(this.authFileHdfsPath)
         // Step 1. Prepare PAI job configuration
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
