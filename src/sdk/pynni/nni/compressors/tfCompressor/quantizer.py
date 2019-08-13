@@ -45,5 +45,5 @@ try:
             r_qw = 2*qw - 1
             return r_qw
 
-except ModuleNotFoundError:
+except ImportError:
     pass

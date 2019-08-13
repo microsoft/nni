@@ -42,7 +42,7 @@ try:
             #print(weight,out)
             return out.type(orig_type)
 
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 

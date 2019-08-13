@@ -2,14 +2,14 @@ try:
     import torch
     from .torchCompressor._nnimc_torch import *
     _torch_available = True
-except ModuleNotFoundError:
+except ImportError:
     _torch_available = False
 
 try:
     import tensorflow as tf
     from .tfCompressor._nnimc_tf import *
     _tf_available = True
-except ModuleNotFoundError:
+except ImportError:
     _tf_available = False
 
 

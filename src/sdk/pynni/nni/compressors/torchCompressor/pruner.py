@@ -77,7 +77,7 @@ try:
             self.mask_list[layer_info.name] = new_mask
             return new_mask
 
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 

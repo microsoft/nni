@@ -15,7 +15,7 @@ try:
             orig_type = weight.type()  # TODO: user layer_info
             return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
@@ -35,5 +35,5 @@ try:
             orig_type = weight.dtype
             return tf.cast(tf.cast(weight / scale, tf.int8), orig_type) * scale
 
-except ModuleNotFoundError:
+except ImportError:
     pass

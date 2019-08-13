@@ -15,7 +15,7 @@ try:
             threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
             return torch.gt(w_abs, threshold).type(weight.type())
 
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
@@ -34,5 +34,5 @@ try:
             threshold = tf.contrib.distributions.percentile(weight.abs(), sparsity * 100)
             return tf.cast(tf.math.greater(weight.abs(), threshold), weight.dtype)
 
-except ModuleNotFoundError:
+except ImportError:
     pass

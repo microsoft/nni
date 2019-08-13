@@ -50,5 +50,5 @@ try:
             orig_type = weight.dtype
             return out.type(orig_type)
 
-except ModuleNotFoundError:
+except ImportError:
     pass

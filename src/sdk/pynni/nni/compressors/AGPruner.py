@@ -65,7 +65,7 @@ try:
             self.mask_list[layer_info.name] = new_mask
             return new_mask
 
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
@@ -134,5 +134,5 @@ try:
         def update_graph(self, sess):
             sess.run(self.assign_handler)
 
-except ModuleNotFoundError:
+except ImportError:
     pass

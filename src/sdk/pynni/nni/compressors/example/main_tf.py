@@ -112,8 +112,8 @@ def main():
                 #print(tf.gradients(model.cross,[model.w1, model.fcw1]))
         
         test_acc = model.accuracy.eval(feed_dict = {
-            model.images: test.images,
-            model.labels: test.labels,
+            model.images: data.test.images,
+            model.labels: data.test.labels,
             model.keep_prob: 1.0
         })
         print('final result is', test_acc)

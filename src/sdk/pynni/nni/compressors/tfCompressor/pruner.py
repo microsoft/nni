@@ -10,8 +10,8 @@ try:
 
         def calc_mask(self, layer_info, weight):
             sparsity = self.layer_sparsity.get(layer_info.name, self.default_sparsity)
-            threshold = tf.contrib.distributions.percentile(weight.abs(), sparsity * 100)
-            return tf.cast(tf.math.greater(weight.abs(), threshold), weight.dtype)
+            threshold = tf.contrib.distributions.percentile(tf.abs(weight), sparsity * 100)
+            return tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
     
     class TfAGPruner(TfPruner):
         def __init__(self, initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=1, frequency=1):
@@ -74,5 +74,5 @@ try:
         def update_graph(self, sess):
             sess.run(self.assign_handler)
 
-except ModuleNotFoundError:
+except ImportError:
     pass
