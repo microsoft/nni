@@ -237,7 +237,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             show: true
                         },
                         axisLabel: {
-                            formatter: function (value: string) {
+                            formatter: function (value?: string) {
                                 if (value !== undefined) {
                                     const length = value.length;
                                     if (length > 16) {
