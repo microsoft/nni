@@ -14,11 +14,11 @@ __all__ = [
 class TfCompressor:
     """TODO"""
 
-    def __init__(self) -> None:
-        self._bound_model: Optional[Graph] = None
+    def __init__(self):
+        self._bound_model = None
 
 
-    def compress(self, model: Graph) -> None:
+    def compress(self, model):
         """
         Compress given graph with algorithm implemented by subclass.
         This will edit the graph.
@@ -27,7 +27,7 @@ class TfCompressor:
         self._bound_model = model
         self.bind_model(model)
 
-    def compress_default_graph(self) -> None:
+    def compress_default_graph(self):
         """
         Compress the default graph with algorithm implemented by subclass.
         This will edit the graph.
@@ -35,7 +35,7 @@ class TfCompressor:
         self.compress(tf.get_default_graph())
 
 
-    def bind_model(self, model: Graph) -> None:
+    def bind_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -45,7 +45,7 @@ class TfCompressor:
 
 
 class TfLayerInfo:
-    def __init__(self, layer: Operation):
+    def __init__(self, layer):
         self.name: str = layer.name
         self.layer: Operation = layer
         self.weight_index: int
@@ -56,7 +56,7 @@ class TfLayerInfo:
             raise ValueError('Unsupported layer')
 
 
-def _tf_detect_prunable_layers(model: Graph) -> List[TfLayerInfo]:
+def _tf_detect_prunable_layers(model):
     # search for Conv2D layers
     # TODO: whitelist
     return [ TfLayerInfo(op) for op in model.get_operations() if op.type == 'Conv2D' ]
@@ -65,10 +65,10 @@ def _tf_detect_prunable_layers(model: Graph) -> List[TfLayerInfo]:
 class TfPruner(TfCompressor):
     """TODO"""
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
 
-    def calc_mask(self, layer_info: TfLayerInfo, weight: Tensor) -> Tensor:
+    def calc_mask(self, layer_info, weight):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -78,7 +78,7 @@ class TfPruner(TfCompressor):
         raise NotImplementedError("Pruners must overload calc_mask()")
 
 
-    def compress(self, model: Graph) -> None:
+    def compress(self, model):
         super().compress(model)
         # TODO: configurable whitelist
         for layer_info in _tf_detect_prunable_layers(model):
@@ -98,14 +98,14 @@ class TfPruner(TfCompressor):
 
 
 class TfQuantizer(TfCompressor):
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
 
-    def quantize_weight(self, layer_info: TfLayerInfo, weight: Tensor) -> Tensor:
+    def quantize_weight(self, layer_info, weight) -> Tensor:
         raise NotImplementedError()
 
 
-    def compress(self,  model: Graph) -> None:
+    def compress(self,  model):
         for layer_info in _tf_detect_prunable_layers(model):
             self._instrument_layer(layer_info)
 

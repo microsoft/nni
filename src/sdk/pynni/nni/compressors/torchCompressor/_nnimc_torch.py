@@ -14,11 +14,11 @@ __all__ = [
 class TorchCompressor:
     """TODO"""
 
-    def __init__(self) -> None:
-        self._bound_model: Optional[Module] = None
+    def __init__(self):
+        self._bound_model = None
 
 
-    def compress(self, model: Module) -> None:
+    def compress(self, model):
         """
         Compress the model with algorithm implemented by subclass.
         The model will be instrumented and user should never edit it after calling this method.
@@ -28,7 +28,7 @@ class TorchCompressor:
         self.bind_model(model)
 
 
-    def bind_model(self, model: Module) -> None:
+    def bind_model(self, model) -> None:
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -38,14 +38,14 @@ class TorchCompressor:
 
 
 class TorchLayerInfo:
-    def __init__(self, name: str, layer: Module):
+    def __init__(self, name, layer):
         self.name: str = name
         self.layer: Module = layer
 
-        self._forward: Optional[Function] = None
+        self._forward = None
 
 
-def _torch_detect_prunable_layers(model: Module) -> List[TorchLayerInfo]:
+def _torch_detect_prunable_layers(model):
     # search for all layers which have parameter "weight"
     ret = [ ]
     for name, layer in model.named_modules():
@@ -60,10 +60,10 @@ def _torch_detect_prunable_layers(model: Module) -> List[TorchLayerInfo]:
 class TorchPruner(TorchCompressor):
     """TODO"""
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
 
-    def calc_mask(self, layer_info: TorchLayerInfo, weight: Tensor) -> Tensor:
+    def calc_mask(self, layer_info, weight):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -73,13 +73,13 @@ class TorchPruner(TorchCompressor):
         raise NotImplementedError("Pruners must overload calc_mask()")
 
 
-    def compress(self, model: Module) -> None:
+    def compress(self, model):
         super().compress(model)
         # TODO: configurable whitelist
         for layer_info in _torch_detect_prunable_layers(model):
             self._instrument_layer(layer_info)
 
-    def _instrument_layer(self, layer_info: TorchLayerInfo):
+    def _instrument_layer(self, layer_info):
         # TODO: bind additional properties to layer_info instead of layer
         # create a wrapper forward function to replace the original one
         assert layer_info._forward is None, 'Each model can only be compressed once'
@@ -100,14 +100,14 @@ class TorchPruner(TorchCompressor):
 
 
 class TorchQuantizer(TorchCompressor):
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
 
-    def quantize_weight(self, layer_info: TorchLayerInfo, weight: Tensor) -> Tensor:
+    def quantize_weight(self, layer_info, weight):
         # FIXME: where dequantize goes?
         raise NotImplementedError()
 
-    def compress(self, model: Module) -> None:
+    def compress(self, model):
         super().compress(model)
         count = 0
         for layer_info in _torch_detect_prunable_layers(model):
@@ -116,7 +116,7 @@ class TorchQuantizer(TorchCompressor):
                 continue
             self._instrument_layer(layer_info)
 
-    def _instrument_layer(self, layer_info: TorchLayerInfo):
+    def _instrument_layer(self, layer_info):
         assert layer_info._forward is None
         layer_info._forward = layer_info.layer.forward
 

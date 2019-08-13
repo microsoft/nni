@@ -1,7 +1,8 @@
-from level_pruner import TfLevelPruner
-from naive_quantizer import TfNaiveQuantizer
-from AGPruner import TfAGPruner,TfSensitivityPruner
-from QATquantizer import TfDeReFaQuantizer,TfQATquantizer
+#from level_pruner import TfLevelPruner
+#from naive_quantizer import TfNaiveQuantizer
+#from AGPruner import TfAGPruner,TfSensitivityPruner
+#from QATquantizer import TfDeReFaQuantizer,TfQATquantizer
+from nni.compressors.tfCompressor import TfLevelPruner
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -83,11 +84,11 @@ def main():
     model = Mnist()
 
     #TfNaiveQuantizer().compress_default_graph()
-    TfDeReFaQuantizer(q_bits = 8).compress_default_graph()
+    #TfDeReFaQuantizer(q_bits = 8).compress_default_graph()
     #TfAGP = TfAGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
     #TfPruner = TfSensitivityPruner(sparsity = 0.8)
     #TfPruner.compress_default_graph()
-    
+    TfLevelPruner(0.5).compress_default_graph()
     writer = tf.summary.FileWriter("log/simple_example.log", tf.get_default_graph())
     print('writer done')
     writer.close()
