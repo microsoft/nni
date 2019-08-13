@@ -1,6 +1,6 @@
 try:
     import tensorflow as tf
-    from nni.compressors.nnimc import TfQuantizer
+    from ._nnimc_tf import TfQuantizer
 
     class TfNaiveQuantizer(TfQuantizer):
         def __init__(self):

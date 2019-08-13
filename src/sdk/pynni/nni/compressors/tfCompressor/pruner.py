@@ -1,7 +1,7 @@
 
 try:
     import tensorflow as tf
-    from nni.compressors.nnimc import TfPruner
+    from ._nnimc_tf import TfPruner
     class TfLevelPruner(TfPruner):
         def __init__(self, sparsity = 0, layer_sparsity = {}):
             super().__init__()

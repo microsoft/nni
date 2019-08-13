@@ -1,6 +1,6 @@
 try:
     import torch
-    from nni.compressors.nnimc import TorchPruner
+    from ._nnimc_torch import TorchPruner
     class TorchLevelPruner(TorchPruner):
         def __init__(self, sparsity = 0, layer_sparsity = { }):
             super().__init__()

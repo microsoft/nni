@@ -1,6 +1,6 @@
 try:
     import torch
-    from nni.compressors.nnimc import TorchQuantizer
+    from ._nnimc_torch import TorchQuantizer
     
     class TorchNaiveQuantizer(TorchQuantizer):
         def __init__(self):

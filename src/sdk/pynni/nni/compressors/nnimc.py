@@ -1,13 +1,13 @@
 try:
     import torch
-    from nni.compressors.torchCompressor._nnimc_torch import *
+    from .torchCompressor._nnimc_torch import *
     _torch_available = True
 except ModuleNotFoundError:
     _torch_available = False
 
 try:
     import tensorflow as tf
-    from nni.compressors.tfCompressor._nnimc_tf import *
+    from .tfCompressor._nnimc_tf import *
     _tf_available = True
 except ModuleNotFoundError:
     _tf_available = False

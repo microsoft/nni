@@ -39,8 +39,8 @@ class TorchCompressor:
 
 class TorchLayerInfo:
     def __init__(self, name, layer):
-        self.name: str = name
-        self.layer: Module = layer
+        self.name = name
+        self.layer = layer
 
         self._forward = None
 

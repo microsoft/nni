@@ -46,9 +46,9 @@ class TfCompressor:
 
 class TfLayerInfo:
     def __init__(self, layer):
-        self.name: str = layer.name
-        self.layer: Operation = layer
-        self.weight_index: int
+        self.name = layer.name
+        self.layer = layer
+        self.weight_index = None
 
         if layer.type == 'Conv2D':
             self.weight_index = 1
