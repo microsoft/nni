@@ -70,7 +70,7 @@ def parse_path(experiment_config, config_path):
         if experiment_config['trial'].get('taskRoles'):
             for index in range(len(experiment_config['trial']['taskRoles'])):
                 if experiment_config['trial']['taskRoles'][index].get('privateRegistryAuthPath'):
-                    expand_path(root_path, experiment_config['trial']['taskRoles'][index], 'privateRegistryAuthPath')
+                    expand_path(experiment_config['trial']['taskRoles'][index], 'privateRegistryAuthPath')
     if experiment_config.get('tuner'):
         expand_path(experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
@@ -79,7 +79,7 @@ def parse_path(experiment_config, config_path):
         expand_path(experiment_config['advisor'], 'codeDir')
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
-            expand_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
+            expand_path(experiment_config['machineList'][index], 'sshKeyPath')
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
