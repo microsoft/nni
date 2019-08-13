@@ -238,15 +238,19 @@ class Para extends React.Component<ParaProps, ParaState> {
                         },
                         axisLabel: {
                             formatter: function (value: string) {
-                                const length = value.length;
-                                if (length > 16) {
-                                    const temp = value.split('');
-                                    for (let m = 16; m < temp.length; m += 17) {
-                                        temp[m] += '\n';
+                                if (value !== undefined) {
+                                    const length = value.length;
+                                    if (length > 16) {
+                                        const temp = value.split('');
+                                        for (let m = 16; m < temp.length; m += 17) {
+                                            temp[m] += '\n';
+                                        }
+                                        return temp.join('');
+                                    } else {
+                                        return value;
                                     }
-                                    return temp.join('');
                                 } else {
-                                    return value;
+                                    return null;
                                 }
                             }
                         },
@@ -341,8 +345,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                             const length = value.length;
                             if (length > 16) {
                                 const temp = value.split('');
-                                for (let i = 16; i < temp.length; i += 17) {
-                                    temp[i] += '\n';
+                                for (let m = 16; m < temp.length; m += 17) {
+                                    temp[m] += '\n';
                                 }
                                 return temp.join('');
                             } else {
