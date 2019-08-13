@@ -23,6 +23,7 @@ from . import trial
 
 
 _logger = logging.getLogger(__name__)
+_MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
 
 
 def classic_mode(
@@ -202,13 +203,11 @@ def reload_tensorflow_variables(tf, session):
 def _construct_general_key(mutable_id, mutable_layer_id):
     # Mutable layer key in a general (search space) format
     # that is, prefix/mutable_id/mutable_layer_id
-    _MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
     return _MUTABLE_LAYER_SPACE_PREFIX + "/" + mutable_id + "/" + mutable_layer_id
 
 
 def _decompose_general_key(key):
     # inverse operation of above
-    _MUTABLE_LAYER_SPACE_PREFIX = "_mutable_layer"
     if not key.startswith(_MUTABLE_LAYER_SPACE_PREFIX):
         return None, None
     else:
