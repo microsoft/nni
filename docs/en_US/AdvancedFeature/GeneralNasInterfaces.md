@@ -120,7 +120,7 @@ Here, `nni.training_update` is to do some update on the full graph. In enas_mode
 
 **\*oneshot_mode\***: following the training approach in [this paper][6]. Different from enas_mode which trains the full graph by training large numbers of subgraphs, in oneshot_mode the full graph is built and dropout is added to candidate inputs and also added to candidate ops' outputs. Then this full graph is trained like other DL models. [Detailed Description](#OneshotMode). (currently only supported on tensorflow). 
 
-To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.) Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
+To use oneshot_mode, you should add one more field in the `trial` config as shown below. In this mode, though there is no need to use tuner, you still need to specify a tuner (any tuner) in the config file for now. Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 ```diff
 trial:
     command: your command to run the trial
@@ -132,7 +132,7 @@ trial:
 
 **\*darts_mode\***: following the training approach in [this paper][3]. It is similar to oneshot_mode. There are two differences, one is that darts_mode only add architecture weights to the outputs of candidate ops, the other is that it trains model weights and architecture weights in an interleaved manner. [Detailed Description](#DartsMode).
 
-To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, also no need to specify tuner in the config file as it does not need tuner. (Note that you still need to specify a tuner (any tuner) in the config file for now.)
+To use darts_mode, you should add one more field in the `trial` config as shown below. In this mode, though there is no need to use tuner, you still need to specify a tuner (any tuner) in the config file for now.
 ```diff
 trial:
     command: your command to run the trial
@@ -156,9 +156,9 @@ for _ in range(num):
 
 ### enas_mode
 
-In enas_mode, the compiled trial code builds the full graph (rather than subgraph), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md).
+In enas_mode, the compiled trial code builds the full graph (rather than subgraph), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./MultiPhase.md).
 
-Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals. [Here]() is an example for enas_mode.
+Specifically, for trials using tensorflow, we create and use tensorflow variable as signals, and tensorflow conditional functions to control the search space (full-graph) to be more flexible, which means it can be changed into different sub-graphs (multiple times) depending on these signals. [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/enas_mode) is an example for enas_mode.
 
 <a name="OneshotMode"></a>
 
@@ -168,7 +168,7 @@ Below is the figure to show where dropout is added to the full graph for one lay
 
 ![](../../img/oneshot_mode.png)
 
-As suggested in the [paper][6], a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here]() is an example for oneshot_mode.
+As suggested in the [paper][6], a dropout method is implemented to the inputs for every layer. The dropout rate is set to r^(1/k), where 0 < r < 1 is a hyper-parameter of the model (default to be 0.01) and k is number of optional inputs for a specific layer. The higher the fan-in, the more likely each possible input is to be dropped out. However, the probability of dropping out all optional_inputs of a layer is kept constant regardless of its fan-in. Suppose r = 0.05. If a layer has k = 2 optional_inputs then each one will independently be dropped out with probability 0.051/2 ≈ 0.22 and will be retained with probability 0.78. If a layer has k = 7 optional_inputs then each one will independently be dropped out with probability 0.051/7 ≈ 0.65 and will be retained with probability 0.35. In both cases, the probability of dropping out all of the layer's optional_inputs is 5%. The outputs of candidate ops are dropped out through the same way. [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/oneshot_mode) is an example for oneshot_mode.
 
 <a name="DartsMode"></a>
 
@@ -178,7 +178,7 @@ Below is the figure to show where architecture weights are added to the full gra
 
 ![](../../img/darts_mode.png)
 
-In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here]() is an example for darts_mode.
+In `nni.training_update`, tensorflow MomentumOptimizer is used to train the architecture weights based on the pass `loss` and `feed_dict`. [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/darts_mode) is an example for darts_mode.
 
 ### [__TODO__] Multiple trial jobs for One-Shot NAS
 
