@@ -37,11 +37,11 @@
 * **[Theano]** https://pypi.org/project/Theano/   
     
 
-You are encouraged to [contribute more examples](Tutorial/Contributing.md) for other NNI users.
+如果能[贡献更多示例](Tutorial/Contributing.md)，会对其他 NNI 用户有很大的帮助。
 
-## Supported Library
+## 支持的库
 
-NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
+NNI 也支持其它 Python 库，包括一些基于 GBDT 的算法：XGBoost, CatBoost 以及 lightGBM。
 
 * **[Scikit-learn]** https://scikit-learn.org/stable/
 
@@ -55,6 +55,6 @@ NNI also supports all libraries written in python.Here are some common libraries
 * [Auto-gbdt](TrialExample/GbdtExample.md)  
     
 
-Here is just a small list of libraries that supported by NNI. If you are interested in NNI, you can refer to the [tutorial](TrialExample/Trials.md) to complete your own hacks.
+这只是 NNI 支持的一小部分库。 如果对 NNI 感兴趣，可参考[教程](TrialExample/Trials.md)来继续学习。
 
-In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer [Write a Trial Run on NNI](TrialExample/Trials.md). In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
+除了这些案例，也欢迎更多的用户将 NNI 应用到自己的工作中，如果有任何疑问，请参考[实现 Trial](TrialExample/Trials.md)。 In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
