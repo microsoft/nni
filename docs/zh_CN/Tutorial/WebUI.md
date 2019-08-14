@@ -12,7 +12,7 @@
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* 支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
+* Support to review and download the experiment result and nni-manager/dispatcher log file from the "View" button.
 
 ![](../../img/webui-img/download.png)
 
@@ -53,19 +53,17 @@
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-由于训练中可能有非常多的中间结果，因此中间结果图提供了过滤功能。 如果要使用过滤按钮查看部分 Trial，则需要提供数据。
+The trial may have many intermediate results in the training progress. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
 
-第一个输入框应该填入什么？ 可能会发现一个 Trial 的中间结果点变得更好或者更差。 换句话说，这可能是非常重要的中间结果点。 只需将其输入第一个输入框中。
+You may find that these trials will get better or worse at one of intermediate results. In other words, this is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
 
-选择了中间结果序号后，要输入需要了解的该中间结果序号的指标范围。 即其最小值和最大值。 如此图中，中间结果点为 9，指标范围为 60 至 80。
-
-Trial 中指标范围在 20 至 60 的 13 个结果就被过滤掉了。
+And then input the range of metrics on this intermedia result. Like below picture, it chooses No. 4 intermediate result and set the range of metrics to 0.8-1.
 
 ![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 包括：
+Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
