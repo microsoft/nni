@@ -48,6 +48,7 @@ jobs:
       cat test/port
     displayName: 'Get docker port'
   - script: |
+      set -e
       cd test
       python3 generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
       --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)

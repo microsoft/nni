@@ -2,7 +2,7 @@
 
 TPE approaches were actually run asynchronously in order to make use of multiple compute nodes and to avoid wasting time waiting for trial evaluations to complete. For the TPE approach, the so-called constant liar approach was used: each time a candidate point x∗ was proposed, a fake fitness evaluation of the y was assigned temporarily, until the evaluation completed and reported the actual loss f(x∗).
 
-## Introducion and Problems
+## Introduction and Problems
 
 ### Sequential Model-based Global Optimization
 
@@ -19,7 +19,7 @@ Since calculation of p(y|x) is expensive, TPE approach modeled p(y|x) by p(x|y) 
 ![](../../img/parallel_tpe_search_tpe.PNG)
 
 where l(x) is the density formed by using the observations {x(i)} such that corresponding loss
-f(x(i)) was less than y∗ and g(x) is the density formed by using the remaining observations. TPE algorithm depends on a y∗ that is larger than the best observed f(x) so that some points can be used to form l(x). The TPE algorithm chooses y∗ to be some quantile γ of the observed y values, so that p(y<`y∗`) = γ, but no specific model for p(y) is necessary. The tree-structured form of l and g makes it easy to draw manycandidates according to l and evaluate them according to g(x)/l(x). On each iteration, the algorithm returns the candidate x∗ with the greatest EI.
+f(x(i)) was less than y∗ and g(x) is the density formed by using the remaining observations. TPE algorithm depends on a y∗ that is larger than the best observed f(x) so that some points can be used to form l(x). The TPE algorithm chooses y∗ to be some quantile γ of the observed y values, so that p(y<`y∗`) = γ, but no specific model for p(y) is necessary. The tree-structured form of l and g makes it easy to draw many candidates according to l and evaluate them according to g(x)/l(x). On each iteration, the algorithm returns the candidate x∗ with the greatest EI.
 
 Here is a simulation of the TPE algorithm in a two-dimensional search space. The difference of background color represents different values. It can be seen that TPE combines exploration and exploitation very well. (Black indicates the points of this round samples, and yellow indicates the points has been taken in the history.)
 
@@ -69,13 +69,13 @@ We have simulated the method above. The following figure shows the result of usi
 
 ### Branin-Hoo
 
-The four optimization strtigeies presented in the last section are now complared on the Branin-Hoo function which is a classical test-case in global optimization.
+The four optimization strategies presented in the last section are now compared on the Branin-Hoo function which is a classical test-case in global optimization.
 
 ![](../../img/parallel_tpe_search_branin.PNG)
 
 The recommended values of a, b, c, r, s and t are: a = 1, b = 5.1 ⁄ (4π2), c = 5 ⁄ π, r = 6, s = 10 and t = 1 ⁄ (8π). This function has three global minimizers(-3.14, 12.27), (3.14, 2.27), (9.42, 2.47).
 
-Next is the comparaison of the q-EI associated with the q first points (q ∈ [1,10]) given by the constant liar strategies (min and max), 2000 q-points designs uniformly drawn for every q, and 2000 q-points LHS designs taken at random for every q.
+Next is the comparison of the q-EI associated with the q first points (q ∈ [1,10]) given by the constant liar strategies (min and max), 2000 q-points designs uniformly drawn for every q, and 2000 q-points LHS designs taken at random for every q.
 
 ![](../../img/parallel_tpe_search_result.PNG)
 

@@ -39,16 +39,14 @@ logger = logging.getLogger('grid_search_AutoML')
 class GridSearchTuner(Tuner):
     '''
     GridSearchTuner will search all the possible configures that the user define in the searchSpace.
-    The only acceptable types of search space are 'quniform', 'qloguniform' and 'choice'
+    The only acceptable types of search space are 'choice', 'quniform', 'randint'
 
     Type 'choice' will select one of the options. Note that it can also be nested.
 
-    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly.
-    Note that q should be at least 2.
-    It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
+    It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger than the value in front of it.
 
-    Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)]
-    and sample and then change the sampled value back.
+    Type 'randint' gives all possible intergers in range[low, high). Note that 'high' is not included.
     '''
 
     def __init__(self):
@@ -73,8 +71,12 @@ class GridSearchTuner(Tuner):
                             chosen_params.extend(choice)
                         else:
                             chosen_params.append(choice)
+                elif _type == 'quniform':
+                    chosen_params = self._parse_quniform(_value)
+                elif _type == 'randint':
+                    chosen_params = self._parse_randint(_value)
                 else:
-                    chosen_params = self.parse_qtype(_type, _value)
+                    raise RuntimeError("Not supported type: %s" % _type)
             else:
                 chosen_params = dict()
                 for key in ss_spec.keys():
@@ -95,21 +97,12 @@ class GridSearchTuner(Tuner):
 
     def _parse_quniform(self, param_value):
         '''parse type of quniform parameter and return a list'''
-        if param_value[2] < 2:
-            raise RuntimeError("The number of values sampled (q) should be at least 2")
-        low, high, count = param_value[0], param_value[1], param_value[2]
-        interval = (high - low) / (count - 1)
-        return [float(low + interval * i) for i in range(count)]
+        low, high, q = param_value[0], param_value[1], param_value[2]
+        return np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
 
-    def parse_qtype(self, param_type, param_value):
-        '''parse type of quniform or qloguniform'''
-        if param_type == 'quniform':
-            return self._parse_quniform(param_value)
-        if param_type == 'qloguniform':
-            param_value[:2] = np.log(param_value[:2])
-            return list(np.exp(self._parse_quniform(param_value)))
-
-        raise RuntimeError("Not supported type: %s" % param_type)
+    def _parse_randint(self, param_value):
+        '''parse type of randint parameter and return a list'''
+        return np.arange(param_value[0], param_value[1]).tolist()
 
     def expand_parameters(self, para):
         '''
@@ -133,7 +126,7 @@ class GridSearchTuner(Tuner):
 
     def update_search_space(self, search_space):
         '''
-        Check if the search space is valid and expand it: only contains 'choice' type or other types beginnning with the letter 'q'
+        Check if the search space is valid and expand it: support only 'choice', 'quniform', randint'
         '''
         self.expanded_search_space = self.json2parameter(search_space)
 
