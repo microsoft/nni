@@ -1,8 +1,8 @@
-# 超参数优化的对比
+# Hyper Parameter Optimization Comparison
 
 *匿名作者*
 
-超参优化算法在几个问题上的对比。
+Comparison of Hyperparameter Optimization (HPO) algorithms on several problems.
 
 超参数优化算法如下：
 
