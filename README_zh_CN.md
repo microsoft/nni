@@ -338,7 +338,7 @@ You can use these commands to get more information about the experiment
 
 * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
 * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
-* [NNI 中的自动特征工程](examples/trials/auto-feature-engineering/README.md)
+* [NNI 中的自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)
 
 ## **反馈**
 
