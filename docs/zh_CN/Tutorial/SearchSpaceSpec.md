@@ -29,7 +29,7 @@
   
   * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。
   
-  * [nested] 搜索空间定义的简单[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a key `_name` in this dict, which helps you to identify which element is chosen. 相应的，这是使用从 NNI 获得的嵌套搜索空间的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
+  * [nested] 搜索空间定义的简单[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 `_name`，这有助于标识选中的元素。 相应的，这是使用从 NNI 获得的嵌套搜索空间的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
     
     * Random Search（随机搜索） 
     * TPE
@@ -38,8 +38,8 @@
 
 * `{"_type": "randint", "_value": [lower, upper]}`
   
-  * Choosing a random integer from `lower` (inclusive) to `upper` (exclusive).
-  * Note: Different tuners may interpret `randint` differently. Some (e.g., TPE, GridSearch) treat integers from lower to upper as unordered ones, while others respect the ordering (e.g., SMAC). If you want all the tuners to respect the ordering, please use `quniform` with `q=1`.
+  * 从 `lower` (包含) 到 `upper` (不包含) 中选择一个随机整数。
+  * 注意：不同 Tuner 可能对 `randint` 有不同的实现。 一些 Tuner（例如，TPE，GridSearch）将从低到高无序选择，而其它一些（例如，SMAC）则有顺序。 如果希望所有 Tuner 都有序，可使用 `quniform` 并设置 `q=1`。
 
 * `{"_type": "uniform", "_value": [low, high]}`
   
@@ -48,8 +48,8 @@
 
 * `{"_type": "quniform", "_value": [low, high, q]}`
   
-  * Which means the variable value is a value like `clip(round(uniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound. For example, for `_value` specified as [0, 10, 2.5], possible values are [0, 2.5, 5.0, 7.5, 10.0]; For `_value` specified as [2, 10, 5], possible values are [2, 5, 10].
-  * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
+  * 变量值为 `clip(round(uniform(low, high) / q) * q, low, high)`，clip 操作用于约束生成值的边界。 例如，`_value` 为 [0, 10, 2.5]，可取的值为 [0, 2.5, 5.0, 7.5, 10.0]; `_value` 为 [2, 10, 5]，可取的值为 [2, 5, 10]。
+  * 适用于离散，同时反映了某种"平滑"的数值，但上下限都有限制。 如果需要从范围 [low, high] 中均匀选择整数，可以如下定义 `_value`：`[low, high, 1]`。
 
 * `{"_type": "loguniform", "_value": [low, high]}`
   
@@ -58,7 +58,7 @@
 
 * `{"_type": "qloguniform", "_value": [low, high, q]}`
   
-  * Which means the variable value is a value like `clip(round(loguniform(low, high) / q) * q, low, high)`, where the clip operation is used to constraint the generated value in the bound.
+  * 变量值为 `clip(round(loguniform(low, high) / q) * q, low, high)`，clip 操作用于约束生成值的边界。
   * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
 * `{"_type": "normal", "_value": [mu, sigma]}`
@@ -67,16 +67,16 @@
 
 * `{"_type": "qnormal", "_value": [mu, sigma, q]}`
   
-  * Which means the variable value is a value like `round(normal(mu, sigma) / q) * q`
+  * 这表示变量值会类似于 `round(normal(mu, sigma) / q) * q`
   * 适用于在 mu 周围的离散变量，且没有上下限限制。
 
 * `{"_type": "lognormal", "_value": [mu, sigma]}`
   
-  * Which means the variable value is a value drawn according to `exp(normal(mu, sigma))` so that the logarithm of the return value is normally distributed. 当优化时，此变量必须是正数。
+  * 变量值为 `exp(normal(mu, sigma))` 分布，范围值是对数的正态分布。 当优化时，此变量必须是正数。
 
 * `{"_type": "qlognormal", "_value": [mu, sigma, q]}`
   
-  * Which means the variable value is a value like `round(exp(normal(mu, sigma)) / q) * q`
+  * 这表示变量值会类似于 `round(exp(normal(mu, sigma)) / q) * q`
   * 适用于值是“平滑”的离散变量，但某一边有界。
 
 * `{"_type": "mutable_layer", "_value": {mutable_layer_infomation}}`
