@@ -55,15 +55,15 @@
 
 Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要且相关的中间结果。 To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
+这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要的中间结果。 如果要仔细查看这个点，可以在 #Intermediate 中输入其横坐标。
 
-And then input the range of metrics on this intermedia result. Like below picture, it chooses No. 4 intermediate result and set the range of metrics to 0.8-1.
+并输入这个中间结果的指标范围。 如下图所示，选择了第 4 个中间结果， 并将指标范围设置为了 0.8 -1。
 
 ![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+点击 "Trials Detail" 标签查看所有 Trial 的状态。 包括：
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
