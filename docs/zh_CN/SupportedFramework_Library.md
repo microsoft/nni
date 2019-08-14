@@ -1,8 +1,8 @@
 # 框架和库的支持
 
-通过内置的 Python API，NNI 天然支持所有 Python (` 版本 >= 3.5`) 语言的 AI 框架，可使用所有超参调优和神经网络搜索算法。 NNI had also provided a set of examples and tutorials for some of the popular scenarios to make jump start easier.
+通过内置的 Python API，NNI 天然支持所有 Python (` 版本 >= 3.5`) 语言的 AI 框架，可使用所有超参调优和神经网络搜索算法。 NNI 还为常见场景提供了一些示例和教程，使上手更容易。
 
-## Supported AI Frameworks
+## 支持的 AI 框架
 
 * **[PyTorch]** https://github.com/pytorch/pytorch
 
@@ -12,26 +12,26 @@
     
 * [TGS salt identification chanllenge](../../examples/trials/kaggle-tgs-salt/README.md)  
     
-* [Network_morphism](../../examples/trials/network_morphism/README.md)  
+* [Network morphism](../../examples/trials/network_morphism/README_zh_CN.md)  
     
 
 * **[TensorFlow]** https://github.com/tensorflow/tensorflow
 
 * [MNIST-tensorflow](../../examples/trials/mnist-distributed)  
     
-* [Squad](../../examples/trials/ga_squad/README.md)  
+* [Squad](../../examples/trials/ga_squad/README_zh_CN.md)  
     
 
 * **[Keras]** https://github.com/keras-team/keras
 
 * [MNIST-keras](../../examples/trials/mnist-keras)  
     
-* [Network_morphism](../../examples/trials/network_morphism/README.md)  
+* [Network morphism](../../examples/trials/network_morphism/README_zh_CN.md)  
     
 
 * **[MXNet]** https://github.com/apache/incubator-mxnet
 * **[Caffe2]** https://github.com/BVLC/caffe
-* **[CNTK (Python language)]** https://github.com/microsoft/CNTK
+* **[CNTK (Python 语言)]** https://github.com/microsoft/CNTK
 * **[Spark MLlib]** http://spark.apache.org/mllib/
 * **[Chainer]** https://chainer.org/
 * **[Theano]** https://pypi.org/project/Theano/   
