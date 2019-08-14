@@ -80,7 +80,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
           </ul>    
-          <li><b><a href="docs/en_US/CommunitySharings/HpoComparision.md">超参调优</a> Tuner</b></li>
+          <li><b><a href="docs/zh_CN/CommunitySharings/HpoComparision.md">超参调优</a> Tuner</b></li>
           <ul>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
@@ -92,7 +92,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
           </ul>
-          <li><b><a href="docs/en_US/CommunitySharings/NasComparision.md">网络结构搜索</a> Tuner</b></li>
+          <li><b><a href="docs/zh_CN/CommunitySharings/NasComparision.md">网络结构搜索</a> Tuner</b></li>
           <ul>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
@@ -321,7 +321,7 @@ You can use these commands to get more information about the experiment
 
 * [报告 Bug](https://github.com/microsoft/nni/issues/new/choose)。
 * [请求新功能](https://github.com/microsoft/nni/issues/new/choose).
-* 建议或询问[如何调试](docs/en_US/Tutorial/HowToDebug.md)文档相关的问题。
+* 建议或询问[如何调试](docs/zh_CN/Tutorial/HowToDebug.md)文档相关的问题。
 * 找到标有 ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) 标签的 Issue。这些都是简单的 Issue，新的贡献者可以从这些问题开始。
 
 在编写代码前，可以先看看[贡献指南](docs/zh_CN/Tutorial/Contributing.md)来了解更多信息。 此外，还提供了以下文档：
@@ -329,8 +329,8 @@ You can use these commands to get more information about the experiment
 * [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
 * [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
-* [自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
-* [实现定制的训练平台](docs/en_US/TrainingService/HowToImplementTrainingService.md)
+* [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
+* [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
 
 ## **外部代码库**
 
