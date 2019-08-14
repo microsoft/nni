@@ -125,7 +125,7 @@ for _ in range(num):
 
 ***oneshot_mode***: 遵循[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的训练方法。 与 enas_mode 通过训练大量子图来训练全图有所不同，oneshot_mode 中构建了全图，并将 dropout 添加到候选的输入以及候选的输出操作中。 然后像其它深度学习模型一样进行训练。 [详细说明](#OneshotMode)。 （当前仅支持 TensorFlow）。
 
-要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 （注意，当前仍然需要在配置文件中指定任一一个 Tuner。）此模式下也不需要添加 `nni.training_update`，因为在训练过程中不需要特别的更新过程。
+要使用 oneshot_mode，需要在配置的 `trial` 部分增加如下字段。 In this mode, though there is no need to use tuner, you still need to specify a tuner (any tuner) in the config file for now. Also, no need to add `nni.training_update` in this mode, because no special processing (or update) is needed during training.
 
 ```diff
 trial:
@@ -139,7 +139,7 @@ trial:
 
 ***darts_mode***: 参考 [论文](https://arxiv.org/abs/1806.09055)中的训练方法。 与 oneshot_mode 类似。 有两个不同之处，首先 darts_mode 只将架构权重添加到候选操作的输出中，另外是交错的来训练模型权重和架构权重。 [详细说明](#DartsMode)。
 
-要使用 darts_mode，需要在配置的 `trial` 部分增加如下字段。 此模式不需要 Tuner，因此不用在配置文件中指定 Tuner。 （注意，当前仍需要在配置文件中指定任意一个 Tuner。）
+要使用 darts_mode，需要在配置的 `trial` 部分增加如下字段。 In this mode, though there is no need to use tuner, you still need to specify a tuner (any tuner) in the config file for now.
 
 ```diff
 trial:
@@ -166,9 +166,9 @@ for _ in range(num):
 
 ### enas_mode
 
-在 enas_mode 中，编译后的 Trial 代码会构建完整的图形（而不是子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 它通过 [NNI 多阶段 Experiment](./multiPhase.md) 来支持。
+在 enas_mode 中，编译后的 Trial 代码会构建完整的图形（而不是子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 It is supported by [NNI multi-phase](./MultiPhase.md).
 
-具体来说，使用 TensorFlow 的 Trial，通过 TensorFlow 变量来作为信号，并使用 TensorFlow 的条件函数来控制搜索空间（全图）来提高灵活性。这意味着根据这些信号，可以变为不同的多个子图。 [这是 enas_mode]() 的示例。
+具体来说，使用 TensorFlow 的 Trial，通过 TensorFlow 变量来作为信号，并使用 TensorFlow 的条件函数来控制搜索空间（全图）来提高灵活性。这意味着根据这些信号，可以变为不同的多个子图。 [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/enas_mode) is an example for enas_mode.
 
 <a name="OneshotMode"></a>
 
@@ -178,7 +178,7 @@ for _ in range(num):
 
 ![](../../img/oneshot_mode.png)
 
-如[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的建议，应该为每层的输入实现 Dropout 方法。 当 0 < r < 1 是模型超参的取值范围（默认值为 0.01），k 是某层可选超参的数量，Dropout 比率设为 r^(1/k)。 fan-in 越高，每个输入被丢弃的可能性越大。 但某层丢弃所有可选输入的概率是常数，与 fan-in 无关。 假设 r = 0.05。 如果某层有 k = 2 个可选的输入，每个输入都会以独立的 0.051/2 ≈ 0.22 的概率被丢弃，也就是说有 0.78 的概率被保留。 如果某层有 k = 7 个可选的输入，每个输入都会以独立的 0.051/7 ≈ 0.65 的概率被丢弃，也就是说有 0.35 的概率被保留。 在这两种情况下，丢弃所有可选输入的概率是 5%。 候选操作的输出会通过同样的方法被丢弃。 [这里]()是 oneshot_mode 的示例。
+如[论文](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)中的建议，应该为每层的输入实现 Dropout 方法。 当 0 < r < 1 是模型超参的取值范围（默认值为 0.01），k 是某层可选超参的数量，Dropout 比率设为 r^(1/k)。 fan-in 越高，每个输入被丢弃的可能性越大。 但某层丢弃所有可选输入的概率是常数，与 fan-in 无关。 假设 r = 0.05。 如果某层有 k = 2 个可选的输入，每个输入都会以独立的 0.051/2 ≈ 0.22 的概率被丢弃，也就是说有 0.78 的概率被保留。 如果某层有 k = 7 个可选的输入，每个输入都会以独立的 0.051/7 ≈ 0.65 的概率被丢弃，也就是说有 0.35 的概率被保留。 在这两种情况下，丢弃所有可选输入的概率是 5%。 候选操作的输出会通过同样的方法被丢弃。 [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/oneshot_mode) is an example for oneshot_mode.
 
 <a name="DartsMode"></a>
 
@@ -188,7 +188,7 @@ for _ in range(num):
 
 ![](../../img/darts_mode.png)
 
-在 `nni.training_update` 中，TensorFlow 的 MomentumOptimizer 通过传递的 `loss` 和 `feed_dict` 来训练架构权重。 [这是 darts_mode]() 的示例。
+在 `nni.training_update` 中，TensorFlow 的 MomentumOptimizer 通过传递的 `loss` 和 `feed_dict` 来训练架构权重。 [Here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas/darts_mode) is an example for darts_mode.
 
 ### [**待实现**] One-Shot NAS 的多 Trial 任务。
 
