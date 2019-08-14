@@ -12,7 +12,7 @@
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* Support to review and download the experiment result and nni-manager/dispatcher log file from the "View" button.
+* "View" 按钮支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
 
 ![](../../img/webui-img/download.png)
 
@@ -53,9 +53,9 @@
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-The trial may have many intermediate results in the training progress. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
+Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-You may find that these trials will get better or worse at one of intermediate results. In other words, this is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
+这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要且相关的中间结果。 To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
 
 And then input the range of metrics on this intermedia result. Like below picture, it chooses No. 4 intermediate result and set the range of metrics to 0.8-1.
 
