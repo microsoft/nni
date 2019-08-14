@@ -53,6 +53,11 @@ export namespace ValidationSchemas {
                 shmMB: joi.number(),
                 authFile: joi.string(),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
+                portList: joi.array().items(joi.object({
+                    label: joi.string().required(),
+                    beginAt: joi.number().required(),
+                    portNumber: joi.number().required(),
+                })),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
