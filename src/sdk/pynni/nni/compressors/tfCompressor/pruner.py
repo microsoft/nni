@@ -2,7 +2,7 @@
 try:
     import tensorflow as tf
     from ._nnimc_tf import TfPruner
-    class TfLevelPruner(TfPruner):
+    class LevelPruner(TfPruner):
         def __init__(self, sparsity = 0, layer_sparsity = {}):
             super().__init__()
             self.default_sparsity = sparsity
@@ -13,7 +13,7 @@ try:
             threshold = tf.contrib.distributions.percentile(tf.abs(weight), sparsity * 100)
             return tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
     
-    class TfAGPruner(TfPruner):
+    class AGPruner(TfPruner):
         def __init__(self, initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=1, frequency=1):
             super().__init__()
             self.initial_sparsity = initial_sparsity
@@ -38,7 +38,7 @@ try:
                                 (tf.pow(1.0 - base,3)))
             return target_sparsity
             
-        def calc_mask(self, layer, weight):
+        def calc_mask(self, layer_info, weight):
             
             target_sparsity = self.compute_target_sparsity()
             threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
@@ -46,12 +46,12 @@ try:
             self.assign_handler.append(tf.assign(weight, weight*mask))
             return mask
             
-        def update_epoch(self, sess, epoch):
+        def update_epoch(self, epoch, sess):
             sess.run(self.assign_handler)
             sess.run(tf.assign(self.now_epoch, int(epoch)))
         
     
-    class TfSensitivityPruner(TfPruner):
+    class SensitivityPruner(TfPruner):
         def __init__(self, sparsity):
             super().__init__()
             self.sparsity = sparsity
@@ -71,7 +71,7 @@ try:
                 self.assign_handler.append(mask_update_handler)
             return mask
 
-        def update_graph(self, sess):
+        def update_epoch(self, epoch, sess):
             sess.run(self.assign_handler)
 
 except ImportError:

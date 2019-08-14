@@ -1,8 +1,4 @@
-#from level_pruner import TfLevelPruner
-#from naive_quantizer import TfNaiveQuantizer
-#from AGPruner import TfAGPruner,TfSensitivityPruner
-#from QATquantizer import TfDeReFaQuantizer,TfQATquantizer
-from nni.compressors.tfCompressor import TfLevelPruner
+from nni.compressors.tfCompressor import AGPruner
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -83,15 +79,13 @@ def main():
 
     model = Mnist()
 
-    #TfNaiveQuantizer().compress_default_graph()
-    #TfDeReFaQuantizer(q_bits = 8).compress_default_graph()
-    #TfAGP = TfAGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    #TfPruner = TfSensitivityPruner(sparsity = 0.8)
-    #TfPruner.compress_default_graph()
-    TfLevelPruner(0.5).compress_default_graph()
-    writer = tf.summary.FileWriter("log/simple_example.log", tf.get_default_graph())
-    print('writer done')
-    writer.close()
+    '''you can change this to SensitivityPruner to implement it
+    pruner = SensitivityPruner(sparsity = 0.8)
+    '''
+    pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+    pruner.compress(tf.get_default_graph())
+    
+    
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for batch_idx in range(2000):
@@ -107,9 +101,9 @@ def main():
                     model.labels: data.test.labels,
                     model.keep_prob: 1.0
                 })
-                #TfPruner.update_graph(sess)
+                pruner.update_epoch(batch_idx / 10,sess)
                 print('test accuracy', test_acc)
-                #print(tf.gradients(model.cross,[model.w1, model.fcw1]))
+                
         
         test_acc = model.accuracy.eval(feed_dict = {
             model.images: data.test.images,

@@ -1,7 +1,7 @@
 try:
     import torch
     from ._nnimc_torch import TorchPruner
-    class TorchLevelPruner(TorchPruner):
+    class LevelPruner(TorchPruner):
         def __init__(self, sparsity = 0, layer_sparsity = { }):
             super().__init__()
             self.default_sparsity = sparsity
@@ -14,7 +14,7 @@ try:
             threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
             return torch.gt(w_abs, threshold).type(weight.type())
     
-    class TorchAGPruner(TorchPruner):
+    class AGPruner(TorchPruner):
         def __init__(self, initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=1, frequency=1):
             """
             """
@@ -57,7 +57,7 @@ try:
             self.now_epoch = epoch
         
         
-    class TorchSensitivityPruner(TorchPruner):
+    class SensitivityPruner(TorchPruner):
         def __init__(self, sparsity):
             super().__init__()
             self.sparsity = sparsity
@@ -76,6 +76,9 @@ try:
             new_mask = torch.gt(w_abs, threshold).type(weight.type())
             self.mask_list[layer_info.name] = new_mask
             return new_mask
+        
+        def update_epoch(self, epoch):
+            pass
 
 except ImportError:
     pass

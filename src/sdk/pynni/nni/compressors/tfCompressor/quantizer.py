@@ -2,7 +2,7 @@ try:
     import tensorflow as tf
     from ._nnimc_tf import TfQuantizer
 
-    class TfNaiveQuantizer(TfQuantizer):
+    class NaiveQuantizer(TfQuantizer):
         def __init__(self):
             super().__init__()
             self.layer_scale = { }
@@ -14,7 +14,7 @@ try:
             orig_type = weight.dtype
             return tf.cast(tf.cast(weight / scale, tf.int8), orig_type) * scale
     
-    class TfQATquantizer(TfQuantizer):
+    class QATquantizer(TfQuantizer):
         def __init__(self, q_bits):
             super().__init__()
             self.q_bits = q_bits
@@ -30,7 +30,7 @@ try:
             
             return qw
     
-    class TfDoReFaQuantizer(TfQuantizer):
+    class DoReFaQuantizer(TfQuantizer):
         def __init__(self, q_bits):
             super().__init__()
             self.q_bits = q_bits

@@ -2,7 +2,7 @@ try:
     import torch
     from ._nnimc_torch import TorchQuantizer
     
-    class TorchNaiveQuantizer(TorchQuantizer):
+    class NaiveQuantizer(TorchQuantizer):
         def __init__(self):
             super().__init__()
             self.layer_scale = { }
@@ -15,7 +15,7 @@ try:
             orig_type = weight.type()  # TODO: user layer_info
             return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
     
-    class TorchDoReFaQuantizer(TorchQuantizer):
+    class DoReFaQuantizer(TorchQuantizer):
         def __init__(self, q_bits):
             super().__init__()
             self.q_bits = q_bits
@@ -32,7 +32,7 @@ try:
             output = torch.round(input_ri*scale)/scale
             return output
 
-    class TorchQATquantizer(TorchQuantizer):
+    class QATquantizer(TorchQuantizer):
         def __init__(self, q_bits):
             super().__init__()
             self.q_bits = q_bits

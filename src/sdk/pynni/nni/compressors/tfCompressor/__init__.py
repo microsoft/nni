@@ -1,2 +1,2 @@
-from .pruner import TfLevelPruner, TfAGPruner, TfSensitivityPruner
-from .quantizer import TfNaiveQuantizer, TfQATquantizer, TfDoReFaQuantizer
+from .pruner import LevelPruner, AGPruner, SensitivityPruner
+from .quantizer import QATquantizer, DoReFaQuantizer

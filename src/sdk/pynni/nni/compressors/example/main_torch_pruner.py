@@ -1,7 +1,4 @@
-from level_pruner import TorchLevelPruner
-from naive_quantizer import TorchNaiveQuantizer
-from AGPruner import TorchAGPruner,TorchSensitivityPruner
-from QATquantizer import TorchDoReFaQuantizer,TorchQATquantizer
+from nni.compressors.torchCompressor import AGPruner
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -67,23 +64,21 @@ def main():
         batch_size = 1000, shuffle = True)
 
     model = Mnist()
-    #TorchLevelPruner(0.5).compress(model)
-    #TorchNaiveQuantizer().compress(model)
     
-    #TorchQATquantizer(q_bits = 32).compress(model)
-    #model = compressor.compress(Mnist()).to(device)
-    #pruner = TorchAGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    #pruner = TorchSensitivityPruner(sparsity = 0.8)
-    #pruner.compress(model)
+    '''you can change this to SensitivityPruner to implement it
+    pruner = SensitivityPruner(sparsity = 0.8)
+    '''
+    pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+    pruner.compress(model)
+
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)
     for epoch in range(10):
         print('# Epoch {} #'.format(epoch))
-        if epoch == 2:
-            TorchDoReFaQuantizer(q_bits = 32).compress(model)
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
-        #pruner.update_epoch(epoch)
         
-        #print(epoch, pruner.compute_target_sparsity(epoch))
+        pruner.update_epoch(epoch)
+        
+        
 
 main()
