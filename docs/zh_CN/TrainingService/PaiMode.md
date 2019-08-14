@@ -57,7 +57,7 @@ paiConfig:
 * shmMB 
     * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
 * authFile 
-    * 可选，设置在使用 OpenPAI 时的私有 Docker 认证文件路径。[参考文档](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。
+    * Optional key, Set the auth file path for private registry while using PAI mode, [Refer](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job), you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
