@@ -57,4 +57,4 @@ NNI 也支持其它 Python 库，包括一些基于 GBDT 的算法：XGBoost, Ca
 
 这只是 NNI 支持的一小部分库。 如果对 NNI 感兴趣，可参考[教程](TrialExample/Trials.md)来继续学习。
 
-除了这些案例，也欢迎更多的用户将 NNI 应用到自己的工作中，如果有任何疑问，请参考[实现 Trial](TrialExample/Trials.md)。 In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to [here](Tutorial/Contributing.md).
+除了这些案例，也欢迎更多的用户将 NNI 应用到自己的工作中，如果有任何疑问，请参考[实现 Trial](TrialExample/Trials.md)。 如果想成为 NNI 的贡献者，无论是分享示例，还是实现 Tuner 或其它内容，我们都非常期待您的参与。更多信息请[参考这里](Tutorial/Contributing.md)。
