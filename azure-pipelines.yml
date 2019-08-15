@@ -58,7 +58,7 @@ jobs:
   - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
-      python3 -m pip install tensorflow==1.12.0 --user
+      python3 -m pip install tensorflow --user
     displayName: 'Install dependencies for integration'
   - script: |
       source install.sh
