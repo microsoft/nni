@@ -8,3 +8,7 @@ hyperopt
 
 # metis tuner
 sklearn
+
+#compressor
+tensorflow
+torch

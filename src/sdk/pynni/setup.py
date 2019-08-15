@@ -36,7 +36,9 @@ setuptools.setup(
         'json_tricks',
         'numpy',
         'scipy',
-        'coverage'
+        'coverage',
+        'tensorflow',
+        'torch'
     ],
     package_data = {'nni': ['**/requirements.txt']},
 
