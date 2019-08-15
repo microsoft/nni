@@ -1,2 +1,2 @@
 from .pruner import LevelPruner, AGPruner, SensitivityPruner
-from .quantizer import QATquantizer, DoReFaQuantizer
+from .quantizer import NaiveQuantizer, QATquantizer, DoReFaQuantizer

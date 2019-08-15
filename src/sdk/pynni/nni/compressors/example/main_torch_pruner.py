@@ -1,6 +1,5 @@
 from nni.compressors.torchCompressor import AGPruner
 import torch
-import torch.nn.functional as F
 from torchvision import datasets, transforms
 
 
