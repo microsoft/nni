@@ -58,7 +58,9 @@ setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'sklearn'
+        'sklearn',
+        'tensorflow',
+        'torch'
     ],
 
     entry_points = {
