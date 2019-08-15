@@ -1,5 +1,6 @@
 from nni.compressors.torchCompressor import QATquantizer
 import torch
+import torch.nn.functional as F
 from torchvision import datasets, transforms
 
 

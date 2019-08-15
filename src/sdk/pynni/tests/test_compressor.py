@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from nni.compressors import tfCompressor,torchCompressor
 import torch
+import torch.nn.functional as F
 import tensorflow as tf 
 
 def weight_variable(shape):
