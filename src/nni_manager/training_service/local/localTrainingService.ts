@@ -131,7 +131,7 @@ class LocalTrainingService implements TrainingService {
     private readonly occupiedGpuIndexNumMap: Map<number, number>;
     private designatedGpuIndices!: Set<number>;
     private readonly log: Logger;
-    private localTrailConfig?: TrialConfig;
+    private localTrialConfig?: TrialConfig;
     private localConfig?: LocalConfig;
     private isMultiPhase: boolean;
     private readonly jobStreamMap: Map<string, ts.Stream>;
@@ -204,7 +204,7 @@ class LocalTrainingService implements TrainingService {
                 } catch (error) {
                     //ignore
                 }
-                this.log.debug(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
+                this.log.debug(`trialJob status update: ${trialJobId}, ${trialJob.status}`);
             }
         }
 
@@ -302,14 +302,14 @@ class LocalTrainingService implements TrainingService {
         }
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.localTrailConfig = <TrialConfig>JSON.parse(value);
+                this.localTrialConfig = <TrialConfig>JSON.parse(value);
                 // Parse trial config failed, throw Error
-                if (this.localTrailConfig === undefined) {
+                if (this.localTrialConfig === undefined) {
                     throw new Error('trial config parsed failed');
                 }
-                if (this.localTrailConfig.gpuNum !== undefined) {
-                    this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
-                    if (this.gpuScheduler === undefined && this.localTrailConfig.gpuNum > 0) {
+                if (this.localTrialConfig.gpuNum !== undefined) {
+                    this.log.info(`required GPU number is ${this.localTrialConfig.gpuNum}`);
+                    if (this.gpuScheduler === undefined && this.localTrialConfig.gpuNum > 0) {
                         this.gpuScheduler = new GPUScheduler();
                     }
                 }
@@ -343,10 +343,10 @@ class LocalTrainingService implements TrainingService {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 let getResult: Promise<string>;
-                if (this.localTrailConfig === undefined) {
+                if (this.localTrialConfig === undefined) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
-                    getResult = Promise.resolve(JSON.stringify(this.localTrailConfig));
+                    getResult = Promise.resolve(JSON.stringify(this.localTrialConfig));
                 }
 
                 return getResult;
@@ -359,8 +359,8 @@ class LocalTrainingService implements TrainingService {
         this.log.info('Stopping local machine training service...');
         this.stopping = true;
         for (const stream of this.jobStreamMap.values()) {
-            stream.end(0)
-            stream.emit('end')
+            stream.end(0);
+            stream.emit('end');
         }
         if (this.gpuScheduler !== undefined) {
             await this.gpuScheduler.stop();
@@ -378,8 +378,8 @@ class LocalTrainingService implements TrainingService {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
                 //Refer https://github.com/Juul/tail-stream/issues/20
-                stream.end(0)
-                stream.emit('end')
+                stream.end(0);
+                stream.emit('end');
                 this.jobStreamMap.delete(trialJob.id);
             }
         }
@@ -427,8 +427,8 @@ class LocalTrainingService implements TrainingService {
     }
 
     private tryGetAvailableResource(): [boolean, { gpuIndices: number[]}] {
-        if (this.localTrailConfig === undefined) {
-            throw new Error('localTrailConfig is not initialized!');
+        if (this.localTrialConfig === undefined) {
+            throw new Error('localTrialConfig is not initialized!');
         }
 
         const resource: { gpuIndices: number[] } = { gpuIndices: [] };
@@ -450,11 +450,11 @@ class LocalTrainingService implements TrainingService {
             selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.designatedGpuIndices.has(index));
         }
 
-        if (selectedGPUIndices.length < this.localTrailConfig.gpuNum) {
+        if (selectedGPUIndices.length < this.localTrialConfig.gpuNum) {
             return [false, resource];
         }
 
-        selectedGPUIndices.splice(this.localTrailConfig.gpuNum);
+        selectedGPUIndices.splice(this.localTrialConfig.gpuNum);
         Object.assign(resource, { gpuIndices: selectedGPUIndices });
 
         return [true, resource];
@@ -494,7 +494,7 @@ class LocalTrainingService implements TrainingService {
                     if (!success) {
                         break;
                     }
-                    
+
                     this.occupyResource(resource);
                     await this.runTrialJob(trialJobId, resource);
                 }
@@ -512,18 +512,23 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
-    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string[] {
+    private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
             script.push(
-                `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+                `cmd /c ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
         } else {
-            script.push(
-                `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            script.push(`eval ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            if (process.platform === 'darwin') {
+                // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
+                // Considering the worst case, write 999 to avoid negative duration
+                script.push(`echo $? \`date +%s999\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            } else {
+                script.push(`echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            }
         }
 
         return script;
@@ -531,23 +536,23 @@ class LocalTrainingService implements TrainingService {
 
     private async runTrialJob(trialJobId: string, resource: {gpuIndices: number[]}): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        if (this.localTrailConfig === undefined) {
+        if (this.localTrialConfig === undefined) {
             throw new Error(`localTrialConfig not initialized!`);
         }
-        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource, this.localTrailConfig.gpuNum);
+        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource, this.localTrialConfig.gpuNum);
 
-        if (this.localTrailConfig === undefined) {
+        if (this.localTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
         const runScriptContent: string[] = [];
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         }
-        runScriptContent.push(`cd ${this.localTrailConfig.codeDir}`);
+        runScriptContent.push(`cd ${this.localTrialConfig.codeDir}`);
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }
-        const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
+        const scripts: string[] = this.getScript(this.localTrialConfig, trialJobDetail.workingDirectory);
         scripts.forEach((script: string) => {
             runScriptContent.push(script);
         });

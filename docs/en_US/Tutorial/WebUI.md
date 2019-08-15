@@ -11,7 +11,7 @@ Click the tab "Overview".
 * If your experiment have many trials, you can change the refresh interval on here.
 
 ![](../../img/webui-img/refresh-interval.png)
-* Support to review and download the experiment result and nni-manager/dispatcher log file from the download.
+* Support to review and download the experiment result and nni-manager/dispatcher log file from the "View" button.
 
 ![](../../img/webui-img/download.png)
 * You can click the learn about in the error box to track experiment log message if the experiment's status is error.
