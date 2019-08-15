@@ -202,7 +202,7 @@ class SMACTuner(Tuner):
                 converted_dict[key] = np.exp(challenger_dict[key])
             # convert categorical back to original value
             elif key in self.categorical_dict:
-                idx = challenger_dict[key]
+                idx = int(challenger_dict[key])
                 converted_dict[key] = self.categorical_dict[key][idx]
             else:
                 converted_dict[key] = value
