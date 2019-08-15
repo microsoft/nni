@@ -14,7 +14,7 @@ jobs:
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.12.0 --user
-    displayname: 'Install dependencies for integration'
+    displayName: 'Install dependencies for integration'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
