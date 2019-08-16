@@ -49,8 +49,8 @@ class TfLayerInfo:
         self.name = layer.name
         self.layer = layer
         self.weight_index = None
-
-        if layer.type == 'Conv2D':
+        self.support_types = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
+        if layer.type in self.support_types:
             self.weight_index = 1
         else:
             raise ValueError('Unsupported layer')
