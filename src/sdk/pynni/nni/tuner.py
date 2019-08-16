@@ -17,12 +17,10 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
-import functools
 import logging
 
 import nni
 
-from .nas_utils import convert_nas_search_space
 from .recoverable import Recoverable
 
 _logger = logging.getLogger(__name__)
@@ -110,11 +108,3 @@ class Tuner(Recoverable):
 
     def _on_error(self):
         pass
-
-
-def rewrite_nas_space(func):
-    @functools.wraps(func)
-    def wrap(self, search_space):
-        search_space = convert_nas_search_space(search_space)
-        return func(self, search_space)
-    return wrap

@@ -17,6 +17,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
+import functools
 import logging
 
 from . import trial
@@ -186,6 +187,7 @@ def reload_tensorflow_variables(tf, session):
     mutable_layers = sorted(list(mutable_layers))
     for mutable_id, mutable_layer_id in mutable_layers:
         if mutable_id not in name_space:
+            _logger.warning("{} not found in name space".format(mutable_id))
             continue
         name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
         # get optional inputs names
@@ -234,13 +236,9 @@ def training_update(nas_mode, tf=None, session=None, loss=None, feed_dict=None):
         reload_tensorflow_variables(tf, session)
 
 
-def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inputs,
-                                     download=True):
+def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inputs):
     # optional_inputs should be name(key)s of the optional inputs
     try:
-        if not download:
-            raise KeyError  # skip over this
-
         mutable_block = trial.get_current_parameter(mutable_id)
 
         # Great! There is a NAS tuner
@@ -254,10 +252,9 @@ def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inpu
 
         # find how many to choose
         optional_input_size = int(params[expected_prefix + "/optional_input_size"])  # convert uniform to randint
-        total_state_size = len(optional_inputs) ** optional_input_size
 
         # find who to choose, can duplicate
-        optional_input_state = int(params[expected_prefix + "/optional_input_chosen_state"] * total_state_size)
+        optional_input_state = params[expected_prefix + "/optional_input_chosen_state"]
         chosen_inputs = []
         # make sure dict -> list produce stable result by sorting
         optional_inputs_keys = sorted(optional_inputs)
@@ -299,7 +296,7 @@ def convert_nas_search_space(search_space):
                 else:
                     raise ValueError("No layer choice found in %s" % layer_key)
 
-                if layer_data.get("optional_inputs") and layer_data.get("optional_input_size"):
+                if layer_data.get("optional_input_size"):
                     input_size = layer_data["optional_input_size"]
                     if isinstance(input_size, int):
                         input_size = [input_size, input_size]
@@ -307,20 +304,35 @@ def convert_nas_search_space(search_space):
                         _logger.error("Might not be able to handle optional_input_size < 0, please double check")
                     input_size[1] += 1
                 else:
-                    _logger.info("Optional input choices are set to empty by default")
+                    _logger.info("Optional input choices are set to empty by default in %s" % layer_key)
                     input_size = [0, 1]
 
-                ret[layer_key + "/layer_choice"] = {
-                    "_type": "choice", "_value": layer_choice
+                if layer_data.get("optional_inputs"):
+                    total_state_size = len(layer_data["optional_inputs"]) ** (input_size[1] - 1)
+                else:
+                    _logger.info("Optional inputs not found in %s" % layer_key)
+                    total_state_size = 1
+
+                converted = {
+                    layer_key + "/layer_choice": {
+                        "_type": "choice", "_value": layer_choice
+                    },
+                    layer_key + "/optional_input_size": {
+                        "_type": "randint", "_value": input_size
+                    },
+                    layer_key + "/optional_input_chosen_state": {
+                        "_type": "randint", "_value": [0, total_state_size]
+                    }
                 }
-                # there still appears to be some problems in randint, using uniform to convert here
-                ret[layer_key + "/optional_input_size"] = {
-                    "_type": "uniform", "_value": input_size
-                }
-                # map all possible options into a real number in [0, 1)
-                ret[layer_key + "/optional_input_chosen_state"] = {
-                    "_type": "uniform", "_value": [0, 1]
-                }
-                # seems still need more discussion here, as these choices are not easily interpretable
+                _logger.info(converted)
+                ret.update(converted)
 
     return ret
+
+
+def rewrite_nas_space(func):
+    @functools.wraps(func)
+    def wrap(self, search_space):
+        search_space = convert_nas_search_space(search_space)
+        return func(self, search_space)
+    return wrap

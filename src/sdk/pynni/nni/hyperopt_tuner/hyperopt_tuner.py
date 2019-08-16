@@ -26,7 +26,8 @@ import logging
 
 import hyperopt as hp
 import numpy as np
-from nni.tuner import Tuner, rewrite_nas_space
+from nni.tuner import Tuner
+from nni.nas_utils import rewrite_nas_space
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
