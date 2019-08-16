@@ -83,7 +83,7 @@ class Compare extends React.Component<CompareProps, {}> {
             },
             xAxis: {
                 type: 'category',
-                // name: '# Intermeidate',
+                // name: '# Intermediate',
                 boundaryGap: false,
                 data: xAxis
             },
@@ -194,9 +194,9 @@ class Compare extends React.Component<CompareProps, {}> {
                 maskClosable={false}
                 width="90%"
             >
-                <Row className="compare-intermeidate">
+                <Row className="compare-intermediate">
                     {this.intermediate()}
-                    <Row className="compare-yAxis"># Intermeidate</Row>
+                    <Row className="compare-yAxis"># Intermediate</Row>
                 </Row>
                 <Row>{this.initColumn()}</Row>
             </Modal>
