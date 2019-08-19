@@ -31,7 +31,7 @@ import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.utils import OptimizeMode, MetricType, extract_scalar_reward, randint_to_quniform
+from nni.utils import OptimizeMode, MetricType, extract_scalar_reward
 from nni.common import multi_phase_enabled
 
 from .config_generator import CG_BOHB
@@ -467,7 +467,6 @@ class BOHB(MsgDispatcherBase):
             search space of this experiment
         """
         search_space = data
-        randint_to_quniform(search_space)
         cs = CS.ConfigurationSpace()
         for var in search_space:
             _type = str(search_space[var]["_type"])
@@ -476,7 +475,7 @@ class BOHB(MsgDispatcherBase):
                     var, choices=search_space[var]["_value"]))
             elif _type == 'randint':
                 cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
-                    var, lower=0, upper=search_space[var]["_value"][0]))
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
             elif _type == 'uniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
                     var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))

@@ -103,11 +103,11 @@ def stop_experiment_test():
     snooze()
     assert not detect_port(8990), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
-    # test cmd `nnictl stop all`
-    proc = subprocess.run(['nnictl', 'stop', 'all'])
-    assert proc.returncode == 0, '`nnictl stop all` failed with code %d' % proc.returncode
+    # test cmd `nnictl stop --all`
+    proc = subprocess.run(['nnictl', 'stop', '--all'])
+    assert proc.returncode == 0, '`nnictl stop --all` failed with code %d' % proc.returncode
     snooze()
-    assert not detect_port(8888) and not detect_port(8989), '`nnictl stop all` failed to stop experiments'
+    assert not detect_port(8888) and not detect_port(8989), '`nnictl stop --all` failed to stop experiments'
 
 
 if __name__ == '__main__':
