@@ -50,11 +50,15 @@ def get_next_parameter():
         return None
     return _params['parameters']
 
-def get_current_parameter(tag):
+def get_current_parameter(tag=None):
     global _params
     if _params is None:
         return None
-    return _params['parameters'][tag]
+    if tag is None:
+        # return all parameters when tag is None
+        return _params["parameters"]
+    else:
+        return _params['parameters'][tag]
 
 def get_experiment_id():
     return _experiment_id

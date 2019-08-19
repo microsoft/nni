@@ -39,17 +39,18 @@ class AnnotationTestCase(TestCase):
             shutil.rmtree('_generated')
 
     def test_search_space_generator(self):
-        search_space = generate_search_space('testcase/annotated')
+        shutil.copytree('testcase/annotated', '_generated/annotated')
+        search_space = generate_search_space('_generated/annotated')
         with open('testcase/searchspace.json') as f:
             self.assertEqual(search_space, json.load(f))
 
     def test_code_generator(self):
-        code_dir = expand_annotations('testcase/usercode', '_generated', nas_mode='classic_mode')
-        self.assertEqual(code_dir, '_generated')
-        self._assert_source_equal('testcase/annotated/nas.py', '_generated/nas.py')
-        self._assert_source_equal('testcase/annotated/mnist.py', '_generated/mnist.py')
-        self._assert_source_equal('testcase/annotated/dir/simple.py', '_generated/dir/simple.py')
-        with open('testcase/usercode/nonpy.txt') as src, open('_generated/nonpy.txt') as dst:
+        code_dir = expand_annotations('testcase/usercode', '_generated/usercode', nas_mode='classic_mode')
+        self.assertEqual(code_dir, '_generated/usercode')
+        self._assert_source_equal('testcase/annotated/nas.py', '_generated/usercode/nas.py')
+        self._assert_source_equal('testcase/annotated/mnist.py', '_generated/usercode/mnist.py')
+        self._assert_source_equal('testcase/annotated/dir/simple.py', '_generated/usercode/dir/simple.py')
+        with open('testcase/usercode/nonpy.txt') as src, open('_generated/usercode/nonpy.txt') as dst:
             assert src.read() == dst.read()
 
     def test_annotation_detecting(self):
