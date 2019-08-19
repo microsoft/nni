@@ -8,6 +8,7 @@ When compression algorithm designer implements one prune algorithm, he only need
 ## Algorithm
 We now provide some naive compression algorithm and four popular compress agorithms for users, including two pruning algorithm and two quantization algorithm.
 Below is a list of model compression algorithms supported in our compressor
+
 |Name|Paper|
 |---|---|
 | AGPruner| [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)|
