@@ -15,12 +15,14 @@ You can quantize your model to 8 bits with the code below before your training c
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import QATquantizer
-QATquantizer(q_bits = 8).compress(tf.get_default_graph())
+quantizer = QATquantizer(q_bits = 8)
+quantizer(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import QATquantizer
-QATquantizer(q_bits = 8).compress(model)
+quantizer = QATquantizer(q_bits = 8)
+quantizer(model)
 ```
 
 You can view example for more information
@@ -35,12 +37,14 @@ To implement DoReFaQuantizer, you can add code below before your training code
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import DoReFaQuantizer
-DoReFaQuantizer(q_bits = 8).compress(tf.get_default_graph())
+quantizer = DoReFaQuantizer(q_bits = 8)
+quantizer(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import DoReFaQuantizer
-DoReFaQuantizer(q_bits = 8).compress(model)
+quantizer = DoReFaQuantizer(q_bits = 8)
+quantizer(model)
 ```
 
 You can view example for more information

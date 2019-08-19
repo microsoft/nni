@@ -16,12 +16,14 @@ First, you should import pruner and add mask to model.
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1).compress(tf.get_default_graph())
+pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1).compress(model)
+pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+pruner(model)
 ```
 
 Second, you should add code below to update epoch number when you finish one epoch in your training code.
@@ -50,14 +52,14 @@ Tensorflow code
 from nni.compressors.tfCompressor import SensitivityPruner
 
 pruner = SensitivityPruner(sparsity = 0.8)
-pruner.compress(tf.get_default_graph())
+pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import SensitivityPruner
 
 pruner = SensitivityPruner(sparsity = 0.8)
-pruner.compress(model)
+pruner(model)
 ```
 Like AGPruner, you should update mask information every epoch by adding code below
 

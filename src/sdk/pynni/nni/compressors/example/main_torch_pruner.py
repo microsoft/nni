@@ -69,7 +69,9 @@ def main():
     pruner = SensitivityPruner(sparsity = 0.8)
     '''
     pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    pruner.compress(model)
+    pruner(model)
+    # you can also use compress(model) method
+    # like that pruner.compress(model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)
     for epoch in range(10):

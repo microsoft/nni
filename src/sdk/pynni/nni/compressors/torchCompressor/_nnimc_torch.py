@@ -28,7 +28,7 @@ class TorchCompressor:
         self.bind_model(model)
 
 
-    def bind_model(self, model) -> None:
+    def bind_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -62,6 +62,10 @@ class TorchPruner(TorchCompressor):
 
     def __init__(self):
         super().__init__()
+
+    def __call__(self, model):
+        self.compress(model)
+        return model
 
     def calc_mask(self, layer_info, weight):
         """
@@ -97,12 +101,22 @@ class TorchPruner(TorchCompressor):
             return ret
 
         layer_info.layer.forward = new_forward
+    
+    def update_epoch(self, epoch):
+        pass
+    
+    def step(self):
+        pass
 
 
 class TorchQuantizer(TorchCompressor):
     def __init__(self):
         super().__init__()
 
+    def __call__(self, model):
+        self.compress(model)
+        return model
+    
     def quantize_weight(self, layer_info, weight):
         # FIXME: where dequantize goes?
         raise NotImplementedError()
@@ -125,3 +139,9 @@ class TorchQuantizer(TorchCompressor):
             return layer_info._forward(*input)
 
         layer_info.layer.forward = new_forward
+    
+    def update_epoch(self, epoch):
+        pass
+    
+    def step(self):
+        pass

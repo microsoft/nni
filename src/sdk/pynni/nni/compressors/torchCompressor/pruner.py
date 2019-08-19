@@ -77,8 +77,6 @@ try:
             self.mask_list[layer_info.name] = new_mask
             return new_mask
         
-        def update_epoch(self, epoch):
-            pass
 
 except ImportError:
     pass

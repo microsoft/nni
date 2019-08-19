@@ -83,7 +83,9 @@ def main():
     pruner = SensitivityPruner(sparsity = 0.8)
     '''
     pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    pruner.compress(tf.get_default_graph())
+    pruner(tf.get_default_graph())
+    # you can also use compress(model) or compress_default_graph() for tensorflow compressor
+    # pruner.compress(tf.get_default_graph())
     
     
     with tf.Session() as sess:

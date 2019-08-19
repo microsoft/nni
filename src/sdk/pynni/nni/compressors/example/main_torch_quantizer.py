@@ -68,7 +68,10 @@ def main():
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(q_bits = 8).compress(model)
     '''
-    QATquantizer(q_bits = 8).compress(model)
+    quantizer = QATquantizer(q_bits = 8)
+    quantizer(model)
+    # you can also use compress(model) method
+    # like thaht quantizer.compress(model)
     
 
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)

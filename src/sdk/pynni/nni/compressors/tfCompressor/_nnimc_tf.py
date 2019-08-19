@@ -49,8 +49,8 @@ class TfLayerInfo:
         self.name = layer.name
         self.layer = layer
         self.weight_index = None
-
-        if layer.type == 'Conv2D':
+        self.support_type = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
+        if layer.type in self.support_types:
             self.weight_index = 1
         else:
             raise ValueError('Unsupported layer')
@@ -59,7 +59,8 @@ class TfLayerInfo:
 def _tf_detect_prunable_layers(model):
     # search for Conv2D layers
     # TODO: whitelist
-    return [ TfLayerInfo(op) for op in model.get_operations() if op.type == 'Conv2D' ]
+    whiltlist = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
+    return [ TfLayerInfo(op) for op in model.get_operations() if op.type in whiltlist ]
 
 
 class TfPruner(TfCompressor):
@@ -67,6 +68,10 @@ class TfPruner(TfCompressor):
 
     def __init__(self):
         super().__init__()
+
+    def __call__(self, model):
+        self.compress(model)
+        return model
 
     def calc_mask(self, layer_info, weight):
         """
@@ -76,7 +81,6 @@ class TfPruner(TfCompressor):
         This method works as a subgraph which will be inserted into the bound model.
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
-
 
     def compress(self, model):
         super().compress(model)
@@ -95,13 +99,23 @@ class TfPruner(TfCompressor):
         mask = self.calc_mask(layer_info, weight)
         new_weight = weight * mask
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
+    
+    def update_epoch(self, epoch, sess):
+        pass
+    
+    def step(self, sess):
+        pass
 
 
 class TfQuantizer(TfCompressor):
     def __init__(self):
         super().__init__()
 
-    def quantize_weight(self, layer_info, weight) -> Tensor:
+    def __call__(self, model):
+        self.compress(model)
+        return model
+
+    def quantize_weight(self, layer_info, weight):
         raise NotImplementedError()
 
 
@@ -113,3 +127,9 @@ class TfQuantizer(TfCompressor):
         weight_op = layer_info.layer.inputs[layer_info.weight_index].op
         new_weight = self.quantize_weight(layer_info, weight_op.inputs[0])
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
+
+    def update_epoch(self, epoch, sess):
+        pass
+    
+    def step(self, sess):
+        pass
