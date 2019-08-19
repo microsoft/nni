@@ -1,4 +1,4 @@
-from nni.compressors.tfCompressor import AGPruner
+from nni.compressors.tf_compressor import QATquantizer
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -79,11 +79,14 @@ def main():
 
     model = Mnist()
 
-    '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(sparsity = 0.8)
+    '''you can change this to DoReFaQuantizer to implement it
+    DoReFaQuantizer(configure_list).compress(tf.get_default_graph())
     '''
-    pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    pruner.compress(tf.get_default_graph())
+    configure_list = [{'q_bits':8, 'support_type':'default'}]
+    quantizer = QATquantizer(configure_list)
+    quantizer(tf.get_default_graph())
+    # you can also use compress(model) or compress_default_graph()
+    # method like QATquantizer(q_bits = 8).compress_default_graph()
     
     
     with tf.Session() as sess:
@@ -101,7 +104,6 @@ def main():
                     model.labels: data.test.labels,
                     model.keep_prob: 1.0
                 })
-                pruner.update_epoch(batch_idx / 10,sess)
                 print('test accuracy', test_acc)
                 
         

@@ -1,5 +1,26 @@
 Pruner on NNI Compressor
 ===
+## LevelPruner
+
+This is one basic pruner: you can set a target sparsity level(expressed as a fraction, 0.6 means we will prune 60%). 
+
+We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
+
+### Usage
+
+Tensorflow code
+```
+pruner = nni.compressors.tf_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner(model_graph)
+```
+
+Pytorch code
+```
+pruner = nni.compressors.torch_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner(model)
+```
+
+***
 
 ## AGPruner
 In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
@@ -16,12 +37,14 @@ First, you should import pruner and add mask to model.
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1).compress(tf.get_default_graph())
+pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1).compress(model)
+pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+pruner(model)
 ```
 
 Second, you should add code below to update epoch number when you finish one epoch in your training code.
@@ -50,14 +73,14 @@ Tensorflow code
 from nni.compressors.tfCompressor import SensitivityPruner
 
 pruner = SensitivityPruner(sparsity = 0.8)
-pruner.compress(tf.get_default_graph())
+pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import SensitivityPruner
 
 pruner = SensitivityPruner(sparsity = 0.8)
-pruner.compress(model)
+pruner(model)
 ```
 Like AGPruner, you should update mask information every epoch by adding code below
 

@@ -1,4 +1,4 @@
-from nni.compressors.tfCompressor import QATquantizer
+from nni.compressors.tf_compressor import AGPruner
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -79,10 +79,26 @@ def main():
 
     model = Mnist()
 
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(q_bits = 0.8).compress(tf.get_default_graph())
+    '''you can change this to SensitivityPruner to implement it
+    pruner = SensitivityPruner(configure_list)
     '''
-    QATquantizer(q_bits = 8).compress(tf.get_default_graph())
+    configure_list = [{
+                        'initial_sparsity': 0,
+                        'final_sparsity': 0.8,
+                        'start_epoch': 1,
+                        'end_epoch': 10,
+                        'frequency': 1,
+                        'support_type': 'default'
+                    }]
+    pruner = AGPruner(configure_list)
+    # if you want to load from yaml file
+    # configure_file = nni.compressors.tf_compressor._nnimc_tf._tf_default_load_configure_file('configure_example.yaml','AGPruner')
+    # configure_list = configure_file.get('config',[])
+    # pruner.load_configure(configure_list)
+    # you can also handle it yourself and input an configure list in json
+    pruner(tf.get_default_graph())
+    # you can also use compress(model) or compress_default_graph() for tensorflow compressor
+    # pruner.compress(tf.get_default_graph())
     
     
     with tf.Session() as sess:
@@ -100,6 +116,7 @@ def main():
                     model.labels: data.test.labels,
                     model.keep_prob: 1.0
                 })
+                pruner.update_epoch(batch_idx / 10,sess)
                 print('test accuracy', test_acc)
                 
         
