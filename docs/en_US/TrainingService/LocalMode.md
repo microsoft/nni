@@ -56,7 +56,7 @@ The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined i
     "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
 }
 ```
-Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search space.
+Refer to [define search space](../Tutorial/SearchSpaceSpec.md) to learn more about search space.
 
 >Step 3 - Define Experiment
 
