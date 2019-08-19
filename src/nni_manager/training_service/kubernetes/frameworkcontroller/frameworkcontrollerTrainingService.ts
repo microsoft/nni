@@ -211,16 +211,28 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             if (this.azureStorageClient === undefined) {
                 throw new Error('azureStorageClient is not initialized');
             }
+            let retryCount: number = 1;
             try {
-                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
-                await AzureStorageClientUtility.uploadDirectory(
-                    this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
-                //upload code files to azure storage
-                await AzureStorageClientUtility.uploadDirectory(
-                    this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${this.fcTrialConfig.codeDir}`);
-
-                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/` + 
-                                    `${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                while (retryCount >= 0) {
+                    //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
+                    let resultUploadDir1: boolean = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${trialLocalTempFolder}`);
+                    //upload code files to azure storage
+                    let resultUploadDir2: boolean = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${this.fcTrialConfig.codeDir}`);
+                    if (resultUploadDir1 && resultUploadDir2) {
+                        trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
+                        `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                        break;
+                    } else {
+                        //wait for 5 seconds to re-upload files
+                        await delay(5000);
+                        this.log.info('Re-upload files to azure-storage');
+                        retryCount -= 1;
+                    }
+                }
             } catch (error) {
                 this.log.error(error);
 
