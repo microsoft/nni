@@ -1,17 +1,18 @@
 jobs:
-- task: AntiMalware@3
-  inputs:
-    InputType: 'Basic'
-    ScanType: 'CustomScan'
-    FileDirPath: '$(Build.StagingDirectory)'
-    EnableServices: false
-    SupportLogOnError: false
-    TreatSignatureUpdateFailureAs: 'Warning'
-    SignatureFreshness: 'UpToDate'
-    TreatStaleSignatureAs: 'Error'
+
 - job: 'integration_test_local_ubuntu'
 
   steps:
+  - task: AntiMalware@3
+    inputs:
+      InputType: 'Basic'
+      ScanType: 'CustomScan'
+      FileDirPath: '$(Build.StagingDirectory)'
+      EnableServices: false
+      SupportLogOnError: false
+      TreatSignatureUpdateFailureAs: 'Warning'
+      SignatureFreshness: 'UpToDate'
+      TreatStaleSignatureAs: 'Error'
   - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
