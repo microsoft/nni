@@ -1,1 +1,2 @@
-from .sparse_pruner import SparsePruner
+from .sparse_pruner import SparsePruner, CosineDecay, LinearDecay
+

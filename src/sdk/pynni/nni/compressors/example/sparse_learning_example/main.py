@@ -13,10 +13,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
-import nni.compressors.torchCompressor.sparselearning as sparselearning
-from sparselearning.core import SparsePruner, CosineDecay, LinearDecay
-from sparselearning.models import AlexNet, VGG16, LeNet_300_100, LeNet_5_Caffe, WideResNet
-from sparselearning.utils import get_mnist_dataloaders, get_cifar10_dataloaders, plot_class_feature_histograms
+import nni
+from nni.compressors.torchCompressor.sparselearning.sparse_pruner import SparsePruner, CosineDecay, LinearDecay
+from nni.compressors.torchCompressor.sparselearning.models import AlexNet, VGG16, LeNet_300_100, LeNet_5_Caffe, WideResNet
+from nni.compressors.torchCompressor.sparselearning.utils import get_mnist_dataloaders, get_cifar10_dataloaders, plot_class_feature_histograms
 
 from extensions import magnitude_variance_pruning, variance_redistribution
 
@@ -155,7 +155,7 @@ def main():
     parser.add_argument('--iters', type=int, default=1, help='How many times the model should be run after each other. Default=1')
     parser.add_argument('--save-features', action='store_true', help='Resumes a saved model and saves its feature data to disk for plotting.')
     parser.add_argument('--bench', action='store_true', help='Enables the benchmarking of layers and estimates sparse speedups')
-    sparselearning.core.add_sparse_args(parser)
+    nni.compressors.torchCompressor.sparselearning.sparse_pruner.add_sparse_args(parser)
 
     args = parser.parse_args()
     setup_logger(args)
