@@ -27,7 +27,7 @@ interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
     intermediate: Array<number>;
-    progress?: number;
+    multiProgress?: number;
 }
 
 interface Experiment {
