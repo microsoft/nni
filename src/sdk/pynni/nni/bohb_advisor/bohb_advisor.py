@@ -427,7 +427,7 @@ class BOHB(MsgDispatcherBase):
             send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
             return None
         assert self.generated_hyper_configs
-        params = self.generated_hyper_configs.pop()
+        params = self.generated_hyper_configs.pop(0)
         ret = {
             'parameter_id': params[0],
             'parameter_source': 'algorithm',
