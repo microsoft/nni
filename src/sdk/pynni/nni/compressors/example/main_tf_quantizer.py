@@ -80,9 +80,10 @@ def main():
     model = Mnist()
 
     '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(q_bits = 0.8).compress(tf.get_default_graph())
+    DoReFaQuantizer(configure_list).compress(tf.get_default_graph())
     '''
-    quantizer = QATquantizer(q_bits = 8)
+    configure_list = [{'q_bits':8, 'support_type':'default'}]
+    quantizer = QATquantizer(configure_list)
     quantizer(tf.get_default_graph())
     # you can also use compress(model) or compress_default_graph()
     # method like QATquantizer(q_bits = 8).compress_default_graph()

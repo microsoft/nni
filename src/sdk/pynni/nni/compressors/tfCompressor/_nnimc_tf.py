@@ -1,13 +1,15 @@
 import tensorflow as tf
 from tensorflow import Graph, Operation, Tensor
-
+import yaml
 from typing import List
 
 __all__ = [
     'TfCompressor',
     'TfPruner',
     'TfQuantizer',
-    '_tf_detect_prunable_layers'
+    '_tf_detect_prunable_layers',
+    '_tf_default_get_configure',
+    '_tf_default_load_configure_file'
 ]
 
 
@@ -25,7 +27,7 @@ class TfCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.bind_model(model)
+        self.preprocess_model(model)
 
     def compress_default_graph(self):
         """
@@ -35,7 +37,7 @@ class TfCompressor:
         self.compress(tf.get_default_graph())
 
 
-    def bind_model(self, model):
+    def preprocess_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -50,7 +52,7 @@ class TfLayerInfo:
         self.layer = layer
         self.weight_index = None
         self.support_type = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
-        if layer.type in self.support_types:
+        if layer.type in self.support_type:
             self.weight_index = 1
         else:
             raise ValueError('Unsupported layer')
@@ -62,6 +64,23 @@ def _tf_detect_prunable_layers(model):
     whiltlist = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
     return [ TfLayerInfo(op) for op in model.get_operations() if op.type in whiltlist ]
 
+def _tf_default_get_configure(configure_list, layer_info):
+    configure = {}
+    for config in configure_list:
+        if config.get('support_type', '') == 'default':
+            configure = config
+        elif layer_info.layer.type in config.get('support_type', []):
+            configure = config
+        elif layer_info.name in config.get('support_op', []):
+            configure = config
+
+    return configure
+
+def _tf_default_load_configure_file(config_path, class_name):
+    assert config_path is not None and config_path.endswith('yaml')
+    file = open(config_path, 'r')
+    yaml_text = yaml.load(file.read())
+    return yaml_text.get(class_name, {})
 
 class TfPruner(TfCompressor):
     """TODO"""

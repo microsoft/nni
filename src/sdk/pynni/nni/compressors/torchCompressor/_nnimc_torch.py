@@ -1,13 +1,15 @@
 from torch import Tensor
 from torch.nn import Module, Parameter
-
+import yaml
 from typing import List
 
 __all__ = [
     'TorchCompressor',
     'TorchPruner',
     'TorchQuantizer',
-    '_torch_detect_prunable_layers'
+    '_torch_detect_prunable_layers',
+    '_torch_default_get_configure',
+    '_torch_default_load_configure_file'
 ]
 
 
@@ -25,10 +27,10 @@ class TorchCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.bind_model(model)
+        self.preprocess_model(model)
 
 
-    def bind_model(self, model):
+    def preprocess_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -56,6 +58,23 @@ def _torch_detect_prunable_layers(model):
             pass
     return ret
 
+def _torch_default_get_configure(configure_list, layer_info):
+    configure = {}
+    for config in configure_list:
+        if config.get('support_type', '') == 'default':
+            configure = config
+        elif layer_info.layer.type() in config.get('support_type', []):
+            configure = config
+        elif layer_info.name in config.get('support_op', []):
+            configure = config
+
+    return configure
+
+def _torch_default_load_configure_file(config_path, class_name):
+    assert config_path is not None and config_path.endswith('yaml')
+    file = open(config_path, 'r')
+    yaml_text = yaml.load(file.read())
+    return yaml_text.get(class_name, {})
 
 class TorchPruner(TorchCompressor):
     """TODO"""
@@ -102,10 +121,10 @@ class TorchPruner(TorchCompressor):
 
         layer_info.layer.forward = new_forward
     
-    def update_epoch(self, epoch):
+    def update_epoch(self, epoch, **kwargs):
         pass
     
-    def step(self):
+    def step(self, **kwargs):
         pass
 
 
