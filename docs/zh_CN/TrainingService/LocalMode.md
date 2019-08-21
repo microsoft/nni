@@ -57,7 +57,7 @@
     }
     
 
-Refer to [define search space](../Tutorial/SearchSpaceSpec.md) to learn more about search space.
+参考[定义搜索空间](../Tutorial/SearchSpaceSpec.md)进一步了解。
 
 > 第三步：定义 Experiment
 > 
