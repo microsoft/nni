@@ -27,9 +27,8 @@
 
 * `{"_type": "choice", "_value": options}`
   
-  * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。
-  
-  * [nested] 搜索空间定义的简单[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 `_name`，这有助于标识选中的元素。 相应的，这是使用从 NNI 获得的嵌套搜索空间的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
+  * 表示变量的值是选项之一。 这里的 `options` 应该是字符串或数值的列表。 可将任意对象（如子数组，数字与字符串的混合值或者空值）存入此数组中，但可能会产生不可预料的行为。
+  * `options` 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。 <a [嵌套搜索空间的简单示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 `_name`，这有助于标识选中的元素。 相应的，这是使用从 NNI 获得的嵌套搜索空间的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
     
     * Random Search（随机搜索） 
     * TPE
