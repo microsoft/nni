@@ -25,13 +25,13 @@ If you want to prune all weight to 80% sparsity, you can add code below into you
 
 Tensorflow code
 ```
-pruner = nni.compressors.tfCompressor.LevelPruner(sparsity=0.8)
+pruner = nni.compressors.tfCompressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
 pruner(model_graph)
 ```
 
 Pytorch code
 ```
-pruner = nni.compressors.torchCompressor.LevelPruner(sparsity=0.8)
+pruner = nni.compressors.torchCompressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
 pruner(model)
 ```
 
@@ -39,6 +39,42 @@ Our compressor will automatically insert mask into your model, and you can train
 
 You can get more information in Algorithm details
 
+#### Configuration
+We now provide an default format for our build-in algorithm, algorithm designer can follow this format and use our default configure parser
+
+Following our default format, user can set configure in his code or a yaml file. And pass configure to compressor by init() or load_configure()
+
+
+Code 
+```
+[{
+    'sparsity':0.8,
+    'support_layer':'default'
+    'support_op':['op_name1','op_name2']
+}]
+```
+
+file
+```
+tfAGPruner:       
+  config:
+    -
+        start_epoch: 0
+        end_epoch: 16
+        frequency: 2
+        initial_sparsity: 0.05
+        final_sparsity: 0.60
+        support_type: default
+    - 
+        prune: False
+        start_epoch: 0
+        end_epoch: 20
+        frequency: 2
+        initial_sparsity: 0.05
+        final_sparsity: 0.60
+        support_type: [Linear] 
+        support_op: [conv1, conv2]
+```
 ### For compression algorithm designer
 We use the instrumentation method to insert a node or function after the corresponding position in the model.  And we provide interface for designer to design compression algorithm easily.
 
@@ -48,6 +84,7 @@ Tensorflow code
 ```
 class YourPruner(nni.compressors.tfCompressor.TfPruner):
     def __init__(self, your_input):
+        # defaultly, we suggest you to use configure_list as input
         pass
     
     # don not change calc_mask() input 
@@ -118,4 +155,28 @@ class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
         #your code
 ```
 
+#### Preprocess Model
+Sometimes, designer wants to preprocess model before compress, designer can overload preprocess_model() method 
+
+```
+class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
+    def __init__(self, your_input):
+        pass
+    
+    # don not change quantize_weight() input 
+    def quantize_weight(self, layer_info, weight):
+        # you can get layer name in layer_info.name
+        # you can get weight data in weight
+        # design your quantizer and return new weight
+        return new_weight
+    
+    # you can also design your method
+    def your_method(self, your_input):
+        #your code
+    
+    def preprocess_model(self, model):
+        #preprocess model
+```
+#### Step and Epoch
+if an designer wants to update mask every step,  designer can implement step() or update_epoch() method in his code, and tell user to call when use it
 

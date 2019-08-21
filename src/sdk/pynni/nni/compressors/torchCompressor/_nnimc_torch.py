@@ -63,7 +63,7 @@ def _torch_default_get_configure(configure_list, layer_info):
     for config in configure_list:
         if config.get('support_type', '') == 'default':
             configure = config
-        elif layer_info.layer.type() in config.get('support_type', []):
+        elif type(layer_info.layer).__name__ in config.get('support_type', []):
             configure = config
         elif layer_info.name in config.get('support_op', []):
             configure = config
