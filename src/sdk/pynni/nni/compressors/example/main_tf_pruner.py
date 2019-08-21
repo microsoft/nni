@@ -80,10 +80,20 @@ def main():
     model = Mnist()
 
     '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(sparsity = 0.8)
+    pruner = SensitivityPruner(configure_list)
     '''
-    pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    pruner.compress(tf.get_default_graph())
+    configure_list = [{
+                        'initial_sparsity': 0,
+                        'final_sparsity': 0.8,
+                        'start_epoch': 1,
+                        'end_epoch': 10,
+                        'frequency': 1,
+                        'support_type': 'default'
+                    }]
+    pruner = AGPruner(configure_list)
+    pruner(tf.get_default_graph())
+    # you can also use compress(model) or compress_default_graph() for tensorflow compressor
+    # pruner.compress(tf.get_default_graph())
     
     
     with tf.Session() as sess:

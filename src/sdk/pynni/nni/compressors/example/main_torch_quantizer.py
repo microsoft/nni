@@ -66,9 +66,13 @@ def main():
     model = Mnist()
     
     '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(q_bits = 8).compress(model)
+    DoReFaQuantizer(configure_list).compress(model)
     '''
-    QATquantizer(q_bits = 8).compress(model)
+    configure_list = [{'q_bits':8, 'support_type':'default'}]
+    quantizer = QATquantizer(configure_list)
+    quantizer(model)
+    # you can also use compress(model) method
+    # like thaht quantizer.compress(model)
     
 
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)

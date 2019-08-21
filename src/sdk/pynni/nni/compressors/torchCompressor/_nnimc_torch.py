@@ -1,13 +1,15 @@
 from torch import Tensor
 from torch.nn import Module, Parameter
-
+import yaml
 from typing import List
 
 __all__ = [
     'TorchCompressor',
     'TorchPruner',
     'TorchQuantizer',
-    '_torch_detect_prunable_layers'
+    '_torch_detect_prunable_layers',
+    '_torch_default_get_configure',
+    '_torch_default_load_configure_file'
 ]
 
 
@@ -25,10 +27,10 @@ class TorchCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.bind_model(model)
+        self.preprocess_model(model)
 
 
-    def bind_model(self, model) -> None:
+    def preprocess_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
@@ -56,12 +58,33 @@ def _torch_detect_prunable_layers(model):
             pass
     return ret
 
+def _torch_default_get_configure(configure_list, layer_info):
+    configure = {}
+    for config in configure_list:
+        if config.get('support_type', '') == 'default':
+            configure = config
+        elif type(layer_info.layer).__name__ in config.get('support_type', []):
+            configure = config
+        elif layer_info.name in config.get('support_op', []):
+            configure = config
+
+    return configure
+
+def _torch_default_load_configure_file(config_path, class_name):
+    assert config_path is not None and config_path.endswith('yaml')
+    file = open(config_path, 'r')
+    yaml_text = yaml.load(file.read())
+    return yaml_text.get(class_name, {})
 
 class TorchPruner(TorchCompressor):
     """TODO"""
 
     def __init__(self):
         super().__init__()
+
+    def __call__(self, model):
+        self.compress(model)
+        return model
 
     def calc_mask(self, layer_info, weight):
         """
@@ -97,12 +120,22 @@ class TorchPruner(TorchCompressor):
             return ret
 
         layer_info.layer.forward = new_forward
+    
+    def update_epoch(self, epoch, **kwargs):
+        pass
+    
+    def step(self, **kwargs):
+        pass
 
 
 class TorchQuantizer(TorchCompressor):
     def __init__(self):
         super().__init__()
 
+    def __call__(self, model):
+        self.compress(model)
+        return model
+    
     def quantize_weight(self, layer_info, weight):
         # FIXME: where dequantize goes?
         raise NotImplementedError()
@@ -125,3 +158,9 @@ class TorchQuantizer(TorchCompressor):
             return layer_info._forward(*input)
 
         layer_info.layer.forward = new_forward
+    
+    def update_epoch(self, epoch):
+        pass
+    
+    def step(self):
+        pass

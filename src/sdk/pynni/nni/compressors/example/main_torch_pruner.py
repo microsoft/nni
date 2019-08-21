@@ -66,10 +66,21 @@ def main():
     model = Mnist()
     
     '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(sparsity = 0.8)
+    pruner = SensitivityPruner(configure_list)
     '''
-    pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
-    pruner.compress(model)
+    configure_list = [{
+                        'initial_sparsity': 0,
+                        'final_sparsity': 0.8,
+                        'start_epoch': 1,
+                        'end_epoch': 10,
+                        'frequency': 1,
+                        'support_type': 'default'
+                    }]
+
+    pruner = AGPruner(configure_list)
+    pruner(model)
+    # you can also use compress(model) method
+    # like that pruner.compress(model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)
     for epoch in range(10):

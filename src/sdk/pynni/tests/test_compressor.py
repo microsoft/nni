@@ -93,7 +93,8 @@ class TorchMnist(torch.nn.Module):
 class CompressorTestCase(TestCase):
     def test_tf_pruner(self):
         model = TfMnist()
-        tfCompressor.LevelPruner(sparsity = 0.8).compress_default_graph()
+        configure_list = [{'sparsity':0.8, 'support_type':'default'}]
+        tfCompressor.LevelPruner(configure_list).compress_default_graph()
 
 
     def test_tf_quantizer(self):
@@ -102,7 +103,8 @@ class CompressorTestCase(TestCase):
     
     def test_torch_pruner(self):
         model = TorchMnist()
-        torchCompressor.LevelPruner(sparsity = 0.8).compress(model)
+        configure_list = [{'sparsity':0.8, 'support_type':'default'}]
+        torchCompressor.LevelPruner(configure_list).compress(model)
     
     def test_torch_quantizer(self):
         model = TorchMnist()

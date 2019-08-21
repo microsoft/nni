@@ -1,11 +1,12 @@
 try:
     import torch
     from ._nnimc_torch import TorchQuantizer
-    
+    from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_configure_file
+
     class NaiveQuantizer(TorchQuantizer):
         def __init__(self):
             super().__init__()
-            self.layer_scale = { }
+            self.layer_scale = {}
     
         def quantize_weight(self, layer_info, weight):
             new_scale = weight.abs().max() / 127
@@ -16,14 +17,34 @@ try:
             return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
     
     class DoReFaQuantizer(TorchQuantizer):
-        def __init__(self, q_bits):
+        def __init__(self, configure_list):
+            """
+                configure Args:
+                    q_bits
+            """
             super().__init__()
-            self.q_bits = q_bits
+            self.configure_list = []
+            if isinstance(configure_list, list):
+                for configure in configure_list:
+                    self.configure_list.append(configure)
+            else:
+                raise ValueError('please init with configure list')
         
+        def load_configure(self, config_path):
+            config_list = _torch_default_load_configure_file(config_path, 'DoReFaQuantizer')
+            for config in config_list.get('config', []):
+                self.configure_list.append(config)
+            
+        def get_qbits(self, configure={}):
+            sparsity = configure.get('q_bits',0)
+            return sparsity
+    
         def quantize_weight(self, layer_info, weight):
+            q_bits = self.get_qbits(_torch_default_get_configure(self.configure_list, layer_info))
+
             out = weight.tanh()
             out = out /( 2 * out.abs().max()) + 0.5
-            out = self.quantize(out, self.q_bits)
+            out = self.quantize(out, q_bits)
             out = 2 * out -1
             return out
         
@@ -34,11 +55,31 @@ try:
 
     class QATquantizer(TorchQuantizer):
         def __init__(self, q_bits):
+            """
+                Configure Args:
+                    q_bits
+            """
             super().__init__()
-            self.q_bits = q_bits
+            self.configure_list = []
+            if isinstance(configure_list, list):
+                for configure in configure_list:
+                    self.configure_list.append(configure)
+            else:
+                raise ValueError('please init with configure list')
         
+        def load_configure(self, config_path):
+            config_list = _torch_default_load_configure_file(config_path, 'QATquantizer')
+            for config in config_list.get('config', []):
+                self.configure_list.append(config)
+            
+        def get_qbits(self, configure={}):
+            sparsity = configure.get('q_bits',0)
+            return sparsity
+
         def quantize_weight(self, layer_info, weight):
-            if self.q_bits <= 1:
+            q_bits = self.get_qbits(_torch_default_get_configure(self.configure_list, layer_info))
+
+            if q_bits <= 1:
                 return weight
             a = torch.min(weight)
             b = torch.max(weight)
