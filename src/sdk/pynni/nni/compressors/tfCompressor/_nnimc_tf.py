@@ -52,7 +52,7 @@ class TfLayerInfo:
         self.layer = layer
         self.weight_index = None
 
-        self.support_type = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
+        self.support_type = ['Conv2D', 'DepthwiseConv2dNative'] #MatMul
         if layer.type in self.support_type:
             self.weight_index = 1
         else:
@@ -62,7 +62,7 @@ class TfLayerInfo:
 def _tf_detect_prunable_layers(model):
     # search for Conv2D layers
     # TODO: whitelist
-    whiltlist = ['Conv2D', 'MatMul', 'DepthwiseConv2dNative']
+    whiltlist = ['Conv2D', 'DepthwiseConv2dNative'] #MatMul
     return [ TfLayerInfo(op) for op in model.get_operations() if op.type in whiltlist ]
 
 def _tf_default_get_configure(configure_list, layer_info):

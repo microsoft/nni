@@ -57,7 +57,7 @@ class LinearDecay(object):
 
 
 class SparsePruner(TorchPruner):
-    def __init__(self, optimizer, prune_rate_decay, prune_rate=0.5, prune_mode='magnitude', growth_mode='momentum', redistribution_mode='momentum', verbose=False, fp16=False):
+    def __init__(self, optimizer, prune_rate_decay, density, sparse_init='constant', prune_rate=0.5, prune_mode='magnitude', growth_mode='momentum', redistribution_mode='momentum', verbose=False, fp16=False):
         super().__init__()
         growth_modes = ['random', 'momentum', 'momentum_neuron']
         if growth_mode not in growth_modes:
@@ -111,6 +111,9 @@ class SparsePruner(TorchPruner):
         self.prune_every_k_steps = None
         self.half = fp16
         self.name_to_32bit = {}
+
+        self.density = density
+        self.sparse_init = sparse_init
 
     def calc_mask(self, layer_info, weight):
         weight_mask = self.masks.get(layer_info.name, None)
@@ -276,7 +279,7 @@ class SparsePruner(TorchPruner):
                 if self.verbose:
                     self.print_nonzero_counts()
 
-    def add_module(self, module, density, sparse_init='constant'):
+    def preprocess_model(self, module):
         self.modules.append(module)
         for name, tensor in module.named_parameters():
             self.names.append(name)
@@ -285,7 +288,7 @@ class SparsePruner(TorchPruner):
         self.remove_type(nn.BatchNorm2d)
         self.remove_type(nn.BatchNorm1d)
         self.remove_type(nn.PReLU)
-        self.init(mode=sparse_init, density=density)
+        self.init(mode=self.sparse_init, density=self.density)
 
     def is_at_start_of_pruning(self, name):
         if self.start_name is None: self.start_name = name

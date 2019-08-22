@@ -252,9 +252,9 @@ def main():
         if not args.dense:
             decay = CosineDecay(args.prune_rate, len(train_loader)*(args.epochs))
             #decay = LinearDecay(args.prune_rate, len(train_loader)*(args.epochs))
-            pruner = SparsePruner(optimizer, decay, prune_rate=args.prune_rate, prune_mode=args.prune, growth_mode=args.growth, redistribution_mode=args.redistribution,
+            pruner = SparsePruner(optimizer, decay, density=args.density, sparse_init='constant', prune_rate=args.prune_rate, prune_mode=args.prune, growth_mode=args.growth, redistribution_mode=args.redistribution,
                            verbose=args.verbose, fp16=args.fp16)
-            pruner.add_module(model, density=args.density)
+            pruner(model)
 
         for epoch in range(1, args.epochs + 1):
             t0 = time.time()
