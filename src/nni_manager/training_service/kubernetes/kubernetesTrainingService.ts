@@ -38,6 +38,7 @@ import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
+var yaml = require('js-yaml');
 var fs = require('fs');
 
 /**
@@ -364,6 +365,10 @@ abstract class KubernetesTrainingService {
         }
         let trialJobOutputUrl: string = '';
         let retryCount: number = 1;
+        let config = yaml.safeLoad(fs.readFileSync('./config/config.yaml', 'utf8'));
+        if(config && config.azureStorageUploadRetryCount instanceof Number) {
+            retryCount = config.azureStorageUploadRetryCount;
+        }
         let resultUploadNNIScript: boolean = false;
         let resultUploadCodeFile: boolean = false;
         try {
