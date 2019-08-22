@@ -1,1 +1,1 @@
-azureStorageUploadRetryCount: 1 #If upload files to azure storage failed, NNI will retry the process of upload, this field will specify the number of attempts to re-upload files.
+azureStorageUploadRetryCount: 1 #If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
