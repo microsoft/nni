@@ -62,7 +62,7 @@ export namespace AzureStorageClientUtility {
             if (error) {
                 getLogger()
                   .error(`Create directory failed:, ${error}`);
-                  deferred.resolve(false);
+                deferred.resolve(false);
             } else {
                 deferred.resolve(true);
             }
@@ -110,7 +110,7 @@ export namespace AzureStorageClientUtility {
             if (error) {
                 getLogger()
                   .error(`Upload file failed:, ${error}`);
-                  deferred.resolve(false);
+                deferred.resolve(false);
             } else {
                 deferred.resolve(true);
             }

@@ -27,7 +27,7 @@ import * as component from '../../../common/component';
 
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
+    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
@@ -102,9 +102,13 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, curTrialSequenceId, form);
         //upload files to sotrage
         const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
+        let initStatus: TrialJobStatus = 'WAITING';
+        if (!trialJobOutputUrl) {
+            initStatus = 'FAILED';
+        }
         const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
             trialJobId,
-            'WAITING',
+            initStatus,
             Date.now(),
             trialWorkingFolder,
             form,
@@ -215,33 +219,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             if (this.azureStorageClient === undefined) {
                 throw new Error('azureStorageClient is not initialized');
             }
-            let retryCount: number = 1;
-            try {
-                while (retryCount >= 0) {
-                    //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
-                    let resultUploadDir1: boolean = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                        `${trialLocalTempFolder}`);
-                    //upload code files to azure storage
-                    let resultUploadDir2: boolean = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                        `${this.kubeflowTrialConfig.codeDir}`);
-                    if (resultUploadDir1 && resultUploadDir2) {
-                        trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
-                        `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
-                        break;
-                    } else {
-                        //wait for 5 seconds to re-upload files
-                        await delay(5000);
-                        this.log.info('Re-upload files to azure-storage');
-                        retryCount -= 1;
-                    }
-                } 
-            } catch (error) {
-                this.log.error(error);
-
-                return Promise.reject(error);
-            }
+            trialJobOutputUrl = await this.uploadFilesToAzureStorage(trialJobId, trialLocalTempFolder, this.kubeflowTrialConfig.codeDir);
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             // Creat work dir for current trial in NFS directory
