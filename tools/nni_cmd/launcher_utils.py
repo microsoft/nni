@@ -198,10 +198,7 @@ def validate_common_content(experiment_config):
                     Schema({**separate_schema_dict[separate_key]['customized']}).validate(experiment_config[separate_key])
     except SchemaError as error:
         print_error('Your config file is not correct, please check your config file content!')
-        if error.__str__().__contains__('Wrong key'):
-            print_error(' '.join(error.__str__().split()[:3]))
-        else:
-            print_error(error)
+        print_error(error.code)
         exit(1)
 
     #set default value
