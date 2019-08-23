@@ -6,7 +6,6 @@ from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_conf
 
 class LevelPruner(TorchPruner):
     """Prune to an exact pruning level specification
-
     """
     def __init__(self, configure_list):
         """
