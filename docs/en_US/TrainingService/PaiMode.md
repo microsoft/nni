@@ -64,6 +64,23 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
         beginAt: 8080,
         portNumber: 2
     ``` 
+    Let's say you want to launch a tensorboard in the mnist example using the port. So the first step is to write a wrapper script `launch_pai.sh` of `mnist.py`.
+
+    ```bash
+    export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
+    tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
+    python3 mnist.py
+    ```
+    The config file of portList should be filled as following:
+
+    ```yaml
+  trial:
+    command: bash launch_pai.sh
+    portList:
+      - label: tensorboard
+        beginAt: 0
+        portNumber: 1
+    ```
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
