@@ -397,8 +397,8 @@ abstract class KubernetesTrainingService {
             } while (retryCount-- >= 0)
         } catch (error) {
             this.log.error(error);
-
-            return Promise.reject(error);
+            //return a empty url when got error
+            return Promise.resolve("");
         }
         return Promise.resolve(trialJobOutputUrl);
     }
