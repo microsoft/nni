@@ -8,3 +8,6 @@ hyperopt
 
 # metis tuner
 sklearn
+
+# compresser
+pyyaml

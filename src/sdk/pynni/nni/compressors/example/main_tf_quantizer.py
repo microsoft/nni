@@ -1,4 +1,4 @@
-from nni.compressors.tfCompressor import QATquantizer
+from nni.compressors.tf_compressor import QATquantizer
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 

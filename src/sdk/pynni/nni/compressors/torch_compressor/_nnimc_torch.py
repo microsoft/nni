@@ -121,10 +121,10 @@ class TorchPruner(TorchCompressor):
 
         layer_info.layer.forward = new_forward
     
-    def update_epoch(self, epoch, **kwargs):
+    def update_epoch(self, epoch):
         pass
     
-    def step(self, **kwargs):
+    def step(self):
         pass
 
 

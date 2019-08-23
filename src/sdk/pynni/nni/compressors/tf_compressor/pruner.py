@@ -1,5 +1,3 @@
-
-
 import tensorflow as tf
 from ._nnimc_tf import TfPruner
 from ._nnimc_tf import _tf_default_get_configure, _tf_default_load_configure_file
@@ -84,6 +82,7 @@ class AGPruner(TfPruner):
         target_sparsity = self.compute_target_sparsity(layer_info)
         threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
         mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
+        print('tensor weight', weight)
         self.assign_handler.append(tf.assign(weight, weight*mask))
         return mask
         
@@ -135,4 +134,3 @@ class SensitivityPruner(TfPruner):
 
     def update_epoch(self, epoch, sess):
         sess.run(self.assign_handler)
-

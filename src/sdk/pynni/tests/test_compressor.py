@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from nni.compressors import tfCompressor,torchCompressor
+from nni.compressors import tf_compressor,torch_compressor
 import torch
 import torch.nn.functional as F
 import tensorflow as tf 
@@ -94,21 +94,21 @@ class CompressorTestCase(TestCase):
     def test_tf_pruner(self):
         model = TfMnist()
         configure_list = [{'sparsity':0.8, 'support_type':'default'}]
-        tfCompressor.LevelPruner(configure_list).compress_default_graph()
+        tf_compressor.LevelPruner(configure_list).compress_default_graph()
 
 
     def test_tf_quantizer(self):
         model = TfMnist()
-        tfCompressor.NaiveQuantizer().compress_default_graph()
+        tf_compressor.NaiveQuantizer().compress_default_graph()
     
     def test_torch_pruner(self):
         model = TorchMnist()
         configure_list = [{'sparsity':0.8, 'support_type':'default'}]
-        torchCompressor.LevelPruner(configure_list).compress(model)
+        torch_compressor.LevelPruner(configure_list).compress(model)
     
     def test_torch_quantizer(self):
         model = TorchMnist()
-        torchCompressor.NaiveQuantizer().compress(model)
+        torch_compressor.NaiveQuantizer().compress(model)
 
 
 if __name__ == '__main__':

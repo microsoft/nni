@@ -27,7 +27,7 @@ def read(fname):
 
 setup(
     name = 'nni',
-    version = 'v0.8-263-g1f92408',
+    version = '999.0.0-developing',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
@@ -58,7 +58,8 @@ setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'sklearn'
+        'sklearn',
+        'pyyaml'
     ],
 
     entry_points = {
