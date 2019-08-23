@@ -15,7 +15,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install flake8 --user
-      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/mnist.py:F821
+      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821
       python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
@@ -34,6 +34,10 @@ jobs:
       cd test
       PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+    displayName: 'nnicli test'
 
 - job: 'basic_test_pr_macOS'
   pool:
@@ -61,3 +65,7 @@ jobs:
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
+  - script: |
+      cd test
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 cli_test.py
+    displayName: 'nnicli test'

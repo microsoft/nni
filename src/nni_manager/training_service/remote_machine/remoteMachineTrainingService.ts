@@ -511,12 +511,16 @@ class RemoteMachineTrainingService implements TrainingService {
         // tslint:disable-next-line: no-floating-promises
         SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
 
-        this.timer.subscribe(
+        const disposable: Rx.IDisposable = this.timer.subscribe(
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
                     `tail -n 1 ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
                 if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+                    if (rmMeta.gpuSummary.gpuCount === 0) {
+                        this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
+                        this.timer.unsubscribe(disposable);
+                    }
                 }
             }
         );
@@ -601,12 +605,16 @@ class RemoteMachineTrainingService implements TrainingService {
         let command: string;
         // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
         // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
-        if (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
-            command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
+        // If gpuNum is undefined, will not set CUDA_VISIBLE_DEVICES in script
+        if (this.trialConfig.gpuNum === undefined) {
+            command = this.trialConfig.command;
         } else {
-            command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
+            if (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
+                command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
+            } else {
+                command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
+            }
         }
-
         // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         if (this.remoteRestServerPort === undefined) {

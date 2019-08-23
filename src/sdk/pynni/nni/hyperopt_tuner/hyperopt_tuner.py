@@ -27,7 +27,7 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
 
@@ -51,6 +51,8 @@ def json2space(in_x, name=NodeType.ROOT):
             _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
                 out_y = eval('hp.hp.choice')(name, _value)
+            elif _type == 'randint':
+                out_y = hp.hp.randint(name, _value[1] - _value[0])
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
@@ -91,7 +93,12 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
                                    name=name + '[%d]' % _index)
                 }
             else:
-                out_y = parameter[name]
+                if _type in ['quniform', 'qloguniform']:
+                    out_y = np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1])
+                elif _type == 'randint':
+                    out_y = parameter[name] + in_x[NodeType.VALUE][0]
+                else:
+                    out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():
@@ -190,13 +197,19 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode='minimize'):
+    def __init__(self, algorithm_name, optimize_mode='minimize', 
+                 parallel_optimize=False, constant_liar_type='min'):
         """
         Parameters
         ----------
         algorithm_name : str
             algorithm_name includes "tpe", "random_search" and anneal".
         optimize_mode : str
+        parallel_optimize : bool 
+            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
+        constant_liar_type : str
+            constant_liar_type including "min", "max" and "mean"
+            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
         """
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -204,6 +217,13 @@ class HyperoptTuner(Tuner):
         self.total_data = {}
         self.rval = None
         self.supplement_data_num = 0
+
+        self.parallel = parallel_optimize
+        if self.parallel:
+            self.CL_rval = None
+            self.constant_liar_type = constant_liar_type
+            self.running_data = []
+            self.optimal_y = None
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -231,7 +251,6 @@ class HyperoptTuner(Tuner):
         search_space : dict
         """
         self.json = search_space
-        randint_to_quniform(self.json)
 
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
@@ -263,9 +282,13 @@ class HyperoptTuner(Tuner):
         total_params = self.get_suggestion(random_search=False)
         # avoid generating same parameter with concurrent trials because hyperopt doesn't support parallel mode
         if total_params in self.total_data.values():
-            # but it can cause deplicate parameter rarely
+            # but it can cause duplicate parameter rarely
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
+
+        if self.parallel:
+            self.running_data.append(parameter_id)
+        
         params = split_index(total_params)
         return params
 
@@ -287,10 +310,43 @@ class HyperoptTuner(Tuner):
             raise RuntimeError('Received parameter_id not in total_data.')
         params = self.total_data[parameter_id]
 
+        # code for parallel
+        if self.parallel:
+            constant_liar = kwargs.get('constant_liar', False)
+
+            if constant_liar:
+                rval = self.CL_rval
+            else:
+                rval = self.rval
+                # ignore duplicated reported final result (due to aware of intermedate result)
+                if parameter_id not in self.running_data:
+                    logger.info("Received duplicated final result with parameter id: %s", parameter_id)
+                    return
+                self.running_data.remove(parameter_id)
+
+                # update the reward of optimal_y
+                if self.optimal_y is None:
+                    if self.constant_liar_type == 'mean':
+                        self.optimal_y = [reward, 1]
+                    else:
+                        self.optimal_y = reward
+                else:
+                    if self.constant_liar_type == 'mean':
+                        _sum = self.optimal_y[0] + reward
+                        _number = self.optimal_y[1] + 1
+                        self.optimal_y = [_sum, _number]
+                    elif self.constant_liar_type == 'min':
+                        self.optimal_y = min(self.optimal_y, reward)
+                    elif self.constant_liar_type == 'max':
+                        self.optimal_y = max(self.optimal_y, reward)
+                logger.debug("Update optimal_y with reward, optimal_y = %s", self.optimal_y)
+        else:
+            rval = self.rval
+
+
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 
-        rval = self.rval
         domain = rval.domain
         trials = rval.trials
 
@@ -375,13 +431,26 @@ class HyperoptTuner(Tuner):
         total_params : dict
             parameter suggestion
         """
+        if self.parallel and len(self.total_data)>20 and len(self.running_data) and self.optimal_y is not None:
+            self.CL_rval = copy.deepcopy(self.rval)
+            if self.constant_liar_type == 'mean':
+                _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
+            else:
+                _constant_liar_y = self.optimal_y
+            for _parameter_id in self.running_data:
+                self.receive_trial_result(parameter_id=_parameter_id, parameters=None, value=_constant_liar_y, constant_liar=True)
+            rval = self.CL_rval
 
-        rval = self.rval
+            random_state = np.random.randint(2**31 - 1)
+        else:
+            rval = self.rval
+            random_state = rval.rstate.randint(2**31 - 1)
+    
         trials = rval.trials
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
         rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31 - 1)
+
         if random_search:
             new_trials = hp.rand.suggest(new_ids, rval.domain, trials,
                                          random_state)

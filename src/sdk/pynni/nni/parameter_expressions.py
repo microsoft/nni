@@ -32,12 +32,14 @@ def choice(options, random_state):
     return random_state.choice(options)
 
 
-def randint(upper, random_state):
+def randint(lower, upper, random_state):
     '''
+    Generate a random integer from `lower` (inclusive) to `upper` (exclusive).
+    lower: an int that represent an lower bound
     upper: an int that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
-    return random_state.randint(upper)
+    return random_state.randint(lower, upper)
 
 
 def uniform(low, high, random_state):
@@ -57,7 +59,7 @@ def quniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.round(uniform(low, high, random_state) / q) * q
+    return np.clip(np.round(uniform(low, high, random_state) / q) * q, low, high)
 
 
 def loguniform(low, high, random_state):
@@ -77,7 +79,7 @@ def qloguniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.round(loguniform(low, high, random_state) / q) * q
+    return np.clip(np.round(loguniform(low, high, random_state) / q) * q, low, high)
 
 
 def normal(mu, sigma, random_state):
