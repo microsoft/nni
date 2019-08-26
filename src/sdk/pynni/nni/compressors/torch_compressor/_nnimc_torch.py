@@ -1,6 +1,6 @@
 from torch import Tensor
 from torch.nn import Module, Parameter
-import yaml
+from ruamel.yaml import YAML
 from typing import List
 
 __all__ = [
@@ -71,10 +71,16 @@ def _torch_default_get_configure(configure_list, layer_info):
     return configure
 
 def _torch_default_load_configure_file(config_path, class_name):
+    print('load CLASS:{0} from PATH:{1}'.format(class_name, config_path))
     assert config_path is not None and config_path.endswith('yaml')
     file = open(config_path, 'r')
+    yaml = YAML(typ='safe')
     yaml_text = yaml.load(file.read())
-    return yaml_text.get(class_name, {})
+    configure_file = yaml_text.get(class_name, {})
+    if not configure_file:
+        print('WARNING: load Nothing from configure file, Default { }')
+    return configure_file
+
 
 class TorchPruner(TorchCompressor):
     """TODO"""
@@ -138,7 +144,7 @@ class TorchQuantizer(TorchCompressor):
     
     def quantize_weight(self, layer_info, weight):
         # FIXME: where dequantize goes?
-        raise NotImplementedError()
+        raise NotImplementedError("Quantizer must overload quantize_weight()")
 
     def compress(self, model):
         super().compress(model)

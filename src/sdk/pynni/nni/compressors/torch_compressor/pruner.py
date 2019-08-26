@@ -98,7 +98,7 @@ class AGPruner(TorchPruner):
         mask = self.mask_list.get(layer_info.name, torch.ones(weight.shape))
         target_sparsity = self.compute_target_sparsity(now_epoch, layer_info)
         k = int(weight.numel() * target_sparsity)
-        if k == 0 or target_sparsity>=1 or target_sparsity<=0:
+        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
             return mask
         
         w_abs = weight.abs()*mask

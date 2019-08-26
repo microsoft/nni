@@ -78,6 +78,7 @@ def main():
                     }]
 
     pruner = AGPruner(configure_list)
+    pruner.load_configure('configure_example.yaml')
     pruner(model)
     # you can also use compress(model) method
     # like that pruner.compress(model)

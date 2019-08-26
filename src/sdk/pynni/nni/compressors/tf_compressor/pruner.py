@@ -66,7 +66,7 @@ class AGPruner(TfPruner):
         now_epoch = tf.minimum(self.now_epoch, tf.constant(end_epoch))
         span = int(((end_epoch - start_epoch-1)//freq)*freq)
         assert span > 0
-        base = tf.cast(now_epoch - initial_sparsity, tf.float32) / span
+        base = tf.cast(now_epoch - start_epoch, tf.float32) / span
         target_sparsity = (final_sparsity + 
                             (initial_sparsity - final_sparsity)*
                             (tf.pow(1.0 - base, 3)))
