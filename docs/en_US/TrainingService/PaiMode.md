@@ -60,8 +60,8 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     The config schema in NNI is shown below:
     ```
     portList:
-      - label: test,
-        beginAt: 8080,
+      - label: test
+        beginAt: 8080
         portNumber: 2
     ``` 
     Let's say you want to launch a tensorboard in the mnist example using the port. So the first step is to write a wrapper script `launch_pai.sh` of `mnist.py`.
