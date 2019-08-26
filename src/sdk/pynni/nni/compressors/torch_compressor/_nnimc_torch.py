@@ -49,7 +49,7 @@ class TorchLayerInfo:
 
 def _torch_detect_prunable_layers(model):
     # search for all layers which have parameter "weight"
-    ret = [ ]
+    ret = []
     for name, layer in model.named_modules():
         try:
             if isinstance(layer.weight, Parameter) and isinstance(layer.weight.data, Tensor):

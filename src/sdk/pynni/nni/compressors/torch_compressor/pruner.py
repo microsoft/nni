@@ -135,7 +135,7 @@ class SensitivityPruner(TorchPruner):
             self.configure_list.append(config)
         
     def get_sparsity(self, configure={}):
-        sparsity = configure.get('sparsity',0)
+        sparsity = configure.get('sparsity', 0)
         return sparsity
     
     def calc_mask(self, layer_info, weight):

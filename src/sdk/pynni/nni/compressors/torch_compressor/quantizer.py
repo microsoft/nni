@@ -34,9 +34,14 @@ class DoReFaQuantizer(TorchQuantizer):
         for config in config_list.get('config', []):
             self.configure_list.append(config)
         
-    def get_qbits(self, configure={}):
-        sparsity = configure.get('q_bits',0)
-        return sparsity
+    def get_qbits(self, configure):
+        if not isinstance(configure, dict):
+            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            configure = {}
+        qbits = configure.get('q_bits', 32)
+        if qbits == 0:
+            print('WARNING: you can not set q_bits ZERO!')
+        return qbits
 
     def quantize_weight(self, layer_info, weight):
         q_bits = self.get_qbits(_torch_default_get_configure(self.configure_list, layer_info))
@@ -71,9 +76,14 @@ class QATquantizer(TorchQuantizer):
         for config in config_list.get('config', []):
             self.configure_list.append(config)
         
-    def get_qbits(self, configure={}):
-        sparsity = configure.get('q_bits',0)
-        return sparsity
+    def get_qbits(self, configure):
+        if not isinstance(configure, dict):
+            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            configure = {}
+        qbits = configure.get('q_bits', 32)
+        if qbits == 0:
+            print('WARNING: you can not set q_bits ZERO!')
+        return qbits
 
     def quantize_weight(self, layer_info, weight):
         q_bits = self.get_qbits(_torch_default_get_configure(self.configure_list, layer_info))

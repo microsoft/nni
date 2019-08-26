@@ -61,6 +61,7 @@ class TfLayerInfo:
 def _tf_detect_prunable_layers(model):
     # search for Conv2D layers
     # TODO: whitelist
+    # please make sure op not from optimizer
     whiltlist = ['Conv2D', 'DepthwiseConv2dNative']
     return [ TfLayerInfo(op) for op in model.get_operations() if op.type in whiltlist ]
 
@@ -143,7 +144,7 @@ class TfQuantizer(TfCompressor):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
 
-    def compress(self,  model):
+    def compress(self, model):
         for layer_info in _tf_detect_prunable_layers(model):
             self._instrument_layer(layer_info)
 

@@ -60,7 +60,7 @@ class AGPruner(TfPruner):
         final_sparsity = configure.get('final_sparsity', 0)
         initial_sparsity = configure.get('initial_sparsity', 0)
 
-        if end_epoch <= start_epoch:
+        if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
             return final_sparsity
         
         now_epoch = tf.minimum(self.now_epoch, tf.constant(end_epoch))
