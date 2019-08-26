@@ -57,19 +57,21 @@ class Tuner(Recoverable):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Invoked when a trial reports its final result. Must override.
+        By default this only reports results of algorithm-generated hyper-parameters.
+        Use `accept_customized_trials()` to receive results from user-added parameters.
         parameter_id: int
         parameters: object created by 'generate_parameters()'
         reward: object reported by trial
         """
+        # TODO: kwargs doc?
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
-    def receive_customized_trial_result(self, parameter_id, parameters, value, **kwargs):
-        """Invoked when a trial added by WebUI reports its final result. Do nothing by default.
-        parameter_id: int
-        parameters: object created by user
-        value: object reported by trial
+    def accept_customized_trials(self, accept=True):
+        """Enable or disable receiving results of user-added hyper-parameters. 
+        By default `receive_trial_result()` will only receive results of algorithm-generated hyper-parameters.
+        If tuners want to receive those of customized parameters as well, they can call this function in `__init__()`.
         """
-        _logger.info('Customized trial job %s ignored by tuner', parameter_id)
+        self._accept_customized = accept
 
     def trial_end(self, parameter_id, success, **kwargs):
         """Invoked when a trial is completed or terminated. Do nothing by default.

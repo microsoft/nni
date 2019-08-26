@@ -171,15 +171,19 @@ class MsgDispatcher(MsgDispatcherBase):
         id_ = data['parameter_id']
         value = data['value']
         if id_ in _customized_parameter_ids:
-            if multi_phase_enabled():
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
-            else:
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+            if not hasattr(self.tuner, '_accept_customized'):
+                self.tuner._accept_customized = False
+            if not self.tuner._accept_customized:
+                _logger.info('Customized trial job %s ignored by tuner', id_)
+                return
+            customized = True
         else:
-            if multi_phase_enabled():
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
-            else:
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+            customized = False
+
+        if multi_phase_enabled():
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized, trial_job_id=data['trial_job_id'])
+        else:
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized)
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
