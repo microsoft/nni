@@ -152,9 +152,10 @@ class PPOModel:
         nenvs = model_config.num_envs
 
         # Calculate the batch_size
-        self.nbatch = nbatch = nenvs * model_config.nsteps
-        nbatch_train = nbatch // model_config.nminibatches
-        self.nupdates = self.model_config.total_timesteps//self.nbatch
+        self.nbatch = nbatch = nenvs * model_config.nsteps # num of record per update
+        nbatch_train = nbatch // model_config.nminibatches # get batch size
+        # self.nupdates is used to tune lr and cliprange
+        self.nupdates = self.model_config.total_timesteps // self.nbatch
 
         # Instantiate the model object (that creates act_model and train_model)
         self.model = Model(policy=policy, nbatch_act=nenvs, nbatch_train=nbatch_train,
@@ -251,6 +252,7 @@ class PPOModel:
         trials_info:             complete info of the generated trials from the previous inference
         nenvs:                   the batch size of the (previous) inference
         """
+        # keep frac decay for future optimization
         if self.cur_update <= self.nupdates:
             frac = 1.0 - (self.cur_update - 1.0) / self.nupdates
         else:
@@ -285,7 +287,8 @@ class PPOTuner(Tuner):
     PPOTuner
     """
 
-    def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4, minibatch_size=4):
+    def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4, minibatch_size=4,
+                 ent_coef=0.0, lr=3e-4, vf_coef=0.5, max_grad_norm=0.5, gamma=0.99, lam=0.95, cliprange=0.2):
         """
         initialization, PPO model is not initialized here as search space is not received yet.
 
@@ -295,6 +298,13 @@ class PPOTuner(Tuner):
         trials_per_update:     number of trials to have for each model update
         epochs_per_update:     number of epochs to run for each model update
         minibatch_size:        minibatch size (number of trials) for the update
+        ent_coef:              policy entropy coefficient in the optimization objective
+        lr:                    learning rate of the model (lstm network), constant
+        vf_coef:               value function loss coefficient in the optimization objective
+        max_grad_norm:         gradient norm clipping coefficient
+        gamma:                 discounting factor
+        lam:                   advantage estimation discounting factor (lambda in the paper)
+        cliprange:             cliprange in the PPO algorithm, constant
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
