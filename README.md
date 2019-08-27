@@ -352,6 +352,7 @@ Now we have some external usage examples run in NNI from our contributors. Thank
 * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) in NNI 
 * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) in NNI <br>
 
+Besudes, here are some external references (with author's permission) that we would like to share with you.
 #### External References ####
 * [Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
 
