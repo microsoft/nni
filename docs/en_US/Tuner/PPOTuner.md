@@ -7,8 +7,8 @@ This is a tuner generally for NNI's NAS interface, it uses ppo algorithm. The im
 
 It could successfully tune the mnist-nas example, and has the following result:
 
-![](../../img/bohb_1.png)
+![](../../img/ppo_mnist.png)
 
 result of tuning enas search space (limited epoch number):
 
-![](../../img/bohb_1.png)
+![](../../img/ppo_cifar10.png)
