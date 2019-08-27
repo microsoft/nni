@@ -2,7 +2,9 @@ from torch import Tensor
 from torch.nn import Module, Parameter
 from ruamel.yaml import YAML
 from typing import List
+import logging
 
+logger = logging.getLogger('torch_compressor')
 __all__ = [
     'TorchCompressor',
     'TorchPruner',
@@ -14,7 +16,9 @@ __all__ = [
 
 
 class TorchCompressor:
-    """TODO"""
+    """
+    Base compressor for pytorch
+    """
 
     def __init__(self):
         self._bound_model = None
@@ -37,9 +41,24 @@ class TorchCompressor:
         It is guaranteed that only one model will be bound to each compressor instance.
         """
         pass
+    
+    def update_epoch(self, epoch):
+        """
+        if user want to update model every epoch, user can override this method
+        """
+        pass
+    
+    def step(self):
+        """
+        if user want to update model every step, user can override this method
+        """
+        pass
 
 
 class TorchLayerInfo:
+    """
+    layer info for pytorch
+    """
     def __init__(self, name, layer):
         self.name = name
         self.layer = layer
@@ -59,6 +78,13 @@ def _torch_detect_prunable_layers(model):
     return ret
 
 def _torch_default_get_configure(configure_list, layer_info):
+    """
+    Get configure for input layer
+    defaultly the later config will cover front config
+    WARNING: please mask sure default configure is the first in the list
+    """
+    if not configure_list:
+        logger.warning('WARNING: configure list is None')
     configure = {}
     for config in configure_list:
         if config.get('support_type', '') == 'default':
@@ -67,23 +93,26 @@ def _torch_default_get_configure(configure_list, layer_info):
             configure = config
         elif layer_info.name in config.get('support_op', []):
             configure = config
-
+    if not configure:
+        logger.warning('WARNING: can not get configure, default NONE!!!')
     return configure
 
 def _torch_default_load_configure_file(config_path, class_name):
-    print('load CLASS:{0} from PATH:{1}'.format(class_name, config_path))
+    logger.info('load CLASS:{0} from PATH:{1}'.format(class_name, config_path))
     assert config_path is not None and config_path.endswith('yaml')
     file = open(config_path, 'r')
     yaml = YAML(typ='safe')
     yaml_text = yaml.load(file.read())
     configure_file = yaml_text.get(class_name, {})
     if not configure_file:
-        print('WARNING: load Nothing from configure file, Default { }')
+        logger.warning('WARNING: load Nothing from configure file, Default { }')
     return configure_file
 
 
 class TorchPruner(TorchCompressor):
-    """TODO"""
+    """
+    Base pruner for pytorch pruner
+    """
 
     def __init__(self):
         super().__init__()
@@ -127,14 +156,12 @@ class TorchPruner(TorchCompressor):
 
         layer_info.layer.forward = new_forward
     
-    def update_epoch(self, epoch):
-        pass
-    
-    def step(self):
-        pass
 
 
 class TorchQuantizer(TorchCompressor):
+    """
+    Base quantizer for pytorch quantizer
+    """
     def __init__(self):
         super().__init__()
 
@@ -143,7 +170,10 @@ class TorchQuantizer(TorchCompressor):
         return model
     
     def quantize_weight(self, layer_info, weight):
-        # FIXME: where dequantize goes?
+        """
+        user should know where dequantize goes and implement it in quantize method
+        we now do not provide dequantize method
+        """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
     def compress(self, model):
@@ -165,8 +195,4 @@ class TorchQuantizer(TorchCompressor):
 
         layer_info.layer.forward = new_forward
     
-    def update_epoch(self, epoch):
-        pass
     
-    def step(self):
-        pass
