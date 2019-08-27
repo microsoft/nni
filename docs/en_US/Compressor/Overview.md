@@ -4,7 +4,7 @@ NNI provides easy-to-use toolkit to help user  design and use compression algori
 ## Framework
 We use the instrumentation method to insert a node or function after the corresponding position in the model.
 
-When compression algorithm designer implements one prune algorithm, he only need to pay attention to the generation method of mask, without caring about applying the mask to the garph.
+When compression algorithm designer implements one prune algorithm, designer only need to pay attention to the generation method of mask, without caring about applying the mask to the graph.
 ## Algorithm
 We now provide some naive compression algorithm and four popular compress agorithms for users, including two pruning algorithm and two quantization algorithm.
 Below is a list of model compression algorithms supported in our compressor
@@ -25,13 +25,13 @@ If you want to prune all weight to 80% sparsity, you can add code below into you
 
 Tensorflow code
 ```
-pruner = nni.compressors.tfCompressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner = nni.compressors.tf_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
 pruner(model_graph)
 ```
 
 Pytorch code
 ```
-pruner = nni.compressors.torchCompressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner = nni.compressors.torch_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
 pruner(model)
 ```
 
@@ -56,7 +56,7 @@ Code
 
 file
 ```
-tfAGPruner:       
+AGPruner:       
   config:
     -
         start_epoch: 0
@@ -82,7 +82,7 @@ If you want to use mask to prune a model, you can use Pruner as base class. And 
 
 Tensorflow code
 ```
-class YourPruner(nni.compressors.tfCompressor.TfPruner):
+class YourPruner(nni.compressors.tf_compressor.TfPruner):
     def __init__(self, your_input):
         # defaultly, we suggest you to use configure_list as input
         pass
@@ -101,7 +101,7 @@ class YourPruner(nni.compressors.tfCompressor.TfPruner):
 ```
 Pytorch code
 ```
-class YourPruner(nni.compressors.torchCompressor.TorchPruner):
+class YourPruner(nni.compressors.torch_compressor.TorchPruner):
     def __init__(self, your_input):
         pass
     
@@ -121,7 +121,7 @@ if you want to generate new weight and replace the old one, you are suggested to
 
 Tensorflow code
 ```
-class YourPruner(nni.compressors.tfCompressor.TfQuantizer):
+class YourPruner(nni.compressors.tf_compressor.TfQuantizer):
     def __init__(self, your_input):
         pass
     
@@ -139,7 +139,7 @@ class YourPruner(nni.compressors.tfCompressor.TfQuantizer):
 ```
 Pytorch code
 ```
-class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
+class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
     def __init__(self, your_input):
         pass
     
@@ -159,7 +159,7 @@ class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
 Sometimes, designer wants to preprocess model before compress, designer can overload preprocess_model() method 
 
 ```
-class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
+class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
     def __init__(self, your_input):
         pass
     
@@ -178,5 +178,5 @@ class YourPruner(nni.compressors.torchCompressor.TorchQuantizer):
         #preprocess model
 ```
 #### Step and Epoch
-if an designer wants to update mask every step,  designer can implement step() or update_epoch() method in his code, and tell user to call when use it
+if an designer wants to update mask every step,  designer can implement step() or update_epoch() method in his code, and tell user to call when use it.
 

@@ -1,4 +1,3 @@
-
 import torch
 from ._nnimc_torch import TorchPruner
 from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_configure_file
@@ -7,7 +6,6 @@ from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_conf
 
 class LevelPruner(TorchPruner):
     """Prune to an exact pruning level specification
-
     """
     def __init__(self, configure_list):
         """
@@ -72,6 +70,7 @@ class AGPruner(TorchPruner):
             raise ValueError('please init with configure list')
         
         self.mask_list = {}
+        self.now_epoch = 1
 
     def load_configure(self, config_path):
         config_list = _torch_default_load_configure_file(config_path, 'AGPruner')
@@ -81,11 +80,10 @@ class AGPruner(TorchPruner):
     def compute_target_sparsity(self, now_epoch, layer_info):
         configure = _torch_default_get_configure(self.configure_list, layer_info)
         end_epoch = configure.get('end_epoch', 1)
-        start_epoch = configure.get('start_epoch', 0)
+        start_epoch = configure.get('start_epoch', 1)
         freq = configure.get('frequency', 1)
         final_sparsity = configure.get('final_sparsity', 0)
         initial_sparsity = configure.get('initial_sparsity', 0)
-
         if end_epoch <= start_epoch or end_epoch <= now_epoch or initial_sparsity >= final_sparsity:
             return final_sparsity
         span = ((end_epoch - start_epoch-1)//freq)*freq
@@ -100,7 +98,7 @@ class AGPruner(TorchPruner):
         mask = self.mask_list.get(layer_info.name, torch.ones(weight.shape))
         target_sparsity = self.compute_target_sparsity(now_epoch, layer_info)
         k = int(weight.numel() * target_sparsity)
-        if k == 0:
+        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
             return mask
         
         w_abs = weight.abs()*mask
@@ -137,7 +135,7 @@ class SensitivityPruner(TorchPruner):
             self.configure_list.append(config)
         
     def get_sparsity(self, configure={}):
-        sparsity = configure.get('sparsity',0)
+        sparsity = configure.get('sparsity', 0)
         return sparsity
     
     def calc_mask(self, layer_info, weight):
@@ -155,6 +153,3 @@ class SensitivityPruner(TorchPruner):
         self.mask_list[layer_info.name] = new_mask
         return new_mask
         
-
-
-

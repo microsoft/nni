@@ -40,7 +40,7 @@ You can view example for more information
 ***
 
 ## SensitivityPruner
-In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.
+In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and Jeff Pool provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.
 
 >We used the sensitivity results to find each layer’s threshold: for example, the smallest threshold was applied to the most sensitive layer, which is the first convolutional layer... The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
 
@@ -73,3 +73,13 @@ pruner.update_epoch(epoch)
 ```
 You can view example for more information
 ***
+
+## SparsePruner
+
+In [Sparse Networks from Scratch: Faster Training without Losing Performance](https://arxiv.org/pdf/1907.04840.pdf), author Tim Dettmers and Luke Zettlemoyer provide an algorithm to prune the weight and regrow weight to get better performance.
+You can get their original code from their [github](https://github.com/TimDettmers/sparse_learning).
+
+We implement their algorithm with our framework, 
+user can use torch sparse pruner and and keep original way of use. 
+Note that we only implement naive tensorflow sparse pruner. User can only use adam optimizer with tensorflow sparse pruner. You can get detailed usage in /nni/compressor/tf_compressor/sparselearning. 
+

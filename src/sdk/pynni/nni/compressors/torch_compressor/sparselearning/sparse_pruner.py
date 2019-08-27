@@ -14,7 +14,7 @@ import time
 from matplotlib import pyplot as plt
 from sparselearning.funcs import redistribution_funcs, growth_funcs, prune_funcs
 
-from nni.compressors.torchCompressor._nnimc_torch import TorchPruner
+from nni.compressors.torch_compressor._nnimc_torch import TorchPruner
 
 def add_sparse_args(parser):
     parser.add_argument('--growth', type=str, default='momentum', help='Growth mode. Choose from: momentum, random, and momentum_neuron.')

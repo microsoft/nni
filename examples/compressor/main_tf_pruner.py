@@ -1,4 +1,4 @@
-from nni.compressors.tfCompressor import AGPruner
+from nni.compressors.tf_compressor import AGPruner
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -91,6 +91,7 @@ def main():
                         'support_type': 'default'
                     }]
     pruner = AGPruner(configure_list)
+    pruner.load_configure('configure_example.yaml')
     pruner(tf.get_default_graph())
     # you can also use compress(model) or compress_default_graph() for tensorflow compressor
     # pruner.compress(tf.get_default_graph())

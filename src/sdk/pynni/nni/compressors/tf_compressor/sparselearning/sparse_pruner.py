@@ -10,8 +10,8 @@ import shutil
 import time
 from matplotlib import pyplot as plt
 
-from nni.compressors.tfCompressor._nnimc_tf import TfPruner
-from nni.compressors.tfCompressor._nnimc_tf import _tf_detect_prunable_layers
+from nni.compressors.tf_compressor._nnimc_tf import TfPruner
+from nni.compressors.tf_compressor._nnimc_tf import _tf_detect_prunable_layers
 
 def add_sparse_args(parser):
     parser.add_argument('--growth', type=str, default='momentum', help='Growth mode. Choose from: momentum, random, and momentum_neuron.')

@@ -1,4 +1,4 @@
-from nni.compressors.torchCompressor import AGPruner
+from nni.compressors.torch_compressor import QATquantizer
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -65,30 +65,22 @@ def main():
 
     model = Mnist()
     
-    '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(configure_list)
+    '''you can change this to DoReFaQuantizer to implement it
+    DoReFaQuantizer(configure_list).compress(model)
     '''
-    configure_list = [{
-                        'initial_sparsity': 0,
-                        'final_sparsity': 0.8,
-                        'start_epoch': 1,
-                        'end_epoch': 10,
-                        'frequency': 1,
-                        'support_type': 'default'
-                    }]
-
-    pruner = AGPruner(configure_list)
-    pruner(model)
+    configure_list = [{'q_bits':8, 'support_type':'default'}]
+    quantizer = QATquantizer(configure_list)
+    quantizer(model)
     # you can also use compress(model) method
-    # like that pruner.compress(model)
+    # like thaht quantizer.compress(model)
+    
 
     optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)
     for epoch in range(10):
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
-        
-        pruner.update_epoch(epoch)
+
         
         
 

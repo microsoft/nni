@@ -1,5 +1,3 @@
-
-
 import tensorflow as tf
 from ._nnimc_tf import TfPruner
 from ._nnimc_tf import _tf_default_get_configure, _tf_default_load_configure_file
@@ -62,13 +60,13 @@ class AGPruner(TfPruner):
         final_sparsity = configure.get('final_sparsity', 0)
         initial_sparsity = configure.get('initial_sparsity', 0)
 
-        if end_epoch <= start_epoch:
+        if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
             return final_sparsity
         
         now_epoch = tf.minimum(self.now_epoch, tf.constant(end_epoch))
         span = int(((end_epoch - start_epoch-1)//freq)*freq)
         assert span > 0
-        base = tf.cast(now_epoch - initial_sparsity, tf.float32) / span
+        base = tf.cast(now_epoch - start_epoch, tf.float32) / span
         target_sparsity = (final_sparsity + 
                             (initial_sparsity - final_sparsity)*
                             (tf.pow(1.0 - base, 3)))
@@ -84,6 +82,7 @@ class AGPruner(TfPruner):
         target_sparsity = self.compute_target_sparsity(layer_info)
         threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
         mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
+        print('tensor weight', weight)
         self.assign_handler.append(tf.assign(weight, weight*mask))
         return mask
         
@@ -135,4 +134,3 @@ class SensitivityPruner(TfPruner):
 
     def update_epoch(self, epoch, sess):
         sess.run(self.assign_handler)
-
