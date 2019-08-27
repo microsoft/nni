@@ -347,12 +347,12 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 
 ## **External Repositories and References**
 Now we have some external usage examples run in NNI from our contributors. Thanks our lovely contributors. And welcome more and more people to join us!
-### External Repositories ###
+#### External Repositories ####
 * Run [ENAS](examples/tuners/enas_nni/README.md) in NNI
 * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) in NNI 
 * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) in NNI <br>
 
-### External References ###
+#### External References ####
 * [Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
 
 ## **Feedback**
