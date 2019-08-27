@@ -1,0 +1,24 @@
+authorName: v-yugzh
+experimentName: lr_efficient_net
+trialConcurrency: 4
+maxExecDuration: 48h
+maxTrialNum: 140
+trainingServicePlatform: pai
+searchSpacePath: search_lr.json
+useAnnotation: false
+tuner:
+  builtinTunerName: GridSearch
+trial:
+  codeDir: EfficientNet-PyTorch
+  command: python3 main.py cifar10 -j 4 --epochs 20 -a efficientnet-b0 --pretrained --num-classes 10 --batch-size 64 --optimizer sgd --request-from-nni
+  cpuNum: 4
+  memoryMB: 16384
+  gpuNum: 1
+  shmMB: 8192
+  virtualCluster: nni
+  image: ultmaster/nni:latest
+nniManagerIp: <nni_manager_ip>
+paiConfig:
+  userName: <username>
+  passWord: <password>
+  host: <host>

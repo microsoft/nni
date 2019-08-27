@@ -1,0 +1,10 @@
+{
+  "lr": {
+    "_type": "qloguniform",
+    "_value": [0.00001, 0.1, 7]
+  },
+  "wd": {
+    "_type": "qloguniform",
+    "_value": [0.000001, 0.001, 7]
+  }
+}
