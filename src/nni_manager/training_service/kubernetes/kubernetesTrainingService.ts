@@ -400,6 +400,9 @@ abstract class KubernetesTrainingService {
             //return a empty url when got error
             return Promise.resolve("");
         }
+        if(!trialJobOutputUrl) {
+            this.log.info(`Retry-count is used up, upload files to azureStorage for trial ${trialJobId} failed!`);
+        }
         return Promise.resolve(trialJobOutputUrl);
     }
      
