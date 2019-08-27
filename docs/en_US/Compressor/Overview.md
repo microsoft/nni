@@ -19,7 +19,7 @@ Below is a list of model compression algorithms supported in our compressor
 ## Usage
 ### For compression algorithm user
 
-Take naive level pruner as an example
+Take naive level pruner as an example, you can get detailed information in Pruner details.
 
 If you want to prune all weight to 80% sparsity, you can add code below into your code before your training code.
 

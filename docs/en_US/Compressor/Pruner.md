@@ -1,5 +1,26 @@
 Pruner on NNI Compressor
 ===
+## LevelPruner
+
+This is one basic pruner: you can set a target sparsity level(expressed as a fraction, 0.6 means we will prune 60%). 
+
+We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
+
+### Usage
+
+Tensorflow code
+```
+pruner = nni.compressors.tf_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner(model_graph)
+```
+
+Pytorch code
+```
+pruner = nni.compressors.torch_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+pruner(model)
+```
+
+***
 
 ## AGPruner
 In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.

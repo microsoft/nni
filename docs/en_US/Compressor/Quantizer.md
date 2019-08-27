@@ -1,5 +1,19 @@
 Quantizer on NNI Compressor
 ===
+## NaiveQuantizer
+
+We provide NaiveQuantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm.
+
+### Usage
+tensorflow
+```
+nni.compressors.tf_compressor.NaiveQuantizer()(model_graph)
+```
+pytorch
+```
+nni.compressors.torch_compressor.NaiveQuantizer()(model)
+```
+***
 ## QATquantizer
 In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
 
