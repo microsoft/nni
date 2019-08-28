@@ -348,7 +348,7 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 ## **External Repositories and References**
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
-* **Repo** - run [ENAS](examples/tuners/enas_nni/README.md) with NNI
+* **Repo** - Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
 * **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
 * **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
 * **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
