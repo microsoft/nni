@@ -346,17 +346,15 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 
 
 ## **External Repositories and References**
-Now we have some external usage examples run in NNI from our contributors. Thanks our lovely contributors. And welcome more and more people to join us!
+With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
+* **Repo** - run [ENAS](examples/tuners/enas_nni/README.md) with NNI
+* **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
+* **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
+* **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
+<br>
 
-* Run [ENAS](examples/tuners/enas_nni/README.md) in NNI
-* Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) in NNI 
-* [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) in NNI <br>
-
-Besudes, here are some external references (with author's permission) that we would like to share with you.
-
-
-* [Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
+* **Blog** - Advisor, NNI, Google Vizier ,[Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
 
 ## **Feedback**
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI
