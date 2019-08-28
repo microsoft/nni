@@ -352,7 +352,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 * **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
 * **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
 * **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-* **Blog** - Advisor, NNI, Google Vizier ,[Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
+* **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison by @gaocegege - 总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
 
 ## **Feedback**
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI
