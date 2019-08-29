@@ -22,9 +22,9 @@ NNI v1.0 focuses on **Scalability** and **Ease of Use**, with updates like vario
 <img src=".././img/release-1-title-2.png" width="100%" />
 </p>
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step one**：Start with the [Tutorial Document](./Tutorial/Installation.md)，and install NNI v1.0 first.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step two**：Find a [" Hello word  example"](./Tutorial/QuickStart.md) , follow the tutorial documentation and have a Quick Start. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step three**：Familiar with the [WebUI Tutorial](./Tutorial/WebUI.md) to understand the strong of NNI.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step one**：Start with the [Tutorial Document](./Tutorial/Installation.md)，and install NNI v1.0 first.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step two**：Find a [" Hello word  example"](./Tutorial/QuickStart.md) , follow the tutorial documentation and have a Quick Start. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step three**：Familiar with the [WebUI Tutorial](./Tutorial/WebUI.md) to understand the strong of NNI.<br>
 
 Then you can enjoy the wonderful fully automatic tuning experience. For more Detail about the 1.0 updates, you can refer to [Release 1.0](https://github.com/microsoft/nni/releases) . More of our advance plan, you can refer to our [Roadmap](https://github.com/microsoft/nni/wiki/Roadmap).Besides these we also welcome more and more contributors to join us to make our NNI more powerful, there are many ways to participate, please refer to [here](./Tutorial/Contributing.md
 ) for more details.
