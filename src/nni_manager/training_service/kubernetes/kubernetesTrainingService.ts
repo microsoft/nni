@@ -359,15 +359,14 @@ abstract class KubernetesTrainingService {
         return registrySecretName;
     }
 
-    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: String, codeDir: String): Promise<string> {
+    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: String, codeDir: String, uploadRetryCount: number | undefined): Promise<string> {
         if (this.azureStorageClient === undefined) {
             throw new Error('azureStorageClient is not initialized');
         }
         let trialJobOutputUrl: string = '';
         let retryCount: number = 1;
-        let config = yaml.safeLoad(fs.readFileSync('./config/config.yaml', 'utf8'));
-        if(config && config.azureStorageUploadRetryCount instanceof Number) {
-            retryCount = config.azureStorageUploadRetryCount;
+        if(uploadRetryCount) {
+            retryCount = uploadRetryCount;
         }
         let resultUploadNNIScript: boolean = false;
         let resultUploadCodeFile: boolean = false;
