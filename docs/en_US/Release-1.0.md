@@ -1,8 +1,7 @@
 
-
-
- # NNI v1.0 RELEASED  ! # 
-
+<p align="center">
+<img src=".././img/title-02.png" width="100%" />
+</p>
 
 <p style="color:grey" align="center">
 From September, 2018 to September , 2019, We are still moving on …
@@ -16,6 +15,8 @@ NNI v1.0 focuses on **Scalability** and **Ease of Use**, with updates like vario
 <img src=".././img/nni-1.png" width="80%" />
 </p>
 
+<br />
+<br />
 
  ## Start with a “Hello Word” job ##
 
