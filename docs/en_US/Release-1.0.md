@@ -1,9 +1,8 @@
 
 
 
-# NNI v1.0 RELEASED  ! #
-<font color="#dd0000" align="center">NNI v1.0 RELEASED</font> <br />
-<center> NNI v1.0 RELEASED </center>
+ # NNI v1.0 RELEASED  ! # 
+
 
 <p style="color:grey" align="center">
 From September, 2018 to September , 2019, We are still moving on …
