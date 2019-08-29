@@ -348,21 +348,12 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 ## **External Repositories and References**
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
-<<<<<<< HEAD
-* **Repo** - run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-* **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-* **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
-* **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-<br>
-
-* **Blog** - Advisor, NNI, Google Vizier ,[Design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
-=======
 * **Repo** - Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
 * **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
 * **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
 * **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-* **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison by @gaocegege - 总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/机器学习/katib-new)
->>>>>>> 4a678c556d16045e3f8e552867dd24dcb1e7c0fa
+* **Blog (in Chinese)** - AutoML tools (Advisor, NNI and Google Vizier) comparison by [@gaocegege](https://github.com/gaocegege) - [总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
+
 
 ## **Feedback**
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI
