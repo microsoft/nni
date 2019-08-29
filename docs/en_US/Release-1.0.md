@@ -17,7 +17,6 @@ NNI v1.0 focuses on **Scalability** and **Ease of Use**, with updates like vario
 
 <br />
 <br />
- ## Start with a “Hello Word” job ##
 
 <p align="center">
 <img src=".././img/release-1-title-2.png" width="100%" />
