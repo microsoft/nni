@@ -1,49 +1,53 @@
 # Compressor
-NNI provides easy-to-use toolkit to help user  design and use compression algorithm.
+NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and Pytorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed [here](./AutoCompression). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#CustomizeCompression).
 
-## Framework
-We use the instrumentation method to insert a node or function after the corresponding position in the model.
+## Supported algorithms
+We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
 
-When compression algorithm designer implements one prune algorithm, designer only need to pay attention to the generation method of mask, without caring about applying the mask to the graph.
-## Algorithm
-We now provide some naive compression algorithm and four popular compress agorithms for users, including two pruning algorithm and two quantization algorithm.
-Below is a list of model compression algorithms supported in our compressor
-
-|Name|Paper|
+|Name|Brief Introduction of Algorithm|
 |---|---|
-| AGPruner| [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)|
-| SensitivityPruner |[Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626)|
-| QATquantizer      |[Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
-| DoReFaQuantizer   |[DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160)|
+| [LevelPruner](./Pruner#LevelPruner) | None |
+| [AGPruner](./Pruner#AGPruner) | To prune, or not to prune: exploring the efficacy of pruning for model compression. [Reference Paper](https://arxiv.org/abs/1710.01878)|
+| [SensitivityPruner](./Pruner#SensitivityPruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)|
+| [NaiveQuantizer](./Quantizer#NaiveQuantizer) | None |
+| [QATquantizer](./Quantizer#QATquantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
+| [DoReFaQuantizer](./Quantizer#DoReFaQuantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
 
-## Usage
-### For compression algorithm user
+## Usage of built-in compression algorithms
 
-Take naive level pruner as an example, you can get detailed information in Pruner details.
-
-If you want to prune all weight to 80% sparsity, you can add code below into your code before your training code.
+We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with LevelPruner, you can add the following three lines into your code before training your model ([here]() is complete code).
 
 Tensorflow code
 ```
-pruner = nni.compressors.tf_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
-pruner(model_graph)
+config = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.tf_compressor.LevelPruner(config)
+pruner(tf.get_default_graph())
 ```
 
 Pytorch code
 ```
-pruner = nni.compressors.torch_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+config = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.torch_compressor.LevelPruner(config)
 pruner(model)
 ```
 
-Our compressor will automatically insert mask into your model, and you can train your model with masks without changing your training code. You will get a compressed model when you finish your training.
+You can use other compression algorithms in the package of `nni.compressors`. The algorithms are implemented in both Pytorch and Tensorflow, under `nni.compressors.torch_compressor` and `nni.compressors.tf_compressor` respectively. You can refer to [Pruner](./Pruner) and [Quantizer](./Quantizer) for detail description of supported algorithms.
 
-You can get more information in Algorithm details
+The function call `pruner(model)` receives user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph`, while in Pytorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
-#### Configuration
-We now provide an default format for our build-in algorithm, algorithm designer can follow this format and use our default configure parser
+When instantiate a compression algorithm, there is `config` passed in. We describe how to write this config below.
 
-Following our default format, user can set configure in his code or a yaml file. And pass configure to compressor by init() or load_configure()
+### User configuration for a compression algorithm
 
+When compressing a model, users may want to specify the ratio for sparsity, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object. In each `dict`, there are some keys commonly supported by NNI compression:
+
+* __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
+* __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
+* __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
+
+There are also other keys in the `dict`, but they are specific for every compression algorithms. For example, some , some.
+
+The configuration in each `dict` is applied one by one, that is, latter configuration will overwrite former ones on the operations that are within the scope of both of them.
 
 Code 
 ```
@@ -75,7 +79,16 @@ AGPruner:
         support_type: [Linear] 
         support_op: [conv1, conv2]
 ```
-### For compression algorithm designer
+
+For Take naive level pruner as an example, you can get detailed information in Pruner details.
+Our compressor will automatically insert mask into your model, and you can train your model with masks without changing your training code. You will get a compressed model when you finish your training.
+
+You can get more information in Algorithm details
+
+<a name="CustomizeCompression"></a>
+
+## Customize new compression algorithms
+
 We use the instrumentation method to insert a node or function after the corresponding position in the model.  And we provide interface for designer to design compression algorithm easily.
 
 If you want to use mask to prune a model, you can use Pruner as base class. And design your mask in calc_mask() method.
