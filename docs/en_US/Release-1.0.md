@@ -7,7 +7,7 @@
 From September, 2018 to September , 2019, We are still moving on …
 
 
-NNI v1.0 focuses on **Scalability** and **Ease of Use**, with updates like various types of [Tuning Algorithms](./Tuner/BuiltinTuner.md),  [Multiple Platforms Supported](./TrainingService/SupportTrainingService.md) ,concise visual [WebUI](./Tutorial/WebUI.md) , and friendly  APIs ，NNI has grown into a more intelligent automated machine learning(AutoML) toolkit.
+NNI v1.0 focuses on **Scalability** and **Ease of Use**, with updates like various types of [Tuning Algorithms](./Tuner/BuiltinTuner.md),  [Multiple Platforms Supported](./TrainingService/SupportTrainingService.md) ,concise visual [WebUI](./Tutorial/WebUI.md) , and friendly  APIs ,NNI has grown into a more intelligent automated machine learning(AutoML) toolkit.
 <br/>
 <br/>
 <br/>
