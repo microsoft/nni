@@ -315,7 +315,8 @@ kubeflow_config_schema = {
                            error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),\
                           error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
-        }
+        },
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
     })
 }
 
@@ -361,7 +362,8 @@ frameworkcontroller_config_schema = {
                            error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),\
                           error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
-        }
+        },
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
     })
 }
 

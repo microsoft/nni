@@ -125,7 +125,8 @@ export namespace ValidationSchemas {
                 azureStorage: joi.object({
                     accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
-                })
+                }),
+                uploadRetryCount: joi.number().min(1)
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
@@ -141,7 +142,8 @@ export namespace ValidationSchemas {
                 azureStorage: joi.object({
                     accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
-                })
+                }),
+                uploadRetryCount: joi.number().min(1)
             }),
             nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1)
