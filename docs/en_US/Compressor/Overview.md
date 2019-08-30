@@ -45,45 +45,43 @@ When compressing a model, users may want to specify the ratio for sparsity, to s
 * __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
-There are also other keys in the `dict`, but they are specific for every compression algorithms. For example, some , some.
+There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
 
-The configuration in each `dict` is applied one by one, that is, latter configuration will overwrite former ones on the operations that are within the scope of both of them.
+The configuration in each `dict` is applied one by one, that is, latter configuration will overwrite former ones on the operations that are within the scope of both of them. 
 
-Code 
+A simple example of configuration is shown below:
 ```
 [{
-    'sparsity':0.8,
-    'support_layer':'default'
-    'support_op':['op_name1','op_name2']
+    'sparsity': 0.8,
+    'op_types': 'default'
+},
+{
+    'sparsity': 0.6,
+    'op_names': ['op_name1', 'op_name2']
+},
+{
+    'exclude': True,
+    'op_names': ['op_name3']
 }]
 ```
+It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and please do not compress `op_name3`.
 
-file
+### Other APIs
+
+Some compression algorithms use epochs to control the progress of compression, and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
+
+Tensorflow code 
 ```
-AGPruner:       
-  config:
-    -
-        start_epoch: 0
-        end_epoch: 16
-        frequency: 2
-        initial_sparsity: 0.05
-        final_sparsity: 0.60
-        support_type: default
-    - 
-        prune: False
-        start_epoch: 0
-        end_epoch: 20
-        frequency: 2
-        initial_sparsity: 0.05
-        final_sparsity: 0.60
-        support_type: [Linear] 
-        support_op: [conv1, conv2]
+pruner.update_epoch(epoch, sess)
+```
+Pytorch code
+```
+pruner.update_epoch(epoch)
 ```
 
-For Take naive level pruner as an example, you can get detailed information in Pruner details.
-Our compressor will automatically insert mask into your model, and you can train your model with masks without changing your training code. You will get a compressed model when you finish your training.
+The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
 
-You can get more information in Algorithm details
+[TODO] The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
 
 <a name="CustomizeCompression"></a>
 
