@@ -54,6 +54,9 @@ class GPUScheduler {
             } catch (error) {
                 this.log.error('Read GPU summary failed with error: ', error);
             }
+            if (this.gpuSummary !== undefined && this.gpuSummary.gpuCount === 0) {
+                throw new Error('GPU not available. Please check your CUDA configuration');
+            }
             await delay(5000);
         }
     }
@@ -97,7 +100,7 @@ class GPUScheduler {
      * used to run in remote machine, and will be deleted after uploaded from local.
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
-        await execMkdir(this.gpuMetricCollectorScriptFolder);
+        await execMkdir(this.gpuMetricCollectorScriptFolder, true);
         //generate gpu_metrics_collector script
         const gpuMetricsCollectorScriptPath: string =
             path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));

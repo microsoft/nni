@@ -25,7 +25,6 @@ pruner(model)
 #### User configuration for LevelPruner
 * **sparsity:** This is to specify the sparsity operations to be compressed to
 
-
 ***
 
 ## AGPruner
