@@ -1,5 +1,5 @@
 # Compressor
-NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and Pytorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed [here](./AutoCompression). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#CustomizeCompression).
+NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and Pytorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#CustomizeCompression).
 
 ## Supported algorithms
 We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
@@ -81,113 +81,90 @@ pruner.update_epoch(epoch)
 
 The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
 
-[TODO] The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
+__[TODO]__ The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
 
 <a name="CustomizeCompression"></a>
 
 ## Customize new compression algorithms
 
-We use the instrumentation method to insert a node or function after the corresponding position in the model.  And we provide interface for designer to design compression algorithm easily.
+To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruner and quantizer respectively.
 
-If you want to use mask to prune a model, you can use Pruner as base class. And design your mask in calc_mask() method.
+### Pruning algorithm
 
-Tensorflow code
+If you want to write a new pruning algorithm, you can write a class that inherits `nni.compressors.tf_compressor.TfPruner` or `nni.compressors.torch_compressor.TorchPruner` depending on which framework you use. Then, override the member functions with the logic of your algorithm.
+
 ```
+# This is writing a pruner in tensorflow.
+# For writing a pruner in Pytorch, you can simply replace
+# nni.compressors.tf_compressor.TfPruner with
+# nni.compressors.torch_compressor.TorchPruner
 class YourPruner(nni.compressors.tf_compressor.TfPruner):
-    def __init__(self, your_input):
-        # defaultly, we suggest you to use configure_list as input
+    def __init__(self, config):
+        # suggest you to use the NNI defined spec for config
         pass
     
-    # don not change calc_mask() input 
+    def bind_model(self, model):
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
+        pass
+
     def calc_mask(self, layer_info, weight):
         # you can get layer name in layer_info.name
         # you can get weight data in weight
         # design your mask and return your mask
         return your_mask
-    
-    # you can also design your method help to generate mask
-    def your_method(self, your_input):
-        #your code
 
-```
-Pytorch code
-```
-class YourPruner(nni.compressors.torch_compressor.TorchPruner):
-    def __init__(self, your_input):
+    # note for pytorch version, there is no sess in input arguments
+    def update_epoch(self, epoch_num, sess):
         pass
-    
-    # don not change calc_mask() input 
-    def calc_mask(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your mask and return your mask
-        return your_mask
-    
-    # you can also design your method help to generate mask
-    def your_method(self, your_input):
-        #your code
+
+    def step(self):
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
+        pass
 ```
 
-if you want to generate new weight and replace the old one, you are suggested to use Quantizer as base class. And you can manage the weight in quantize_weight() method.
+For the simpliest algorithm, you can only override `calc_mask`, it receives each layer's information (i.e., layer name) and the layer's weight, you generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
-Tensorflow code
+Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
+
+Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., referennce to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms]() for example implementations.
+
+### Quantization algorithm
+
+The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+
 ```
+# This is writing a Quantizer in tensorflow.
+# For writing a Quantizer in Pytorch, you can simply replace
+# nni.compressors.tf_compressor.TfQuantizer with
+# nni.compressors.torch_compressor.TorchQuantizer
 class YourPruner(nni.compressors.tf_compressor.TfQuantizer):
-    def __init__(self, your_input):
+    def __init__(self, config):
+        # suggest you to use the NNI defined spec for config
         pass
-    
-    # don not change quantize_weight() input 
+
+    def bind_model(self, model):
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
+        pass
+
     def quantize_weight(self, layer_info, weight):
         # you can get layer name in layer_info.name
         # you can get weight data in weight
         # design your quantizer and return new weight
         return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
 
-```
-Pytorch code
-```
-class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
-    def __init__(self, your_input):
+    # note for pytorch version, there is no sess in input arguments
+    def update_epoch(self, epoch_num, sess):
         pass
-    
-    # don not change quantize_weight() input 
-    def quantize_weight(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your quantizer and return new weight
-        return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-```
 
-#### Preprocess Model
-Sometimes, designer wants to preprocess model before compress, designer can overload preprocess_model() method 
-
-```
-class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
-    def __init__(self, your_input):
+    def step(self):
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
         pass
-    
-    # don not change quantize_weight() input 
-    def quantize_weight(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your quantizer and return new weight
-        return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-    
-    def preprocess_model(self, model):
-        #preprocess model
 ```
-#### Step and Epoch
-if an designer wants to update mask every step,  designer can implement step() or update_epoch() method in his code, and tell user to call when use it.
 
+### Usage of user customized compression algorithm
+
+__[TODO]__ ...
