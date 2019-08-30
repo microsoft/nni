@@ -30,7 +30,7 @@ class TorchCompressor:
         self.preprocess_model(model)
 
 
-    def preprocess_model(self, model):
+    def bind_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.

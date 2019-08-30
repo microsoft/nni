@@ -279,7 +279,7 @@ class SparsePruner(TorchPruner):
                 if self.verbose:
                     self.print_nonzero_counts()
 
-    def preprocess_model(self, module):
+    def bind_model(self, module):
         self.modules.append(module)
         for name, tensor in module.named_parameters():
             self.names.append(name)

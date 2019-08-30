@@ -191,7 +191,7 @@ class NaiveSparsePruner(TfPruner):
             weight = self.weight_list[layer_info.name]
             self.sess.run(tf.assign(weight, mask*weight))
 
-    def preprocess_model(self, module):
+    def bind_model(self, module):
         self.modules.append(module)
         self.prunable_layers = _tf_detect_prunable_layers(module)
         self.init(mode=self.sparse_init, density=self.density)
