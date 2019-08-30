@@ -6,10 +6,10 @@ We have provided two naive compression algorithms and four popular ones for user
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
-| [LevelPruner](./Pruner#LevelPruner) | None |
+| [LevelPruner](./Pruner#LevelPruner) | Pruning the specified ratio on each weight based on absolute values of weights |
 | [AGPruner](./Pruner#AGPruner) | To prune, or not to prune: exploring the efficacy of pruning for model compression. [Reference Paper](https://arxiv.org/abs/1710.01878)|
 | [SensitivityPruner](./Pruner#SensitivityPruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)|
-| [NaiveQuantizer](./Quantizer#NaiveQuantizer) | None |
+| [NaiveQuantizer](./Quantizer#NaiveQuantizer) |  Quantize weights to default 8 bits |
 | [QATquantizer](./Quantizer#QATquantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFaQuantizer](./Quantizer#DoReFaQuantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
 
@@ -164,6 +164,8 @@ class YourPruner(nni.compressors.tf_compressor.TfQuantizer):
         # in the func bind_model
         pass
 ```
+
+__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### Usage of user customized compression algorithm
 
