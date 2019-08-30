@@ -124,11 +124,11 @@ class YourPruner(nni.compressors.tf_compressor.TfPruner):
         pass
 ```
 
-For the simpliest algorithm, you can only override `calc_mask`, it receives each layer's information (i.e., layer name) and the layer's weight, you generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+For the simpliest algorithm, you only need to override `calc_mask`, it receives each layer's information (i.e., layer name) and the layer's weight, you generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
 Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., referennce to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
+Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., reference to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
 
 ### Quantization algorithm
 
