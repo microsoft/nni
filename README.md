@@ -345,15 +345,22 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 * [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 
 
-## **External Repositories and References**
-With authors' permission, we listed a set of NNI usage examples and relevant articles.
+## **External References**
+With authors' permission, we listed a set of NNI usage examples and relevant articles.<br />
+* ### **External Repositories** ###
 
-* **Repo** - Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-* **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-* **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
-* **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-* **Blog (in Chinese)** - AutoML tools (Advisor, NNI and Google Vizier) comparison by [@gaocegege](https://github.com/gaocegege) - [总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
+  * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
+  * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
+  * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
+  * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
 
+* ### **Relevant Articles** ###
+  
+  * [Hyper Parameter Optimization Comparison](docs/en_US/CommunitySharings/HpoComparision.md)
+  * [Neural Architecture Search Comparison](docs/en_US/CommunitySharings/NasComparision.md)
+  * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
+  * [Automatically tuning SVD on NNI](docs/en_US/CommunitySharings/RecommendersSvd.md)
+  * **Blog (in Chinese)** - AutoML tools (Advisor, NNI and Google Vizier) comparison by [@gaocegege](https://github.com/gaocegege) - [总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
 
 ## **Feedback**
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI
