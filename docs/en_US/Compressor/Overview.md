@@ -156,7 +156,7 @@ class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
 ```
 
 #### Preprocess Model
-Sometimes, designer wants to preprocess model before compress, designer can overload preprocess_model() method 
+Sometimes, designer wants to preprocess model before compress, designer can overload bind_model() method 
 
 ```
 class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
@@ -174,7 +174,7 @@ class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
     def your_method(self, your_input):
         #your code
     
-    def preprocess_model(self, model):
+    def bind_model(self, model):
         #preprocess model
 ```
 #### Step and Epoch

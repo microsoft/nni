@@ -31,7 +31,7 @@ class TorchCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.preprocess_model(model)
+        self.bind_model(model)
 
 
     def bind_model(self, model):
