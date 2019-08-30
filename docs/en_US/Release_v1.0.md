@@ -7,7 +7,7 @@
 From September, 2018 to September, 2019, We are still moving on …
 
 
- **Great news!!!**  With the tag of **Scalability** and **Ease of Use** , NNI v1.0 is comming. Based on the various types of [Tuning Algorithms](./Tuner/BuiltinTuner.md),NNI has supported the [Neural Architecture Search](docs/en_US/AdvancedFeature/GeneralNasInterfaces.md),which is an exciting news for algorithmic engineers, besides these, NNI v1.0 has made many improvements in the [platform diversification](./TrainingService/SupportTrainingService.md) and [WebUI simplification](./Tutorial/WebUI.md).NNI has grown into a more intelligent automated machine learning(AutoML) toolkit.
+ **Great news!**&nbsp;&nbsp;With the tag of **Scalability** and **Ease of Use** , NNI v1.0 is comming. Based on the various types of [Tuning Algorithms](./Tuner/BuiltinTuner.md),NNI has supported the [Neural Architecture Search](docs/en_US/AdvancedFeature/GeneralNasInterfaces.md),which is an exciting news for algorithmic engineers, besides these, NNI v1.0 has made many improvements in the [platform diversification](./TrainingService/SupportTrainingService.md) and [WebUI simplification](./Tutorial/WebUI.md).NNI has grown into a more intelligent automated machine learning(AutoML) toolkit.
  
 
 
