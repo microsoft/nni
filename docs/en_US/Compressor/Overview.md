@@ -15,7 +15,7 @@ We have provided two naive compression algorithms and four popular ones for user
 
 ## Usage of built-in compression algorithms
 
-We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with LevelPruner, you can add the following three lines into your code before training your model ([here]() is complete code).
+We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with LevelPruner, you can add the following three lines into your code before training your model ([here](https://github.com/microsoft/nni/tree/master/examples/model_compress) is complete code).
 
 Tensorflow code
 ```
@@ -128,7 +128,7 @@ For the simpliest algorithm, you can only override `calc_mask`, it receives each
 
 Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., referennce to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms]() for example implementations.
+Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., referennce to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
 
 ### Quantization algorithm
 
