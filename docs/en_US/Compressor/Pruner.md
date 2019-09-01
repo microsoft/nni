@@ -1,5 +1,8 @@
 Pruner on NNI Compressor
 ===
+
+<a name="LevelPruner"></a>
+
 ## LevelPruner
 
 This is one basic pruner: you can set a target sparsity level(expressed as a fraction, 0.6 means we will prune 60%). 
@@ -21,6 +24,7 @@ pruner(model)
 ```
 
 ***
+<a name="AGPruner"></a>
 
 ## AGPruner
 In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
@@ -59,6 +63,7 @@ pruner.update_epoch(epoch)
 ```
 You can view example for more information
 ***
+<a name="SensitivityPruner"></a>
 
 ## SensitivityPruner
 In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.

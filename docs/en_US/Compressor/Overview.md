@@ -1,182 +1,172 @@
 # Compressor
-NNI provides easy-to-use toolkit to help user  design and use compression algorithm.
+NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and PyTorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#CustomizeCompression).
 
-## Framework
-We use the instrumentation method to insert a node or function after the corresponding position in the model.
+## Supported algorithms
+We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
 
-When compression algorithm designer implements one prune algorithm, designer only need to pay attention to the generation method of mask, without caring about applying the mask to the graph.
-## Algorithm
-We now provide some naive compression algorithm and four popular compress agorithms for users, including two pruning algorithm and two quantization algorithm.
-Below is a list of model compression algorithms supported in our compressor
-
-|Name|Paper|
+|Name|Brief Introduction of Algorithm|
 |---|---|
-| AGPruner| [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)|
-| SensitivityPruner |[Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626)|
-| QATquantizer      |[Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
-| DoReFaQuantizer   |[DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160)|
+| [LevelPruner](./Pruner#LevelPruner) | Pruning the specified ratio on each weight based on absolute values of weights |
+| [AGPruner](./Pruner#AGPruner) | To prune, or not to prune: exploring the efficacy of pruning for model compression. [Reference Paper](https://arxiv.org/abs/1710.01878)|
+| [SensitivityPruner](./Pruner#SensitivityPruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)|
+| [NaiveQuantizer](./Quantizer#NaiveQuantizer) |  Quantize weights to default 8 bits |
+| [QATquantizer](./Quantizer#QATquantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
+| [DoReFaQuantizer](./Quantizer#DoReFaQuantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
 
-## Usage
-### For compression algorithm user
+## Usage of built-in compression algorithms
 
-Take naive level pruner as an example, you can get detailed information in Pruner details.
-
-If you want to prune all weight to 80% sparsity, you can add code below into your code before your training code.
+We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with LevelPruner, you can add the following three lines into your code before training your model ([here](https://github.com/microsoft/nni/tree/master/examples/model_compress) is complete code).
 
 Tensorflow code
 ```
-pruner = nni.compressors.tf_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
-pruner(model_graph)
+config = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.tf_compressor.LevelPruner(config)
+pruner(tf.get_default_graph())
 ```
 
 Pytorch code
 ```
-pruner = nni.compressors.torch_compressor.LevelPruner([{'sparsity':0.8,'support_type': 'default'}])
+config = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.torch_compressor.LevelPruner(config)
 pruner(model)
 ```
 
-Our compressor will automatically insert mask into your model, and you can train your model with masks without changing your training code. You will get a compressed model when you finish your training.
+You can use other compression algorithms in the package of `nni.compressors`. The algorithms are implemented in both Pytorch and Tensorflow, under `nni.compressors.torch_compressor` and `nni.compressors.tf_compressor` respectively. You can refer to [Pruner](./Pruner) and [Quantizer](./Quantizer) for detail description of supported algorithms.
 
-You can get more information in Algorithm details
+The function call `pruner(model)` receives user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph`, while in Pytorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
-#### Configuration
-We now provide an default format for our build-in algorithm, algorithm designer can follow this format and use our default configure parser
+When instantiate a compression algorithm, there is `config` passed in. We describe how to write this config below.
 
-Following our default format, user can set configure in his code or a yaml file. And pass configure to compressor by init() or load_configure()
+### User configuration for a compression algorithm
 
+When compressing a model, users may want to specify the ratio for sparsity, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object. In each `dict`, there are some keys commonly supported by NNI compression:
 
-Code 
+* __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
+* __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
+* __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
+
+There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
+
+The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them. 
+
+A simple example of configuration is shown below:
 ```
 [{
-    'sparsity':0.8,
-    'support_layer':'default'
-    'support_op':['op_name1','op_name2']
+    'sparsity': 0.8,
+    'op_types': 'default'
+},
+{
+    'sparsity': 0.6,
+    'op_names': ['op_name1', 'op_name2']
+},
+{
+    'exclude': True,
+    'op_names': ['op_name3']
 }]
 ```
+It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and please do not compress `op_name3`.
 
-file
-```
-AGPruner:       
-  config:
-    -
-        start_epoch: 0
-        end_epoch: 16
-        frequency: 2
-        initial_sparsity: 0.05
-        final_sparsity: 0.60
-        support_type: default
-    - 
-        prune: False
-        start_epoch: 0
-        end_epoch: 20
-        frequency: 2
-        initial_sparsity: 0.05
-        final_sparsity: 0.60
-        support_type: [Linear] 
-        support_op: [conv1, conv2]
-```
-### For compression algorithm designer
-We use the instrumentation method to insert a node or function after the corresponding position in the model.  And we provide interface for designer to design compression algorithm easily.
+### Other APIs
 
-If you want to use mask to prune a model, you can use Pruner as base class. And design your mask in calc_mask() method.
+Some compression algorithms use epochs to control the progress of compression, and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
 
-Tensorflow code
+Tensorflow code 
 ```
+pruner.update_epoch(epoch, sess)
+```
+Pytorch code
+```
+pruner.update_epoch(epoch)
+```
+
+The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
+
+__[TODO]__ The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
+
+<a name="CustomizeCompression"></a>
+
+## Customize new compression algorithms
+
+To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruner and quantizer respectively.
+
+### Pruning algorithm
+
+If you want to write a new pruning algorithm, you can write a class that inherits `nni.compressors.tf_compressor.TfPruner` or `nni.compressors.torch_compressor.TorchPruner` depending on which framework you use. Then, override the member functions with the logic of your algorithm.
+
+```
+# This is writing a pruner in tensorflow.
+# For writing a pruner in Pytorch, you can simply replace
+# nni.compressors.tf_compressor.TfPruner with
+# nni.compressors.torch_compressor.TorchPruner
 class YourPruner(nni.compressors.tf_compressor.TfPruner):
-    def __init__(self, your_input):
-        # defaultly, we suggest you to use configure_list as input
+    def __init__(self, config):
+        # suggest you to use the NNI defined spec for config
         pass
     
-    # don not change calc_mask() input 
+    def bind_model(self, model):
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
+        pass
+
     def calc_mask(self, layer_info, weight):
         # you can get layer name in layer_info.name
         # you can get weight data in weight
         # design your mask and return your mask
         return your_mask
-    
-    # you can also design your method help to generate mask
-    def your_method(self, your_input):
-        #your code
 
-```
-Pytorch code
-```
-class YourPruner(nni.compressors.torch_compressor.TorchPruner):
-    def __init__(self, your_input):
+    # note for pytorch version, there is no sess in input arguments
+    def update_epoch(self, epoch_num, sess):
         pass
-    
-    # don not change calc_mask() input 
-    def calc_mask(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your mask and return your mask
-        return your_mask
-    
-    # you can also design your method help to generate mask
-    def your_method(self, your_input):
-        #your code
+
+    def step(self):
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
+        pass
 ```
 
-if you want to generate new weight and replace the old one, you are suggested to use Quantizer as base class. And you can manage the weight in quantize_weight() method.
+For the simpliest algorithm, you only need to override `calc_mask`, it receives each layer's information (i.e., layer name) and the layer's weight, you generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
-Tensorflow code
+Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
+
+Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., reference to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
+
+### Quantization algorithm
+
+The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+
 ```
+# This is writing a Quantizer in tensorflow.
+# For writing a Quantizer in Pytorch, you can simply replace
+# nni.compressors.tf_compressor.TfQuantizer with
+# nni.compressors.torch_compressor.TorchQuantizer
 class YourPruner(nni.compressors.tf_compressor.TfQuantizer):
-    def __init__(self, your_input):
+    def __init__(self, config):
+        # suggest you to use the NNI defined spec for config
         pass
-    
-    # don not change quantize_weight() input 
+
+    def bind_model(self, model):
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
+        pass
+
     def quantize_weight(self, layer_info, weight):
         # you can get layer name in layer_info.name
         # you can get weight data in weight
         # design your quantizer and return new weight
         return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
 
-```
-Pytorch code
-```
-class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
-    def __init__(self, your_input):
+    # note for pytorch version, there is no sess in input arguments
+    def update_epoch(self, epoch_num, sess):
         pass
-    
-    # don not change quantize_weight() input 
-    def quantize_weight(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your quantizer and return new weight
-        return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-```
 
-#### Preprocess Model
-Sometimes, designer wants to preprocess model before compress, designer can overload preprocess_model() method 
-
-```
-class YourPruner(nni.compressors.torch_compressor.TorchQuantizer):
-    def __init__(self, your_input):
+    def step(self):
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
         pass
-    
-    # don not change quantize_weight() input 
-    def quantize_weight(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your quantizer and return new weight
-        return new_weight
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-    
-    def preprocess_model(self, model):
-        #preprocess model
 ```
-#### Step and Epoch
-if an designer wants to update mask every step,  designer can implement step() or update_epoch() method in his code, and tell user to call when use it.
 
+__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
+
+### Usage of user customized compression algorithm
+
+__[TODO]__ ...
