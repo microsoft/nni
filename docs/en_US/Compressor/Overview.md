@@ -47,7 +47,7 @@ When compressing a model, users may want to specify the ratio for sparsity, to s
 
 There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
 
-The configuration in each `dict` is applied one by one, that is, latter configuration will overwrite former ones on the operations that are within the scope of both of them. 
+The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them. 
 
 A simple example of configuration is shown below:
 ```
