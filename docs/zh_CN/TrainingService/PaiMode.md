@@ -69,7 +69,7 @@ paiConfig:
             portNumber: 2
         
     
-    Let's say you want to launch a tensorboard in the mnist example using the port. So the first step is to write a wrapper script `launch_pai.sh` of `mnist.py`.
+    假设需要在 MNIST 示例中使用端口来运行 TensorBoard。 第一步是编写 `mnist.py` 的包装脚本 `launch_pai.sh`。
     
     ```bash
     export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
@@ -77,7 +77,7 @@ paiConfig:
     python3 mnist.py
     ```
     
-    The config file of portList should be filled as following:
+    portList 的配置部分如下：
     
     ```yaml
     trial:
