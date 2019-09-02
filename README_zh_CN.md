@@ -92,7 +92,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
           </ul>
-          <li><b><a href="docs/en_US/AdvancedFeature/GeneralNasInterfaces.md">NAS</a> Tuner</b></li>
+          <li><b><a href="docs/zh_CN/AdvancedFeature/GeneralNasInterfaces.md">NAS</a> Tuner</b></li>
           <ul>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
