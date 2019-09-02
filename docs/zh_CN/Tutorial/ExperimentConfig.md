@@ -552,7 +552,7 @@ machineList:
   
   - **uploadRetryCount**
     
-    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+    如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
 
 - **paiConfig**
   
