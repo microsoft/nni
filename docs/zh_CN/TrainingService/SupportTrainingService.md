@@ -35,5 +35,5 @@ TrainingService 的声明如下：
     }
     
 
-TrainingService 的父类有一些抽象函数，用户需要继承父类并实现所有这些抽象函数。  
-有关如何实现 TrainingService 的更多信息，[参考这里](HowToImplementTrainingService.md)。
+The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.  
+For more information about how to write your own TrainingService, please [refer](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/HowToImplementTrainingService.md).
