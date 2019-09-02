@@ -336,11 +336,11 @@ You can use these commands to get more information about the experiment
 
 经作者许可的一些 NNI 用法示例和相关文档。
 
-* **代码库** - 使用 NNI 调优 [ENAS](examples/tuners/enas_nni/README.md)
-* **代码库** - 使用 NNI 进行[神经网络架构搜索](examples/trials/nas_cifar10/README.md)。 
-* **代码库** - 使用 NNI 进行[自动特征工程](examples/trials/auto-feature-engineering/README.md)。 
+* **代码库** - 使用 NNI 调优 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)。
+* **代码库** - 使用 NNI 进行[神经网络架构搜索](examples/trials/nas_cifar10/README_zh_CN.md)。 
+* **代码库** - 使用 NNI 进行[自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)。 
 * **代码库** - 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)。
-* **Blog (in Chinese)** - AutoML tools (Advisor, NNI and Google Vizier) comparison by [@gaocegege](https://github.com/gaocegege) - [总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
+* **博客** - 自动机器学习工具（Advisor, NNI 和 Google Vizier）的比较，[作者：@gaocegege](https://github.com/gaocegege) - [kubeflow/katib 的设计与实现（总结与分析章节）](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
 
 ## **反馈**
 
