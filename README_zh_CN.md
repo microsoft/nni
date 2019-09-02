@@ -22,7 +22,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     <td>
       </td>
       <td>
-        <b>框架和库</b>
+        <b>支持的框架和库</b>
         <img src="docs/img/bar.png"/>
       </td>
       <td>
