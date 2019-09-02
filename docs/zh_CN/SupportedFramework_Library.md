@@ -10,7 +10,7 @@
     
 * [CIFAR-10](TrialExample/Cifar10Examples.md)  
     
-* [TGS salt identification chanllenge](../../examples/trials/kaggle-tgs-salt/README.md)  
+* [TGS salt identification chanllenge](../../examples/trials/kaggle-tgs-salt/README_zh_CN.md)  
     
 * [Network morphism](../../examples/trials/network_morphism/README_zh_CN.md)  
     
