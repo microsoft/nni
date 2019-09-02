@@ -345,7 +345,7 @@ You can use these commands to get more information about the experiment
 ## **反馈**
 
 * 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论
-* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 NNI 标签提问
+* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
 
 ## **许可协议**
