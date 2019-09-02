@@ -61,8 +61,8 @@ paiConfig:
 
 * portList
     
-    * Optional key. Set the portList configuration of OpenPAI, it specifies a list of port used in container, [Refer](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification).  
-        The config schema in NNI is shown below:
+    * 可选。 设置 OpenPAI 的 portList。指定了容器中使用的端口列表，[参考文档](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification)。  
+        示例如下：
         portList:
           - label: test
             beginAt: 8080
