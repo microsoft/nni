@@ -55,6 +55,32 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Optional key. Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 * authFile
     * Optional key, Set the auth file path for private registry while using PAI mode, [Refer](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job), you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
+* portList  
+    * Optional key. Set the portList configuration of OpenPAI, it specifies a list of port used in container, [Refer](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification).  
+    The config schema in NNI is shown below:
+    ```
+    portList:
+      - label: test
+        beginAt: 8080
+        portNumber: 2
+    ``` 
+    Let's say you want to launch a tensorboard in the mnist example using the port. So the first step is to write a wrapper script `launch_pai.sh` of `mnist.py`.
+
+    ```bash
+    export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
+    tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
+    python3 mnist.py
+    ```
+    The config file of portList should be filled as following:
+
+    ```yaml
+  trial:
+    command: bash launch_pai.sh
+    portList:
+      - label: tensorboard
+        beginAt: 0
+        portNumber: 1
+    ```
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```

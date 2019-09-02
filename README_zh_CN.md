@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.9](https://github.com/Microsoft/nni/releases) 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI [v1.0](https://github.com/Microsoft/nni/releases) 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 <p align="center">
   <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -92,7 +92,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
           </ul>
-          <li><b><a href="docs/zh_CN/CommunitySharings/NasComparision.md">网络结构搜索</a> Tuner</b></li>
+          <li><b><a href="docs/zh_CN/AdvancedFeature/GeneralNasInterfaces.md">NAS</a> Tuner</b></li>
           <ul>
           <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
@@ -199,7 +199,7 @@ Linux 和 macOS
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.9 https://github.com/Microsoft/nni.git
+    git clone -b v1.0 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -209,7 +209,7 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v0.9 https://github.com/Microsoft/nni.git
+  git clone -b v1.0 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
@@ -225,7 +225,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)�
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v0.9 https://github.com/Microsoft/nni.git
+    git clone -b v1.0 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 macOS
@@ -332,13 +332,15 @@ You can use these commands to get more information about the experiment
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
 
-## **外部代码库**
+## **其它代码库和参考**
 
-下面是一些贡献者为 NNI 提供的使用示例 谢谢可爱的贡献者！ 欢迎越来越多的人加入我们！
+经作者许可的一些 NNI 用法示例和相关文档。
 
-* 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
-* 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
-* [NNI 中的自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)
+* **代码库** - 使用 NNI 调优 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)。
+* **代码库** - 使用 NNI 进行[神经网络架构搜索](examples/trials/nas_cifar10/README_zh_CN.md)。 
+* **代码库** - 使用 NNI 进行[自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)。 
+* **代码库** - 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)。
+* **博客** - 自动机器学习工具（Advisor, NNI 和 Google Vizier）的比较，[作者：@gaocegege](https://github.com/gaocegege) - [kubeflow/katib 的设计与实现（总结与分析章节）](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
 
 ## **反馈**
 
