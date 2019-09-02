@@ -8,7 +8,7 @@
     :maxdepth: 2
 
     Recommenders 中使用 NNI<RecommendersSvd>
-    Automatically tuning SPTAG with NNI <SptagAutoTune>
+    使用 NNI 为 SPTAG 自动调参 <SptagAutoTune>
     神经网络结构搜索（NAS）的对比<NasComparision>
     超参调优算法的对比<HpoComparision>
     TPE 的并行优化<ParallelizingTpeSearch>
