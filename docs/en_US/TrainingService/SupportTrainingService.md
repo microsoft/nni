@@ -33,4 +33,4 @@ abstract class TrainingService {
 }
 ```
 The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.  
-For more information about how to write your own TrainingService, please [refer](https://github.com/SparkSnail/nni/blob/dev-trainingServiceDoc/docs/en_US/TrainingService/HowToImplementTrainingService.md).
+For more information about how to write your own TrainingService, please [refer](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/HowToImplementTrainingService.md).
