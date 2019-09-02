@@ -1,4 +1,4 @@
-# Automatically tuning SPTAG with NNI
+# 使用 NNI 为 SPTAG 自动调参
 
 [SPTAG](https://github.com/microsoft/SPTAG) (Space Partition Tree And Graph) is a library for large scale vector approximate nearest neighbor search scenario released by [Microsoft Research (MSR)](https://www.msra.cn/) and [Microsoft Bing](https://www.bing.com/).
 
