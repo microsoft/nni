@@ -31,13 +31,14 @@ import { getLogger, Logger } from '../../common/log';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
+import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
+var yaml = require('js-yaml');
 var fs = require('fs');
 
 /**
@@ -356,6 +357,52 @@ abstract class KubernetesTrainingService {
             }
         );
         return registrySecretName;
+    }
+
+    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: String, codeDir: String, uploadRetryCount: number | undefined): Promise<string> {
+        if (this.azureStorageClient === undefined) {
+            throw new Error('azureStorageClient is not initialized');
+        }
+        let trialJobOutputUrl: string = '';
+        let retryCount: number = 1;
+        if(uploadRetryCount) {
+            retryCount = uploadRetryCount;
+        }
+        let resultUploadNNIScript: boolean = false;
+        let resultUploadCodeFile: boolean = false;
+        try {
+            do {
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
+                if(!resultUploadNNIScript) {
+                    resultUploadNNIScript = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${trialLocalTempFolder}`);
+                }
+                //upload code files to azure storage
+                if(!resultUploadCodeFile) {
+                    resultUploadCodeFile = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${codeDir}`);
+                }
+                if (resultUploadNNIScript && resultUploadCodeFile) {
+                    trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
+                    `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                    break;
+                } else {
+                    //wait for 5 seconds to re-upload files
+                    await delay(5000);
+                    this.log.info('Upload failed, Retry: upload files to azure-storage');
+                }
+            } while (retryCount-- >= 0)
+        } catch (error) {
+            this.log.error(error);
+            //return a empty url when got error
+            return Promise.resolve("");
+        }
+        if(!trialJobOutputUrl) {
+            this.log.info(`Retry-count is used up, upload files to azureStorage for trial ${trialJobId} failed!`);
+        }
+        return Promise.resolve(trialJobOutputUrl);
     }
      
 }
