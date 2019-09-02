@@ -1,5 +1,8 @@
 Quantizer on NNI Compressor
 ===
+
+<a name="NaiveQuantizer"></a>
+
 ## NaiveQuantizer
 
 We provide NaiveQuantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
@@ -15,6 +18,8 @@ nni.compressors.torch_compressor.NaiveQuantizer()(model)
 ```
 
 ***
+<a name="QATquantizer"></a>
+
 ## QATquantizer
 In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
 
@@ -49,6 +54,8 @@ You can view example for more information
 
 
 ***
+<a name="DoReFaQuantizer"></a>
+
 ## DoReFaQuantizer
 In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160), authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
 
