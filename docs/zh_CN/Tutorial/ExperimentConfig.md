@@ -549,6 +549,10 @@ machineList:
     - **azureShare**
       
       **azureShare** 是 Azure 文件存储的共享参数。
+  
+  - **uploadRetryCount**
+    
+    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
 
 - **paiConfig**
   
