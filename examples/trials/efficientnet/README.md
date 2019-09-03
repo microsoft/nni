@@ -12,7 +12,11 @@ We provide here:
 
 ## Instructions
 
-1. Clone our modified version of [EfficientNet-PyTorch](https://github.com/ultmaster/EfficientNet-PyTorch) in this directory.
+1. Clone our modified version of [EfficientNet-PyTorch](https://github.com/ultmaster/EfficientNet-PyTorch).
+   The modifications were done to adhere to the original [Tensorflow version](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 
+   as close as possible (including EMA, label smoothing and etc.); also added are the interactions with NNI.
+   Clone it into `EfficientNet-PyTorch`; then you will see files like `main.py`, `train_imagenet.sh`, as specified
+   in the configuration files.
 2. Resolve all the dependencies following the README.
 3. Run `nnictl create --config config_lr.yml` if you want to do transfer learning;
    or `nnictl create --config config_net.yml` if you want to find the best EfficientNet-B1.
