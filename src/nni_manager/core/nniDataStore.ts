@@ -27,7 +27,7 @@ import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo, HyperParameterFormat,
     ExportedDataFormat } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
+import { getExperimentId, getExperimentMode } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
@@ -47,7 +47,7 @@ class NNIDataStore implements DataStore {
 
         // TODO support specify database dir
         const databaseDir: string = getDefaultDatabaseDir();
-        if(isNewExperiment()) {
+        if(getExperimentMode() === 'new') {
             mkDirP(databaseDir).then(() => {
                 this.db.init(true, databaseDir).then(() => {
                     this.log.info('Datastore initialization done');

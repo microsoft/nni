@@ -73,6 +73,10 @@ export class MockedNNIManager extends Manager {
         return Promise.resolve();
     }
 
+    public viewExperiment(): Promise<void> {
+        return Promise.resolve();
+    }
+
     public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const deferred: Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
         const jobDetail: TrialJobDetail = {
