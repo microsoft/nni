@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { isNewExperiment } from '../common/experimentStartupInfo';
+import { getExperimentMode } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
@@ -159,7 +159,8 @@ class NNIRestHandler {
 
     private startExperiment(router: Router): void {
         router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
-            if (isNewExperiment()) {
+            let experimentMode: string = getExperimentMode();
+            if (experimentMode === 'new') {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
                         experiment_id: eid
@@ -168,8 +169,15 @@ class NNIRestHandler {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else {
+            } else if (experimentMode === 'resume'){
                 this.nniManager.resumeExperiment().then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
+                    this.handle_error(err, res);
+                });
+            } else {
+                this.nniManager.viewExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal

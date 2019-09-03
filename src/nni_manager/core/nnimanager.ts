@@ -180,6 +180,12 @@ class NNIManager implements Manager {
         return this.experimentProfile.id;
     }
 
+    public async viewExperiment(): Promise<void> {
+        this.log.info(`Viewing experiment: ${this.experimentProfile.id}`);
+        this.experimentProfile = await this.dataStore.getExperimentProfile(getExperimentId());
+        this.setStatus('VIEWING');
+    }
+
     public async resumeExperiment(): Promise<void> {
         this.log.info(`Resuming experiment: ${this.experimentProfile.id}`);
         //Fetch back the experiment profile

@@ -21,7 +21,7 @@
 
 import argparse
 import pkg_resources
-from .launcher import create_experiment, resume_experiment
+from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import *
 from .package_management import *
@@ -65,6 +65,12 @@ def parse_args():
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.set_defaults(func=resume_experiment)
+
+    # parse view command
+    parser_resume = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.set_defaults(func=view_experiment)
 
     # parse update command
     parser_updater = subparsers.add_parser('update', help='update the experiment')

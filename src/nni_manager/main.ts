@@ -44,9 +44,8 @@ import {
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number,
     logDirectory: string, experimentLogLevel: string): void {
-    const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel);
+    setExperimentStartupInfo(startExpMode, expId, basePort, logDirectory, experimentLogLevel);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -89,7 +88,7 @@ async function initContainer(platformMode: string): Promise<void> {
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume/view> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -108,15 +107,15 @@ if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
-if (!['new', 'resume'].includes(startMode)) {
+if (!['new', 'resume', 'view'].includes(startMode)) {
     console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if (startMode === 'resume' && experimentId.trim().length < 1) {
-    console.log(`FATAL: cannot resume experiment, invalid experiment_id: ${experimentId}`);
+if ((startMode === 'resume' || startMode === 'view') && experimentId.trim().length < 1) {
+    console.log(`FATAL: cannot resume or view the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
 }

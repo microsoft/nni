@@ -123,7 +123,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         cmds += ['--log_dir', log_dir]
     if log_level is not None:
         cmds += ['--log_level', log_level]
-    if mode == 'resume':
+    if mode == 'resume' or 'view':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
@@ -553,3 +553,36 @@ def create_experiment(args):
     nni_config.set_config('experimentConfig', experiment_config)
     launch_experiment(args, experiment_config, 'new', config_file_name)
     nni_config.set_config('restServerPort', args.port)
+
+def view_experiment(args):
+    '''view a stopped experiment'''
+    update_experiment()
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    experiment_id = None
+    experiment_endTime = None
+    #find the latest stopped experiment
+    if not args.id:
+        print_error('Please set experiment id! \nYou could use \'nnictl resume {id}\' to resume a stopped experiment!\n' \
+        'You could use \'nnictl experiment list --all\' to show all experiments!')
+        exit(1)
+    else:
+        if experiment_dict.get(args.id) is None:
+            print_error('Id %s not exist!' % args.id)
+            exit(1)
+        if experiment_dict[args.id]['status'] != 'STOPPED':
+            print_error('Only stopped experiments can be resumed!')
+            exit(1)
+        experiment_id = args.id
+    print_normal('Viewing experiment %s...' % experiment_id)
+    nni_config = Config(experiment_dict[experiment_id]['fileName'])
+    experiment_config = nni_config.get_config('experimentConfig')
+    experiment_id = nni_config.get_config('experimentId')
+    new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    new_nni_config = Config(new_config_file_name)
+    new_nni_config.set_config('experimentConfig', experiment_config)
+
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], 'view', new_config_file_name, experiment_id)
+    nni_config.set_config('restServerPid', rest_process.pid)
+    new_nni_config.set_config('restServerPort', args.port)
+

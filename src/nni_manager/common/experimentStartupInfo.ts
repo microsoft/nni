@@ -27,18 +27,18 @@ import * as component from '../common/component';
 @component.Singleton
 class ExperimentStartupInfo {
     private experimentId: string = '';
-    private newExperiment: boolean = true;
+    private experimentMode: string = '';
     private basePort: number = -1;
     private initialized: boolean = false;
     private initTrialSequenceID: number = 0;
     private logDir: string = '';
     private logLevel: string = '';
 
-    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
+    public setStartupInfo(experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
 
-        this.newExperiment = newExperiment;
+        this.experimentMode = experimentMode;
         this.experimentId = experimentId;
         this.basePort = basePort;
         this.initialized = true;
@@ -66,10 +66,10 @@ class ExperimentStartupInfo {
         return this.basePort;
     }
 
-    public isNewExperiment(): boolean {
+    public getExperimentMode(): string {
         assert(this.initialized);
 
-        return this.newExperiment;
+        return this.experimentMode;
     }
 
     public getLogDir(): string {
@@ -104,8 +104,8 @@ function getBasePort(): number {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getBasePort();
 }
 
-function isNewExperiment(): boolean {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
+function getExperimentMode(): string {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getExperimentMode();
 }
 
 function setInitTrialSequenceId(initSequenceId: number): void {
@@ -121,10 +121,10 @@ function getExperimentStartupInfo(): ExperimentStartupInfo {
 }
 
 function setExperimentStartupInfo(
-    newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
+    experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
     component.get<ExperimentStartupInfo>(ExperimentStartupInfo)
-    .setStartupInfo(newExperiment, experimentId, basePort, logDir, logLevel);
+    .setStartupInfo(experimentMode, experimentId, basePort, logDir, logLevel);
 }
 
-export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
+export { ExperimentStartupInfo, getBasePort, getExperimentId, getExperimentMode, getExperimentStartupInfo,
     setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };
