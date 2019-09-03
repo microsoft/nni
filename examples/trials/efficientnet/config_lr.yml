@@ -4,7 +4,7 @@ trialConcurrency: 4
 maxExecDuration: 48h
 maxTrialNum: 140
 trainingServicePlatform: pai
-searchSpacePath: search_lr.json
+searchSpacePath: search_lr_old.json
 useAnnotation: false
 tuner:
   builtinTunerName: GridSearch
