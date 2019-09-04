@@ -75,16 +75,19 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: KeyVaultConfig;
     public readonly azureStorage: AzureStorage;
+    public readonly uploadRetryCount: number | undefined;
 
     constructor(
             apiVersion: string,
             keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
-            storage?: KubernetesStorageKind
+            storage?: KubernetesStorageKind,
+            uploadRetryCount?: number
         ) {
         super(apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+        this.uploadRetryCount = uploadRetryCount;
     }
 
     public get storageType(): KubernetesStorageKind {
@@ -98,7 +101,8 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
             kubernetesClusterConfigObjectAzure.apiVersion,
             kubernetesClusterConfigObjectAzure.keyVault,
             kubernetesClusterConfigObjectAzure.azureStorage,
-            kubernetesClusterConfigObjectAzure.storage
+            kubernetesClusterConfigObjectAzure.storage,
+            kubernetesClusterConfigObjectAzure.uploadRetryCount
         );
     }
 }
