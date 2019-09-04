@@ -1,4 +1,9 @@
-"""A deep MNIST classifier using convolutional layers."""
+"""
+A deep MNIST classifier using convolutional layers.
+
+This file is a modification of the official pytorch mnist example:
+https://github.com/pytorch/examples/blob/master/mnist/main.py
+"""
 
 import argparse
 import logging

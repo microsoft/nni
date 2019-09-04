@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_mnist
+experimentName: example_mnist_pytorch
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 50

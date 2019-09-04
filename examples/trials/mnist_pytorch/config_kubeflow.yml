@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_dist
+experimentName: example_dist_pytorch
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 1
