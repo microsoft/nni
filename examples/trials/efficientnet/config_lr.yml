@@ -16,7 +16,7 @@ trial:
   gpuNum: 1
   shmMB: 8192
   virtualCluster: nni
-  image: ultmaster/nni:latest
+  image: msranni/nni:latest
 nniManagerIp: <nni_manager_ip>
 paiConfig:
   userName: <username>
