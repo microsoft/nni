@@ -62,8 +62,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         <ul>
         <li><b>示例</b></li>
          <ul>
-           <li><a href="examples/trials/mnist-distributed-pytorch">MNIST-pytorch</li></a>
-           <li><a href="examples/trials/mnist-distributed">MNIST-tensorflow</li></a>
+           <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
+           <li><a href="examples/trials/mnist">MNIST-tensorflow</li></a>
            <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
