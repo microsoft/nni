@@ -37,7 +37,6 @@ class ExperimentStartupInfo {
     public setStartupInfo(experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
-
         this.experimentMode = experimentMode;
         this.experimentId = experimentId;
         this.basePort = basePort;

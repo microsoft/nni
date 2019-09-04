@@ -123,7 +123,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         cmds += ['--log_dir', log_dir]
     if log_level is not None:
         cmds += ['--log_level', log_level]
-    if mode == 'resume' or 'view':
+    if mode in ['resume', 'view']:
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
@@ -371,8 +371,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
-    if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
-        log_level = 'debug'
+    if mode != 'view':
+        if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
+            log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
@@ -406,84 +407,85 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
-
-    # set remote config
-    if experiment_config['trainingServicePlatform'] == 'remote':
-        print_normal('Setting remote config...')
-        config_result, err_msg = set_remote_config(experiment_config, args.port, config_file_name)
-        if config_result:
-            print_normal('Successfully set remote config!')
-        else:
-            print_error('Failed! Error is: {}'.format(err_msg))
-            try:
-                kill_command(rest_process.pid)
-            except Exception:
-                raise Exception(ERROR_INFO % 'Rest server stopped!')
-            exit(1)
-
-    # set local config
-    if experiment_config['trainingServicePlatform'] == 'local':
-        print_normal('Setting local config...')
-        if set_local_config(experiment_config, args.port, config_file_name):
-            print_normal('Successfully set local config!')
-        else:
-            print_error('Set local config failed!')
-            try:
-                kill_command(rest_process.pid)
-            except Exception:
-                raise Exception(ERROR_INFO % 'Rest server stopped!')
-            exit(1)
-
-    #set pai config
-    if experiment_config['trainingServicePlatform'] == 'pai':
-        print_normal('Setting pai config...')
-        config_result, err_msg = set_pai_config(experiment_config, args.port, config_file_name)
-        if config_result:
-            print_normal('Successfully set pai config!')
-        else:
-            if err_msg:
+    if mode != 'view':
+        # set remote config
+        if experiment_config['trainingServicePlatform'] == 'remote':
+            print_normal('Setting remote config...')
+            config_result, err_msg = set_remote_config(experiment_config, args.port, config_file_name)
+            if config_result:
+                print_normal('Successfully set remote config!')
+            else:
                 print_error('Failed! Error is: {}'.format(err_msg))
-            try:
-                kill_command(rest_process.pid)
-            except Exception:
-                raise Exception(ERROR_INFO % 'Restful server stopped!')
-            exit(1)
+                try:
+                    kill_command(rest_process.pid)
+                except Exception:
+                    raise Exception(ERROR_INFO % 'Rest server stopped!')
+                exit(1)
 
-    #set kubeflow config
-    if experiment_config['trainingServicePlatform'] == 'kubeflow':
-        print_normal('Setting kubeflow config...')
-        config_result, err_msg = set_kubeflow_config(experiment_config, args.port, config_file_name)
-        if config_result:
-            print_normal('Successfully set kubeflow config!')
-        else:
-            if err_msg:
-                print_error('Failed! Error is: {}'.format(err_msg))
-            try:
-                kill_command(rest_process.pid)
-            except Exception:
-                raise Exception(ERROR_INFO % 'Restful server stopped!')
-            exit(1)
-    
-    #set frameworkcontroller config
-    if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
-        print_normal('Setting frameworkcontroller config...')
-        config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)
-        if config_result:
-            print_normal('Successfully set frameworkcontroller config!')
-        else:
-            if err_msg:
-                print_error('Failed! Error is: {}'.format(err_msg))
-            try:
-                kill_command(rest_process.pid)
-            except Exception:
-                raise Exception(ERROR_INFO % 'Restful server stopped!')
-            exit(1)
+        # set local config
+        if experiment_config['trainingServicePlatform'] == 'local':
+            print_normal('Setting local config...')
+            if set_local_config(experiment_config, args.port, config_file_name):
+                print_normal('Successfully set local config!')
+            else:
+                print_error('Set local config failed!')
+                try:
+                    kill_command(rest_process.pid)
+                except Exception:
+                    raise Exception(ERROR_INFO % 'Rest server stopped!')
+                exit(1)
+
+        #set pai config
+        if experiment_config['trainingServicePlatform'] == 'pai':
+            print_normal('Setting pai config...')
+            config_result, err_msg = set_pai_config(experiment_config, args.port, config_file_name)
+            if config_result:
+                print_normal('Successfully set pai config!')
+            else:
+                if err_msg:
+                    print_error('Failed! Error is: {}'.format(err_msg))
+                try:
+                    kill_command(rest_process.pid)
+                except Exception:
+                    raise Exception(ERROR_INFO % 'Restful server stopped!')
+                exit(1)
+
+        #set kubeflow config
+        if experiment_config['trainingServicePlatform'] == 'kubeflow':
+            print_normal('Setting kubeflow config...')
+            config_result, err_msg = set_kubeflow_config(experiment_config, args.port, config_file_name)
+            if config_result:
+                print_normal('Successfully set kubeflow config!')
+            else:
+                if err_msg:
+                    print_error('Failed! Error is: {}'.format(err_msg))
+                try:
+                    kill_command(rest_process.pid)
+                except Exception:
+                    raise Exception(ERROR_INFO % 'Restful server stopped!')
+                exit(1)
+        
+        #set frameworkcontroller config
+        if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
+            print_normal('Setting frameworkcontroller config...')
+            config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)
+            if config_result:
+                print_normal('Successfully set frameworkcontroller config!')
+            else:
+                if err_msg:
+                    print_error('Failed! Error is: {}'.format(err_msg))
+                try:
+                    kill_command(rest_process.pid)
+                except Exception:
+                    raise Exception(ERROR_INFO % 'Restful server stopped!')
+                exit(1)
 
     # start a new experiment
     print_normal('Starting experiment...')
-    # set debug configuration
-    if experiment_config.get('debug') is None:
-        experiment_config['debug'] = args.debug
+    if mode != 'view':
+        # set debug configuration
+        if experiment_config.get('debug') is None:
+            experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
         if experiment_id is None:
@@ -581,8 +583,5 @@ def view_experiment(args):
     new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
     new_nni_config = Config(new_config_file_name)
     new_nni_config.set_config('experimentConfig', experiment_config)
-
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], 'view', new_config_file_name, experiment_id)
-    nni_config.set_config('restServerPid', rest_process.pid)
+    launch_experiment(args, experiment_config, 'view', new_config_file_name, experiment_id)
     new_nni_config.set_config('restServerPort', args.port)
-

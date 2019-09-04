@@ -192,60 +192,60 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
+        this.setStatus('VIEWING');
+        // setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
-        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
+        // // Set up multiphase config
+        // if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+        //     this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        // }
 
-        // Set up multiphase config
-        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
-            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
-        }
+        // // Set up versionCheck config
+        // if (expParams.versionCheck !== undefined) {
+        //     this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
+        // }
 
-        // Set up versionCheck config
-        if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
-        }
+        // const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
+        //     expParams.multiPhase, expParams.multiThread);
+        // this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+        // const checkpointDir: string = await this.createCheckpointDir();
+        // this.setupTuner(
+        //     dispatcherCommand,
+        //     undefined,
+        //     'resume',
+        //     checkpointDir);
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-            expParams.multiPhase, expParams.multiThread);
-        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
-        const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(
-            dispatcherCommand,
-            undefined,
-            'resume',
-            checkpointDir);
+        // const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
-        const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
+        // // Resume currSubmittedTrialNum
+        // this.currSubmittedTrialNum = allTrialJobs.length;
 
-        // Resume currSubmittedTrialNum
-        this.currSubmittedTrialNum = allTrialJobs.length;
+        // // Check the final status for WAITING and RUNNING jobs
+        // await Promise.all(allTrialJobs
+        //     .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
+        //     .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
-        // Check the final status for WAITING and RUNNING jobs
-        await Promise.all(allTrialJobs
-            .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+        // // Collect generated trials and imported trials
+        // const finishedTrialData: string = await this.exportData();
+        // const importedData: string[] = await this.dataStore.getImportedData();
+        // let trialData: Object[] = JSON.parse(finishedTrialData);
+        // for (const oneImportedData of importedData) {
+        //     // do not deduplicate
+        //     trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
+        // }
+        // this.trialDataForTuner = JSON.stringify(trialData);
 
-        // Collect generated trials and imported trials
-        const finishedTrialData: string = await this.exportData();
-        const importedData: string[] = await this.dataStore.getImportedData();
-        let trialData: Object[] = JSON.parse(finishedTrialData);
-        for (const oneImportedData of importedData) {
-            // do not deduplicate
-            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
-        }
-        this.trialDataForTuner = JSON.stringify(trialData);
+        // if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+        //     this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+        //     this.experimentProfile.endTime) {
+        //     delete this.experimentProfile.endTime;
+        // }
+        // this.setStatus('RUNNING');
 
-        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
-            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
-            this.experimentProfile.endTime) {
-            delete this.experimentProfile.endTime;
-        }
-        this.setStatus('RUNNING');
-
-        // TO DO: update database record for resume event
-        this.run().catch((err: Error) => {
-            this.criticalError(err);
-        });
+        // // TO DO: update database record for resume event
+        // this.run().catch((err: Error) => {
+        //     this.criticalError(err);
+        // });
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
