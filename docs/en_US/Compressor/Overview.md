@@ -118,7 +118,8 @@ class YourPruner(nni.compressors.tf_compressor.TfPruner):
     def update_epoch(self, epoch_num, sess):
         pass
 
-    def step(self):
+    # note for pytorch version, there is no sess in input arguments
+    def step(self, sess):
         # can do some processing based on the model or weights binded
         # in the func bind_model
         pass
@@ -159,17 +160,11 @@ class YourPruner(nni.compressors.tf_compressor.TfQuantizer):
     def update_epoch(self, epoch_num, sess):
         pass
 
-    def step(self):
+    # note for pytorch version, there is no sess in input arguments
+    def step(self, sess):
         # can do some processing based on the model or weights binded
         # in the func bind_model
         pass
-    
-    # don not change quantize_weight() input 
-    def quantize_weight(self, layer_info, weight):
-        # you can get layer name in layer_info.name
-        # you can get weight data in weight
-        # design your quantizer and return new weight
-        return new_weight
     
     # you can also design your method
     def your_method(self, your_input):
