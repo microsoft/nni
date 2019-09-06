@@ -55,10 +55,8 @@ def get_current_parameter(tag=None):
     if _params is None:
         return None
     if tag is None:
-        # return all parameters when tag is None
-        return _params["parameters"]
-    else:
-        return _params['parameters'][tag]
+        return _params['parameters']
+    return _params['parameters'][tag]
 
 def get_experiment_id():
     return _experiment_id

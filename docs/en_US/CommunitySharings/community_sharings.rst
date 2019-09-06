@@ -8,6 +8,7 @@ In addtion to the official tutorilas and examples, we encourage community contri
     :maxdepth: 2
 
     NNI in Recommenders <RecommendersSvd>
+    Automatically tuning SPTAG with NNI <SptagAutoTune>
     Neural Architecture Search Comparison <NasComparision>
     Hyper-parameter Tuning Algorithm Comparsion <HpoComparision>
     Parallelizing Optimization for TPE <ParallelizingTpeSearch>

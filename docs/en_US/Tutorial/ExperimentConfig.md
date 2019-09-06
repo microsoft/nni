@@ -519,6 +519,10 @@ machineList:
 
       __azureShare__ is the share of the azure file storage.
 
+  * __uploadRetryCount__
+
+    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+
 * __paiConfig__
 
   * __userName__
