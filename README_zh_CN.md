@@ -170,7 +170,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 **通过 pip 命令安装**
 
-* 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+* We support Linux, MacOS and Windows (local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 Linux 和 macOS
 
