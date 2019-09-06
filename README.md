@@ -347,17 +347,11 @@ Before providing your hacks, you can review the [Contributing Instruction](docs/
 
 ## **External Repositories and References**
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
-
-* **Repo** - Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-* **Repo** - Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-* **Repo** - [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
-* **Repo** - [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-* **Blog (in Chinese)** - AutoML tools (Advisor, NNI and Google Vizier) comparison by [@gaocegege]( https://github.com/gaocegege ) - [总结与分析 section of design and implementation of kubeflow/katib](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
-
-  * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-  * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-  * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
-  * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
+* ### **External Repositories** ###
+   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
+   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
+   * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
+   * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
 
 * ### **Relevant Articles** ###
   
