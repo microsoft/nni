@@ -4,6 +4,11 @@ from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
 class FixedProductTuner(GridSearchTuner):
 
     def __init__(self, product):
+        """
+        This tuner is essentially grid search, but it guarantees all the parameters with alpha * beta^2 * gamma^2 is
+        approximately `product`.
+        :param product: the constant provided, should be 2 in EfficientNet-B1
+        """
         super().__init__()
         self.product = product
 
