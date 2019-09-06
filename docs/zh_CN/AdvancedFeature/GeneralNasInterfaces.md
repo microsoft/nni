@@ -1,6 +1,6 @@
-# 神经网络架构搜索的通用编程接口（测试版）
+# NNI Programming Interface for Neural Architecture Search (NAS)
 
-** 这是一个测试中的功能，目前只实现了通用的 NAS 编程接口。 在随后的版本中会支持权重共享。*
+**This is an **experimental feature**. Currently, we only implemented the general NAS programming interface. Weight sharing will be supported in the following releases.*
 
 自动化的神经网络架构（NAS）搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动化 NAS 的可行性，并发现了一些超越手动设计和调整的模型。 代表算法有 [NASNet](https://arxiv.org/abs/1707.07012)，[ENAS](https://arxiv.org/abs/1802.03268)，[DARTS](https://arxiv.org/abs/1806.09055)，[Network Morphism](https://arxiv.org/abs/1806.10282)，以及 [Evolution](https://arxiv.org/abs/1703.01041) 等。 新的算法还在不断涌现。 然而，实现这些算法需要很大的工作量，且很难重用其它算法的代码库来实现。
 
