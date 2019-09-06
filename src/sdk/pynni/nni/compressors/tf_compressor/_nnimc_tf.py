@@ -32,7 +32,7 @@ class TfCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.preprocess_model(model)
+        self.bind_model(model)
 
     def compress_default_graph(self):
         """
@@ -42,7 +42,7 @@ class TfCompressor:
         self.compress(tf.get_default_graph())
 
 
-    def preprocess_model(self, model):
+    def bind_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.

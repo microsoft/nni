@@ -31,10 +31,10 @@ class TorchCompressor:
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
         self._bound_model = model
-        self.preprocess_model(model)
+        self.bind_model(model)
 
 
-    def preprocess_model(self, model):
+    def bind_model(self, model):
         """
         This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.

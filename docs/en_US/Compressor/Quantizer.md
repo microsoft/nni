@@ -5,7 +5,7 @@ Quantizer on NNI Compressor
 
 ## NaiveQuantizer
 
-We provide NaiveQuantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm.
+We provide NaiveQuantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
 
 ### Usage
 tensorflow
@@ -16,6 +16,7 @@ pytorch
 ```
 nni.compressors.torch_compressor.NaiveQuantizer()(model)
 ```
+
 ***
 <a name="QATquantizer"></a>
 
@@ -34,17 +35,23 @@ You can quantize your model to 8 bits with the code below before your training c
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import QATquantizer
-quantizer = QATquantizer(q_bits = 8)
+configure_list = [{'q_bits':8, 'support_type':'default'}]
+quantizer = QATquantizer(configure_list)
 quantizer(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import QATquantizer
-quantizer = QATquantizer(q_bits = 8)
+configure_list = [{'q_bits':8, 'support_type':'default'}]
+quantizer = QATquantizer(configure_list)
 quantizer(model)
 ```
 
 You can view example for more information
+
+#### User configuration for QATquantizer
+* **q_bits:** This is to specify the q_bits operations to be quantized to
+
 
 ***
 <a name="DoReFaQuantizer"></a>
@@ -58,14 +65,19 @@ To implement DoReFaQuantizer, you can add code below before your training code
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import DoReFaQuantizer
-quantizer = DoReFaQuantizer(q_bits = 8)
+configure_list = [{'q_bits':8, 'support_type':'default'}]
+quantizer = DoReFaQuantizer(configure_list)
 quantizer(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import DoReFaQuantizer
-quantizer = DoReFaQuantizer(q_bits = 8)
+configure_list = [{'q_bits':8, 'support_type':'default'}]
+quantizer = DoReFaQuantizer(configure_list)
 quantizer(model)
 ```
 
 You can view example for more information
+
+#### User configuration for QATquantizer
+* **q_bits:** This is to specify the q_bits operations to be quantized to
