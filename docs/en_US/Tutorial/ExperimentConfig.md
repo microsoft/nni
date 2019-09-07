@@ -1,8 +1,8 @@
 # Experiment config reference
 
-A config file is needed when create an experiment, the path of the config file is provide to nnictl.
-The config file is written in YAML format, and need to be written correctly.
-This document describes the rule to write config file, and will provide some examples and templates.
+A config file is needed when creating an experiment. The path of the config file is provide to `nnictl`.
+The config file is in YAML format.
+This document describes the rules to write the config file, and provides some examples and templates.
 
 - [Experiment config reference](#Experiment-config-reference)
   - [Template](#Template)
