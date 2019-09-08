@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v1.0](https://github.com/Microsoft/nni/releases) 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI [v1.0](https://github.com/Microsoft/nni/blob/readme-v1/docs/en_US/Release_v1.0.md) has been released! &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 <p align="center">
   <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -336,17 +336,26 @@ You can use these commands to get more information about the experiment
 
 经作者许可的一些 NNI 用法示例和相关文档。
 
-* **代码库** - 使用 NNI 调优 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)。
-* **代码库** - 使用 NNI 进行[神经网络架构搜索](examples/trials/nas_cifar10/README_zh_CN.md)。 
-* **代码库** - 使用 NNI 进行[自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)。 
-* **代码库** - 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)。
-* **博客** - 自动机器学习工具（Advisor, NNI 和 Google Vizier）的比较，[作者：@gaocegege](https://github.com/gaocegege) - [kubeflow/katib 的设计与实现（总结与分析章节）](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
+* ### **External Repositories**
+   
+   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
+   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
+   * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
+   * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
+* ### **Relevant Articles**
+   
+   * [Hyper Parameter Optimization Comparison](docs/en_US/CommunitySharings/HpoComparision.md)
+   * [Neural Architecture Search Comparison](docs/en_US/CommunitySharings/NasComparision.md)
+   * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
+   * [Automatically tuning SVD with NNI](docs/en_US/CommunitySharings/RecommendersSvd.md)
+   * [Automatically tuning SPTAG with NNI](docs/en_US/CommunitySharings/SptagAutoTune.md)
+   * **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) by [@gaocegege](https://github.com/gaocegege) - 总结与分析 section of design and implementation of kubeflow/katib
 
 ## **反馈**
 
-* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论
-* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问
-* [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
+* Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
+* [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
 
 ## **许可协议**
 
