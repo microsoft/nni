@@ -1,6 +1,6 @@
-# General Programming Interface for Neural Architecture Search (experimental feature)
+# NNI Programming Interface for Neural Architecture Search (NAS)
 
-_*This is an experimental feature, currently, we only implemented the general NAS programming interface. Weight sharing will be supported in the following releases._
+_*This is an **experimental feature**. Currently, we only implemented the general NAS programming interface. Weight sharing will be supported in the following releases._
 
 Automatic neural architecture search is taking an increasingly important role on finding better models. Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually designed and tuned models. Some of representative works are [NASNet][2], [ENAS][1], [DARTS][3], [Network Morphism][4], and [Evolution][5]. There are new innovations keeping emerging. However, it takes great efforts to implement those algorithms, and it is hard to reuse code base of one algorithm for implementing another.
 

@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v1.0](https://github.com/Microsoft/nni/releases) 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI [v1.0](https://github.com/Microsoft/nni/blob/master/docs/zh_CN/Release_v1.0.md) 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 <p align="center">
   <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -62,8 +62,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         <ul>
         <li><b>示例</b></li>
          <ul>
-           <li><a href="examples/trials/mnist-distributed-pytorch">MNIST-pytorch</li></a>
-           <li><a href="examples/trials/mnist-distributed">MNIST-tensorflow</li></a>
+           <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
+           <li><a href="examples/trials/mnist">MNIST-tensorflow</li></a>
            <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
@@ -336,17 +336,26 @@ You can use these commands to get more information about the experiment
 
 经作者许可的一些 NNI 用法示例和相关文档。
 
-* **代码库** - 使用 NNI 调优 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)。
-* **代码库** - 使用 NNI 进行[神经网络架构搜索](examples/trials/nas_cifar10/README_zh_CN.md)。 
-* **代码库** - 使用 NNI 进行[自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md)。 
-* **代码库** - 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)。
-* **博客** - 自动机器学习工具（Advisor, NNI 和 Google Vizier）的比较，[作者：@gaocegege](https://github.com/gaocegege) - [kubeflow/katib 的设计与实现（总结与分析章节）](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90)
+* ### **外部代码库**
+   
+   * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
+   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
+   * [NNI 中的自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md) 
+   * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
+* ### **相关文章**
+   
+   * [超参数优化的对比](docs/en_US/CommunitySharings/HpoComparision.md)
+   * [神经网络结构搜索的对比](docs/en_US/CommunitySharings/NasComparision.md)
+   * [并行化顺序算法：TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
+   * [使用 NNI 为 SVD 自动调参](docs/en_US/CommunitySharings/RecommendersSvd.md)
+   * [使用 NNI 为 SPTAG 自动调参](docs/en_US/CommunitySharings/SptagAutoTune.md)
+   * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
 
 ## **反馈**
 
-* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论
-* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问
+* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
+* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问。
 
 ## **许可协议**
 
