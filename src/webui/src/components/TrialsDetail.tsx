@@ -171,7 +171,9 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             status: status,
                             duration: duration,
                             acc: acc,
-                            description: desc
+                            description: desc,
+                            startTime: begin,
+                            endTime: (end !== undefined) ? end : undefined
                         });
                     });
                     // update search data result

@@ -8,6 +8,8 @@ interface TableObj {
     acc?: FinalType; // draw accuracy graph
     description: Parameters;
     color?: string;
+    startTime?: number;
+    endTime?: number;
 }
 
 interface SearchSpace {
