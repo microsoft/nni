@@ -50,6 +50,7 @@ jobs:
     displayName: 'Install dependencies for integration tests in PAI mode'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi

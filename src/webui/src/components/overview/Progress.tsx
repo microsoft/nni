@@ -11,11 +11,12 @@ import '../../static/style/probar.scss';
 
 interface ProgressProps {
     trialProfile: Experiment;
+    concurrency: number;
     trialNumber: TrialNumber;
     bestAccuracy: number;
     status: string;
     errors: string;
-    updateFile: Function;
+    changeConcurrency: (val: number) => void;
 }
 
 interface ProgressState {
@@ -45,12 +46,14 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const { btnName } = this.state;
         if (this._isMounted) {
             if (btnName === 'Edit') {
+                // user click edit
                 this.setState(() => ({
                     isEnable: false,
                     btnName: 'Save',
                     cancelSty: 'inline-block'
                 }));
             } else {
+                // user click save button
                 axios(`${MANAGER_IP}/experiment`, {
                     method: 'GET'
                 })
@@ -81,9 +84,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             message.destroy();
                                             message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()}
                                             successfully`);
-                                            // rerender trial profile message
-                                            const { updateFile } = this.props;
-                                            updateFile();
+                                            this.props.changeConcurrency(parseInt(userInputVal, 10));
                                         }
                                     })
                                         .catch(error => {

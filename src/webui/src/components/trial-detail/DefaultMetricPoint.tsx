@@ -85,7 +85,9 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             });
             // deal with best metric line
             const bestCurve: Array<number | object>[] = []; // best curve data source
-            bestCurve.push([lineListDefault[0][0], lineListDefault[0][1], accSource[0].searchSpace]);
+            if (lineListDefault[0] !== undefined) {
+                bestCurve.push([lineListDefault[0][0], lineListDefault[0][1], accSource[0].searchSpace]);
+            }
             if (optimize === 'maximize') {
                 for (let i = 1; i < lineListDefault.length; i++) {
                     const val = lineListDefault[i][1];
@@ -275,7 +277,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             <div>
                 <div className="default-metric">
                     <div className="position">
-                        <span className="bold">optimization curve</span>
+                        <span className="bold">Optimization curve</span>
                         <Switch defaultChecked={false} onChange={this.loadDefault} />
                     </div>
                 </div>

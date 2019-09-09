@@ -121,13 +121,12 @@ class MetisTuner(Tuner):
                 key_range = search_space[key]['_value']
                 idx = self.key_order.index(key)
                 if key_type == 'quniform':
-                    if key_range[2] == 1:
-                        self.x_bounds[idx] = [key_range[0], key_range[1]]
+                    if key_range[2] == 1 and key_range[0].is_integer() and key_range[1].is_integer():
+                        self.x_bounds[idx] = [key_range[0], key_range[1]+1]
                         self.x_types[idx] = 'range_int'
                     else:
-                        bounds = []
-                        for value in np.arange(key_range[0], key_range[1], key_range[2]):
-                            bounds.append(value)
+                        low, high, q = key_range
+                        bounds = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
                         self.x_bounds[idx] = bounds
                         self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':

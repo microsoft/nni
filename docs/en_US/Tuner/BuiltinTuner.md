@@ -117,6 +117,11 @@ tuner:
 
 Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress. [Detailed Description](./EvolutionTuner.md)
 
+**Requirement of classArg**
+
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+
+* **population_size** (*int value(should >0), optional, default = 20*) - the initial size of the population(trial num) in evolution tuner.
 
 **Usage example**
 
@@ -126,6 +131,7 @@ tuner:
   builtinTunerName: Evolution
   classArgs:
     optimize_mode: maximize
+    population_size: 100
 ```
 
 <br>

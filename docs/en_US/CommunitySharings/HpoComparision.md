@@ -1,7 +1,7 @@
-# Hyperparameter Optimization Comparison
+# Hyper Parameter Optimization Comparison
 *Posted by Anonymous Author*
 
-Comparison of Hyperparameter Optimization algorithms on several problems.
+Comparison of Hyperparameter Optimization (HPO) algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
