@@ -176,11 +176,11 @@ class NNIRestHandler {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else {
+            } else if (experimentMode === 'view'){
                 this.nniManager.viewExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
-                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
+                    // View experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
             }

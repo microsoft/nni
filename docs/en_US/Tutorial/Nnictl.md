@@ -10,6 +10,7 @@ nnictl support commands:
 
 * [nnictl create](#create)
 * [nnictl resume](#resume)
+* [nnictl view](#view)
 * [nnictl stop](#stop)
 * [nnictl update](#update)
 * [nnictl trial](#trial)
@@ -102,6 +103,35 @@ Debug mode will disable version check function in Trialkeeper.
 
   ```bash
   nnictl resume [experiment_id] --port 8088
+  ```
+
+<a name="view"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+
+* Description
+
+  You can use this command to view a stopped experiment.
+
+* Usage
+
+  ```bash
+  nnictl view [OPTIONS]
+  ```
+
+* Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  True| |The id of the experiment you want to view|
+  |--port, -p|  False| |Rest port of the experiment you want to view|
+
+* Example
+
+  > view an experiment with specified port 8088
+
+  ```bash
+  nnictl view [experiment_id] --port 8088
   ```
 
 <a name="stop"></a>
