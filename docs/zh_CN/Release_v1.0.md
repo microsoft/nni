@@ -21,9 +21,9 @@
 <img src=".././img/release-1-title-2.png" width="100%" />
 </p>
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step one**: Start with the [Tutorial Doc](./Tutorial/Installation.md), and install NNI v1.0 first.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step two**: Find a " Hello world example", follow the [Tutorial Doc](./Tutorial/QuickStart.md) and have a Quick Start.   
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step three**: Get familiar with the [WebUI Tutorial](./Tutorial/WebUI.md) and let NNI better assists with your tuning tour.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**第一步**： 根据[教程](./Tutorial/Installation.md)安装 NNI v1.0。  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**第二步**：找到 "Hello world" 示例，按照[教程](./Tutorial/QuickStart.md)入门。   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**第三步**：熟悉 [Web 界面](./Tutorial/WebUI.md)，用 NNI 进行自动机器学习！  
 
 
-The fully automated tool greatly improves the efficiency of the tuning process. For more detail about the 1.0 updates, you can refer to [Release 1.0](https://github.com/microsoft/nni/releases). More of our advance plan, you can refer to our [Roadmap](https://github.com/microsoft/nni/wiki/Roadmap). Besides, we also welcome more and more contributors to join us, there are many ways to participate, please refer to [How to contribute](./Tutorial/Contributing.md) for more details.
+全自动工具极大地提高了调优过程的效率。 关于 v1.0 的更多细节，可参考 [Release 1.0](https://github.com/microsoft/nni/releases)。 关于进一步计划，可参考[路线图](https://github.com/microsoft/nni/wiki/Roadmap)。 此外，欢迎更多的参与者加入我们。可参考[如何贡献](./Tutorial/Contributing.md)，来了解多种参与方法。
