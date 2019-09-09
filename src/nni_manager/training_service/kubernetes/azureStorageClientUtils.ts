@@ -35,15 +35,15 @@ export namespace AzureStorageClientUtility {
      * @param fileServerClient
      * @param azureShare
      */
-    export async function createShare(fileServerClient: any, azureShare: any): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+    export async function createShare(fileServerClient: any, azureShare: any): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         fileServerClient.createShareIfNotExists(azureShare, (error: any, result: any, response: any) => {
             if (error) {
                 getLogger()
                   .error(`Create share failed:, ${error}`);
-                deferred.reject(error);
+                deferred.resolve(false);
             } else {
-                deferred.resolve();
+                deferred.resolve(true);
             }
         });
 
@@ -56,18 +56,17 @@ export namespace AzureStorageClientUtility {
      * @param azureFoler
      * @param azureShare
      */
-    export async function createDirectory(fileServerClient: azureStorage.FileService, azureFoler: any, azureShare: any): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+    export async function createDirectory(fileServerClient: azureStorage.FileService, azureFoler: any, azureShare: any): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, (error: any, result: any, response: any) => {
             if (error) {
                 getLogger()
                   .error(`Create directory failed:, ${error}`);
-                deferred.reject(error);
+                deferred.resolve(false);
             } else {
-                deferred.resolve();
+                deferred.resolve(true);
             }
         });
-
         return deferred.promise;
     }
 
@@ -77,16 +76,20 @@ export namespace AzureStorageClientUtility {
      * @param azureDirectory
      */
     export async function createDirectoryRecursive(fileServerClient: azureStorage.FileService, azureDirectory: string,
-                                                   azureShare: any): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+                                                   azureShare: any): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         const directories: string[] = azureDirectory.split('/');
         let rootDirectory: string = '';
         for (const directory of directories) {
             rootDirectory += directory;
-            await createDirectory(fileServerClient, rootDirectory, azureShare);
+            let result:boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
+            if (!result) {
+                deferred.resolve(false);
+                return deferred.promise;
+            }
             rootDirectory += '/';
         }
-        deferred.resolve();
+        deferred.resolve(true);
 
         return deferred.promise;
     }
@@ -100,16 +103,16 @@ export namespace AzureStorageClientUtility {
      * @param localFilePath
      */
     async function uploadFileToAzure(fileServerClient: any, azureDirectory: string, azureFileName: any, azureShare: any,
-                                     localFilePath: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+                                     localFilePath: string): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         await fileServerClient.createFileFromLocalFile(azureShare, azureDirectory, azureFileName, localFilePath,
                                                        (error: any, result: any, response: any) => {
             if (error) {
                 getLogger()
                   .error(`Upload file failed:, ${error}`);
-                deferred.reject(error);
+                deferred.resolve(false);
             } else {
-                deferred.resolve();
+                deferred.resolve(true);
             }
         });
 
@@ -125,17 +128,17 @@ export namespace AzureStorageClientUtility {
      * @param localFilePath
      */
     async function downloadFile(fileServerClient: any, azureDirectory: string, azureFileName: any, azureShare: any,
-                                localFilePath: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+                                localFilePath: string): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         // tslint:disable-next-line:non-literal-fs-path
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath),
                                                (error: any, result: any, response: any) => {
             if (error) {
                 getLogger()
                   .error(`Download file failed:, ${error}`);
-                deferred.reject(error);
+                deferred.resolve(false);
             } else {
-                deferred.resolve();
+                deferred.resolve(true);
             }
         });
 
@@ -151,28 +154,38 @@ export namespace AzureStorageClientUtility {
      */
     // tslint:disable:non-literal-fs-path
     export async function uploadDirectory(fileServerClient: azureStorage.FileService, azureDirectory: string, azureShare: any,
-                                          localDirectory: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+                                          localDirectory: string): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
-        await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
+        let result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
+        if (!result) {
+            deferred.resolve(false);
+            return deferred.promise;
+        }
         for (const fileName of fileNameArray) {
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {
+                let resultUploadFile: boolean = true;
+                let resultUploadDir: boolean = true;
                 if (fs.lstatSync(fullFilePath)
                       .isFile()) {
-                    await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);
+                    resultUploadFile = await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);
                 } else {
                     // If filePath is a directory, recuisively copy it to azure
-                    await uploadDirectory(fileServerClient, String.Format('{0}/{1}', azureDirectory, fileName), azureShare, fullFilePath);
+                    resultUploadDir = await uploadDirectory(fileServerClient, String.Format('{0}/{1}', azureDirectory, fileName), azureShare, fullFilePath);
+                }
+                if (!(resultUploadFile && resultUploadDir)) {
+                    deferred.resolve(false);
+                    return deferred.promise;
                 }
             } catch (error) {
-                deferred.reject(error);
+                deferred.resolve(false);
 
                 return deferred.promise;
             }
         }
         // All files/directories are copied successfully, resolve
-        deferred.resolve();
+        deferred.resolve(true);
 
         return deferred.promise;
     }
