@@ -15,8 +15,6 @@ Provided here are:
 
 For training on ImageNet, read `EfficientNet-PyTorch/train_imagenet.sh`. Download ImageNet beforehand and extract it adhering to [PyTorch format](https://pytorch.org/docs/stable/torchvision/datasets.html#imagenet) and then replace `/mnt/data/imagenet` in with the location of the ImageNet storage. This file should also be a good example to follow for mounting ImageNet into the container on OpenPAI.
 
-*Backward compatibility instructions: Grid Search quniform is changed in NNI v1.0. Use `search_net_old.json` if for NNI <= 0.9.* 
-
 ## Results
 
 The follow image is a screenshot, demonstrating the relationship between acc@1 and alpha, beta, gamma.
