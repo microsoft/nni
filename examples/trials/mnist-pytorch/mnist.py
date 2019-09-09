@@ -108,17 +108,16 @@ def main(args):
         train(args, model, device, train_loader, optimizer, epoch)
         test_acc = test(args, model, device, test_loader)
 
-        # report intermediate result
-        nni.report_intermediate_result(test_acc)
-        logger.debug('test accuracy %g', test_acc)
-        logger.debug('Pipe send intermediate result done.')
-
-    test_acc = test(args, model, device, test_loader)
-    # report final result
-    nni.report_final_result(test_acc)
-    logger.debug('Final result is %g', test_acc)
-    logger.debug('Send final result done.')
-
+        if epoch < args['epochs']:
+            # report intermediate result
+            nni.report_intermediate_result(test_acc)
+            logger.debug('test accuracy %g', test_acc)
+            logger.debug('Pipe send intermediate result done.')
+        else:
+            # report final result
+            nni.report_final_result(test_acc)
+            logger.debug('Final result is %g', test_acc)
+            logger.debug('Send final result done.')
 
 
 def get_params():
