@@ -22,6 +22,7 @@ import logging
 from collections import defaultdict
 import json_tricks
 
+from nni import NoMoreTrialError
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
@@ -144,7 +145,10 @@ class MsgDispatcher(MsgDispatcherBase):
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
             param_id = _create_parameter_id()
-            param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            try:
+                param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            except NoMoreTrialError:
+                param = ''
             send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
