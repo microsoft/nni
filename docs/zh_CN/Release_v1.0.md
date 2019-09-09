@@ -2,9 +2,9 @@
 <img src=".././img/release-1-title-1.png" width="100%" />
 </p>
 
-From September 2018 to September 2019, We are still moving on …
+从 2018 年 9 月到 2019 年 9 月，我们一直在前进 ...
 
-**Great news!**&nbsp;&nbsp;With the tag of **Scalability** and **Ease of Use**, NNI v1.0 is comming. Based on the various types of [Tuning Algorithms](./Tuner/BuiltinTuner.md), NNI has supported the Hyperparameter tuning, Neural Architecture search and Auto-Feature-Engineering, which is an exciting news for algorithmic engineers; besides these, NNI v1.0 has made many improvements in the optimization of tuning algorithm, [WebUI's simplicity and intuition](./Tutorial/WebUI.md) and [Platform diversification](./TrainingService/SupportTrainingService.md). NNI has grown into a more intelligent automated machine learning (AutoML) toolkit.
+**好消息！**&nbsp;&nbsp;NNI v1.0 带来了更强的**伸缩性**和**易用性**。 基于各种[调参算法](./Tuner/BuiltinTuner.md)，NNI 已经支持了超参调优，神经网络结构搜索，自动特侦工程等，对算法工程师非常有用的功能。除此之外，NNI v1.0 带来了大量的改进，包括调优算法的优化，[Web 界面简化并更加直观](./Tutorial/WebUI.md)，以及[更多样的平台](./TrainingService/SupportTrainingService.md)。 NNI 已经成为了一个更加智能的自动机器学习（AutoML）工具包。
 
   
   
