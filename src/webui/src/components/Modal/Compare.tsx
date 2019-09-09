@@ -107,6 +107,7 @@ class Compare extends React.Component<CompareProps, {}> {
     initColumn = () => {
         const { compareRows } = this.props;
         const idList: Array<string> = [];
+        const sequenceIdList: Array<number> = [];
         const durationList: Array<number> = [];
 
         const parameterList: Array<object> = [];
@@ -117,6 +118,7 @@ class Compare extends React.Component<CompareProps, {}> {
         Object.keys(compareRows).map(item => {
             const temp = compareRows[item];
             idList.push(temp.id);
+            sequenceIdList.push(temp.sequenceId);
             durationList.push(temp.duration);
             parameterList.push(temp.description.parameters);
         });
@@ -124,10 +126,18 @@ class Compare extends React.Component<CompareProps, {}> {
             <table className="compare">
                 <tbody>
                     <tr>
-                        <td />
+                        <td className="column">Id</td>
                         {Object.keys(idList).map(key => {
                             return (
                                 <td className="value idList" key={key}>{idList[key]}</td>
+                            );
+                        })}
+                    </tr>
+                    <tr>
+                        <td className="column">Trial No.</td>
+                        {Object.keys(sequenceIdList).map(key => {
+                            return (
+                                <td className="value idList" key={key}>{sequenceIdList[key]}</td>
                             );
                         })}
                     </tr>
