@@ -1,6 +1,6 @@
 # Experiment（实验）配置参考
 
-创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 YAML 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
+A config file is needed when creating an experiment. The path of the config file is provided to `nnictl`. The config file is in YAML format. This document describes the rules to write the config file, and provides some examples and templates.
 
 - [Experiment（实验）配置参考](#Experiment-config-reference) 
   - [模板](#Template)
