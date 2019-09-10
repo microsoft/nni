@@ -59,6 +59,35 @@ paiConfig:
 * authFile 
     * 可选。在使用 pai 模式时，为私有 Docker 仓库设置认证文件，[见参考文档](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。提供 authFile 的本地路径即可， NNI 会上传此文件。
 
+* portList
+    
+    * 可选。 设置 OpenPAI 的 portList。指定了容器中使用的端口列表，[参考文档](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification)。  
+        示例如下：
+        portList:
+          - label: test
+            beginAt: 8080
+            portNumber: 2
+        
+    
+    假设需要在 MNIST 示例中使用端口来运行 TensorBoard。 第一步是编写 `mnist.py` 的包装脚本 `launch_pai.sh`。
+    
+    ```bash
+    export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
+    tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
+    python3 mnist.py
+    ```
+    
+    portList 的配置部分如下：
+    
+    ```yaml
+    trial:
+    command: bash launch_pai.sh
+    portList:
+      - label: tensorboard
+        beginAt: 0
+        portNumber: 1
+    ```
+
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
     nnictl create --config exp_pai.yml
