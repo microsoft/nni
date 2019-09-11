@@ -182,7 +182,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // checkbox for coloumn
     selectedColumn = (checkedValues: Array<string>) => {
-        // 7: because have seven common column, "Intermediate count" is not shown by default
+        // 7: because have seven common column, "Intermediate count" is hidden by default
         let count = 7;
         const want: Array<object> = [];
         const finalKeys: Array<string> = [];
@@ -191,6 +191,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             switch (checkedValues[m]) {
                 case 'Trial No.':
                 case 'ID':
+                case 'StartTime':
+                case 'EndTime':
                 case 'Duration':
                 case 'Status':
                 case 'Operation':
@@ -345,6 +347,50 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <div>{record.id}</div>
                             );
                         }
+                    });
+                    break;
+                case 'StartTime':
+                    showColumn.push({
+                        title: 'StartTime',
+                        dataIndex: 'startTime',
+                        key: 'startTime',
+                        width: 160,
+                        render: (text: string, record: TableObj) => {
+                            const start = record.startTime !== undefined ? record.startTime : -1;
+                            return (
+                                <span>
+                                    {
+                                        start !== -1
+                                            ?
+                                            new Date(start).toLocaleString('en-US')
+                                            :
+                                            '--'
+                                    }
+                                </span>
+                            );
+                        },
+                    });
+                    break;
+                case 'EndTime':
+                    showColumn.push({
+                        title: 'EndTime',
+                        dataIndex: 'endTime',
+                        key: 'endTime',
+                        width: 160,
+                        render: (text: string, record: TableObj) => {
+                            const end = record.endTime !== undefined ? record.endTime : -1;
+                            return (
+                                <span>
+                                    {
+                                        end !== -1
+                                            ?
+                                            new Date(end).toLocaleString('en-US')
+                                            :
+                                            '--'
+                                    }
+                                </span>
+                            );
+                        },
                     });
                     break;
                 case 'Duration':
