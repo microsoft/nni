@@ -223,6 +223,16 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                     <span>{DETAILTABS}</span>
                 </Col>
                 <Col span={16} className="desktop-right">
+                    <span>
+                        <Button
+                            className="fresh"
+                            type="ghost"
+                        >
+                            <a target="_blank" href="https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html">
+                                <Icon type="question" /><span>Help</span>
+                            </a>
+                        </Button>
+                    </span>
                     <span>{this.select()}</span>
                     <span>
                         <Dropdown
@@ -237,10 +247,10 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                                 <span>View</span>
                                 {
                                     menuVisible
-                                    ?
-                                    <Icon type="up" className="margin-icon"/>
-                                    :
-                                    <Icon type="down" className="margin-icon"/>
+                                        ?
+                                        <Icon type="up" className="margin-icon" />
+                                        :
+                                        <Icon type="down" className="margin-icon" />
                                 }
                             </a>
                         </Dropdown>
