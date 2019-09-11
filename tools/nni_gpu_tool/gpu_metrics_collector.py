@@ -21,6 +21,7 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 
 from xml.dom import minidom
 
@@ -33,7 +34,7 @@ def check_ready_to_run():
         pidList.remove(os.getpid())
         return len(pidList) == 0
     else:
-        pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
+        pgrep_output = subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
         pidList = []
         for pid in pgrep_output.splitlines():
             pidList.append(int(pid))
@@ -45,23 +46,21 @@ def main(argv):
     if check_ready_to_run() == False:
         # GPU metrics collector is already running. Exit
         exit(2)
-    with open(os.path.join(metrics_output_dir, "gpu_metrics"), "w") as outputFile:
-        pass
-    os.chmod(os.path.join(metrics_output_dir, "gpu_metrics"), 0o777)
-    cmd = 'nvidia-smi -q -x'
+    cmd = 'nvidia-smi -q -x'.split()
     while(True):
         try:
-            smi_output = subprocess.check_output(cmd, shell=True)
-            parse_nvidia_smi_result(smi_output, metrics_output_dir)
-        except:
-            exception = sys.exc_info()
-            for e in exception:
-                print("job exporter error {}".format(e))
+            smi_output = subprocess.check_output(cmd)
+        except Exception:
+            traceback.print_exc()
+            gen_empty_gpu_metric(metrics_output_dir)
+            break
+        parse_nvidia_smi_result(smi_output, metrics_output_dir)
         # TODO: change to sleep time configurable via arguments
         time.sleep(5)
 
 def parse_nvidia_smi_result(smi, outputDir):
     try:
+        old_umask = os.umask(0)
         xmldoc = minidom.parseString(smi)
         gpuList = xmldoc.getElementsByTagName('gpu')
         with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
@@ -85,6 +84,24 @@ def parse_nvidia_smi_result(smi, outputDir):
     except :
         e_info = sys.exc_info()
         print('xmldoc paring error')
+    finally:
+        os.umask(old_umask)
+
+def gen_empty_gpu_metric(outputDir):
+    try:
+        old_umask = os.umask(0)
+        with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
+            outPut = {}
+            outPut["Timestamp"] = time.asctime(time.localtime())
+            outPut["gpuCount"] = 0
+            outPut["gpuInfos"] = []
+            print(outPut)
+            outputFile.write("{}\n".format(json.dumps(outPut, sort_keys=True)))
+            outputFile.flush()
+    except Exception:
+        traceback.print_exc()
+    finally:
+        os.umask(old_umask)
 
 
 if __name__ == "__main__":

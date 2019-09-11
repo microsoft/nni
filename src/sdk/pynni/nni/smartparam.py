@@ -19,11 +19,11 @@
 # ==================================================================================================
 
 
-import random
 import numpy as np
 
 from .env_vars import trial_env_vars
 from . import trial
+from . import parameter_expressions as param_exp
 from .nas_utils import classic_mode, enas_mode, oneshot_mode, darts_mode
 
 
@@ -47,39 +47,39 @@ __all__ = [
 
 if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
-        return random.choice(options)
+        return param_exp.choice(options, np.random.RandomState())
 
-    def randint(upper, name=None):
-        return random.randrange(upper)
+    def randint(lower, upper, name=None):
+        return param_exp.randint(lower, upper, np.random.RandomState())
 
     def uniform(low, high, name=None):
-        return random.uniform(low, high)
+        return param_exp.uniform(low, high, np.random.RandomState())
 
     def quniform(low, high, q, name=None):
         assert high > low, 'Upper bound must be larger than lower bound'
-        return np.clip(round(random.uniform(low, high) / q) * q, low, high)
+        return param_exp.quniform(low, high, q, np.random.RandomState())
 
     def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
-        return np.exp(random.uniform(np.log(low), np.log(high)))
+        return param_exp.loguniform(low, high, np.random.RandomState())
 
     def qloguniform(low, high, q, name=None):
-        return np.clip(round(loguniform(low, high) / q) * q, low, high)
+        return param_exp.qloguniform(low, high, q, np.random.RandomState())
 
     def normal(mu, sigma, name=None):
-        return random.gauss(mu, sigma)
+        return param_exp.normal(mu, sigma, np.random.RandomState())
 
     def qnormal(mu, sigma, q, name=None):
-        return round(random.gauss(mu, sigma) / q) * q
+        return param_exp.qnormal(mu, sigma, q, np.random.RandomState())
 
     def lognormal(mu, sigma, name=None):
-        return np.exp(random.gauss(mu, sigma))
+        return param_exp.lognormal(mu, sigma, np.random.RandomState())
 
     def qlognormal(mu, sigma, q, name=None):
-        return round(lognormal(mu, sigma) / q) * q
+        return param_exp.qlognormal(mu, sigma, q, np.random.RandomState())
 
     def function_choice(*funcs, name=None):
-        return random.choice(funcs)()
+        return param_exp.choice(funcs, np.random.RandomState())()
 
     def mutable_layer():
         raise RuntimeError('Cannot call nni.mutable_layer in this mode')
@@ -89,7 +89,7 @@ else:
     def choice(options, name=None, key=None):
         return options[_get_param(key)]
 
-    def randint(upper, name=None, key=None):
+    def randint(lower, upper, name=None, key=None):
         return _get_param(key)
 
     def uniform(low, high, name=None, key=None):

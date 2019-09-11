@@ -1,6 +1,36 @@
 Pruner on NNI Compressor
 ===
 
+<a name="LevelPruner"></a>
+
+## LevelPruner
+
+This is one basic pruner: you can set a target sparsity level(expressed as a fraction, 0.6 means we will prune 60%). 
+
+We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
+
+### Usage
+
+Tensorflow code
+```
+configure_list = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.tf_compressor.LevelPruner(configure_list)
+pruner(model_graph)
+```
+
+Pytorch code
+```
+configure_list = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = nni.compressors.torch_compressor.LevelPruner(configure_list)
+pruner(model)
+```
+
+#### User configuration for LevelPruner
+* **sparsity:** This is to specify the sparsity operations to be compressed to
+
+***
+<a name="AGPruner"></a>
+
 ## AGPruner
 In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
@@ -16,13 +46,29 @@ First, you should import pruner and add mask to model.
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+configure_list = [{
+                        'initial_sparsity': 0,
+                        'final_sparsity': 0.8,
+                        'start_epoch': 1,
+                        'end_epoch': 10,
+                        'frequency': 1,
+                        'support_type': 'default'
+                    }]
+pruner = AGPruner(configure_list)
 pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import AGPruner
-pruner = AGPruner(initial_sparsity=0, final_sparsity=0.8, start_epoch=1, end_epoch=10, frequency=1)
+configure_list = [{
+                        'initial_sparsity': 0,
+                        'final_sparsity': 0.8,
+                        'start_epoch': 1,
+                        'end_epoch': 10,
+                        'frequency': 1,
+                        'support_type': 'default'
+                    }]
+pruner = AGPruner(configure_list)
 pruner(model)
 ```
 
@@ -37,7 +83,16 @@ Pytorch code
 pruner.update_epoch(epoch)
 ```
 You can view example for more information
+
+#### User configuration for AGPruner
+* **initial_sparsity:** This is to specify the sparsity when compressor starts to  compress
+* **final_sparsity:** This is to specify the sparsity when compressor finishes to  compress
+* **start_epoch:** This is to specify the epoch number when compressor starts to  compress
+* **end_epoch:** This is to specify the epoch number when compressor finishes to  compress
+* **frequency:** This is to specify every *frequency* number epochs compressor compress once
+
 ***
+<a name="SensitivityPruner"></a>
 
 ## SensitivityPruner
 In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and Jeff Pool provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.
@@ -50,15 +105,15 @@ You can prune weight step by step and reach one target sparsity by SensitivityPr
 Tensorflow code
 ```
 from nni.compressors.tfCompressor import SensitivityPruner
-
-pruner = SensitivityPruner(sparsity = 0.8)
+configure_list = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = SensitivityPruner(configure_list)
 pruner(tf.get_default_graph())
 ```
 Pytorch code
 ```
 from nni.compressors.torchCompressor import SensitivityPruner
-
-pruner = SensitivityPruner(sparsity = 0.8)
+configure_list = [{'sparsity':0.8,'support_type': 'default'}]
+pruner = SensitivityPruner(configure_list)
 pruner(model)
 ```
 Like AGPruner, you should update mask information every epoch by adding code below
@@ -72,6 +127,10 @@ Pytorch code
 pruner.update_epoch(epoch)
 ```
 You can view example for more information
+
+#### User configuration for SensitivityPruner
+* **sparsity:** This is to specify the sparsity operations to be compressed to
+
 ***
 
 ## SparsePruner

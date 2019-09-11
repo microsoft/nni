@@ -4,7 +4,7 @@
 
 * * *
 
-[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=latest)](https://nni.readthedocs.io/en/latest/?badge=latest)
+[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=latest)](https://nni.readthedocs.io/zh/latest/?badge=latest)
 
 [English](README.md)
 
@@ -47,40 +47,40 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         </ul>
       </td>
       <td align="left">
-        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner（调参器）</a>
+        <a href="docs/zh_CN/Tuner/BuiltinTuner.md">Tuner（调参器）</a>
         <br />
         <ul>
           <b style="margin-left:-20px">通用 Tuner</b>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（进化算法）</a></li>    
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（进化算法）</a></li>    
           <b style="margin-left:-20px">超参 Tuner</b>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
           <b style="margin-left:-20px">网络结构 Tuner</b>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
           </ul>
-          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor（评估器）</a>
+          <a href="docs/zh_CN/Assessor/BuiltinAssessor.md">Assessor（评估器）</a>
           <ul>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
           </ul>  
       </td>
       <td>
       <ul>
-        <li><a href="docs/en_US/TrainingService/LocalMode.md">本机</a></li>
-        <li><a href="docs/en_US/TrainingService/RemoteMachineMode.md">远程计算机</a></li>
+        <li><a href="docs/zh_CN/TrainingService/LocalMode.md">本机</a></li>
+        <li><a href="docs/zh_CN/TrainingService/RemoteMachineMode.md">远程计算机</a></li>
         <li><b>基于 Kubernetes 的平台</b></li>
-            <ul><li><a href="docs/en_US/TrainingService/PaiMode.md">OpenPAI</a></li>
-            <li><a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a></li>
-            <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
+            <ul><li><a href="docs/zh_CN/TrainingService/PaiMode.md">OpenPAI</a></li>
+            <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
+            <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
             </ul>
       </ul>
       </td>
@@ -226,34 +226,34 @@ You can use these commands to get more information about the experiment
 点击阅读：
 
 * [NNI 概述](docs/zh_CN/Overview.md)
-* [快速入门](docs/en_US/Tutorial/QuickStart.md)
-* [贡献](docs/en_US/Tutorial/Contributing.md)
-* [示例](docs/en_US/examples.rst)
-* [参考](docs/en_US/reference.rst)
-* [Web 界面教程](docs/en_US/Tutorial/WebUI.md)
+* [快速入门](docs/zh_CN/Tutorial/QuickStart.md)
+* [贡献](docs/zh_CN/Tutorial/Contributing.md)
+* [示例](docs/zh_CN/examples.rst)
+* [参考](docs/zh_CN/reference.rst)
+* [Web 界面教程](docs/zh_CN/Tutorial/WebUI.md)
 
 ## **入门**
 
-* [安装 NNI](docs/en_US/Tutorial/Installation.md)
-* [使用命令行工具 nnictl](docs/en_US/Tutorial/Nnictl.md)
-* [使用 NNIBoard](docs/en_US/Tutorial/WebUI.md)
-* [如何定义搜索空间](docs/en_US/Tutorial/SearchSpaceSpec.md)
-* [如何实现 Trial 代码](docs/en_US/TrialExample/Trials.md)
-* [如何选择 Tuner、搜索算法](docs/en_US/Tuner/BuiltinTuner.md)
-* [配置 Experiment](docs/en_US/Tutorial/ExperimentConfig.md)
-* [如何使用 Annotation](docs/en_US/TrialExample/Trials.md#nni-python-annotation)
+* [安装 NNI](docs/zh_CN/Tutorial/Installation.md)
+* [使用命令行工具 nnictl](docs/zh_CN/Tutorial/Nnictl.md)
+* [使用 NNIBoard](docs/zh_CN/Tutorial/WebUI.md)
+* [如何定义搜索空间](docs/zh_CN/Tutorial/SearchSpaceSpec.md)
+* [如何实现 Trial 代码](docs/zh_CN/TrialExample/Trials.md)
+* [如何选择 Tuner、搜索算法](docs/zh_CN/Tuner/BuiltinTuner.md)
+* [配置 Experiment](docs/zh_CN/Tutorial/ExperimentConfig.md)
+* [如何使用 Annotation](docs/zh_CN/TrialExample/Trials.md#nni-python-annotation)
 
 ## **教程**
 
-* [在 OpenPAI 上运行 Experiment](docs/en_US/TrainingService/PaiMode.md)
-* [在 Kubeflow 上运行 Experiment](docs/en_US/TrainingService/KubeflowMode.md)
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/TrainingService/LocalMode.md)
-* [在多机上运行 Experiment](docs/en_US/TrainingService/RemoteMachineMode.md)
-* [尝试不同的 Tuner](docs/en_US/Tuner/BuiltinTuner.md)
-* [尝试不同的 Assessor](docs/en_US/Assessor/BuiltinAssessor.md)
-* [实现自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
-* [实现自定义 Assessor](docs/en_US/Assessor/CustomizeAssessor.md)
-* [使用进化算法为阅读理解任务找到好模型](docs/en_US/TrialExample/SquadEvolutionExamples.md)
+* [在 OpenPAI 上运行 Experiment](docs/zh_CN/TrainingService/PaiMode.md)
+* [在 Kubeflow 上运行 Experiment](docs/zh_CN/TrainingService/KubeflowMode.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/TrainingService/LocalMode.md)
+* [在多机上运行 Experiment](docs/zh_CN/TrainingService/RemoteMachineMode.md)
+* [尝试不同的 Tuner](docs/zh_CN/Tuner/BuiltinTuner.md)
+* [尝试不同的 Assessor](docs/zh_CN/Assessor/BuiltinAssessor.md)
+* [实现自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
+* [实现自定义 Assessor](docs/zh_CN/Assessor/CustomizeAssessor.md)
+* [使用进化算法为阅读理解任务找到好模型](docs/zh_CN/TrialExample/SquadEvolutionExamples.md)
 
 ## **贡献**
 
@@ -265,10 +265,10 @@ You can use these commands to get more information about the experiment
 
 在提交代码前，需要遵循以下的简单准则：
 
-* [如何调试](docs/en_US/Tutorial/HowToDebug.md)
-* [代码风格和命名约定](docs/en_US/Tutorial/Contributing.md)
+* [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
+* [代码风格和命名约定](docs/zh_CN/Tutorial/Contributing.md)
 * 如何设置 [NNI 开发环境](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
-* 查看[贡献说明](docs/en_US/Tutorial/Contributing.md)并熟悉 NNI 的代码贡献指南
+* 查看[贡献说明](docs/zh_CN/Tutorial/Contributing.md)并熟悉 NNI 的代码贡献指南
 
 ## **外部代码库**
 

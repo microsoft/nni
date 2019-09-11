@@ -1,21 +1,29 @@
 import torch
 from ._nnimc_torch import TorchQuantizer
 from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_configure_file
-
+import logging
+logger = logging.getLogger('torch quantizer')
 class NaiveQuantizer(TorchQuantizer):
+    """
+    quantize weight to 8 bits
+    """
     def __init__(self):
         super().__init__()
         self.layer_scale = {}
 
     def quantize_weight(self, layer_info, weight):
         new_scale = weight.abs().max() / 127
-        # TODO: use int id
         scale = max(self.layer_scale.get(layer_info.name, 0), new_scale)
         self.layer_scale[layer_info.name] = scale
         orig_type = weight.type()  # TODO: user layer_info
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
 class DoReFaQuantizer(TorchQuantizer):
+    """
+    Quantizer using the DoReFa scheme, as defined in:
+    Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
+    (https://arxiv.org/abs/1606.06160)
+    """
     def __init__(self, configure_list):
         """
             configure Args:
@@ -29,18 +37,15 @@ class DoReFaQuantizer(TorchQuantizer):
         else:
             raise ValueError('please init with configure list')
     
-    def load_configure(self, config_path):
-        config_list = _torch_default_load_configure_file(config_path, 'DoReFaQuantizer')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_qbits(self, configure):
         if not isinstance(configure, dict):
-            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            logger.warning('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
             configure = {}
         qbits = configure.get('q_bits', 32)
         if qbits == 0:
-            print('WARNING: you can not set q_bits ZERO!')
+            logger.warning('WARNING: you can not set q_bits ZERO!')
+            qbits = 32
         return qbits
 
     def quantize_weight(self, layer_info, weight):
@@ -58,6 +63,11 @@ class DoReFaQuantizer(TorchQuantizer):
         return output
 
 class QATquantizer(TorchQuantizer):
+    """
+    Quantizer using the DoReFa scheme, as defined in:
+    Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
+    """
     def __init__(self, configure_list):
         """
             Configure Args:
@@ -71,18 +81,15 @@ class QATquantizer(TorchQuantizer):
         else:
             raise ValueError('please init with configure list')
     
-    def load_configure(self, config_path):
-        config_list = _torch_default_load_configure_file(config_path, 'QATquantizer')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_qbits(self, configure):
         if not isinstance(configure, dict):
-            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            logger.warning('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
             configure = {}
         qbits = configure.get('q_bits', 32)
         if qbits == 0:
-            print('WARNING: you can not set q_bits ZERO!')
+            logger.warning('WARNING: you can not set q_bits ZERO!')
+            qbits = 32
         return qbits
 
     def quantize_weight(self, layer_info, weight):

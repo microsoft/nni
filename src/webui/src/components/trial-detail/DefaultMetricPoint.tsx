@@ -275,7 +275,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             <div>
                 <div className="default-metric">
                     <div className="position">
-                        <span className="bold">optimization curve</span>
+                        <span className="bold">Optimization curve</span>
                         <Switch defaultChecked={false} onChange={this.loadDefault} />
                     </div>
                 </div>

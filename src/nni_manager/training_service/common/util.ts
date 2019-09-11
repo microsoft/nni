@@ -46,7 +46,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     }
     try {
         fileNameValid = await validateFileNameRecursively(codeDir);
-    } catch(error) {
+    } catch (error) {
         throw new Error(`Validate file name error: ${error}`);
     }
 
@@ -55,23 +55,24 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
                                     + ` please check if it's a valid code dir`;
         throw new Error(errMessage);
     }
-    
-    if(!fileNameValid) {
-        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`; 
-        throw new Error(errMessage);    
+
+    if (!fileNameValid) {
+        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
+        throw new Error(errMessage);
     }
 
     return fileCount;
 }
 
-
 /**
  * crete a new directory
  * @param directory
  */
-export async function execMkdir(directory: string): Promise<void> {
+export async function execMkdir(directory: string, share: boolean = false): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe New-Item -Path ${directory} -ItemType "directory" -Force`);
+    } else if (share) {
+        await cpp.exec(`(umask 0; mkdir -p ${directory})`);
     } else {
         await cpp.exec(`mkdir -p ${directory}`);
     }

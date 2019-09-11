@@ -98,7 +98,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     For the entire parameter set, please refer to the following "
                                     <a href={trialink} target="_blank">{trialink}</a>".
                                     <br/>
-                                    Current Phase: {record.description.progress}.
+                                    Current Phase: {record.description.multiProgress}.
                                 </Row>
                                 :
                                 <div />

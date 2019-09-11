@@ -2,6 +2,9 @@ import tensorflow as tf
 from ._nnimc_tf import TfPruner
 from ._nnimc_tf import _tf_default_get_configure, _tf_default_load_configure_file
 
+import logging
+logger = logging.getLogger('tensorflow pruner')
+
 class LevelPruner(TfPruner):
     def __init__(self, configure_list):
         """
@@ -16,10 +19,6 @@ class LevelPruner(TfPruner):
         else:
             raise ValueError('please init with configure list')
 
-    def load_configure(self, config_path):
-        config_list = _tf_default_load_configure_file(config_path, 'LevelPruner')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_sparsity(self, configure={}):
         sparsity = configure.get('sparsity', 0)
@@ -32,14 +31,23 @@ class LevelPruner(TfPruner):
         return tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
 
 class AGPruner(TfPruner):
+    """
+    An automated gradual pruning algorithm that prunes the smallest magnitude 
+    weights to achieve a preset level of network sparsity.
+
+    Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
+    efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
+    Learning of Phones and other Consumer Devices,
+    https://arxiv.org/pdf/1710.01878.pdf
+    """
     def __init__(self, configure_list):
         """
             Configure Args
-                initial_sparsity
-                final_sparsity
-                start_epoch
-                end_epoch
-                frequency
+                initial_sparsity:
+                final_sparsity: you should make sure initial_sparsity <= final_sparsity
+                start_epoch: start epoch numer begin update mask
+                end_epoch: end epoch number stop update mask
+                frequency: if you want update every 2 epoch, you can set it 2
         """
         super().__init__()
         self.configure_list = []
@@ -61,6 +69,7 @@ class AGPruner(TfPruner):
         initial_sparsity = configure.get('initial_sparsity', 0)
 
         if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
+            logger.warning('your end epoch <= start epoch or initial_sparsity >= final_sparsity')
             return final_sparsity
         
         now_epoch = tf.minimum(self.now_epoch, tf.constant(end_epoch))
@@ -72,17 +81,13 @@ class AGPruner(TfPruner):
                             (tf.pow(1.0 - base, 3)))
         return target_sparsity
     
-    def load_configure(self, config_path):
-        config_list = _tf_default_load_configure_file(config_path, 'AGPruner')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
 
     def calc_mask(self, layer_info, weight):
         
         target_sparsity = self.compute_target_sparsity(layer_info)
         threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
+        # stop gradient in case gradient change the mask
         mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
-        print('tensor weight', weight)
         self.assign_handler.append(tf.assign(weight, weight*mask))
         return mask
         
@@ -92,10 +97,17 @@ class AGPruner(TfPruner):
     
 
 class SensitivityPruner(TfPruner):
+    """
+    Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
+    https://arxiv.org/pdf/1506.02626v3.pdf
+
+    I.e.: "The pruning threshold is chosen as a quality parameter multiplied
+    by the standard deviation of a layers weights."
+    """
     def __init__(self, configure_list):
         """
             Configure Args:
-                sparsity
+                sparsity: chosen pruning sparsity
         """
         super().__init__()
         self.configure_list = []
@@ -108,10 +120,6 @@ class SensitivityPruner(TfPruner):
         self.layer_mask = {}
         self.assign_handler = []
 
-    def load_configure(self, config_path):
-        config_list = _tf_default_load_configure_file(config_path, 'SensitivityPruner')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_sparsity(self, configure={}):
         sparsity = configure.get('sparsity', 0)
@@ -125,8 +133,10 @@ class SensitivityPruner(TfPruner):
         self.layer_mask[layer_info.name] = mask
         
         weight_assign_handler = tf.assign(weight, mask*weight)
+        # use control_dependencies so that weight_assign_handler will be executed before mask_update_handler
         with tf.control_dependencies([weight_assign_handler]):
             threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
+            # stop gradient in case gradient change the mask
             new_mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
             mask_update_handler = tf.assign(mask, new_mask)
             self.assign_handler.append(mask_update_handler)

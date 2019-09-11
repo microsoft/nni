@@ -111,23 +111,3 @@ def init_dispatcher_logger():
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
     init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
-
-
-def randint_to_quniform(in_x):
-    if isinstance(in_x, dict):
-        if NodeType.TYPE in in_x.keys():
-            if in_x[NodeType.TYPE] == 'randint':
-                value = in_x[NodeType.VALUE]
-                value.append(1)
-
-                in_x[NodeType.TYPE] = 'quniform'
-                in_x[NodeType.VALUE] = value
- 
-            elif in_x[NodeType.TYPE] == 'choice':
-                randint_to_quniform(in_x[NodeType.VALUE])
-        else:
-            for key in in_x.keys():
-                randint_to_quniform(in_x[key])
-    elif isinstance(in_x, list):
-        for temp in in_x:
-            randint_to_quniform(temp)

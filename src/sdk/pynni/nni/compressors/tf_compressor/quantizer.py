@@ -2,7 +2,13 @@ import tensorflow as tf
 from ._nnimc_tf import TfQuantizer
 from ._nnimc_tf import _tf_default_get_configure, _tf_default_load_configure_file
 
+import logging
+logger = logging.getLogger('tensorflow quantizer')
+
 class NaiveQuantizer(TfQuantizer):
+    """
+    quantize weight to 8 bits
+    """
     def __init__(self):
         super().__init__()
         self.layer_scale = {}
@@ -15,6 +21,11 @@ class NaiveQuantizer(TfQuantizer):
         return tf.cast(tf.cast(weight / scale, tf.int8), orig_type) * scale
 
 class QATquantizer(TfQuantizer):
+    """
+    Quantizer using the DoReFa scheme, as defined in:
+    Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
+    """
     def __init__(self, configure_list):
         """
             Configure Args:
@@ -28,18 +39,15 @@ class QATquantizer(TfQuantizer):
         else:
             raise ValueError('please init with configure list')
     
-    def load_configure(self, config_path):
-        config_list = _tf_default_load_configure_file(config_path, 'QATquantizer')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_qbits(self, configure):
         if not isinstance(configure, dict):
-            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            logger.warning('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
             configure = {}
         qbits = configure.get('q_bits', 32)
         if qbits == 0:
-            print('WARNING: you can not set q_bits ZERO!')
+            logger.warning('WARNING: you can not set q_bits ZERO!')
+            qbits = 32
         return qbits
 
     def quantize_weight(self, layer_info, weight):
@@ -50,12 +58,18 @@ class QATquantizer(TfQuantizer):
         n = tf.cast(2 ** q_bits, tf.float32)
         scale = b-a/(n-1)
         
+        # use gradient_override_map to change round to idetity for gradient
         with tf.get_default_graph().gradient_override_map({'Round': 'Identity'}):
             qw = tf.round((weight-a)/scale)*scale +a
         
         return qw
 
 class DoReFaQuantizer(TfQuantizer):
+    """
+    Quantizer using the DoReFa scheme, as defined in:
+    Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
+    (https://arxiv.org/abs/1606.06160)
+    """
     def __init__(self, configure_list):
         """
             Configure Args:
@@ -69,18 +83,15 @@ class DoReFaQuantizer(TfQuantizer):
         else:
             raise ValueError('please init with configure list')
 
-    def load_configure(self, config_path):
-        config_list = _tf_default_load_configure_file(config_path, 'DoReFaQuantizer')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_qbits(self, configure):
         if not isinstance(configure, dict):
-            print('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
+            logger.warning('WARNING: you should input a dict to get_qbits, set DEFAULT { }')
             configure = {}
         qbits = configure.get('q_bits', 32)
         if qbits == 0:
-            print('WARNING: you can not set q_bits ZERO!')
+            logger.warning('WARNING: you can not set q_bits ZERO!')
+            qbits = 32
         return qbits
 
     def quantize_weight(self, layer_info, weight):
@@ -89,6 +100,7 @@ class DoReFaQuantizer(TfQuantizer):
         b = a/(2*tf.reduce_max(tf.abs(weight))) + 0.5
 
         scale = pow(2, q_bits-1)
+        # use gradient_override_map to change round to idetity for gradient
         with tf.get_default_graph().gradient_override_map({'Round': 'Identity'}):
             qw = tf.round(b*scale)/scale
         r_qw = 2*qw - 1

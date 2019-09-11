@@ -74,9 +74,11 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
+    private copyAuthFilePromise?: Promise<void>;
     private versionCheck: boolean = true;
     private logCollection: string;
     private isMultiPhase: boolean = false;
+    private authFileHdfsPath: string | undefined = undefined;
 
     constructor() {
         this.log = getLogger();
@@ -292,6 +294,12 @@ class PAITrainingService implements TrainingService {
                     HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
                     this.hdfsClient
                 );
+                
+                // Upload authFile to hdfs
+                if (this.paiTrialConfig.authFile) {
+                    this.authFileHdfsPath = unixPathJoin(HDFSClientUtility.hdfsExpRootDir(this.paiClusterConfig.userName), 'authFile');
+                    this.copyAuthFilePromise = HDFSClientUtility.copyFileToHdfs(this.paiTrialConfig.authFile, this.authFileHdfsPath, this.hdfsClient);
+                }
 
                 deferred.resolve();
                 break;
@@ -373,6 +381,10 @@ class PAITrainingService implements TrainingService {
             await this.copyExpCodeDirPromise;
         }
 
+        //Make sure authFile is copied from local to HDFS
+        if (this.paiTrialConfig.authFile) {
+            await this.copyAuthFilePromise;
+        }
         // Step 1. Prepare PAI job configuration
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
@@ -449,7 +461,7 @@ class PAITrainingService implements TrainingService {
             // Add Virutal Cluster
             this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
             //Task auth File
-            this.paiTrialConfig.authFile
+            this.authFileHdfsPath
         );
 
         // Step 2. Upload code files in codeDir onto HDFS

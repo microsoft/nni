@@ -292,7 +292,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         isFilter
                             ?
                             <span>
-                                <span className="filter-x"># Intermeidate</span>
+                                <span className="filter-x"># Intermediate</span>
                                 <input
                                     // placeholder="point"
                                     ref={input => this.pointInput = input}
@@ -321,7 +321,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             null
                     }
                 </Row>
-                <Row className="intermeidate-graph">
+                <Row className="intermediate-graph">
                     <ReactEcharts
                         option={interSource}
                         style={{ width: '100%', height: 418, margin: '0 auto' }}

@@ -54,7 +54,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
 * shmMB
     * Optional key. Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 * authFile
-    * Optional key, Set the auth file path for private registry while using PAI mode, [Refer](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job).
+    * Optional key, Set the auth file path for private registry while using PAI mode, [Refer](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job), you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```

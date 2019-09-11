@@ -237,16 +237,20 @@ class Para extends React.Component<ParaProps, ParaState> {
                             show: true
                         },
                         axisLabel: {
-                            formatter: function (value: string) {
-                                const length = value.length;
-                                if (length > 16) {
-                                    const temp = value.split('');
-                                    for (let m = 16; m < temp.length; m += 17) {
-                                        temp[m] += '\n';
+                            formatter: function (value?: string) {
+                                if (value !== undefined) {
+                                    const length = value.length;
+                                    if (length > 16) {
+                                        const temp = value.split('');
+                                        for (let m = 16; m < temp.length; m += 17) {
+                                            temp[m] += '\n';
+                                        }
+                                        return temp.join('');
+                                    } else {
+                                        return value;
                                     }
-                                    return temp.join('');
                                 } else {
-                                    return value;
+                                    return null;
                                 }
                             }
                         },

@@ -56,12 +56,30 @@ def parse_path(experiment_config, config_path):
     expand_path(experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         expand_path(experiment_config['trial'], 'codeDir')
+        if experiment_config['trial'].get('authFile'):
+            expand_path(experiment_config['trial'], 'authFile')
+        if experiment_config['trial'].get('ps'):
+            if experiment_config['trial']['ps'].get('privateRegistryAuthPath'):
+                expand_path(experiment_config['trial']['ps'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('master'):
+            if experiment_config['trial']['master'].get('privateRegistryAuthPath'):
+                expand_path(experiment_config['trial']['master'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('worker'):
+            if experiment_config['trial']['worker'].get('privateRegistryAuthPath'):
+                expand_path(experiment_config['trial']['worker'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('taskRoles'):
+            for index in range(len(experiment_config['trial']['taskRoles'])):
+                if experiment_config['trial']['taskRoles'][index].get('privateRegistryAuthPath'):
+                    expand_path(experiment_config['trial']['taskRoles'][index], 'privateRegistryAuthPath')
     if experiment_config.get('tuner'):
         expand_path(experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
         expand_path(experiment_config['assessor'], 'codeDir')
     if experiment_config.get('advisor'):
         expand_path(experiment_config['advisor'], 'codeDir')
+    if experiment_config.get('machineList'):
+        for index in range(len(experiment_config['machineList'])):
+            expand_path(experiment_config['machineList'][index], 'sshKeyPath')
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
@@ -69,6 +87,21 @@ def parse_path(experiment_config, config_path):
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
+        if experiment_config['trial'].get('authFile'):
+            parse_relative_path(root_path, experiment_config['trial'], 'authFile')
+        if experiment_config['trial'].get('ps'):
+            if experiment_config['trial']['ps'].get('privateRegistryAuthPath'):
+                parse_relative_path(root_path, experiment_config['trial']['ps'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('master'):
+            if experiment_config['trial']['master'].get('privateRegistryAuthPath'):
+                parse_relative_path(root_path, experiment_config['trial']['master'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('worker'):
+            if experiment_config['trial']['worker'].get('privateRegistryAuthPath'):
+                parse_relative_path(root_path, experiment_config['trial']['worker'], 'privateRegistryAuthPath')
+        if experiment_config['trial'].get('taskRoles'):
+            for index in range(len(experiment_config['trial']['taskRoles'])):
+                if experiment_config['trial']['taskRoles'][index].get('privateRegistryAuthPath'):
+                    parse_relative_path(root_path, experiment_config['trial']['taskRoles'][index], 'privateRegistryAuthPath')
     if experiment_config.get('tuner'):
         parse_relative_path(root_path, experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):

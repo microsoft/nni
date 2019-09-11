@@ -91,6 +91,7 @@ def parse_args():
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
     parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
     parser_stop.add_argument('--port', '-p', dest='port', help='the port of restful server')
+    parser_stop.add_argument('--all', '-a', action='store_true', help='stop all of experiments')
     parser_stop.set_defaults(func=stop_experiment)
 
     #parse trial command

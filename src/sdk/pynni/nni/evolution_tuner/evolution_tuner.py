@@ -26,7 +26,7 @@ import random
 
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 import nni.parameter_expressions as parameter_expressions
 
@@ -175,7 +175,6 @@ class EvolutionTuner(Tuner):
         search_space : dict
         """
         self.searchspace_json = search_space
-        randint_to_quniform(self.searchspace_json)
         self.space = json2space(self.searchspace_json)
 
         self.random_state = np.random.RandomState()

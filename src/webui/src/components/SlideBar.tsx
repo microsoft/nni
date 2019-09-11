@@ -136,7 +136,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                     onChange={this.handleVisibleChange}
                     title={
                         <span>
-                            <span>Download</span>
+                            <span>View</span>
                         </span>
                     }
                 >
@@ -234,7 +234,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                         >
                             <a className="ant-dropdown-link" href="#">
                                 <Icon type="download" className="down-icon" />
-                                <span>Download</span>
+                                <span>View</span>
                                 {
                                     menuVisible
                                     ?

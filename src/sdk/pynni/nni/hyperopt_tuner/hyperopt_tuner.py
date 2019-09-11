@@ -27,7 +27,7 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
 
@@ -51,6 +51,8 @@ def json2space(in_x, name=NodeType.ROOT):
             _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
                 out_y = eval('hp.hp.choice')(name, _value)
+            elif _type == 'randint':
+                out_y = hp.hp.randint(name, _value[1] - _value[0])
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
@@ -93,6 +95,8 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
             else:
                 if _type in ['quniform', 'qloguniform']:
                     out_y = np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1])
+                elif _type == 'randint':
+                    out_y = parameter[name] + in_x[NodeType.VALUE][0]
                 else:
                     out_y = parameter[name]
         else:
@@ -247,7 +251,6 @@ class HyperoptTuner(Tuner):
         search_space : dict
         """
         self.json = search_space
-        randint_to_quniform(self.json)
 
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
@@ -279,7 +282,7 @@ class HyperoptTuner(Tuner):
         total_params = self.get_suggestion(random_search=False)
         # avoid generating same parameter with concurrent trials because hyperopt doesn't support parallel mode
         if total_params in self.total_data.values():
-            # but it can cause deplicate parameter rarely
+            # but it can cause duplicate parameter rarely
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
 
@@ -315,6 +318,10 @@ class HyperoptTuner(Tuner):
                 rval = self.CL_rval
             else:
                 rval = self.rval
+                # ignore duplicated reported final result (due to aware of intermedate result)
+                if parameter_id not in self.running_data:
+                    logger.info("Received duplicated final result with parameter id: %s", parameter_id)
+                    return
                 self.running_data.remove(parameter_id)
 
                 # update the reward of optimal_y

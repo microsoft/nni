@@ -22,7 +22,7 @@ import csv
 import os
 import psutil
 import json
-import datetime
+from datetime import datetime, timezone
 import time
 import re
 from pathlib import Path
@@ -142,6 +142,8 @@ def parse_ids(args):
         elif isinstance(experiment_dict[key], list):
             # if the config file is old version, remove the configuration from file
             experiment_config.remove_experiment(key)
+    if args.all:
+        return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
             if str(experiment_dict[key]['port']) == args.port:
@@ -160,8 +162,6 @@ def parse_ids(args):
             exit(1)
         else:
             result_list = running_experiment_list
-    elif args.id == 'all':
-        result_list = running_experiment_list
     elif args.id.endswith('*'):
         for id in running_experiment_list:
             if id.startswith(args.id[:-1]):
@@ -175,7 +175,7 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list and ((args.id and args.id != 'all') or args.port):
+    if not result_list and (args.id  or args.port):
         print_error('There are no experiments matched, please set correct experiment id or restful server port')
     elif not result_list:
         print_error('There is no experiment running...')
@@ -206,10 +206,10 @@ def convert_time_stamp_to_date(content):
     start_time_stamp = content.get('startTime')
     end_time_stamp = content.get('endTime')
     if start_time_stamp:
-        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        start_time = datetime.fromtimestamp(start_time_stamp // 1000, timezone.utc).astimezone().strftime("%Y/%m/%d %H:%M:%S")
         content['startTime'] = str(start_time)
     if end_time_stamp:
-        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        end_time = datetime.fromtimestamp(end_time_stamp // 1000, timezone.utc).astimezone().strftime("%Y/%m/%d %H:%M:%S")
         content['endTime'] = str(end_time)
     return content
 
@@ -225,6 +225,9 @@ def check_rest(args):
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
+    if args.id and args.id == 'all':
+        print_warning('\'nnictl stop all\' is abolished, please use \'nnictl stop --all\' to stop all of experiments!')
+        exit(1)
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
         experiment_config = Experiments()
@@ -568,7 +571,7 @@ def experiment_list(args):
             if experiment_dict[key]['status'] != 'STOPPED':
                 experiment_id_list.append(key)
         if not experiment_id_list:
-            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all stopped experiments.')
+            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
@@ -581,7 +584,7 @@ def get_time_interval(time1, time2):
         #convert time to timestamp
         time1 = time.mktime(time.strptime(time1, '%Y/%m/%d %H:%M:%S'))
         time2 = time.mktime(time.strptime(time2, '%Y/%m/%d %H:%M:%S'))
-        seconds = (datetime.datetime.fromtimestamp(time2) - datetime.datetime.fromtimestamp(time1)).seconds
+        seconds = (datetime.fromtimestamp(time2) - datetime.fromtimestamp(time1)).seconds
         #convert seconds to day:hour:minute:second
         days = seconds / 86400
         seconds %= 86400

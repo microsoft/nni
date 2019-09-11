@@ -2,7 +2,8 @@ import torch
 from ._nnimc_torch import TorchPruner
 from ._nnimc_torch import _torch_default_get_configure, _torch_default_load_configure_file
 
-
+import logging
+logger = logging.getLogger('torch pruner')
 
 class LevelPruner(TorchPruner):
     """Prune to an exact pruning level specification
@@ -31,11 +32,6 @@ class LevelPruner(TorchPruner):
         else:
             raise ValueError('please init with configure list')
 
-
-    def load_configure(self, config_path):
-        config_list = _torch_default_load_configure_file(config_path, 'LevelPruner')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
         
     def get_sparsity(self, configure={}):
         sparsity = configure.get('sparsity',0)
@@ -52,14 +48,23 @@ class LevelPruner(TorchPruner):
         return torch.gt(w_abs, threshold).type(weight.type())
 
 class AGPruner(TorchPruner):
+    """
+    An automated gradual pruning algorithm that prunes the smallest magnitude 
+    weights to achieve a preset level of network sparsity.
+
+    Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
+    efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
+    Learning of Phones and other Consumer Devices,
+    https://arxiv.org/pdf/1710.01878.pdf
+    """
     def __init__(self, configure_list):
         """
             Configure Args
                 initial_sparsity
-                final_sparsity
-                start_epoch
-                end_epoch
-                frequency
+                final_sparsity: you should make sure initial_sparsity <= final_sparsity
+                start_epoch: start epoch numer begin update mask
+                end_epoch: end epoch number stop update mask, you should make sure start_epoch <= end_epoch
+                frequency: if you want update every 2 epoch, you can set it 2
         """
         super().__init__()
         self.configure_list = []
@@ -72,11 +77,6 @@ class AGPruner(TorchPruner):
         self.mask_list = {}
         self.now_epoch = 1
 
-    def load_configure(self, config_path):
-        config_list = _torch_default_load_configure_file(config_path, 'AGPruner')
-        for config in config_list.get('config', []):
-            self.configure_list.append(config)
-
     def compute_target_sparsity(self, now_epoch, layer_info):
         configure = _torch_default_get_configure(self.configure_list, layer_info)
         end_epoch = configure.get('end_epoch', 1)
@@ -84,8 +84,13 @@ class AGPruner(TorchPruner):
         freq = configure.get('frequency', 1)
         final_sparsity = configure.get('final_sparsity', 0)
         initial_sparsity = configure.get('initial_sparsity', 0)
-        if end_epoch <= start_epoch or end_epoch <= now_epoch or initial_sparsity >= final_sparsity:
+        if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
+            logger.warning('your end epoch <= start epoch or initial_sparsity >= final_sparsity')
             return final_sparsity
+
+        if end_epoch <= now_epoch:
+            return final_sparsity
+
         span = ((end_epoch - start_epoch-1)//freq)*freq
         assert span > 0
         target_sparsity = (final_sparsity + 
@@ -100,7 +105,7 @@ class AGPruner(TorchPruner):
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
             return mask
-        
+        # if we want to generate new mask, we should update weigth first 
         w_abs = weight.abs()*mask
         threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
@@ -114,10 +119,17 @@ class AGPruner(TorchPruner):
     
     
 class SensitivityPruner(TorchPruner):
+    """
+    Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
+    https://arxiv.org/pdf/1506.02626v3.pdf
+
+    I.e.: "The pruning threshold is chosen as a quality parameter multiplied
+    by the standard deviation of a layers weights."
+    """
     def __init__(self, configure_list):
         """
             configure Args:
-                sparsity
+                sparsity: chosen pruning sparsity
         """
         super().__init__()
         self.configure_list = []
@@ -130,6 +142,9 @@ class SensitivityPruner(TorchPruner):
         self.mask_list = {}
     
     def load_configure(self, config_path):
+        """
+        if you want load configure from yaml file, you can use it and input config_path
+        """
         config_list = _torch_default_load_configure_file(config_path, 'SensitivityPruner')
         for config in config_list.get('config', []):
             self.configure_list.append(config)
@@ -140,6 +155,7 @@ class SensitivityPruner(TorchPruner):
     
     def calc_mask(self, layer_info, weight):
         mask = self.mask_list.get(layer_info.name, torch.ones(weight.shape))
+        # if we want to generate new mask, we should update weigth first 
         weight = weight*mask
         sparsity = self.get_sparsity(_torch_default_get_configure(self.configure_list, layer_info))
         target_sparsity = sparsity * torch.std(weight).item()
