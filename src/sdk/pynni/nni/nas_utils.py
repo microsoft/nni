@@ -241,7 +241,7 @@ def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inpu
     try:
         mutable_block = trial.get_current_parameter(mutable_id)
 
-        # Great! There is a NAS tuner
+        # There is a NAS tuner
         chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
         chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
     except KeyError:
@@ -269,8 +269,9 @@ def _get_layer_and_inputs_from_tuner(mutable_id, mutable_layer_id, optional_inpu
 
 def convert_nas_search_space(search_space):
     """
-    :param search_space: raw search space
-    :return: the new search space, mutable_layers will be converted into choice
+    Args:
+        param search_space: raw search space
+        return: the new search space, mutable_layers will be converted into choice
     """
     ret = dict()
     for k, v in search_space.items():
