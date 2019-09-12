@@ -148,7 +148,7 @@ class MsgDispatcher(MsgDispatcherBase):
             try:
                 param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
             except NoMoreTrialError:
-                param = ''
+                param = None
             send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))

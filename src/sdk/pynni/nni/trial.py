@@ -49,11 +49,7 @@ def get_next_parameter():
     _params = platform.get_next_parameter()
     if _params is None:
         return None
-    if _params['parameters']:
-        return _params['parameters']
-    else:
-        # empty hyper parameter
-        return None
+    return _params['parameters']
 
 def get_current_parameter(tag=None):
     global _params
