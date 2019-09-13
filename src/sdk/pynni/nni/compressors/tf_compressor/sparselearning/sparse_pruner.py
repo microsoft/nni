@@ -57,7 +57,7 @@ class LinearDecay(object):
 
 
 class NaiveSparsePruner(TfPruner):
-    def __init__(self, optimizer, prune_rate_decay, density=0.05):
+    def __init__(self, optimizer, prune_rate_decay, density=0.05, prune_rate=0.5):
         super().__init__()
         growth_modes = ['random', 'momentum', 'momentum_neuron']
         prune_mode='magnitude'
@@ -433,8 +433,8 @@ class NaiveSparsePruner(TfPruner):
         if k>= 100:
             k=100
 
-        self.weight_list[layer_info.name]
-        thresh = tf.contrib.distributions.percentile(tf.abs(new_grad), k)
+        weight = self.weight_list[layer_info.name]
+        threshold = tf.contrib.distributions.percentile(tf.abs(new_grad), k)
         new_temp_mask = tf.cast(tf.math.greater(weight.abs(), threshold), new_grad.dtype)
         new_maks = tf.maximum(mask, new_temp_mask)
         return new_mask

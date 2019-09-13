@@ -40,6 +40,7 @@ def your_redistribution(masking, name, weight, mask):
                     The values will be automatically sum-normalized
                     after this step.
     '''
+    layer_importance = None
     return layer_importance
 
 #===========================================================#
