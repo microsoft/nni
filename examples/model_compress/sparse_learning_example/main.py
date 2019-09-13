@@ -14,9 +14,9 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
 import nni
-from nni.compressors.torchCompressor.sparselearning.sparse_pruner import SparsePruner, CosineDecay, LinearDecay
-from nni.compressors.torchCompressor.sparselearning.models import AlexNet, VGG16, LeNet_300_100, LeNet_5_Caffe, WideResNet
-from nni.compressors.torchCompressor.sparselearning.utils import get_mnist_dataloaders, get_cifar10_dataloaders, plot_class_feature_histograms
+from nni.compressors.torch_Compressor.sparselearning.sparse_pruner import SparsePruner, CosineDecay, LinearDecay
+from nni.compressors.torch_Compressor.sparselearning.models import AlexNet, VGG16, LeNet_300_100, LeNet_5_Caffe, WideResNet
+from nni.compressors.torch_Compressor.sparselearning.utils import get_mnist_dataloaders, get_cifar10_dataloaders, plot_class_feature_histograms
 
 from extensions import magnitude_variance_pruning, variance_redistribution
 

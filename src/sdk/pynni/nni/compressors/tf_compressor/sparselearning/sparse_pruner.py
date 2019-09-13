@@ -57,9 +57,15 @@ class LinearDecay(object):
 
 
 class NaiveSparsePruner(TfPruner):
-    def __init__(self, optimizer, prune_rate_decay, density=0.05, sparse_init='constant', prune_rate=0.5, prune_mode='magnitude', growth_mode='momentum', redistribution_mode='momentum', verbose=False, fp16=False):
+    def __init__(self, optimizer, prune_rate_decay, density=0.05):
         super().__init__()
         growth_modes = ['random', 'momentum', 'momentum_neuron']
+        prune_mode='magnitude'
+        growth_mode = 'momentum'
+        redistribution_mode='momentum'
+        sparse_init='constant'
+        verbose=False
+        fp16=False
         if growth_mode not in growth_modes:
             print('Growth mode: {0} not supported!'.format(growth_mode))
             print('Supported modes are:', str(growth_modes))
