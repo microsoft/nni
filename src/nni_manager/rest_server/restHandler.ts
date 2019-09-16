@@ -86,11 +86,11 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response, isFatal: boolean = false): void {
+    private handle_error(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
-            res.status(500);
+            res.status(errorCode);
         }
         res.send({
             error: err.message
@@ -147,7 +147,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                this.handle_error(new Error(`Could not update experiment in view mode!`), res);
+                this.handle_error(new Error(`Could not update experiment in view mode!`), res, false, 400);
             }
         });
     }
@@ -207,7 +207,7 @@ class NNIRestHandler {
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
             let experimentMode: string = getExperimentMode();
-            if(experimentMode !== ExperimentStartUpMode.VIEW) {
+            if (experimentMode !== ExperimentStartUpMode.VIEW) {
                 // tslint:disable-next-line:no-any
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
@@ -221,7 +221,7 @@ class NNIRestHandler {
                     this.handle_error(NNIError.FromError(err), res, true);
                 }
             } else {
-                this.handle_error(new Error(`Could not set cluster-metadata in view mode!`), res);
+                this.handle_error(new Error(`Could not set cluster-metadata in view mode!`), res, false, 400);
             }
         });
     }
@@ -260,7 +260,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                this.handle_error(new Error(`Could not add customized trial in view mode!`), res);
+                this.handle_error(new Error(`Could not add customized trial in view mode!`), res, false, 400);
             }
         });
     }
@@ -275,7 +275,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                this.handle_error(new Error(`Could not delete trial job in view mode!`), res);
+                this.handle_error(new Error(`Could not delete trial job in view mode!`), res, false, 400);
             }
 
         });
