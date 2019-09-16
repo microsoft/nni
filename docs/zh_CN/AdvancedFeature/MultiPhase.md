@@ -12,7 +12,7 @@
 
 ### 实现使用多阶段的 Trial 代码：
 
-**1. Update trial code**
+**1. 更新 Trial 代码**
 
 It is pretty simple to use multi-phase in trial code, an example is shown below:
 
