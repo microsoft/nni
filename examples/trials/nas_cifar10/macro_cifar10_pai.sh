@@ -26,10 +26,6 @@ python3 src/cifar10/nni_child_cifar10.py \
   --child_lr_min=0.001 \
   --child_lr_T_0=10 \
   --child_lr_T_mul=2 \
-  --controller_search_whole_channels \
-  --controller_train_every=1 \
-  --controller_num_aggregate=20 \
-  --controller_train_steps=50 \
   --child_mode="subgraph" \
   "$@"
 
