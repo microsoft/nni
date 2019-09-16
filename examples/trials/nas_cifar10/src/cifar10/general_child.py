@@ -13,7 +13,6 @@ class GeneralChild(Model):
                  images,
                  labels,
                  cutout_size=None,
-                 whole_channels=False,
                  fixed_arc=None,
                  out_filters_scale=1,
                  num_layers=2,
@@ -64,7 +63,6 @@ class GeneralChild(Model):
             data_format=data_format,
             name=name)
 
-        self.whole_channels = whole_channels
         self.lr_cosine = lr_cosine
         self.lr_max = lr_max
         self.lr_min = lr_min

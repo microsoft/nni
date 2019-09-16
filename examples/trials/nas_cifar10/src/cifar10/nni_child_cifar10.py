@@ -30,7 +30,6 @@ def build_trial(images, labels, ChildClass):
         labels,
         use_aux_heads=FLAGS.child_use_aux_heads,
         cutout_size=FLAGS.child_cutout_size,
-        whole_channels=FLAGS.controller_search_whole_channels,
         num_layers=FLAGS.child_num_layers,
         num_cells=FLAGS.child_num_cells,
         num_branches=FLAGS.child_num_branches,
