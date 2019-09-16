@@ -33,7 +33,7 @@ import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { Manager, ExperimentStartUpInfo } from './manager';
+import { Manager, ExperimentStartUpMode } from './manager';
 import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
@@ -276,7 +276,7 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(ExperimentStartUpInfo.NEW, 'unittest', 8080);
+    setExperimentStartupInfo(ExperimentStartUpMode.NEW, 'unittest', 8080);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');

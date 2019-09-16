@@ -24,7 +24,7 @@ import { TrialJobStatus } from './trainingService';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL' | 'VIEWING';
-namespace ExperimentStartUpInfo {
+namespace ExperimentStartUpMode {
     export const NEW = 'new';
     export const RESUME = 'resume';
     export const VIEW = 'view';
@@ -121,4 +121,4 @@ abstract class Manager {
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpInfo };
+export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

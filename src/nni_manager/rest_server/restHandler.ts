@@ -27,7 +27,7 @@ import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { getExperimentMode } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpInfo } from '../common/manager';
+import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
@@ -160,7 +160,7 @@ class NNIRestHandler {
     private startExperiment(router: Router): void {
         router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
             let experimentMode: string = getExperimentMode();
-            if (experimentMode === ExperimentStartUpInfo.NEW) {
+            if (experimentMode === ExperimentStartUpMode.NEW) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
                         experiment_id: eid
@@ -169,14 +169,14 @@ class NNIRestHandler {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else if (experimentMode === ExperimentStartUpInfo.RESUME){
+            } else if (experimentMode === ExperimentStartUpMode.RESUME){
                 this.nniManager.resumeExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else if (experimentMode === ExperimentStartUpInfo.VIEW){
+            } else if (experimentMode === ExperimentStartUpMode.VIEW){
                 this.nniManager.viewExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {

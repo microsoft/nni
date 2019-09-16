@@ -26,7 +26,7 @@ import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo, getExperimentMode } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
-import { Manager } from './common/manager';
+import { Manager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg, uniqueString } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
@@ -44,7 +44,7 @@ import {
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number,
     logDirectory: string, experimentLogLevel: string): void {
-    const expId: string = startExpMode === 'new' ? uniqueString(8) : experimentId;
+    const expId: string = startExpMode === ExperimentStartUpMode.NEW ? uniqueString(8) : experimentId;
     setExperimentStartupInfo(startExpMode, expId, basePort, logDirectory, experimentLogLevel);
 }
 
@@ -107,14 +107,14 @@ if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
-if (!['new', 'resume', 'view'].includes(startMode)) {
+if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME, ExperimentStartUpMode.VIEW].includes(startMode)) {
     console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if ((startMode === 'resume' || startMode === 'view') && experimentId.trim().length < 1) {
+if ((startMode === ExperimentStartUpMode.RESUME || startMode === ExperimentStartUpMode.VIEW) && experimentId.trim().length < 1) {
     console.log(`FATAL: cannot resume or view the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
