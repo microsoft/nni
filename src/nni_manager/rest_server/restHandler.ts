@@ -147,9 +147,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                let message = `Could not update experiment in view mode!`;
-                this.log.warning(message);
-                res.send(message);
+                this.handle_error(new Error(`Could not update experiment in view mode!`), res);
             }
         });
     }
@@ -223,11 +221,8 @@ class NNIRestHandler {
                     this.handle_error(NNIError.FromError(err), res, true);
                 }
             } else {
-                let message = `Could not set cluster-metadata in view mode!`;
-                this.log.warning(message);
-                res.send(message);
+                this.handle_error(new Error(`Could not set cluster-metadata in view mode!`), res);
             }
-
         });
     }
 
@@ -265,9 +260,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                let message = `Could not add customized trial in view mode!`;
-                this.log.warning(message);
-                res.send(message);
+                this.handle_error(new Error(`Could not add customized trial in view mode!`), res);
             }
         });
     }
@@ -282,9 +275,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                let message = `Could not delete trial job in view mode!`;
-                this.log.warning(message);
-                res.send(message);
+                this.handle_error(new Error(`Could not delete trial job in view mode!`), res);
             }
 
         });
