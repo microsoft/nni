@@ -15,7 +15,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install flake8 --user
-      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821
+      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
       python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
