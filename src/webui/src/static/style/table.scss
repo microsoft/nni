@@ -115,6 +115,7 @@
 }
 
 #detail-button{
+    margin: 2px 0;
     .common-style, .common-style:visited, .common-style:focus{
         height: 26px;
         border: none;
@@ -131,7 +132,7 @@
     .common-style:disabled{
         background-color: #f4f4f4;
     }
-    .special, .special:visited, .special:focus{
+    .special, .special:visited, .special:focus, .special button{
         height: 26px;
         border: none;
         border-radius: 0;
@@ -146,7 +147,7 @@
         background-color: #c8c8c8;
         outline: 0;
     }
-    .special:disabled{
+    .special:disabled, .special button:disabled{
         background-color: #f4f4f4;
         color: #d9d9d9;
     }

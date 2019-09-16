@@ -60,7 +60,8 @@
     "lodash": "^4.17.13",
     "lodash.merge": "^4.6.2",
     "node.extend": "^1.1.7",
-    "hoek": "^4.2.1"
+    "hoek": "^4.2.1",
+    "js-yaml": "^3.13.1"
   },
   "engines": {
     "node": ">=10.0.0"

@@ -115,6 +115,12 @@ tuner:
 
 此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
+**参数**
+
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+
+* **population_size** (*int 类型(大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的种群（Trial 数量）。
+
 **示例**
 
 ```yaml
@@ -123,6 +129,7 @@ tuner:
   builtinTunerName: Evolution
   classArgs:
     optimize_mode: maximize
+    population_size: 100
 ```
 
 <br />

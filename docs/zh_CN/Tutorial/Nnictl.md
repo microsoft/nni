@@ -123,6 +123,7 @@ nnictl 支持的命令：
   | ---------- | ----- | --- | -------------------------------- |
   | id         | False |     | 要停止的 Experiment 标识               |
   | --port, -p | False |     | 要停止的 Experiment 使用的 RESTful 服务端口 |
+  | --all, -a  | False |     | 停止所有 Experiment                  |
 
 * 详细信息及样例
   
@@ -147,10 +148,10 @@ nnictl 支持的命令：
         ```
         
   
-  4. 可使用 'nnictl stop all' 来停止所有的 Experiment。
+  4. 可使用 'nnictl stop --all' 来停止所有的 Experiment。
     
         ```bash
-        nnictl stop all
+        nnictl stop --all
         ```
         
   
