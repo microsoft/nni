@@ -39,6 +39,8 @@ export class PAITaskRole {
     public readonly command: string;
     //Shared memory for one task in the task role
     public readonly shmMB?: number;
+    //portList to specify the port used in container
+    public portList?: portListMetaData[];
 
     /**
      * Constructor
@@ -50,7 +52,7 @@ export class PAITaskRole {
      * @param command Executable command for tasks in the task role, can not be empty
      */
     constructor(name : string, taskNumber : number, cpuNumber : number, memoryMB : number, gpuNumber : number,
-                command : string, shmMB?: number) {
+                command : string, shmMB?: number, portList?: portListMetaData[]) {
         this.name = name;
         this.taskNumber = taskNumber;
         this.cpuNumber = cpuNumber;
@@ -58,6 +60,7 @@ export class PAITaskRole {
         this.gpuNumber = gpuNumber;
         this.command = command;
         this.shmMB = shmMB;
+        this.portList = portList;
     }
 }
 
@@ -121,6 +124,16 @@ export class PAIClusterConfig {
 }
 
 /**
+ * portList data structure used in PAI taskRole
+ */
+export class portListMetaData {
+    public readonly label : string = '';
+    public readonly beginAt: number = 0;
+    public readonly portNumber: number = 0;
+}
+  
+
+/**
  * PAI trial configuration
  */
 export class NNIPAITrialConfig extends TrialConfig {
@@ -134,9 +147,11 @@ export class NNIPAITrialConfig extends TrialConfig {
     public shmMB?: number;
     //authentication file used for private Docker registry 
     public authFile?: string;
+    //portList to specify the port used in container
+    public portList?: portListMetaData[];
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
-                image: string, virtualCluster?: string, shmMB?: number, authFile?: string) {
+                image: string, virtualCluster?: string, shmMB?: number, authFile?: string, portList?: portListMetaData[]) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
@@ -144,5 +159,6 @@ export class NNIPAITrialConfig extends TrialConfig {
         this.virtualCluster = virtualCluster;
         this.shmMB = shmMB;
         this.authFile = authFile;
+        this.portList = portList;
     }
 }

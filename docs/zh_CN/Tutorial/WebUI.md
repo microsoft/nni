@@ -12,7 +12,7 @@
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* 支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
+* "View" 按钮支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
 
 ![](../../img/webui-img/download.png)
 
@@ -53,13 +53,11 @@
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-由于训练中可能有非常多的中间结果，因此中间结果图提供了过滤功能。 如果要使用过滤按钮查看部分 Trial，则需要提供数据。
+Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-第一个输入框应该填入什么？ 可能会发现一个 Trial 的中间结果点变得更好或者更差。 换句话说，这可能是非常重要的中间结果点。 只需将其输入第一个输入框中。
+这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要的中间结果。 如果要仔细查看这个点，可以在 #Intermediate 中输入其横坐标。
 
-选择了中间结果序号后，要输入需要了解的该中间结果序号的指标范围。 即其最小值和最大值。 如此图中，中间结果点为 9，指标范围为 60 至 80。
-
-Trial 中指标范围在 20 至 60 的 13 个结果就被过滤掉了。
+并输入这个中间结果的指标范围。 如下图所示，选择了第 4 个中间结果， 并将指标范围设置为了 0.8 -1。
 
 ![](../../img/webui-img/filter-intermediate.png)
 

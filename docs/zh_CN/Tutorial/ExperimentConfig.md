@@ -1,6 +1,6 @@
 # Experiment（实验）配置参考
 
-创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 YAML 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
+创建 Experiment 所需要的配置文件。 配置文件的路径会传入 `nnictl` 命令。 配置文件的格式为 YAML。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
 - [Experiment（实验）配置参考](#Experiment-config-reference) 
   - [模板](#Template)
@@ -549,6 +549,10 @@ machineList:
     - **azureShare**
       
       **azureShare** 是 Azure 文件存储的共享参数。
+  
+  - **uploadRetryCount**
+    
+    如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
 
 - **paiConfig**
   

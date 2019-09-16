@@ -34,20 +34,28 @@ const COLUMN_INDEX = [
         index: 2
     },
     {
-        name: 'Duration',
+        name: 'StartTime',
         index: 3
     },
     {
-        name: 'Status',
+        name: 'EndTime',
         index: 4
     },
     {
-        name: 'Intermediate count',
+        name: 'Duration',
         index: 5
     },
     {
-        name: 'Default',
+        name: 'Status',
         index: 6
+    },
+    {
+        name: 'Intermediate count',
+        index: 7
+    },
+    {
+        name: 'Default',
+        index: 8
     },
     {
         name: 'Operation',
@@ -57,7 +65,8 @@ const COLUMN_INDEX = [
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation'];
 // all choice column !dictory final
-const COLUMNPro = ['Trial No.', 'ID', 'Duration', 'Status', 'Intermediate count', 'Default', 'Operation'];
+const COLUMNPro = ['Trial No.', 'ID', 'StartTime', 'EndTime', 'Duration', 'Status',
+'Intermediate count', 'Default', 'Operation'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,
     CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION

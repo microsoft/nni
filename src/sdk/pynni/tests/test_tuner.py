@@ -34,6 +34,7 @@ class NaiveTuner(Tuner):
         self.param = 0
         self.trial_results = [ ]
         self.search_space = None
+        self.accept_customized_trials()
 
     def generate_parameters(self, parameter_id, **kwargs):
         # report Tuner's internal states to generated parameters,
@@ -45,13 +46,9 @@ class NaiveTuner(Tuner):
             'search_space': self.search_space
         }
 
-    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
+    def receive_trial_result(self, parameter_id, parameters, value, customized, **kwargs):
         reward = extract_scalar_reward(value)
-        self.trial_results.append((parameter_id, parameters['param'], reward, False))
-
-    def receive_customized_trial_result(self, parameter_id, parameters, value):
-        reward = extract_scalar_reward(value)
-        self.trial_results.append((parameter_id, parameters['param'], reward, True))
+        self.trial_results.append((parameter_id, parameters['param'], reward, customized))
 
     def update_search_space(self, search_space):
         self.search_space = search_space

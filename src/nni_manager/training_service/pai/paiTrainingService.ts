@@ -79,6 +79,7 @@ class PAITrainingService implements TrainingService {
     private logCollection: string;
     private isMultiPhase: boolean = false;
     private authFileHdfsPath: string | undefined = undefined;
+    private portList?: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -446,6 +447,8 @@ class PAITrainingService implements TrainingService {
                 nniPaiTrialCommand,
                 // Task shared memory
                 this.paiTrialConfig.shmMB,
+                // Task portList
+                this.paiTrialConfig.portList
             )
         ];
 

@@ -40,7 +40,7 @@ for (dirpath, dirnames, filenames) in walk('./nni'):
     files = [path.normpath(path.join(dirpath, filename)) for filename in filenames]
     data_files.append((path.normpath(dirpath), files))
 
-with open('../../README.md', 'r') as fh:
+with open('../../README.md', 'r', encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
