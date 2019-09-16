@@ -179,11 +179,7 @@ class MsgDispatcher(MsgDispatcherBase):
             customized = True
         else:
             customized = False
-
-        if multi_phase_enabled():
-            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized, trial_job_id=data['trial_job_id'])
-        else:
-            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized)
+        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized, trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
