@@ -139,11 +139,18 @@ class NNIRestHandler {
 
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
-            this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
-                res.send();
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
+            let experimentMode: string = getExperimentMode();
+            if( experimentMode !== ExperimentStartUpMode.VIEW) {
+                this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            } else {
+                let message = `Could not update experiment in view mode!`;
+                this.log.warning(message);
+                res.send(message);
+            }
         });
     }
 
@@ -201,18 +208,26 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
-            // tslint:disable-next-line:no-any
-            const metadata: any = req.body;
-            const keys: string[] = Object.keys(metadata);
-            try {
-                for (const key of keys) {
-                    await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
+            let experimentMode: string = getExperimentMode();
+            if(experimentMode !== ExperimentStartUpMode.VIEW) {
+                // tslint:disable-next-line:no-any
+                const metadata: any = req.body;
+                const keys: string[] = Object.keys(metadata);
+                try {
+                    for (const key of keys) {
+                        await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
+                    }
+                    res.send();
+                } catch (err) {
+                    // setClusterMetata is a step of initialization, so any exception thrown is a fatal
+                    this.handle_error(NNIError.FromError(err), res, true);
                 }
-                res.send();
-            } catch (err) {
-                // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                this.handle_error(NNIError.FromError(err), res, true);
+            } else {
+                let message = `Could not set cluster-metadata in view mode!`;
+                this.log.warning(message);
+                res.send(message);
             }
+
         });
     }
 
@@ -242,21 +257,36 @@ class NNIRestHandler {
 
     private addTrialJob(router: Router): void {
         router.post('/trial-jobs', async (req: Request, res: Response) => {
-            this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
-                res.send();
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
+            let experimentMode: string = getExperimentMode();
+            if(experimentMode !== ExperimentStartUpMode.VIEW) {
+                this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            } else {
+                let message = `Could not add customized trial in view mode!`;
+                this.log.warning(message);
+                res.send(message);
+            }
         });
     }
 
     private cancelTrialJob(router: Router): void {
         router.delete('/trial-jobs/:id', async (req: Request, res: Response) => {
-            this.nniManager.cancelTrialJobByUser(req.params.id).then(() => {
-                res.send();
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
+            let experimentMode: string = getExperimentMode();
+            if(experimentMode !== ExperimentStartUpMode.VIEW) {
+                this.nniManager.cancelTrialJobByUser(req.params.id).then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            } else {
+                let message = `Could not delete trial job in view mode!`;
+                this.log.warning(message);
+                res.send(message);
+            }
+
         });
     }
 
