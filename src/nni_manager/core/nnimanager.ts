@@ -192,7 +192,6 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
-        this.setStatus('VIEWING');
         setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
         // Set up multiphase config
