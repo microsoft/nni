@@ -29,7 +29,7 @@ import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
 import { NNIError } from '../common/errors';
 import { getExperimentId, getExperimentMode } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
+import { ExperimentProfile,  TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
 import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
@@ -47,7 +47,7 @@ class NNIDataStore implements DataStore {
 
         // TODO support specify database dir
         const databaseDir: string = getDefaultDatabaseDir();
-        if(getExperimentMode() === 'new') {
+        if(getExperimentMode() === ExperimentStartUpMode.NEW) {
             mkDirP(databaseDir).then(() => {
                 this.db.init(true, databaseDir).then(() => {
                     this.log.info('Datastore initialization done');
