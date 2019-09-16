@@ -94,7 +94,7 @@ All types of sampling strategies and their parameter are listed here:
 
 Known Limitations:
 
-* Note that Metis Tuner only supports numerical `choice` now
+* GP Tuner and Metis Tuner suport only **numerical values** in search space(`choice` type values can be no-numeraical with other tuners, e.g. string values). Gaussian Process Regressor makes prediction based on a kernel function and the distance among the points, it's hard to get the true distance among no-numerical values.
 
 * Note that for nested search space:
 

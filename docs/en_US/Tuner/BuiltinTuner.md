@@ -308,7 +308,7 @@ tuner:
 
 > Built-in Tuner Name: **MetisTuner**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+Note that the only acceptable types of search space are `quniform`, `uniform` and `randint` and numerical `choice`.
 
 **Suggested scenario**
 
@@ -381,7 +381,7 @@ advisor:
 
 > Built-in Tuner Name: **GPTuner**
 
-Note that the only acceptable types of search space are `choice`, `randint`, `uniform`, `quniform`,  `loguniform`, `qloguniform`.
+Note that the only acceptable types of search space are `randint`, `uniform`, `quniform`,  `loguniform`, `qloguniform`, and numerical `choice`.
 
 **Suggested scenario**
 
