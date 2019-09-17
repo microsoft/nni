@@ -1,10 +1,10 @@
-# PPO Tuner on NNI
+# NNI 中的 PPO Tuner
 
 ## PPOTuner
 
-This is a tuner generally for NNI's NAS interface, it uses [ppo algorithm](https://arxiv.org/abs/1707.06347). The implementation inherits the main logic of the implementation [here](https://github.com/openai/baselines/tree/master/baselines/ppo2) (i.e., ppo2 from OpenAI), and is adapted for NAS scenario.
+这是通常用于 NAS 接口的 NNI Tuner，使用了 [PPO 算法](https://arxiv.org/abs/1707.06347)。 此实现继承了[这里](https://github.com/openai/baselines/tree/master/baselines/ppo2)的主要逻辑，(即 OpenAI 的 PPO2)，并为 NAS 场景做了适配。
 
-It could successfully tune the [mnist-nas example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas), and has the following result:
+它能成功调优 [mnist-nas 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas)，结果如下：
 
 ![](../../img/ppo_mnist.png)
 
