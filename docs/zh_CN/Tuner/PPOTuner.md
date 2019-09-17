@@ -8,12 +8,12 @@
 
 ![](../../img/ppo_mnist.png)
 
-We also tune [the macro search space for image classification in the enas paper](https://github.com/microsoft/nni/tree/master/examples/trials/nas_cifar10) (with limited epoch number for each trial, i.e., 8 epochs), which is implemented using the NAS interface and tuned with PPOTuner. Use Figure 7 in the [enas paper](https://arxiv.org/pdf/1802.03268.pdf) to show how the search space looks like
+我们也使用 NAS 接口和 PPO Tuner 调优了[ ENAS 论文中为图片分类所做的宏分类](https://github.com/microsoft/nni/tree/master/examples/trials/nas_cifar10)（Trial 中 Epoch 限定为 8）。 [enas 论文](https://arxiv.org/pdf/1802.03268.pdf)中的图 7 展示了搜索空间：
 
 ![](../../img/enas_search_space.png)
 
-The figure above is a chosen architecture, we use it to show how the search space looks like. Each square is a layer whose operation can be chosen from 6 operations. Each dash line is a skip connection, each square layer could choose 0 or 1 skip connection getting the output of a previous layer. **Note that** in original macro search space each square layer could choose any number of skip connections, while in our implementation it is only allowed to choose 0 or 1.
+上图是某个选定的架构，用来展示搜索空间。 每个方块是一层，其操作可从 6 个操作中选择。 每条虚线是直通连接，每个方块都可以有 0 或 1 条直通连接获得前面层的输出。 **注意**，在原始的宏搜索空间中，每个方块层可选择任意条直通连接，在此实现中，仅允许 0 或 1条。
 
-The result is shown in figure below (with the experiment config [here](https://github.com/microsoft/nni/blob/master/examples/trials/nas_cifar10/config_ppo.yml)):
+结果如下图所示（[配置文件](https://github.com/microsoft/nni/blob/master/examples/trials/nas_cifar10/config_ppo.yml)）：
 
 ![](../../img/ppo_cifar10.png)
