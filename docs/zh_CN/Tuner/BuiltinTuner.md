@@ -20,6 +20,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 | [**Metis Tuner**](#MetisTuner)           | 大多数调参工具仅仅预测最优配置，而 Metis 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次 Trial 的建议。 它不进行随机取样。 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。 [参考论文](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)                                               |
 | [**BOHB**](#BOHB)                        | BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 [参考论文](https://arxiv.org/abs/1807.01774)                                                                    |
 | [**GP Tuner**](#GPTuner)                 | Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)，[Github 库](https://github.com/fmfn/BayesianOptimization)                                                                             |
+| [**PPO Tuner**](#PPOTuner)               | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                                                     |
 
 ## 用法
 
@@ -412,4 +413,40 @@ tuner:
     cold_start_num: 10
     selection_num_warm_up: 100000
     selection_num_starting_points: 250
+```
+
+<a name="PPOTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
+
+> 内置 Tuner 名称：**PPOTuner**
+
+搜索空间类型仅支持 `mutable_layer`。 `optional_input_size` 只能是 0, 1, 或 [0, 1]。
+
+**建议场景**
+
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使用 NNI 的 NAS 接口进行神经网络架构搜索时，推荐使用 PPO Tuner。 一般来说，尽管PPO算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 因此，建议在有大量计算资源时，再使用此 Tuner。 可以在简单的任务上尝试，如 [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) 示例。 [查看详细信息](./PPOTuner.md)
+
+**参数**
+
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trialConcurrency` 设为 `trials_per_update` 的倍数，以便提高 Trial 的并发效率。
+* **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
+* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
+* **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
+* **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
+* **vf_coef** (*float, 可选, 默认为 0.5*) - Value function loss coefficient in the optimization objective.
+* **max_grad_norm** (*float, 可选, 默认为 0.5*) - Gradient norm clipping coefficient.
+* **gamma** (*float, 可选, 默认为 0.99*) - Discounting factor.
+* **lam** (*float, 可选, 默认为 0.95*) - Advantage estimation discounting factor (论文中的 lambda).
+* **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
+
+**示例**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
 ```
