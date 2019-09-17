@@ -425,12 +425,12 @@ tuner:
 
 **建议场景**
 
-PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使用 NNI 的 NAS 接口进行神经网络架构搜索时，推荐使用 PPO Tuner。 It has relatively high data efficiency but is suggested when you have large amount of computation resource. You could try it on very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [Detailed Description](./PPOTuner.md)
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使用 NNI 的 NAS 接口进行神经网络架构搜索时，推荐使用 PPO Tuner。 一般来说，尽管PPO算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 因此，建议在有大量计算资源时，再使用此 Tuner。 可以在简单的任务上尝试，如 [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) 示例。 [查看详细信息](./PPOTuner.md)
 
-**Requirement of classArgs**
+**参数**
 
-* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **trials_per_update** (*int, optional, default = 20*) - The number of trials to be used for one update. This number is recommended to be larger than `trialConcurrency` and `trialConcurrency` be a aliquot devisor of `trials_per_update`. Note that trials_per_update should be divisible by minibatch_size.
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 This number is recommended to be larger than `trialConcurrency` and `trialConcurrency` be a aliquot devisor of `trials_per_update`. Note that trials_per_update should be divisible by minibatch_size.
 * **epochs_per_update** (*int, optional, default = 4*) - The number of epochs for one update.
 * **minibatch_size** (*int, optional, default = 4*) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that, trials_per_update should be divisible by minibatch_size.
 * **ent_coef** (*float, optional, default = 0.0*) - Policy entropy coefficient in the optimization objective.
