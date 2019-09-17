@@ -432,8 +432,8 @@ PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使
 * **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trialConcurrency` 设为 `trials_per_update` 的倍数，以便提高 Trial 的并发效率。
 * **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
-* **minibatch_size** (*int, optional, default = 4*) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that, trials_per_update should be divisible by minibatch_size.
-* **ent_coef** (*float, optional, default = 0.0*) - Policy entropy coefficient in the optimization objective.
+* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
+* **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
 * **lr** (*float, optional, default = 3e-4*) - Learning rate of the model (lstm network), constant.
 * **vf_coef** (*float, optional, default = 0.5*) - Value function loss coefficient in the optimization objective.
 * **max_grad_norm** (*float, optional, default = 0.5*) - Gradient norm clipping coefficient.
