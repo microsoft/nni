@@ -434,14 +434,14 @@ PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使
 * **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
 * **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
 * **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
-* **lr** (*float, optional, default = 3e-4*) - Learning rate of the model (lstm network), constant.
-* **vf_coef** (*float, optional, default = 0.5*) - Value function loss coefficient in the optimization objective.
-* **max_grad_norm** (*float, optional, default = 0.5*) - Gradient norm clipping coefficient.
-* **gamma** (*float, optional, default = 0.99*) - Discounting factor.
-* **lam** (*float, optional, default = 0.95*) - Advantage estimation discounting factor (lambda in the paper).
-* **cliprange** (*float, optional, default = 0.2*) - Cliprange in the PPO algorithm, constant.
+* **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
+* **vf_coef** (*float, 可选, 默认为 0.5*) - Value function loss coefficient in the optimization objective.
+* **max_grad_norm** (*float, 可选, 默认为 0.5*) - Gradient norm clipping coefficient.
+* **gamma** (*float, 可选, 默认为 0.99*) - Discounting factor.
+* **lam** (*float, 可选, 默认为 0.95*) - Advantage estimation discounting factor (论文中的 lambda).
+* **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
