@@ -432,7 +432,7 @@ PPOTuner is a Reinforcement Learning tuner based on PPO algorithm. When you are 
 **Requirement of classArgs**
 
 * **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **trials_per_update** (*int, optional, default = 20*) - The number of trials to be used for one update. It must be divisible by minibatch_size. `trialConcurrency` is recommended to be an exact multiple of `trials_per_update` for better concurrency of trials.
+* **trials_per_update** (*int, optional, default = 20*) - The number of trials to be used for one update. It must be divisible by minibatch_size. `trials_per_update` is recommended to be an exact multiple of `trialConcurrency` for better concurrency of trials.
 * **epochs_per_update** (*int, optional, default = 4*) - The number of epochs for one update.
 * **minibatch_size** (*int, optional, default = 4*) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that, trials_per_update must be divisible by minibatch_size.
 * **ent_coef** (*float, optional, default = 0.0*) - Policy entropy coefficient in the optimization objective.
