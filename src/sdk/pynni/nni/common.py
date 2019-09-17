@@ -52,21 +52,21 @@ def init_logger(logger_file_path, log_level_name='info'):
     logger_file_path: path of logger file (path-like object).
     """
     log_level = log_level_map.get(log_level_name, logging.INFO)
-    logger_file = open(logger_file_path, 'w')
-    fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
-    logging.Formatter.converter = time.localtime
-    formatter = logging.Formatter(fmt, _time_format)
-    handler = logging.StreamHandler(logger_file)
-    handler.setFormatter(formatter)
+    with open(logger_file_path, 'w') as logger_file:
+        fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+        logging.Formatter.converter = time.localtime
+        formatter = logging.Formatter(fmt, _time_format)
+        handler = logging.StreamHandler(logger_file)
+        handler.setFormatter(formatter)
 
-    root_logger = logging.getLogger()
-    root_logger.addHandler(handler)
-    root_logger.setLevel(log_level)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(handler)
+        root_logger.setLevel(log_level)
 
-    # these modules are too verbose
-    logging.getLogger('matplotlib').setLevel(log_level)
+        # these modules are too verbose
+        logging.getLogger('matplotlib').setLevel(log_level)
 
-    sys.stdout = _LoggerFileWrapper(logger_file)
+        sys.stdout = _LoggerFileWrapper(logger_file)
 
 _multi_thread = False
 _multi_phase = False
