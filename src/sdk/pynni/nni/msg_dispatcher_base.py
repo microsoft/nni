@@ -18,7 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-#import json_tricks
 import os
 import threading
 import logging
@@ -39,7 +38,12 @@ _logger = logging.getLogger(__name__)
 QUEUE_LEN_WARNING_MARK = 20
 _worker_fast_exit_on_terminate = True
 
+
 class MsgDispatcherBase(Recoverable):
+    """This is where tuners and assessors are not defined yet.
+    Inherits this class to make your own advisor.
+    """
+
     def __init__(self):
         if multi_thread_enabled():
             self.pool = ThreadPool()
@@ -49,7 +53,8 @@ class MsgDispatcherBase(Recoverable):
             self.default_command_queue = Queue()
             self.assessor_command_queue = Queue()
             self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
-            self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
+            self.assessor_worker = threading.Thread(target=self.command_queue_worker,
+                                                    args=(self.assessor_command_queue,))
             self.default_worker.start()
             self.assessor_worker.start()
             self.worker_exceptions = []
@@ -72,7 +77,8 @@ class MsgDispatcherBase(Recoverable):
             if multi_thread_enabled():
                 result = self.pool.map_async(self.process_command_thread, [(command, data)])
                 self.thread_results.append(result)
-                if any([thread_result.ready() and not thread_result.successful() for thread_result in self.thread_results]):
+                if any([thread_result.ready() and not thread_result.successful() for thread_result in
+                        self.thread_results]):
                     _logger.debug('Caught thread exception')
                     break
             else:
@@ -112,7 +118,8 @@ class MsgDispatcherBase(Recoverable):
     def enqueue_command(self, command, data):
         """Enqueue command into command queues
         """
-        if command == CommandType.TrialEnd or (command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL'):
+        if command == CommandType.TrialEnd or (
+                command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL'):
             self.assessor_command_queue.put((command, data))
         else:
             self.default_command_queue.put((command, data))
@@ -142,14 +149,14 @@ class MsgDispatcherBase(Recoverable):
         _logger.debug('process_command: command: [{}], data: [{}]'.format(command, data))
 
         command_handlers = {
-            # Tunner commands:
+            # Tuner commands:
             CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
             CommandType.ImportData: self.handle_import_data,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
 
-            # Tunner/Assessor commands:
+            # Tuner/Assessor commands:
             CommandType.ReportMetricData: self.handle_report_metric_data,
 
             CommandType.TrialEnd: self.handle_trial_end,
@@ -163,22 +170,99 @@ class MsgDispatcherBase(Recoverable):
         pass
 
     def handle_initialize(self, data):
+        """Initialize search space and tuner, if any
+        This method is meant to be called only once for each experiment, after calling this method,
+        dispatcher should `send(CommandType.Initialized, '')`, to set the status of the experiment to be "INITIALIZED".
+        Parameters
+        ----------
+        data: dict
+            search space
+        """
         raise NotImplementedError('handle_initialize not implemented')
 
     def handle_request_trial_jobs(self, data):
+        """The message dispatcher is demanded to generate `data` trial jobs.
+        These trials jobs should be sent via `send(CommandType.NewTrialJob, json_tricks.dumps(parameter)`,
+        where `parameter` will arrive at NNI Manager and eventually received by trial jobs as "next parameter".
+        Semantically, message dispatcher should do this `send` exactly `data` times.
+
+        The JSON sent by this method should follow the format of
+        {
+            "parameter_id": 42
+            "parameters": {
+                 // this will be received by trial
+            }
+        }
+        Parameters
+        ----------
+        data: int
+            number of trial jobs
+        """
+        # TODO: can someone check this "semantically"?
         raise NotImplementedError('handle_request_trial_jobs not implemented')
 
     def handle_update_search_space(self, data):
-       raise NotImplementedError('handle_update_search_space not implemented')
+        """This method will be called when search space is updated.
+        It's recommended to call this method in `handle_initialize` to initialize search space.
+        Message dispatcher is not responsible for notifying NNI manager that this update is done.
+        Parameters
+        ----------
+        data: dict
+            search space
+        """
+        raise NotImplementedError('handle_update_search_space not implemented')
 
     def handle_import_data(self, data):
+        """Called when experiment is resumed.
+        Parameters
+        ----------
+        data: list
+            list of past data
+        """
+        # TODO: can someone help me explain the format of data?
         raise NotImplementedError('handle_import_data not implemented')
 
     def handle_add_customized_trial(self, data):
+        # TODO: not clear
         raise NotImplementedError('handle_add_customized_trial not implemented')
 
     def handle_report_metric_data(self, data):
+        """Called when metric data is reported or new parameters are requested (for multiphase).
+        When new parameters are requested, this method should send a new parameter with
+                if data['type'] == MetricType.REQUEST_PARAMETER:
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
+            ret = self._get_one_trial_job()
+            if data['trial_job_id'] is not None:
+                ret['trial_job_id'] = data['trial_job_id']
+            if data['parameter_index'] is not None:
+                ret['parameter_index'] = data['parameter_index']
+            self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+        Parameters
+        ----------
+        data: dict
+            a dict with keys: 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
+            type: can be `MetricType.REQUEST_PARAMETER`, `MetricType.FINAL` or `MetricType.PERIODICAL`.
+            `REQUEST_PARAMETER` is used to request new parameters for multiphase trial job
+        Raises
+        ------
+        ValueError
+            Data type is not supported
+        """
         raise NotImplementedError('handle_report_metric_data not implemented')
 
     def handle_trial_end(self, data):
+        """Called when the state of one of the trials is changed
+        Parameters
+        ----------
+        data: dict
+            a dict with keys: trial_job_id, event, hyper_params.
+            trial_job_id: the id generated by training service;
+            event: the job’s state;
+            hyper_params: the string that is sent by message dispatcher during the creation of trials.
+        """
         raise NotImplementedError('handle_trial_end not implemented')
