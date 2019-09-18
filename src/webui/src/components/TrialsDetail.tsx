@@ -116,6 +116,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const { tablePageSize, whichGraph } = this.state;
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
+        const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
 
         return (
             <div>
@@ -124,10 +125,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
-                                    height={402}
-                                    showSource={source}
-                                    whichGraph={whichGraph}
-                                    optimize={EXPERIMENT.optimizeMode}
+                                    trialIds={trialIds}
+                                    visible={whichGraph === '1'}
                                 />
                             </Row>
                         </TabPane>

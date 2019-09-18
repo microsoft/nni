@@ -169,8 +169,8 @@ const downFile = (content: string, fileName: string) => {
     }
 };
 
-function formatTimestamp(timestamp?: number): string {
-    return timestamp ? new Date(timestamp).toLocaleString('en-US') : 'N/A';
+function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): string {
+    return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
 }
 
 function metricAccuracy(metric: MetricDataRecord): number {
@@ -178,8 +178,13 @@ function metricAccuracy(metric: MetricDataRecord): number {
     return typeof data === 'number' ? data : NaN;
 }
 
+function formatAccuracy(accuracy: number): string {
+    // TODO: how to format NaN?
+    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatTimestamp, metricAccuracy,
+    formatAccuracy, formatTimestamp, metricAccuracy,
 };

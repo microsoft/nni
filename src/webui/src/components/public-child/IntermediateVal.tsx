@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
-import { metricAccuracy } from '../../static/function';
+import { formatAccuracy, metricAccuracy } from '../../static/function';
 
 interface IntermediateValProps {
     trialId: string;
@@ -29,11 +29,6 @@ function formatLatestAccuracy(trial: Trial) {
         const latest = trial.intermediateMetrics[trial.intermediateMetrics.length - 1];
         return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
     }
-}
-
-function formatAccuracy(accuracy: number) {
-    // TODO: NaN
-    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 export default IntermediateVal;

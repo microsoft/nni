@@ -3,7 +3,7 @@ import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { TableObj } from '../../static/interface';
+import { Trial } from '../../static/model/trial';
 import { Row, Tabs, Button, message, Modal } from 'antd';
 import { MANAGER_IP } from '../../static/const';
 import '../../static/style/overview.scss';
@@ -30,9 +30,9 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         };
     }
 
-    showFormatModal = (record: TableObj) => {
+    showFormatModal = (trial: Trial) => {
         // get copy parameters
-        const params = JSON.stringify(record.description.parameters, null, 4);
+        const params = JSON.stringify(trial.info.hyperParameters, null, 4);
         // open modal with format string
         this.setState({ isShowFormatModal: true, formatStr: params });
     }
@@ -56,20 +56,13 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     }
 
     render() {
-        const record = TRIALS.getTrial(this.props.trialId);
         const { isShowFormatModal, formatStr } = this.state;
+        const trialId = this.props.trialId;
+        const trial = TRIALS.getTrial(trialId);
         let isClick = false;
-        let isHasParameters = true;
-        if (record.description.parameters.error) {
-            isHasParameters = false;
-        }
-        const openRowDataSource = record.description.parameters;
-        const trialink: string = `${MANAGER_IP}/trial-jobs/${record.id}`;
-        const logPathRow = record.description.logPath !== undefined
-            ?
-            record.description.logPath
-            :
-            'This trial\'s log path are not available.';
+        const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
+        const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
+        const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
             <Row className="openRowContent hyperpar">
                 <Tabs tabPosition="left" className="card">
@@ -82,34 +75,34 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     we are listing the latest parameter in webportal.
                                     <br />
                                     For the entire parameter set, please refer to the following "
-                                    <a href={trialink} target="_blank">{trialink}</a>".
+                                    <a href={trialLink} target="_blank">{trialLink}</a>".
                                     <br/>
-                                    Current Phase: {record.description.multiProgress}.
+                                    Current Phase: {multiProgress}.
                                 </Row>
                                 :
                                 <div />
                         }
                         {
-                            isHasParameters
+                            trial.info.hyperParameters !== undefined
                                 ?
                                 <Row id="description">
                                     <Row className="bgHyper">
                                         {
                                             isClick
                                                 ?
-                                                <pre>{JSON.stringify(openRowDataSource, null, 4)}</pre>
+                                                <pre>{JSON.stringify(trial.info.hyperParameters, null, 4)}</pre>
                                                 :
                                                 <JSONTree
                                                     hideRoot={true}
                                                     shouldExpandNode={() => true}  // default expandNode
                                                     getItemString={() => (<span />)}  // remove the {} items
-                                                    data={openRowDataSource}
+                                                    data={trial.info.hyperParameters}
                                                 />
                                         }
                                     </Row>
                                     <Row className="copy">
                                         <Button
-                                            onClick={this.showFormatModal.bind(this, record)}
+                                            onClick={this.showFormatModal.bind(this, trial)}
                                         >
                                             Copy as json
                                         </Button>
@@ -129,11 +122,11 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 ?
                                 <PaiTrialLog
                                     logStr={logPathRow}
-                                    id={record.id}
+                                    id={trialId}
                                     logCollection={EXPERIMENT.logCollectionEnabled}
                                 />
                                 :
-                                <TrialLog logStr={logPathRow} id={record.id} />
+                                <TrialLog logStr={logPathRow} id={trialId} />
                         }
                     </TabPane>
                 </Tabs>

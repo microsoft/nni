@@ -51,13 +51,13 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
 
     setDispatcher = (value: string) => {
         if (this._isLogDrawer === true) {
-            this.setState(() => ({ isLoadispatcher: false, dispatcherLogStr: value }));
+            this.setState({ isLoadispatcher: false, dispatcherLogStr: value });
         }
     }
 
     setNNImanager = (val: string) => {
         if (this._isLogDrawer === true) {
-            this.setState(() => ({ isLoading: false, nniManagerLogStr: val }));
+            this.setState({ isLoading: false, nniManagerLogStr: val });
         }
     }
 

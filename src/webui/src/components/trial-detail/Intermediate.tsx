@@ -44,10 +44,10 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     drawIntermediate = (source: Array<TableObj>) => {
         if (source.length > 0) {
-            this.setState(() => ({
+            this.setState({
                 length: source.length,
                 detailSource: source
-            }));
+            });
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -115,9 +115,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 series: trialIntermediate
             };
-            this.setState(() => ({
+            this.setState({
                 interSource: option
-            }));
+            });
         } else {
             const nullData = {
                 grid: {
@@ -134,7 +134,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     name: 'Metric'
                 }
             };
-            this.setState(() => ({ interSource: nullData }));
+            this.setState({ interSource: nullData });
         }
     }
 

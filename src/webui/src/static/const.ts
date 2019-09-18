@@ -65,7 +65,7 @@ const COLUMN_INDEX = [
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation'];
 // all choice column !dictory final
-const COLUMNPro = ['Trial No.', 'ID', 'StartTime', 'EndTime', 'Duration', 'Status',
+const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
 'Intermediate count', 'Default', 'Operation'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,

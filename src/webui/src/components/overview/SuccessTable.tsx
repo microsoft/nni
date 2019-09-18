@@ -64,7 +64,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 dataIndex: 'accuracy',
                 render: (text: string, record: TableRecord) => {
                     return (
-                        <DefaultMetric record={TRIALS.getTrial(record.id)} />
+                        <DefaultMetric trialId={record.id} />
                     );
                 }
             }

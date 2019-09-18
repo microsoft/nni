@@ -6,8 +6,8 @@ import { ColumnProps } from 'antd/lib/table';
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
-import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
-import { TableRecord, TrialJob } from '../../static/interface';
+import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
+import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
 import IntermediateVal from '../public-child/IntermediateVal'; // table default metric column
@@ -74,42 +74,35 @@ class TableList extends React.Component<TableListProps, TableListState> {
         };
     }
 
-    showIntermediateModal = (id: string) => {
-
-        axios(`${MANAGER_IP}/metric-data/${id}`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const intermediateArr: number[] = [];
-                    // support intermediate result is dict because the last intermediate result is
-                    // final result in a succeed trial, it may be a dict.
-                    // get intermediate result dict keys array
-                    let otherkeys: Array<string> = ['default'];
-                    if (res.data.length !== 0) {
-                        otherkeys = Object.keys(JSON.parse(res.data[0].data));
-                    }
-                    // intermediateArr just store default val
-                    Object.keys(res.data).map(item => {
-                        const temp = JSON.parse(res.data[item].data);
-                        if (typeof temp === 'object') {
-                            intermediateArr.push(temp.default);
-                        } else {
-                            intermediateArr.push(temp);
-                        }
-                    });
-                    const intermediate = intermediateGraphOption(intermediateArr, id);
-                    this.setState(() => ({
-                        intermediateData: res.data, // store origin intermediate data for a trial
-                        intermediateOption: intermediate,
-                        intermediateOtherKeys: otherkeys,
-                        intermediateId: id
-                    }));
+    showIntermediateModal = async (id: string) => {
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
+        if (res.status === 200) {
+            const intermediateArr: number[] = [];
+            // support intermediate result is dict because the last intermediate result is
+            // final result in a succeed trial, it may be a dict.
+            // get intermediate result dict keys array
+            let otherkeys: Array<string> = ['default'];
+            if (res.data.length !== 0) {
+                otherkeys = Object.keys(JSON.parse(res.data[0].data));
+            }
+            // intermediateArr just store default val
+            Object.keys(res.data).map(item => {
+                const temp = JSON.parse(res.data[item].data);
+                if (typeof temp === 'object') {
+                    intermediateArr.push(temp.default);
+                } else {
+                    intermediateArr.push(temp);
                 }
             });
-        this.setState({
-            modalVisible: true
-        });
+            const intermediate = intermediateGraphOption(intermediateArr, id);
+            this.setState({
+                intermediateData: res.data, // store origin intermediate data for a trial
+                intermediateOption: intermediate,
+                intermediateOtherKeys: otherkeys,
+                intermediateId: id
+            });
+        }
+        this.setState({ modalVisible: true });
     }
 
     // intermediate button click -> intermediate graph for each trial
@@ -139,9 +132,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
         const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
         // re-render
-        this.setState(() => ({
+        this.setState({
             intermediateOption: intermediate
-        }));
+        });
     }
 
     hideIntermediateModal = () => {
@@ -175,8 +168,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             switch (checkedValues[m]) {
                 case 'Trial No.':
                 case 'ID':
-                case 'StartTime':
-                case 'EndTime':
+                case 'Start Time':
+                case 'End Time':
                 case 'Duration':
                 case 'Status':
                 case 'Operation':
@@ -223,7 +216,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>) => {
-        this.setState(() => ({ selectRows: selectedRows, selectedRowKeys: selected }));
+        this.setState({ selectRows: selectedRows, selectedRowKeys: selected });
     }
     // open Compare-modal
     compareBtn = () => {
@@ -252,8 +245,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
         };
         let showTitle = COLUMNPro;
-        let bgColor = '';
-        const trialJob: Array<TrialJob> = [];
         const showColumn: Array<object> = [];
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
@@ -273,12 +264,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
             }
         }
-        trialJobStatus.map(item => {
-            trialJob.push({
-                text: item,
-                value: item
-            });
-        });
         for (const item of columnList) {
             switch (item) {
                 case 'Trial No.':
@@ -287,73 +272,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'ID':
                     showColumn.push(IdColumnConfig);
                     break;
-                case 'StartTime':
-                    showColumn.push({
-                        title: 'StartTime',
-                        dataIndex: 'startTime',
-                        key: 'startTime',
-                        width: 160,
-                        render: (text: string, record: TableRecord) => {
-                            const start = record.startTime !== undefined ? record.startTime : -1;
-                            return (
-                                <span>
-                                    {
-                                        start !== -1
-                                            ?
-                                            new Date(start).toLocaleString('en-US')
-                                            :
-                                            '--'
-                                    }
-                                </span>
-                            );
-                        },
-                    });
+                case 'Start Time':
+                    showColumn.push(StartTimeColumnConfig);
                     break;
-                case 'EndTime':
-                    showColumn.push({
-                        title: 'EndTime',
-                        dataIndex: 'endTime',
-                        key: 'endTime',
-                        width: 160,
-                        render: (text: string, record: TableRecord) => {
-                            const end = record.endTime !== undefined ? record.endTime : -1;
-                            return (
-                                <span>
-                                    {
-                                        end !== -1
-                                            ?
-                                            new Date(end).toLocaleString('en-US')
-                                            :
-                                            '--'
-                                    }
-                                </span>
-                            );
-                        },
-                    });
+                case 'End Time':
+                    showColumn.push(EndTimeColumnConfig);
                     break;
                 case 'Duration':
                     showColumn.push(DurationColumnConfig);
                     break;
                 case 'Status':
-                    showColumn.push({
-                        title: 'Status',
-                        dataIndex: 'status',
-                        key: 'status',
-                        width: 150,
-                        className: 'tableStatus',
-                        render: (text: string, record: TableRecord) => {
-                            bgColor = record.status;
-                            return (
-                                <span className={`${bgColor} commonStyle`}>{record.status}</span>
-                            );
-                        },
-                        filters: trialJob,
-                        onFilter: (value: string, record: TableRecord) => {
-                            return record.status.indexOf(value) === 0;
-                        },
-                        // onFilter: (value: string, record: TableRecord) => record.status.indexOf(value) === 0,
-                        sorter: (a: TableRecord, b: TableRecord): number => a.status.localeCompare(b.status)
-                    });
+                    showColumn.push(StatusColumnConfig);
                     break;
                 case 'Intermediate count':
                     showColumn.push(IntermediateCountColumnConfig);
@@ -423,7 +352,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     break;
 
                 default:
-                    alert('Add default column');
+                    // FIXME
+                    alert('Unexpected column type');
             }
         }
 
@@ -521,6 +451,24 @@ const IdColumnConfig: ColumnProps<TableRecord> = {
     )
 };
 
+const StartTimeColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Start Time',
+    dataIndex: 'startTime',
+    width: 160,
+    render: (text, record) => (
+        <span>{formatTimestamp(record.startTime)}</span>
+    )
+};
+
+const EndTimeColumnConfig: ColumnProps<TableRecord> = {
+    title: 'End Time',
+    dataIndex: 'endTime',
+    width: 160,
+    render: (text, record) => (
+        <span>{formatTimestamp(record.endTime, '--')}</span>
+    )
+};
+
 const DurationColumnConfig: ColumnProps<TableRecord> = {
     title: 'Duration',
     dataIndex: 'duration',
@@ -529,6 +477,19 @@ const DurationColumnConfig: ColumnProps<TableRecord> = {
     render: (text, record) => (
         <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
     )
+};
+
+const StatusColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Status',
+    dataIndex: 'status',
+    width: 150,
+    className: 'tableStatus',
+    render: (text, record) => (
+        <span className={`${record.status} commonStyle`}>{record.status}</span>
+    ),
+    sorter: (a, b) => a.status.localeCompare(b.status),
+    filters: trialJobStatus.map(status => ({ text: status, value: status })),
+    onFilter: (value, record) => (record.status === value)
 };
 
 const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {

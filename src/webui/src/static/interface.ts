@@ -68,11 +68,6 @@ interface TooltipForAccuracy {
     data: Array<number | object>;
 }
 
-interface TrialJob {
-    text: string;
-    value: string;
-}
-
 interface Dimobj {
     dim: number;
     name: string;
@@ -184,7 +179,7 @@ interface NNIManagerStatus {
 }
 
 export {
-    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint, TrialJob,
+    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
     DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
     TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
     NNIManagerStatus,

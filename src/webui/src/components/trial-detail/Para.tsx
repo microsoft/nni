@@ -119,12 +119,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                 this.swapGraph(paraData, swapAxisArr);
             }
             this.getOption(paraData, lengthofTrials);
-            this.setState(() => ({ paraBack: paraData }));
+            this.setState({ paraBack: paraData });
         }
 
     hyperParaPic = (source: Array<TableObj>, searchSpace: string) => {
         // filter succeed trials [{}, {}, {}]
-        const dataSource = source.filter(filterByStatus);  // FIXME: may need to copy
+        const dataSource = source.filter(filterByStatus);
         const lenOfDataSource: number = dataSource.length;
         const accPara: Array<number> = [];
         // specific value array
@@ -140,7 +140,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
         });
         const dimName = Object.keys(searchRange);
-        this.setState(() => ({ dimName: dimName }));
+        this.setState({ dimName: dimName });
 
         const parallelAxis: Array<Dimobj> = [];
         // search space range and specific value [only number]
@@ -432,17 +432,17 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
         };
         // please wait the data
-        this.setState(() => ({
+        this.setState({
             option: optionown,
             paraNodata: '',
             succeedRenderCount: lengthofTrials,
             sutrialCount: paralleData.length
-        }));
+        });
     }
 
     // get swap parallel axis
     getSwapArr = (value: Array<string>) => {
-        this.setState(() => ({ swapAxisArr: value }));
+        this.setState({ swapAxisArr: value });
     }
 
     reInit = () => {
@@ -503,9 +503,9 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
         this.getOption(paraBack, succeedRenderCount);
         // please wait the data
-        this.setState(() => ({
+        this.setState({
             isLoadConfirm: false
-        }));
+        });
     }
 
     sortDimY = (a: Dimobj, b: Dimobj) => {

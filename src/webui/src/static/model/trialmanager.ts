@@ -48,15 +48,18 @@ class TrialManager {
         return updated;
     }
 
-    public getTrial(trialId: string) {
+    public getTrial(trialId: string): Trial {
         return this.trials.get(trialId)!;
+    }
+
+    public getTrials(trialIds: string[]): Trial[] {
+        return trialIds.map(trialId => this.trials.get(trialId)!);
     }
 
     public table(trialIds: string[]): TableRecord[] {
         return trialIds.map(trialId => this.trials.get(trialId)!.tableRecord);
     }
 
-    // TODO: make TrialManager more "iterable"
     public toArray(): Trial[] {
         const trials = Array.from(this.trials.values()).filter(trial => trial.initialized());
         return trials.sort((trial1, trial2) => trial1.sequenceId - trial2.sequenceId);
@@ -67,16 +70,12 @@ class TrialManager {
         return trials.sort((trial1, trial2) => trial1.sequenceId - trial2.sequenceId);
     }
 
-    public sort(): Trial[] {
-        return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
+    public succeededTrials(): Trial[] {
+        return this.filter(trial => trial.status === 'SUCCEEDED');
     }
 
-    public accuracyGraphData(filterCallback?: (trial: Trial) => boolean): [ number[], number[] ] {
-        // TODO: use this in trial details
-        const trials = filterCallback ? this.filter(filterCallback) : this.toArray();
-        const xSequence = trials.map(trial => trial.sequenceId!);
-        const ySequence = trials.map(trial => trial.accuracy!);
-        return [ xSequence, ySequence ];
+    public sort(): Trial[] {
+        return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
     }
 
     public countStatus(): Map<string, number> {

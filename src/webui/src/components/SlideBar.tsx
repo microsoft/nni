@@ -66,15 +66,15 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         switch (e.key) {
             // to see & download experiment parameters
             case '1':
-                this.setState(() => ({ isvisibleExperimentDrawer: true }));
+                this.setState({ isvisibleExperimentDrawer: true });
                 break;
             // to see & download nnimanager log
             case '2':
-                this.setState(() => ({ activeKey: 'nnimanager', isvisibleLogDrawer: true }));
+                this.setState({ activeKey: 'nnimanager', isvisibleLogDrawer: true });
                 break;
             // to see & download dispatcher log
             case '3':
-                this.setState(() => ({ isvisibleLogDrawer: true, activeKey: 'dispatcher' }));
+                this.setState({ isvisibleLogDrawer: true, activeKey: 'dispatcher' });
                 break;
             case 'close':
             case '10':
@@ -193,7 +193,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         event.preventDefault();
         event.stopPropagation();
         this.setState({ isdisabledFresh: true }, () => {
-            setTimeout(() => { this.setState(() => ({ isdisabledFresh: false })); }, 1000);
+            setTimeout(() => { this.setState({ isdisabledFresh: false }); }, 1000);
         });
     }
 
@@ -315,12 +315,12 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
     // close log drawer (nnimanager.dispatcher)
     closeLogDrawer = () => {
-        this.setState(() => ({ isvisibleLogDrawer: false, activeKey: '' }));
+        this.setState({ isvisibleLogDrawer: false, activeKey: '' });
     }
 
     // close download experiment parameters drawer
     closeExpDrawer = () => {
-        this.setState(() => ({ isvisibleExperimentDrawer: false }));
+        this.setState({ isvisibleExperimentDrawer: false });
     }
 
     componentDidMount() {

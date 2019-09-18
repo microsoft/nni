@@ -170,7 +170,10 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
     private generateAccuracyGraph(bestTrials: Trial[]): object {
         const bestTrialIds = new Set(bestTrials.map(trial => trial.id));
-        const [ xSequence, ySequence ] = TRIALS.accuracyGraphData(trial => bestTrialIds.has(trial.id));
+
+        const xSequence = bestTrials.map(trial => trial.sequenceId);
+        const ySequence = bestTrials.map(trial => trial.accuracy);
+
         return {
             // support max show 0.0000000
             grid: {
