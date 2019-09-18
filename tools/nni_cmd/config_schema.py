@@ -212,7 +212,6 @@ assessor_schema_dict = {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
         },
-        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'Curvefitting': {
         'builtinAssessorName': 'Curvefitting',
@@ -223,14 +222,12 @@ assessor_schema_dict = {
             Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
             Optional('gap'): setNumberRange('gap', int, 1, 9999),
         },
-        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'customized': {
         'codeDir': setPathCheck('codeDir'),
         'classFileName': setType('classFileName', str),
         'className': setType('className', str),
         Optional('classArgs'): dict,
-        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999)
     }
 }
 

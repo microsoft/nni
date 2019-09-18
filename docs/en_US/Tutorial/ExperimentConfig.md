@@ -35,7 +35,7 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuIndices:
 trial:
   command:
   codeDir:
@@ -71,14 +71,13 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuIndices:
 assessor:
   #choice: Medianstop
   builtinAssessorName:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
-  gpuNum:
 trial:
   command:
   codeDir:
@@ -113,14 +112,13 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuIndices:
 assessor:
   #choice: Medianstop
   builtinAssessorName:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
-  gpuNum:
 trial:
   command:
   codeDir:
@@ -264,11 +262,9 @@ machineList:
 
       __classArgs__ specifies the arguments of tuner algorithm.
 
-  * __gpuNum__
+  * __gpuIndices__
 
-      __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number. If the field is not set, NNI will not set `CUDA_VISIBLE_DEVICES` in script (that is, will not control the visibility of GPUs on trial command through `CUDA_VISIBLE_DEVICES`), and will not manage gpu resource.
-
-      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+      __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
 
   * __includeIntermediateResults__
 
@@ -304,10 +300,6 @@ machineList:
     * __classArgs__
 
       __classArgs__ specifies the arguments of assessor algorithm.
-
-  * __gpuNum__
-
-    __gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
 
     Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
 
@@ -560,7 +552,6 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
@@ -586,14 +577,12 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   assessor:
     #choice: Medianstop
     builtinAssessorName: Medianstop
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
@@ -620,7 +609,6 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   assessor:
     codeDir: /nni/assessor
     classFileName: myassessor.py
@@ -628,7 +616,6 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
@@ -656,7 +643,6 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
@@ -780,7 +766,6 @@ machineList:
     builtinAssessorName: Medianstop
     classArgs:
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     codeDir: .
     worker:

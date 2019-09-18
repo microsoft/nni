@@ -189,7 +189,6 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow('')
             }),
             clusterMetaData: joi.array().items(joi.object({
