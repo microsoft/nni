@@ -308,8 +308,7 @@ tuner:
 
 > Built-in Tuner Name: **MetisTuner**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
-
+Note that the only acceptable types of search space are `quniform`, `uniform` and `randint` and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
 **Suggested scenario**
 
 Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
@@ -381,7 +380,7 @@ advisor:
 
 > Built-in Tuner Name: **GPTuner**
 
-Note that the only acceptable types of search space are `choice`, `randint`, `uniform`, `quniform`,  `loguniform`, `qloguniform`.
+Note that the only acceptable types of search space are `randint`, `uniform`, `quniform`,  `loguniform`, `qloguniform`, and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
 
 **Suggested scenario**
 
