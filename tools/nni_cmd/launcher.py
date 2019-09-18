@@ -296,8 +296,12 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiThread'] = experiment_config.get('multiThread')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
+        if request_data['advisor'].get('gpuIndices') and isinstance(request_data['advisor'].get('gpuIndices'), int):
+            request_data['advisor']['gpuIndices'] = str(request_data['advisor'].get('gpuIndices'))
     else:
         request_data['tuner'] = experiment_config['tuner']
+        if request_data['tuner'].get('gpuIndices') and isinstance(request_data['tuner'].get('gpuIndices'), int):
+            request_data['tuner']['gpuIndices'] = str(request_data['tuner'].get('gpuIndices'))
         if 'assessor' in experiment_config:
             request_data['assessor'] = experiment_config['assessor']
     #debug mode should disable version check

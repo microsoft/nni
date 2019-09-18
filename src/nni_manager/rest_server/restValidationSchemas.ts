@@ -170,8 +170,8 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
-                checkpointDir: joi.string().allow('')
+                checkpointDir: joi.string().allow(''),
+                gpuIndices: joi.string()
             }),
             tuner: joi.object({
                 builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner'),
@@ -179,9 +179,9 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow(''),
-                includeIntermediateResults: joi.boolean()
+                includeIntermediateResults: joi.boolean(),
+                gpuIndices: joi.string()
             }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),

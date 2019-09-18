@@ -15,6 +15,8 @@ tuner:
     trials_per_update: 60
     epochs_per_update: 12
     minibatch_size: 10
+  #could the No. 0 gpu for this tuner
+  gpuIndices: 0
 trial:
   command: sh ./macro_cifar10.sh
   codeDir: ./
