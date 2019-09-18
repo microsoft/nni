@@ -243,11 +243,11 @@ machineList:
   * __builtinTunerName__ and __classArgs__
     * __builtinTunerName__
 
-      __builtinTunerName__ specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
+      __builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
 
     * __classArgs__
 
-      __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
+      __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
   * __codeDir__, __classFileName__, __className__ and __classArgs__
     * __codeDir__
 
@@ -270,6 +270,8 @@ machineList:
 
       If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
 
+  Note: users could only use one way to specify tuner, either specifying `builtinTunerName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+
 * __assessor__
 
   * Description
@@ -278,7 +280,7 @@ machineList:
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
 
-      __builtinAssessorName__ specifies the name of system assessor, NNI sdk provides one kind of assessor {__Medianstop__}
+      __builtinAssessorName__ specifies the name of built-in assessor, NNI sdk provides different assessors introducted [here](../Assessor/BuiltinAssessor.md).
     * __classArgs__
 
       __classArgs__ specifies the arguments of assessor algorithm
@@ -301,7 +303,39 @@ machineList:
 
       __classArgs__ specifies the arguments of assessor algorithm.
 
-    Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
+  Note: users could only use one way to specify assessor, either specifying `builtinAssessorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`. If users do not want to use assessor, assessor fileld should leave to empty.
+
+* __advisor__
+  * Description
+
+    __advisor__ specifies the advisor algorithm in the experiment, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+  * __builtinAdvisorName__ and __classArgs__
+    * __builtinAdvisorName__
+
+      __builtinAdvisorName__ specifies the name of a built-in advisor, NNI sdk provides [different advisors](../Tuner/BuiltinTuner.md).
+
+    * __classArgs__
+
+      __classArgs__ specifies the arguments of the advisor algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in advisor.
+  * __codeDir__, __classFileName__, __className__ and __classArgs__
+    * __codeDir__
+
+      __codeDir__ specifies the directory of advisor code.
+    * __classFileName__
+
+      __classFileName__ specifies the name of advisor file.
+    * __className__
+
+      __className__ specifies the name of advisor class.
+    * __classArgs__
+
+      __classArgs__ specifies the arguments of advisor algorithm.
+
+  * __gpuIndices__
+
+      __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+
+  Note: users could only use one way to specify advisor, either specifying `builtinAdvisorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
 
 * __trial(local, remote)__
 
