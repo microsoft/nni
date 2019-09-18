@@ -281,6 +281,26 @@ class NNIManager implements Manager {
         return this.dataStore.getMetricData(trialJobId, metricType);
     }
 
+    public async getLatestMetricData(): Promise<MetricDataRecord[]> {
+        // FIXME: this can take a long time
+        const allMetrics: MetricDataRecord[] = await this.dataStore.getMetricData();
+        const finals: MetricDataRecord[] = [];
+        const latestIntermediates: Map<string, MetricDataRecord> = new Map<string, MetricDataRecord>();
+        for (const metric of allMetrics) {
+            if (metric.type !== 'PERIODICAL') {
+                finals.push(metric);
+            } else {
+                const old: MetricDataRecord | undefined = latestIntermediates.get(metric.trialJobId);
+                if (old === undefined || old.sequence <= metric.sequence) {
+                    latestIntermediates.set(metric.trialJobId, metric);
+                }
+            }
+        }
+        // FIXME: should this be sorted?
+        return finals.concat(Array.from(latestIntermediates.values()));
+        // FIXME: unit test
+    }
+
     public getExperimentProfile(): Promise<ExperimentProfile> {
         // TO DO: using Promise.resolve()
         const deferred: Deferred<ExperimentProfile> = new Deferred<ExperimentProfile>();

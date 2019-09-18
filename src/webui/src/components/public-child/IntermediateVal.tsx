@@ -1,48 +1,39 @@
 import * as React from 'react';
-import { TableObj } from '../../static/interface';
+import { TRIALS } from '../../static/datamodel';
+import { Trial } from '../../static/model/trial';
+import { metricAccuracy } from '../../static/function';
 
 interface IntermediateValProps {
-    record: TableObj;
+    trialId: string;
 }
 
 class IntermediateVal extends React.Component<IntermediateValProps, {}> {
-
     constructor(props: IntermediateValProps) {
         super(props);
-
     }
 
     render() {
-        const { record } = this.props;
-        const interArr = record.description.intermediate;
-        let lastVal;
-        let wei = 0;
-        if (interArr !== undefined) {
-            lastVal = interArr[interArr.length - 1];
-        }
-        let result: string = JSON.stringify(lastVal);
-        if (lastVal !== undefined) {
-            if (lastVal.toString().indexOf('.') !== -1) {
-                wei = lastVal.toString().length - lastVal.toString().indexOf('.') - 1;
-                if (wei > 6) {
-                    result = `${lastVal.toFixed(6)}`;
-                }
-            }
-            // some trial haven't final result
-            if (record.acc !== undefined) {
-                if (record.acc.default !== undefined) {
-                    result = `${result} (FINAL)`;
-                }
-            } else {
-                result = `${result} (LATEST)`;
-            }
-        } else {
-            result = '--';
-        }
+        const trial = TRIALS.getTrial(this.props.trialId);
         return (
-            <div>{result}</div>
+            <div>{formatLatestAccuracy(trial)}</div>
         );
     }
+}
+
+function formatLatestAccuracy(trial: Trial) {
+    if (trial.accuracy !== undefined) {
+        return `${formatAccuracy(trial.accuracy)} (FINAL)`;
+    } else if (trial.intermediateMetrics.length === 0) {
+        return '--';
+    } else {
+        const latest = trial.intermediateMetrics[trial.intermediateMetrics.length - 1];
+        return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+    }
+}
+
+function formatAccuracy(accuracy: number) {
+    // TODO: NaN
+    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 export default IntermediateVal;

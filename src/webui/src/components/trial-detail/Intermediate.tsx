@@ -24,7 +24,6 @@ interface IntermediateProps {
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
 
     static intervalMediate = 1;
-    public _isMounted = false;
     public pointInput: HTMLInputElement | null;
     public minValInput: HTMLInputElement | null;
     public maxValInput: HTMLInputElement | null;
@@ -45,12 +44,10 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     drawIntermediate = (source: Array<TableObj>) => {
         if (source.length > 0) {
-            if (this._isMounted) {
-                this.setState(() => ({
-                    length: source.length,
-                    detailSource: source
-                }));
-            }
+            this.setState(() => ({
+                length: source.length,
+                detailSource: source
+            }));
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -118,11 +115,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 series: trialIntermediate
             };
-            if (this._isMounted) {
-                this.setState(() => ({
-                    interSource: option
-                }));
-            }
+            this.setState(() => ({
+                interSource: option
+            }));
         } else {
             const nullData = {
                 grid: {
@@ -139,71 +134,60 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     name: 'Metric'
                 }
             };
-            if (this._isMounted) {
-                this.setState(() => ({ interSource: nullData }));
-            }
+            this.setState(() => ({ interSource: nullData }));
         }
     }
 
     // confirm btn function [filter data]
     filterLines = () => {
-        if (this._isMounted) {
-            const filterSource: Array<TableObj> = [];
-            this.setState({ isLoadconfirmBtn: true }, () => {
-                const { source } = this.props;
-                // get input value
-                const pointVal = this.pointInput !== null ? this.pointInput.value : '';
-                const minVal = this.minValInput !== null ? this.minValInput.value : '';
-                const maxVal = this.maxValInput !== null ? this.maxValInput.value : '';
-                // user not input message
-                if (pointVal === '' || minVal === '') {
-                    alert('Please input filter message');
+        const filterSource: Array<TableObj> = [];
+        this.setState({ isLoadconfirmBtn: true }, () => {
+            const { source } = this.props;
+            // get input value
+            const pointVal = this.pointInput !== null ? this.pointInput.value : '';
+            const minVal = this.minValInput !== null ? this.minValInput.value : '';
+            const maxVal = this.maxValInput !== null ? this.maxValInput.value : '';
+            // user not input message
+            if (pointVal === '' || minVal === '') {
+                alert('Please input filter message');
+            } else {
+                // user not input max value
+                const position = JSON.parse(pointVal);
+                const min = JSON.parse(minVal);
+                if (maxVal === '') {
+                    Object.keys(source).map(item => {
+                        const temp = source[item];
+                        const val = temp.description.intermediate[position - 1];
+                        if (val >= min) {
+                            filterSource.push(temp);
+                        }
+                    });
                 } else {
-                    // user not input max value
-                    const position = JSON.parse(pointVal);
-                    const min = JSON.parse(minVal);
-                    if (maxVal === '') {
-                        Object.keys(source).map(item => {
-                            const temp = source[item];
-                            const val = temp.description.intermediate[position - 1];
-                            if (val >= min) {
-                                filterSource.push(temp);
-                            }
-                        });
-                    } else {
-                        const max = JSON.parse(maxVal);
-                        Object.keys(source).map(item => {
-                            const temp = source[item];
-                            const val = temp.description.intermediate[position - 1];
-                            if (val >= min && val <= max) {
-                                filterSource.push(temp);
-                            }
-                        });
-                    }
-                    if (this._isMounted) {
-                        this.setState({ filterSource: filterSource });
-                    }
-                    this.drawIntermediate(filterSource);
+                    const max = JSON.parse(maxVal);
+                    Object.keys(source).map(item => {
+                        const temp = source[item];
+                        const val = temp.description.intermediate[position - 1];
+                        if (val >= min && val <= max) {
+                            filterSource.push(temp);
+                        }
+                    });
                 }
-                const counts = this.state.clickCounts + 1;
-                if (this._isMounted) {
-                    this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
-                }
-            });
-        }
+                this.setState({ filterSource: filterSource });
+                this.drawIntermediate(filterSource);
+            }
+            const counts = this.state.clickCounts + 1;
+            this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
+        });
     }
 
     switchTurn = (checked: boolean) => {
-        if (this._isMounted) {
-            this.setState({ isFilter: checked });
-        }
+        this.setState({ isFilter: checked });
         if (checked === false) {
             this.drawIntermediate(this.props.source);
         }
     }
 
     componentDidMount() {
-        this._isMounted = true;
         const { source } = this.props;
         this.drawIntermediate(source);
     }
@@ -270,10 +254,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         }
 
         return false;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
     }
 
     render() {

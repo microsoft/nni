@@ -113,6 +113,8 @@ abstract class Manager {
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
+
+    public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
 }
 
 export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus };

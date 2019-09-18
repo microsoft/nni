@@ -88,7 +88,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             if (lineListDefault[0] !== undefined) {
                 bestCurve.push([lineListDefault[0][0], lineListDefault[0][1], accSource[0].searchSpace]);
             }
-            if (optimize === 'maximize') {
+            if (optimize !== 'minimize') {
                 for (let i = 1; i < lineListDefault.length; i++) {
                     const val = lineListDefault[i][1];
                     const latest = bestCurve[bestCurve.length - 1][1];

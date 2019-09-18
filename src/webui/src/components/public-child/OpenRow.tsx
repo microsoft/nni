@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableObj } from '../../static/interface';
 import { Row, Tabs, Button, message, Modal } from 'antd';
 import { MANAGER_IP } from '../../static/const';
@@ -11,10 +12,7 @@ import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
-    trainingPlatform: string;
-    record: TableObj;
-    logCollection: boolean;
-    multiphase: boolean;
+    trialId: string;
 }
 
 interface OpenRowState {
@@ -24,7 +22,6 @@ interface OpenRowState {
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
-    public _isMounted: boolean;
     constructor(props: OpenRowProps) {
         super(props);
         this.state = {
@@ -37,16 +34,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         // get copy parameters
         const params = JSON.stringify(record.description.parameters, null, 4);
         // open modal with format string
-        if (this._isMounted === true) {
-            this.setState(() => ({ isShowFormatModal: true, formatStr: params }));
-        }
+        this.setState({ isShowFormatModal: true, formatStr: params });
     }
 
     hideFormatModal = () => {
         // close modal, destroy state format string data
-        if (this._isMounted === true) {
-            this.setState(() => ({ isShowFormatModal: false, formatStr: '' }));
-        }
+        this.setState({ isShowFormatModal: false, formatStr: '' });
     }
 
     copyParams = () => {
@@ -62,15 +55,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.hideFormatModal();
     }
 
-    componentDidMount() {
-        this._isMounted = true;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
-    }
     render() {
-        const { trainingPlatform, record, logCollection, multiphase } = this.props;
+        const record = TRIALS.getTrial(this.props.trialId);
         const { isShowFormatModal, formatStr } = this.state;
         let isClick = false;
         let isHasParameters = true;
@@ -89,7 +75,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                 <Tabs tabPosition="left" className="card">
                     <TabPane tab="Parameters" key="1">
                         {
-                            multiphase
+                            EXPERIMENT.multiPhase
                                 ?
                                 <Row className="link">
                                     Trails for multiphase experiment will return a set of parameters,
@@ -138,12 +124,13 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                     </TabPane>
                     <TabPane tab="Log" key="2">
                         {
-                            trainingPlatform !== 'local'
+                            // FIXME: this should not be handled in web UI side
+                            EXPERIMENT.trainingServicePlatform !== 'local'
                                 ?
                                 <PaiTrialLog
                                     logStr={logPathRow}
                                     id={record.id}
-                                    logCollection={logCollection}
+                                    logCollection={EXPERIMENT.logCollectionEnabled}
                                 />
                                 :
                                 <TrialLog logStr={logPathRow} id={record.id} />
