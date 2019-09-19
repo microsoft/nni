@@ -168,4 +168,3 @@ class SensitivityPruner(TorchPruner):
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
         self.mask_list[layer_info.name] = new_mask
         return new_mask
-        

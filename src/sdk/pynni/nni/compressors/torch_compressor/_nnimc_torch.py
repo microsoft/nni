@@ -1,5 +1,5 @@
 from torch import Tensor
-from torch.nn import Module, Parameter
+from torch.nn import Module, Parameter, Conv2d
 from ruamel.yaml import YAML
 from typing import List
 import logging
@@ -68,6 +68,7 @@ class TorchLayerInfo:
 
 def _torch_detect_prunable_layers(model):
     # search for all layers which have parameter "weight"
+    # return a list of prunable layer
     ret = []
     for name, layer in model.named_modules():
         try:
@@ -77,11 +78,21 @@ def _torch_detect_prunable_layers(model):
             pass
     return ret
 
+def _torch_detect_module(model, module_type):
+    ret = []
+    for name, module in model.named_modules():
+        try:
+            if isinstance(module, module_type):
+                ret.append(TorchLayerInfo(name, layer))
+        except AttributeError:
+            pass
+    return ret
+
 def _torch_default_get_configure(configure_list, layer_info):
     """
     Get configure for input layer
-    defaultly the later config will cover front config
-    WARNING: please mask sure default configure is the first in the list
+    the later config will override front config by default
+    WARNING: please make sure default configure is the first in the list
     """
     if not configure_list:
         logger.warning('WARNING: configure list is None')

@@ -105,7 +105,7 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
 
 class Individual(object):
     """
-    Indicidual class to store the indv info.
+    Individual class to store the indv info.
     """
 
     def __init__(self, config=None, info=None, result=None, save_dir=None):
