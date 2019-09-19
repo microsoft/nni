@@ -15,27 +15,19 @@ import logging
 logger = logging.getLogger('KSE')
 
 def density_entropy(X):
-    K = 5
-    N, C, D = X.shape
-    x = X.transpose(1, 0, 2).reshape(C, N, -1)
-    score = []
+    N, C, D, K = X.shape, 5
+    x = X.transpose(1, 0, 2)
+    score = np.zeros(C)
+    dms = np.zeros(N)
+
     for c in range(C):
         nbrs = NearestNeighbors(n_neighbors=K + 1).fit(x[c])
-        dms = []
         for i in range(N):
-            dm = 0
             dist, ind = nbrs.kneighbors(x[c, i].reshape(1, -1))
-            for j, id in enumerate(ind[0][1:]):
-                dm += dist[0][j + 1]
-
-            dms.append(dm)
-
+            dms[i] = sum([dist[0][j + 1] for j, id in enumerate(ind[0][1:])])
+        
         dms_sum = sum(dms)
-        en = 0
-        for i in range(N):
-            en += -dms[i]/dms_sum*math.log(dms[i]/dms_sum, 2)
-
-        score.append(en)
+        score[c] = sum([-dms[i] / dms_sum * math.log(dms[i]/dms_sum, 2) for i in range(N)])
     return np.array(score)
 
 class Conv2d_KSE(nn.Module):
