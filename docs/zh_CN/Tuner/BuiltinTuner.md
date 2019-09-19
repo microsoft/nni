@@ -20,7 +20,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 | [**Metis Tuner**](#MetisTuner)           | 大多数调参工具仅仅预测最优配置，而 Metis 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次 Trial 的建议。 它不进行随机取样。 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。 [参考论文](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)                                               |
 | [**BOHB**](#BOHB)                        | BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 [参考论文](https://arxiv.org/abs/1807.01774)                                                                    |
 | [**GP Tuner**](#GPTuner)                 | Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)，[Github 库](https://github.com/fmfn/BayesianOptimization)                                                                             |
-| [**PPO Tuner**](#PPOTuner)               | PPO Tuner is an Reinforcement Learning tuner based on PPO algorithm. [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                 |
+| [**PPO Tuner**](#PPOTuner)               | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                                                     |
 
 ## 用法
 
@@ -306,7 +306,7 @@ tuner:
 
 > 名称：**MetisTuner**
 
-Note that the only acceptable types of search space are `quniform`, `uniform` and `randint` and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points. **Suggested scenario**
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。 **Suggested scenario**
 
 Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
 
@@ -332,17 +332,17 @@ tuner:
 
 > 名称：**BOHB**
 
-**Installation**
+**安装**
 
-BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package, ConfigSpace need to be installed by following command before first use.
+BOHB Advisor 的使用依赖 [ConfigSpace](https://github.com/automl/ConfigSpace) 包，在第一次使用 BOHB 的时候，在命令行运行以下的指令来安装 ConfigSpace。
 
 ```bash
 nnictl package install --name=BOHB
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. In this case, it may converges to a better configuration due to Bayesian optimization usage. [Detailed Description](./BohbAdvisor.md)
+与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 In this case, it may converges to a better configuration due to Bayesian optimization usage. [Detailed Description](./BohbAdvisor.md)
 
 **Requirement of classArgs**
 
