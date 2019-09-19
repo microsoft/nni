@@ -306,7 +306,7 @@ tuner:
 
 > 名称：**MetisTuner**
 
-注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
 **建议场景**
 
@@ -344,7 +344,7 @@ nnictl package install --name=BOHB
 
 **建议场景**
 
-与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下, 由于贝叶斯优化使用, 它可能会收敛到更好的配置。 [详细说明](./BohbAdvisor.md)
+与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下，使用贝叶斯优化，可能会收敛到更好的配置。 [详细说明](./BohbAdvisor.md)
 
 **参数**
 
@@ -379,7 +379,7 @@ advisor:
 
 > 名称：**GPTuner**
 
-注意，搜索空间接受的类型包括 `choice`, `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`。
+注意，搜索空间接受的类型包括 `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`，以及数值的 `choice`。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
 **建议场景**
 
