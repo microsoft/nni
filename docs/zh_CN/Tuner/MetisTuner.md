@@ -14,6 +14,6 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 它会标识出下一个超参的候选项。 这是通过对隐含信息的探索、挖掘和重采样来实现的。
 
-Note that the only acceptable types of search space are `quniform`, `uniform` and `randint` and numerical `choice`.
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。
 
 更多详情，参考论文：https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
