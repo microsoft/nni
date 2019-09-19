@@ -306,15 +306,17 @@ tuner:
 
 > 名称：**MetisTuner**
 
-此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。 **Suggested scenario**
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
+**建议场景**
 
-**Requirement of classArgs**
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送`精度`这样的最终结果给 Tuner。 [详细说明](./MetisTuner.md)
+
+**参数**
 
 * **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -328,7 +330,7 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
 
 > 名称：**BOHB**
 
@@ -342,9 +344,9 @@ nnictl package install --name=BOHB
 
 **建议场景**
 
-与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 In this case, it may converges to a better configuration due to Bayesian optimization usage. [Detailed Description](./BohbAdvisor.md)
+与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下，使用贝叶斯优化，可能会收敛到更好的配置。 [详细说明](./BohbAdvisor.md)
 
-**Requirement of classArgs**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **min_budget** (*整数, 可选项, 默认值为 1*) - 运行一个试验给予的最低计算资源（budget），这里的计算资源通常使用mini-batches 或者 epochs。 该参数必须为正数。
@@ -357,9 +359,9 @@ nnictl package install --name=BOHB
 * **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议保留默认值。
 * **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议保留默认值。
 
-*Please note that currently float type only support decimal representation, you have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
+*目前 NNI 的浮点类型仅支持十进制表示，必须使用 0.333 来代替 1/3，0.001代替 1e-3。*
 
-**Usage example**
+**示例**
 
 ```yaml
 advisor:
@@ -377,13 +379,13 @@ advisor:
 
 > 名称：**GPTuner**
 
-Note that the only acceptable types of search space are `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`, and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
+注意，搜索空间接受的类型包括 `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`，以及数值的 `choice`。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
-**Suggested scenario**
+**建议场景**
 
-As a strategy in Sequential Model-based Global Optimization(SMBO) algorithm, GP Tuner uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) and common tools can be employed. Therefore GP Tuner is most adequate for situations where the function to be optimized is a very expensive endeavor. GP can be used when the computation resource is limited. While GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [Detailed Description](./GPTuner.md)
+作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 由于需要反转 Gram 矩阵，GP Tuner 的计算复杂度以 *O(N^3)* 的速度增长，因此不适合于需要大量 Trial 的情形。 [详细说明](./GPTuner.md)
 
-**Requirement of classArgs**
+**参数**
 
 * **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。 
@@ -395,7 +397,7 @@ As a strategy in Sequential Model-based Global Optimization(SMBO) algorithm, GP 
 * **selection_num_warm_up** (*int, 可选, 默认为 1e5*) - 用于获得最大采集函数而评估的随机点数量。
 * **selection_num_starting_points** (*int, 可选, 默认为 250*) - 预热后，从随机七十点运行 L-BFGS-B 的次数。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -419,18 +421,18 @@ tuner:
 
 > 内置 Tuner 名称：**PPOTuner**
 
-Note that the only acceptable type of search space is `mutable_layer`. `optional_input_size` can only be 0, 1, or [0, 1].
+搜索空间类型仅支持 `mutable_layer`。 `optional_input_size` 只能是 0, 1, 或 [0, 1]。
 
-**Suggested scenario**
+**建议场景**
 
-PPOTuner is a Reinforcement Learning tuner based on PPO algorithm. When you are using NNI NAS interface in your trial code to do neural architecture search, PPOTuner is recommended. It has relatively high data efficiency but is suggested when you have large amount of computation resource. You could try it on very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [Detailed Description](./PPOTuner.md)
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 当在 Trial 代码中使用 NNI 的 NAS 接口进行神经网络架构搜索时，推荐使用 PPO Tuner。 一般来说，尽管PPO算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 因此，建议在有大量计算资源时，再使用此 Tuner。 可以在简单的任务上尝试，如 [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) 示例。 [查看详细信息](./PPOTuner.md)
 
-**Requirement of classArgs**
+**参数**
 
 * **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 This number is recommended to be larger than `trialConcurrency` and `trialConcurrency` be a aliquot devisor of `trials_per_update`. Note that trials_per_update should be divisible by minibatch_size.
+* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trials_per_update` 设为 `trialConcurrency` 的倍数，以提高 Trial 的并发效率。
 * **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
-* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 Note that, trials_per_update should be divisible by minibatch_size.
+* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
 * **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
 * **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
 * **vf_coef** (*float, 可选, 默认为 0.5*) - Value function loss coefficient in the optimization objective.
@@ -439,7 +441,7 @@ PPOTuner is a Reinforcement Learning tuner based on PPO algorithm. When you are 
 * **lam** (*float, 可选, 默认为 0.95*) - Advantage estimation discounting factor (论文中的 lambda).
 * **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
