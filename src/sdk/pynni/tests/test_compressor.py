@@ -110,6 +110,10 @@ class CompressorTestCase(TestCase):
         model = TorchMnist()
         torch_compressor.NaiveQuantizer().compress(model)
 
+    def test_torch_KSE_quantizer(self):
+        model = TorchMnist()
+        configure_list = [{'G':4, 'T':0, 'support_type':'default'}]
+        torch_compressor.KSE(configure_list).compress(model)
 
 if __name__ == '__main__':
     main()

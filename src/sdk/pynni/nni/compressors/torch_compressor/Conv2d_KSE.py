@@ -11,6 +11,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import KMeans
 from math import isnan
 
+import logging
+logger = logging.getLogger('KSE')
 
 def density_entropy(X):
     K = 5
@@ -57,7 +59,7 @@ class Conv2d_KSE(nn.Module):
         else:
             self.G = G
         self.group_num = self.G
-        self.weight = nn.Parameter(torch.Tensor(output_channels, input_channels, kernel_size, kernel_size))
+        self.weight = nn.Parameter(torch.Tensor(output_channels, input_channels, *kernel_size))
         self.mask = nn.Parameter(torch.Tensor(input_channels), requires_grad=False)
 
         # 确定bias
@@ -82,10 +84,10 @@ class Conv2d_KSE(nn.Module):
                 continue
             cluster = self.__getattr__("clusters_" + str(g))
             clusters = cluster.permute(1, 0, 2, 3).contiguous().view(
-                self.cluster_num[g] * cluster.shape[1], self.kernel_size, self.kernel_size)
+                self.cluster_num[g] * cluster.shape[1], *self.kernel_size)
             cluster_weight = clusters[
                 self.__getattr__("cluster_indexs_" + str(g)).data].contiguous().view(
-                self.output_channels, cluster.shape[1], self.kernel_size, self.kernel_size)
+                self.output_channels, cluster.shape[1], *self.kernel_size)
 
             cluster_weights.append(cluster_weight)
 
@@ -106,31 +108,33 @@ class Conv2d_KSE(nn.Module):
         if T is not None:
             self.T = T
         weight = self.weight.data.cpu().numpy()
+        weight = weight.transpose(1, 0, 2, 3).reshape(self.input_channels, self.output_channels, -1)
 
         # Calculate channels KSE indicator.
-        weight = weight.transpose(1, 0, 2, 3).reshape(self.input_channels, self.output_channels, -1)
-        ks_weight = np.sum(np.linalg.norm(weight, ord=1, axis=2), 1)
-        ke_weight = density_entropy(weight.reshape(self.output_channels, self.input_channels, -1))
-        ks_weight = (ks_weight - np.min(ks_weight)) / (np.max(ks_weight) - np.min(ks_weight))
-        ke_weight = (ke_weight - np.min(ke_weight)) / (np.max(ke_weight) - np.min(ke_weight))
-        indicator = np.sqrt(ks_weight / (1 + ke_weight))
-        indicator = (indicator - np.min(indicator))/(np.max(indicator) - np.min(indicator))
-
+        # input channel is only 1
+        if self.input_channels <= 1:
+            indicator = np.array([1.0])
+        else:
+            ks_weight = np.sum(np.linalg.norm(weight, ord=1, axis=2), 1)
+            ke_weight = density_entropy(weight.reshape(self.output_channels, self.input_channels, -1))
+            ks_weight = (ks_weight - np.min(ks_weight)) / (np.max(ks_weight) - np.min(ks_weight))
+            ke_weight = (ke_weight - np.min(ke_weight)) / (np.max(ke_weight) - np.min(ke_weight))
+            indicator = np.sqrt(ks_weight / (1 + ke_weight))
+            indicator = (indicator - np.min(indicator))/(np.max(indicator) - np.min(indicator))
         # Calculate each input channels kernel number and split them into different groups.
         # Each group has same kernel number.
-        mask = np.zeros(shape=(self.input_channels))  # each kernel number(g number) for each input channel
         self.group_size = [0 for i in range(self.G)]
         self.cluster_num = [1 for i in range(self.G)]
 
         for i in range(self.input_channels):
             if math.floor(indicator[i] * self.G) == 0:
-                mask[i] = 0
+                self.mask[i] = 0
                 self.group_size[0] += 1
             elif math.ceil(indicator[i] * self.G) == self.G:
-                mask[i] = self.G - 1
+                self.mask[i] = self.G - 1
                 self.group_size[-1] += 1
             else:
-                mask[i] = math.floor(indicator[i] * self.G)
+                self.mask[i] = math.floor(indicator[i] * self.G)
                 self.group_size[int(math.floor(indicator[i] * self.G))] += 1
 
         for i in range(self.G):
@@ -140,26 +144,6 @@ class Conv2d_KSE(nn.Module):
                 self.cluster_num[i] = self.output_channels
             else:
                 self.cluster_num[i] = math.ceil(self.output_channels * math.pow(2, i + 1 - self.T - self.G)) # i + 1 是将floor转为ceil
-        
-        self.mask.data = torch.Tensor(mask)
-
-        # Generate corresponding cluster and index.
-        # For kernel number = N: use full_weight rather than cluster&index
-
-        # 抽取出相同的qc的filter组成一组
-        self.full_weight = nn.Parameter(torch.Tensor(
-            self.output_channels, self.group_size[-1], self.kernel_size, self.kernel_size),requires_grad=True)
-
-        for g in range(1, self.G - 1):
-            if self.group_size[g] == 0: 
-                continue
-            else:
-                # [qc, 相同qc的filter数目, kernel size, kernel size]
-                cluster = nn.Parameter(torch.Tensor(
-                    self.cluster_num[g], self.group_size[g], self.kernel_size, self.kernel_size), requires_grad=True)
-                index = nn.Parameter(torch.zeros(self.output_channels, self.group_size[g]), requires_grad=False)
-                self.__setattr__("clusters_" + str(g), cluster)
-                self.__setattr__("indexs_" + str(g), index)
 
         # Calculate cluster and index by k-means
         # First, collect weight corresponding to each group(same kernel number)
@@ -169,14 +153,14 @@ class Conv2d_KSE(nn.Module):
             if self.group_size[g] == 0:
                 weight_group.append([])
                 continue
+            
             each_weight_group = []
             for c in range(self.input_channels):
-                if mask[c] == g:
+                if self.mask[c] == g:
                     each_weight_group.append(np.expand_dims(weight[:, c], 1))
             each_weight_group = np.concatenate(each_weight_group, 1)
             weight_group.append(each_weight_group)
-
-        self.full_weight.data = torch.Tensor(weight_group[-1]) # g最大代表保留所有的权重
+        self.full_weight = nn.Parameter(torch.Tensor(weight_group[-1]),requires_grad=True)
 
         for g in range(1, self.G - 1): # 全部去掉/全部保留的时候不需要考虑
             if self.group_size[g] == 0:
@@ -193,13 +177,13 @@ class Conv2d_KSE(nn.Module):
                 assignments = kmean.labels_
 
                 clusters.append(np.expand_dims(np.reshape(centroids, [
-                    self.cluster_num[g], self.kernel_size, self.kernel_size]), 1))
+                    self.cluster_num[g], *self.kernel_size]), 1))
                 indexs.append(np.expand_dims(assignments, 1))
 
             clusters = np.concatenate(clusters, 1)
             indexs = np.concatenate(indexs, 1)
-            self.__getattr__("clusters_"+str(g)).data = torch.Tensor(clusters)
-            self.__getattr__("indexs_"+str(g)).data = torch.Tensor(indexs)
+            self.__setattr__("clusters_" + str(g), nn.Parameter(torch.Tensor(clusters), requires_grad=True))
+            self.__setattr__("indexs_" + str(g), nn.Parameter(torch.Tensor(indexs), requires_grad=False))
 
     
     def forward_init(self):
@@ -276,7 +260,7 @@ class Conv2d_KSE(nn.Module):
                 self.cluster_num[i] = math.ceil(self.output_channels * math.pow(2, i + 1 - self.T - self.G))
 
         self.full_weight = nn.Parameter(
-            torch.Tensor(self.output_channels, self.group_size[-1], self.kernel_size, self.kernel_size),
+            torch.Tensor(self.output_channels, self.group_size[-1], *self.kernel_size),
             requires_grad=True)
 
         for g in range(1, self.G - 1):
@@ -284,7 +268,7 @@ class Conv2d_KSE(nn.Module):
                 continue
             else:
                 cluster = nn.Parameter(torch.zeros(
-                    self.cluster_num[g], self.group_size[g], self.kernel_size, self.kernel_size), requires_grad=True)
+                    self.cluster_num[g], self.group_size[g], *self.kernel_size), requires_grad=True)
                 index = nn.Parameter(torch.ByteTensor(math.ceil(
                     math.ceil(math.log(self.cluster_num[g], 2)) * self.output_channels * self.group_size[g] / 8)),
                     requires_grad=False)

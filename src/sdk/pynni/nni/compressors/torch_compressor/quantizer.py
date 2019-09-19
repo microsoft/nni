@@ -146,8 +146,8 @@ class KSE(TorchQuantizer):
 
             # replace origin conv2d with conv2d_kse
             conv2d_kse = Conv2d_KSE(
-                input_channels = layer_info.layer.input_channels, 
-                output_channels = layer_info.layer.output_channels, 
+                input_channels = layer_info.layer.in_channels, 
+                output_channels = layer_info.layer.out_channels, 
                 kernel_size = layer_info.layer.kernel_size, 
                 stride = layer_info.layer.stride, 
                 padding = layer_info.layer.padding, 
@@ -164,23 +164,12 @@ class KSE(TorchQuantizer):
             setattr(model, layer_info.name, layer_info.layer)
             self._instrument_layer(layer_info)
     
-    def quantize_weight(self, layer_info, weight):
-        cluster_weights = []
-        for g in range(1, self.G - 1): # 最开始和最后一层的layer不进行pruner
-            if self.group_size[g] == 0:
-                continue
-            cluster = self.__getattr__("clusters_" + str(g))
-            clusters = cluster.permute(1, 0, 2, 3).contiguous().view(
-                self.cluster_num[g] * cluster.shape[1], self.kernel_size, self.kernel_size)
-            cluster_weight = clusters[
-                self.__getattr__("cluster_indexs_" + str(g)).data].contiguous().view(
-                self.output_channels, cluster.shape[1], self.kernel_size, self.kernel_size)
+    def _instrument_layer(self, layer_info):
+        assert layer_info._forward is None
+        layer_info._forward = layer_info.layer.forward
 
-            cluster_weights.append(cluster_weight)
+        def new_forward(*input):
+            # layer_info.layer.weight.data = self.quantize_weight(layer_info, layer_info.layer.weight.data)
+            return layer_info._forward(*input)
 
-        if len(cluster_weights) == 0:
-            weight = self.full_weight
-        else:
-            weight = torch.cat((self.full_weight, torch.cat(cluster_weights, dim=1)), dim=1)
-
-        return weight
+        layer_info.layer.forward = new_forward

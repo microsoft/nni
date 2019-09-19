@@ -83,7 +83,7 @@ def _torch_detect_module(model, module_type):
     for name, module in model.named_modules():
         try:
             if isinstance(module, module_type):
-                ret.append(TorchLayerInfo(name, layer))
+                ret.append(TorchLayerInfo(name, module))
         except AttributeError:
             pass
     return ret
