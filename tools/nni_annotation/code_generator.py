@@ -22,6 +22,7 @@
 import ast
 import astor
 
+
 # pylint: disable=unidiomatic-typecheck
 
 def parse_annotation_mutable_layers(code, lineno, nas_mode):
@@ -79,7 +80,8 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
                 fields['optional_inputs'] = True
             elif k.id == 'optional_input_size':
                 assert not fields['optional_input_size'], 'Duplicated field: optional_input_size'
-                assert type(value) is ast.Num or type(value) is ast.List, 'Value of optional_input_size should be a number or list'
+                assert type(value) is ast.Num or type(
+                    value) is ast.List, 'Value of optional_input_size should be a number or list'
                 optional_input_size = value
                 fields['optional_input_size'] = True
             elif k.id == 'layer_output':
@@ -117,6 +119,7 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)
     return nodes
+
 
 def parse_annotation(code):
     """Parse an annotation string.
@@ -198,7 +201,7 @@ def convert_args_to_dict(call, with_lambda=False):
         if type(arg) in [ast.Str, ast.Num]:
             arg_value = arg
         else:
-        # if arg is not a string or a number, we use its source code as the key
+            # if arg is not a string or a number, we use its source code as the key
             arg_value = astor.to_source(arg).strip('\n"')
             arg_value = ast.Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
@@ -311,7 +314,6 @@ class Transformer(ast.NodeTransformer):
 
         return self._visit_children(node)
 
-
     def _visit_string(self, node):
         string = node.value.s
         if string.startswith('@nni.'):
@@ -325,7 +327,7 @@ class Transformer(ast.NodeTransformer):
             call_node.args.insert(0, ast.Str(s=self.nas_mode))
             return expr
 
-        if string.startswith('@nni.report_intermediate_result')  \
+        if string.startswith('@nni.report_intermediate_result') \
                 or string.startswith('@nni.report_final_result') \
                 or string.startswith('@nni.get_next_parameter'):
             return parse_annotation(string[1:])  # expand annotation string to code
@@ -340,7 +342,6 @@ class Transformer(ast.NodeTransformer):
             return None
 
         raise AssertionError('Unexpected annotation function')
-
 
     def _visit_children(self, node):
         self.stack.append(None)
