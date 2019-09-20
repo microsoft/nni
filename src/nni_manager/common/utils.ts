@@ -219,6 +219,11 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         if (advisor.classFileName !== undefined && advisor.classFileName.length > 1) {
             command += ` --advisor_class_filename ${advisor.classFileName}`;
         }
+        if (advisor.gpuIndices !== undefined) {
+            command = `CUDA_VISIBLE_DEVICES=${advisor.gpuIndices} ` + command;
+        } else {
+            command = `CUDA_VISIBLE_DEVICES='' ` + command;
+        }
     } else {
         command += ` --tuner_class_name ${tuner.className}`;
         if (tuner.classArgs !== undefined) {
@@ -242,6 +247,12 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
             if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
                 command += ` --assessor_class_filename ${assessor.classFileName}`;
             }
+        }
+
+        if (tuner.gpuIndices !== undefined) {
+            command = `CUDA_VISIBLE_DEVICES=${tuner.gpuIndices} ` + command;
+        } else {
+            command = `CUDA_VISIBLE_DEVICES='' ` + command;
         }
     }
 
