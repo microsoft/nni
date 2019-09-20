@@ -15,8 +15,9 @@ import logging
 logger = logging.getLogger('KSE')
 
 def density_entropy(X):
-    N, C, D, K = X.shape, 5
-    x = X.transpose(1, 0, 2)
+    K = 5
+    N, C, D = X.shape
+    x = X.transpose(1, 0, 2).reshape(C, N, -1)
     score = np.zeros(C)
     dms = np.zeros(N)
 
@@ -42,7 +43,6 @@ class Conv2d_KSE(nn.Module):
         self.isbias = bias
         self.T = T
 
-        # 在用户给定G = 0的情况下确定g的大小
         if G == 0:
             if output_channels >= input_channels:
                 self.G = input_channels
@@ -54,7 +54,6 @@ class Conv2d_KSE(nn.Module):
         self.weight = nn.Parameter(torch.Tensor(output_channels, input_channels, *kernel_size))
         self.mask = nn.Parameter(torch.Tensor(input_channels), requires_grad=False)
 
-        # 确定bias
         if bias:
             self.bias = nn.Parameter(torch.Tensor(output_channels))
         else:
@@ -70,27 +69,7 @@ class Conv2d_KSE(nn.Module):
     def forward(self, input):
         # overwrite nn.module forward method
         # transform cluster and index into weight for training
-        cluster_weights = []
-        for g in range(1, self.G - 1): # 最开始和最后一层的layer不进行pruner
-            if self.group_size[g] == 0:
-                continue
-            cluster = self.__getattr__("clusters_" + str(g))
-            clusters = cluster.permute(1, 0, 2, 3).contiguous().view(
-                self.cluster_num[g] * cluster.shape[1], *self.kernel_size)
-            cluster_weight = clusters[
-                self.__getattr__("cluster_indexs_" + str(g)).data].contiguous().view(
-                self.output_channels, cluster.shape[1], *self.kernel_size)
-
-            cluster_weights.append(cluster_weight)
-
-        if len(cluster_weights) == 0:
-            weight = self.full_weight
-        else:
-            weight = torch.cat((self.full_weight, torch.cat(cluster_weights, dim=1)), dim=1)
-
-        # 计算卷积结果
-        # 从input中沿着列选择 调用torch.nn.functional进行卷积操作 
-        return F.conv2d(torch.index_select(input, 1, self.channels_indexs), weight, self.bias,
+        return F.conv2d(torch.index_select(input, 1, self.channels_indexs), self.weight, self.bias,
                         stride=self.stride,
                         padding=self.padding)
 
@@ -135,12 +114,12 @@ class Conv2d_KSE(nn.Module):
             elif i == self.G - 1:
                 self.cluster_num[i] = self.output_channels
             else:
-                self.cluster_num[i] = math.ceil(self.output_channels * math.pow(2, i + 1 - self.T - self.G)) # i + 1 是将floor转为ceil
+                self.cluster_num[i] = math.ceil(self.output_channels * math.pow(2, i + 1 - self.T - self.G))
 
         # Calculate cluster and index by k-means
         # First, collect weight corresponding to each group(same kernel number)
         weight = self.weight.data.cpu().numpy()
-        weight_group = [] # 相同qc的group的weight集合
+        weight_group = []
         for g in range(self.G):
             if self.group_size[g] == 0:
                 weight_group.append([])
@@ -154,7 +133,7 @@ class Conv2d_KSE(nn.Module):
             weight_group.append(each_weight_group)
         self.full_weight = nn.Parameter(torch.Tensor(weight_group[-1]),requires_grad=True)
 
-        for g in range(1, self.G - 1): # 全部去掉/全部保留的时候不需要考虑
+        for g in range(1, self.G - 1):
             if self.group_size[g] == 0:
                 continue
             cluster_weight = weight_group[g]
@@ -201,7 +180,7 @@ class Conv2d_KSE(nn.Module):
                     all_indexs.append(i)
             cluster_indexs.append(cluster_index)
 
-        self.channels_indexs = nn.Parameter(torch.zeros(self.input_channels - self.group_size[0]).long(),
+        self.channels_indexs = nn.Parameter(torch.zeros(self.input_channels - self.group_size[0]).long(), # 减去全部消除的 即完全不重要的
                                             requires_grad=False)
 
         # transform index for training
