@@ -116,7 +116,7 @@ class SensitivityPruner(Pruner):
     
    
     def calc_weight(self, layer, weight, config):
-        mask = self.mask_list.get(layer_info.name, torch.ones(weight.shape))
+        mask = self.mask_list.get(layer.name, torch.ones(weight.shape))
         # if we want to generate new mask, we should update weigth first 
         weight = weight*mask
         target_sparsity = config['sparsity'] * torch.std(weight).item()
@@ -127,5 +127,5 @@ class SensitivityPruner(Pruner):
         w_abs = weight.abs()
         threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
-        self.mask_list[layer_info.name] = new_mask
+        self.mask_list[layer.name] = new_mask
         return new_mask
