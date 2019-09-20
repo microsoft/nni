@@ -1,4 +1,4 @@
-from nni.compressors.torch_compressor import QATquantizer
+from nni.compression.torch import QAT_Quantizer
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -68,8 +68,8 @@ def main():
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(configure_list).compress(model)
     '''
-    configure_list = [{'q_bits':8, 'support_type':'default'}]
-    quantizer = QATquantizer(configure_list)
+    configure_list = [{'q_bits':8, 'op_type':'default'}]
+    quantizer = QAT_Quantizer(configure_list)
     quantizer(model)
     # you can also use compress(model) method
     # like thaht quantizer.compress(model)

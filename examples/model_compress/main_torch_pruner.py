@@ -1,4 +1,4 @@
-from nni.compressors.torch_compressor import AGPruner
+from nni.compression.torch import AGP_Pruner
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -74,11 +74,10 @@ def main():
                         'start_epoch': 1,
                         'end_epoch': 10,
                         'frequency': 1,
-                        'support_type': 'default'
+                        'op_type': 'default'
                     }]
 
-    pruner = AGPruner(configure_list)
-    pruner.load_configure('configure_example.yaml')
+    pruner = AGP_Pruner(configure_list)
     pruner(model)
     # you can also use compress(model) method
     # like that pruner.compress(model)
