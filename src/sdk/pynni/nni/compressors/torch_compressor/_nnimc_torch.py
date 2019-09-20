@@ -81,11 +81,8 @@ def _torch_detect_prunable_layers(model):
 def _torch_detect_module(model, module_type):
     ret = []
     for name, module in model.named_modules():
-        try:
-            if isinstance(module, module_type):
-                ret.append(TorchLayerInfo(name, module))
-        except AttributeError:
-            pass
+        if isinstance(module, module_type):
+            ret.append(TorchLayerInfo(name, module))
     return ret
 
 def _torch_default_get_configure(configure_list, layer_info):
