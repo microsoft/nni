@@ -23,7 +23,6 @@ ppo_tuner.py including:
 """
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import copy
 import logging
 import numpy as np
