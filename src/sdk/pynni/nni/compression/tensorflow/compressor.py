@@ -144,7 +144,7 @@ class Quantizer(Compressor):
 def _detect_weight_index(layer):
     index = default_layers.op_weight_index.get(layer.type)
     if index is not None:
-        return idx
+        return index
     weight_indices = [ i for i, op in enumerate(layer.op.inputs) if op.name.endswith('Variable/read') ]
     if len(weight_indices) == 1:
         return weight_indices[0]
