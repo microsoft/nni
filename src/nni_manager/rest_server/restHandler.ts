@@ -139,11 +139,11 @@ class NNIRestHandler {
 
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
-                this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
-                    res.send();
-                }).catch((err: Error) => {
-                    this.handle_error(err, res);
-                });
+            this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
         });
     }
 
@@ -234,11 +234,11 @@ class NNIRestHandler {
 
     private addTrialJob(router: Router): void {
         router.post('/trial-jobs', async (req: Request, res: Response) => {
-                this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
-                    res.send();
-                }).catch((err: Error) => {
-                    this.handle_error(err, res);
-                });
+            this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
         });
     }
 

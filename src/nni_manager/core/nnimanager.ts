@@ -91,7 +91,7 @@ class NNIManager implements Manager {
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
         if (this.readonly) {
-            throw new Error('Error: can not update experiment profile in readonly mode!');
+            return Promise.reject(new Error('Error: can not update experiment profile in readonly mode!'));
         }
         switch (updateType) {
             case 'TRIAL_CONCURRENCY':
@@ -115,7 +115,7 @@ class NNIManager implements Manager {
 
     public importData(data: string): Promise<void> {
         if (this.readonly) {
-            throw new Error('Error: can not import data in readonly mode!');
+            return Promise.reject(new Error('Error: can not import data in readonly mode!'));
         }
         if (this.dispatcher === undefined) {
             return Promise.reject(
@@ -133,7 +133,7 @@ class NNIManager implements Manager {
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
         if (this.readonly) {
-            throw new Error('Error: can not add customized trial job in readonly mode!');
+            return Promise.reject(new Error('Error: can not add customized trial job in readonly mode!'));
         }
         if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
             return Promise.reject(
@@ -148,7 +148,7 @@ class NNIManager implements Manager {
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
         if (this.readonly) {
-            throw new Error('Error: can not cancel trial job in readonly mode!');
+            return Promise.reject(new Error('Error: can not cancel trial job in readonly mode!'));
         }
         this.log.info(`User cancelTrialJob: ${trialJobId}`);
         await this.trainingService.cancelTrialJob(trialJobId);
@@ -264,7 +264,7 @@ class NNIManager implements Manager {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.readonly) {
-            throw new Error('Error: can not set cluster metadata in readonly mode!');
+            return Promise.reject(new Error('Error: can not set cluster metadata in readonly mode!'));
         }
         this.log.info(`NNIManager setClusterMetadata, key: ${key}, value: ${value}`);
         let timeoutId: NodeJS.Timer;
