@@ -76,6 +76,7 @@ class Logger {
     private level: number = INFO;
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
+    private readonly: boolean = false;
 
     constructor(fileName?: string) {
         let logFile: string | undefined = fileName;
@@ -95,6 +96,8 @@ class Logger {
         if (logLevel !== undefined) {
             this.level = logLevel;
         }
+
+        this.readonly = isReadonly();
     }
 
     public close() {
@@ -141,7 +144,7 @@ class Logger {
      * @param param the params to be written
      */
     private log(level: string, param: any[]): void {
-        if (!isReadonly()) {
+        if (!this.readonly) {
             const buffer: WritableStreamBuffer = new WritableStreamBuffer();
             buffer.write(`[${(new Date()).toLocaleString()}] ${level} `);
             buffer.write(format(param));
