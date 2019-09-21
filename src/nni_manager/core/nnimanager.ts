@@ -211,7 +211,7 @@ class NNIManager implements Manager {
     
             // Set up versionCheck config
             if (expParams.versionCheck !== undefined) {
-                this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
+                this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
             }
     
             const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
