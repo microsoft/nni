@@ -59,6 +59,7 @@ class NNIManager implements Manager {
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
+    private readonly: boolean;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
     
@@ -72,6 +73,7 @@ class NNIManager implements Manager {
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
         this.trialDataForTuner = '';
+        this.readonly = false;
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -88,6 +90,9 @@ class NNIManager implements Manager {
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
+        if (this.readonly) {
+            throw new Error('Error: can not update experiment profile in readonly mode!');
+        }
         switch (updateType) {
             case 'TRIAL_CONCURRENCY':
                 this.updateTrialConcurrency(experimentProfile.params.trialConcurrency);
@@ -109,6 +114,9 @@ class NNIManager implements Manager {
     }
 
     public importData(data: string): Promise<void> {
+        if (this.readonly) {
+            throw new Error('Error: can not import data in readonly mode!');
+        }
         if (this.dispatcher === undefined) {
             return Promise.reject(
                 new Error('tuner has not been setup')
@@ -124,6 +132,9 @@ class NNIManager implements Manager {
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
+        if (this.readonly) {
+            throw new Error('Error: can not add customized trial job in readonly mode!');
+        }
         if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
             return Promise.reject(
                 new Error('reach maxTrialNum')
@@ -136,6 +147,9 @@ class NNIManager implements Manager {
     }
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
+        if (this.readonly) {
+            throw new Error('Error: can not cancel trial job in readonly mode!');
+        }
         this.log.info(`User cancelTrialJob: ${trialJobId}`);
         await this.trainingService.cancelTrialJob(trialJobId);
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
@@ -180,71 +194,68 @@ class NNIManager implements Manager {
         return this.experimentProfile.id;
     }
 
-    public async viewExperiment(): Promise<void> {
-        this.log.info(`Viewing experiment: ${this.experimentProfile.id}`);
-        this.experimentProfile = await this.dataStore.getExperimentProfile(getExperimentId());
-        this.setStatus('VIEWING');
-    }
-
-    public async resumeExperiment(): Promise<void> {
+    public async resumeExperiment(readonly: boolean): Promise<void> {
         this.log.info(`Resuming experiment: ${this.experimentProfile.id}`);
         //Fetch back the experiment profile
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
-        const expParams: ExperimentParams = this.experimentProfile.params;
-        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
-
-        // Set up multiphase config
-        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
-            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        this.readonly = readonly;
+        if (!readonly) {
+            const expParams: ExperimentParams = this.experimentProfile.params;
+            setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
+    
+            // Set up multiphase config
+            if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+                this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+            }
+    
+            // Set up versionCheck config
+            if (expParams.versionCheck !== undefined) {
+                this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
+            }
+    
+            const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
+                expParams.multiPhase, expParams.multiThread);
+            this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+            const checkpointDir: string = await this.createCheckpointDir();
+            this.setupTuner(
+                dispatcherCommand,
+                undefined,
+                'resume',
+                checkpointDir);
+    
+            const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
+    
+            // Resume currSubmittedTrialNum
+            this.currSubmittedTrialNum = allTrialJobs.length;
+    
+            // Check the final status for WAITING and RUNNING jobs
+            await Promise.all(allTrialJobs
+                .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
+                .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+    
+            // Collect generated trials and imported trials
+            const finishedTrialData: string = await this.exportData();
+            const importedData: string[] = await this.dataStore.getImportedData();
+            let trialData: Object[] = JSON.parse(finishedTrialData);
+            for (const oneImportedData of importedData) {
+                // do not deduplicate
+                trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
+            }
+            this.trialDataForTuner = JSON.stringify(trialData);
+    
+            if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+                this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+                this.experimentProfile.endTime) {
+                delete this.experimentProfile.endTime;
+            }
+            this.setStatus('RUNNING');
+    
+            // TO DO: update database record for resume event
+            this.run().catch((err: Error) => {
+                this.criticalError(err);
+            });
         }
-
-        // Set up versionCheck config
-        if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
-        }
-
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-            expParams.multiPhase, expParams.multiThread);
-        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
-        const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(
-            dispatcherCommand,
-            undefined,
-            'resume',
-            checkpointDir);
-
-        const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
-
-        // Resume currSubmittedTrialNum
-        this.currSubmittedTrialNum = allTrialJobs.length;
-
-        // Check the final status for WAITING and RUNNING jobs
-        await Promise.all(allTrialJobs
-            .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
-
-        // Collect generated trials and imported trials
-        const finishedTrialData: string = await this.exportData();
-        const importedData: string[] = await this.dataStore.getImportedData();
-        let trialData: Object[] = JSON.parse(finishedTrialData);
-        for (const oneImportedData of importedData) {
-            // do not deduplicate
-            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
-        }
-        this.trialDataForTuner = JSON.stringify(trialData);
-
-        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
-            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
-            this.experimentProfile.endTime) {
-            delete this.experimentProfile.endTime;
-        }
-        this.setStatus('RUNNING');
-
-        // TO DO: update database record for resume event
-        this.run().catch((err: Error) => {
-            this.criticalError(err);
-        });
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
@@ -252,6 +263,9 @@ class NNIManager implements Manager {
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
+        if (this.readonly) {
+            throw new Error('Error: can not set cluster metadata in readonly mode!');
+        }
         this.log.info(`NNIManager setClusterMetadata, key: ${key}, value: ${value}`);
         let timeoutId: NodeJS.Timer;
         // TO DO: move timeout value to constants file

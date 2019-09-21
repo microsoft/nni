@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { getExperimentMode } from '../common/experimentStartupInfo';
+import { getExperimentMode, getReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
@@ -139,16 +139,11 @@ class NNIRestHandler {
 
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
-            let experimentMode: string = getExperimentMode();
-            if( experimentMode !== ExperimentStartUpMode.VIEW) {
                 this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     this.handle_error(err, res);
                 });
-            } else {
-                this.handle_error(new Error(`Could not update experiment in view mode!`), res, false, 400);
-            }
         });
     }
 
@@ -175,20 +170,13 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else if (experimentMode === ExperimentStartUpMode.RESUME){
-                this.nniManager.resumeExperiment().then(() => {
+                this.nniManager.resumeExperiment(getReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else if (experimentMode === ExperimentStartUpMode.VIEW){
-                this.nniManager.viewExperiment().then(() => {
-                    res.send();
-                }).catch((err: Error) => {
-                    // View experiment is a step of initialization, so any exception thrown is a fatal
-                    this.handle_error(err, res);
-                });
-            }
+            } 
         });
     }
 
@@ -206,8 +194,6 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
-            let experimentMode: string = getExperimentMode();
-            if (experimentMode !== ExperimentStartUpMode.VIEW) {
                 // tslint:disable-next-line:no-any
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
@@ -220,9 +206,6 @@ class NNIRestHandler {
                     // setClusterMetata is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(NNIError.FromError(err), res, true);
                 }
-            } else {
-                this.handle_error(new Error(`Could not set cluster-metadata in view mode!`), res, false, 400);
-            }
         });
     }
 
@@ -252,32 +235,21 @@ class NNIRestHandler {
 
     private addTrialJob(router: Router): void {
         router.post('/trial-jobs', async (req: Request, res: Response) => {
-            let experimentMode: string = getExperimentMode();
-            if(experimentMode !== ExperimentStartUpMode.VIEW) {
                 this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     this.handle_error(err, res);
                 });
-            } else {
-                this.handle_error(new Error(`Could not add customized trial in view mode!`), res, false, 400);
-            }
         });
     }
 
     private cancelTrialJob(router: Router): void {
         router.delete('/trial-jobs/:id', async (req: Request, res: Response) => {
-            let experimentMode: string = getExperimentMode();
-            if(experimentMode !== ExperimentStartUpMode.VIEW) {
-                this.nniManager.cancelTrialJobByUser(req.params.id).then(() => {
-                    res.send();
-                }).catch((err: Error) => {
-                    this.handle_error(err, res);
-                });
-            } else {
-                this.handle_error(new Error(`Could not delete trial job in view mode!`), res, false, 400);
-            }
-
+            this.nniManager.cancelTrialJobByUser(req.params.id).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
         });
     }
 

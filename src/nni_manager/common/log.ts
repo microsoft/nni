@@ -26,7 +26,7 @@ import { Writable } from 'stream';
 import { WritableStreamBuffer } from 'stream-buffers';
 import { format } from 'util';
 import * as component from '../common/component';
-import { getExperimentStartupInfo } from './experimentStartupInfo';
+import { getExperimentStartupInfo, getReadonly } from './experimentStartupInfo';
 import { getLogDir } from './utils';
 
 const FATAL: number = 1;
@@ -134,14 +134,21 @@ class Logger {
     public fatal(...param: any[]): void {
         this.log('FATAL', param);
     }
-
+    
+    /**
+     * if the experiment is not in readonly mode, write log content to stream
+     * @param level log level
+     * @param param the params to be written
+     */
     private log(level: string, param: any[]): void {
-        const buffer: WritableStreamBuffer = new WritableStreamBuffer();
-        buffer.write(`[${(new Date()).toLocaleString()}] ${level} `);
-        buffer.write(format(param));
-        buffer.write('\n');
-        buffer.end();
-        this.bufferSerialEmitter.feed(buffer.getContents());
+        if (!getReadonly()) {
+            const buffer: WritableStreamBuffer = new WritableStreamBuffer();
+            buffer.write(`[${(new Date()).toLocaleString()}] ${level} `);
+            buffer.write(format(param));
+            buffer.write('\n');
+            buffer.end();
+            this.bufferSerialEmitter.feed(buffer.getContents());
+        }
     }
 }
 

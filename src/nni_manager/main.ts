@@ -43,9 +43,9 @@ import {
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number,
-    logDirectory: string, experimentLogLevel: string): void {
+    logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
     const expId: string = startExpMode === ExperimentStartUpMode.NEW ? uniqueString(8) : experimentId;
-    setExperimentStartupInfo(startExpMode, expId, basePort, logDirectory, experimentLogLevel);
+    setExperimentStartupInfo(startExpMode, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -88,7 +88,7 @@ async function initContainer(platformMode: string): Promise<void> {
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume/view> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -107,15 +107,15 @@ if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
-if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME, ExperimentStartUpMode.VIEW].includes(startMode)) {
+if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
     console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if ((startMode === ExperimentStartUpMode.RESUME || startMode === ExperimentStartUpMode.VIEW) && experimentId.trim().length < 1) {
-    console.log(`FATAL: cannot resume or view the experiment, invalid experiment_id: ${experimentId}`);
+if ((startMode === ExperimentStartUpMode.RESUME) && experimentId.trim().length < 1) {
+    console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
 }
@@ -132,7 +132,15 @@ if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
     console.log(`FATAL: invalid log_level: ${logLevel}`);
 }
 
-initStartupInfo(startMode, experimentId, port, logDir, logLevel);
+const readonlyArg: string = parseArg(['--readonly', '-r']);
+if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+    console.log(`FATAL: readonly property should only be true or false`);
+    usage();
+    process.exit(1);
+}
+const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+
+initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {

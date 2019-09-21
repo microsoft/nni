@@ -27,7 +27,6 @@ type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOP
 namespace ExperimentStartUpMode {
     export const NEW = 'new';
     export const RESUME = 'resume';
-    export const VIEW = 'view';
 }
 
 interface ExperimentParams {
@@ -100,9 +99,8 @@ interface NNIManagerStatus {
 
 abstract class Manager {
     public abstract startExperiment(experimentParams: ExperimentParams): Promise<string>;
-    public abstract resumeExperiment(): Promise<void>;
+    public abstract resumeExperiment(readonly: boolean): Promise<void>;
     public abstract stopExperiment(): Promise<void>;
-    public abstract viewExperiment(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
     public abstract importData(data: string): Promise<void>;

@@ -33,8 +33,9 @@ class ExperimentStartupInfo {
     private initTrialSequenceID: number = 0;
     private logDir: string = '';
     private logLevel: string = '';
+    private readonly: boolean = false;
 
-    public setStartupInfo(experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
+    public setStartupInfo(experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
         this.experimentMode = experimentMode;
@@ -50,6 +51,10 @@ class ExperimentStartupInfo {
 
         if (logLevel !== undefined && logLevel.length > 1) {
             this.logLevel = logLevel;
+        }
+
+        if (readonly !== undefined) {
+            this.readonly = readonly;
         }
     }
 
@@ -81,6 +86,12 @@ class ExperimentStartupInfo {
         assert(this.initialized);
 
         return this.logLevel;
+    }
+
+    public getReadonly(): boolean {
+        assert(this.initialized);
+
+        return this.readonly;
     }
 
     public setInitTrialSequenceId(initSequenceId: number): void {
@@ -120,10 +131,14 @@ function getExperimentStartupInfo(): ExperimentStartupInfo {
 }
 
 function setExperimentStartupInfo(
-    experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
+    experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
     component.get<ExperimentStartupInfo>(ExperimentStartupInfo)
-    .setStartupInfo(experimentMode, experimentId, basePort, logDir, logLevel);
+    .setStartupInfo(experimentMode, experimentId, basePort, logDir, logLevel, readonly);
+}
+
+function getReadonly(): boolean {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getReadonly();
 }
 
 export { ExperimentStartupInfo, getBasePort, getExperimentId, getExperimentMode, getExperimentStartupInfo,
-    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };
+    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId, getReadonly };
