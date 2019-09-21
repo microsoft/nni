@@ -70,7 +70,6 @@ def parse_args():
     parser_resume = subparsers.add_parser('view', help='view a stopped experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to view')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode') 
     parser_resume.set_defaults(func=view_experiment)
 
     # parse update command

@@ -402,8 +402,10 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
-    if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
-        log_level = 'debug'
+    #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
+    if mode != 'view':
+        if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
+            log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
@@ -444,7 +446,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
-    if experiment_config.get('debug') is None:
+    if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
