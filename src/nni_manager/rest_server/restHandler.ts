@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { isNewExperiment, getReadonly } from '../common/experimentStartupInfo';
+import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
@@ -169,7 +169,7 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                this.nniManager.resumeExperiment(getReadonly()).then(() => {
+                this.nniManager.resumeExperiment(isReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal

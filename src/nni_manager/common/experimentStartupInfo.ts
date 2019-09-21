@@ -88,7 +88,7 @@ class ExperimentStartupInfo {
         return this.logLevel;
     }
 
-    public getReadonly(): boolean {
+    public isReadonly(): boolean {
         assert(this.initialized);
 
         return this.readonly;
@@ -136,9 +136,9 @@ function setExperimentStartupInfo(
     .setStartupInfo(newExperiment, experimentId, basePort, logDir, logLevel, readonly);
 }
 
-function getReadonly(): boolean {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getReadonly();
+function isReadonly(): boolean {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isReadonly();
 }
 
 export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
-    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId, getReadonly };
+    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId, isReadonly };
