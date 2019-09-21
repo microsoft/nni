@@ -23,7 +23,7 @@ import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
-type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL' | 'VIEWING';
+type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
 namespace ExperimentStartUpMode {
     export const NEW = 'new';
     export const RESUME = 'resume';

@@ -25,7 +25,7 @@ import * as path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { getExperimentMode, getReadonly } from '../common/experimentStartupInfo';
+import { isNewExperiment, getReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
@@ -159,8 +159,7 @@ class NNIRestHandler {
 
     private startExperiment(router: Router): void {
         router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
-            let experimentMode: string = getExperimentMode();
-            if (experimentMode === ExperimentStartUpMode.NEW) {
+            if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
                         experiment_id: eid
@@ -169,7 +168,7 @@ class NNIRestHandler {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            } else if (experimentMode === ExperimentStartUpMode.RESUME){
+            } else {
                 this.nniManager.resumeExperiment(getReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {

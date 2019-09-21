@@ -27,7 +27,7 @@ import * as component from '../common/component';
 @component.Singleton
 class ExperimentStartupInfo {
     private experimentId: string = '';
-    private experimentMode: string = '';
+    private newExperiment: boolean = true;
     private basePort: number = -1;
     private initialized: boolean = false;
     private initTrialSequenceID: number = 0;
@@ -35,10 +35,10 @@ class ExperimentStartupInfo {
     private logLevel: string = '';
     private readonly: boolean = false;
 
-    public setStartupInfo(experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
+    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
-        this.experimentMode = experimentMode;
+        this.newExperiment = newExperiment;
         this.experimentId = experimentId;
         this.basePort = basePort;
         this.initialized = true;
@@ -70,10 +70,10 @@ class ExperimentStartupInfo {
         return this.basePort;
     }
 
-    public getExperimentMode(): string {
+    public isNewExperiment(): boolean {
         assert(this.initialized);
 
-        return this.experimentMode;
+        return this.newExperiment;
     }
 
     public getLogDir(): string {
@@ -114,8 +114,8 @@ function getBasePort(): number {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getBasePort();
 }
 
-function getExperimentMode(): string {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getExperimentMode();
+function isNewExperiment(): boolean {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
 }
 
 function setInitTrialSequenceId(initSequenceId: number): void {
@@ -131,14 +131,14 @@ function getExperimentStartupInfo(): ExperimentStartupInfo {
 }
 
 function setExperimentStartupInfo(
-    experimentMode: string, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
+    newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
     component.get<ExperimentStartupInfo>(ExperimentStartupInfo)
-    .setStartupInfo(experimentMode, experimentId, basePort, logDir, logLevel, readonly);
+    .setStartupInfo(newExperiment, experimentId, basePort, logDir, logLevel, readonly);
 }
 
 function getReadonly(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getReadonly();
 }
 
-export { ExperimentStartupInfo, getBasePort, getExperimentId, getExperimentMode, getExperimentStartupInfo,
+export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
     setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId, getReadonly };

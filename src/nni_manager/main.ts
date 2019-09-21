@@ -24,7 +24,7 @@ import { Container, Scope } from 'typescript-ioc';
 import * as fs from 'fs';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
-import { setExperimentStartupInfo, getExperimentMode } from './common/experimentStartupInfo';
+import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
@@ -44,8 +44,9 @@ import {
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number,
     logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
+    const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
     const expId: string = startExpMode === ExperimentStartUpMode.NEW ? uniqueString(8) : experimentId;
-    setExperimentStartupInfo(startExpMode, expId, basePort, logDirectory, experimentLogLevel, readonly);
+    setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
