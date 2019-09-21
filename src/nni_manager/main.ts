@@ -42,10 +42,10 @@ import {
 } from './training_service/remote_machine/remoteMachineTrainingService';
 
 function initStartupInfo(
-    startExpMode: string, experimentId: string, basePort: number,
+    startExpMode: string, resumeExperimentId: string, basePort: number,
     logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    const expId: string = startExpMode === ExperimentStartUpMode.NEW ? uniqueString(8) : experimentId;
+    const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
