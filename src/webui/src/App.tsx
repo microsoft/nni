@@ -92,12 +92,19 @@ class App extends React.Component<{}, AppState> {
             // experiment finished, refresh once more to ensure consistency
             if (this.state.interval > 0) {
                 this.setState({ interval: 0 });
-                window.setTimeout(this.refresh);
+                this.lastRefresh();
             }
 
         } else if (this.state.interval !== 0) {
             this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
         }
+    }
+
+    private async lastRefresh() {
+        await EXPERIMENT.update();
+        await TRIALS.update(true);
+        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
+        this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
     }
 }
 

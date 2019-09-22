@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { MANAGER_IP } from '../const';
+import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
 import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
 
@@ -7,6 +7,9 @@ class TrialManager {
     private trials: Map<string, Trial> = new Map<string, Trial>();
     private infoInitialized: boolean = false;
     private metricInitialized: boolean = false;
+    private maxSequenceId: number = 0;
+    private doingBatchUpdate: boolean = false;
+    private batchUpdatedAfterReading: boolean = false;
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -14,38 +17,9 @@ class TrialManager {
         }
     }
 
-    public async update(): Promise<boolean> {
-        const infoPromise = axios.get(`${MANAGER_IP}/trial-jobs`);
-        const metricPromise = axios.get(`${MANAGER_IP}/metric-data`);
-        const [ infoResponse, metricResponse ] = await Promise.all([ infoPromise, metricPromise ]);
-        let updated = false;
-
-        if (infoResponse.status === 200) {
-            for (const info of infoResponse.data as TrialJobInfo[]) {
-                if (this.trials.has(info.id)) {
-                    updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated;
-                } else {
-                    this.trials.set(info.id, new Trial(info, undefined));
-                    updated = true;
-                }
-            }
-            this.infoInitialized = true;
-        }
-
-        if (metricResponse.status === 200) {
-            const allMetrics = groupMetricsByTrial(metricResponse.data as MetricDataRecord[]);
-            for (const [ trialId, metrics ] of allMetrics.entries()) {
-                if (this.trials.has(trialId)) {
-                    updated = this.trials.get(trialId)!.updateMetrics(metrics) || updated;
-                } else {
-                    this.trials.set(trialId, new Trial(undefined, metrics));
-                    updated = true;
-                }
-            }
-            this.metricInitialized = true;
-        }
-
-        return updated;
+    public async update(lastTime?: boolean): Promise<boolean> {
+        const [ infoUpdated, metricUpdated ] = await Promise.all([ this.updateInfo(), this.updateMetrics(lastTime) ]);
+        return infoUpdated || metricUpdated;
     }
 
     public getTrial(trialId: string): Trial {
@@ -95,6 +69,75 @@ class TrialManager {
             }
         }
         return cnt;
+    }
+
+    private async updateInfo(): Promise<boolean> {
+        const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
+        let updated = false;
+        if (response.status === 200) {
+            for (const info of response.data as TrialJobInfo[]) {
+                if (this.trials.has(info.id)) {
+                    updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated;
+                } else {
+                    this.trials.set(info.id, new Trial(info, undefined));
+                    updated = true;
+                }
+                this.maxSequenceId = Math.max(this.maxSequenceId, info.sequenceId);
+            }
+            this.infoInitialized = true;
+        }
+        return updated;
+    }
+
+    private async updateMetrics(lastTime?: boolean): Promise<boolean> {
+        if (this.trials.size < METRIC_GROUP_UPDATE_THRESHOLD || lastTime) {
+            return await this.updateAllMetrics();
+        } else {
+            this.updateManyMetrics();
+            const ret = (await this.updateLatestMetrics()) || this.batchUpdatedAfterReading;
+            this.batchUpdatedAfterReading = false;
+            return ret;
+        }
+    }
+
+    private async updateAllMetrics(): Promise<boolean> {
+        const response = await axios.get(`${MANAGER_IP}/metric-data`);
+        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+    }
+
+    private async updateLatestMetrics(): Promise<boolean> {
+        const response = await axios.get(`${MANAGER_IP}/metric-data-latest`);
+        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], true);
+    }
+
+    private async updateManyMetrics(): Promise<void> {
+        if (this.doingBatchUpdate) {
+            return;
+        }
+        this.doingBatchUpdate = true;
+        for (let i = 0; i < this.maxSequenceId; i += METRIC_GROUP_UPDATE_SIZE) {
+            const response = await axios.get(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`);
+            if (response.status === 200) {
+                const updated = this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+                this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
+            }
+        }
+        this.doingBatchUpdate = false;
+    }
+
+    private doUpdateMetrics(allMetrics: MetricDataRecord[], latestOnly: boolean): boolean {
+        let updated = false;
+        for (const [ trialId, metrics ] of groupMetricsByTrial(allMetrics).entries()) {
+            if (this.trials.has(trialId)) {
+                const trial = this.trials.get(trialId)!;
+                updated = (latestOnly ? trial.updateLatestMetrics(metrics) : trial.updateMetrics(metrics)) || updated;
+            } else {
+                this.trials.set(trialId, new Trial(undefined, metrics));
+                updated = true;
+            }
+        }
+        this.metricInitialized = true;
+        return updated;
     }
 }
 

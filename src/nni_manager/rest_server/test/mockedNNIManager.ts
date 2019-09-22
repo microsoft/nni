@@ -129,6 +129,9 @@ export class MockedNNIManager extends Manager {
     public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
+    public getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]> {
+        throw new MethodNotImplementedError();
+    }
     public getLatestMetricData(): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }

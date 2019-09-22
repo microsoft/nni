@@ -279,6 +279,18 @@ class NNIManager implements Manager {
         return this.dataStore.getMetricData(trialJobId, metricType);
     }
 
+    public async getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]> {
+        const trialJobs = await this.dataStore.listTrialJobs();
+        const targetTrials = trialJobs.filter(trial => (
+            // FIXME: can this be undefined?
+            trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
+        ));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+
+        const allMetrics = await this.dataStore.getMetricData();
+        return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
+    }
+
     public async getLatestMetricData(): Promise<MetricDataRecord[]> {
         // FIXME: this can take a long time
         const allMetrics: MetricDataRecord[] = await this.dataStore.getMetricData();
@@ -294,7 +306,6 @@ class NNIManager implements Manager {
                 }
             }
         }
-        // FIXME: should this be sorted?
         return finals.concat(Array.from(latestIntermediates.values()));
         // FIXME: unit test
     }

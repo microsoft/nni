@@ -111,10 +111,11 @@ abstract class Manager {
     public abstract getClusterMetadata(key: string): Promise<string>;
 
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
+    public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
+
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
-
-    public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
 }
 
 export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus };

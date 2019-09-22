@@ -1,3 +1,7 @@
+// when there are more trials than this threshold, metrics will be updated in group of this size to avoid freezing
+const METRIC_GROUP_UPDATE_THRESHOLD = 100;
+const METRIC_GROUP_UPDATE_SIZE = 20;
+
 const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
@@ -69,5 +73,6 @@ const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Sta
 'Intermediate count', 'Default', 'Operation'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,
-    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION
+    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION,
+    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE,
 };

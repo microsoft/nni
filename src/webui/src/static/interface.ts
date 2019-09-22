@@ -24,6 +24,7 @@ interface TableRecord {
     status: string;
     intermediateCount: number;
     accuracy?: number;
+    latestAccuracy: string;  // formatted string
 }
 
 interface SearchSpace {

@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, metricAccuracy } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -62,6 +62,7 @@ class Trial implements TableObj {
             status: this.info.status,
             intermediateCount: this.intermediates.length,
             accuracy: this.finalAcc,
+            latestAccuracy: this.formatLatestAccuracy(),
         };
     }
 
@@ -177,6 +178,17 @@ class Trial implements TableObj {
             this.finalAcc = metricAccuracy(this.final);
         }
         return !same;
+    }
+
+    public formatLatestAccuracy(): string {  // TODO: this should be private
+        if (this.accuracy !== undefined) {
+            return `${formatAccuracy(this.accuracy)} (FINAL)`;
+        } else if (this.intermediates.length === 0) {
+            return '--';
+        } else {
+            const latest = this.intermediates[this.intermediates.length - 1]!;
+            return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+        }
     }
 }
 

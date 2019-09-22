@@ -127,6 +127,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                                 <DefaultPoint
                                     trialIds={trialIds}
                                     visible={whichGraph === '1'}
+                                    trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                                 />
                             </Row>
                         </TabPane>
@@ -199,6 +200,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     tableSource={source.map(trial => trial.tableRecord)}
                     columnList={columnList}
                     changeColumn={changeColumn}
+                    trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                     ref={(tabList) => this.tableList = tabList}
                 />
             </div>

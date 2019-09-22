@@ -11,6 +11,7 @@ require('echarts/lib/component/title');
 interface DefaultPointProps {
     trialIds: string[];
     visible: boolean;
+    trialsUpdateBroadcast: number;
 }
 
 interface DefaultPointState {

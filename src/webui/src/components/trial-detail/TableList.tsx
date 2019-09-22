@@ -10,7 +10,6 @@ import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } fr
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
-import IntermediateVal from '../public-child/IntermediateVal'; // table default metric column
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -31,6 +30,7 @@ interface TableListProps {
     tableSource: Array<TableRecord>;
     columnList: Array<string>; // user select columnKeys
     changeColumn: (val: Array<string>) => void;
+    trialsUpdateBroadcast: number;
 }
 
 interface TableListState {
@@ -235,7 +235,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     render() {
-        const { pageSize, tableSource, columnList } = this.props;
+        const { pageSize, columnList } = this.props;
+        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
+        console.log('rerender table', tableSource);
         const { intermediateOption, modalVisible, isShowColumn,
             selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
         const rowSelection = {
@@ -516,7 +518,8 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
         }
     },
     render: (text, record) => (
-        <IntermediateVal trialId={record.id} />
+        // TODO: is this needed?
+        <div>{record.latestAccuracy}</div>
     )
 };
 
