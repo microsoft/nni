@@ -33,7 +33,7 @@ import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { Manager, ExperimentStartUpMode } from './manager';
+import { Manager } from './manager';
 import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';

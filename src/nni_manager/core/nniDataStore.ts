@@ -29,7 +29,7 @@ import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
 import { NNIError } from '../common/errors';
 import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile,  TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
+import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
 import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
