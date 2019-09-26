@@ -17,107 +17,109 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
-
-
-import nni.protocol
-from nni.protocol import CommandType, send, receive
-from nni.tuner import Tuner
-from nni.msg_dispatcher import MsgDispatcher
-from nni.utils import extract_scalar_reward
-from io import BytesIO
+import copy
 import json
+import logging
 from unittest import TestCase, main
 
+# TODO: can we make this tidier?
+from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
+from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
+from nni.smac_tuner.smac_tuner import SMACTuner
+from nni.tuner import Tuner
 
-class NaiveTuner(Tuner):
-    def __init__(self):
-        self.param = 0
-        self.trial_results = []
-        self.search_space = None
-        self.accept_customized_trials()
-
-    def generate_parameters(self, parameter_id, **kwargs):
-        # report Tuner's internal states to generated parameters,
-        # so we don't need to pause the main loop
-        self.param += 2
-        return {
-            'param': self.param,
-            'trial_results': self.trial_results,
-            'search_space': self.search_space
-        }
-
-    def receive_trial_result(self, parameter_id, parameters, value, customized, **kwargs):
-        reward = extract_scalar_reward(value)
-        self.trial_results.append((parameter_id, parameters['param'], reward, customized))
-
-    def update_search_space(self, search_space):
-        self.search_space = search_space
-
-
-_in_buf = BytesIO()
-_out_buf = BytesIO()
-
-
-def _reverse_io():
-    _in_buf.seek(0)
-    _out_buf.seek(0)
-    nni.protocol._out_file = _in_buf
-    nni.protocol._in_file = _out_buf
-
-
-def _restore_io():
-    _in_buf.seek(0)
-    _out_buf.seek(0)
-    nni.protocol._in_file = _in_buf
-    nni.protocol._out_file = _out_buf
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('test_tuner')
 
 
 class TunerTestCase(TestCase):
-    def test_tuner(self):
-        _reverse_io()  # now we are sending to Tuner's incoming stream
-        send(CommandType.RequestTrialJobs, '2')
-        send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":10}')
-        send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":11}')
-        send(CommandType.UpdateSearchSpace, '{"name":"SS0"}')
-        send(CommandType.AddCustomizedTrialJob, '{"param":-1}')
-        send(CommandType.ReportMetricData, '{"parameter_id":2,"type":"FINAL","value":22}')
-        send(CommandType.RequestTrialJobs, '1')
-        send(CommandType.KillTrialJob, 'null')
-        _restore_io()
+    """
+    Targeted at testing functions of built-in tuners, including
+        - [ ] load_checkpoint
+        - [ ] save_checkpoint
+        - [X] update_search_space
+        - [X] generate_multiple_parameters
+        - [ ] import_data
+        - [ ] trial_end
+        - [ ] receive_trial_result
+    """
 
-        tuner = NaiveTuner()
-        dispatcher = MsgDispatcher(tuner)
-        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
+    def search_space_test_one(self, tuner_factory, search_space):
+        tuner = tuner_factory()
+        self.assertIsInstance(tuner, Tuner)
+        tuner.update_search_space(copy.deepcopy(search_space))  # TODO: why does update search space change dict?
+        parameters = tuner.generate_multiple_parameters(list(range(0, 50)))
+        logger.info(parameters)
+        if not parameters:  # TODO: not strict
+            raise ValueError("No parameters generated")
+        return parameters
 
-        dispatcher.run()
-        e = dispatcher.worker_exceptions[0]
-        self.assertIs(type(e), AssertionError)
-        self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
+    def check_range(self, generated_params, search_space):
+        EPS = 1E-6
+        for param in generated_params:
+            for k, v in param.items():
+                item = search_space[k]
+                if item["_type"] == "choice":
+                    self.assertIn(v, item["_value"])
+                if item["_type"] == "randint":
+                    self.assertIsInstance(v, int)
+                    self.assertIn(v, item["_value"])
+                if item["_type"] == "uniform":
+                    self.assertIsInstance(v, float)
+                if item["_type"] in ("randint", "uniform", "quniform", "loguniform", "qloguniform"):
+                    self.assertGreaterEqual(v, item["_value"][0])
+                    self.assertLessEqual(v, item["_value"][1])
+                if item["_type"].startswith("q"):
+                    multiple = v / item["_value"][2]
+                    if item["_value"][0] + EPS < v < item["_value"][1] - EPS:
+                        self.assertAlmostEqual(int(round(multiple) + EPS), multiple)
+                if item["_type"] in ("qlognormal", "lognormal"):
+                    self.assertGreater(v, 0)
 
-        _reverse_io()  # now we are receiving from Tuner's outgoing stream
-        self._assert_params(0, 2, [], None)
-        self._assert_params(1, 4, [], None)
+    def search_space_test_all(self, tuner_factory, supported_types=None):
+        with open("assets/search_space.json", "r") as fp:
+            search_space_all = json.load(fp)
+        if supported_types is None:
+            supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",
+                               "normal", "qnormal", "lognormal", "qlognormal"]
+        full_supported_search_space = dict()
+        for single in search_space_all:
+            single_keyword = single.split("_")
+            single_search_space = {single: search_space_all[single]}
+            if any([t in single_keyword for t in supported_types]) and "fail" not in single_keyword:
+                try:
+                    # supports this key
+                    self.search_space_test_one(tuner_factory, single_search_space)
+                    full_supported_search_space.update(single_search_space)
+                except Exception as e:
+                    if "undefined" not in single_keyword:
+                        raise  # TODO: fix undefined
+                    logger.error(e)
+            else:
+                with self.assertRaises(Exception) as cm:
+                    self.search_space_test_one(tuner_factory, single_search_space)
 
-        command, data = receive()  # this one is customized
-        data = json.loads(data)
-        self.assertIs(command, CommandType.NewTrialJob)
-        self.assertEqual(data['parameter_id'], 2)
-        self.assertEqual(data['parameter_source'], 'customized')
-        self.assertEqual(data['parameters'], {'param': -1})
+                logger.info("{}, {}, {}".format(tuner_factory, single, cm.exception))
+        logger.info("Full supported search space: {}".format(full_supported_search_space))
+        self.search_space_test_one(tuner_factory, full_supported_search_space)
 
-        self._assert_params(3, 6, [[1, 4, 11, False], [2, -1, 22, True]], {'name': 'SS0'})
+    def test_grid_search(self):
+        self.search_space_test_all(lambda: GridSearchTuner(),
+                                   supported_types=["choice", "randint", "quniform"])
 
-        self.assertEqual(len(_out_buf.read()), 0)  # no more commands
+    def test_tpe(self):
+        self.search_space_test_all(lambda: HyperoptTuner("tpe"))
 
-    def _assert_params(self, parameter_id, param, trial_results, search_space):
-        command, data = receive()
-        self.assertIs(command, CommandType.NewTrialJob)
-        data = json.loads(data)
-        self.assertEqual(data['parameter_id'], parameter_id)
-        self.assertEqual(data['parameter_source'], 'algorithm')
-        self.assertEqual(data['parameters']['param'], param)
-        self.assertEqual(data['parameters']['trial_results'], trial_results)
-        self.assertEqual(data['parameters']['search_space'], search_space)
+    def test_random_search(self):
+        self.search_space_test_all(lambda: HyperoptTuner("random_search"))
+
+    def test_anneal(self):
+        self.search_space_test_all(lambda: HyperoptTuner("anneal"))
+
+    def test_smac(self):
+        # TODO: smac seems not clean and generates a lot of temporary files
+        self.search_space_test_all(lambda: SMACTuner("maximize"),
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
 
 if __name__ == '__main__':

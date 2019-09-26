@@ -1,0 +1,74 @@
+{
+  "choice_str": {
+    "_type": "choice",
+    "_value": ["cat","dog", "elephant", "cow", "sheep", "panda"]
+  },
+  "choice_int": {
+    "_type": "choice",
+    "_value": [42, 43, -1]
+  },
+  "choice_mixed": {
+    "_type": "choice",
+    "_value": [0.3, "cat", 1, null]
+  },
+  "choice_float": {
+    "_type": "choice",
+    "_value": [0.3, 1, 2.0]
+  },
+  "randint_normal": {
+    "_type": "randint",
+    "_value": [-2, 3]
+  },
+  "randint_single_undefined": {
+    "_type": "randint",
+    "_value": [10, 11]
+  },
+  "randint_fail_equal": {
+    "_type": "randint",
+    "_value": [0, 0]
+  },
+  "uniform_normal": {
+    "_type": "uniform",
+    "_value": [-1.0, 1.5]
+  },
+  "uniform_equal_undefined": {
+    "_type": "uniform",
+    "_value": [99.9, 99.9]
+  },
+  "quniform_normal": {
+    "_type": "quniform",
+    "_value": [0.0, 10.0, 2.5]
+  },
+  "quniform_clip": {
+    "_type": "quniform",
+    "_value": [2.0, 10.0, 5.0]
+  },
+  "quniform_clip_2": {
+    "_type": "quniform",
+    "_value": [-5.5, -0.5, 6]
+  },
+  "loguniform_normal": {
+    "_type": "loguniform",
+    "_value": [0.001, 100]
+  },
+  "qloguniform_normal": {
+    "_type": "qloguniform",
+    "_value": [0.001, 100, 1]
+  },
+  "normal_normal": {
+    "_type": "normal",
+    "_value": [-1.0, 5.0]
+  },
+  "qnormal_normal": {
+    "_type": "qnormal",
+    "_value": [-1.5, 5.0, 0.1]
+  },
+  "lognormal_normal": {
+    "_type": "lognormal",
+    "_value": [-1.0, 5.0]
+  },
+  "qlognormal_normal": {
+    "_type": "qlognormal",
+    "_value": [-1.5, 5.0, 0.1]
+  }
+}
