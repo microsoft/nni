@@ -220,11 +220,10 @@ class MsgDispatcherBase(Recoverable):
         data: list
             a list of dictionaries, each of which has at least two keys, 'parameter' and 'value'
         """
-        # TODO: can someone help me explain the format of data?
         raise NotImplementedError('handle_import_data not implemented')
 
     def handle_add_customized_trial(self, data):
-        # TODO: not clear
+        # TODO: needs to justify this format to data
         raise NotImplementedError('handle_add_customized_trial not implemented')
 
     def handle_report_metric_data(self, data):
