@@ -38,9 +38,9 @@ NUM_CLASSES = 10
 
 
 def create_mnist_model(hyper_params, input_shape=(H, W, 1), num_classes=NUM_CLASSES):
-    '''
+    """
     Create simple convolutional model
-    '''
+    """
     layers = [
         Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape),
         Conv2D(64, (3, 3), activation='relu'),
@@ -62,9 +62,9 @@ def create_mnist_model(hyper_params, input_shape=(H, W, 1), num_classes=NUM_CLAS
 
 
 def load_mnist_data(args):
-    '''
+    """
     Load MNIST dataset
-    '''
+    """
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     x_train = (np.expand_dims(x_train, -1).astype(np.float) / 255.)[:args.num_train]
@@ -79,22 +79,22 @@ def load_mnist_data(args):
 
 
 class SendMetrics(keras.callbacks.Callback):
-    '''
+    """
     Keras callback to send metrics to NNI framework
-    '''
+    """
 
     def on_epoch_end(self, epoch, logs={}):
-        '''
+        """
         Run on end of each epoch
-        '''
+        """
         LOG.debug(logs)
         nni.report_intermediate_result(logs["val_acc"])
 
 
 def train(args, params):
-    '''
+    """
     Train model
-    '''
+    """
     x_train, y_train, x_test, y_test = load_mnist_data(args)
     model = create_mnist_model(params)
 
@@ -107,9 +107,9 @@ def train(args, params):
 
 
 def generate_default_params():
-    '''
+    """
     Generate default hyper parameters
-    '''
+    """
     return {
         'optimizer': 'Adam',
         'learning_rate': 0.001
