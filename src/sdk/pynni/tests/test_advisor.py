@@ -23,24 +23,12 @@ from io import BytesIO
 from unittest import TestCase, main
 
 import nni.protocol
-from nni.assessor import Assessor, AssessResult
+from nni.hyperband_advisor.hyperband_advisor import Hyperband
 from nni.msg_dispatcher import MsgDispatcher
 from nni.protocol import CommandType, send, receive
 
 _trials = []
 _end_trials = []
-
-
-class NaiveAssessor(Assessor):
-    def assess_trial(self, trial_job_id, trial_history):
-        _trials.append(trial_job_id)
-        if sum(trial_history) % 2 == 0:
-            return AssessResult.Good
-        else:
-            return AssessResult.Bad
-
-    def trial_end(self, trial_job_id, success):
-        _end_trials.append((trial_job_id, success))
 
 
 _in_buf = BytesIO()
@@ -69,13 +57,12 @@ class AdvisorTestCase(TestCase):
         send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":10}')
         send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":11}')
         send(CommandType.UpdateSearchSpace, '{"name":"SS0"}')
-        send(CommandType.AddCustomizedTrialJob, '{"param":-1}')
         send(CommandType.ReportMetricData, '{"parameter_id":2,"type":"FINAL","value":22}')
         send(CommandType.RequestTrialJobs, '1')
         send(CommandType.KillTrialJob, 'null')
         _restore_io()
 
-        assessor = NaiveAssessor()
+        assessor = Hyperband()
         dispatcher = MsgDispatcher(None, assessor)
         nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
 

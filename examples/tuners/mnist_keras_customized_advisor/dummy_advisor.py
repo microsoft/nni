@@ -31,7 +31,7 @@ class DummyAdvisor(MsgDispatcherBase):
     """This advisor creates a new trial when validation accuracy of any one of the trials just dropped.
     The trial is killed if the validation accuracy doesn't improve for at least k last-reported metrics.
     To demonstrate the high flexibility of writing advisors, we don't use tuners or the standard definition of
-    search space.
+    search space. This is just a demo to customize an advisor. It's not intended to make any sense.
     """
     def __init__(self, k=3):
         super(DummyAdvisor, self).__init__()
@@ -39,7 +39,7 @@ class DummyAdvisor(MsgDispatcherBase):
         self.random_state = random.Random()
 
     def handle_initialize(self, data):
-        logger.debug("Advisor initialized: {}".format(data))
+        logger.info("Advisor initialized: {}".format(data))
         self.handle_update_search_space(data)
         assert self.searchspace_json["_"] == "Leave the search space empty"
         self.parameters_count = 0
@@ -57,22 +57,23 @@ class DummyAdvisor(MsgDispatcherBase):
             },
             "parameter_source": "algorithm"
         }
+        logger.info("New trial sent: {}".format(new_trial))
         send(CommandType.NewTrialJob, json_tricks.dumps(new_trial))
 
     def handle_request_trial_jobs(self, data):
-        logger.debug("Request trial jobs: {}".format(data))
+        logger.info("Request trial jobs: {}".format(data))
         for _ in range(data):
             self._send_new_trial()
 
     def handle_update_search_space(self, data):
-        logger.debug("Search space update: {}".format(data))
+        logger.info("Search space update: {}".format(data))
         self.searchspace_json = data
 
     def handle_trial_end(self, data):
-        logger.debug("Trial end: {}".format(data)) # do nothing
+        logger.info("Trial end: {}".format(data)) # do nothing
 
     def handle_report_metric_data(self, data):
-        logger.debug("Metric reported: {}".format(data))
+        logger.info("Metric reported: {}".format(data))
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError("Request parameter not supported")
         elif data["type"] == MetricType.PERIODICAL:
@@ -82,6 +83,8 @@ class DummyAdvisor(MsgDispatcherBase):
                 self.parameter_cooldown[parameter_id] = 0
             else:
                 self.parameter_cooldown[parameter_id] += 1
+                logger.info("Accuracy dropped, cooldown {}, sending a new trial".format(
+                    self.parameter_cooldown[parameter_id]))
                 self._send_new_trial()
                 if self.parameter_cooldown[parameter_id] >= self.k:
                     logger.info("Send kill signal to {}".format(data))

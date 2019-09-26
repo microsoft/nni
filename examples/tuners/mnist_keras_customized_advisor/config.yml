@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_customized_advisor
 trialConcurrency: 4
 maxExecDuration: 1h
-maxTrialNum: 10
+maxTrialNum: 200
 #choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json

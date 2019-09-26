@@ -88,7 +88,8 @@ class SendMetrics(keras.callbacks.Callback):
         Run on end of each epoch
         """
         LOG.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        # Should this be val_acc or val_accuracy? Seems inconsistent behavior of Keras?
+        nni.report_intermediate_result(logs["val_accuracy"])
 
 
 def train(args, params):
