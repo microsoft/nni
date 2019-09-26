@@ -25,9 +25,9 @@ import * as path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { isNewExperiment } from '../common/experimentStartupInfo';
+import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
+import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
@@ -88,11 +88,11 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response, isFatal: boolean = false): void {
+    private handle_error(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
-            res.status(500);
+            res.status(errorCode);
         }
         res.send({
             error: err.message
@@ -171,13 +171,13 @@ class NNIRestHandler {
                     this.handle_error(err, res);
                 });
             } else {
-                this.nniManager.resumeExperiment().then(() => {
+                this.nniManager.resumeExperiment(isReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            }
+            } 
         });
     }
 
@@ -195,18 +195,18 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
-            // tslint:disable-next-line:no-any
-            const metadata: any = req.body;
-            const keys: string[] = Object.keys(metadata);
-            try {
-                for (const key of keys) {
-                    await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
+                // tslint:disable-next-line:no-any
+                const metadata: any = req.body;
+                const keys: string[] = Object.keys(metadata);
+                try {
+                    for (const key of keys) {
+                        await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
+                    }
+                    res.send();
+                } catch (err) {
+                    // setClusterMetata is a step of initialization, so any exception thrown is a fatal
+                    this.handle_error(NNIError.FromError(err), res, true);
                 }
-                res.send();
-            } catch (err) {
-                // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                this.handle_error(NNIError.FromError(err), res, true);
-            }
         });
     }
 

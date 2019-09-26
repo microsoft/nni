@@ -14,14 +14,12 @@ tuner:
     className: NaiveTuner
     classArgs:
         optimize_mode: maximize
-    gpuNum: 0
 assessor:
     codeDir: .
     classFileName: naive_assessor.py
     className: NaiveAssessor
     classArgs:
         optimize_mode: maximize
-    gpuNum: 0
 trial:
     command: python3 naive_trial.py
     codeDir: .
