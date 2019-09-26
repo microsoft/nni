@@ -17,12 +17,11 @@ export NNI_PLATFORM=unittest
 ## ------Run sdk test------
 echo ""
 echo "===========================Testing: nni_sdk==========================="
+nnictl package install --name SMAC
 cd ${CWD}/../src/sdk/pynni/
 python3 -m unittest discover -v tests
 
-
-
-# -------------For typescrip unittest-------------
+# -------------For typescript unittest-------------
 cd ${CWD}/../src/nni_manager
 echo ""
 echo "===========================Testing: nni_manager==========================="
