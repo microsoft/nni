@@ -174,7 +174,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermediate count':
+                case 'Intermediate result':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -237,7 +237,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
     render() {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
-        console.log('rerender table', tableSource);
         const { intermediateOption, modalVisible, isShowColumn,
             selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
         const rowSelection = {
@@ -286,7 +285,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                     showColumn.push(StatusColumnConfig);
                     break;
-                case 'Intermediate count':
+                case 'Intermediate result':
                     showColumn.push(IntermediateCountColumnConfig);
                     break;
                 case 'Default':
@@ -328,26 +327,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                         </Button>
                                     </Popconfirm>
                                 </Row>
-                            );
-                        },
-                    });
-                    break;
-
-                case 'Intermediate result':
-                    showColumn.push({
-                        title: 'Intermediate result',
-                        dataIndex: 'intermediate',
-                        key: 'intermediate',
-                        width: '16%',
-                        render: (text: string, record: TableRecord) => {
-                            return (
-                                <Button
-                                    type="primary"
-                                    className="tableButton"
-                                    onClick={this.showIntermediateModal.bind(this, record.id)}
-                                >
-                                    Intermediate
-                                </Button>
                             );
                         },
                     });
@@ -495,7 +474,7 @@ const StatusColumnConfig: ColumnProps<TableRecord> = {
 };
 
 const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Intermediate count',
+    title: 'Intermediate result',
     dataIndex: 'intermediateCount',
     width: 86,
     render: (text, record) => (

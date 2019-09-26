@@ -59,7 +59,6 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const { isShowFormatModal, formatStr } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
-        let isClick = false;
         const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
         const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
@@ -76,7 +75,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     <br />
                                     For the entire parameter set, please refer to the following "
                                     <a href={trialLink} target="_blank">{trialLink}</a>".
-                                    <br/>
+                                    <br />
                                     Current Phase: {multiProgress}.
                                 </Row>
                                 :
@@ -87,18 +86,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 ?
                                 <Row id="description">
                                     <Row className="bgHyper">
-                                        {
-                                            isClick
-                                                ?
-                                                <pre>{JSON.stringify(trial.info.hyperParameters, null, 4)}</pre>
-                                                :
-                                                <JSONTree
-                                                    hideRoot={true}
-                                                    shouldExpandNode={() => true}  // default expandNode
-                                                    getItemString={() => (<span />)}  // remove the {} items
-                                                    data={trial.info.hyperParameters}
-                                                />
-                                        }
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={trial.description.parameters}
+                                        />
                                     </Row>
                                     <Row className="copy">
                                         <Button

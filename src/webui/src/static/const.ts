@@ -3,6 +3,7 @@ const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const MANAGER_IP = `/api/v1/nni`;
+// const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
     'UNKNOWN',
@@ -38,11 +39,11 @@ const COLUMN_INDEX = [
         index: 2
     },
     {
-        name: 'StartTime',
+        name: 'Start Time',
         index: 3
     },
     {
-        name: 'EndTime',
+        name: 'End Time',
         index: 4
     },
     {
@@ -54,7 +55,7 @@ const COLUMN_INDEX = [
         index: 6
     },
     {
-        name: 'Intermediate count',
+        name: 'Intermediate result',
         index: 7
     },
     {
@@ -70,7 +71,7 @@ const COLUMN_INDEX = [
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation'];
 // all choice column !dictory final
 const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
-'Intermediate count', 'Default', 'Operation'];
+'Intermediate result', 'Default', 'Operation'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,
     CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION,
