@@ -1,4 +1,4 @@
-from nni.compressors.tf_compressor import QATquantizer
+from nni.compression.tensorflow import QAT_Quantizer
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -82,8 +82,8 @@ def main():
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(configure_list).compress(tf.get_default_graph())
     '''
-    configure_list = [{'q_bits':8, 'support_type':'default'}]
-    quantizer = QATquantizer(configure_list)
+    configure_list = [{'q_bits':8, 'op_type':'default'}]
+    quantizer = QAT_Quantizer(configure_list)
     quantizer(tf.get_default_graph())
     # you can also use compress(model) or compress_default_graph()
     # method like QATquantizer(q_bits = 8).compress_default_graph()

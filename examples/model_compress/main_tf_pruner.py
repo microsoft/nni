@@ -1,4 +1,4 @@
-from nni.compressors.tf_compressor import AGPruner
+from nni.compression.tensorflow import AGP_Pruner
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -88,9 +88,9 @@ def main():
                         'start_epoch': 1,
                         'end_epoch': 10,
                         'frequency': 1,
-                        'support_type': 'default'
+                        'op_type': 'default'
                     }]
-    pruner = AGPruner(configure_list)
+    pruner = AGP_Pruner(configure_list)
     # if you want to load from yaml file
     # configure_file = nni.compressors.tf_compressor._nnimc_tf._tf_default_load_configure_file('configure_example.yaml','AGPruner')
     # configure_list = configure_file.get('config',[])
