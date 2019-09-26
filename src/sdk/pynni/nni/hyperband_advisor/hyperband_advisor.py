@@ -345,7 +345,6 @@ class Hyperband(MsgDispatcherBase):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
-        print(ret)
         return ret
 
     def handle_update_search_space(self, data):
