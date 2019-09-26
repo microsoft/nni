@@ -101,7 +101,7 @@ describe('Unit test for nnimanager', function () {
         params: updateExperimentParams,
         id: 'test',
         execDuration: 0,
-        maxSequenceId: 0,
+        nextSequenceId: 0,
         revision: 0
     }
 

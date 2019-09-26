@@ -85,9 +85,9 @@ export class MockedNNIManager extends Manager {
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
-            sequenceId: 0,
             form: {
-                jobType: 'TRIAL'
+                sequenceId: 0,
+                hyperParameters: { value: '', index: 0 }
             }
         };
         deferred.resolve(jobDetail);
@@ -129,6 +129,12 @@ export class MockedNNIManager extends Manager {
     public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
+    public getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]> {
+        throw new MethodNotImplementedError();
+    }
+    public getLatestMetricData(): Promise<MetricDataRecord[]> {
+        throw new MethodNotImplementedError();
+    }
     public getExperimentProfile(): Promise<ExperimentProfile> {
         const profile: ExperimentProfile = {
             params: {
@@ -148,7 +154,7 @@ export class MockedNNIManager extends Manager {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
-            maxSequenceId: 0,
+            nextSequenceId: 0,
             revision: 0
         };
 

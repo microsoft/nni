@@ -2,12 +2,13 @@ import * as React from 'react';
 import { Row, Modal } from 'antd';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
+import { TRIALS } from '../../static/datamodel';
 import '../../static/style/compare.scss';
-import { TableObj, Intermedia, TooltipForIntermediate } from 'src/static/interface';
+import { TableRecord, Intermedia, TooltipForIntermediate } from 'src/static/interface';
 
 // the modal of trial compare
 interface CompareProps {
-    compareRows: Array<TableObj>;
+    compareRows: Array<TableRecord>;
     visible: boolean;
     cancelFunc: () => void;
 }
@@ -105,10 +106,11 @@ class Compare extends React.Component<CompareProps, {}> {
 
     // render table column ---
     initColumn = () => {
-        const { compareRows } = this.props;
         const idList: Array<string> = [];
         const sequenceIdList: Array<number> = [];
         const durationList: Array<number> = [];
+
+        const compareRows = this.props.compareRows.map(tableRecord => TRIALS.getTrial(tableRecord.id));
 
         const parameterList: Array<object> = [];
         let parameterKeys: Array<string> = [];
@@ -147,7 +149,7 @@ class Compare extends React.Component<CompareProps, {}> {
                             const temp = compareRows[index];
                             return (
                                 <td className="value" key={index}>
-                                    <IntermediateVal record={temp} />
+                                    <IntermediateVal trialId={temp.id} />
                                 </td>
                             );
                         })}

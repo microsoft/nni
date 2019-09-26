@@ -26,7 +26,6 @@ interface SliderState {
 
 interface SliderProps extends FormComponentProps {
     changeInterval: (value: number) => void;
-    changeFresh: (value: string) => void;
 }
 
 interface EventPer {
@@ -35,7 +34,6 @@ interface EventPer {
 
 class SlideBar extends React.Component<SliderProps, SliderState> {
 
-    public _isMounted = false;
     public divMenu: HTMLDivElement | null;
     public selectHTML: Select | null;
 
@@ -57,32 +55,26 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             method: 'GET'
         })
             .then(res => {
-                if (res.status === 200 && this._isMounted) {
+                if (res.status === 200) {
                     this.setState({ version: res.data });
                 }
             });
     }
 
     handleMenuClick = (e: EventPer) => {
-        if (this._isMounted) { this.setState({ menuVisible: false }); }
+        this.setState({ menuVisible: false });
         switch (e.key) {
             // to see & download experiment parameters
             case '1':
-                if (this._isMounted === true) {
-                    this.setState(() => ({ isvisibleExperimentDrawer: true }));
-                }
+                this.setState({ isvisibleExperimentDrawer: true });
                 break;
             // to see & download nnimanager log
             case '2':
-                if (this._isMounted === true) {
-                    this.setState(() => ({ activeKey: 'nnimanager', isvisibleLogDrawer: true }));
-                }
+                this.setState({ activeKey: 'nnimanager', isvisibleLogDrawer: true });
                 break;
             // to see & download dispatcher log
             case '3':
-                if (this._isMounted === true) {
-                    this.setState(() => ({ isvisibleLogDrawer: true, activeKey: 'dispatcher' }));
-                }
+                this.setState({ isvisibleLogDrawer: true, activeKey: 'dispatcher' });
                 break;
             case 'close':
             case '10':
@@ -96,13 +88,10 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     handleVisibleChange = (flag: boolean) => {
-        if (this._isMounted === true) {
-            this.setState({ menuVisible: flag });
-        }
+        this.setState({ menuVisible: flag });
     }
 
     getInterval = (value: string) => {
-
         if (value === 'close') {
             this.props.changeInterval(0);
         } else {
@@ -203,13 +192,9 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     fresh = (event: React.SyntheticEvent<EventTarget>) => {
         event.preventDefault();
         event.stopPropagation();
-        if (this._isMounted) {
-            this.setState({ isdisabledFresh: true }, () => {
-                const whichPage = window.location.pathname;
-                this.props.changeFresh(whichPage);
-                setTimeout(() => { this.setState(() => ({ isdisabledFresh: false })); }, 1000);
-            });
-        }
+        this.setState({ isdisabledFresh: true }, () => {
+            setTimeout(() => { this.setState({ isdisabledFresh: false }); }, 1000);
+        });
     }
 
     desktopHTML = () => {
@@ -330,25 +315,16 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
     // close log drawer (nnimanager.dispatcher)
     closeLogDrawer = () => {
-        if (this._isMounted === true) {
-            this.setState(() => ({ isvisibleLogDrawer: false, activeKey: '' }));
-        }
+        this.setState({ isvisibleLogDrawer: false, activeKey: '' });
     }
 
     // close download experiment parameters drawer
     closeExpDrawer = () => {
-        if (this._isMounted === true) {
-            this.setState(() => ({ isvisibleExperimentDrawer: false }));
-        }
+        this.setState({ isvisibleExperimentDrawer: false });
     }
 
     componentDidMount() {
-        this._isMounted = true;
         this.getNNIversion();
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
     }
 
     render() {
