@@ -30,7 +30,6 @@ class ExperimentStartupInfo {
     private newExperiment: boolean = true;
     private basePort: number = -1;
     private initialized: boolean = false;
-    private initTrialSequenceID: number = 0;
     private logDir: string = '';
     private logLevel: string = '';
     private readonly: boolean = false;
@@ -93,17 +92,6 @@ class ExperimentStartupInfo {
 
         return this.readonly;
     }
-
-    public setInitTrialSequenceId(initSequenceId: number): void {
-        assert(this.initialized);
-        this.initTrialSequenceID = initSequenceId;
-    }
-
-    public getInitTrialSequenceId(): number {
-        assert(this.initialized);
-
-        return this.initTrialSequenceID;
-    }
 }
 
 function getExperimentId(): string {
@@ -116,14 +104,6 @@ function getBasePort(): number {
 
 function isNewExperiment(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
-}
-
-function setInitTrialSequenceId(initSequenceId: number): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setInitTrialSequenceId(initSequenceId);
-}
-
-function getInitTrialSequenceId(): number {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
 }
 
 function getExperimentStartupInfo(): ExperimentStartupInfo {
@@ -141,4 +121,4 @@ function isReadonly(): boolean {
 }
 
 export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
-    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId, isReadonly };
+    setExperimentStartupInfo, isReadonly };

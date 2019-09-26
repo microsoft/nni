@@ -40,8 +40,6 @@ message.config({
 
 class Para extends React.Component<ParaProps, ParaState> {
 
-    public _isMounted = false;
-
     private chartMulineStyle = {
         width: '100%',
         height: 392,
@@ -121,15 +119,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                 this.swapGraph(paraData, swapAxisArr);
             }
             this.getOption(paraData, lengthofTrials);
-            if (this._isMounted === true) {
-                this.setState(() => ({ paraBack: paraData }));
-            }
+            this.setState({ paraBack: paraData });
         }
 
     hyperParaPic = (source: Array<TableObj>, searchSpace: string) => {
         // filter succeed trials [{}, {}, {}]
-        const origin = source.filter(filterByStatus);
-        const dataSource: Array<TableObj> = JSON.parse(JSON.stringify(origin));
+        const dataSource = source.filter(filterByStatus);
         const lenOfDataSource: number = dataSource.length;
         const accPara: Array<number> = [];
         // specific value array
@@ -139,15 +134,13 @@ class Para extends React.Component<ParaProps, ParaState> {
         // nest search space
         let isNested: boolean = false;
         Object.keys(searchRange).map(item => {
-            if (typeof searchRange[item]._value[0] === 'object') {
+            if (searchRange[item]._value && typeof searchRange[item]._value[0] === 'object') {
                 isNested = true;
                 return;
             }
         });
         const dimName = Object.keys(searchRange);
-        if (this._isMounted === true) {
-            this.setState(() => ({ dimName: dimName }));
-        }
+        this.setState({ dimName: dimName });
 
         const parallelAxis: Array<Dimobj> = [];
         // search space range and specific value [only number]
@@ -324,23 +317,21 @@ class Para extends React.Component<ParaProps, ParaState> {
                     color: ['#CA0000', '#FFC400', '#90EE90']
                 }
             };
-            if (this._isMounted === true) {
-                this.setState({
-                    paraNodata: 'No data',
-                    option: optionOfNull,
-                    sutrialCount: 0,
-                    succeedRenderCount: 0
-                });
-            }
+            this.setState({
+                paraNodata: 'No data',
+                option: optionOfNull,
+                sutrialCount: 0,
+                succeedRenderCount: 0
+            });
         } else {
             Object.keys(dataSource).map(item => {
-                const temp = dataSource[item];
-                eachTrialParams.push(temp.description.parameters);
+                const trial = dataSource[item];
+                eachTrialParams.push(trial.description.parameters.error || '');
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
-                if (temp.acc !== undefined) {
-                    if (temp.acc.default !== undefined) {
-                        accPara.push(temp.acc.default);
+                if (trial.acc !== undefined) {
+                    if (trial.acc.default !== undefined) {
+                        accPara.push(JSON.parse(trial.acc.default));
                     }
                 }
             });
@@ -361,14 +352,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                     });
                 });
             }
-            if (this._isMounted) {
-                // if not return final result
-                const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
-                const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
-                this.setState({ max: maxVal, min: minVal }, () => {
-                    this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
-                });
-            }
+            // if not return final result
+            const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
+            const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
+            this.setState({ max: maxVal, min: minVal }, () => {
+                this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
+            });
         }
     }
 
@@ -376,11 +365,9 @@ class Para extends React.Component<ParaProps, ParaState> {
     percentNum = (value: string) => {
 
         let vals = parseFloat(value);
-        if (this._isMounted) {
-            this.setState({ percent: vals }, () => {
-                this.reInit();
-            });
-        }
+        this.setState({ percent: vals }, () => {
+            this.reInit();
+        });
     }
 
     // deal with response data into pic data
@@ -445,22 +432,17 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
         };
         // please wait the data
-        if (this._isMounted) {
-            this.setState(() => ({
-                option: optionown,
-                paraNodata: '',
-                succeedRenderCount: lengthofTrials,
-                sutrialCount: paralleData.length
-            }));
-        }
+        this.setState({
+            option: optionown,
+            paraNodata: '',
+            succeedRenderCount: lengthofTrials,
+            sutrialCount: paralleData.length
+        });
     }
 
     // get swap parallel axis
     getSwapArr = (value: Array<string>) => {
-
-        if (this._isMounted) {
-            this.setState(() => ({ swapAxisArr: value }));
-        }
+        this.setState({ swapAxisArr: value });
     }
 
     reInit = () => {
@@ -471,9 +453,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     swapReInit = () => {
         const { clickCounts, succeedRenderCount } = this.state;
         const val = clickCounts + 1;
-        if (this._isMounted) {
-            this.setState({ isLoadConfirm: true, clickCounts: val, });
-        }
+        this.setState({ isLoadConfirm: true, clickCounts: val, });
         const { paraBack, swapAxisArr } = this.state;
         const paralDim = paraBack.parallelAxis;
         const paraData = paraBack.data;
@@ -523,11 +503,9 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
         this.getOption(paraBack, succeedRenderCount);
         // please wait the data
-        if (this._isMounted) {
-            this.setState(() => ({
-                isLoadConfirm: false
-            }));
-        }
+        this.setState({
+            isLoadConfirm: false
+        });
     }
 
     sortDimY = (a: Dimobj, b: Dimobj) => {
@@ -585,7 +563,6 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     componentDidMount() {
-        this._isMounted = true;
         this.reInit();
     }
 
@@ -621,10 +598,6 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
         }
         return false;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
     }
 
     render() {

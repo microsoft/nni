@@ -1,43 +1,20 @@
 import * as React from 'react';
-import { TableObj } from '../../static/interface';
+import { TRIALS } from '../../static/datamodel';
+import { formatAccuracy } from '../../static/function';
 
 interface DefaultMetricProps {
-    record: TableObj;
+    trialId: string;
 }
 
 class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
-
     constructor(props: DefaultMetricProps) {
         super(props);
-
     }
 
     render() {
-        const { record } = this.props;
-        let accuracy;
-        if (record.acc !== undefined) {
-            accuracy = record.acc.default;
-        }
-        let wei = 0;
-        if (accuracy !== undefined) {
-            if (accuracy.toString().indexOf('.') !== -1) {
-                wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
-            }
-        }
+        const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
         return (
-            <div>
-                {
-                    record.acc !== undefined && record.acc.default !== undefined
-                        ?
-                        wei > 6
-                            ?
-                            JSON.parse(record.acc.default).toFixed(6)
-                            :
-                            record.acc.default
-                        :
-                        '--'
-                }
-            </div>
+            <div>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>
         );
     }
 }

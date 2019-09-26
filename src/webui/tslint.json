@@ -11,10 +11,6 @@
       ],
       "ban": false,
       "class-name": true,
-      "comment-format": [
-          true,
-          "check-space"
-      ],
       "curly": true,
       "eofline": false,
       "forin": true,
@@ -40,19 +36,9 @@
           "static-before-instance",
           "variables-before-functions"
       ],
-      "no-any": true,
       "no-arg": true,
       "no-bitwise": true,
-      "no-console": [
-          true,
-          "log",
-          "error",
-          "debug",
-          "info",
-          "time",
-          "timeEnd",
-          "trace"
-      ],
+      "no-console": false,
       "no-consecutive-blank-lines": true,
       "no-construct": true,
       "no-debugger": true,
@@ -64,7 +50,6 @@
       "no-switch-case-fall-through": true,
       "no-trailing-whitespace": false,
       "no-unused-expression": true,
-      "no-use-before-declare": true,
       "one-line": [
           true,
           "check-catch",
