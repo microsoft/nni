@@ -31,7 +31,6 @@ from nni.gp_tuner import GPTuner
 from nni.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner import MetisTuner
-from nni.networkmorphism_tuner import NetworkMorphismTuner
 from nni.smac_tuner import SMACTuner
 from nni.tuner import Tuner
 
