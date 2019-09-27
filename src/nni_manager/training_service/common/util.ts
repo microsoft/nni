@@ -193,6 +193,7 @@ export async function tarAdd(tarPath: string, sourcePath: string): Promise<void>
             `import os`,
             `import tarfile`,
             String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tarFilePath, sourceFilePath),
+            `    dir[:] = [d for d in dirs if d != '.git']`,
             `    for file in files:`,
             `        fullpath = os.path.join(root,file)`,
             `        tar.add(fullpath, arcname=file)`,

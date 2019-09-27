@@ -370,9 +370,9 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     let fileCount: number = -1;
     let cmd: string;
     if(process.platform === "win32") {
-        cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
+        cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | ? { $_.PsIsContainer -and $_.FullName -notmatch '.git' } |  Measure-Object | %{$_.Count}"`;
     } else {
-        cmd = `find ${directory} -type f | wc -l`;
+        cmd = `find ${directory} -type f ! -path "*/.git/*" | wc -l`;
     }
     cpp.exec(cmd).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
