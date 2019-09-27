@@ -3,7 +3,6 @@ const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const MANAGER_IP = `/api/v1/nni`;
-// const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
     'UNKNOWN',
