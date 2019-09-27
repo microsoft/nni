@@ -17,8 +17,8 @@ export NNI_PLATFORM=unittest
 ## ------Run sdk test------
 echo ""
 echo "===========================Testing: nni_sdk==========================="
-nnictl package install --name SMAC
 cd ${CWD}/../src/sdk/pynni/
+python3 -m pip install --user -r nni/smac_tuner/requirements.txt
 python3 -m unittest discover -v tests
 
 # -------------For typescript unittest-------------
