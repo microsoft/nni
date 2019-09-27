@@ -128,14 +128,10 @@ if __name__ == '__main__':
 
     ARGS, UNKNOWN = PARSER.parse_known_args()
 
-    try:
-        # get parameters from tuner
-        RECEIVED_PARAMS = nni.get_next_parameter()
-        LOG.debug(RECEIVED_PARAMS)
-        PARAMS = generate_default_params()
-        PARAMS.update(RECEIVED_PARAMS)
-        # train
-        train(ARGS, PARAMS)
-    except Exception as e:
-        LOG.exception(e)
-        raise
+    # get parameters from tuner
+    RECEIVED_PARAMS = nni.get_next_parameter()
+    LOG.debug(RECEIVED_PARAMS)
+    PARAMS = generate_default_params()
+    PARAMS.update(RECEIVED_PARAMS)
+    # train
+    train(ARGS, PARAMS)

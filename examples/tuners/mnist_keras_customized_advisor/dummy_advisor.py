@@ -16,10 +16,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
-import random
 from collections import defaultdict
 
 import json_tricks
+import numpy as np
+from nni import parameter_expressions as param
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.protocol import CommandType, send
 from nni.utils import MetricType
@@ -36,12 +37,11 @@ class DummyAdvisor(MsgDispatcherBase):
     def __init__(self, k=3):
         super(DummyAdvisor, self).__init__()
         self.k = k
-        self.random_state = random.Random()
+        self.random_state = np.random.RandomState()
 
     def handle_initialize(self, data):
         logger.info("Advisor initialized: {}".format(data))
         self.handle_update_search_space(data)
-        assert self.searchspace_json["_"] == "Leave the search space empty"
         self.parameters_count = 0
         self.parameter_best_metric = defaultdict(float)
         self.parameter_cooldown = defaultdict(int)
@@ -52,8 +52,10 @@ class DummyAdvisor(MsgDispatcherBase):
         new_trial = {
             "parameter_id": self.parameters_count,
             "parameters": {
-                "optimizer": self.random_state.choice(["Adam", "SGD"]),
-                "learning_rate": self.random_state.uniform(0.001, 0.1)
+                "optimizer": param.choice(self.searchspace_json["optimizer"], self.random_state),
+                "learning_rate": param.loguniform(self.searchspace_json["learning_rate"][0],
+                                                  self.searchspace_json["learning_rate"][1],
+                                                  self.random_state)
             },
             "parameter_source": "algorithm"
         }
