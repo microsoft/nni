@@ -19,9 +19,10 @@
     "_type": "randint",
     "_value": [-2, 3]
   },
-  "randint_single_undefined": {
+  "randint_single": {
     "_type": "randint",
-    "_value": [10, 11]
+    "_value": [10, 11],
+    "fail": ["smac"]
   },
   "randint_fail_equal": {
     "_type": "randint",
@@ -31,9 +32,10 @@
     "_type": "uniform",
     "_value": [-1.0, 1.5]
   },
-  "uniform_equal_undefined": {
+  "uniform_equal": {
     "_type": "uniform",
-    "_value": [99.9, 99.9]
+    "_value": [99.9, 99.9],
+    "fail": ["smac"]
   },
   "quniform_normal": {
     "_type": "quniform",

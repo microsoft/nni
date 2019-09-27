@@ -23,10 +23,9 @@ import logging
 import os
 from unittest import TestCase, main
 
-# TODO: can we make this tidier?
-from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
-from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
-from nni.smac_tuner.smac_tuner import SMACTuner
+from nni.gridsearch_tuner import GridSearchTuner
+from nni.hyperopt_tuner import HyperoptTuner
+from nni.smac_tuner import SMACTuner
 from nni.tuner import Tuner
 
 logging.basicConfig(level=logging.INFO)
@@ -86,20 +85,20 @@ class TunerTestCase(TestCase):
         full_supported_search_space = dict()
         for single in search_space_all:
             single_keyword = single.split("_")
-            single_search_space = {single: search_space_all[single]}
-            if any([t in single_keyword for t in supported_types]) and "fail" not in single_keyword:
-                try:
-                    # supports this key
-                    self.search_space_test_one(tuner_factory, single_search_space)
-                    full_supported_search_space.update(single_search_space)
-                except Exception as e:
-                    if "undefined" not in single_keyword:
-                        raise  # TODO: fix undefined
-                    logger.error(e)
+            space = search_space_all[single]
+            expected_fail = not any([t in single_keyword for t in supported_types]) or "fail" in single_keyword
+            if "fail" in space:
+                if self._testMethodName.split("_", 1)[1] in space.pop("fail"):
+                    expected_fail = True
+            single_search_space = {single: space}
+            if not expected_fail:
+                # supports this key
+                self.search_space_test_one(tuner_factory, single_search_space)
+                full_supported_search_space.update(single_search_space)
             else:
+                # unsupported key
                 with self.assertRaises(Exception) as cm:
                     self.search_space_test_one(tuner_factory, single_search_space)
-
                 logger.info("{}, {}, {}".format(tuner_factory, single, cm.exception))
         logger.info("Full supported search space: {}".format(full_supported_search_space))
         self.search_space_test_one(tuner_factory, full_supported_search_space)
