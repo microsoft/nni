@@ -124,7 +124,7 @@ function generateScatterSeries(trials: Trial[]) {
     const data = trials.map(trial => [
         trial.sequenceId,
         trial.accuracy,
-        trial.info.hyperParameters,
+        trial.description.parameters,
     ]);
     return {
         symbolSize: 6,

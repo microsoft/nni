@@ -117,7 +117,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
         const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
-
         return (
             <div>
                 <div className="trial" id="tabsty">
