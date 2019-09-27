@@ -1,7 +1,7 @@
 Pruner on NNI Compressor
 ===
 
-## LevelPruner
+## Level Pruner
 
 This is one basic pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%). 
 
@@ -23,12 +23,12 @@ pruner = nni.compression.torch.LevelPruner(config_list)
 pruner(model)
 ```
 
-#### User configuration for LevelPruner
+#### User configuration for Level Pruner
 * **sparsity:** This is to specify the sparsity operations to be compressed to
 
 ***
 
-## AGP\_Pruner
+## AGP Pruner
 In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
 >We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
@@ -81,7 +81,7 @@ pruner.update_epoch(epoch)
 ```
 You can view example for more information
 
-#### User configuration for AGP\_Pruner
+#### User configuration for AGP Pruner
 * **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
 * **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
 * **start_epoch:** This is to specify the epoch number when compressor starts to compress
@@ -90,13 +90,13 @@ You can view example for more information
 
 ***
 
-## SensitivityPruner
+## Sensitivity Pruner
 In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.
 
 >We used the sensitivity results to find each layer’s threshold: for example, the smallest threshold was applied to the most sensitive layer, which is the first convolutional layer... The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
 
 ### Usage
-You can prune weight step by step and reach one target sparsity by SensitivityPruner with the code below.
+You can prune weight step by step and reach one target sparsity by Sensitivity Pruner with the code below.
 
 Tensorflow code
 ```python
@@ -112,7 +112,7 @@ config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
 pruner = SensitivityPruner(config_list)
 pruner(model)
 ```
-Like AGP_Pruner, you should update mask information every epoch by adding code below
+Like AGP Pruner, you should update mask information every epoch by adding code below
 
 Tensorflow code 
 ```python
@@ -124,7 +124,7 @@ pruner.update_epoch(epoch)
 ```
 You can view example for more information
 
-#### User configuration for SensitivityPruner
+#### User configuration for Sensitivity Pruner
 * **sparsity:** This is to specify the sparsity operations to be compressed to
 
 ***
