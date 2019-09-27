@@ -20,6 +20,7 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
+      apt install -y swig
       source unittest.sh
     displayName: 'Unit test'
   - script: |
@@ -55,6 +56,8 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
+      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+      brew install swig
       PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
     displayName: 'Unit test'
   - script: |
