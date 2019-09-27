@@ -60,7 +60,7 @@ class AGP_Pruner(Pruner):
         self.mask_list = {}
         self.now_epoch = 1
 
-    def calc_mask(self, weight, config, **kwargs):
+    def calc_mask(self, weight, config, op_name, **kwargs):
         mask = self.mask_list.get(op_name, torch.ones(weight.shape))
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
