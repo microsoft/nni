@@ -86,7 +86,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const percent = (EXPERIMENT.profile.execDuration / EXPERIMENT.profile.params.maxExecDuration) * 100;
         const remaining = convertTime(EXPERIMENT.profile.params.maxExecDuration - EXPERIMENT.profile.execDuration);
         const maxDuration = convertTime(EXPERIMENT.profile.params.maxExecDuration);
-        const maxTrialNum = convertTime(EXPERIMENT.profile.params.maxTrialNum);
+        const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
         const execDuration = convertTime(EXPERIMENT.profile.execDuration);
 
         let errorContent;

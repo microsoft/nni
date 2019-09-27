@@ -272,7 +272,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         isFilter
                             ?
                             <span>
-                                <span className="filter-x"># Intermediate</span>
+                                <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
                                     ref={input => this.pointInput = input}
@@ -307,7 +307,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         style={{ width: '100%', height: 418, margin: '0 auto' }}
                         notMerge={true} // update now
                     />
-                    <div className="yAxis"># Intermediate</div>
+                    <div className="yAxis"># Intermediate result</div>
                 </Row>
             </div>
         );

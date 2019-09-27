@@ -7,6 +7,7 @@ const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
+import { TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
@@ -159,8 +160,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // checkbox for coloumn
     selectedColumn = (checkedValues: Array<string>) => {
-        // 7: because have seven common column, "Intermediate count" is hidden by default
-        let count = 7;
+        // 9: because have nine common column, 
+        // [Intermediate count, Start Time, End Time] is hidden by default
+        let count = 9;
         const want: Array<object> = [];
         const finalKeys: Array<string> = [];
         const wantResult: Array<string> = [];
@@ -174,7 +176,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermediate count':
+                case 'Intermediate result':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -231,13 +233,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
     // close Compare-modal
     hideCompareModal = () => {
         // close modal. clear select rows data, clear selected track
-            this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
+        this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
     render() {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
-        console.log('rerender table', tableSource);
         const { intermediateOption, modalVisible, isShowColumn,
             selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
         const rowSelection = {
@@ -248,25 +249,41 @@ class TableList extends React.Component<TableListProps, TableListState> {
         };
         let showTitle = COLUMNPro;
         const showColumn: Array<object> = [];
+
+        // parameter as table column
+        const trialMess = TRIALS.getTrial(tableSource[0].id);
+        const trial = trialMess.description.parameters;
+        const parameterColumn: Array<string> = Object.keys(trial);
+        const parameterStr: Array<string> = [];
+        parameterColumn.forEach(value => {
+            parameterStr.push(`${value} (search space)`);
+        });
+        showTitle = COLUMNPro.concat(parameterStr);
+
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
             const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accuracy;
             if (temp !== undefined && typeof temp === 'object') {
-                    // concat default column and finalkeys
-                    const item = Object.keys(temp);
-                    // item: ['default', 'other-keys', 'maybe loss']
-                    if (item.length > 1) {
-                        const want: Array<string> = [];
-                        item.forEach(value => {
-                            if (value !== 'default') {
-                                want.push(value);
-                            }
-                        });
-                        showTitle = COLUMNPro.concat(want);
-                    }
+                // concat default column and finalkeys
+                const item = Object.keys(temp);
+                // item: ['default', 'other-keys', 'maybe loss']
+                if (item.length > 1) {
+                    const want: Array<string> = [];
+                    item.forEach(value => {
+                        if (value !== 'default') {
+                            want.push(value);
+                        }
+                    });
+                    showTitle = COLUMNPro.concat(want);
+                }
             }
         }
         for (const item of columnList) {
+            const paraColumn = item.match(/ \(search space\)$/);
+            let cc;
+            if (paraColumn !== null) {
+                cc = paraColumn.input;
+            }
             switch (item) {
                 case 'Trial No.':
                     showColumn.push(SequenceIdColumnConfig);
@@ -286,7 +303,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Status':
                     showColumn.push(StatusColumnConfig);
                     break;
-                case 'Intermediate count':
+                case 'Intermediate result':
                     showColumn.push(IntermediateCountColumnConfig);
                     break;
                 case 'Default':
@@ -332,27 +349,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         },
                     });
                     break;
-
-                case 'Intermediate result':
+                case (cc):
+                    // remove SEARCH_SPACE title
+                    const realItem = item.replace(' (search space)', '');
                     showColumn.push({
-                        title: 'Intermediate result',
-                        dataIndex: 'intermediate',
-                        key: 'intermediate',
-                        width: '16%',
+                        title: realItem,
+                        dataIndex: item,
+                        key: item,
+                        width: '6%',
                         render: (text: string, record: TableRecord) => {
+                            const eachTrial = TRIALS.getTrial(record.id);
                             return (
-                                <Button
-                                    type="primary"
-                                    className="tableButton"
-                                    onClick={this.showIntermediateModal.bind(this, record.id)}
-                                >
-                                    Intermediate
-                                </Button>
+                                <span>{eachTrial.description.parameters[realItem]}</span>
                             );
                         },
                     });
                     break;
-
                 default:
                     // FIXME
                     alert('Unexpected column type');
@@ -369,6 +381,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         expandedRowRender={this.openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
+                        scroll={{x: 'max-content'}}
                         pagination={pageSize > 0 ? { pageSize } : false}
                     />
                     {/* Intermediate Result Modal */}
@@ -495,7 +508,7 @@ const StatusColumnConfig: ColumnProps<TableRecord> = {
 };
 
 const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Intermediate count',
+    title: 'Intermediate result',
     dataIndex: 'intermediateCount',
     width: 86,
     render: (text, record) => (
