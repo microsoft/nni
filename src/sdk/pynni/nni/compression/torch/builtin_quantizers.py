@@ -15,10 +15,10 @@ class NaiveQuantizer(Quantizer):
         super().__init__(config_list)
         self.layer_scale = {}
 
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, op_name, **kwargs):
         new_scale = weight.abs().max() / 127
-        scale = max(self.layer_scale.get(layer.name, 0), new_scale)
-        self.layer_scale[layer.name] = scale
+        scale = max(self.layer_scale.get(op_name, 0), new_scale)
+        self.layer_scale[op_name] = scale
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
@@ -36,7 +36,7 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(config_list)
 
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, **kwargs):
         if config['q_bits'] <= 1:
             return weight
         a = torch.min(weight)
@@ -63,7 +63,7 @@ class DoReFaQuantizer(Quantizer):
         """
         super().__init__(config_list)
 
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, **kwargs):
         out = weight.tanh()
         out = out /( 2 * out.abs().max()) + 0.5
         out = self.quantize(out, config['q_bits'])

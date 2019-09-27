@@ -15,7 +15,7 @@ class LevelPruner(Pruner):
         """
         super().__init__(config_list)
 
-    def calc_mask(self, layer, weight, config):
+    def calc_mask(self, weight, config, **kwargs):
         threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
         return tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
 
@@ -43,7 +43,7 @@ class AGP_Pruner(Pruner):
         self.now_epoch = tf.Variable(0)
         self.assign_handler = []
 
-    def calc_mask(self, layer, weight, config):
+    def calc_mask(self, weight, config, **kwargs):
         target_sparsity = self.compute_target_sparsity(config)
         threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
         # stop gradient in case gradient change the mask
@@ -93,10 +93,10 @@ class SensitivityPruner(Pruner):
         self.layer_mask = {}
         self.assign_handler = []
 
-    def calc_mask(self, layer, weight, config):
+    def calc_mask(self, weight, config, op_name, **kwargs):
         target_sparsity = config['sparsity'] * tf.math.reduce_std(weight) 
-        mask = tf.get_variable(layer.name + '_mask', initializer=tf.ones(weight.shape), trainable=False)
-        self.layer_mask[layer.name] = mask
+        mask = tf.get_variable(op_name + '_mask', initializer=tf.ones(weight.shape), trainable=False)
+        self.layer_mask[op_name] = mask
 
         weight_assign_handler = tf.assign(weight, mask*weight)
         # use control_dependencies so that weight_assign_handler will be executed before mask_update_handler
