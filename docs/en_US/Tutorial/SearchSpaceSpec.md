@@ -21,6 +21,8 @@ To define a search space, users should define the name of variable, the type of 
 
 Take the first line as an example. `dropout_rate` is defined as a variable whose priori distribution is a uniform distribution of a range from `0.1` and `0.5`.
 
+Note that the ability of a search space is highly connected with your tuner. We listed the supported types for each builtin tuner below. For a customized tuner, you don't have to follow our convention and you will have the flexibility to define any type you want.
+
 ## Types
 
 All types of sampling strategies and their parameter are listed here:
@@ -86,7 +88,7 @@ All types of sampling strategies and their parameter are listed here:
 | Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
 | Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
-| Grid Search Tuner | &#10003; | &#10003; |  | &#10003;  |     | |  |  |    |     |
+| Grid Search Tuner | &#10003; | &#10003; |  | &#10003; |     | |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
 | GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |
@@ -94,12 +96,16 @@ All types of sampling strategies and their parameter are listed here:
 
 Known Limitations:
 
-* GP Tuner and Metis Tuner support only **numerical values** in search space(`choice` type values can be no-numeraical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
+* GP Tuner and Metis Tuner support only **numerical values** in search space (`choice` type values can be no-numeraical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
+
+* SMAC Tuner does not support randint/uniform with only one candidate, e.g., `[0, 1]` or `[0.9, 0.9]`, while others do not have such problem, as long as they support randint/uniform.
+
+* Currently, many tuners won't throw exceptions for invalid search space. For unsupported search space types, it's also possible that the tuner will ignore the field like nothing happened.
 
 * Note that for nested search space:
 
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
 
-    * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+    * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in [#1110](https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
 
 [1]: ../AdvancedFeature/GeneralNasInterfaces.md
