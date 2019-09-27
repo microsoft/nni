@@ -26,11 +26,12 @@ class Compare extends React.Component<CompareProps, {}> {
         const idsList: Array<string> = [];
         Object.keys(compareRows).map(item => {
             const temp = compareRows[item];
+            const trial = TRIALS.getTrial(temp.id);
             trialIntermediate.push({
                 name: temp.id,
-                data: temp.description.intermediate,
+                data: trial.description.intermediate,
                 type: 'line',
-                hyperPara: temp.description.parameters
+                hyperPara: trial.description.parameters
             });
             idsList.push(temp.id);
         });
@@ -208,7 +209,7 @@ class Compare extends React.Component<CompareProps, {}> {
             >
                 <Row className="compare-intermediate">
                     {this.intermediate()}
-                    <Row className="compare-yAxis"># Intermediate</Row>
+                    <Row className="compare-yAxis"># Intermediate result</Row>
                 </Row>
                 <Row>{this.initColumn()}</Row>
             </Modal>

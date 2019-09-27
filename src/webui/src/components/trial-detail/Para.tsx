@@ -326,7 +326,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         } else {
             Object.keys(dataSource).map(item => {
                 const trial = dataSource[item];
-                eachTrialParams.push(trial.description.parameters.error || '');
+                eachTrialParams.push(trial.description.parameters || '');
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
                 if (trial.acc !== undefined) {
