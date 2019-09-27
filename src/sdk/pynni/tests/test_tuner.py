@@ -20,6 +20,7 @@
 import copy
 import json
 import logging
+import os
 from unittest import TestCase, main
 
 # TODO: can we make this tidier?
@@ -77,7 +78,7 @@ class TunerTestCase(TestCase):
                     self.assertGreater(v, 0)
 
     def search_space_test_all(self, tuner_factory, supported_types=None):
-        with open("assets/search_space.json", "r") as fp:
+        with open(os.path.join(os.path.dirname(__file__), "assets/search_space.json"), "r") as fp:
             search_space_all = json.load(fp)
         if supported_types is None:
             supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",

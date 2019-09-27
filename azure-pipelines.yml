@@ -20,7 +20,7 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      apt install -y swig
+      sudo apt install -y swig
       source unittest.sh
     displayName: 'Unit test'
   - script: |
