@@ -20,11 +20,10 @@
 
 import sys
 import numpy
+from . import lib_data
 
 from scipy.stats import norm
 from scipy.optimize import minimize
-
-import nni.metis_tuner.lib_data as lib_data
 
 
 def next_hyperparameter_expected_improvement(fun_prediction,
@@ -70,6 +69,7 @@ def next_hyperparameter_expected_improvement(fun_prediction,
 
     return outputs
 
+
 def _expected_improvement(x, fun_prediction, fun_prediction_args,
                           x_bounds, x_types, samples_y_aggregation,
                           minimize_constraints_fun):
@@ -87,7 +87,7 @@ def _expected_improvement(x, fun_prediction, fun_prediction_args,
         with numpy.errstate(divide="ignore"):
             Z = scaling_factor * (mu - loss_optimum) / sigma
             expected_improvement = scaling_factor * (mu - loss_optimum) * \
-                                        norm.cdf(Z) + sigma * norm.pdf(Z)
+                                   norm.cdf(Z) + sigma * norm.pdf(Z)
             expected_improvement = 0.0 if sigma == 0.0 else expected_improvement
 
         # We want expected_improvement to be as large as possible
@@ -133,6 +133,7 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
         outputs = {'hyperparameter': best_x, 'expected_mu': mu,
                    'expected_sigma': sigma, 'acquisition_func': "lc"}
     return outputs
+
 
 def _lowest_confidence(x, fun_prediction, fun_prediction_args,
                        x_bounds, x_types, minimize_constraints_fun):
@@ -199,4 +200,3 @@ def _lowest_mu(x, fun_prediction, fun_prediction_args,
     if (minimize_constraints_fun is None) or (minimize_constraints_fun(x) is True):
         mu, _ = fun_prediction(x, *fun_prediction_args)
     return mu
-    

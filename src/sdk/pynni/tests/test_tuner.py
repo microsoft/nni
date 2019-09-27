@@ -18,13 +18,20 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 import copy
+import glob
 import json
 import logging
 import os
+import shutil
 from unittest import TestCase, main
 
+from nni.batch_tuner import BatchTuner
+from nni.evolution_tuner import EvolutionTuner
+from nni.gp_tuner import GPTuner
 from nni.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner import HyperoptTuner
+from nni.metis_tuner import MetisTuner
+from nni.networkmorphism_tuner import NetworkMorphismTuner
 from nni.smac_tuner import SMACTuner
 from nni.tuner import Tuner
 
@@ -91,6 +98,7 @@ class TunerTestCase(TestCase):
                 if self._testMethodName.split("_", 1)[1] in space.pop("fail"):
                     expected_fail = True
             single_search_space = {single: space}
+            print(single, expected_fail)
             if not expected_fail:
                 # supports this key
                 self.search_space_test_one(tuner_factory, single_search_space)
@@ -100,8 +108,9 @@ class TunerTestCase(TestCase):
                 with self.assertRaises(Exception) as cm:
                     self.search_space_test_one(tuner_factory, single_search_space)
                 logger.info("{}, {}, {}".format(tuner_factory, single, cm.exception))
-        logger.info("Full supported search space: {}".format(full_supported_search_space))
-        self.search_space_test_one(tuner_factory, full_supported_search_space)
+        if "batch" not in self._testMethodName:
+            logger.info("Full supported search space: {}".format(full_supported_search_space))
+            self.search_space_test_one(tuner_factory, full_supported_search_space)
 
     def test_grid_search(self):
         self.search_space_test_all(lambda: GridSearchTuner(),
@@ -117,9 +126,38 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: HyperoptTuner("anneal"))
 
     def test_smac(self):
-        # TODO: smac seems not clean and generates a lot of temporary files
         self.search_space_test_all(lambda: SMACTuner("maximize"),
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+
+    def test_batch(self):
+        self.search_space_test_all(lambda: BatchTuner(),
+                                   supported_types=["choice"])
+
+    def test_evolution(self):
+        # Needs enough population size, otherwise it will throw a runtime error
+        self.search_space_test_all(lambda: EvolutionTuner("maximize", population_size=100))
+
+    def test_gp(self):
+        self.search_space_test_all(lambda: GPTuner())
+
+    def test_metis(self):
+        self.search_space_test_all(lambda: MetisTuner(),
+                                   supported_types=["choice", "randint", "uniform", "quniform"])
+
+    def test_networkmorphism(self):
+        pass
+
+    def test_ppo(self):
+        pass
+
+    def tearDown(self):
+        file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
+        for file in file_list:
+            if os.path.exists(file):
+                if os.path.isdir(file):
+                    shutil.rmtree(file)
+                else:
+                    os.remove(file)
 
 
 if __name__ == '__main__':

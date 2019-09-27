@@ -19,6 +19,7 @@ echo ""
 echo "===========================Testing: nni_sdk==========================="
 cd ${CWD}/../src/sdk/pynni/
 python3 -m pip install --user -r nni/smac_tuner/requirements.txt
+python3 -m pip install torch==1.2.0+cpu torchvision==0.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 python3 -m unittest discover -v tests
 
 # -------------For typescript unittest-------------

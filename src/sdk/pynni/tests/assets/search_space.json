@@ -1,7 +1,8 @@
 {
   "choice_str": {
     "_type": "choice",
-    "_value": ["cat","dog", "elephant", "cow", "sheep", "panda"]
+    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"],
+    "fail": ["metis", "gp"]
   },
   "choice_int": {
     "_type": "choice",
@@ -9,13 +10,18 @@
   },
   "choice_mixed": {
     "_type": "choice",
-    "_value": [0.3, "cat", 1, null]
+    "_value": [0.3, "cat", 1, null],
+    "fail": ["metis", "gp"]
   },
   "choice_float": {
     "_type": "choice",
     "_value": [0.3, 1, 2.0]
   },
-  "randint_normal": {
+  "choice_single": {
+    "_type": "choice",
+    "_value": [1]
+  },
+  "randint_ok": {
     "_type": "randint",
     "_value": [-2, 3]
   },
@@ -28,7 +34,7 @@
     "_type": "randint",
     "_value": [0, 0]
   },
-  "uniform_normal": {
+  "uniform_ok": {
     "_type": "uniform",
     "_value": [-1.0, 1.5]
   },
@@ -37,7 +43,7 @@
     "_value": [99.9, 99.9],
     "fail": ["smac"]
   },
-  "quniform_normal": {
+  "quniform_ok": {
     "_type": "quniform",
     "_value": [0.0, 10.0, 2.5]
   },
@@ -49,27 +55,27 @@
     "_type": "quniform",
     "_value": [-5.5, -0.5, 6]
   },
-  "loguniform_normal": {
+  "loguniform_ok": {
     "_type": "loguniform",
     "_value": [0.001, 100]
   },
-  "qloguniform_normal": {
+  "qloguniform_ok": {
     "_type": "qloguniform",
     "_value": [0.001, 100, 1]
   },
-  "normal_normal": {
+  "normal_ok": {
     "_type": "normal",
     "_value": [-1.0, 5.0]
   },
-  "qnormal_normal": {
+  "qnormal_ok": {
     "_type": "qnormal",
     "_value": [-1.5, 5.0, 0.1]
   },
-  "lognormal_normal": {
+  "lognormal_ok": {
     "_type": "lognormal",
     "_value": [-1.0, 5.0]
   },
-  "qlognormal_normal": {
+  "qlognormal_ok": {
     "_type": "qlognormal",
     "_value": [-1.5, 5.0, 0.1]
   }
