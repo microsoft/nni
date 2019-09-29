@@ -306,7 +306,11 @@ class Hyperband(MsgDispatcherBase):
         self.job_id_para_id_map = dict()
 
     def handle_initialize(self, data):
-        """data is search space
+        """callback for initializing the advisor
+        Parameters
+        ----------
+        data: dict
+            search space
         """
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
