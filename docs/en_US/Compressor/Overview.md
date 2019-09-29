@@ -19,15 +19,17 @@ We use a simple example to show how to modify your trial code in order to apply 
 
 Tensorflow code
 ```python
+from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = nni.compression.tensorflow.LevelPruner(config_list)
+pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
 
 PyTorch code
 ```python
+from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = nni.compression.torch.LevelPruner(config_list)
+pruner = LevelPruner(config_list)
 pruner(model)
 ```
 

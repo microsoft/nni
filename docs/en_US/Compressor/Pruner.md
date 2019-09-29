@@ -11,15 +11,17 @@ We first sort the weights in the specified layer by their absolute values. And t
 
 Tensorflow code
 ```
+from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = nni.compression.tensorflow.LevelPruner(config_list)
+pruner = LevelPruner(config_list)
 pruner(model_graph)
 ```
 
 PyTorch code
 ```
+from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = nni.compression.torch.LevelPruner(config_list)
+pruner = LevelPruner(config_list)
 pruner(model)
 ```
 
