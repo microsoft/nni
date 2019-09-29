@@ -22,6 +22,7 @@ import os
 import json
 import numpy as np
 
+
 def get_json_content(file_path):
     """Load json file content
 
@@ -41,6 +42,7 @@ def get_json_content(file_path):
     except TypeError as err:
         print('Error: ', err)
         return None
+
 
 def generate_pcs(nni_search_space_content):
     """Generate the Parameter Configuration Space (PCS) which defines the
@@ -85,7 +87,8 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(list(range(choice_len)))[1:-1],
                                 json.dumps(0)))
                             if key in categorical_dict:
-                                raise RuntimeError('%s has already existed, please make sure search space has no duplicate key.' % key)
+                                raise RuntimeError(
+                                    '%s has already existed, please make sure search space has no duplicate key.' % key)
                             categorical_dict[key] = search_space[key]['_value']
                         elif search_space[key]['_type'] == 'randint':
                             pcs_fd.write('%s integer [%d, %d] [%d]\n' % (
@@ -100,14 +103,14 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
                             # use np.round here to ensure that the rounded defaut value is in the range, which will be rounded in configure_space package
-                            search_space[key]['_value'] = list(np.round(np.log(search_space[key]['_value']), 10))
+                            vals = list(np.round(np.log(search_space[key]['_value']), 10))
                             pcs_fd.write('%s real %s [%s]\n' % (
                                 key,
-                                json.dumps(search_space[key]['_value']),
-                                json.dumps(search_space[key]['_value'][0])))
+                                json.dumps(vals),
+                                json.dumps(vals[0])))
                         elif search_space[key]['_type'] == 'quniform':
                             low, high, q = search_space[key]['_value'][0:3]
-                            vals = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high).tolist()
+                            vals = np.clip(np.arange(np.round(low / q), np.round(high / q) + 1) * q, low, high).tolist()
                             pcs_fd.write('%s ordinal {%s} [%s]\n' % (
                                 key,
                                 json.dumps(vals)[1:-1],
@@ -120,6 +123,7 @@ def generate_pcs(nni_search_space_content):
             raise RuntimeError('incorrect search space.')
         return categorical_dict
     return None
+
 
 def generate_scenario(ss_content):
     """Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and
@@ -203,11 +207,12 @@ def generate_scenario(ss_content):
     """
     with open('scenario.txt', 'w') as sce_fd:
         sce_fd.write('deterministic = 0\n')
-        #sce_fd.write('output_dir = \n')
+        # sce_fd.write('output_dir = \n')
         sce_fd.write('paramfile = param_config_space.pcs\n')
         sce_fd.write('run_obj = quality\n')
 
     return generate_pcs(ss_content)
+
 
 if __name__ == '__main__':
     generate_scenario('search_space.json')

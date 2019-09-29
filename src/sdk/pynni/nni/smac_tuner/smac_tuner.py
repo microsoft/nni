@@ -46,9 +46,9 @@ class SMACTuner(Tuner):
     Parameters
     ----------
     optimize_mode: str
-        optimize mode, 'maximize' or 'minimize'
+        optimize mode, 'maximize' or 'minimize', by default 'maximize'
     """
-    def __init__(self, optimize_mode):
+    def __init__(self, optimize_mode="maximize"):
         """Constructor"""
         self.logger = logging.getLogger(
             self.__module__ + "." + self.__class__.__name__)

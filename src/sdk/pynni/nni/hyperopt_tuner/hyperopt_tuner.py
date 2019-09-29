@@ -198,7 +198,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode='minimize', 
+    def __init__(self, algorithm_name, optimize_mode='maximize',
                  parallel_optimize=False, constant_liar_type='min'):
         """
         Parameters
@@ -206,7 +206,8 @@ class HyperoptTuner(Tuner):
         algorithm_name : str
             algorithm_name includes "tpe", "random_search" and anneal".
         optimize_mode : str
-        parallel_optimize : bool 
+            "maximize" or "minimize". By default "maximize".
+        parallel_optimize : bool
             More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
         constant_liar_type : str
             constant_liar_type including "min", "max" and "mean"

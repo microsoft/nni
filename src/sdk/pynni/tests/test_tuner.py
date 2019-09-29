@@ -53,7 +53,8 @@ class TunerTestCase(TestCase):
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
-        tuner.update_search_space(copy.deepcopy(search_space))  # TODO: why does update search space change dict?
+        tuner.update_search_space(search_space)
+
         parameters = tuner.generate_multiple_parameters(list(range(0, 50)))
         logger.info(parameters)
         if not parameters:  # TODO: not strict
@@ -125,7 +126,7 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: HyperoptTuner("anneal"))
 
     def test_smac(self):
-        self.search_space_test_all(lambda: SMACTuner("maximize"),
+        self.search_space_test_all(lambda: SMACTuner(),
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
     def test_batch(self):
@@ -134,7 +135,7 @@ class TunerTestCase(TestCase):
 
     def test_evolution(self):
         # Needs enough population size, otherwise it will throw a runtime error
-        self.search_space_test_all(lambda: EvolutionTuner("maximize", population_size=100))
+        self.search_space_test_all(lambda: EvolutionTuner(population_size=100))
 
     def test_gp(self):
         self.search_space_test_all(lambda: GPTuner())
