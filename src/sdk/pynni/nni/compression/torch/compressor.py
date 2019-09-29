@@ -12,7 +12,6 @@ class LayerInfo:
         self.type = type(module).__name__
 
         self._forward = None
-        self._backup_weight = None
 
 
 class Compressor:
@@ -69,12 +68,12 @@ class Compressor:
     def _select_config(self, layer):
         ret = None
         for config in self._config_list:
-            op_type = config.get('op_type')
-            if op_type == 'default':
-                op_type = default_layers.weighted_modules
-            if op_type and layer.type not in op_type:
+            op_types = config.get('op_types')
+            if op_types == 'default':
+                op_types = default_layers.weighted_modules
+            if op_types and layer.type not in op_types:
                 continue
-            if config.get('op_name') and layer.name not in config['op_name']:
+            if config.get('op_names') and layer.name not in config['op_names']:
                 continue
             ret = config
         if ret is None or ret.get('exclude'):
@@ -89,7 +88,7 @@ class Pruner(Compressor):
     def __init__(self, config_list):
         super().__init__(config_list)
 
-    def calc_mask(self, layer, weight, config):
+    def calc_mask(self, weight, config, op, op_type, op_name):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -110,13 +109,13 @@ class Pruner(Compressor):
 
         def new_forward(*input):
             # apply mask to weight
-            mask = self.calc_mask(layer, layer.module.weight.data, config)
-            layer._backup_weight = layer.module.weight.data
-            layer.module.weight.data = layer.module.weight.data.mul(mask)
+            old_weight = layer.module.weight.data
+            mask = self.calc_mask(old_weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            layer.module.weight.data = old_weight.mul(mask)
             # calculate forward
             ret = layer._forward(*input)
             # recover original weight
-            layer.module.weight.data = layer._backup_weight
+            layer.module.weight.data = old_weight
             return ret
 
         layer.module.forward = new_forward
@@ -133,7 +132,7 @@ class Quantizer(Compressor):
         self.compress(model)
         return model
     
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         user should know where dequantize goes and implement it in quantize method
         we now do not provide dequantize method
@@ -148,7 +147,9 @@ class Quantizer(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*input):
-            layer.module.weight.data = self.quantize_weight(layer, layer.module.weight.data, config)
+            weight = layer.module.weight.data
+            new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            layer.module.weight.data = new_weight
             return layer._forward(*input)
 
         layer.module.forward = new_forward

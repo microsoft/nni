@@ -73,12 +73,12 @@ class Compressor:
     def _select_config(self, layer):
         ret = None
         for config in self._config_list:
-            op_type = config.get('op_type')
-            if op_type == 'default':
-                op_type = default_layers.op_weight_index.keys()
-            if op_type and layer.type not in op_type:
+            op_types = config.get('op_types')
+            if op_types == 'default':
+                op_types = default_layers.op_weight_index.keys()
+            if op_types and layer.type not in op_types:
                 continue
-            if config.get('op_name') and layer.name not in config['op_name']:
+            if config.get('op_names') and layer.name not in config['op_names']:
                 continue
             ret = config
         if ret is None or ret.get('exclude'):
@@ -93,7 +93,7 @@ class Pruner(Compressor):
     def __init__(self, config_list):
         super().__init__(config_list)
 
-    def calc_mask(self, layer, weight, config):
+    def calc_mask(self, weight, config, op, op_type, op_name):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -116,7 +116,7 @@ class Pruner(Compressor):
             return
         weight_op = layer.op.inputs[weight_index].op
         weight = weight_op.inputs[0]
-        mask = self.calc_mask(layer, weight, config)
+        mask = self.calc_mask(weight, config, op=layer.op, op_type=layer.type, op_name=layer.name)
         new_weight = weight * mask
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
 
@@ -128,7 +128,7 @@ class Quantizer(Compressor):
     def __init__(self, config_list):
         super().__init__(config_list)
 
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, op, op_type, op_name):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
     def _instrument_layer(self, layer, config):
@@ -137,7 +137,8 @@ class Quantizer(Compressor):
             _logger.warning('Failed to detect weight for layer {}'.format(layer.name))
             return
         weight_op = layer.op.inputs[weight_index].op
-        new_weight = self.quantize_weight(layer, weight_op.inputs[0], config)
+        weight = weight_op.inputs[0]
+        new_weight = self.quantize_weight(weight, config, op=layer.op, op_type=layer.type, op_name=layer.name)
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
 
 

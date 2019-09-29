@@ -28,7 +28,7 @@ class LevelPruner(Pruner):
         """
         super().__init__(config_list)
 
-    def calc_weight(self, layer, weight, config):
+    def calc_mask(self, weight, config, **kwargs):
         w_abs = weight.abs()
         k = int(weight.numel() * config['sparsity'])
         if k == 0:
@@ -60,8 +60,8 @@ class AGP_Pruner(Pruner):
         self.mask_list = {}
         self.now_epoch = 1
 
-    def calc_mask(self, layer, weight, config):
-        mask = self.mask_list.get(layer.name, torch.ones(weight.shape))
+    def calc_mask(self, weight, config, op_name, **kwargs):
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
@@ -70,7 +70,7 @@ class AGP_Pruner(Pruner):
         w_abs = weight.abs()*mask
         threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
-        self.mask_list[layer.name] = new_mask
+        self.mask_list[op_name] = new_mask
         return new_mask
 
     def compute_target_sparsity(self, config):
@@ -115,8 +115,8 @@ class SensitivityPruner(Pruner):
         self.mask_list = {}
     
    
-    def calc_weight(self, layer, weight, config):
-        mask = self.mask_list.get(layer.name, torch.ones(weight.shape))
+    def calc_mask(self, weight, config, op_name, **kwargs):
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
         # if we want to generate new mask, we should update weigth first 
         weight = weight*mask
         target_sparsity = config['sparsity'] * torch.std(weight).item()
@@ -127,5 +127,5 @@ class SensitivityPruner(Pruner):
         w_abs = weight.abs()
         threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
-        self.mask_list[layer.name] = new_mask
+        self.mask_list[op_name] = new_mask
         return new_mask

@@ -15,10 +15,10 @@ class NaiveQuantizer(Quantizer):
         super().__init__(config_list)
         self.layer_scale = { }
 
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, op_name, **kwargs):
         new_scale = tf.reduce_max(tf.abs(weight)) / 127
-        scale = tf.maximum(self.layer_scale.get(layer.name, tf.constant(0.0)), new_scale)
-        self.layer_scale[layer.name] = scale
+        scale = tf.maximum(self.layer_scale.get(op_name, tf.constant(0.0)), new_scale)
+        self.layer_scale[op_name] = scale
         orig_type = weight.dtype
         return tf.cast(tf.cast(weight / scale, tf.int8), orig_type) * scale
 
@@ -36,7 +36,7 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(config_list)
         
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, **kwargs):
         a = tf.stop_gradient(tf.reduce_min(weight))
         b = tf.stop_gradient(tf.reduce_max(weight))
         n = tf.cast(2 ** config['q_bits'], tf.float32)
@@ -62,7 +62,7 @@ class DoReFaQuantizer(Quantizer):
         """
         super().__init__(config_list)
         
-    def quantize_weight(self, layer, weight, config):
+    def quantize_weight(self, weight, config, **kwargs):
         a = tf.math.tanh(weight)
         b = a/(2*tf.reduce_max(tf.abs(weight))) + 0.5
 
