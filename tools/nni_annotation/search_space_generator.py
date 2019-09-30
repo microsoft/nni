@@ -64,7 +64,6 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             'optional_input_size': args[6].n if isinstance(args[6], ast.Num) else [args[6].elts[0].n, args[6].elts[1].n]
         }
 
-
     def visit_Call(self, node):  # pylint: disable=invalid-name
         self.generic_visit(node)
 
@@ -108,7 +107,7 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         else:
             # arguments of other functions must be literal number
             assert all(isinstance(ast.literal_eval(astor.to_source(arg)), numbers.Real) for arg in node.args), \
-            'Smart parameter\'s arguments must be number literals'
+                'Smart parameter\'s arguments must be number literals'
             args = [ast.literal_eval(astor.to_source(arg)) for arg in node.args]
 
         key = self.module_name + '/' + name + '/' + func
