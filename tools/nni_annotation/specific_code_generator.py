@@ -28,6 +28,7 @@ from nni_cmd.common_utils import print_warning
 para_cfg = None
 prefix_name = None
 
+
 def parse_annotation_mutable_layers(code, lineno):
     """Parse the string of mutable layers in annotation.
     Return a list of AST Expr nodes
@@ -101,6 +102,7 @@ def parse_annotation_mutable_layers(code, lineno):
         node = ast.Assign(targets=[layer_output], value=func_call)
         nodes.append(node)
     return nodes
+
 
 def parse_annotation(code):
     """Parse an annotation string.
@@ -182,7 +184,7 @@ def convert_args_to_dict(call, with_lambda=False):
         if type(arg) in [ast.Str, ast.Num]:
             arg_value = arg
         else:
-        # if arg is not a string or a number, we use its source code as the key
+            # if arg is not a string or a number, we use its source code as the key
             arg_value = astor.to_source(arg).strip('\n"')
             arg_value = ast.Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
@@ -217,7 +219,7 @@ def test_variable_equal(node1, node2):
         if len(node1) != len(node2):
             return False
         return all(test_variable_equal(n1, n2) for n1, n2 in zip(node1, node2))
-    
+
     return node1 == node2
 
 
@@ -294,7 +296,6 @@ class Transformer(ast.NodeTransformer):
 
         return self._visit_children(node)
 
-
     def _visit_string(self, node):
         string = node.value.s
         if string.startswith('@nni.'):
@@ -303,19 +304,27 @@ class Transformer(ast.NodeTransformer):
             return node  # not an annotation, ignore it
 
         if string.startswith('@nni.get_next_parameter'):
-            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
+            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. " \
+                                 "Please remove this line in the trial code."
             print_warning(deprecated_message)
-            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()), args=[ast.Str(s='Get next parameter here...')], keywords=[]))
+            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
+                                           args=[ast.Str(s='Get next parameter here...')], keywords=[]))
+
+        if string.startswith('@nni.training_update'):
+            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
+                                           args=[ast.Str(s='Training update here...')], keywords=[]))
 
         if string.startswith('@nni.report_intermediate_result'):
             module = ast.parse(string[1:])
             arg = module.body[0].value.args[0]
-            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()), args=[ast.Str(s='nni.report_intermediate_result: '), arg], keywords=[]))
+            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
+                                           args=[ast.Str(s='nni.report_intermediate_result: '), arg], keywords=[]))
 
         if string.startswith('@nni.report_final_result'):
             module = ast.parse(string[1:])
             arg = module.body[0].value.args[0]
-            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()), args=[ast.Str(s='nni.report_final_result: '), arg], keywords=[]))
+            return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
+                                           args=[ast.Str(s='nni.report_final_result: '), arg], keywords=[]))
 
         if string.startswith('@nni.mutable_layers'):
             return parse_annotation_mutable_layers(string[1:], node.lineno)
@@ -326,7 +335,6 @@ class Transformer(ast.NodeTransformer):
             return None
 
         raise AssertionError('Unexpected annotation function')
-
 
     def _visit_children(self, node):
         self.stack.append(None)
