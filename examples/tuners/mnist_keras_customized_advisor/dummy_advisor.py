@@ -29,7 +29,9 @@ logger = logging.getLogger('customized_advisor')
 
 
 class DummyAdvisor(MsgDispatcherBase):
-    """This advisor creates a new trial when validation accuracy of any one of the trials just dropped.
+    """WARNING: Advisor API is highly likely to change in future releases.
+
+    This advisor creates a new trial when validation accuracy of any one of the trials just dropped.
     The trial is killed if the validation accuracy doesn't improve for at least k last-reported metrics.
     To demonstrate the high flexibility of writing advisors, we don't use tuners or the standard definition of
     search space. This is just a demo to customize an advisor. It's not intended to make any sense.
