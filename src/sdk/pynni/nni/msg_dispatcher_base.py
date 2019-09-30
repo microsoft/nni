@@ -182,8 +182,8 @@ class MsgDispatcherBase(Recoverable):
 
     def handle_request_trial_jobs(self, data):
         """The message dispatcher is demanded to generate `data` trial jobs.
-        These trials jobs should be sent via `send(CommandType.NewTrialJob, json_tricks.dumps(parameter)`,
-        where `parameter` will arrive at NNI Manager and eventually received by trial jobs as "next parameter".
+        These trial jobs should be sent via `send(CommandType.NewTrialJob, json_tricks.dumps(parameter))`,
+        where `parameter` will be received by NNI Manager and eventually accessible to trial jobs as "next parameter".
         Semantically, message dispatcher should do this `send` exactly `data` times.
 
         The JSON sent by this method should follow the format of
@@ -199,13 +199,12 @@ class MsgDispatcherBase(Recoverable):
         data: int
             number of trial jobs
         """
-        # TODO: can someone check this "semantically"?
         raise NotImplementedError('handle_request_trial_jobs not implemented')
 
     def handle_update_search_space(self, data):
         """This method will be called when search space is updated.
         It's recommended to call this method in `handle_initialize` to initialize search space.
-        Message dispatcher is not responsible for notifying NNI manager that this update is done.
+        *No need to* notify NNI Manager when this update is done.
         Parameters
         ----------
         data: dict
@@ -223,7 +222,8 @@ class MsgDispatcherBase(Recoverable):
         raise NotImplementedError('handle_import_data not implemented')
 
     def handle_add_customized_trial(self, data):
-        # TODO: needs to justify this format to data
+        """Experimental API. Not recommended for usage.
+        """
         raise NotImplementedError('handle_add_customized_trial not implemented')
 
     def handle_report_metric_data(self, data):
