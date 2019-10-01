@@ -147,11 +147,13 @@ tuner:
 
 **Installation**
 
-SMAC need to be installed by following command before first use.
+SMAC need to be installed by following command before first use. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
 
 ```bash
 nnictl package install --name=SMAC
 ```
+
+**Known limitations:** Currently, the tuner has only been tested and working on Ubuntu.
 
 **Suggested scenario**
 

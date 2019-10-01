@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 from unittest import TestCase, main
 
 from nni.batch_tuner import BatchTuner
@@ -126,8 +127,12 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: HyperoptTuner("anneal"))
 
     def test_smac(self):
-        self.search_space_test_all(lambda: SMACTuner(),
-                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+        if sys.platform == "darwin":
+            # only check initialization here
+            SMACTuner()  # FIXME: Known issue. SMAC running on macOS will throw segmentation fault.
+        else:
+            self.search_space_test_all(lambda: SMACTuner(),
+                                       supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
     def test_batch(self):
         self.search_space_test_all(lambda: BatchTuner(),
