@@ -111,7 +111,7 @@ nnictl 支持的命令：
 
 * 说明
   
-  You can use this command to view a stopped experiment.
+  使用此命令查看已停止的 Experiment。
 
 * 用法
   
@@ -121,14 +121,14 @@ nnictl 支持的命令：
 
 * 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                                           |
-  | ---------- | ----- | --- | -------------------------------------------- |
-  | id         | True  |     | The id of the experiment you want to view    |
-  | --port, -p | False |     | Rest port of the experiment you want to view |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | True  |     | 要查看的 Experiment 标识               |
+  | --port, -p | False |     | 要查看的 Experiment 使用的 RESTful 服务端口 |
 
-* Example
+* 示例
   
-  > view an experiment with specified port 8088
+  > 在指定的端口 8088 上查看 Experiment
   
   ```bash
   nnictl view [experiment_id] --port 8088
@@ -137,58 +137,58 @@ nnictl 支持的命令：
 <a name="stop"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
 
-* Description
+* 说明
   
-  You can use this command to stop a running experiment or multiple experiments.
+  使用此命令来停止正在运行的单个或多个 Experiment。
 
-* Usage
+* 用法
   
   ```bash
   nnictl stop [Options]
   ```
 
-* Options
+* 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                                           |
-  | ---------- | ----- | --- | -------------------------------------------- |
-  | id         | False |     | The id of the experiment you want to stop    |
-  | --port, -p | False |     | Rest port of the experiment you want to stop |
-  | --all, -a  | False |     | Stop all of experiments                      |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | False |     | 要停止的 Experiment 标识               |
+  | --port, -p | False |     | 要停止的 Experiment 使用的 RESTful 服务端口 |
+  | --all, -a  | False |     | 停止所有 Experiment                  |
 
-* Details & Examples
+* 详细信息及示例
   
-  1. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+  1. 如果没有指定 id，并且当前有运行的 Experiment，则会停止该 Experiment，否则会输出错误信息。
     
         ```bash
         nnictl stop
         ```
         
   
-  2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+  2. 如果指定了 id，并且此 id 匹配正在运行的 Experiment，nnictl 会停止相应的 Experiment，否则会输出错误信息。
     
         ```bash
         nnictl stop [experiment_id]
         ```
         
   
-  3. If there is a port specified, and an experiment is running on that port, the experiment will be stopped.
+  3. 如果指定了端口，并且此端口有正在运行的 Experiment，则会停止此 Experiment。
     
         ```bash
         nnictl stop --port 8080
         ```
         
   
-  4. Users could use 'nnictl stop --all' to stop all experiments.
+  4. 可使用 'nnictl stop --all' 来停止所有的 Experiment。
     
         ```bash
         nnictl stop --all
         ```
         
   
-  5. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+  5. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
   
-  6. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-  7. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+  6. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
+  7. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
 
 <a name="update"></a>
 
@@ -198,7 +198,7 @@ nnictl 支持的命令：
   
   * 说明
     
-    You can use this command to update an experiment's search space.
+    可以用此命令来更新 Experiment 的搜索空间。
   
   * 用法
     
@@ -208,14 +208,14 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写          | 是否必需  | 默认值 | 说明                                     |
-  | -------------- | ----- | --- | -------------------------------------- |
-  | id             | False |     | 需要设置的 Experiment 的 id                  |
-  | --filename, -f | True  |     | the file storing your new search space |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                    |
+  | -------------- | ----- | --- | --------------------- |
+  | id             | False |     | 需要设置的 Experiment 的 id |
+  | --filename, -f | True  |     | 新的搜索空间文件名             |
   
-  * Example
+  * 示例
     
-    `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+    `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
     nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
