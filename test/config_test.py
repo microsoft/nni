@@ -72,7 +72,7 @@ def run_test(config_file, training_service, local_gpu=False):
         for _ in range(0, max_duration+30, sleep_interval):
             time.sleep(sleep_interval)
             status = get_experiment_status(STATUS_URL)
-            if status == 'DONE':
+            if status in ['DONE', 'TUNER_NO_MORE_TRIAL']:
                 num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
                 if training_service == 'local':
                     print_stderr(TRIAL_JOBS_URL)
