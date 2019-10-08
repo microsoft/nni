@@ -2,12 +2,10 @@
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 `nnictl` 命令。 配置文件的格式为 YAML。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-- [Experiment（实验）配置参考](#Experiment-config-reference) 
-  - [模板](#Template)
-  - [说明](#Configuration-spec)
-  - [样例](#Examples)
-
-<a name="Template"></a>
+- [Experiment（实验）配置参考](#experiment-config-reference) 
+  - [模板](#template)
+  - [说明](#configuration-spec)
+  - [样例](#examples)
 
 ## 模板
 
@@ -131,8 +129,6 @@ machineList:
     username: 
     passwd:
 ```
-
-<a name="Configuration"></a>
 
 ## 说明
 
@@ -356,28 +352,28 @@ machineList:
     
     - **codeDir**
       
-      **codeDir** specifies the directory of advisor code.
+      **codeDir** 指定 Advisor 代码的目录。
     
     - **classFileName**
       
-      **classFileName** specifies the name of advisor file.
+      **classFileName** 指定 Advisor 文件名。
     
     - **className**
       
-      **className** specifies the name of advisor class.
+      **className** 指定 Advisor 类名。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of advisor algorithm.
+      **classArgs** 指定了 Advisor 算法的参数。
   
   - **gpuIndices**
     
-        __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+        __gpuIndices__ 指定了 Advisor 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
         
   
-  Note: users could only use one way to specify advisor, either specifying `builtinAdvisorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+  注意：用户只能用一种方法来指定 Advisor ，指定 `builtinAdvisorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
 
-- **trial(local, remote)**
+- **trial (local, remote)**
   
   - **command**
     
@@ -385,41 +381,41 @@ machineList:
   
   - **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   - **gpuNum**
     
     **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
-- **trial(pai)**
+- **trial (pai)**
   
   - **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   - **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   - **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
   
   - **cpuNum**
     
-    **cpuNum** is the cpu number of cpu to be used in pai container.
+    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
   
   - **memoryMB**
     
-    **memoryMB** set the momory size to be used in pai's container.
+    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
   
   - **image**
     
-    **image** set the image to be used in pai.
+    **image** 指定了 OpenPAI 中使用的 docker 映像。
   
   - **dataDir**
     
-    **dataDir** is the data directory in hdfs to be used.
+    **dataDir** 是 HDFS 中用到的数据目录变量。
   
   - **outputDir**
     
@@ -604,8 +600,6 @@ machineList:
   - **host**
     
     **host** is the host of pai.
-
-<a name="Examples"></a>
 
 ## 样例
 
