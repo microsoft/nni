@@ -79,7 +79,7 @@ class MedianstopAssessor(Assessor):
                     self.completed_avg_history[trial_job_id].append(history_sum / cnt)
             self.running_history.pop(trial_job_id)
         else:
-            logger.warning('trial_end: trial_job_id does not in running_history')
+            logger.warning('trial_end: trial_job_id does not exist in running_history')
 
     def assess_trial(self, trial_job_id, trial_history):
         """assess_trial
@@ -112,7 +112,7 @@ class MedianstopAssessor(Assessor):
             logger.exception(error)
         except Exception as error:
             logger.warning('unrecognized exception in medianstop_assessor:')
-            logger.excpetion(error)
+            logger.exception(error)
 
         self._update_data(trial_job_id, num_trial_history)
         if self.high_better:

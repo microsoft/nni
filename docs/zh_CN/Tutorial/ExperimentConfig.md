@@ -2,12 +2,10 @@
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 `nnictl` 命令。 配置文件的格式为 YAML。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-- [Experiment（实验）配置参考](#Experiment-config-reference) 
-  - [模板](#Template)
-  - [说明](#Configuration-spec)
-  - [样例](#Examples)
-
-<a name="Template"></a>
+- [Experiment（实验）配置参考](#experiment-config-reference) 
+  - [模板](#template)
+  - [说明](#configuration-spec)
+  - [样例](#examples)
 
 ## 模板
 
@@ -19,27 +17,27 @@ experimentName:
 trialConcurrency:
 maxExecDuration:
 maxTrialNum:
-#可选项: local, remote, pai, kubeflow
+# 选项: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#可选项: true, false, 默认值: false
+# 选项: true, false, default: false
 useAnnotation:
-#可选项: true, false, 默认值: false
+# 选项: true, false, default: false
 multiPhase:
-#可选项: true, false, 默认值: false
+# 选项: true, false, default: false
 multiThread:
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution
+  # 选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #可选项: maximize, minimize
+    # 选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuIndices:
 trial:
   command:
   codeDir:
   gpuNum:
-#在本地使用时，machineList 可为空
+# 在本机模式下，machineList 可为空
 machineList:
   - ip:
     port:
@@ -70,18 +68,18 @@ tuner:
   classArgs:
     #可选项: maximize, minimize
     optimize_mode:
-  gpuNum: 
+  gpuIndices: 
 assessor:
   #可选项: Medianstop
   builtinAssessorName:
   classArgs:
     #可选项: maximize, minimize
     optimize_mode:
-  gpuNum: 
+  gpuIndices: 
 trial:
   command: 
   codeDir: 
-  gpuNum: 
+  gpuIndices: 
 #在本地使用时，machineList 可为空
 machineList:
   - ip: 
@@ -112,18 +110,18 @@ tuner:
   classArgs:
     #可选项: maximize, minimize
     optimize_mode:
-  gpuNum: 
+  gpuIndices: 
 assessor:
   #可选项: Medianstop
   builtinAssessorName:
   classArgs:
     #可选项: maximize, minimize
     optimize_mode:
-  gpuNum: 
+  gpuIndices: 
 trial:
   command: 
   codeDir: 
-  gpuNum: 
+  gpuIndices: 
 #在本地使用时，machineList 可为空
 machineList:
   - ip: 
@@ -131,8 +129,6 @@ machineList:
     username: 
     passwd:
 ```
-
-<a name="Configuration"></a>
 
 ## 说明
 
@@ -264,11 +260,11 @@ machineList:
     
     - **builtinTunerName**
       
-      **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
+      **builtinTunerName** 指定系统 Tuner 的名称，NNI SDK 提供了多个内置 Tuner，详情参考[这里](../Tuner/BuiltinTuner.md)。
     
     - **classArgs**
       
-      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
+      **classArgs** 指定了 Tuner 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Tuner 的配置参数。
   
   - **codeDir**, **classFileName**, **className** 和 **classArgs**
     
@@ -288,17 +284,17 @@ machineList:
       
       **classArgs** 指定了 Tuner 算法的参数。
   
-  - **gpuNum**
+  - **gpuIndices**
     
-        __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。 如果此字段没有设置，NNI不会在脚本中添加 `CUDA_VISIBLE_DEVICES` （也就是说，不会通过 `CUDA_VISIBLE_DEVICES` 来控制 GPU 在 Trial 中是否可见），也不会管理 GPU 资源。
-        
-        注意: 只能使用一种方法来指定 Tuner，例如：设置 {tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置两者。
+        __gpuIndices__ 指定了 Tuner 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
         
   
   - **includeIntermediateResults**
     
         如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
+  
+  注意：用户只能用一种方法来指定 Tuner，指定 `builtinTunerName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
 
 - **Assessor**
   
@@ -310,7 +306,7 @@ machineList:
     
     - **builtinAssessorName**
       
-      **builtinAssessorName** 指定了系统 Assessor 的名称， NNI 内置的 Assessor 有 {**Medianstop**，等等}。
+      **builtinAssessorName** 指定了内置 Assessor 的名称，NNI SDK 提供了多个内置的 Assessor，详情参考[这里](../Assessor/BuiltinAssessor.md)。
     
     - **classArgs**
       
@@ -334,11 +330,48 @@ machineList:
       
       **classArgs** 指定了 Assessor 算法的参数。
   
-  - **gpuNum**
+  注意：用户只能用一种方法来指定 Assessor，指定 `builtinAssessorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。 如果不需要使用 Assessor，此字段可为空。
+
+- **Advisor**
+  
+  - 说明
     
-    **gpuNum** 指定了运行 Assessor 进程的 GPU 数量。 此字段的值必须是正整数。
+    **Advisor** 指定了 Experiment 的 Advisor 算法。有两种方法可设置 Advisor。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+  
+  - **builtinAdvisorName** 和 **classArgs**
     
-    注意: 只能使用一种方法来指定 Assessor，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用 Assessor，可将其置为空。
+    - **builtinAdvisorName**
+      
+      **builtinAdvisorName** 指定了内置 Advisor 的名称，NNI SDK 提供了多个[内置的 Advisor](../Tuner/BuiltinTuner.md)。
+    
+    - **classArgs**
+      
+      **classArgs** 指定了 Advisor 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Advisor 的配置参数。
+  
+  - **codeDir**, **classFileName**, **className** 和 **classArgs**
+    
+    - **codeDir**
+      
+      **codeDir** 指定 Advisor 代码的目录。
+    
+    - **classFileName**
+      
+      **classFileName** 指定 Advisor 文件名。
+    
+    - **className**
+      
+      **className** 指定 Advisor 类名。
+    
+    - **classArgs**
+      
+      **classArgs** 指定了 Advisor 算法的参数。
+  
+  - **gpuIndices**
+    
+        __gpuIndices__ 指定了 Advisor 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
+        
+  
+  注意：用户只能用一种方法来指定 Advisor ，指定 `builtinAdvisorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
 
 - **trial (local, remote)**
   
@@ -568,8 +601,6 @@ machineList:
     
     **host** 是 OpenPAI 的主机地址。
 
-<a name="Examples"></a>
-
 ## 样例
 
 - **本机模式**
@@ -577,6 +608,7 @@ machineList:
   如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -592,16 +624,17 @@ machineList:
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
   ```
+  ```
   
   增加 Assessor 配置
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -618,23 +651,23 @@ machineList:
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   assessor:
     #可选项: Medianstop
     builtinAssessorName: Medianstop
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
   ```
+  ```
   
   或者可以指定自定义的 Tuner 和 Assessor：
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -652,7 +685,6 @@ machineList:
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   assessor:
     codeDir: /nni/assessor
     classFileName: myassessor.py
@@ -660,11 +692,11 @@ machineList:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
+  ```
   ```
 
 - **远程模式**
@@ -688,7 +720,6 @@ machineList:
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
@@ -813,7 +844,6 @@ machineList:
     builtinAssessorName: Medianstop
     classArgs:
       optimize_mode: maximize
-    gpuNum: 0
   trial:
     codeDir: .
     worker:
