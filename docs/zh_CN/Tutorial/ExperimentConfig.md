@@ -608,25 +608,27 @@ machineList:
   如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: true
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
+  ```
   ```
   
   增加 Assessor 配置
@@ -826,17 +828,17 @@ machineList:
   trialConcurrency: 1
   maxExecDuration: 1h
   maxTrialNum: 1
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: kubeflow
   searchSpacePath: search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   #nniManagerIp: 10.10.10.10
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   assessor:
     builtinAssessorName: Medianstop
