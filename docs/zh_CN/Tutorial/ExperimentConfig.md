@@ -19,27 +19,27 @@ experimentName:
 trialConcurrency:
 maxExecDuration:
 maxTrialNum:
-#choice: local, remote, pai, kubeflow
+# 选项: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false, default: false
+# 选项: true, false, default: false
 useAnnotation:
-#choice: true, false, default: false
+# 选项: true, false, default: false
 multiPhase:
-#choice: true, false, default: false
+# 选项: true, false, default: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  # 选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    # 选项: maximize, minimize
     optimize_mode:
   gpuIndices:
 trial:
   command:
   codeDir:
   gpuNum:
-#machineList can be empty if the platform is local
+# 在本机模式下，machineList 可为空
 machineList:
   - ip:
     port:
@@ -50,83 +50,85 @@ machineList:
 - **使用 Assessor**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-searchSpacePath:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiPhase:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuIndices:
+  gpuIndices: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
+  gpuIndices: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuIndices: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
 - **使用 Annotation**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiPhase:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuIndices:
+  gpuIndices: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
+  gpuIndices: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuIndices: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
