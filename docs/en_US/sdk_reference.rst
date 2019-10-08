@@ -50,6 +50,9 @@ Assessor
 
 Advisor
 ------------------------
+..  autoclass:: nni.msg_dispatcher_base.MsgDispatcherBase
+    :members:
+
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
     :members:
 
