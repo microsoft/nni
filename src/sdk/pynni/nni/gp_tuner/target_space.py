@@ -55,6 +55,14 @@ class TargetSpace():
             [item[1] for item in sorted(pbounds.items(), key=lambda x: x[0])]
         )
 
+        # check values type
+        for _bound in self._bounds:
+            if _bound['_type'] == 'choice':
+                try:
+                    [float(val) for val in _bound['_value']]
+                except ValueError:
+                    raise ValueError("GP Tuner supports only numerical values")
+
         # preallocated memory for X and Y points
         self._params = np.empty(shape=(0, self.dim))
         self._target = np.empty(shape=(0))

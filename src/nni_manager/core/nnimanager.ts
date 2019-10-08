@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
@@ -59,9 +59,10 @@ class NNIManager implements Manager {
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
+    private readonly: boolean;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
-    
+
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
@@ -72,6 +73,7 @@ class NNIManager implements Manager {
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
         this.trialDataForTuner = '';
+        this.readonly = false;
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -88,6 +90,9 @@ class NNIManager implements Manager {
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
+        if (this.readonly) {
+            return Promise.reject(new Error('Error: can not update experiment profile in readonly mode!'));
+        }
         switch (updateType) {
             case 'TRIAL_CONCURRENCY':
                 this.updateTrialConcurrency(experimentProfile.params.trialConcurrency);
@@ -109,6 +114,9 @@ class NNIManager implements Manager {
     }
 
     public importData(data: string): Promise<void> {
+        if (this.readonly) {
+            return Promise.reject(new Error('Error: can not import data in readonly mode!'));
+        }
         if (this.dispatcher === undefined) {
             return Promise.reject(
                 new Error('tuner has not been setup')
@@ -124,6 +132,9 @@ class NNIManager implements Manager {
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
+        if (this.readonly) {
+            return Promise.reject(new Error('Error: can not add customized trial job in readonly mode!'));
+        }
         if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
             return Promise.reject(
                 new Error('reach maxTrialNum')
@@ -136,6 +147,9 @@ class NNIManager implements Manager {
     }
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
+        if (this.readonly) {
+            return Promise.reject(new Error('Error: can not cancel trial job in readonly mode!'));
+        }
         this.log.info(`User cancelTrialJob: ${trialJobId}`);
         await this.trainingService.cancelTrialJob(trialJobId);
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
@@ -180,14 +194,16 @@ class NNIManager implements Manager {
         return this.experimentProfile.id;
     }
 
-    public async resumeExperiment(): Promise<void> {
+    public async resumeExperiment(readonly: boolean): Promise<void> {
         this.log.info(`Resuming experiment: ${this.experimentProfile.id}`);
         //Fetch back the experiment profile
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
+        this.readonly = readonly;
+        if (readonly) {
+            return Promise.resolve();
+        }
         const expParams: ExperimentParams = this.experimentProfile.params;
-
-        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
@@ -196,7 +212,7 @@ class NNIManager implements Manager {
 
         // Set up versionCheck config
         if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
+            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
@@ -247,6 +263,9 @@ class NNIManager implements Manager {
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
+        if (this.readonly) {
+            return Promise.reject(new Error('Error: can not set cluster metadata in readonly mode!'));
+        }
         this.log.info(`NNIManager setClusterMetadata, key: ${key}, value: ${value}`);
         let timeoutId: NodeJS.Timer;
         // TO DO: move timeout value to constants file
@@ -279,6 +298,37 @@ class NNIManager implements Manager {
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         return this.dataStore.getMetricData(trialJobId, metricType);
+    }
+
+    public async getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]> {
+        const trialJobs = await this.dataStore.listTrialJobs();
+        const targetTrials = trialJobs.filter(trial => (
+            // FIXME: can this be undefined?
+            trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
+        ));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+
+        const allMetrics = await this.dataStore.getMetricData();
+        return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
+    }
+
+    public async getLatestMetricData(): Promise<MetricDataRecord[]> {
+        // FIXME: this can take a long time
+        const allMetrics: MetricDataRecord[] = await this.dataStore.getMetricData();
+        const finals: MetricDataRecord[] = [];
+        const latestIntermediates: Map<string, MetricDataRecord> = new Map<string, MetricDataRecord>();
+        for (const metric of allMetrics) {
+            if (metric.type !== 'PERIODICAL') {
+                finals.push(metric);
+            } else {
+                const old: MetricDataRecord | undefined = latestIntermediates.get(metric.trialJobId);
+                if (old === undefined || old.sequence <= metric.sequence) {
+                    latestIntermediates.set(metric.trialJobId, metric);
+                }
+            }
+        }
+        return finals.concat(Array.from(latestIntermediates.values()));
+        // FIXME: unit test
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {
@@ -363,7 +413,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
-        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener); 
+        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
         this.dispatcher.sendCommand(TERMINATE);
         let tunerAlive: boolean = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -436,11 +486,7 @@ class NNIManager implements Manager {
                 case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -453,11 +499,7 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    if (trialJobDetail.form.jobType === 'TRIAL') {
-                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
-                    } else {
-                        throw new Error('Error: jobType error, not TRIAL');
-                    }
+                    hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
@@ -556,7 +598,7 @@ class NNIManager implements Manager {
                     }
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
-                        jobType: 'TRIAL',
+                        sequenceId: this.experimentProfile.nextSequenceId++,
                         hyperParameters: {
                             value: hyperParams,
                             index: 0
@@ -564,7 +606,7 @@ class NNIManager implements Manager {
                     };
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
-                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
+                    await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
@@ -683,7 +725,7 @@ class NNIManager implements Manager {
                 assert(tunerCommand.trial_job_id !== undefined);
 
                 const trialJobForm: TrialJobApplicationForm = {
-                    jobType: 'TRIAL',
+                    sequenceId: -1,  // FIXME: multi-phase tuner should use sequence ID instead of trial job ID
                     hyperParameters: {
                         value: content,
                         index: tunerCommand.parameter_index
@@ -691,8 +733,11 @@ class NNIManager implements Manager {
                 };
                 this.log.info(`updateTrialJob: job id: ${tunerCommand.trial_job_id}, form: ${JSON.stringify(trialJobForm)}`);
                 await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
-                await this.dataStore.storeTrialJobEvent(
-                    'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
+                if (tunerCommand['parameters'] !== null) {
+                    // parameters field is set as empty string if no more hyper parameter can be generated by tuner.
+                    await this.dataStore.storeTrialJobEvent(
+                        'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
+                }
                 break;
             case NO_MORE_TRIAL_JOBS:
                 if (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
@@ -734,7 +779,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getExperimentRootDir(),
-            maxSequenceId: 0,
+            nextSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
@@ -764,13 +809,6 @@ class NNIManager implements Manager {
         }
 
         return Promise.resolve(chkpDir);
-    }
-
-    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
-        if (sequenceId > this.experimentProfile.maxSequenceId) {
-            this.experimentProfile.maxSequenceId = sequenceId;
-            await this.storeExperimentProfile();
-        }
     }
 }
 

@@ -15,6 +15,6 @@ It finds the global optimal point in the Gaussian Process space. This point repr
 
 It identifies the next hyper-parameter candidate. This is achieved by inferring the potential information gain of exploration, exploitation, and re-sampling.
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+Note that the only acceptable types of search space are `quniform`, `uniform` and `randint` and numerical `choice`.
 
 More details can be found in our paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/

@@ -24,6 +24,10 @@ import { TrialJobStatus } from './trainingService';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
+namespace ExperimentStartUpMode {
+    export const NEW = 'new';
+    export const RESUME = 'resume';
+}
 
 interface ExperimentParams {
     authorName: string;
@@ -79,7 +83,7 @@ interface ExperimentProfile {
     logDir?: string;
     startTime?: number;
     endTime?: number;
-    maxSequenceId: number;
+    nextSequenceId: number;
     revision: number;
 }
 
@@ -95,7 +99,7 @@ interface NNIManagerStatus {
 
 abstract class Manager {
     public abstract startExperiment(experimentParams: ExperimentParams): Promise<string>;
-    public abstract resumeExperiment(): Promise<void>;
+    public abstract resumeExperiment(readonly: boolean): Promise<void>;
     public abstract stopExperiment(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
@@ -111,8 +115,11 @@ abstract class Manager {
     public abstract getClusterMetadata(key: string): Promise<string>;
 
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
+    public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
+
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus };
+export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

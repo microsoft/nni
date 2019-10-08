@@ -2,12 +2,13 @@ import * as React from 'react';
 import { Row, Modal } from 'antd';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
+import { TRIALS } from '../../static/datamodel';
 import '../../static/style/compare.scss';
-import { TableObj, Intermedia, TooltipForIntermediate } from 'src/static/interface';
+import { TableRecord, Intermedia, TooltipForIntermediate } from 'src/static/interface';
 
 // the modal of trial compare
 interface CompareProps {
-    compareRows: Array<TableObj>;
+    compareRows: Array<TableRecord>;
     visible: boolean;
     cancelFunc: () => void;
 }
@@ -25,11 +26,12 @@ class Compare extends React.Component<CompareProps, {}> {
         const idsList: Array<string> = [];
         Object.keys(compareRows).map(item => {
             const temp = compareRows[item];
+            const trial = TRIALS.getTrial(temp.id);
             trialIntermediate.push({
                 name: temp.id,
-                data: temp.description.intermediate,
+                data: trial.description.intermediate,
                 type: 'line',
-                hyperPara: temp.description.parameters
+                hyperPara: trial.description.parameters
             });
             idsList.push(temp.id);
         });
@@ -105,9 +107,11 @@ class Compare extends React.Component<CompareProps, {}> {
 
     // render table column ---
     initColumn = () => {
-        const { compareRows } = this.props;
         const idList: Array<string> = [];
+        const sequenceIdList: Array<number> = [];
         const durationList: Array<number> = [];
+
+        const compareRows = this.props.compareRows.map(tableRecord => TRIALS.getTrial(tableRecord.id));
 
         const parameterList: Array<object> = [];
         let parameterKeys: Array<string> = [];
@@ -117,6 +121,7 @@ class Compare extends React.Component<CompareProps, {}> {
         Object.keys(compareRows).map(item => {
             const temp = compareRows[item];
             idList.push(temp.id);
+            sequenceIdList.push(temp.sequenceId);
             durationList.push(temp.duration);
             parameterList.push(temp.description.parameters);
         });
@@ -124,10 +129,18 @@ class Compare extends React.Component<CompareProps, {}> {
             <table className="compare">
                 <tbody>
                     <tr>
-                        <td />
+                        <td className="column">Id</td>
                         {Object.keys(idList).map(key => {
                             return (
                                 <td className="value idList" key={key}>{idList[key]}</td>
+                            );
+                        })}
+                    </tr>
+                    <tr>
+                        <td className="column">Trial No.</td>
+                        {Object.keys(sequenceIdList).map(key => {
+                            return (
+                                <td className="value idList" key={key}>{sequenceIdList[key]}</td>
                             );
                         })}
                     </tr>
@@ -137,7 +150,7 @@ class Compare extends React.Component<CompareProps, {}> {
                             const temp = compareRows[index];
                             return (
                                 <td className="value" key={index}>
-                                    <IntermediateVal record={temp} />
+                                    <IntermediateVal trialId={temp.id} />
                                 </td>
                             );
                         })}
@@ -196,7 +209,7 @@ class Compare extends React.Component<CompareProps, {}> {
             >
                 <Row className="compare-intermediate">
                     {this.intermediate()}
-                    <Row className="compare-yAxis"># Intermediate</Row>
+                    <Row className="compare-yAxis"># Intermediate result</Row>
                 </Row>
                 <Row>{this.initColumn()}</Row>
             </Modal>

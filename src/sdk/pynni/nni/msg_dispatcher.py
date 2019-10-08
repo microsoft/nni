@@ -22,6 +22,7 @@ import logging
 from collections import defaultdict
 import json_tricks
 
+from nni import NoMoreTrialError
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
@@ -100,11 +101,16 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
 
+    def send_trial_callback(self, id, params):
+        """For tuner to issue trial config when the config is generated
+        """
+        send(CommandType.NewTrialJob, _pack_parameter(id, params))
+
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         _logger.debug("requesting for generating params of {}".format(ids))
-        params_list = self.tuner.generate_multiple_parameters(ids)
+        params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
             send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
@@ -144,7 +150,10 @@ class MsgDispatcher(MsgDispatcherBase):
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
             param_id = _create_parameter_id()
-            param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            try:
+                param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            except NoMoreTrialError:
+                param = None
             send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
@@ -171,15 +180,15 @@ class MsgDispatcher(MsgDispatcherBase):
         id_ = data['parameter_id']
         value = data['value']
         if id_ in _customized_parameter_ids:
-            if multi_phase_enabled():
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
-            else:
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+            if not hasattr(self.tuner, '_accept_customized'):
+                self.tuner._accept_customized = False
+            if not self.tuner._accept_customized:
+                _logger.info('Customized trial job %s ignored by tuner', id_)
+                return
+            customized = True
         else:
-            if multi_phase_enabled():
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value, trial_job_id=data['trial_job_id'])
-            else:
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+            customized = False
+        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized, trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results

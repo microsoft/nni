@@ -22,8 +22,6 @@ interface DurationState {
 
 class Duration extends React.Component<DurationProps, DurationState> {
 
-    public _isMounted = false;
-
     constructor(props: DurationProps) {
 
         super(props);
@@ -142,15 +140,12 @@ class Duration extends React.Component<DurationProps, DurationState> {
             trialId: trialId,
             trialTime: trialTime
         });
-        if (this._isMounted) {
-            this.setState({
-                durationSource: this.getOption(trialRun[0])
-            });
-        }
+        this.setState({
+            durationSource: this.getOption(trialRun[0])
+        });
     }
 
     componentDidMount() {
-        this._isMounted = true;
         const { source } = this.props;
         this.drawDurationGraph(source);
     }
@@ -185,10 +180,6 @@ class Duration extends React.Component<DurationProps, DurationState> {
             }
         }
         return false;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
     }
 
     render() {
