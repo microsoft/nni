@@ -1,6 +1,6 @@
 # **How To** - Customize Your Own Advisor
 
-*Warning: API highly likely to change in future releases.*
+*Warning: API is subject to change in future releases.*
 
 Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial parameters request, final results, and generate trial parameters. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.
 

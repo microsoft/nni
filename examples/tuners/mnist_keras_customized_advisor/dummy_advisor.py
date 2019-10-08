@@ -29,7 +29,7 @@ logger = logging.getLogger('customized_advisor')
 
 
 class DummyAdvisor(MsgDispatcherBase):
-    """WARNING: Advisor API is highly likely to change in future releases.
+    """WARNING: Advisor API is subject to change in future releases.
 
     This advisor creates a new trial when validation accuracy of any one of the trials just dropped.
     The trial is killed if the validation accuracy doesn't improve for at least k last-reported metrics.
