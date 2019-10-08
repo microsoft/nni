@@ -32,7 +32,7 @@ from unittest import TestCase, main
 class NaiveTuner(Tuner):
     def __init__(self):
         self.param = 0
-        self.trial_results = [ ]
+        self.trial_results = []
         self.search_space = None
         self.accept_customized_trials()
 
@@ -57,18 +57,19 @@ class NaiveTuner(Tuner):
 _in_buf = BytesIO()
 _out_buf = BytesIO()
 
+
 def _reverse_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
     nni.protocol._out_file = _in_buf
     nni.protocol._in_file = _out_buf
 
+
 def _restore_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
     nni.protocol._in_file = _in_buf
     nni.protocol._out_file = _out_buf
-
 
 
 class TunerTestCase(TestCase):
@@ -94,20 +95,19 @@ class TunerTestCase(TestCase):
         self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
 
         _reverse_io()  # now we are receiving from Tuner's outgoing stream
-        self._assert_params(0, 2, [ ], None)
-        self._assert_params(1, 4, [ ], None)
+        self._assert_params(0, 2, [], None)
+        self._assert_params(1, 4, [], None)
 
         command, data = receive()  # this one is customized
         data = json.loads(data)
         self.assertIs(command, CommandType.NewTrialJob)
         self.assertEqual(data['parameter_id'], 2)
         self.assertEqual(data['parameter_source'], 'customized')
-        self.assertEqual(data['parameters'], { 'param': -1 })
+        self.assertEqual(data['parameters'], {'param': -1})
 
-        self._assert_params(3, 6, [[1,4,11,False], [2,-1,22,True]], {'name':'SS0'})
+        self._assert_params(3, 6, [[1, 4, 11, False], [2, -1, 22, True]], {'name': 'SS0'})
 
         self.assertEqual(len(_out_buf.read()), 0)  # no more commands
-
 
     def _assert_params(self, parameter_id, param, trial_results, search_space):
         command, data = receive()
