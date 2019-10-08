@@ -17,20 +17,20 @@ experimentName:
 trialConcurrency:
 maxExecDuration:
 maxTrialNum:
-# 选项: local, remote, pai, kubeflow
+# 可选项: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-# 选项: true, false, default: false
+# 可选项: true, false, 默认值: false
 useAnnotation:
-# 选项: true, false, default: false
+# 可选项: true, false, 默认值: false
 multiPhase:
-# 选项: true, false, default: false
+# 可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  # 选项: TPE, Random, Anneal, Evolution
+  # 可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    # 选项: maximize, minimize
+    # 可选项: maximize, minimize
     optimize_mode:
   gpuIndices:
 trial:
@@ -608,7 +608,6 @@ machineList:
   如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
   
   ```yaml
-  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -629,12 +628,10 @@ machineList:
     codeDir: /nni/mnist
     gpuNum: 0
   ```
-  ```
   
   增加 Assessor 配置
   
   ```yaml
-  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -662,12 +659,10 @@ machineList:
     codeDir: /nni/mnist
     gpuNum: 0
   ```
-  ```
   
   或者可以指定自定义的 Tuner 和 Assessor：
   
   ```yaml
-  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
@@ -696,7 +691,6 @@ machineList:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
-  ```
   ```
 
 - **远程模式**
@@ -793,16 +787,16 @@ machineList:
   trialConcurrency: 1
   maxExecDuration: 1h
   maxTrialNum: 1
-  #可选项: local, remote, pai, kubeflow
+  # 可选项: local, remote, pai, kubeflow
   trainingServicePlatform: kubeflow
   searchSpacePath: search_space.json
-  #可选项: true, false
+  # 可选项: true, false
   useAnnotation: false
   tuner:
-    #可选项: TPE, Random, Anneal, Evolution
+    # 可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #可选项: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     codeDir: .
@@ -828,17 +822,17 @@ machineList:
   trialConcurrency: 1
   maxExecDuration: 1h
   maxTrialNum: 1
-  #可选项: local, remote, pai, kubeflow
+  # 可选项: local, remote, pai, kubeflow
   trainingServicePlatform: kubeflow
   searchSpacePath: search_space.json
-  #可选项: true, false
+  # 可选项: true, false
   useAnnotation: false
   #nniManagerIp: 10.10.10.10
   tuner:
-    #可选项: TPE, Random, Anneal, Evolution
+    # 可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #可选项: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
   assessor:
     builtinAssessorName: Medianstop
