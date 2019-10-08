@@ -264,11 +264,11 @@ machineList:
     
     - **builtinTunerName**
       
-      **builtinTunerName** specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+      **builtinTunerName** 指定系统 Tuner 的名称，NNI SDK 提供了多个内置 Tuner，详情参考[这里](../Tuner/BuiltinTuner.md)。
     
     - **classArgs**
       
-      **classArgs** 指定了 Tuner 算法的参数。 Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+      **classArgs** 指定了 Tuner 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Tuner 的配置参数。
   
   - **codeDir**, **classFileName**, **className** 和 **classArgs**
     
@@ -290,7 +290,7 @@ machineList:
   
   - **gpuIndices**
     
-        __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+        __gpuIndices__ 指定了 Tuner 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
         
   
   - **includeIntermediateResults**
@@ -298,7 +298,7 @@ machineList:
         如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
         
   
-  Note: users could only use one way to specify tuner, either specifying `builtinTunerName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+  注意：用户只能用一种方法来指定 Tuner，指定 `builtinTunerName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
 
 - **Assessor**
   
@@ -310,7 +310,7 @@ machineList:
     
     - **builtinAssessorName**
       
-      **builtinAssessorName** specifies the name of built-in assessor, NNI sdk provides different assessors introducted [here](../Assessor/BuiltinAssessor.md).
+      **builtinAssessorName** 指定了内置 Assessor 的名称，NNI SDK 提供了多个内置的 Assessor，详情参考[这里](../Assessor/BuiltinAssessor.md)。
     
     - **classArgs**
       
@@ -334,25 +334,25 @@ machineList:
       
       **classArgs** 指定了 Assessor 算法的参数。
   
-  Note: users could only use one way to specify assessor, either specifying `builtinAssessorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`. If users do not want to use assessor, assessor fileld should leave to empty.
+  注意：用户只能用一种方法来指定 Assessor，指定 `builtinAssessorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。 如果不需要使用 Assessor，此字段可为空。
 
-- **advisor**
+- **Advisor**
   
-  - Description
+  - 说明
     
-    **advisor** specifies the advisor algorithm in the experiment, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **Advisor** 指定了 Experiment 的 Advisor 算法。有两种方法可设置 Advisor。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  - **builtinAdvisorName** and **classArgs**
+  - **builtinAdvisorName** 和 **classArgs**
     
     - **builtinAdvisorName**
       
-      **builtinAdvisorName** specifies the name of a built-in advisor, NNI sdk provides [different advisors](../Tuner/BuiltinTuner.md).
+      **builtinAdvisorName** 指定了内置 Advisor 的名称，NNI SDK 提供了多个[内置的 Advisor](../Tuner/BuiltinTuner.md)。
     
     - **classArgs**
       
-      **classArgs** specifies the arguments of the advisor algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in advisor.
+      **classArgs** 指定了 Advisor 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Advisor 的配置参数。
   
-  - **codeDir**, **classFileName**, **className** and **classArgs**
+  - **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     - **codeDir**
       
