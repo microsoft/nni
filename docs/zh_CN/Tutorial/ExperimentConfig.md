@@ -419,187 +419,187 @@ machineList:
   
   - **outputDir**
     
-    **outputDir** is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
-- **trial(kubeflow)**
+- **trial (kubeflow)**
   
   - **codeDir**
     
-    **codeDir** is the local directory where the code files in.
+    **codeDir** 指定了代码文件的本机路径。
   
-  - **ps(optional)**
+  - **ps (可选)**
     
-    **ps** is the configuration for kubeflow's tensorflow-operator.
+    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     - **replicas**
       
-      **replicas** is the replica number of **ps** role.
+      **replicas** 是 **ps** 角色的副本数量。
     
     - **command**
       
-      **command** is the run script in **ps**'s container.
+      **command** 是在 **ps** 的容器中运行的脚本命令。
     
     - **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **ps** container.
+      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
     
     - **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **ps** container.
+      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
     
     - **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     - **image**
       
-      **image** set the image to be used in **ps**.
+      **image** 设置了 **ps** 使用的 docker 映像。
   
   - **worker**
     
-    **worker** is the configuration for kubeflow's tensorflow-operator.
+    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     - **replicas**
       
-      **replicas** is the replica number of **worker** role.
+      **replicas** 是 **worker** 角色的副本数量。
     
     - **command**
       
-      **command** is the run script in **worker**'s container.
+      **command** 是在 **worker** 的容器中运行的脚本命令。
     
     - **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **worker** container.
+      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
     
     - **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **worker** container.
+      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
     
     - **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     - **image**
       
-      **image** set the image to be used in **worker**.
+      **image** 设置了 **worker** 使用的 docker 映像。
 
 - **localConfig**
   
-  **localConfig** is applicable only if **trainingServicePlatform** is set to `local`, otherwise there should not be **localConfig** section in configuration file.
+  **localConfig** 仅在 **trainingServicePlatform** 设为 `local` 时有效，否则，配置文件中不应该有 **localConfig** 部分。
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **machineList**
   
-  **machineList** should be set if **trainingServicePlatform** is set to remote, or it should be empty.
+  如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
   
   - **ip**
     
-    **ip** is the ip address of remote machine.
+    **ip** 是远程计算机的 ip 地址。
   
   - **port**
     
-    **port** is the ssh port to be used to connect machine.
+    **端口** 是用于连接远程计算机的 ssh 端口。
     
-    Note: if users set port empty, the default value will be 22.
+    注意：如果 port 设为空，则为默认值 22。
   
   - **username**
     
-    **username** is the account of remote machine.
+    **username** 是远程计算机的用户名。
   
   - **passwd**
     
-    **passwd** specifies the password of the account.
+    **passwd** 指定了账户的密码。
   
   - **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+    注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   - **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，远程计算机上只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **kubeflowConfig**:
   
   - **operator**
     
-    **operator** specify the kubeflow's operator to be used, NNI support **tf-operator** in current version.
+    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
   
   - **storage**
     
-    **storage** specify the storage type of kubeflow, including {**nfs**, **azureStorage**}. This field is optional, and the default value is **nfs**. If the config use azureStorage, this field must be completed.
+    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
   
   - **nfs**
     
-    **server** is the host of nfs server
+    **server** 是 NFS 服务器的地址
     
-    **path** is the mounted path of nfs
+    **path** 是 NFS 挂载的路径
   
   - **keyVault**
     
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2
     
     - **vaultName**
       
-      **vaultName** is the value of `--vault-name` used in az command.
+      **vaultName** 是 az 命令中 `--vault-name` 的值。
     
     - **name**
       
-      **name** is the value of `--name` used in az command.
+      **name** 是 az 命令中 `--name` 的值。
   
   - **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     - **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     - **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
   
   - **uploadRetryCount**
     
-    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+    如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
 
 - **paiConfig**
   
   - **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   - **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   - **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 ## 样例
 
@@ -632,53 +632,56 @@ machineList:
   增加 Assessor 配置
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   assessor:
-    #choice: Medianstop
+    #可选项: Medianstop
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
   ```
+  ```
   
   或者可以指定自定义的 Tuner 和 Assessor：
   
   ```yaml
+  ```
   authorName: test
   experimentName: test_experiment
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
     codeDir: /nni/tuner
     classFileName: mytuner.py
     className: MyTuner
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   assessor:
     codeDir: /nni/assessor
@@ -692,6 +695,7 @@ machineList:
     codeDir: /nni/mnist
     gpuNum: 0
   ```
+  ```
 
 - **远程模式**
   
@@ -703,23 +707,24 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: remote
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
-  #machineList can be empty if the platform is local
+  # 如果是本地 Experiment，machineList 可为空。
   machineList:
+  
     - ip: 10.10.10.10
       port: 22
       username: test
