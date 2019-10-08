@@ -49,7 +49,7 @@ class AGP_Pruner(Pruner):
     """
     def __init__(self, config_list):
         """
-            Configure Args
+            Configure Args:
                 initial_sparsity
                 final_sparsity: you should make sure initial_sparsity <= final_sparsity
                 start_epoch: start epoch numer begin update mask
