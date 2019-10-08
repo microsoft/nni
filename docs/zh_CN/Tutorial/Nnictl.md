@@ -225,7 +225,7 @@ nnictl 支持的命令：
   
   * 说明
     
-    You can use this command to update an experiment's concurrency.
+    可以用此命令来更新 Experiment 的并发设置。
   
   * 用法
     
@@ -235,14 +235,14 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写       | 是否必需  | 默认值 | 说明                                      |
-  | ----------- | ----- | --- | --------------------------------------- |
-  | id          | False |     | ID of the experiment you want to set    |
-  | --value, -v | True  |     | the number of allowed concurrent trials |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 ID |
+  | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
   * 样例
     
-    > update experiment's concurrency
+    > 更新 Experiment 的并发数量
     
     ```bash
     nnictl update concurrency [experiment_id] --value [concurrency_number]
@@ -250,26 +250,26 @@ nnictl 支持的命令：
 
 * **nnictl update duration**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's duration.
+    可以用此命令来更新 Experiment 的运行时间。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update duration [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                                                                                                  |
-  | --------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set                                                                                                         |
-  | --value, -v     | True     |         | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                       |
+  | ----------- | ----- | --- | ------------------------------------------------------------------------ |
+  | id          | False |     | 需要设置的 Experiment 的 ID                                                    |
+  | --value, -v | True  |     | Experiment 持续时间，如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
   
-  * Example
+  * 示例
     
-    > update experiment's duration
+    > 修改 Experiment 的执行时间
     
     ```bash
     nnictl update duration [experiment_id] --value [duration]
@@ -277,26 +277,26 @@ nnictl 支持的命令：
 
 * **nnictl update trialnum**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's maxtrialnum.
+    可以用此命令来更新 Experiment 的最大 Trial 数量。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update trialnum [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                   |
-  | --------------- | -------- | ------- | --------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set          |
-  | --value, -v     | True     |         | the new number of maxtrialnum you want to set |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id |
+  | --value, -v | True  |     | 需要设置的 maxtrialnum 的数量 |
   
-  * Example
+  * 示例
     
-    > update experiment's trial num
+    > 更新 Experiment 的 Trial 数量
     
     ```bash
     nnictl update trialnum --id [experiment_id] --value [trial_num]
@@ -307,44 +307,44 @@ nnictl 支持的命令：
 
 * **nnictl trial ls**
   
-  * Description
+  * 说明
     
-    You can use this command to show trial's information.
+    使用此命令来查看 Trial 的信息。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl trial ls
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl trial kill**
   
-  * Description
+  * 说明
     
-    You can use this command to kill a trial job.
+    此命令用于终止 Trial。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl trial kill [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                       |
-  | --------------- | -------- | ------- | --------------------------------- |
-  | id              | False    |         | Experiment ID of the trial        |
-  | --trial_id, -T  | True     |         | ID of the trial you want to kill. |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                    |
+  | -------------- | ----- | --- | --------------------- |
+  | id             | False |     | Trial 的 Experiment ID |
+  | --trial_id, -T | True  |     | 需要终止的 Trial 的 ID。     |
   
-  * Example
+  * 示例
     
-    > kill trail job
+    > 结束 Trial 任务
     
     ```bash
     nnictl trial [trial_id] --experiment [experiment_id]
@@ -354,31 +354,31 @@ nnictl 支持的命令：
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
 
-* Description
+* 说明
   
-  Monitor all of running experiments.
+  查看正在运行的 Experiment。
 
-* Usage
+* 用法
   
   ```bash
   nnictl top
   ```
 
-* Options
+* 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                                                                                                           |
-  | ---------- | ----- | --- | ------------------------------------------------------------------------------------------------------------ |
-  | id         | False |     | ID of the experiment you want to set                                                                         |
-  | --time, -t | False |     | The interval to update the experiment status, the unit of time is second, and the default value is 3 second. |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                                   |
+  | ---------- | ----- | --- | ------------------------------------ |
+  | id         | False |     | 需要设置的 Experiment 的 id                |
+  | --time, -t | False |     | 刷新 Experiment 状态的时间间隔，单位为秒，默认值为 3 秒。 |
 
 <a name="experiment"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage experiment information`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理 Experiment 的信息`
 
 * **nnictl experiment show**
   
   * 说明
     
-    Show the information of experiment.
+    显示 Experiment 的信息。
   
   * 用法
     
@@ -388,15 +388,15 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明                                   |
-  | ----- | ----- | --- | ------------------------------------ |
-  | id    | False |     | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl experiment status**
   
   * 说明
     
-    Show the status of experiment.
+    显示 Experiment 的状态。
   
   * 用法
     
@@ -406,46 +406,46 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明                                   |
-  | ----- | ----- | --- | ------------------------------------ |
-  | id    | False |     | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 ID |
 
 * **nnictl experiment list**
   
-  * Description
+  * 说明
     
-    Show the information of all the (running) experiments.
+    显示正在运行的 Experiment 的信息
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment list [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description             |
-  | --------------- | -------- | ------- | ----------------------- |
-  | --all           | False    |         | list all of experiments |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明              |
+  | ----- | ----- | --- | --------------- |
+  | --all | False |     | 列出所有 Experiment |
 
 * **nnictl experiment delete**
   
-  * Description
+  * 说明
     
-    Delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
+    删除一个或所有 Experiment，包括日志、结果、环境信息和缓存。 用于删除无用的 Experiment 结果，或节省磁盘空间。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment delete [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description               |
-  | --------------- | -------- | ------- | ------------------------- |
-  | id              | False    |         | ID of the experiment      |
-  | --all           | False    |         | delete all of experiments |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明              |
+  | ----- | ----- | --- | --------------- |
+  | id    | False |     | Experiment ID   |
+  | --all | False |     | 删除所有 Experiment |
 
 <a name="export"></a>
 
@@ -453,25 +453,25 @@ nnictl 支持的命令：
   
   * 说明
     
-    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+    使用此命令，可将 Trial 的 reward 和超参导出为 csv 文件。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment export [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | 参数及缩写          | 是否必需  | 默认值 | 说明                                                 |
-  | -------------- | ----- | --- | -------------------------------------------------- |
-  | id             | False |     | ID of the experiment                               |
-  | --filename, -f | True  |     | File path of the output file                       |
-  | --type         | True  |     | Type of output file, only support "csv" and "json" |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                        |
+  | -------------- | ----- | --- | ------------------------- |
+  | id             | False |     | Experiment ID             |
+  | --filename, -f | True  |     | 文件的输出路径                   |
+  | --type         | True  |     | 输出文件类型，仅支持 "csv" 和 "json" |
   
-  * Examples
+  * 示例
   
-  > export all trial data in an experiment as json format
+  > 将 Experiment 中所有 Trial 数据导出为 JSON 格式
   
   ```bash
   nnictl experiment export [experiment_id] --filename [file_path] --type json
@@ -479,26 +479,26 @@ nnictl 支持的命令：
 
 * **nnictl experiment import**
   
-  * Description
+  * 说明
     
-    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+    可使用此命令将以前的 Trial 超参和结果导入到 Tuner 中。 数据会传入调参算法中（即 Tuner 或 Advisor）。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment import [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                           |
-  | --------------- | -------- | ------- | ----------------------------------------------------- |
-  | id              | False    |         | The id of the experiment you want to import data into |
-  | --filename, -f  | True     |         | a file with data you want to import in json format    |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                       |
+  | -------------- | ----- | --- | ------------------------ |
+  | id             | False |     | 需要将数据导入的 Experiment 的 ID |
+  | --filename, -f | True  |     | 需要导入的 JSON 格式的数据文件       |
   
-  * Details
+  * 详细说明
     
-    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
+    NNI 支持导入用户的数据，确保数据格式正确。 样例如下：
     
     ```json
     [
@@ -508,18 +508,18 @@ nnictl 支持的命令：
     ]
     ```
     
-    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+    最顶层列表的每个元素都是一个示例。 对于内置的 Tuner 和 Advisor，每个样本至少需要两个主键：`parameter` 和 `value`。 `parameter` 必须与 Experiment 的搜索空间相匹配，`parameter` 中的所有的主键（或超参）都必须与搜索空间中的主键相匹配。 否则， Tuner 或 Advisor 可能会有无法预期的行为。 `Value` 应当遵循与 `nni.report_final_result` 的输入值一样的规则，即要么时一个数字，或者是包含 `default` 主键的 dict。 对于自定义的 Tuner 或 Advisor，根据实现的不同，此文件可以是任意的 JSON 内容（例如，`import_data`）。
     
-    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+    也可以用 [nnictl experiment export](#export) 命令导出 Experiment 已经运行过的 Trial 超参和结果。
     
-    Currently, following tuner and advisor support import data:
+    当前，以下 Tuner 和 Advisor 支持导入数据：
     
     ```yaml
-    builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
-    builtinAdvisorName: BOHB
+    内置 Tuner: TPE, Anneal, GridSearch, MetisTuner
+    内置 Advisor: BOHB
     ```
     
-    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+    *如果要将数据导入到 BOHB Advisor，建议像 NNI 一样，增加 "TRIAL_BUDGET" 参数，否则，BOHB 会使用 max_budget 作为 "TRIAL_BUDGET"。 示例如下：*
     
     ```json
     [
@@ -527,47 +527,47 @@ nnictl 支持的命令：
     ]
     ```
   
-  * Examples
+  * 示例
     
-    > import data to a running experiment
+    > 将数据导入运行中的 Experiment
     
     ```bash
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理平台的信息`
 
 * **nnictl platform clean**
   
-  * Description
+  * 说明
     
-    It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
+    用于清理目标平台上的磁盘空间。 所提供的 YAML 文件包括了目标平台的信息，与 NNI 配置文件的格式相同。
   
-  * Note
+  * 注意
     
-    if the target platform is being used by other users, it may cause unexpected errors to others.
+    如果目标平台正在被别人使用，可能会造成他人的意外错误。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl platform clean [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                 |
-  | --------------- | -------- | ------- | ----------------------------------------------------------- |
-  | --config        | True     |         | the path of yaml config file used when create an experiment |
+  | 参数及缩写    | 是否必需 | 默认值 | 说明                            |
+  | -------- | ---- | --- | ----------------------------- |
+  | --config | True |     | 创建 Experiment 时的 YAML 配置文件路径。 |
 
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-* Description
+* 说明
   
-  Display the current context information.
+  显示当前上下文信息。
 
-* Usage
+* 用法
   
   ```bash
   nnictl config show
@@ -575,32 +575,32 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
 
 * **nnictl log stdout**
   
-  * Description
+  * 说明
     
-    Show the stdout log content.
+    显示 stdout 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stdout [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stdout            |
-  | --tail, -t      | False    |         | show tail lines of stdout            |
-  | --path, -p      | False    |         | show the path of stdout file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
+  | ---------- | ----- | --- | --------------------- |
+  | id         | False |     | 需要设置的 Experiment 的 id |
+  | --head, -h | False |     | 显示 stdout 开始的若干行      |
+  | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
+  | --path, -p | False |     | 显示 stdout 文件的路径       |
   
-  * Example
+  * 示例
     
-    > Show the tail of stdout log content
+    > 显示 stdout 结尾的若干行
     
     ```bash
     nnictl log stdout [experiment_id] --tail [lines_number]
@@ -608,24 +608,24 @@ nnictl 支持的命令：
 
 * **nnictl log stderr**
   
-  * Description
+  * 说明
     
-    Show the stderr log content.
+    显示 stderr 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stderr [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stderr            |
-  | --tail, -t      | False    |         | show tail lines of stderr            |
-  | --path, -p      | False    |         | show the path of stderr file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                                   |
+  | ---------- | ----- | --- | ------------------------------------ |
+  | id         | False |     | ID of the experiment you want to set |
+  | --head, -h | False |     | show head lines of stderr            |
+  | --tail, -t | False |     | show tail lines of stderr            |
+  | --path, -p | False |     | show the path of stderr file         |
 
 * **nnictl log trial**
   
