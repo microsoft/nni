@@ -28,9 +28,9 @@ from io import BytesIO
 import json
 from unittest import TestCase, main
 
+_trials = []
+_end_trials = []
 
-_trials = [ ]
-_end_trials = [ ]
 
 class NaiveAssessor(Assessor):
     def assess_trial(self, trial_job_id, trial_history):
@@ -47,11 +47,13 @@ class NaiveAssessor(Assessor):
 _in_buf = BytesIO()
 _out_buf = BytesIO()
 
+
 def _reverse_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
     nni.protocol._out_file = _in_buf
     nni.protocol._in_file = _out_buf
+
 
 def _restore_io():
     _in_buf.seek(0)
