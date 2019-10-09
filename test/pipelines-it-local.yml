@@ -9,7 +9,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
-      ./install-it-deps.sh  
+      source install-it-deps.sh
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
