@@ -38,7 +38,7 @@ In [To prune, or not to prune: exploring the efficacy of pruning for model compr
 >The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation
 
 ### Usage
-You can prune all weight from %0 to 80% sparsity in 10 epoch with the code below.
+You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
 
 First, you should import pruner and add mask to model.
 
