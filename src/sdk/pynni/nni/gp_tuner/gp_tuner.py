@@ -83,7 +83,7 @@ class GPTuner(Tuner):
         """
         self._space = TargetSpace(search_space, self._random_state)
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         gp will first randomly generate some parameters.
@@ -123,7 +123,7 @@ class GPTuner(Tuner):
         logger.info("Generate paramageters:\n %s", results)
         return results
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Tuner receive result from trial.
 
         Parameters
