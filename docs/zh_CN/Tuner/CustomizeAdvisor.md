@@ -1,12 +1,12 @@
 # **指南** - 自定义 Advisor
 
-*Warning: API is subject to change in future releases.*
+*警告：API 可能会在将来的版本中更改。*
 
-Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial parameters request, final results, and generate trial parameters. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.
+Advisor 用于同时需要 Tuner 和 Assessor 方法的自动机器学习算法。 Advisor 与 Tuner 类似，它接收 Trial 的参数请求、最终结果，并生成 Trial 的参数。 另外，它也能像 Assessor 一样接收中间结果、Trial 的最终状态，并可以发送终止 Trial 的命令。 注意，在使用 Advisor 时，不能同时使用 Tuner 和 Assessor。
 
-If a user want to implement a customized Advisor, she/he only needs to:
+如果要自定义 Advisor，需要：
 
-**1. Define an Advisor inheriting from the MsgDispatcherBase class.** For example:
+**1. 定义从 MsgDispatcherBase 类继承的 Advisor。** 如：
 
 ```python
 from nni.msg_dispatcher_base import MsgDispatcherBase
@@ -16,11 +16,11 @@ class CustomizedAdvisor(MsgDispatcherBase):
         ...
 ```
 
-**2. Implement the methods with prefix `handle_` except `handle_request`**.. You might find [docs](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase) for `MsgDispatcherBase` helpful.
+**2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**。 [此文档](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase)可帮助理解 `MsgDispatcherBase`。
 
-**3. Configure your customized Advisor in experiment YAML config file.**
+**3. 在 Experiment 的 YAML 文件中配置好自定义的 Advisor。**
 
-Similar to tuner and assessor. NNI needs to locate your customized Advisor class and instantiate the class, so you need to specify the location of the customized Advisor class and pass literal values as parameters to the `__init__` constructor.
+与 Tuner 和 Assessor 类似。 NNI 需要定位到自定义的 Advisor 类，并实例化它，因此需要指定自定义 Advisor 类的文件位置，并将参数值传给 `__init__` 构造函数。
 
 ```yaml
 advisor:
@@ -33,6 +33,6 @@ advisor:
     arg1: value1
 ```
 
-## Example
+## 示例
 
-Here we provide an [example](../../../examples/tuners/mnist_keras_customized_advisor).
+[参考示例](../../../examples/tuners/mnist_keras_customized_advisor)。
