@@ -10,8 +10,8 @@ _logger = logging.getLogger(__name__)
 class LevelPruner(Pruner):
     def __init__(self, config_list):
         """
-            Configure Args:
-                sparsity
+        config_list: supported keys:
+            - sparsity
         """
         super().__init__(config_list)
 
@@ -21,8 +21,7 @@ class LevelPruner(Pruner):
 
 
 class AGP_Pruner(Pruner):
-    """
-    An automated gradual pruning algorithm that prunes the smallest magnitude 
+    """An automated gradual pruning algorithm that prunes the smallest magnitude 
     weights to achieve a preset level of network sparsity.
 
     Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
@@ -32,12 +31,12 @@ class AGP_Pruner(Pruner):
     """
     def __init__(self, config_list):
         """
-            Configure Args:
-                initial_sparsity
-                final_sparsity: you should make sure initial_sparsity <= final_sparsity
-                start_epoch: start epoch numer begin update mask
-                end_epoch: end epoch number stop update mask
-                frequency: if you want update every 2 epoch, you can set it 2
+        config_list: supported keys:
+            - initial_sparsity
+            - final_sparsity: you should make sure initial_sparsity <= final_sparsity
+            - start_epoch: start epoch numer begin update mask
+            - end_epoch: end epoch number stop update mask
+            - frequency: if you want update every 2 epoch, you can set it 2
         """
         super().__init__(config_list)
         self.now_epoch = tf.Variable(0)
@@ -77,8 +76,7 @@ class AGP_Pruner(Pruner):
     
 
 class SensitivityPruner(Pruner):
-    """
-    Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
+    """Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
     https://arxiv.org/pdf/1506.02626v3.pdf
 
     I.e.: "The pruning threshold is chosen as a quality parameter multiplied
@@ -86,8 +84,8 @@ class SensitivityPruner(Pruner):
     """
     def __init__(self, config_list):
         """
-            Configure Args:
-                sparsity: chosen pruning sparsity
+        config_list: supported keys
+            - sparsity: chosen pruning sparsity
         """
         super().__init__(config_list)
         self.layer_mask = {}
