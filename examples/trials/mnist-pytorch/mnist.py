@@ -5,6 +5,7 @@ This file is a modification of the official pytorch mnist example:
 https://github.com/pytorch/examples/blob/master/mnist/main.py
 """
 
+import os
 import argparse
 import logging
 import nni
@@ -84,15 +85,18 @@ def main(args):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+
+    data_dir = os.path.join(args['data_dir'], nni.get_trial_id())
+
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(args['data_dir'], train=True, download=True,
+        datasets.MNIST(data_dir, train=True, download=True,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args['batch_size'], shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(args['data_dir'], train=False, transform=transforms.Compose([
+        datasets.MNIST(data_dir, train=False, transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
         ])),
