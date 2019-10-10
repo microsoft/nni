@@ -1,3 +1,3 @@
-# Automatic Model Compression on NNI
+# NNI 上的自动模型压缩
 
 TBD.
