@@ -1,5 +1,5 @@
 import logging
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from .compressor import Pruner
 
 __all__ = [ 'LevelPruner', 'AGP_Pruner', 'SensitivityPruner' ]

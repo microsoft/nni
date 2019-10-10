@@ -1,9 +1,11 @@
 from unittest import TestCase, main
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import torch
 import torch.nn.functional as F
 import nni.compression.tensorflow as tf_compressor
 import nni.compression.torch as torch_compressor
+
+tf.disable_v2_behavior()
 
 def weight_variable(shape):
     return tf.Variable(tf.truncated_normal(shape, stddev = 0.1))

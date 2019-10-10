@@ -1,5 +1,5 @@
 import logging
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from .compressor import Quantizer
 
 __all__ = [ 'NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer' ]
