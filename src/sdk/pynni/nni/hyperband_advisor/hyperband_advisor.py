@@ -32,6 +32,7 @@ from nni.common import multi_phase_enabled
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.protocol import CommandType, send
 from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
+import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
 
