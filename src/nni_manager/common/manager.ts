@@ -51,6 +51,7 @@ interface ExperimentParams {
         checkpointDir: string;
         gpuNum?: number;
         includeIntermediateResults?: boolean;
+        gpuIndices?: string;
     };
     assessor?: {
         className: string;
@@ -69,6 +70,7 @@ interface ExperimentParams {
         classFileName?: string;
         checkpointDir: string;
         gpuNum?: number;
+        gpuIndices?: string;
     };
     clusterMetaData?: {
         key: string;
