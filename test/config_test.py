@@ -58,7 +58,7 @@ def run_test(config_file, training_service, local_gpu=False):
     '''run test per configuration file'''
 
     new_config_file, config = gen_new_config(config_file, training_service)
-    print(json.dumps(config, sort_keys=True, indent=4), flush=True)
+    print(json.dumps(config, sort_keys=True, indent=4))
 
     if training_service == 'local' and not local_gpu and config['trial']['gpuNum'] > 0:
         print('no gpu, skiping: ', config_file)
@@ -107,13 +107,13 @@ def run(args):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
-            print(GREEN + 'Testing:' + config_file + CLEAR, flush=True)
+            print(GREEN + 'Testing:' + config_file + CLEAR)
             begin_time = time.time()
             run_test(config_file, args.ts, args.local_gpu)
-            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR, flush=True)
+            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR)
         except Exception as error:
-            print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR, flush=True)
-            print('%r' % error, flush=True)
+            print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR)
+            print('%r' % error)
             traceback.print_exc()
             raise error
         finally:

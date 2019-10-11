@@ -116,6 +116,7 @@ def get_succeeded_trial_num(trial_jobs_url):
     return num_succeed
 
 def get_failed_trial_jobs(trial_jobs_url):
+    '''Return failed trial jobs'''
     trial_jobs = requests.get(trial_jobs_url).json()
     failed_jobs = []
     for trial_job in trial_jobs:
@@ -124,6 +125,7 @@ def get_failed_trial_jobs(trial_jobs_url):
     return failed_jobs
 
 def print_failed_job_log(training_service, trial_jobs_url):
+    '''Print job log of FAILED trial jobs'''
     trial_jobs = get_failed_trial_jobs(trial_jobs_url)
     for trial_job in trial_jobs:
         if training_service == 'local':
