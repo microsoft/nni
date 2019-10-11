@@ -143,7 +143,7 @@ tuner:
 
 > Built-in Tuner Name: **SMAC**
 
-**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**Please note that SMAC doesn't support running on Windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
 
 **Installation**
 

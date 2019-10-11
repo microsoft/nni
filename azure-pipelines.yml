@@ -57,7 +57,7 @@ jobs:
   - script: |
       cd test
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-      brew install swig
+      brew install swig@3.04
       PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
     displayName: 'Unit test'
   - script: |

@@ -127,12 +127,8 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: HyperoptTuner("anneal"))
 
     def test_smac(self):
-        if sys.platform == "darwin":
-            # only check initialization here
-            SMACTuner()  # FIXME: Known issue. SMAC running on macOS will throw segmentation fault.
-        else:
-            self.search_space_test_all(lambda: SMACTuner(),
-                                       supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+        self.search_space_test_all(lambda: SMACTuner(),
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
     def test_batch(self):
         self.search_space_test_all(lambda: BatchTuner(),
