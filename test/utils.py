@@ -82,13 +82,14 @@ def get_experiment_id(experiment_url):
     experiment_id = requests.get(experiment_url).json()['id']
     return experiment_id
 
+def get_nni_log_dir(experiment_url):
+    '''get nni's log directory from nni's experiment url'''
+    experiment_id = get_experiment_id(experiment_url)
+    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id, 'log')
+
 def get_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
-    experiment_id = get_experiment_id(experiment_url)
-    experiment_path = os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
-    nnimanager_log_path = os.path.join(experiment_path, 'log', 'nnimanager.log')
-
-    return nnimanager_log_path
+    return os.path.join(get_nni_log_dir(experiment_url), 'nnimanager.log')
 
 def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
@@ -107,7 +108,6 @@ def get_experiment_status(status_url):
 
 def get_succeeded_trial_num(trial_jobs_url):
     trial_jobs = requests.get(trial_jobs_url).json()
-    print(trial_jobs)
     num_succeed = 0
     for trial_job in trial_jobs:
         if trial_job['status'] in ['SUCCEEDED', 'EARLY_STOPPED']:
@@ -115,15 +115,25 @@ def get_succeeded_trial_num(trial_jobs_url):
     print('num_succeed:', num_succeed)
     return num_succeed
 
-def print_stderr(trial_jobs_url):
+def get_failed_trial_jobs(trial_jobs_url):
     trial_jobs = requests.get(trial_jobs_url).json()
+    failed_jobs = []
     for trial_job in trial_jobs:
-        if trial_job['status'] == 'FAILED':
-            stderr_path = trial_job['stderrPath'].split(':')[-1]
-            if sys.platform == "win32":
-                subprocess.run(['type', stderr_path], shell=True)
-            else:
-                subprocess.run(['cat', stderr_path])
+        if trial_job['status'] in ['FAILED']:
+            failed_jobs.append(trial_job)
+    return failed_jobs
+
+def print_failed_job_log(training_service, trial_jobs_url):
+    trial_jobs = get_failed_trial_jobs(trial_jobs_url)
+    for trial_job in trial_jobs:
+        if training_service == 'local':
+            log_filename = trial_job['stderrPath'].split(':')[-1]
+        else:
+            log_filename = os.path.join(get_nni_log_dir(EXPERIMENT_URL), 'trial_' + trial_job['id'] + '.log')
+        with open(log_filename, 'r') as f:
+            log_content = f.read()
+            print(log_filename, flush=True)
+            print(log_content, flush=True)
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]

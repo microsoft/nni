@@ -24,9 +24,10 @@ import glob
 import subprocess
 import time
 import traceback
+import json
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
-    parse_max_duration_time, get_succeeded_trial_num, print_stderr, deep_update
+    parse_max_duration_time, get_succeeded_trial_num, deep_update, print_failed_job_log, get_failed_trial_jobs
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL
 
 def gen_new_config(config_file, training_service='local'):
@@ -37,18 +38,18 @@ def gen_new_config(config_file, training_service='local'):
     config = get_yml_content(config_file)
     new_config_file = config_file + '.tmp'
 
-    ts = get_yml_content('training_service.yml')[training_service]
-    print(ts)
+    it_config = get_yml_content('training_service.yml')
 
     # hack for kubeflow trial config
     if training_service == 'kubeflow':
-        ts['trial']['worker']['command'] = config['trial']['command']
+        it_config[training_service]['trial']['worker']['command'] = config['trial']['command']
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
 
-    deep_update(config, ts)
-    print(config)
+    deep_update(config, it_config['all'])
+    deep_update(config, it_config[training_service])
+
     dump_yml_content(new_config_file, config)
 
     return new_config_file, config
@@ -57,6 +58,7 @@ def run_test(config_file, training_service, local_gpu=False):
     '''run test per configuration file'''
 
     new_config_file, config = gen_new_config(config_file, training_service)
+    print(json.dumps(config, sort_keys=True, indent=4), flush=True)
 
     if training_service == 'local' and not local_gpu and config['trial']['gpuNum'] > 0:
         print('no gpu, skiping: ', config_file)
@@ -72,14 +74,12 @@ def run_test(config_file, training_service, local_gpu=False):
         for _ in range(0, max_duration+30, sleep_interval):
             time.sleep(sleep_interval)
             status = get_experiment_status(STATUS_URL)
-            if status == 'DONE':
-                num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
-                if training_service == 'local':
-                    print_stderr(TRIAL_JOBS_URL)
-                assert num_succeeded == max_trial_num, 'only %d succeeded trial jobs, there should be %d' % (num_succeeded, max_trial_num)
+            if status in ['DONE', 'ERROR'] or get_failed_trial_jobs(TRIAL_JOBS_URL):
                 break
 
-        assert status == 'DONE', 'Failed to finish in maxExecDuration'
+        print_failed_job_log(config['trainingServicePlatform'], TRIAL_JOBS_URL)
+        if status != 'DONE' or get_succeeded_trial_num(TRIAL_JOBS_URL) < max_trial_num:
+            raise AssertionError('Failed to finish in maxExecDuration')
     finally:
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
@@ -107,13 +107,13 @@ def run(args):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
-            print(GREEN + 'Testing:' + config_file + CLEAR)
+            print(GREEN + 'Testing:' + config_file + CLEAR, flush=True)
             begin_time = time.time()
             run_test(config_file, args.ts, args.local_gpu)
-            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR)
+            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR, flush=True)
         except Exception as error:
-            print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR)
-            print('%r' % error)
+            print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR, flush=True)
+            print('%r' % error, flush=True)
             traceback.print_exc()
             raise error
         finally:
