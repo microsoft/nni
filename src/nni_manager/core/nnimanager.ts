@@ -369,7 +369,8 @@ class NNIManager implements Manager {
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
-            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv
+            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
+            CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
@@ -377,6 +378,22 @@ class NNIManager implements Manager {
         this.dispatcher = createDispatcherInterface(tunerProc);
 
         return;
+    }
+
+    private getGpuEnvvarValue(): string {
+        let res: string | undefined;
+
+        if (this.experimentProfile.params.advisor !== undefined) {
+            res = this.experimentProfile.params.advisor.gpuIndices;
+        } else if (this.experimentProfile.params.tuner !== undefined) {
+            res = this.experimentProfile.params.tuner.gpuIndices;
+        }
+
+        if (res === undefined) {
+            return '';
+        } else {
+            return res;
+        }
     }
 
     private updateTrialConcurrency(trialConcurrency: number): void {
