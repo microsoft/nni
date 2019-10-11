@@ -381,18 +381,18 @@ class NNIManager implements Manager {
     }
 
     private getGpuEnvvarValue(): string {
-        let res: string | undefined;
+        let cudaDevices: string | undefined;
 
         if (this.experimentProfile.params.advisor !== undefined) {
-            res = this.experimentProfile.params.advisor.gpuIndices;
+            cudaDevices = this.experimentProfile.params.advisor.gpuIndices;
         } else if (this.experimentProfile.params.tuner !== undefined) {
-            res = this.experimentProfile.params.tuner.gpuIndices;
+            cudaDevices = this.experimentProfile.params.tuner.gpuIndices;
         }
 
-        if (res === undefined) {
+        if (cudaDevices === undefined) {
             return '';
         } else {
-            return res;
+            return cudaDevices;
         }
     }
 
