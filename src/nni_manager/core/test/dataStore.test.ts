@@ -72,8 +72,7 @@ describe('Unit test for dataStore', () => {
                 }`,
                 tuner: {
                     className: 'testTuner',
-                    checkpointDir: '/tmp/cp',
-                    gpuNum: 0
+                    checkpointDir: '/tmp/cp'
                 }
             },
             id: 'exp123',
