@@ -51,13 +51,13 @@ def json2space(in_x, name=NodeType.ROOT):
             name = name + '-' + _type
             _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
-                out_y = eval('hp.hp.choice')(name, _value)
+                out_y = hp.hp.choice(name, _value)
             elif _type == 'randint':
                 out_y = hp.hp.randint(name, _value[1] - _value[0])
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
-                out_y = eval('hp.hp.' + _type)(name, *_value)
+                out_y = getattr(hp.hp, _type)(name, *_value)
         else:
             out_y = dict()
             for key in in_x.keys():

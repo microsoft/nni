@@ -83,8 +83,7 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
                                                        name=name + "[%d]" % _index)
                     }
                 else:
-                    y = eval('parameter_expressions.' +
-                             _type)(*(_value + [random_state]))
+                    y = getattr(parameter_expressions, _type)(*(_value + [random_state]))
             else:
                 y = copy.deepcopy(oldy)
         else:

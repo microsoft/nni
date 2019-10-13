@@ -102,8 +102,7 @@ def json2parameter(ss_spec, random_state):
                 _index = random_state.randint(len(_value))
                 chosen_params = json2parameter(ss_spec[NodeType.VALUE][_index], random_state)
             else:
-                chosen_params = eval('parameter_expressions.' +  # pylint: disable=eval-used
-                                     _type)(*(_value + [random_state]))
+                chosen_params = getattr(parameter_expressions, _type)(*(_value + [random_state]))
         else:
             chosen_params = dict()
             for key in ss_spec.keys():
