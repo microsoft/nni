@@ -72,6 +72,8 @@ class NNIRestHandler {
         this.addTrialJob(router);
         this.cancelTrialJob(router);
         this.getMetricData(router);
+        this.getMetricDataByRange(router);
+        this.getLatestMetricData(router);
         this.exportData(router);
 
         // Express-joi-validator configuration
@@ -255,6 +257,28 @@ class NNIRestHandler {
     private getMetricData(router: Router): void {
         router.get('/metric-data/:job_id*?', async (req: Request, res: Response) => {
             this.nniManager.getMetricData(req.params.job_id, req.query.type).then((metricsData: MetricDataRecord[]) => {
+                res.send(metricsData);
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
+        });
+    }
+
+    private getMetricDataByRange(router: Router): void {
+        router.get('/metric-data-range/:min_seq_id/:max_seq_id', async (req: Request, res: Response) => {
+            const minSeqId = Number(req.params.min_seq_id);
+            const maxSeqId = Number(req.params.max_seq_id);
+            this.nniManager.getMetricDataByRange(minSeqId, maxSeqId).then((metricsData: MetricDataRecord[]) => {
+                res.send(metricsData);
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
+        });
+    }
+
+    private getLatestMetricData(router: Router): void {
+        router.get('/metric-data-latest/', async (req: Request, res: Response) => {
+            this.nniManager.getLatestMetricData().then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
                 this.handle_error(err, res);

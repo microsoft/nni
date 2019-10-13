@@ -1,0 +1,5 @@
+{
+    "README": "To demonstrate the flexibility, this search space does not follow the standard definition.",
+    "optimizer": ["Adam", "SGD"],
+    "learning_rate": [0.001, 0.1]
+}

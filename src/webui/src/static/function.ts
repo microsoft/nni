@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { message } from 'antd';
 import { MANAGER_IP } from './const';
-import { FinalResult, FinalType, TableObj } from './interface';
+import { MetricDataRecord, FinalType, TableObj } from './interface';
 
 const convertTime = (num: number) => {
+    if (num <= 0) {
+        return '0';
+    }
     if (num % 3600 === 0) {
         return num / 3600 + 'h';
     } else {
@@ -15,24 +18,28 @@ const convertTime = (num: number) => {
 
 // trial's duration, accurate to seconds for example 10min 30s
 const convertDuration = (num: number) => {
-    const hour = Math.floor(num / 3600);
-    const min = Math.floor(num / 60 % 60);
-    const second = Math.floor(num % 60);
-    const result = hour > 0 ? `${hour} h ${min} min ${second}s` : `${min} min ${second}s`;
-    if (hour <= 0 && min === 0 && second !== 0) {
-        return `${second}s`;
-    } else if (hour === 0 && min !== 0 && second === 0) {
-        return `${min}min`;
-    } else if (hour === 0 && min !== 0 && second !== 0) {
-        return `${min}min ${second}s`;
-    } else {
-        return result;
+    if (num < 1) {
+        return '0s';
     }
+    const hour = Math.floor(num / 3600);
+    const minute = Math.floor(num / 60 % 60);
+    const second = Math.floor(num % 60);
+    let result = [ ];
+    if (hour > 0) {
+        result.push(`${hour}h`);
+    }
+    if (minute > 0) {
+        result.push(`${minute}min`);
+    }
+    if (second > 0) {
+        result.push(`${second}s`);
+    }
+    return result.join(' ');
 };
 
 // get final result value
 // draw Accuracy point graph
-const getFinalResult = (final: Array<FinalResult>) => {
+const getFinalResult = (final?: MetricDataRecord[]) => {
     let acc;
     let showDefault = 0;
     if (final) {
@@ -51,7 +58,7 @@ const getFinalResult = (final: Array<FinalResult>) => {
 };
 
 // get final result value // acc obj
-const getFinal = (final: Array<FinalResult>) => {
+const getFinal = (final?: MetricDataRecord[]) => {
     let showDefault: FinalType;
     if (final) {
         showDefault = JSON.parse(final[final.length - 1].data);
@@ -101,7 +108,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string) => {
 };
 
 // kill job
-const killJob = (key: number, id: string, status: string, updateList: Function) => {
+const killJob = (key: number, id: string, status: string, updateList?: Function) => {
     axios(`${MANAGER_IP}/trial-jobs/${id}`, {
         method: 'DELETE',
         headers: {
@@ -113,7 +120,9 @@ const killJob = (key: number, id: string, status: string, updateList: Function) 
                 message.destroy();
                 message.success('Cancel the job successfully');
                 // render the table
-                updateList();
+                if (updateList) {
+                    updateList();  // FIXME
+                }
             } else {
                 message.error('fail to cancel the job');
             }
@@ -160,7 +169,22 @@ const downFile = (content: string, fileName: string) => {
     }
 };
 
+function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): string {
+    return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
+}
+
+function metricAccuracy(metric: MetricDataRecord): number {
+    const data = JSON.parse(metric.data);
+    return typeof data === 'number' ? data : NaN;
+}
+
+function formatAccuracy(accuracy: number): string {
+    // TODO: how to format NaN?
+    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
-    intermediateGraphOption, killJob, filterByStatus, filterDuration
+    intermediateGraphOption, killJob, filterByStatus, filterDuration,
+    formatAccuracy, formatTimestamp, metricAccuracy,
 };

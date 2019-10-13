@@ -19,7 +19,7 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
 /**
  * PAI trial job detail
@@ -34,20 +34,18 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
-    public sequenceId: number;
+    public form: TrialJobApplicationForm;
     public hdfsLogPath: string;
     public isEarlyStopped?: boolean;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string,
-                submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {
+                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.sequenceId = sequenceId;
         this.tags = [];
         this.hdfsLogPath = hdfsLogPath;
     }

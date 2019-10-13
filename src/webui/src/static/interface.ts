@@ -1,3 +1,5 @@
+// tslint:disable:no-any
+
 // draw accuracy graph data interface
 interface TableObj {
     key: number;
@@ -10,6 +12,19 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
+}
+
+interface TableRecord {
+    key: string;
+    sequenceId: number;
+    startTime: number;
+    endTime?: number;
+    id: string;
+    duration: number;
+    status: string;
+    intermediateCount: number;
+    accuracy?: number;
+    latestAccuracy: string;  // formatted string
 }
 
 interface SearchSpace {
@@ -30,26 +45,6 @@ interface Parameters {
     logPath?: string;
     intermediate: Array<number>;
     multiProgress?: number;
-}
-
-interface Experiment {
-    id: string;
-    author: string;
-    revision?: number;
-    experName: string;
-    logDir?: string;
-    runConcurren: number;
-    maxDuration: number;
-    execDuration: number;
-    MaxTrialNum: number;
-    startTime: number;
-    endTime?: number;
-    trainingServicePlatform: string;
-    tuner: object;
-    assessor?: object;
-    advisor?: object;
-    clusterMetaData?: object;
-    logCollection?: string;
 }
 
 // trial accuracy
@@ -74,21 +69,6 @@ interface TooltipForAccuracy {
     data: Array<number | object>;
 }
 
-interface TrialNumber {
-    succTrial: number;
-    failTrial: number;
-    stopTrial: number;
-    waitTrial: number;
-    runTrial: number;
-    unknowTrial: number;
-    totalCurrentTrial: number;
-}
-
-interface TrialJob {
-    text: string;
-    value: string;
-}
-
 interface Dimobj {
     dim: number;
     name: string;
@@ -108,10 +88,6 @@ interface ParaObj {
     parallelAxis: Array<Dimobj>;
 }
 
-interface FinalResult {
-    data: string;
-}
-
 interface Intermedia {
     name: string; // id
     type: string;
@@ -119,13 +95,93 @@ interface Intermedia {
     hyperPara: object; // each trial hyperpara value
 }
 
-interface ExperimentInfo {
-    platform: string;
-    optimizeMode: string;
+interface MetricDataRecord {
+    timestamp: number;
+    trialJobId: string;
+    parameterId: string;
+    type: string;
+    sequence: number;
+    data: string;
+}
+
+interface TrialJobInfo {
+    id: string;
+    sequenceId: number;
+    status: string;
+    startTime?: number;
+    endTime?: number;
+    hyperParameters?: string[];
+    logPath?: string;
+    finalMetricData?: MetricDataRecord[];
+    stderrPath?: string;
+}
+
+interface ExperimentParams {
+    authorName: string;
+    experimentName: string;
+    description?: string;
+    trialConcurrency: number;
+    maxExecDuration: number; // seconds
+    maxTrialNum: number;
+    searchSpace: string;
+    trainingServicePlatform: string;
+    multiPhase?: boolean;
+    multiThread?: boolean;
+    versionCheck?: boolean;
+    logCollection?: string;
+    tuner?: {
+        className: string;
+        builtinTunerName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+        includeIntermediateResults?: boolean;
+    };
+    assessor?: {
+        className: string;
+        builtinAssessorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
+    advisor?: {
+        className: string;
+        builtinAdvisorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
+    clusterMetaData?: {
+        key: string;
+        value: string;
+    }[];
+}
+
+interface ExperimentProfile {
+    params: ExperimentParams;
+    id: string;
+    execDuration: number;
+    logDir?: string;
+    startTime?: number;
+    endTime?: number;
+    maxSequenceId: number;
+    revision: number;
+}
+
+interface NNIManagerStatus {
+    status: string;
+    errors: string[];
 }
 
 export {
-    TableObj, Parameters, Experiment, AccurPoint, TrialNumber, TrialJob,
-    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalResult, FinalType,
-    TooltipForIntermediate, SearchSpace, Intermedia, ExperimentInfo
+    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
+    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
+    TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
+    NNIManagerStatus,
 };
