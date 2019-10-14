@@ -7,7 +7,7 @@ We have provided two naive compression algorithms and four popular ones for user
 | Name                                                 | Brief Introduction of Algorithm                                                                                                                                                                                            |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Level Pruner](./Pruner.md#level-pruner)             | Pruning the specified ratio on each weight based on absolute values of weights                                                                                                                                             |
-| [AGP Pruner](./Pruner.md#agp-pruner)                 | To prune, or not to prune: exploring the efficacy of pruning for model compression. [Reference Paper](https://arxiv.org/abs/1710.01878)                                                                                    |
+| [AGP Pruner](./Pruner.md#agp-pruner)                 | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)                                                         |
 | [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)                                                                                                   |
 | [Naive Quantizer](./Quantizer.md#naive-quantizer)    | Quantize weights to default 8 bits                                                                                                                                                                                         |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer)        | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
@@ -72,7 +72,7 @@ It means following the algorithm's default setting for compressed operations wit
 
 ### Other APIs
 
-Some compression algorithms use epochs to control the progress of compression, and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
+Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](./Pruner.md#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
 
 Tensorflow code
 ```python
@@ -138,7 +138,7 @@ Some algorithms may want global information for generating masks, for example, a
 
 The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
 
-```
+```python
 # This is writing a Quantizer in tensorflow.
 # For writing a Quantizer in PyTorch, you can simply replace
 # nni.compression.tensorflow.Quantizer with
