@@ -32,7 +32,7 @@ class LevelPruner(Pruner):
         w_abs = weight.abs()
         k = int(weight.numel() * config['sparsity'])
         if k == 0:
-            return torch.ones(weight.shape)
+            return torch.ones(weight.shape).type(weight.type())
         threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
         return torch.gt(w_abs, threshold).type(weight.type())
 
@@ -61,7 +61,7 @@ class AGP_Pruner(Pruner):
         self.now_epoch = 1
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type(weight.type()))
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
@@ -116,7 +116,7 @@ class SensitivityPruner(Pruner):
     
    
     def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type(weight.type()))
         # if we want to generate new mask, we should update weigth first 
         weight = weight*mask
         target_sparsity = config['sparsity'] * torch.std(weight).item()
