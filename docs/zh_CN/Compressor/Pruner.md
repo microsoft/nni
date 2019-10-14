@@ -3,13 +3,13 @@ NNI Compressor 中的 Pruner
 
 ## Level Pruner
 
-This is one basic pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%).
+这是个基本的 Pruner：可设置目标稀疏度（以分数表示，0.6 表示会剪除 60%）。
 
-We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
+首先按照绝对值对指定层的权重排序。 然后按照所需的稀疏度，将值最小的权重屏蔽为 0。
 
-### Usage
+### 用法
 
-Tensorflow code
+TensorFlow 代码
 ```
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -17,7 +17,7 @@ pruner = LevelPruner(config_list)
 pruner(model_graph)
 ```
 
-PyTorch code
+PyTorch 代码
 ```
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
