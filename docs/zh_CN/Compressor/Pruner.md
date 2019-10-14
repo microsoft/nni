@@ -1,4 +1,4 @@
-Pruner on NNI Compressor
+NNI Compressor 中的 Pruner
 ===
 
 ## Level Pruner
