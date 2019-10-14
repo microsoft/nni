@@ -79,7 +79,7 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
 
-## Asynchronous Dispatcher Mode for trial dependency control
+## Trial 依赖控制的异步 Dispatcher 模式
 
 多机间启用权重的 Trial，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的 Trial 完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的 Trial 时，Tuner 线程可以决定是否阻塞当前线程。 例如：
 
