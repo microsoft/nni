@@ -1,9 +1,9 @@
 from unittest import TestCase, main
-import nni.compression.tensorflow as tf_compressor
-import nni.compression.torch as torch_compressor
+import tensorflow as tf
 import torch
 import torch.nn.functional as F
-import tensorflow as tf 
+import nni.compression.tensorflow as tf_compressor
+import nni.compression.torch as torch_compressor
 
 def weight_variable(shape):
     return tf.Variable(tf.truncated_normal(shape, stddev = 0.1))
