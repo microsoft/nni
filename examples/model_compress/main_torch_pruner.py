@@ -89,7 +89,7 @@ def main():
         test(model, device, test_loader)
         
         pruner.update_epoch(epoch)
-        
-        
 
-main()
+
+if __name__ == '__main__':
+    main()
