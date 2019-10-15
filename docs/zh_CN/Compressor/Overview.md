@@ -43,11 +43,11 @@ pruner(model)
 
 压缩模型时，用户可能希望指定稀疏率，为不同类型的操作指定不同的比例，排除某些类型的操作，或仅压缩某类操作。 配置规范可用于表达此类需求。 可将其视为一个 Python 的 `list` 对象，其中每个元素都是一个 `dict` 对象。 在每个 `dict` 中，有一些 NNI 压缩算法支持的键值：
 
-* __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
-* __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
-* __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
+* __op_types__：指定要压缩的操作类型。 'default' 表示使用算法的默认设置。
+* __op_names__：指定需要压缩的操作的名称。 如果没有设置此字段，操作符不会通过名称筛选。
+* __exclude__：默认为 False。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。
 
-There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
+`dict` 还有一些其它键值，由特定的压缩算法所使用。 例如：
 
 The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them.
 
