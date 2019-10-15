@@ -49,9 +49,9 @@ pruner(model)
 
 `dict` 还有一些其它键值，由特定的压缩算法所使用。 例如：
 
-The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them.
+`list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
 
-A simple example of configuration is shown below:
+配置的简单示例如下：
 ```python
 [
     {
@@ -68,32 +68,32 @@ A simple example of configuration is shown below:
     }
 ]
 ```
-It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and please do not compress `op_name3`.
+其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
-### Other APIs
+### 其它 API
 
-Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](./Pruner.md#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
+一些压缩算法使用 Epoch 来控制压缩进度（如[AGP](./Pruner.md#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此提供了另外两个 API。 一个是 `update_epoch`，可参考下例使用：
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
 
-The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
+另一个是 `step`，可在每个批处理后调用 `pruner.step()`。 注意，并不是所有的算法都需要这两个 API，对于不需要它们的算法，调用它们不会有影响。
 
-__[TODO]__ The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
+__[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训练后使用此 API，可得到压缩后的模型。 同时也可导出另一个文件用来存储 mask 的数值。
 
-## Customize new compression algorithms
+## 定制新的压缩算法
 
-To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruner and quantizer respectively.
+为了简化压缩算法的编写，NNI 设计了简单且灵活的接口。 对于 Pruner 和 Quantizer 分别有相应的接口。
 
-### Pruning algorithm
+### 剪枝算法
 
-If you want to write a new pruning algorithm, you can write a class that inherits `nni.compression.tensorflow.Pruner` or `nni.compression.torch.Pruner` depending on which framework you use. Then, override the member functions with the logic of your algorithm.
+要实现新的剪枝算法，根据使用的框架，添加继承于 `nni.compression.tensorflow.Pruner` 或 `nni.compression.torch.Pruner` 的类。 然后，根据算法逻辑来重写成员函数。
 
 ```python
 # This is writing a pruner in tensorflow.
