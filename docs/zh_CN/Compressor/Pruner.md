@@ -32,14 +32,14 @@ pruner(model)
 
 ## AGP Pruner
 在 [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)中，作者 Michael Zhu 和 Suyog Gupta 提出了一种逐渐修建权重的算法。
-> We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t: ![](../../img/agp_pruner.png) The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation
+> 我们引入了一种新的自动梯度剪枝算法。这种算法从初始的稀疏度值 si（一般为 0）开始，通过 n 步的剪枝操作，增加到最终所需的稀疏度 sf。从训练步骤 t0 开始，以 ∆t 为剪枝频率： ![](../../img/agp_pruner.png) 在神经网络训练时‘逐步增加网络稀疏度时，每训练  ∆t 步更新一次权重剪枝的二进制掩码。同时也允许训练步骤恢复因为剪枝而造成的精度损失。 根据我们的经验，∆t 设为 100 到 1000 个训练步骤之间时，对于模型最终精度的影响可忽略不计。 一旦模型达到了稀疏度目标 sf，权重掩码将不再更新。 公式背后的稀疏函数直觉。
 
-### Usage
-You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
+### 用法
+通过下列代码，可以在 10 个 Epoch 中将权重稀疏度从 0% 剪枝到 80%。
 
-First, you should import pruner and add mask to model.
+首先，导入 Pruner 来为模型添加遮盖。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import AGP_Pruner
 config_list = [{
@@ -53,7 +53,7 @@ config_list = [{
 pruner = AGP_Pruner(config_list)
 pruner(tf.get_default_graph())
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import AGP_Pruner
 config_list = [{
