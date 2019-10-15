@@ -91,7 +91,7 @@ pruner.update_epoch(epoch)
 
 ## Sensitivity Pruner
 在 [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626) 中，作者 Song Han 提出了一种算法来查找每一层的敏感度，并据此为每一层设置剪枝的阈值。
-> We used the sensitivity results to find each layer’s threshold: for example, the smallest threshold was applied to the most sensitive layer, which is the first convolutional layer... The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
+> 我们使用了敏感度结果来找到每层的阈值：如，最敏感的第一层卷积层会使用最小的阈值。 The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
 
 ### Usage
 You can prune weight step by step and reach one target sparsity by Sensitivity Pruner with the code below.
