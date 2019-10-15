@@ -143,7 +143,7 @@ The interface for customizing quantization algorithm is similar to that of pruni
 # For writing a Quantizer in PyTorch, you can simply replace
 # nni.compression.tensorflow.Quantizer with
 # nni.compression.torch.Quantizer
-class YourPruner(nni.compression.tensorflow.Quantizer):
+class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, config_list):
         # suggest you to use the NNI defined spec for config
         super().__init__(config_list)
@@ -169,13 +169,6 @@ class YourPruner(nni.compression.tensorflow.Quantizer):
         # can do some processing based on the model or weights binded
         # in the func bind_model
         pass
-    
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-    
-    def bind_model(self, model):
-        #preprocess model
 ```
 
 __[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
