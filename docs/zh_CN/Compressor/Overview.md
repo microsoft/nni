@@ -1,13 +1,13 @@
 # Compressor
-NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
+NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
 
-## Supported algorithms
-We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
+## 支持的算法
+NNI 提供了两种朴素压缩算法以及四种流行的压缩算法，包括 3 种剪枝算法以及 3 种量化算法：
 
-| Name                                                 | Brief Introduction of Algorithm                                                                                                                                                                                            |
+| 名称                                                   | 算法简介                                                                                                                                                                                                                       |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)             | Pruning the specified ratio on each weight based on absolute values of weights                                                                                                                                             |
-| [AGP Pruner](./Pruner.md#agp-pruner)                 | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)                                                         |
+| [Level Pruner](./Pruner.md#level-pruner)             | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                                         |
+| [AGP Pruner](./Pruner.md#agp-pruner)                 | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                                        |
 | [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)                                                                                                   |
 | [Naive Quantizer](./Quantizer.md#naive-quantizer)    | Quantize weights to default 8 bits                                                                                                                                                                                         |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer)        | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
