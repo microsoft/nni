@@ -1,7 +1,9 @@
 # Compressor
+
 NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
 
 ## 支持的算法
+
 NNI 提供了两种朴素压缩算法以及四种流行的压缩算法，包括 3 种剪枝算法以及 3 种量化算法：
 
 | 名称                                                   | 算法简介                                                                                                                                                                       |
@@ -18,6 +20,7 @@ NNI 提供了两种朴素压缩算法以及四种流行的压缩算法，包括 
 通过简单的示例来展示如何修改 Trial 代码来使用压缩算法。 比如，需要通过 Level Pruner 来将权重剪枝 80%，首先在代码中训练模型前，添加以下内容（[完整代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)）。
 
 TensorFlow 代码
+
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -26,6 +29,7 @@ pruner(tf.get_default_graph())
 ```
 
 PyTorch 代码
+
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -52,6 +56,7 @@ pruner(model)
 `list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
 
 配置的简单示例如下：
+
 ```python
 [
     {
@@ -68,6 +73,7 @@ pruner(model)
     }
 ]
 ```
+
 其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
 ### 其它 API
@@ -75,10 +81,13 @@ pruner(model)
 一些压缩算法使用 Epoch 来控制压缩进度（如[AGP](./Pruner.md#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此提供了另外两个 API。 一个是 `update_epoch`，可参考下例使用：
 
 TensorFlow 代码
+
 ```python
 pruner.update_epoch(epoch, sess)
 ```
+
 PyTorch 代码
+
 ```python
 pruner.update_epoch(epoch)
 ```
