@@ -4,20 +4,20 @@ NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法�
 ## 支持的算法
 NNI 提供了两种朴素压缩算法以及四种流行的压缩算法，包括 3 种剪枝算法以及 3 种量化算法：
 
-| 名称                                                   | 算法简介                                                                                                                                                                                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)             | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                                         |
-| [AGP Pruner](./Pruner.md#agp-pruner)                 | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                                        |
-| [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)                                                                                                   |
-| [Naive Quantizer](./Quantizer.md#naive-quantizer)    | Quantize weights to default 8 bits                                                                                                                                                                                         |
-| [QAT Quantizer](./Quantizer.md#qat-quantizer)        | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
-| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer)  | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)                                                                           |
+| 名称                                                   | 算法简介                                                                                                                                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)             | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                         |
+| [AGP Pruner](./Pruner.md#agp-pruner)                 | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                        |
+| [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | 为 Efficient Neural Networks 学习权重和连接。 [参考论文](https://arxiv.org/abs/1506.02626)                                                                                              |
+| [Naive Quantizer](./Quantizer.md#naive-quantizer)    | 默认将权重量化为 8 位                                                                                                                                                               |
+| [QAT Quantizer](./Quantizer.md#qat-quantizer)        | 为 Efficient Integer-Arithmetic-Only Inference 量化并训练神经网络。 [参考论文](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
+| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer)  | DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 [参考论文](https://arxiv.org/abs/1606.06160)                                                                                              |
 
-## Usage of built-in compression algorithms
+## 内置压缩算法的用法
 
-We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with Level Pruner, you can add the following three lines into your code before training your model ([here](https://github.com/microsoft/nni/tree/master/examples/model_compress) is complete code).
+通过简单的示例来展示如何修改 Trial 代码来使用压缩算法。 比如，需要通过 Level Pruner 来将权重剪枝 80%，首先在代码中训练模型前，添加以下内容（[完整代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)）。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -25,7 +25,7 @@ pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -33,7 +33,7 @@ pruner = LevelPruner(config_list)
 pruner(model)
 ```
 
-You can use other compression algorithms in the package of `nni.compression`. The algorithms are implemented in both PyTorch and Tensorflow, under `nni.compression.torch` and `nni.compression.tensorflow` respectively. You can refer to [Pruner](./Pruner.md) and [Quantizer](./Quantizer.md) for detail description of supported algorithms.
+可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。
 
 The function call `pruner(model)` receives user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph()`, while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
