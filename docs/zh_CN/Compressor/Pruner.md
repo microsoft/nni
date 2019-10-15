@@ -91,38 +91,38 @@ pruner.update_epoch(epoch)
 
 ## Sensitivity Pruner
 在 [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626) 中，作者 Song Han 提出了一种算法来查找每一层的敏感度，并据此为每一层设置剪枝的阈值。
-> 我们使用了敏感度结果来找到每层的阈值：如，最敏感的第一层卷积层会使用最小的阈值。 The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
+> 我们使用了敏感度结果来找到每层的阈值：如，最敏感的第一层卷积层会使用最小的阈值。 剪枝阈值作为质量参数来乘以图层权重的标准方差。
 
-### Usage
-You can prune weight step by step and reach one target sparsity by Sensitivity Pruner with the code below.
+### 用法
+下列代码通过 Sensitivity Pruner 来逐步对权重剪枝，并达到目标稀疏度。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import SensitivityPruner
 config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
 pruner = SensitivityPruner(config_list)
 pruner(tf.get_default_graph())
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import SensitivityPruner
 config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
 pruner = SensitivityPruner(config_list)
 pruner(model)
 ```
-Like AGP Pruner, you should update mask information every epoch by adding code below
+与 AGP Pruner 莱斯，需要使用下列代码在每个 Epoch 后更新信息
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for Sensitivity Pruner
-* **sparsity:** This is to specify the sparsity operations to be compressed to
+#### Sensitivity Pruner 的用户配置
+* **sparsity:**，指定压缩的稀疏度。
 
 ***
