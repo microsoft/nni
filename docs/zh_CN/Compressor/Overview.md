@@ -41,7 +41,7 @@ pruner(model)
 
 ### 压缩算法中的用户配置
 
-When compressing a model, users may want to specify the ratio for sparsity, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object. In each `dict`, there are some keys commonly supported by NNI compression:
+压缩模型时，用户可能希望指定稀疏率，为不同类型的操作指定不同的比例，排除某些类型的操作，或仅压缩某类操作。 配置规范可用于表达此类需求。 可将其视为一个 Python 的 `list` 对象，其中每个元素都是一个 `dict` 对象。 在每个 `dict` 中，有一些 NNI 压缩算法支持的键值：
 
 * __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
 * __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
