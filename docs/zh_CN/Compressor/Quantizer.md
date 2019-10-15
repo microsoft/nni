@@ -1,16 +1,16 @@
-Quantizer on NNI Compressor
+NNI Compressor 中的 Quantizer
 ===
 
 ## Naive Quantizer
 
-We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
+Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试量化算法。
 
-### Usage
-tensorflow
+### 用法
+Tensorflow
 ```python
 nni.compressors.tensorflow.NaiveQuantizer()(model_graph)
 ```
-pytorch
+PyTorch
 ```python
 nni.compressors.torch.NaiveQuantizer()(model)
 ```
@@ -18,8 +18,8 @@ nni.compressors.torch.NaiveQuantizer()(model)
 ***
 
 ## QAT Quantizer
-In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
-> We propose an approach that simulates quantization effects in the forward pass of training. Backpropagation still happens as usual, and all weights and biases are stored in floating point so that they can be easily nudged by small amounts. The forward propagation pass however simulates quantized inference as it will happen in the inference engine, by implementing in floating-point arithmetic the rounding behavior of the quantization scheme * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer, the batch normalization parameters are “folded into” the weights before quantization. * Activations are quantized at points where they would be during inference, e.g. after the activation function is applied to a convolutional or fully connected layer’s output, or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+在 [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) 中，作者 Benoit Jacob 和 Skirmantas Kligys 提出了一种算法在训练中量化模型。
+> 我们提出了一种方法，在训练的前向过程中模拟量化效果。 此方法不影响反向传播，所有权重和偏差都使用了浮点数保存，因此能很容易的进行量化。 The forward propagation pass however simulates quantized inference as it will happen in the inference engine, by implementing in floating-point arithmetic the rounding behavior of the quantization scheme * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer, the batch normalization parameters are “folded into” the weights before quantization. * Activations are quantized at points where they would be during inference, e.g. after the activation function is applied to a convolutional or fully connected layer’s output, or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
 
 ### Usage
