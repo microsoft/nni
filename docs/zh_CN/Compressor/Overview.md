@@ -96,7 +96,7 @@ __[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训
 要实现新的剪枝算法，根据使用的框架，添加继承于 `nni.compression.tensorflow.Pruner` 或 `nni.compression.torch.Pruner` 的类。 然后，根据算法逻辑来重写成员函数。
 
 ```python
-# This is writing a pruner in tensorflow.
+# TensorFlow 中定制 Pruner。
 # For writing a pruner in PyTorch, you can simply replace
 # nni.compression.tensorflow.Pruner with
 # nni.compression.torch.Pruner
