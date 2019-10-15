@@ -68,24 +68,24 @@ pruner = AGP_Pruner(config_list)
 pruner(model)
 ```
 
-Second, you should add code below to update epoch number when you finish one epoch in your training code.
+其次，在训练代码中每完成一个 Epoch，更新一下 Epoch 数值。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for AGP Pruner
-* **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
-* **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress
-* **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once
+#### AGP Pruner 的用户配置
+* **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
+* **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
+* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值。
+* **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
+* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝。
 
 ***
 
