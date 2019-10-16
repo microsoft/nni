@@ -27,7 +27,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         this.state = {
             nniManagerLogStr: null,
             dispatcherLogStr: null,
-            isLoading: true
+            isLoading: true,
         };
     }
 
