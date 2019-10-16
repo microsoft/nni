@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = [ 'LevelPruner', 'AGP_Pruner', 'SensitivityPruner' ]
+__all__ = ['LevelPruner', 'AGP_Pruner', 'SensitivityPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -10,6 +10,7 @@ logger = logging.getLogger('torch pruner')
 class LevelPruner(Pruner):
     """Prune to an exact pruning level specification
     """
+
     def __init__(self, config_list):
         """
         config_list: supported keys:
@@ -21,8 +22,8 @@ class LevelPruner(Pruner):
         w_abs = weight.abs()
         k = int(weight.numel() * config['sparsity'])
         if k == 0:
-            return torch.ones(weight.shape)
-        threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
+            return torch.ones(weight.shape).type(weight.type())
+        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
         return torch.gt(w_abs, threshold).type(weight.type())
 
 
@@ -35,6 +36,7 @@ class AGP_Pruner(Pruner):
     Learning of Phones and other Consumer Devices,
     https://arxiv.org/pdf/1710.01878.pdf
     """
+
     def __init__(self, config_list):
         """
         config_list: supported keys:
@@ -49,14 +51,14 @@ class AGP_Pruner(Pruner):
         self.now_epoch = 1
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type(weight.type()))
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
             return mask
         # if we want to generate new mask, we should update weigth first 
-        w_abs = weight.abs()*mask
-        threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
+        w_abs = weight.abs() * mask
+        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
         self.mask_list[op_name] = new_mask
         return new_mask
@@ -74,18 +76,18 @@ class AGP_Pruner(Pruner):
         if end_epoch <= self.now_epoch:
             return final_sparsity
 
-        span = ((end_epoch - start_epoch-1)//freq)*freq
+        span = ((end_epoch - start_epoch - 1) // freq) * freq
         assert span > 0
-        target_sparsity = (final_sparsity + 
-                            (initial_sparsity - final_sparsity)*
-                            (1.0 - ((self.now_epoch - start_epoch)/span))**3)
+        target_sparsity = (final_sparsity +
+                           (initial_sparsity - final_sparsity) *
+                           (1.0 - ((self.now_epoch - start_epoch) / span)) ** 3)
         return target_sparsity
 
     def update_epoch(self, epoch):
         if epoch > 0:
             self.now_epoch = epoch
-    
-    
+
+
 class SensitivityPruner(Pruner):
     """Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
     https://arxiv.org/pdf/1506.02626v3.pdf
@@ -93,6 +95,7 @@ class SensitivityPruner(Pruner):
     I.e.: "The pruning threshold is chosen as a quality parameter multiplied
     by the standard deviation of a layers weights."
     """
+
     def __init__(self, config_list):
         """
         config_list: supported keys:
@@ -100,19 +103,18 @@ class SensitivityPruner(Pruner):
         """
         super().__init__(config_list)
         self.mask_list = {}
-    
-   
+
     def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape))
+        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type(weight.type()))
         # if we want to generate new mask, we should update weigth first 
-        weight = weight*mask
+        weight = weight * mask
         target_sparsity = config['sparsity'] * torch.std(weight).item()
         k = int(weight.numel() * target_sparsity)
         if k == 0:
             return mask
-        
+
         w_abs = weight.abs()
-        threshold = torch.topk(w_abs.view(-1), k, largest = False).values.max()
+        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
         new_mask = torch.gt(w_abs, threshold).type(weight.type())
         self.mask_list[op_name] = new_mask
         return new_mask
