@@ -41,7 +41,7 @@ def get_default_parameters():
     '''get default parameters'''
     params = {
         'C': 1.0,
-        'keral': 'linear',
+        'kernel': 'linear',
         'degree': 3,
         'gamma': 0.01,
         'coef0': 0.01
@@ -52,7 +52,7 @@ def get_model(PARAMS):
     '''Get model according to parameters'''
     model = SVC()
     model.C = PARAMS.get('C')
-    model.keral = PARAMS.get('keral')
+    model.kernel = PARAMS.get('kernel')
     model.degree = PARAMS.get('degree')
     model.gamma = PARAMS.get('gamma')
     model.coef0 = PARAMS.get('coef0')
