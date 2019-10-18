@@ -73,7 +73,7 @@ setuptools.setup(
         'requests',
         'astor',
         'PythonWebHDFS',
-        'hyperopt',
+        'hyperopt==0.1.2',
         'json_tricks',
         'numpy',
         'scipy',
