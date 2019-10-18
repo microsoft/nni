@@ -184,11 +184,12 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     </Col>
                 </Row>
                 {/* learn about click -> default active key is dispatcher. */}
-                <LogDrawer
-                    isVisble={isShowLogDrawer}
-                    closeDrawer={this.closeDrawer}
-                    activeTab="dispatcher"
-                />
+                {isShowLogDrawer ? (
+                    <LogDrawer
+                        closeDrawer={this.closeDrawer}
+                        activeTab="dispatcher"
+                    />
+                ) : null}
             </Row>
         );
     }
