@@ -2,7 +2,7 @@
 NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and PyTorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
 
 ## Supported algorithms
-We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
+We have provided two naive compression algorithms and three popular ones for users, including two pruning algorithms and three quantization algorithms:
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
