@@ -332,20 +332,35 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                         <Icon type="line-chart" />
                                     </Button>
                                     {/* kill job */}
-                                    <Popconfirm
-                                        title="Are you sure to cancel this trial?"
-                                        onConfirm={killJob.
-                                            bind(this, record.key, record.id, record.status)}
-                                    >
-                                        <Button
-                                            type="default"
-                                            disabled={flag}
-                                            className="margin-mediate special"
-                                            title="kill"
-                                        >
-                                            <Icon type="stop" />
-                                        </Button>
-                                    </Popconfirm>
+                                    {
+                                        flag
+                                            ?
+                                            <Button
+                                                type="default"
+                                                disabled={true}
+                                                className="margin-mediate special"
+                                                title="kill"
+                                            >
+                                                <Icon type="stop" />
+                                            </Button>
+                                            :
+                                            <Popconfirm
+                                                title="Are you sure to cancel this trial?"
+                                                okText="Yes"
+                                                cancelText="No"
+                                                onConfirm={killJob.
+                                                    bind(this, record.key, record.id, record.status)}
+                                            >
+                                                <Button
+                                                    type="default"
+                                                    disabled={false}
+                                                    className="margin-mediate special"
+                                                    title="kill"
+                                                >
+                                                    <Icon type="stop" />
+                                                </Button>
+                                            </Popconfirm>
+                                    }
                                 </Row>
                             );
                         },
