@@ -86,11 +86,10 @@ def main():
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
+        pruner.update_epoch(epoch + 1)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
-
-        pruner.update_epoch(epoch + 1)
 
 
 if __name__ == '__main__':
