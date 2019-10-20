@@ -67,14 +67,14 @@ def main():
 
     model = Mnist()
 
-    '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(configure_list)
+    '''you can change this to LevelPruner to implement it
+    pruner = LevelPruner(configure_list)
     '''
     configure_list = [{
         'initial_sparsity': 0,
         'final_sparsity': 0.8,
-        'start_epoch': 1,
-        'end_epoch': 11,
+        'start_epoch': 0,
+        'end_epoch': 10,
         'frequency': 1,
         'op_type': 'default'
     }]
@@ -86,7 +86,7 @@ def main():
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
-        pruner.update_epoch(epoch + 1)
+        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)

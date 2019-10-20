@@ -56,11 +56,14 @@ class AGP_Pruner(Pruner):
         """
         super().__init__(config_list)
         self.mask_list = {}
-        self.now_epoch = 1
+        self.now_epoch = 0
         self.if_init_list = {}
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        if self.if_init_list.get(op_name, True):
+        start_epoch = config.get('start_epoch', 0)
+        freq = config.get('frequency', 1)
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
+                self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
@@ -73,12 +76,12 @@ class AGP_Pruner(Pruner):
             self.mask_list.update({op_name: new_mask})
             self.if_init_list.update({op_name: False})
         else:
-            new_mask = self.mask_list[op_name]
+            new_mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
         return new_mask
 
     def compute_target_sparsity(self, config):
         end_epoch = config.get('end_epoch', 1)
-        start_epoch = config.get('start_epoch', 1)
+        start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         final_sparsity = config.get('final_sparsity', 0)
         initial_sparsity = config.get('initial_sparsity', 0)

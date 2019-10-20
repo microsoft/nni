@@ -79,8 +79,8 @@ def main():
 
     model = Mnist()
 
-    '''you can change this to SensitivityPruner to implement it
-    pruner = SensitivityPruner(configure_list)
+    '''you can change this to LevelPruner to implement it
+    pruner = LevelPruner(configure_list)
     '''
     configure_list = [{
                         'initial_sparsity': 0,

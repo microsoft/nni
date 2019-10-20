@@ -2,7 +2,7 @@ import logging
 import tensorflow as tf
 from .compressor import Pruner
 
-__all__ = [ 'LevelPruner', 'AGP_Pruner', 'SensitivityPruner' ]
+__all__ = ['LevelPruner', 'AGP_Pruner']
 
 _logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class AGP_Pruner(Pruner):
     Learning of Phones and other Consumer Devices,
     https://arxiv.org/pdf/1710.01878.pdf
     """
+
     def __init__(self, config_list):
         """
         config_list: supported keys:
@@ -60,51 +61,16 @@ class AGP_Pruner(Pruner):
         if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
             _logger.warning('your end epoch <= start epoch or initial_sparsity >= final_sparsity')
             return final_sparsity
-        
+
         now_epoch = tf.minimum(self.now_epoch, tf.constant(end_epoch))
-        span = int(((end_epoch - start_epoch-1)//freq)*freq)
+        span = int(((end_epoch - start_epoch - 1) // freq) * freq)
         assert span > 0
         base = tf.cast(now_epoch - start_epoch, tf.float32) / span
-        target_sparsity = (final_sparsity + 
-                            (initial_sparsity - final_sparsity)*
-                            (tf.pow(1.0 - base, 3)))
+        target_sparsity = (final_sparsity +
+                           (initial_sparsity - final_sparsity) *
+                           (tf.pow(1.0 - base, 3)))
         return target_sparsity
 
     def update_epoch(self, epoch, sess):
         sess.run(self.assign_handler)
         sess.run(tf.assign(self.now_epoch, int(epoch)))
-    
-
-class SensitivityPruner(Pruner):
-    """Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
-    https://arxiv.org/pdf/1506.02626v3.pdf
-
-    I.e.: "The pruning threshold is chosen as a quality parameter multiplied
-    by the standard deviation of a layers weights."
-    """
-    def __init__(self, config_list):
-        """
-        config_list: supported keys
-            - sparsity: chosen pruning sparsity
-        """
-        super().__init__(config_list)
-        self.layer_mask = {}
-        self.assign_handler = []
-
-    def calc_mask(self, weight, config, op_name, **kwargs):
-        target_sparsity = config['sparsity'] * tf.math.reduce_std(weight) 
-        mask = tf.get_variable(op_name + '_mask', initializer=tf.ones(weight.shape), trainable=False)
-        self.layer_mask[op_name] = mask
-
-        weight_assign_handler = tf.assign(weight, mask*weight)
-        # use control_dependencies so that weight_assign_handler will be executed before mask_update_handler
-        with tf.control_dependencies([weight_assign_handler]):
-            threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
-            # stop gradient in case gradient change the mask
-            new_mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
-            mask_update_handler = tf.assign(mask, new_mask)
-            self.assign_handler.append(mask_update_handler)
-        return mask
-
-    def update_epoch(self, epoch, sess):
-        sess.run(self.assign_handler)
