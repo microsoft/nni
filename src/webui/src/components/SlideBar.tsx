@@ -338,11 +338,12 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 {tablet}
                 {desktop}
                 {/* the drawer for dispatcher & nnimanager log message */}
-                <LogDrawer
-                    isVisble={isvisibleLogDrawer}
-                    closeDrawer={this.closeLogDrawer}
-                    activeTab={activeKey}
-                />
+                {isvisibleLogDrawer ? (
+                    <LogDrawer
+                        closeDrawer={this.closeLogDrawer}
+                        activeTab={activeKey}
+                    />
+                ) : null}
                 <ExperimentDrawer
                     isVisble={isvisibleExperimentDrawer}
                     closeExpDrawer={this.closeExpDrawer}
