@@ -100,10 +100,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.setState({ whichGraph: activeKey });
     }
 
-    test = () => {
-        alert('TableList component was not properly initialized.');
-    }
-
     updateSearchFilterType = (value: string) => {
         // clear input value and re-render table
         if (this.searchInput !== null) {
@@ -167,14 +163,14 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     <Col span={14} className="right">
                         <Button
                             className="common"
-                            onClick={this.tableList ? this.tableList.addColumn : this.test}
+                            onClick={() => { if (this.tableList) { this.tableList.addColumn(); }}}
                         >
                             Add column
                         </Button>
                         <Button
                             className="mediateBtn common"
                             // use child-component tableList's function, the function is in child-component.
-                            onClick={this.tableList ? this.tableList.compareBtn : this.test}
+                            onClick={() => { if (this.tableList) { this.tableList.compareBtn(); }}}
                         >
                             Compare
                         </Button>
