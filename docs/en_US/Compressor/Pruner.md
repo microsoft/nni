@@ -86,9 +86,9 @@ You can view example for more information
 #### User configuration for AGP Pruner
 * **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
 * **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress
+* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
 * **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once
+* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
 
 ***
 
