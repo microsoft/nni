@@ -26,7 +26,6 @@ import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
-from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -95,7 +94,6 @@ class MetisTuner(Tuner):
         self.minimize_starting_points = None
         self.supplement_data_num = 0
 
-    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update the self.x_bounds and self.x_types by the search_space.json
 
