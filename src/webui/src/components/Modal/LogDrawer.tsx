@@ -16,6 +16,7 @@ interface LogDrawerState {
     nniManagerLogStr: string | null;
     dispatcherLogStr: string | null;
     isLoading: boolean;
+    logDrawerHeight: number;
 }
 
 class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
@@ -28,6 +29,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
             nniManagerLogStr: null,
             dispatcherLogStr: null,
             isLoading: true,
+            logDrawerHeight: window.innerHeight - 48
         };
     }
 
@@ -63,18 +65,23 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         );
     }
 
+    setLogDrawerHeight = () => {
+        this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
+    }
+
     async componentDidMount() {
         this.refresh();
+        window.addEventListener('resize', this.setLogDrawerHeight);
     }
 
     componentWillUnmount() {
         window.clearTimeout(this.timerId);
+        window.removeEventListener('resize', this.setLogDrawerHeight);
     }
 
     render() {
         const { closeDrawer, activeTab } = this.props;
-        const { nniManagerLogStr, dispatcherLogStr, isLoading } = this.state;
-        const heights: number = window.innerHeight - 48; // padding top and bottom
+        const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
         return (
             <Row>
                 <Drawer
@@ -84,16 +91,24 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     onClose={closeDrawer}
                     visible={true}
                     width="76%"
-                    height={heights}
+                    height={logDrawerHeight}
                 // className="logDrawer"
                 >
-                    <div className="card-container log-tab-body" style={{ height: heights }}>
-                        <Tabs type="card" defaultActiveKey={activeTab} style={{ height: heights + 19 }}>
+                    <div className="card-container log-tab-body">
+                        <Tabs
+                            type="card"
+                            defaultActiveKey={activeTab}
+                            style={{ height: logDrawerHeight, minHeight: 190 }}
+                        >
                             {/* <Tabs type="card" onTabClick={this.selectwhichLog} defaultActiveKey={activeTab}> */}
                             {/* <TabPane tab="Dispatcher Log" key="dispatcher"> */}
                             <TabPane tab={this.dispatcherHTML()} key="dispatcher">
                                 <div>
-                                    <MonacoHTML content={dispatcherLogStr || 'Loading...'} loading={isLoading} />
+                                    <MonacoHTML
+                                        content={dispatcherLogStr || 'Loading...'}
+                                        loading={isLoading}
+                                        height={logDrawerHeight - 104}
+                                    />
                                 </div>
                                 <Row className="buttons">
                                     <Col span={12} className="download">
@@ -117,7 +132,11 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                             <TabPane tab={this.nnimanagerHTML()} key="nnimanager">
                                 {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
                                 <div>
-                                    <MonacoHTML content={nniManagerLogStr || 'Loading...'} loading={isLoading} />
+                                    <MonacoHTML
+                                        content={nniManagerLogStr || 'Loading...'}
+                                        loading={isLoading}
+                                        height={logDrawerHeight - 104}
+                                    />
                                 </div>
                                 <Row className="buttons">
                                     <Col span={12} className="download">
@@ -159,7 +178,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                 this.setState({ nniManagerLogStr: res.data });
             }
         });
-        Promise.all([ dispatcherPromise, nniManagerPromise ]).then(() => {
+        Promise.all([dispatcherPromise, nniManagerPromise]).then(() => {
             this.setState({ isLoading: false });
             this.timerId = window.setTimeout(this.refresh, 300);
         });

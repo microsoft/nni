@@ -21,7 +21,7 @@ $drowHoverBgColor: #e2e2e2;
     padding-bottom: 14px;
     .down-icon{
         font-size: 20px !important;
-        padding-right: 2px;
+        padding-right: 6px;
     }
 }
 
@@ -185,6 +185,11 @@ $drowHoverBgColor: #e2e2e2;
         img{
             width: 20px;
             margin-right: 8px;
+        }
+        /* ? icon style */
+        .question{
+            width: 14px;
+            margin-right: 4px;
         }
         .feedback{
             font-size: 16px;
