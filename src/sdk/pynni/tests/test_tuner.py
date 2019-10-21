@@ -58,6 +58,7 @@ class TunerTestCase(TestCase):
 
         parameters = tuner.generate_multiple_parameters(list(range(0, 50)))
         logger.info(parameters)
+        self.check_range(parameters, search_space)
         if not parameters:  # TODO: not strict
             raise ValueError("No parameters generated")
         return parameters
@@ -65,13 +66,29 @@ class TunerTestCase(TestCase):
     def check_range(self, generated_params, search_space):
         EPS = 1E-6
         for param in generated_params:
+            if self._testMethodName == "test_batch":
+                param = {list(search_space.keys())[0]: param}
             for k, v in param.items():
+                if k.startswith("_mutable_layer"):
+                    _, block, layer, choice = k.split("/")
+                    cand = search_space[block]["_value"][layer].get(choice)
+                    # cand could be None, e.g., optional_inputs_chosen_state
+                    if choice == "layer_choice":
+                        self.assertIn(v, cand)
+                    if choice == "optional_input_size":
+                        if isinstance(cand, int):
+                            self.assertEqual(v, cand)
+                        else:
+                            self.assertGreaterEqual(v, cand[0])
+                            self.assertLessEqual(v, cand[1])
+                    if choice == "optional_inputs":
+                        pass  # ignore for now
+                    continue
                 item = search_space[k]
                 if item["_type"] == "choice":
                     self.assertIn(v, item["_value"])
                 if item["_type"] == "randint":
                     self.assertIsInstance(v, int)
-                    self.assertIn(v, item["_value"])
                 if item["_type"] == "uniform":
                     self.assertIsInstance(v, float)
                 if item["_type"] in ("randint", "uniform", "quniform", "loguniform", "qloguniform"):
@@ -79,43 +96,49 @@ class TunerTestCase(TestCase):
                     self.assertLessEqual(v, item["_value"][1])
                 if item["_type"].startswith("q"):
                     multiple = v / item["_value"][2]
+                    print(k, v, multiple, item)
                     if item["_value"][0] + EPS < v < item["_value"][1] - EPS:
-                        self.assertAlmostEqual(int(round(multiple) + EPS), multiple)
+                        self.assertAlmostEqual(int(round(multiple)), multiple)
                 if item["_type"] in ("qlognormal", "lognormal"):
-                    self.assertGreater(v, 0)
+                    self.assertGreaterEqual(v, 0)
+                if item["_type"] == "mutable_layer":
+                    for layer_name, info in item["_value"].items():
+                        self.assertIn(v[layer_name]["chosen_layer"], item["layer_choice"])
 
-    def search_space_test_all(self, tuner_factory, supported_types=None):
+    def search_space_test_all(self, tuner_factory, supported_types=None, ignore_types=None):
         with open(os.path.join(os.path.dirname(__file__), "assets/search_space.json"), "r") as fp:
             search_space_all = json.load(fp)
         if supported_types is None:
             supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",
-                               "normal", "qnormal", "lognormal", "qlognormal"]
+                               "normal", "qnormal", "lognormal", "qlognormal", "mutable"]
         full_supported_search_space = dict()
         for single in search_space_all:
             single_keyword = single.split("_")
             space = search_space_all[single]
             expected_fail = not any([t in single_keyword for t in supported_types]) or "fail" in single_keyword
+            if ignore_types is not None and any([t in ignore_types for t in single_keyword]):
+                continue
             if "fail" in space:
                 if self._testMethodName.split("_", 1)[1] in space.pop("fail"):
                     expected_fail = True
             single_search_space = {single: space}
-            print(single, expected_fail)
             if not expected_fail:
                 # supports this key
                 self.search_space_test_one(tuner_factory, single_search_space)
                 full_supported_search_space.update(single_search_space)
             else:
                 # unsupported key
-                with self.assertRaises(Exception) as cm:
+                with self.assertRaises(Exception, msg="Testing {}".format(single)) as cm:
                     self.search_space_test_one(tuner_factory, single_search_space)
                 logger.info("{}, {}, {}".format(tuner_factory, single, cm.exception))
-        if "batch" not in self._testMethodName:
+        if not any(t in self._testMethodName for t in ["batch", "grid_search"]):
+            # grid search fails for too many combinations
             logger.info("Full supported search space: {}".format(full_supported_search_space))
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
     def test_grid_search(self):
         self.search_space_test_all(lambda: GridSearchTuner(),
-                                   supported_types=["choice", "randint", "quniform"])
+                                   supported_types=["choice", "randint", "quniform", "mutable"])
 
     def test_tpe(self):
         self.search_space_test_all(lambda: HyperoptTuner("tpe"))
@@ -139,7 +162,10 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: EvolutionTuner(population_size=100))
 
     def test_gp(self):
-        self.search_space_test_all(lambda: GPTuner())
+        self.search_space_test_all(lambda: GPTuner(),
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform",
+                                                    "qloguniform"],
+                                   ignore_types=["normal", "lognormal", "qnormal", "qlognormal"])
 
     def test_metis(self):
         self.search_space_test_all(lambda: MetisTuner(),
