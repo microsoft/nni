@@ -147,7 +147,7 @@ export class SSHClientManager {
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
     public async getAvailableSSHClient(): Promise<Client> {
-        this.log.info('--------------ssh client--147------------')
+        this.log.debug('--------------ssh client--147------------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         for (const index of this.sshClientArray.keys()) {
             const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
@@ -158,7 +158,7 @@ export class SSHClientManager {
                 return deferred.promise;
             }
         }
-        this.log.info('------------ssh client----158------------')
+        this.log.debug('------------ssh client----158------------')
         //init a new ssh client if could not get an available one
         return this.initNewSSHClient();
     }
@@ -208,16 +208,16 @@ export class SSHClientManager {
      */
     // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
-        this.log.info('-----------start to initialize client-----------')
+        this.log.debug('-----------start to initialize client-----------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
             username: this.rmMeta.username };
-        this.log.info(this.rmMeta.ip)
-        this.log.info(this.rmMeta.port)
-        this.log.info(this.rmMeta.username)
+        this.log.debug(this.rmMeta.ip)
+        this.log.debug(this.rmMeta.port)
+        this.log.debug(this.rmMeta.username)
         if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
         } else if (this.rmMeta.sshKeyPath !== undefined) {
@@ -233,13 +233,13 @@ export class SSHClientManager {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
         conn.on('ready', () => {
-            this.log.info('--------------------initialize client success----------------')
+            this.log.debug('--------------------initialize client success----------------')
             this.addNewSSHClient(conn);
             deferred.resolve(conn);
         })
           .on('error', (err: Error) => {
-            this.log.info('---------------ssh client error-----------')
-            this.log.info(err)
+            this.log.debug('---------------ssh client error-----------')
+            this.log.debug(err)
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         })
