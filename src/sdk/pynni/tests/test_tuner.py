@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 from unittest import TestCase, main
 
 from nni.batch_tuner import BatchTuner

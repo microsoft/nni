@@ -143,15 +143,17 @@ tuner:
 
 > Built-in Tuner Name: **SMAC**
 
-**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**Please note that SMAC doesn't support running on Windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
 
 **Installation**
 
-SMAC need to be installed by following command before first use.
+SMAC need to be installed by following command before first use. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
 
 ```bash
 nnictl package install --name=SMAC
 ```
+
+**Known limitations:** Currently, the tuner has only been tested and working on Ubuntu.
 
 **Suggested scenario**
 
