@@ -232,7 +232,7 @@ For NNI on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWi
 
 **Verify install**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow 1.x installed** before running it. Note that **currently Tensorflow 2.0 is NOT supported**.
 
 * Download the examples via clone the source code.
 

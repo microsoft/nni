@@ -6,6 +6,7 @@ import MonacoEditor from 'react-monaco-editor';
 interface MonacoEditorProps {
     content: string;
     loading: boolean;
+    height: number;
 }
 
 class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
@@ -25,18 +26,17 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
     }
 
     render() {
-        const { content, loading } = this.props;
-        const heights: number = window.innerHeight - 48;
+        const { content, loading, height } = this.props;
         return (
             <div className="just-for-log">
                 <Spin
                     // tip="Loading..."
-                    style={{ width: '100%', height: heights * 0.9 }}
+                    style={{ width: '100%', height: height }}
                     spinning={loading}
                 >
                     <MonacoEditor
                         width="100%"
-                        height={heights * 0.9}
+                        height={height}
                         language="json"
                         value={content}
                         options={DRAWEROPTION}

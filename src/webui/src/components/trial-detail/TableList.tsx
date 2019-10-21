@@ -251,13 +251,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const showColumn: Array<object> = [];
 
         // parameter as table column
-        const trialMess = TRIALS.getTrial(tableSource[0].id);
-        const trial = trialMess.description.parameters;
-        const parameterColumn: Array<string> = Object.keys(trial);
         const parameterStr: Array<string> = [];
-        parameterColumn.forEach(value => {
-            parameterStr.push(`${value} (search space)`);
-        });
+        if (tableSource.length > 0) {
+            const trialMess = TRIALS.getTrial(tableSource[0].id);
+            const trial = trialMess.description.parameters;
+            const parameterColumn: Array<string> = Object.keys(trial);
+            parameterColumn.forEach(value => {
+                parameterStr.push(`${value} (search space)`);
+            });
+        }
         showTitle = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
@@ -330,20 +332,35 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                         <Icon type="line-chart" />
                                     </Button>
                                     {/* kill job */}
-                                    <Popconfirm
-                                        title="Are you sure to cancel this trial?"
-                                        onConfirm={killJob.
-                                            bind(this, record.key, record.id, record.status)}
-                                    >
-                                        <Button
-                                            type="default"
-                                            disabled={flag}
-                                            className="margin-mediate special"
-                                            title="kill"
-                                        >
-                                            <Icon type="stop" />
-                                        </Button>
-                                    </Popconfirm>
+                                    {
+                                        flag
+                                            ?
+                                            <Button
+                                                type="default"
+                                                disabled={true}
+                                                className="margin-mediate special"
+                                                title="kill"
+                                            >
+                                                <Icon type="stop" />
+                                            </Button>
+                                            :
+                                            <Popconfirm
+                                                title="Are you sure to cancel this trial?"
+                                                okText="Yes"
+                                                cancelText="No"
+                                                onConfirm={killJob.
+                                                    bind(this, record.key, record.id, record.status)}
+                                            >
+                                                <Button
+                                                    type="default"
+                                                    disabled={false}
+                                                    className="margin-mediate special"
+                                                    title="kill"
+                                                >
+                                                    <Icon type="stop" />
+                                                </Button>
+                                            </Popconfirm>
+                                    }
                                 </Row>
                             );
                         },
