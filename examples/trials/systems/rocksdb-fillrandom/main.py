@@ -26,7 +26,7 @@ def run(**parameters):
     '''Run rocksdb benchmark and return throughput'''
     bench_type = parameters['benchmarks']
     # recover args
-    args = [f"--{k}={v}" for k, v in parameters.items()]
+    args = ["--{}={}".format(k, v) for k, v in parameters.items()]
     # subprocess communicate
     process = subprocess.Popen(['db_bench'] + args, stdout=subprocess.PIPE)
     out, err = process.communicate()
