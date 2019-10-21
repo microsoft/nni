@@ -37,6 +37,7 @@ import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
 import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
 import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
 import nni.metis_tuner.Regression_GP.Selection as gp_selection
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -100,7 +101,7 @@ class MetisTuner(Tuner):
         self.minimize_starting_points = None
         self.supplement_data_num = 0
 
-
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update the self.x_bounds and self.x_types by the search_space.json
 

@@ -27,6 +27,7 @@ import numpy as np
 import logging
 
 import nni
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import convert_dict2tuple
 
@@ -124,6 +125,7 @@ class GridSearchTuner(Tuner):
                 ret_para.append(copy.deepcopy(config))
         return ret_para
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         '''
         Check if the search space is valid and expand it: support only 'choice', 'quniform', randint'

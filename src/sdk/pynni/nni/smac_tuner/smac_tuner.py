@@ -25,6 +25,7 @@ import sys
 import logging
 import numpy as np
 
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -129,6 +130,7 @@ class SMACTuner(Tuner):
 
         return optimizer
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """TODO: this is urgly, we put all the initialization work in this method, because initialization relies
         on search space, also because update_search_space is called at the beginning.

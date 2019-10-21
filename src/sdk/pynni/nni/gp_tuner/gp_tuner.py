@@ -28,6 +28,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -74,6 +75,7 @@ class GPTuner(Tuner):
         # num of imported data
         self.supplement_data_num = 0
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update the self.bounds and self.types by the search_space.json
 
