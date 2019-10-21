@@ -333,7 +333,9 @@ class RemoteMachineTrainingService implements TrainingService {
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
+                console.log('------------------training service 336---------------')
                 await this.setupConnections(value);
+                console.log('------------------training service 338---------------')
                 //remove local temp files
                 await execRemove(this.getLocalGpuMetricCollectorDir());
                 break;
@@ -461,13 +463,15 @@ class RemoteMachineTrainingService implements TrainingService {
         const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
+        console.log('-------------------in trainingservice 466------------------')
         let connectedRMNum: number = 0;
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             const sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
+            console.log('-------------------in trainingservice 471------------------')
             const sshClient: Client = await sshClientManager.getAvailableSSHClient();
-            console.log('-------------------in trainingservice 470------------------')
+            console.log('-------------------in trainingservice 473------------------')
             this.machineSSHClientMap.set(rmMeta, sshClientManager);
             await this.initRemoteMachineOnConnected(rmMeta, sshClient);
             if (++connectedRMNum === rmMetaList.length) {

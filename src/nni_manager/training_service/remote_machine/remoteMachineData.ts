@@ -144,6 +144,7 @@ export class SSHClientManager {
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
     public async getAvailableSSHClient(): Promise<Client> {
+        console.log('--------------ssh client--147------------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         for (const index of this.sshClientArray.keys()) {
             const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
@@ -154,7 +155,7 @@ export class SSHClientManager {
                 return deferred.promise;
             }
         }
-
+        console.log('------------ssh client----158------------')
         //init a new ssh client if could not get an available one
         return this.initNewSSHClient();
     }
@@ -234,6 +235,8 @@ export class SSHClientManager {
             deferred.resolve(conn);
         })
           .on('error', (err: Error) => {
+            console.log('---------------ssh client error-----------')
+            console.log(err)
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         })
