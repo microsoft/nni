@@ -467,6 +467,7 @@ class RemoteMachineTrainingService implements TrainingService {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             const sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
             const sshClient: Client = await sshClientManager.getAvailableSSHClient();
+            console.log('-------------------in trainingservice 470------------------')
             this.machineSSHClientMap.set(rmMeta, sshClientManager);
             await this.initRemoteMachineOnConnected(rmMeta, sshClient);
             if (++connectedRMNum === rmMetaList.length) {
@@ -480,6 +481,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
         // generate gpu script in local machine first, will copy to remote machine later
+        console.log('-------------------in trainingservice 484------------------')
         await this.generateGpuMetricsCollectorScript(rmMeta.username);
         const nniRootDir: string = unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni');
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);

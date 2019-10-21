@@ -204,12 +204,16 @@ export class SSHClientManager {
      */
     // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
+        console.log('-----------start to initialize client-----------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
             username: this.rmMeta.username };
+        console.log(this.rmMeta.ip)
+        console.log(this.rmMeta.port)
+        console.log(this.rmMeta.username)
         if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
         } else if (this.rmMeta.sshKeyPath !== undefined) {
@@ -225,6 +229,7 @@ export class SSHClientManager {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
         conn.on('ready', () => {
+            console.log('--------------------initialize client success----------------')
             this.addNewSSHClient(conn);
             deferred.resolve(conn);
         })
