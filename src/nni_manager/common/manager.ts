@@ -49,8 +49,8 @@ interface ExperimentParams {
         classArgs?: any;
         classFileName?: string;
         checkpointDir: string;
-        gpuNum?: number;
         includeIntermediateResults?: boolean;
+        gpuIndices?: string;
     };
     assessor?: {
         className: string;
@@ -59,7 +59,6 @@ interface ExperimentParams {
         classArgs?: any;
         classFileName?: string;
         checkpointDir: string;
-        gpuNum?: number;
     };
     advisor?: {
         className: string;
@@ -68,7 +67,7 @@ interface ExperimentParams {
         classArgs?: any;
         classFileName?: string;
         checkpointDir: string;
-        gpuNum?: number;
+        gpuIndices?: string;
     };
     clusterMetaData?: {
         key: string;
@@ -83,7 +82,7 @@ interface ExperimentProfile {
     logDir?: string;
     startTime?: number;
     endTime?: number;
-    maxSequenceId: number;
+    nextSequenceId: number;
     revision: number;
 }
 
@@ -115,6 +114,9 @@ abstract class Manager {
     public abstract getClusterMetadata(key: string): Promise<string>;
 
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
+    public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
+
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
 }

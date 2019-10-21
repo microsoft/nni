@@ -25,6 +25,7 @@ import copy
 import random
 
 import numpy as np
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
@@ -169,6 +170,7 @@ class EvolutionTuner(Tuner):
         self.population = None
         self.space = None
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update search space.
         Search_space contains the information that user pre-defined.

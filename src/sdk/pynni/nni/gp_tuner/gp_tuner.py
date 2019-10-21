@@ -28,6 +28,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
+from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -74,6 +75,7 @@ class GPTuner(Tuner):
         # num of imported data
         self.supplement_data_num = 0
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update the self.bounds and self.types by the search_space.json
 
@@ -83,7 +85,7 @@ class GPTuner(Tuner):
         """
         self._space = TargetSpace(search_space, self._random_state)
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         gp will first randomly generate some parameters.
@@ -123,7 +125,7 @@ class GPTuner(Tuner):
         logger.info("Generate paramageters:\n %s", results)
         return results
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """Tuner receive result from trial.
 
         Parameters
