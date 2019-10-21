@@ -3,10 +3,11 @@ import sys
 import os
 import signal
 import psutil
-from .common_utils import  print_error, print_normal, print_warning
+from .common_utils import print_error, print_normal, print_warning
+
 
 def check_output_command(file_path, head=None, tail=None):
-    '''call check_output command to read content from a file'''
+    """call check_output command to read content from a file"""
     if os.path.exists(file_path):
         if sys.platform == 'win32':
             cmds = ['powershell.exe', 'type', file_path]
@@ -26,8 +27,9 @@ def check_output_command(file_path, head=None, tail=None):
         print_error('{0} does not exist!'.format(file_path))
         exit(1)
 
+
 def kill_command(pid):
-    '''kill command'''
+    """kill command"""
     if sys.platform == 'win32':
         process = psutil.Process(pid=pid)
         process.send_signal(signal.CTRL_BREAK_EVENT)
@@ -35,21 +37,20 @@ def kill_command(pid):
         cmds = ['kill', str(pid)]
         call(cmds)
 
+
 def install_package_command(package_name):
-    '''install python package from pip'''
-    #TODO refactor python logic
-    if sys.platform == "win32":
-        cmds = 'python -m pip install --user {0}'.format(package_name)
-    else:
-        cmds = 'python3 -m pip install --user {0}'.format(package_name)
-    call(cmds, shell=True)
+    """install python package from pip"""
+    call(_get_pip_install() + [package_name], shell=False)
+
 
 def install_requirements_command(requirements_path):
-    '''install requirements.txt'''
-    cmds = 'cd ' + requirements_path + ' && {0} -m pip install --user -r requirements.txt'
-    #TODO refactor python logic
-    if sys.platform == "win32":
-        cmds = cmds.format('python')
-    else:
-        cmds = cmds.format('python3')
-    call(cmds, shell=True)
+    """install requirements.txt"""
+    call(_get_pip_install() + ["-r", os.path.join(requirements_path, "requirements.txt")], shell=False)
+
+
+def _get_pip_install():
+    python = "python" if sys.platform == "win32" else "python3"
+    ret = [python, "-m", "pip", "install"]
+    if "CONDA_DEFAULT_ENV" not in os.environ and "VIRTUAL_ENV" not in os.environ:
+        ret.append("--user")  # not in virtualenv or conda
+    return ret
