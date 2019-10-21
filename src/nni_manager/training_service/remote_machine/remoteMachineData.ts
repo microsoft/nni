@@ -24,6 +24,7 @@ import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
+import { getLogger, Logger } from '../../common/log';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -131,6 +132,7 @@ export class SSHClient {
  * The remote machine ssh client manager
  */
 export class SSHClientManager {
+    private readonly log: Logger;
     private readonly sshClientArray: SSHClient[];
     private readonly maxTrialNumberPerConnection: number;
     private readonly rmMeta: RemoteMachineMeta;
@@ -138,13 +140,14 @@ export class SSHClientManager {
         this.rmMeta = rmMeta;
         this.sshClientArray = sshClientArray;
         this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
+        this.log = getLogger();
     }
 
     /**
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
     public async getAvailableSSHClient(): Promise<Client> {
-        console.log('--------------ssh client--147------------')
+        this.log.info('--------------ssh client--147------------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         for (const index of this.sshClientArray.keys()) {
             const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
@@ -155,7 +158,7 @@ export class SSHClientManager {
                 return deferred.promise;
             }
         }
-        console.log('------------ssh client----158------------')
+        this.log.info('------------ssh client----158------------')
         //init a new ssh client if could not get an available one
         return this.initNewSSHClient();
     }
@@ -205,16 +208,16 @@ export class SSHClientManager {
      */
     // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
-        console.log('-----------start to initialize client-----------')
+        this.log.info('-----------start to initialize client-----------')
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
             username: this.rmMeta.username };
-        console.log(this.rmMeta.ip)
-        console.log(this.rmMeta.port)
-        console.log(this.rmMeta.username)
+        this.log.info(this.rmMeta.ip)
+        this.log.info(this.rmMeta.port)
+        this.log.info(this.rmMeta.username)
         if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
         } else if (this.rmMeta.sshKeyPath !== undefined) {
@@ -230,13 +233,13 @@ export class SSHClientManager {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
         conn.on('ready', () => {
-            console.log('--------------------initialize client success----------------')
+            this.log.info('--------------------initialize client success----------------')
             this.addNewSSHClient(conn);
             deferred.resolve(conn);
         })
           .on('error', (err: Error) => {
-            console.log('---------------ssh client error-----------')
-            console.log(err)
+            this.log.info('---------------ssh client error-----------')
+            this.log.info(err)
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         })
