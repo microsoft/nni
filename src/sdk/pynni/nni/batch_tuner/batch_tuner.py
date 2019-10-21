@@ -25,7 +25,6 @@ batch_tuner.py including:
 import logging
 
 import nni
-from nni.nas_utils import rewrite_nas_space
 from nni.tuner import Tuner
 
 TYPE = '_type'
@@ -70,7 +69,6 @@ class BatchTuner(Tuner):
                 raise RuntimeError('The combined-paramreters value in BatchTuner is not a list.')
         return None
 
-    @rewrite_nas_space
     def update_search_space(self, search_space):
         """Update the search space
 
