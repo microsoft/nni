@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Quantizer
 
-__all__ = [ 'NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer' ]
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class DoReFaQuantizer(Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         out = weight.tanh()
-        out = out /( 2 * out.abs().max()) + 0.5
+        out = out / (2 * out.abs().max()) + 0.5
         out = self.quantize(out, config['q_bits'])
         out = 2 * out -1
         return out

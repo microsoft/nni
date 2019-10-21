@@ -18,7 +18,6 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import os
 import json
 import numpy as np
 
@@ -99,7 +98,8 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
-                            # use np.round here to ensure that the rounded defaut value is in the range, which will be rounded in configure_space package
+                            # use np.round here to ensure that the rounded defaut value is in the range,
+                            # which will be rounded in configure_space package
                             search_space[key]['_value'] = list(np.round(np.log(search_space[key]['_value']), 10))
                             pcs_fd.write('%s real %s [%s]\n' % (
                                 key,

@@ -1,5 +1,5 @@
-import tensorflow as tf
 import logging
+import tensorflow as tf
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -52,19 +52,16 @@ class Compressor:
         Users can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
-        pass
-    
+
     def update_epoch(self, epoch, sess):
         """
         if user want to update mask every epoch, user can override this method
         """
-        pass
-    
+
     def step(self, sess):
         """
         if user want to update mask every step, user can override this method
         """
-        pass
 
 
     def _instrument_layer(self, layer, config):
@@ -90,8 +87,6 @@ class Pruner(Compressor):
     """
     Abstract base TensorFlow pruner
     """
-    def __init__(self, config_list):
-        super().__init__(config_list)
 
     def calc_mask(self, weight, config, op, op_type, op_name):
         """
@@ -112,7 +107,7 @@ class Pruner(Compressor):
         """
         weight_index = _detect_weight_index(layer)
         if weight_index is None:
-            _logger.warning('Failed to detect weight for layer {}'.format(layer.name))
+            _logger.warning('Failed to detect weight for layer %s', layer.name)
             return
         weight_op = layer.op.inputs[weight_index].op
         weight = weight_op.inputs[0]
@@ -125,8 +120,6 @@ class Quantizer(Compressor):
     """
     Abstract base TensorFlow quantizer
     """
-    def __init__(self, config_list):
-        super().__init__(config_list)
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
@@ -134,7 +127,7 @@ class Quantizer(Compressor):
     def _instrument_layer(self, layer, config):
         weight_index = _detect_weight_index(layer)
         if weight_index is None:
-            _logger.warning('Failed to detect weight for layer {}'.format(layer.name))
+            _logger.warning('Failed to detect weight for layer %s', layer.name)
             return
         weight_op = layer.op.inputs[weight_index].op
         weight = weight_op.inputs[0]
@@ -146,7 +139,7 @@ def _detect_weight_index(layer):
     index = default_layers.op_weight_index.get(layer.type)
     if index is not None:
         return index
-    weight_indices = [ i for i, op in enumerate(layer.op.inputs) if op.name.endswith('Variable/read') ]
+    weight_indices = [i for i, op in enumerate(layer.op.inputs) if op.name.endswith('Variable/read')]
     if len(weight_indices) == 1:
         return weight_indices[0]
     return None
