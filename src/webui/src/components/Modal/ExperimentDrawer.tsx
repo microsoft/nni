@@ -58,7 +58,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                         trialMessage: trialMessagesArr
                     };
                     if (this._isCompareMount === true) {
-                        this.setState(() => ({ experiment: JSON.stringify(result, null, 4) }));
+                        this.setState({ experiment: JSON.stringify(result, null, 4) });
                     }
                 }
             }));

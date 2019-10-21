@@ -26,7 +26,7 @@ import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
-import { Manager } from './common/manager';
+import { Manager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg, uniqueString } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
@@ -43,10 +43,10 @@ import {
 
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number,
-    logDirectory: string, experimentLogLevel: string): void {
-    const createNew: boolean = (startExpMode === 'new');
+    logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
+    const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel);
+    setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -108,15 +108,15 @@ if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
-if (!['new', 'resume'].includes(startMode)) {
+if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
     console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if (startMode === 'resume' && experimentId.trim().length < 1) {
-    console.log(`FATAL: cannot resume experiment, invalid experiment_id: ${experimentId}`);
+if ((startMode === ExperimentStartUpMode.RESUME) && experimentId.trim().length < 1) {
+    console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
 }
@@ -133,7 +133,15 @@ if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
     console.log(`FATAL: invalid log_level: ${logLevel}`);
 }
 
-initStartupInfo(startMode, experimentId, port, logDir, logLevel);
+const readonlyArg: string = parseArg(['--readonly', '-r']);
+if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+    console.log(`FATAL: readonly property should only be true or false`);
+    usage();
+    process.exit(1);
+}
+const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+
+initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {

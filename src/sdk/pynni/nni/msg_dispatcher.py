@@ -22,6 +22,7 @@ import logging
 from collections import defaultdict
 import json_tricks
 
+from nni import NoMoreTrialError
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
@@ -41,8 +42,9 @@ We need this because NNI manager may send metrics after reporting a trial ended.
 TODO: move this logic to NNI manager
 '''
 
+
 def _sort_history(history):
-    ret = [ ]
+    ret = []
     for i, _ in enumerate(history):
         if i in history:
             ret.append(history[i])
@@ -50,16 +52,19 @@ def _sort_history(history):
             break
     return ret
 
+
 # Tuner global variables
 _next_parameter_id = 0
 _trial_params = {}
 '''key: trial job ID; value: parameters'''
 _customized_parameter_ids = set()
 
+
 def _create_parameter_id():
     global _next_parameter_id  # pylint: disable=global-statement
     _next_parameter_id += 1
     return _next_parameter_id - 1
+
 
 def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
     _trial_params[parameter_id] = params
@@ -75,6 +80,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
     else:
         ret['parameter_index'] = 0
     return json_tricks.dumps(ret)
+
 
 class MsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
@@ -100,11 +106,16 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
 
+    def send_trial_callback(self, id, params):
+        """For tuner to issue trial config when the config is generated
+        """
+        send(CommandType.NewTrialJob, _pack_parameter(id, params))
+
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         _logger.debug("requesting for generating params of {}".format(ids))
-        params_list = self.tuner.generate_multiple_parameters(ids)
+        params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
             send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
@@ -117,7 +128,7 @@ class MsgDispatcher(MsgDispatcherBase):
 
     def handle_import_data(self, data):
         """Import additional data for tuning
-        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        data: a list of dictionaries, each of which has at least two keys, 'parameter' and 'value'
         """
         self.tuner.import_data(data)
 
@@ -144,8 +155,12 @@ class MsgDispatcher(MsgDispatcherBase):
             assert data['trial_job_id'] is not None
             assert data['parameter_index'] is not None
             param_id = _create_parameter_id()
-            param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
-            send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
+            try:
+                param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
+            except NoMoreTrialError:
+                param = None
+            send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'],
+                                                                    parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
@@ -179,7 +194,8 @@ class MsgDispatcher(MsgDispatcherBase):
             customized = True
         else:
             customized = False
-        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized, trial_job_id=data.get('trial_job_id'))
+        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
+                                        trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
@@ -214,7 +230,8 @@ class MsgDispatcher(MsgDispatcherBase):
             _logger.debug('BAD, kill %s', trial_job_id)
             send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
             # notify tuner
-            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)
+            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]',
+                          dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)
             if dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS == 'true':
                 self._earlystop_notify_tuner(data)
         else:

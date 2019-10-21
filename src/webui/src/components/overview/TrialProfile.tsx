@@ -1,9 +1,11 @@
 import * as React from 'react';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../static/const';
+import { EXPERIMENT } from '../../static/datamodel';
 
 interface TrialInfoProps {
-    experiment: object;
+    experimentUpdateBroadcast: number;
+    concurrency: number;
 }
 
 class TrialInfo extends React.Component<TrialInfoProps, {}> {
@@ -12,32 +14,21 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         super(props);
     }
 
-    componentWillReceiveProps(nextProps: TrialInfoProps) {
-        const experiments = nextProps.experiment;
-        Object.keys(experiments).map(key => {
-            switch (key) {
-                case 'id':
-                case 'logDir':
-                case 'startTime':
-                case 'endTime':
-                    experiments[key] = undefined;
-                    break;
-                case 'params':
-                    const params = experiments[key];
-                    Object.keys(params).map(item => {
-                        if (item === 'experimentName' || item === 'searchSpace'
-                            || item === 'trainingServicePlatform') {
-                            params[item] = undefined;
-                        }
-                    });
-                    break;
-                default:
-            }
-        });
-    }
-
     render() {
-        const { experiment } = this.props;
+        const blacklist = [
+            'id', 'logDir', 'startTime', 'endTime',
+            'experimentName', 'searchSpace', 'trainingServicePlatform'
+        ];
+        // tslint:disable-next-line:no-any
+        const filter = (key: string, val: any) => {
+            if (key === 'trialConcurrency') {
+                return this.props.concurrency;
+            }
+            return blacklist.includes(key) ? undefined : val;
+        };
+        const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
+
+        // FIXME: highlight not working?
         return (
             <div className="profile">
                 <MonacoEditor
@@ -45,7 +36,7 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
                     height="361"
                     language="json"
                     theme="vs-light"
-                    value={JSON.stringify(experiment, null, 2)}
+                    value={profile}
                     options={MONACO}
                 />
             </div>

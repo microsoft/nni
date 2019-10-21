@@ -11,11 +11,16 @@ jobs:
   - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
+      python3 -m pip install torch==0.4.1 --user
+      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install tensorflow==1.12.0 --user
+    displayName: 'Install dependencies for integration'
+  - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install flake8 --user
-      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821
+      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
       python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
@@ -50,6 +55,11 @@ jobs:
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
+  - script: |
+      python3 -m pip install torch==0.4.1 --user
+      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install tensorflow==1.13.1 --user
+    displayName: 'Install dependencies for integration'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'

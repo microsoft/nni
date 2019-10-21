@@ -170,18 +170,18 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
-                checkpointDir: joi.string().allow('')
+                checkpointDir: joi.string().allow(''),
+                gpuIndices: joi.string()
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow(''),
-                includeIntermediateResults: joi.boolean()
+                includeIntermediateResults: joi.boolean(),
+                gpuIndices: joi.string()
             }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
@@ -189,7 +189,6 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow('')
             }),
             clusterMetaData: joi.array().items(joi.object({
@@ -210,7 +209,7 @@ export namespace ValidationSchemas {
             startTime: joi.number(),
             endTime: joi.number(),
             logDir: joi.string(),
-            maxSequenceId: joi.number()
+            nextSequenceId: joi.number()
         }
     };
 }
