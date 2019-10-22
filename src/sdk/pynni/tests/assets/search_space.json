@@ -27,8 +27,7 @@
   },
   "randint_single": {
     "_type": "randint",
-    "_value": [10, 11],
-    "fail": ["smac"]
+    "_value": [10, 11]
   },
   "randint_fail_equal": {
     "_type": "randint",
@@ -40,8 +39,7 @@
   },
   "uniform_equal": {
     "_type": "uniform",
-    "_value": [99.9, 99.9],
-    "fail": ["smac"]
+    "_value": [99.9, 99.9]
   },
   "quniform_ok": {
     "_type": "quniform",

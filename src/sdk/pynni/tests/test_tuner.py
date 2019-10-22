@@ -151,7 +151,7 @@ class TunerTestCase(TestCase):
 
     def test_smac(self):
         self.search_space_test_all(lambda: SMACTuner(),
-                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform", "mutable"])
 
     def test_batch(self):
         self.search_space_test_all(lambda: BatchTuner(),

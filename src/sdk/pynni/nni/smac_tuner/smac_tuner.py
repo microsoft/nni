@@ -61,6 +61,7 @@ class SMACTuner(Tuner):
         self.update_ss_done = False
         self.loguniform_key = set()
         self.categorical_dict = {}
+        self.fixed_value_set = dict()
         self.cs = None
 
     def _main_cli(self):
@@ -132,22 +133,37 @@ class SMACTuner(Tuner):
 
     @rewrite_nas_space
     def update_search_space(self, search_space):
-        """TODO: this is urgly, we put all the initialization work in this method, because initialization relies
-        on search space, also because update_search_space is called at the beginning.
+        """
         NOTE: updating search space is not supported.
 
         Parameters
         ----------
-        search_space:
+        search_space: dict
             search space
         """
+
+        # TODO: this is ugly, we put all the initialization work in this method, because initialization relies
+        #         on search space, also because update_search_space is called at the beginning.
+
         if not self.update_ss_done:
-            self.categorical_dict = generate_scenario(search_space)
+            updated_search_space = dict()
+            self.fixed_value_set = dict()
+            for key, val in search_space.items():
+                try:
+                    if "_type" in val and ((val["_type"] == "randint" and val["_value"][0] + 1 == val["_value"][1])
+                            or ("uniform" in val["_type"] and val["_value"][0] == val["_value"][1])):
+                        self.fixed_value_set[key] = val["_value"][0]
+                        continue
+                except:  # could encounter invalid/wrong/unexpected search space definition, ignore here
+                    pass
+                updated_search_space[key] = val
+            self.categorical_dict = generate_scenario(updated_search_space)
             if self.categorical_dict is None:
                 raise RuntimeError('categorical dict is not correctly returned after parsing search space.')
             self.optimizer = self._main_cli()
             self.smbo_solver = self.optimizer.solver
-            self.loguniform_key = {key for key in search_space.keys() if search_space[key]['_type'] == 'loguniform'}
+            self.loguniform_key = {key for key in updated_search_space.keys()
+                                   if updated_search_space[key]['_type'] == 'loguniform'}
             self.update_ss_done = True
         else:
             self.logger.warning('update search space is not supported.')
@@ -181,11 +197,13 @@ class SMACTuner(Tuner):
         else:
             self.smbo_solver.nni_smac_receive_runs(self.total_data[parameter_id], reward)
 
-    def convert_loguniform_categorical(self, challenger_dict):
-        """Convert the values of type `loguniform` back to their initial range
-        Also, we convert categorical:
-        categorical values in search space are changed to list of numbers before,
-        those original values will be changed back in this function
+    def param_postprocess(self, challenger_dict):
+        """
+        Postprocessing for a set of parameter includes:
+        1. Convert the values of type `loguniform` back to their initial range.
+        2. Convert categorical: categorical values in search space are changed to list of numbers before,
+        those original values will be changed back in this function.
+        3. Fill in the fixed value that was extracted previously.
 
         Parameters
         ----------
@@ -208,6 +226,7 @@ class SMACTuner(Tuner):
                 converted_dict[key] = self.categorical_dict[key][idx]
             else:
                 converted_dict[key] = value
+        converted_dict.update(self.fixed_value_set)
         return converted_dict
 
     def generate_parameters(self, parameter_id, **kwargs):
@@ -226,12 +245,12 @@ class SMACTuner(Tuner):
         if self.first_one:
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
-            return self.convert_loguniform_categorical(init_challenger.get_dictionary())
+            return self.param_postprocess(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
                 self.total_data[parameter_id] = challenger
-                return self.convert_loguniform_categorical(challenger.get_dictionary())
+                return self.param_postprocess(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """generate mutiple instances of hyperparameters
@@ -251,7 +270,7 @@ class SMACTuner(Tuner):
             for one_id in parameter_id_list:
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
-                params.append(self.convert_loguniform_categorical(init_challenger.get_dictionary()))
+                params.append(self.param_postprocess(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             cnt = 0
@@ -260,16 +279,18 @@ class SMACTuner(Tuner):
                 if cnt >= len(parameter_id_list):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
-                params.append(self.convert_loguniform_categorical(challenger.get_dictionary()))
+                params.append(self.param_postprocess(challenger.get_dictionary()))
                 cnt += 1
         return params
 
     def import_data(self, data):
-        """Import additional data for tuning
+        """
+        Import additional data for tuning
+
         Parameters
         ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        data: list of dict
+            Each of which has at least two keys, `parameter` and `value`.
         """
         _completed_num = 0
         for trial_info in data:
