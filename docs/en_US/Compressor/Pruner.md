@@ -48,7 +48,7 @@ from nni.compression.tensorflow import AGP_Pruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
-    'start_epoch': 1,
+    'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
     'op_types': 'default'
@@ -62,7 +62,7 @@ from nni.compression.torch import AGP_Pruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
-    'start_epoch': 1,
+    'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
     'op_types': 'default'
@@ -86,47 +86,9 @@ You can view example for more information
 #### User configuration for AGP Pruner
 * **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
 * **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress
+* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
 * **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once
+* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
 
 ***
 
-## Sensitivity Pruner
-In [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626), author Song Han and provide an algorithm to find the sensitivity of each layer and set the pruning threshold to each layer.
-
->We used the sensitivity results to find each layer’s threshold: for example, the smallest threshold was applied to the most sensitive layer, which is the first convolutional layer... The pruning threshold is chosen as a quality parameter multiplied by the standard deviation of a layer’s weights
-
-### Usage
-You can prune weight step by step and reach one target sparsity by Sensitivity Pruner with the code below.
-
-Tensorflow code
-```python
-from nni.compression.tensorflow import SensitivityPruner
-config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
-pruner = SensitivityPruner(config_list)
-pruner(tf.get_default_graph())
-```
-PyTorch code
-```python
-from nni.compression.torch import SensitivityPruner
-config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
-pruner = SensitivityPruner(config_list)
-pruner(model)
-```
-Like AGP Pruner, you should update mask information every epoch by adding code below
-
-Tensorflow code 
-```python
-pruner.update_epoch(epoch, sess)
-```
-PyTorch code
-```python
-pruner.update_epoch(epoch)
-```
-You can view example for more information
-
-#### User configuration for Sensitivity Pruner
-* **sparsity:** This is to specify the sparsity operations to be compressed to
-
-***

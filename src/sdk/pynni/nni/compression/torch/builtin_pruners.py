@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'SensitivityPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -17,14 +17,22 @@ class LevelPruner(Pruner):
             - sparsity
         """
         super().__init__(config_list)
+        self.mask_list = {}
+        self.if_init_list = {}
 
-    def calc_mask(self, weight, config, **kwargs):
-        w_abs = weight.abs()
-        k = int(weight.numel() * config['sparsity'])
-        if k == 0:
-            return torch.ones(weight.shape).type_as(weight)
-        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
-        return torch.gt(w_abs, threshold).type_as(weight)
+    def calc_mask(self, weight, config, op_name, **kwargs):
+        if self.if_init_list.get(op_name, True):
+            w_abs = weight.abs()
+            k = int(weight.numel() * config['sparsity'])
+            if k == 0:
+                return torch.ones(weight.shape).type_as(weight)
+            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
+            mask = torch.gt(w_abs, threshold).type_as(weight)
+            self.mask_list.update({op_name: mask})
+            self.if_init_list.update({op_name: False})
+        else:
+            mask = self.mask_list[op_name]
+        return mask
 
 
 class AGP_Pruner(Pruner):
@@ -48,24 +56,32 @@ class AGP_Pruner(Pruner):
         """
         super().__init__(config_list)
         self.mask_list = {}
-        self.now_epoch = 1
+        self.now_epoch = 0
+        self.if_init_list = {}
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
-        target_sparsity = self.compute_target_sparsity(config)
-        k = int(weight.numel() * target_sparsity)
-        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
-            return mask
-        # if we want to generate new mask, we should update weigth first 
-        w_abs = weight.abs() * mask
-        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
-        new_mask = torch.gt(w_abs, threshold).type_as(weight)
-        self.mask_list[op_name] = new_mask
+        start_epoch = config.get('start_epoch', 0)
+        freq = config.get('frequency', 1)
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
+                self.now_epoch - start_epoch) % freq == 0:
+            mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
+            target_sparsity = self.compute_target_sparsity(config)
+            k = int(weight.numel() * target_sparsity)
+            if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
+                return mask
+            # if we want to generate new mask, we should update weigth first
+            w_abs = weight.abs() * mask
+            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
+            new_mask = torch.gt(w_abs, threshold).type_as(weight)
+            self.mask_list.update({op_name: new_mask})
+            self.if_init_list.update({op_name: False})
+        else:
+            new_mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
         return new_mask
 
     def compute_target_sparsity(self, config):
         end_epoch = config.get('end_epoch', 1)
-        start_epoch = config.get('start_epoch', 1)
+        start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         final_sparsity = config.get('final_sparsity', 0)
         initial_sparsity = config.get('initial_sparsity', 0)
@@ -86,35 +102,5 @@ class AGP_Pruner(Pruner):
     def update_epoch(self, epoch):
         if epoch > 0:
             self.now_epoch = epoch
-
-
-class SensitivityPruner(Pruner):
-    """Use algorithm from "Learning both Weights and Connections for Efficient Neural Networks" 
-    https://arxiv.org/pdf/1506.02626v3.pdf
-
-    I.e.: "The pruning threshold is chosen as a quality parameter multiplied
-    by the standard deviation of a layers weights."
-    """
-
-    def __init__(self, config_list):
-        """
-        config_list: supported keys:
-            - sparsity: chosen pruning sparsity
-        """
-        super().__init__(config_list)
-        self.mask_list = {}
-
-    def calc_mask(self, weight, config, op_name, **kwargs):
-        mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
-        # if we want to generate new mask, we should update weight first
-        weight = weight * mask
-        target_sparsity = config['sparsity'] * torch.std(weight).item()
-        k = int(weight.numel() * target_sparsity)
-        if k == 0:
-            return mask
-
-        w_abs = weight.abs()
-        threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
-        new_mask = torch.gt(w_abs, threshold).type_as(weight)
-        self.mask_list[op_name] = new_mask
-        return new_mask
+            for k in self.if_init_list.keys():
+                self.if_init_list[k] = True
