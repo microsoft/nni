@@ -75,7 +75,7 @@ All types of sampling strategies and their parameter are listed here:
   * Type for [Neural Architecture Search Space][1]. Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
   * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
   * The following HPO tuners can be adapted to tune this search space: TPE, Random, Anneal, Evolution, Grid Search,
-  Hyperband and BOHB.
+  Hyperband and BOHB. Note that SMAC is currently not supported due to [a known SMAC issue](https://github.com/microsoft/nni/issues/1641).
   * For detailed usage, please refer to [General NAS Interfaces][1].
 
 ## Search Space Types Supported by Each Tuner
