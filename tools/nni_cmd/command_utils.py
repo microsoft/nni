@@ -39,12 +39,26 @@ def kill_command(pid):
 
 
 def install_package_command(package_name):
-    """install python package from pip"""
+    """
+    Install python package from pip.
+
+    Parameters
+    ----------
+    package_name: str
+        The name of package to be installed.
+    """
     call(_get_pip_install() + [package_name], shell=False)
 
 
 def install_requirements_command(requirements_path):
-    """install requirements.txt"""
+    """
+    Install packages from `requirements.txt` in `requirements_path`.
+
+    Parameters
+    ----------
+    requirements_path: str
+        Path to the directory that contains `requirements.txt`.
+    """
     call(_get_pip_install() + ["-r", os.path.join(requirements_path, "requirements.txt")], shell=False)
 
 
