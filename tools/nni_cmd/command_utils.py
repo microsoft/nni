@@ -65,6 +65,7 @@ def install_requirements_command(requirements_path):
 def _get_pip_install():
     python = "python" if sys.platform == "win32" else "python3"
     ret = [python, "-m", "pip", "install"]
-    if "CONDA_DEFAULT_ENV" not in os.environ and "VIRTUAL_ENV" not in os.environ:
+    if "CONDA_DEFAULT_ENV" not in os.environ and "VIRTUAL_ENV" not in os.environ and \
+            (sys.platform != "win32" and os.getuid() != 0):  # on unix and not running in root
         ret.append("--user")  # not in virtualenv or conda
     return ret
