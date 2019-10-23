@@ -83,9 +83,9 @@ pruner.update_epoch(epoch)
 #### AGP Pruner 的用户配置
 * **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
 * **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
+* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值，默认为 0。
 * **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
+* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝，默认 frequency=1。
 
 ***
 
