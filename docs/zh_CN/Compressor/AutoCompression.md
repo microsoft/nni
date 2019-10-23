@@ -1,6 +1,6 @@
 # NNI 上的自动模型压缩
 
-It's convenient to implement auto model compression with NNI compression and NNI tuners
+使用 NNI 的压缩和 Tuner 能轻松实现自动模型压缩
 
 ## First, model compression with NNI
 
