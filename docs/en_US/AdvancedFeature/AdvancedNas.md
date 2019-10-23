@@ -63,7 +63,7 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
 
-## Asynchornous Dispatcher Mode for trial dependency control
+## Asynchronous Dispatcher Mode for trial dependency control
 The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
 ```python
     def generate_parameters(self, parameter_id):

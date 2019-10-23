@@ -214,7 +214,12 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             type="ghost"
                         >
                             <a target="_blank" href="https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html">
-                                <Icon type="question" /><span>Help</span>
+                                <img
+                                    src={require('../static/img/icon/ques.png')}
+                                    alt="question"
+                                    className="question"
+                                />
+                                <span>Help</span>
                             </a>
                         </Button>
                     </span>
@@ -329,8 +334,8 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
 
     render() {
         const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
-        const tablet = (<MediaQuery minWidth={885} maxWidth={1241}>{this.tabeltHTML()}</MediaQuery>);
-        const desktop = (<MediaQuery minWidth={1242}>{this.desktopHTML()}</MediaQuery>);
+        const tablet = (<MediaQuery minWidth={885} maxWidth={1281}>{this.tabeltHTML()}</MediaQuery>);
+        const desktop = (<MediaQuery minWidth={1282}>{this.desktopHTML()}</MediaQuery>);
         const { isvisibleLogDrawer, activeKey, isvisibleExperimentDrawer } = this.state;
         return (
             <div>
@@ -338,11 +343,12 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                 {tablet}
                 {desktop}
                 {/* the drawer for dispatcher & nnimanager log message */}
-                <LogDrawer
-                    isVisble={isvisibleLogDrawer}
-                    closeDrawer={this.closeLogDrawer}
-                    activeTab={activeKey}
-                />
+                {isvisibleLogDrawer ? (
+                    <LogDrawer
+                        closeDrawer={this.closeLogDrawer}
+                        activeTab={activeKey}
+                    />
+                ) : null}
                 <ExperimentDrawer
                     isVisble={isvisibleExperimentDrawer}
                     closeExpDrawer={this.closeExpDrawer}

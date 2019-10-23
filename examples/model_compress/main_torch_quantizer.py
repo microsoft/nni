@@ -81,7 +81,6 @@ def main():
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
 
-        
-        
 
-main()
+if __name__ == '__main__':
+    main()

@@ -114,4 +114,6 @@ def main():
         })
         print('final result is', test_acc)
 
-main()
+
+if __name__ == '__main__':
+    main()
