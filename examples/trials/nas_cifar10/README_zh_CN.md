@@ -1,9 +1,9 @@
-# Run Neural Architecture Search in NNI
+# 在 NNI 中运行神经网络架构搜索
 
-Now we have an NAS example [NNI-NAS-Example](https://github.com/Crysple/NNI-NAS-Example) run in NNI using NAS interface from our contributors.
+参考 [NNI-NAS-Example](https://github.com/Crysple/NNI-NAS-Example)，来使用贡献者提供的 NAS 接口。
 
-We have included its trial code in this folder, and provided example config files to show how to use PPO tuner to tune the trial code.
+此目录中包含了 Trial 代码，并提供了示例的配置文件来展示如何使用 PPO Tuner 来调优此 Trial 代码。
 
-To prepare for the dataset, please run `cd data && . download.sh`.
+运行下列代码来准备数据集 `cd data && . download.sh`.
 
-Thanks our lovely contributors, and welcome more and more people to join us!
+感谢可爱的志愿者，欢迎更多的人加入我们！
