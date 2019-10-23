@@ -220,7 +220,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)�
 
 **验证安装**
 
-以下示例 Experiment 依赖于 TensorFlow 。 Make sure you have **TensorFlow 1.x installed** before running it. Note that **currently Tensorflow 2.0 is NOT supported**.
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow 1.x**。 注意，**目前不支持 TensorFlow 2.0**。
 
 * 通过克隆源代码下载示例。
 
