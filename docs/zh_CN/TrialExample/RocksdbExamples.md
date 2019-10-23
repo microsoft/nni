@@ -8,25 +8,25 @@ RocksDB 的性能表现非常依赖于调优操作。 但由于其底层技术�
 
 本示例展示了如何使用 NNI，通过评测工具 `db_bench` 来找到 `fillrandom` 基准的最佳配置，此工具是 RocksDB 官方提供的评测工具。 在运行示例前，需要检查 NNI 已安装，
 
-db_bench</code> 已经加入到了 `PATH` 中。 Please refer to [here](../Tutorial/QuickStart.md) for detailed information about installation and preparing of NNI environment, and [here](https://github.com/facebook/rocksdb/blob/master/INSTALL.md) for compiling RocksDB as well as `db_bench`.</p> 
+db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/QuickStart.md)，了解如何安装并准备 NNI 环境，参考[这里](https://github.com/facebook/rocksdb/blob/master/INSTALL.md)来编译 RocksDB 以及 `db_bench`。</p> 
 
-We also provide a simple script [`db_bench_installation.sh`](../../../examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) helping to compile and install `db_bench` as well as its dependencies on Ubuntu. Installing RocksDB on other systems can follow the same procedure.
+此简单脚本 [`db_bench_installation.sh`](../../../examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) 可帮助编译并在 Ubuntu 上安装 `db_bench` 及其依赖包。 可遵循相同的过程在其它系统中安装 RocksDB。
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom`](../../../examples/trials/systems/rocksdb-fillrandom)*
-
-
-
-## Experiment setup
-
-There are mainly three steps to setup an experiment of tuning systems on NNI. Define search space with a `json` file, write a benchmark code, and start NNI experiment by passing a config file to NNI manager.
+*代码目录：[`example/trials/systems/rocksdb-fillrandom`](../../../examples/trials/systems/rocksdb-fillrandom)*
 
 
 
-### Search Space
+## Experiment 设置
 
-For simplicity, this example tunes three parameters, `write_buffer_size`, `min_write_buffer_num` and `level0_file_num_compaction_trigger`, for writing 16M keys with 20 Bytes of key size and 100 Bytes of value size randomly, based on writing operations per second (OPS). `write_buffer_size` sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. `min_write_buffer_num` is the minimum number of memtables to be merged before flushing to storage. Once the number of files in level 0 reaches `level0_file_num_compaction_trigger`, level 0 to level 1 compaction is triggered.
+在 NNI 上配置调优的 Experiment 主要有三个步骤。 使用 `json` 文件定义搜索空间，编写评测代码，将配置传入 NNI 管理器来启动 Experiment。
 
-In this example, the search space is specified by a `search_space.json` file as shown below. Detailed explanation of search space could be found [here](../Tutorial/SearchSpaceSpec.md).
+
+
+### 搜索空间
+
+为简单起见，此示例仅调优三个参数，`write_buffer_size`, `min_write_buffer_num` 以及 `level0_file_num_compaction_trigger`，场景为测试随机写入 16M 数据的每秒写操作数（OPS），其 Key 为 20 字节，值为 100 字节。 `write_buffer_size` 设置单个内存表的大小。 一旦内存表超过此大小，会被标记为不可变，并创建新内存表。 `min_write_buffer_num` 是要合并写入存储的最小内存表数量。 一旦 Level 0 的文件数量达到了 `level0_file_num_compaction_trigger`，就会触发 Level 0 到 Level 1 的压缩。
+
+此示例中，下列 `search_space.json` 文件指定了搜索空间。 搜索空间的详细说明参考[这里](../Tutorial/SearchSpaceSpec.md)。
 
 
 
@@ -48,13 +48,13 @@ In this example, the search space is specified by a `search_space.json` file as 
 ```
 
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/search_space.json`](../../../examples/trials/systems/rocksdb-fillrandom/search_space.json)*
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/search_space.json`](../../../examples/trials/systems/rocksdb-fillrandom/search_space.json)*
 
 
 
-### Benchmark code
+### 评测代码
 
-Benchmark code should receive a configuration from NNI manager, and report the corresponding benchmark result back. Following NNI APIs are designed for this purpose. In this example, writing operations per second (OPS) is used as a performance metric. Please refer to [here](Trials.md) for detailed information.
+评测代码从 NNI 管理器接收配置，并返回相应的基准测试结果。 下列 NNI API 用于相应的操作。 In this example, writing operations per second (OPS) is used as a performance metric. Please refer to [here](Trials.md) for detailed information.
 
 * Use `nni.get_next_parameter()` to get next system configuration.
 * Use `nni.report_final_result(metric)` to report the benchmark result.
