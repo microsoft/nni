@@ -54,62 +54,62 @@ db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/Quic
 
 ### 评测代码
 
-评测代码从 NNI 管理器接收配置，并返回相应的基准测试结果。 下列 NNI API 用于相应的操作。 In this example, writing operations per second (OPS) is used as a performance metric. Please refer to [here](Trials.md) for detailed information.
+评测代码从 NNI 管理器接收配置，并返回相应的基准测试结果。 下列 NNI API 用于相应的操作。 此示例中，每秒写操作数（OPS）作为了性能指标。 参考[这里](Trials.md)，了解详情。
 
-* Use `nni.get_next_parameter()` to get next system configuration.
-* Use `nni.report_final_result(metric)` to report the benchmark result.
+* 使用 `nni.get_next_parameter()` 来获取下一个系统配置。
+* 使用 `nni.report_final_result(metric)` 来返回测试结果。
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/main.py`](../../../examples/trials/systems/rocksdb-fillrandom/main.py)*
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/main.py`](../../../examples/trials/systems/rocksdb-fillrandom/main.py)*
 
 
 
-### Config file
+### 配置文件
 
-One could start a NNI experiment with a config file. A config file for NNI is a `yaml` file usually including experiment settings (`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.), platform settings (`trainingServicePlatform`, etc.), path settings (`searchSpacePath`, `trial codeDir`, etc.) and tuner settings (`tuner`, `tuner optimize_mode`, etc.). Please refer to [here](../Tutorial/QuickStart.md) for more information.
+用于启动 NNI Experiment 的配置文件。 NNI 的配置文件是 `YAML` 格式，通常包括了 Experiment 设置 (`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等)，平台设置 (`trainingServicePlatform`, 等), 路径设置 (`searchSpacePath`, `trial codeDir`, 等) 以及 Tuner 设置 (`tuner`, `tuner optimize_mode`, 等)。 参考[这里](../Tutorial/QuickStart.md)了解详情。
 
-Here is an example of tuning RocksDB with SMAC algorithm:
+这是使用 SMAC 算法调优 RocksDB 的示例：
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
 
-Here is an example of tuning RocksDB with TPE algorithm:
+这是使用 TPE 算法调优 RocksDB 的示例：
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/config_tpe.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_tpe.yml)*
+*代码目录: [`example/trials/systems/rocksdb-fillrandom/config_tpe.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_tpe.yml)*
 
-Other tuners can be easily adopted in the same way. Please refer to [here](../Tuner/BuiltinTuner.md) for more information.
+其它 Tuner 算法可以通过相同的方式来使用。 参考[这里](../Tuner/BuiltinTuner.md)了解详情。
 
-Finally, we could enter the example folder and start the experiment using following commands:
+最后，进入示例目录，并通过下列命令启动 Experiment：
 
 
 
 ```bash
-# tuning RocksDB with SMAC tuner
+# 使用 SMAC Tuner 调优 RocksDB
 nnictl create --config ./config_smac.yml
-# tuning RocksDB with TPE tuner
+# 使用 TPE Tuner 调优 RocksDB
 nnictl create --config ./config_tpe.yml
 ```
 
 
 
 
-## Experiment results
+## Experiment 结果
 
-We ran these two examples on the same machine with following details:
+在同一台计算机上运行这两个示例的详细信息：
 
 * 16 * Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz
-* 465 GB of rotational hard drive with ext4 file system
-* 128 GB of RAM
-* Kernel version: 4.15.0-58-generic
-* NNI version: v1.0-37-g1bd24577
-* RocksDB version: 6.4
+* 465 GB 磁盘，安装 ext4 操作系统
+* 128 GB 内存
+* 内核版本: 4.15.0-58-generic
+* NNI 版本: v1.0-37-g1bd24577
+* RocksDB 版本: 6.4
 * RocksDB DEBUG_LEVEL: 0
 
-The detailed experiment results are shown in the below figure. Horizontal axis is sequential order of trials. Vertical axis is the metric, write OPS in this example. Blue dots represent trials for tuning RocksDB with SMAC tuner, and orange dots stand for trials for tuning RocksDB with TPE tuner. 
+详细的实验结果如下图所示。 水平轴是 Trial 的顺序。 垂直轴是指标，此例中为写入的 OPS。 蓝点表示使用的是 SMAC Tuner，橙色表示使用的是 TPE Tuner。 
 
 ![image](../../../examples/trials/systems/rocksdb-fillrandom/plot.png)
 
-Following table lists the best trials and corresponding parameters and metric obtained by the two tuners. Unsurprisingly, both of them found the same optimal configuration for `fillrandom` benchmark.
+下表列出了两个 Tuner 获得的最佳 Trial 以及相应的参数和指标。 不出所料，两个 Tuner 都为 `fillrandom` 测试找到了一样的最佳配置。
 
-| Tuner | Best trial | Best OPS | write_buffer_size | min_write_buffer_number_to_merge | level0_file_num_compaction_trigger |
-|:-----:|:----------:|:--------:|:-------------------:|:------------------------------------:|:--------------------------------------:|
-| SMAC  |    255     |  779289  |       2097152       |                 7.0                  |                  7.0                   |
-|  TPE  |    169     |  761456  |       2097152       |                 7.0                  |                  7.0                   |
+| Tuner | 最佳 Trial | 最佳 OPS | write_buffer_size | min_write_buffer_number_to_merge | level0_file_num_compaction_trigger |
+|:-----:|:--------:|:------:|:-------------------:|:------------------------------------:|:--------------------------------------:|
+| SMAC  |   255    | 779289 |       2097152       |                 7.0                  |                  7.0                   |
+|  TPE  |   169    | 761456 |       2097152       |                 7.0                  |                  7.0                   |
