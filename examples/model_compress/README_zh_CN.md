@@ -1,12 +1,12 @@
-# Run model compression examples
+# 运行模型压缩示例
 
-You can run these examples easily like this, take torch pruning for example
+以 PyTorch 剪枝为例：
 
 ```bash
 python main_torch_pruner.py
 ```
 
-This example uses AGP Pruner. Initiating a pruner needs a user provided configuration which can be provided in two ways:
+此示例使用了 AGP Pruner。 Initiating a pruner needs a user provided configuration which can be provided in two ways:
 
 - By reading `configure_example.yaml`, this can make code clean when your configuration is complicated
 - Directly config in your codes
