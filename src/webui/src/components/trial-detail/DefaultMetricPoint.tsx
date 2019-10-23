@@ -135,17 +135,17 @@ function generateScatterSeries(trials: Trial[]) {
 
 function generateBestCurveSeries(trials: Trial[]) {
     let best = trials[0];
-    const data = [[ best.sequenceId, best.accuracy, best.info.hyperParameters ]];
+    const data = [[ best.sequenceId, best.accuracy, best.description.parameters ]];
 
     for (let i = 1; i < trials.length; i++) {
         const trial = trials[i];
         const delta = trial.accuracy! - best.accuracy!;
         const better = (EXPERIMENT.optimizeMode === 'minimize') ? (delta < 0) : (delta > 0);
         if (better) {
-            data.push([ trial.sequenceId, trial.accuracy, trial.info.hyperParameters ]);
+            data.push([ trial.sequenceId, trial.accuracy, trial.description.parameters ]);
             best = trial;
         } else {
-            data.push([ trial.sequenceId, best.accuracy, trial.info.hyperParameters ]);
+            data.push([ trial.sequenceId, best.accuracy, trial.description.parameters ]);
         }
     }
 

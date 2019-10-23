@@ -125,6 +125,11 @@ class Compare extends React.Component<CompareProps, {}> {
             durationList.push(temp.duration);
             parameterList.push(temp.description.parameters);
         });
+        let isComplexSearchSpace;
+        if (parameterList.length > 0) {
+            isComplexSearchSpace = (typeof parameterList[0][parameterKeys[0]] === 'object')
+                ? true : false;
+        }
         return (
             <table className="compare">
                 <tbody>
@@ -164,22 +169,26 @@ class Compare extends React.Component<CompareProps, {}> {
                         })}
                     </tr>
                     {
-                        Object.keys(parameterKeys).map(index => {
-                            return (
-                                <tr key={index}>
-                                    <td className="column" key={index}>{parameterKeys[index]}</td>
-                                    {
-                                        Object.keys(parameterList).map(key => {
-                                            return (
-                                                <td key={key} className="value">
-                                                    {parameterList[key][parameterKeys[index]]}
-                                                </td>
-                                            );
-                                        })
-                                    }
-                                </tr>
-                            );
-                        })
+                        isComplexSearchSpace
+                            ?
+                            null
+                            :
+                            Object.keys(parameterKeys).map(index => {
+                                return (
+                                    <tr key={index}>
+                                        <td className="column" key={index}>{parameterKeys[index]}</td>
+                                        {
+                                            Object.keys(parameterList).map(key => {
+                                                return (
+                                                    <td key={key} className="value">
+                                                        {parameterList[key][parameterKeys[index]]}
+                                                    </td>
+                                                );
+                                            })
+                                        }
+                                    </tr>
+                                );
+                            })
                     }
                 </tbody>
             </table>
