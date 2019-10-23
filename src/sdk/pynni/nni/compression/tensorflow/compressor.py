@@ -13,20 +13,21 @@ class LayerInfo:
 
 
 class Compressor:
-    """
-    Abstract base TensorFlow compressor
-    """
+    """Abstract base TensorFlow compressor"""
+
     def __init__(self, config_list):
         self._bound_model = None
         self._config_list = config_list
 
     def __call__(self, model):
+        """Compress given graph with algorithm implemented by subclass.
+        The graph will be editted and returned.
+        """
         self.compress(model)
         return model
 
     def compress(self, model):
-        """
-        Compress given graph with algorithm implemented by subclass.
+        """Compress given graph with algorithm implemented by subclass.
         This will edit the graph.
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
@@ -39,28 +40,24 @@ class Compressor:
                 self._instrument_layer(layer, config)
 
     def compress_default_graph(self):
-        """
-        Compress the default graph with algorithm implemented by subclass.
-        This will edit the graph.
+        """Compress the default graph with algorithm implemented by subclass.
+        This will edit the default graph.
         """
         self.compress(tf.get_default_graph())
 
 
     def bind_model(self, model):
-        """
-        This method is called when a model is bound to the compressor.
-        Users can optionally overload this method to do model-specific initialization.
+        """This method is called when a model is bound to the compressor.
+        Compressors can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
 
     def update_epoch(self, epoch, sess):
-        """
-        if user want to update mask every epoch, user can override this method
+        """If user want to update mask every epoch, user can override this method
         """
 
     def step(self, sess):
-        """
-        if user want to update mask every step, user can override this method
+        """If user want to update mask every step, user can override this method
         """
 
 
@@ -89,8 +86,7 @@ class Pruner(Compressor):
     """
 
     def calc_mask(self, weight, config, op, op_type, op_name):
-        """
-        Pruners should overload this method to provide mask for weight tensors.
+        """Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
         It will be applied with `multiply()` operation.
         This method works as a subgraph which will be inserted into the bound model.
@@ -98,13 +94,11 @@ class Pruner(Compressor):
         raise NotImplementedError("Pruners must overload calc_mask()")
 
     def _instrument_layer(self, layer, config):
-        """
-        it seems the graph editor can only swap edges of nodes or remove all edges from a node
-        it cannot remove one edge from a node, nor can it assign a new edge to a node
-        we assume there is a proxy operation between the weight and the Conv2D layer
-        this is true as long as the weight is `tf.Value`
-        not sure what will happen if the weight is calculated from other operations
-        """
+        # it seems the graph editor can only swap edges of nodes or remove all edges from a node
+        # it cannot remove one edge from a node, nor can it assign a new edge to a node
+        # we assume there is a proxy operation between the weight and the Conv2D layer
+        # this is true as long as the weight is `tf.Value`
+        # not sure what will happen if the weight is calculated from other operations
         weight_index = _detect_weight_index(layer)
         if weight_index is None:
             _logger.warning('Failed to detect weight for layer %s', layer.name)

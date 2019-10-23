@@ -15,9 +15,8 @@ class LayerInfo:
 
 
 class Compressor:
-    """
-    Abstract base PyTorch compressor
-    """
+    """Abstract base PyTorch compressor"""
+
     def __init__(self, config_list):
         self._bound_model = None
         self._config_list = config_list
@@ -27,8 +26,7 @@ class Compressor:
         return model
 
     def compress(self, model):
-        """
-        Compress the model with algorithm implemented by subclass.
+        """Compress the model with algorithm implemented by subclass.
         The model will be instrumented and user should never edit it after calling this method.
         """
         assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
@@ -40,24 +38,19 @@ class Compressor:
             if config is not None:
                 self._instrument_layer(layer, config)
 
-
     def bind_model(self, model):
-        """
-        This method is called when a model is bound to the compressor.
+        """This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
 
     def update_epoch(self, epoch):
-        """
-        if user want to update model every epoch, user can override this method
+        """if user want to update model every epoch, user can override this method
         """
 
     def step(self):
+        """if user want to update model every step, user can override this method
         """
-        if user want to update model every step, user can override this method
-        """
-
 
     def _instrument_layer(self, layer, config):
         raise NotImplementedError()
@@ -84,14 +77,12 @@ class Pruner(Compressor):
     """
 
     def calc_mask(self, weight, config, op, op_type, op_name):
-        """
-        Pruners should overload this method to provide mask for weight tensors.
+        """Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
         It will be applied with `mul()` operation.
         This method is effectively hooked to `forward()` method of the model.
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
-
 
     def _instrument_layer(self, layer, config):
         # TODO: support multiple weight tensors
@@ -126,8 +117,7 @@ class Quantizer(Compressor):
         return model
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
-        """
-        user should know where dequantize goes and implement it in quantize method
+        """user should know where dequantize goes and implement it in quantize method
         we now do not provide dequantize method
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
