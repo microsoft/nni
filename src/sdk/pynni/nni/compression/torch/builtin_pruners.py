@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -104,3 +104,74 @@ class AGP_Pruner(Pruner):
             self.now_epoch = epoch
             for k in self.if_init_list.keys():
                 self.if_init_list[k] = True
+
+class FPGMPruner(Pruner):
+    """A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration", 
+    https://arxiv.org/pdf/1811.00250.pdf
+    """
+
+    def __init__(self, config_list):
+        """
+        config_list: supported keys:
+            - pruning_rate: percentage of convolutional filters to be pruned.
+            - start_epoch: start epoch number begin update mask
+            - end_epoch: end epoch number stop update mask, you should make sure start_epoch <= end_epoch
+        """
+        super().__init__(config_list)
+        self.mask_list = {}
+        #self.pruning_rate = config_list.get('pruning_rate')
+        print(config_list)
+
+    def calc_mask(self, weight, config, op_name, **kwargs):
+        #print(weight.size(), type(weight))
+        #print('config:', config)
+        #print('kgargs:', kwargs)
+        
+        if kwargs['op_type'] in ['Conv1d', 'Conv2d', 'Conv3d']:
+            num_kernels = weight.size(0) * weight.size(1)
+            num_prune = int(num_kernels * config.get('pruning_rate'))
+            if num_kernels < 3 or num_prune < 1:
+                return torch.ones(weight.size())
+            min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+            masks = torch.ones(weight.size())
+            #num_before = masks.sum()
+            for idx in min_gm_idx:
+                masks[idx] = 0.
+            #print('pruned: {}'.format(masks.sum() / num_before))
+            return masks
+        else:
+            return torch.ones(weight.size())
+
+    def _get_min_gm_kernel_idx(self, weight, n):
+        """filter/kernel dimensions for Conv2d:
+        IN: number of input channel
+        OUT: number of output channel
+        H: filter height
+        W: filter width
+        """
+        assert len(weight.size()) >= 3 # supports Conv1d, Conv2d, Conv3d
+        assert weight.size(0) * weight.size(1) > 2
+
+        dist_list = []
+        for in_i in range(weight.size(0)):
+            for out_i in range(weight.size(1)):
+                dist_sum = self._get_distance_sum_fast(weight, in_i, out_i)
+                dist_list.append((dist_sum, (in_i, out_i)))
+        min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
+        return [x[1] for x in min_gm_kernels]
+
+    def _get_distance_sum(self, weight, in_idx, out_idx):
+        w = weight.view(-1, weight.size(-2), weight.size(-1))
+        dist_sum = 0.
+        for k in w:
+            dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
+        return dist_sum
+
+    def _get_distance_sum_fast(self, weight, in_idx, out_idx):
+        w = weight.view(-1, weight.size(-2), weight.size(-1))
+        anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+        x = w - anchor_w
+        x = x*x
+        x = torch.sqrt(x)
+        return x.sum()
