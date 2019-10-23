@@ -4,7 +4,7 @@ json_tricks
 # hyperopt tuner
 numpy
 scipy
-hyperopt
+hyperopt==0.1.2
 
 # metis tuner
 sklearn
