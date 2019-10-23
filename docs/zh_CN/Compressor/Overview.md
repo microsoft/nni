@@ -1,26 +1,22 @@
 # Compressor
-
 NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
 
 ## 支持的算法
+We have provided two naive compression algorithms and three popular ones for users, including two pruning algorithms and three quantization algorithms:
 
-NNI 提供了两种朴素压缩算法以及四种流行的压缩算法，包括 3 种剪枝算法以及 3 种量化算法：
-
-| 名称                                                   | 算法简介                                                                                                                                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)             | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                         |
-| [AGP Pruner](./Pruner.md#agp-pruner)                 | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                        |
-| [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | 为 Efficient Neural Networks 学习权重和连接。 [参考论文](https://arxiv.org/abs/1506.02626)                                                                                              |
-| [Naive Quantizer](./Quantizer.md#naive-quantizer)    | 默认将权重量化为 8 位                                                                                                                                                               |
-| [QAT Quantizer](./Quantizer.md#qat-quantizer)        | 为 Efficient Integer-Arithmetic-Only Inference 量化并训练神经网络。 [参考论文](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
-| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer)  | DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 [参考论文](https://arxiv.org/abs/1606.06160)                                                                                              |
+| 名称                                                  | 算法简介                                                                                                                                                                                                                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)            | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                                         |
+| [AGP Pruner](./Pruner.md#agp-pruner)                | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                                        |
+| [Naive Quantizer](./Quantizer.md#naive-quantizer)   | Quantize weights to default 8 bits                                                                                                                                                                                         |
+| [QAT Quantizer](./Quantizer.md#qat-quantizer)       | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
+| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)                                                                           |
 
 ## 内置压缩算法的用法
 
 通过简单的示例来展示如何修改 Trial 代码来使用压缩算法。 比如，需要通过 Level Pruner 来将权重剪枝 80%，首先在代码中训练模型前，添加以下内容（[完整代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)）。
 
 TensorFlow 代码
-
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -29,7 +25,6 @@ pruner(tf.get_default_graph())
 ```
 
 PyTorch 代码
-
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -56,7 +51,6 @@ pruner(model)
 `list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
 
 配置的简单示例如下：
-
 ```python
 [
     {
@@ -73,7 +67,6 @@ pruner(model)
     }
 ]
 ```
-
 其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
 ### 其它 API
@@ -81,13 +74,10 @@ pruner(model)
 一些压缩算法使用 Epoch 来控制压缩进度（如[AGP](./Pruner.md#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此提供了另外两个 API。 一个是 `update_epoch`，可参考下例使用：
 
 TensorFlow 代码
-
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-
 PyTorch 代码
-
 ```python
 pruner.update_epoch(epoch)
 ```
@@ -136,7 +126,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
         pass
 ```
 
-对于最简单的算法，只需要重写 `calc_mask` 函数。 它可接收每层的权重，并选择对应的配置和操作的信息。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
+For the simpliest algorithm, you only need to override `calc_mask`. 它可接收每层的权重，并选择对应的配置和操作的信息。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
 
 一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。
 
@@ -148,34 +138,42 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# 如果要在 PyTorch 中定制 Quantizer，可将
-# nni.compression.tensorflow.Quantizer 替换为
+# For writing a Quantizer in PyTorch, you can simply replace
+# nni.compression.tensorflow.Quantizer with
 # nni.compression.torch.Quantizer
-class YourQuantizer(nni.compression.tensorflow.Quantizer):
+class YourPruner(nni.compression.tensorflow.Quantizer):
     def __init__(self, config_list):
-        # 建议使用 NNI 定义的规范来进行配置
+        # suggest you to use the NNI defined spec for config
         super().__init__(config_list)
 
     def bind_model(self, model):
-        # 此函数可通过成员变量，来保存模型和其权重，
-        # 从而能在训练过程中获取这些信息。
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
         pass
 
     def quantize_weight(self, weight, config, **kwargs):
-        # weight 是目标的权重张量
-        # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
-        # 实现定制的 Quantizer 并返回新的权重
+        # weight is the target weight tensor
+        # config is the selected dict object in config_list for this layer
+        # kwargs contains op, op_type, and op_name
+        # design your quantizer and return new weight
         return new_weight
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def step(self, sess):
-        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
         pass
+
+    # you can also design your method
+    def your_method(self, your_input):
+        #your code
+
+    def bind_model(self, model):
+        #preprocess model
 ```
 
 __[TODO]__ 添加成员函数 `quantize_layer_output`，用于支持量化层输出的量化算法。
