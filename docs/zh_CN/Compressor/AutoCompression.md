@@ -90,7 +90,7 @@ acc = evaluate(model) # evaluation
 nni.report_final_results(acc)
 ```
 
-Last, define our task and automatically tuning pruning methods with layers sparsity
+最后，定义任务，并使用任务来自动修剪层稀疏度。
 
 ```yaml
 authorName: default
@@ -98,16 +98,16 @@ experimentName: Auto_Compression
 trialConcurrency: 2
 maxExecDuration: 100h
 maxTrialNum: 500
-#choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: local
-#choice: true, false
+# 可选项: true, false
 useAnnotation: False
 searchSpacePath: search_space.json
 tuner:
-  #choice: TPE, Random, Anneal...
+  # 可选项: TPE, Random, Anneal...
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    # 可选项: maximize, minimize
     optimize_mode: maximize
 trial:
   command: bash run_prune.sh
