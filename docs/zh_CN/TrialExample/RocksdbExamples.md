@@ -1,6 +1,6 @@
-# Tuning RocksDB on NNI
+# 在 NNI 上调优 RocksDB
 
-## Overview
+## 概述
 
 [RocksDB](https://github.com/facebook/rocksdb) is a popular high performance embedded key-value database used in production systems at various web-scale enterprises including Facebook, Yahoo!, and LinkedIn.. It is a fork of [LevelDB](https://github.com/google/leveldb) by Facebook optimized to exploit many central processing unit (CPU) cores, and make efficient use of fast storage, such as solid-state drives (SSD), for input/output (I/O) bound workloads.
 
