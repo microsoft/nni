@@ -32,7 +32,7 @@ setuptools.setup(
 
     python_requires = '>=3.5',
     install_requires = [
-        'hyperopt',
+        'hyperopt==0.1.2',
         'json_tricks',
         'numpy',
         'scipy',

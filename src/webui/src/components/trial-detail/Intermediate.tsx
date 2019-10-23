@@ -262,16 +262,10 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             <div>
                 {/* style in para.scss */}
                 <Row className="meline intermediate">
-                    {/* filter message */}
-                    <span>Filter</span>
-                    <Switch
-                        defaultChecked={false}
-                        onChange={this.switchTurn}
-                    />
                     {
                         isFilter
                             ?
-                            <span>
+                            <span style={{marginRight: 15}}>
                                 <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
@@ -300,6 +294,12 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             :
                             null
                     }
+                    {/* filter message */}
+                    <span>Filter</span>
+                    <Switch
+                        defaultChecked={false}
+                        onChange={this.switchTurn}
+                    />
                 </Row>
                 <Row className="intermediate-graph">
                     <ReactEcharts

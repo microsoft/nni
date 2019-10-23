@@ -14,6 +14,7 @@ interface ExpDrawerProps {
 
 interface ExpDrawerState {
     experiment: string;
+    expDrawerHeight: number;
 }
 
 class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
@@ -23,7 +24,8 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         super(props);
 
         this.state = {
-            experiment: ''
+            experiment: '',
+            expDrawerHeight: window.innerHeight - 48
         };
     }
 
@@ -69,9 +71,14 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         downFile(experiment, 'experiment.json');
     }
 
+    onWindowResize = () => {
+        this.setState(() => ({expDrawerHeight: window.innerHeight - 48}));
+    }
+
     componentDidMount() {
         this._isCompareMount = true;
         this.getExperimentContent();
+        window.addEventListener('resize', this.onWindowResize);
     }
 
     componentWillReceiveProps(nextProps: ExpDrawerProps) {
@@ -83,12 +90,12 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
     componentWillUnmount() {
         this._isCompareMount = false;
+        window.removeEventListener('resize', this.onWindowResize);
     }
 
     render() {
         const { isVisble, closeExpDrawer } = this.props;
-        const { experiment } = this.state;
-        const heights: number = window.innerHeight - 48;
+        const { experiment, expDrawerHeight } = this.state;
         return (
             <Row className="logDrawer">
                 <Drawer
@@ -99,15 +106,16 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     onClose={closeExpDrawer}
                     visible={isVisble}
                     width="54%"
-                    height={heights}
+                    height={expDrawerHeight}
                 >
-                    <div className="card-container log-tab-body" style={{ height: heights }}>
-                        <Tabs type="card" style={{ height: heights + 19 }}>
+                    {/* 104: tabHeight(40) + tabMarginBottom(16) + buttonHeight(32) + buttonMarginTop(16) */}
+                    <div className="card-container log-tab-body">
+                        <Tabs type="card" style={{ height: expDrawerHeight, minHeight: 190 }}>
                             <TabPane tab="Experiment Parameters" key="Experiment">
                                 <div className="just-for-log">
                                     <MonacoEditor
                                         width="100%"
-                                        height={heights * 0.9}
+                                        height={expDrawerHeight - 104}
                                         language="json"
                                         value={experiment}
                                         options={DRAWEROPTION}
