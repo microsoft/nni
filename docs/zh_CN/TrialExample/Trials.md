@@ -169,4 +169,4 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 * [如何在 NNI 调优 SciKit-learn 的参数](SklearnExamples.md)
 * [在阅读理解上使用自动模型架构搜索。](SquadEvolutionExamples.md)
 * [如何在 NNI 上调优 GBDT](GbdtExample.md)
-* [Tuning RocksDB on NNI](RocksdbExamples.md)
+* [在 NNI 上调优 RocksDB](RocksdbExamples.md)
