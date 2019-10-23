@@ -38,24 +38,22 @@ class Compressor:
             if config is not None:
                 self._instrument_layer(layer, config)
 
-
     def bind_model(self, model):
         """This method is called when a model is bound to the compressor.
         Users can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
         pass
-    
+
     def update_epoch(self, epoch):
         """if user want to update model every epoch, user can override this method
         """
         pass
-    
+
     def step(self):
         """if user want to update model every step, user can override this method
         """
         pass
-
 
     def _instrument_layer(self, layer, config):
         raise NotImplementedError()
@@ -90,7 +88,6 @@ class Pruner(Compressor):
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
-
     def _instrument_layer(self, layer, config):
         # TODO: support multiple weight tensors
         # create a wrapper forward function to replace the original one
@@ -112,7 +109,7 @@ class Pruner(Compressor):
             return ret
 
         layer.module.forward = new_forward
- 
+
 
 class Quantizer(Compressor):
     """Base quantizer for pytorch quantizer"""
@@ -123,7 +120,7 @@ class Quantizer(Compressor):
     def __call__(self, model):
         self.compress(model)
         return model
-    
+
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """user should know where dequantize goes and implement it in quantize method
         we now do not provide dequantize method

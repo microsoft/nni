@@ -45,7 +45,7 @@ from nni.compression.tensorflow import AGP_Pruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
-    'start_epoch': 1,
+    'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
     'op_types': 'default'
@@ -59,7 +59,7 @@ from nni.compression.torch import AGP_Pruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
-    'start_epoch': 1,
+    'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
     'op_types': 'default'
@@ -83,46 +83,9 @@ pruner.update_epoch(epoch)
 #### AGP Pruner 的用户配置
 * **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
 * **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
-* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值。
+* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值，默认为 0。
 * **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
-* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝。
+* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝，默认 frequency=1。
 
 ***
 
-## Sensitivity Pruner
-在 [Learning both Weights and Connections for Efficient Neural Networks](https://arxiv.org/abs/1506.02626) 中，作者 Song Han 提出了一种算法来查找每一层的敏感度，并据此为每一层设置剪枝的阈值。
-> 我们使用了敏感度结果来找到每层的阈值：如，最敏感的第一层卷积层会使用最小的阈值。 剪枝阈值作为质量参数来乘以图层权重的标准方差。
-
-### 用法
-下列代码通过 Sensitivity Pruner 来逐步对权重剪枝，并达到目标稀疏度。
-
-TensorFlow 代码
-```python
-from nni.compression.tensorflow import SensitivityPruner
-config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
-pruner = SensitivityPruner(config_list)
-pruner(tf.get_default_graph())
-```
-PyTorch 代码
-```python
-from nni.compression.torch import SensitivityPruner
-config_list = [{ 'sparsity':0.8, 'op_types': 'default' }]
-pruner = SensitivityPruner(config_list)
-pruner(model)
-```
-与 AGP Pruner 莱斯，需要使用下列代码在每个 Epoch 后更新信息
-
-TensorFlow 代码
-```python
-pruner.update_epoch(epoch, sess)
-```
-PyTorch 代码
-```python
-pruner.update_epoch(epoch)
-```
-查看示例进一步了解
-
-#### Sensitivity Pruner 的用户配置
-* **sparsity:**，指定压缩的稀疏度。
-
-***

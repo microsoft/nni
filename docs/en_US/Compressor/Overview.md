@@ -1,14 +1,15 @@
 # Compressor
+
 NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and PyTorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
 
 ## Supported algorithms
-We have provided two naive compression algorithms and four popular ones for users, including three pruning algorithms and three quantization algorithms:
+
+We have provided two naive compression algorithms and three popular ones for users, including two pruning algorithms and three quantization algorithms:
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
 | [Level Pruner](./Pruner.md#level-pruner) | Pruning the specified ratio on each weight based on absolute values of weights |
 | [AGP Pruner](./Pruner.md#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
-| [Sensitivity Pruner](./Pruner.md#sensitivity-pruner) | Learning both Weights and Connections for Efficient Neural Networks. [Reference Paper](https://arxiv.org/abs/1506.02626)|
 | [Naive Quantizer](./Quantizer.md#naive-quantizer) |  Quantize weights to default 8 bits |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
@@ -18,6 +19,7 @@ We have provided two naive compression algorithms and four popular ones for user
 We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with Level Pruner, you can add the following three lines into your code before training your model ([here](https://github.com/microsoft/nni/tree/master/examples/model_compress) is complete code).
 
 Tensorflow code
+
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -26,6 +28,7 @@ pruner(tf.get_default_graph())
 ```
 
 PyTorch code
+
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
@@ -52,6 +55,7 @@ There are also other keys in the `dict`, but they are specific for every compres
 The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them. 
 
 A simple example of configuration is shown below:
+
 ```python
 [
     {
@@ -68,17 +72,21 @@ A simple example of configuration is shown below:
     }
 ]
 ```
+
 It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and please do not compress `op_name3`.
 
 ### Other APIs
 
 Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](./Pruner.md#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
 
-Tensorflow code 
+Tensorflow code
+
 ```python
 pruner.update_epoch(epoch, sess)
 ```
+
 PyTorch code
+
 ```python
 pruner.update_epoch(epoch)
 ```
@@ -128,7 +136,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
         pass
 ```
 
-For the simpliest algorithm, you only need to override `calc_mask`. It receives each layer's weight and selected configuration, as well as op information. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+For the simplest algorithm, you only need to override `calc_mask`. It receives each layer's weight and selected configuration, as well as op information. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
 Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
 
