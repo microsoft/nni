@@ -1,7 +1,5 @@
-# Usage:
-#       python3 -m pylint --rcfile=PATH_TO_THIS_FILE PACKAGE_NAME
-# or
-#       python3 -m pylint --rcfile=PATH_TO_THIS_FILE SOURCE_FILE.py
+# This pylintrc file is a little more strick than the one in root of code directory
+# SDK source MUST pass lint rules in top level directory, and SHOULD pass rules here
 
 [SETTINGS]
 
