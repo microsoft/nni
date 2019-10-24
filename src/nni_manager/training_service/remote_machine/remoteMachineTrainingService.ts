@@ -333,6 +333,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
+                this.log.debug('------------------training service try keyboard-interactive mode---------------')
                 this.log.debug('------------------training service 336---------------')
                 await this.setupConnections(value);
                 this.log.debug('------------------training service 338---------------')
