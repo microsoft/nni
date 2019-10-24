@@ -24,7 +24,6 @@ import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
-import { getLogger, Logger } from '../../common/log';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -132,7 +131,6 @@ export class SSHClient {
  * The remote machine ssh client manager
  */
 export class SSHClientManager {
-    private readonly log: Logger;
     private readonly sshClientArray: SSHClient[];
     private readonly maxTrialNumberPerConnection: number;
     private readonly rmMeta: RemoteMachineMeta;
@@ -140,7 +138,6 @@ export class SSHClientManager {
         this.rmMeta = rmMeta;
         this.sshClientArray = sshClientArray;
         this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
-        this.log = getLogger();
     }
 
     /**
