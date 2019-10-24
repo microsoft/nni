@@ -244,8 +244,9 @@ export class SSHClientManager {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
-            this.log.debug('---------------ssh client keyboard-interactive-----------')
-            finish(["password"]);
+            this.log.debug('---------------ssh client keyboard-interactive2-----------')
+            this.log.debug(this.rmMeta.passwd)
+            finish([this.rmMeta.passwd]);
         })
           .connect(connectConfig);
 
