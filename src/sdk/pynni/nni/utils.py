@@ -41,7 +41,7 @@ class OptimizeMode(Enum):
     Maximize = 'maximize'
 
 
-class NodeType(Enum):
+class NodeType:
     """Node Type class
     """
     ROOT = 'root'
@@ -51,7 +51,7 @@ class NodeType(Enum):
     NAME = '_name'
 
 
-class MetricType(Enum):
+class MetricType:
     """The types of metric data
     """
     FINAL = 'FINAL'
@@ -70,7 +70,8 @@ def split_index(params):
         for key in params:
             result[key] = split_index(params[key])
         return result
-    return params
+    else:
+        return params
 
 
 def extract_scalar_reward(value, scalar_key='default'):
