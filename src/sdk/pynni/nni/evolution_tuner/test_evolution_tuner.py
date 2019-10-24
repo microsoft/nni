@@ -21,7 +21,6 @@
 test_evolution_tuner.py
 """
 
-
 import numpy as np
 
 from unittest import TestCase, main
