@@ -6,4 +6,4 @@ AGPruner:
         frequency: 1
         initial_sparsity: 0.05
         final_sparsity: 0.8
-        op_type: 'default'
+        op_types: 'default'
