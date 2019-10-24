@@ -214,7 +214,8 @@ export class SSHClientManager {
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
-            username: this.rmMeta.username };
+            username: this.rmMeta.username,
+            tryKeyboard: true };
         this.log.debug(this.rmMeta.ip)
         this.log.debug(this.rmMeta.port)
         this.log.debug(this.rmMeta.username)
@@ -242,6 +243,9 @@ export class SSHClientManager {
             this.log.debug(err)
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
+        }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
+            this.log.debug('---------------ssh client keyboard-interactive-----------')
+            finish(["password"]);
         })
           .connect(connectConfig);
 
