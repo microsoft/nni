@@ -154,6 +154,7 @@ export class SSHClientManager {
                 return deferred.promise;
             }
         }
+        
         //init a new ssh client if could not get an available one
         return this.initNewSSHClient();
     }
