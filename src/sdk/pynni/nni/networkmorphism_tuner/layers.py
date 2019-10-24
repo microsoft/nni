@@ -570,7 +570,7 @@ def to_real_keras_layer(layer):
         return layers.Flatten()
     if is_layer(layer, "GlobalAveragePooling"):
         return layers.GlobalAveragePooling2D()
-    return None  # FIXME: should here return or raise?
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 def is_layer(layer, layer_type):
@@ -603,7 +603,7 @@ def is_layer(layer, layer_type):
         return isinstance(layer, (StubFlatten,))
     elif layer_type == "GlobalAveragePooling":
         return isinstance(layer, StubGlobalPooling)
-    return None  # FIXME: return or raise?
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 def layer_description_extractor(layer, node_to_id):

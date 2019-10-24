@@ -191,7 +191,7 @@ def _add_index(in_x, parameter):
                     return {NodeType.INDEX: pos, NodeType.VALUE: item}
         else:
             return parameter
-    return None  # FIXME: what to return here?
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 class HyperoptTuner(Tuner):
