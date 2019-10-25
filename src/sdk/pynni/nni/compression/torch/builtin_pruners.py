@@ -120,37 +120,35 @@ class FPGMPruner(Pruner):
         """
         super().__init__(config_list)
         self.mask_list = {}
-        #self.pruning_rate = config_list.get('pruning_rate')
-        print(config_list)
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
-        #print(weight.size(), type(weight))
-        #print('config:', config)
-        #print('kgargs:', kwargs)
-        
-        if kwargs['op_type'] in ['Conv1d', 'Conv2d', 'Conv3d']:
+    def calc_mask(self, weight, config, op, op_type, op_name):
+        assert 0 <= config.get('pruning_rate') < 1
+        assert config['op_type'] in ['Conv1d', 'Conv2d', 'Conv3d']
+
+        masks = torch.ones(weight.size())
+
+        if op_type == config['op_type']:
             num_kernels = weight.size(0) * weight.size(1)
             num_prune = int(num_kernels * config.get('pruning_rate'))
-            if num_kernels < 3 or num_prune < 1:
-                return torch.ones(weight.size())
+            if num_kernels < 2 or num_prune < 1:
+                self.mask_list.update({op_name: masks})
+                return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
-            masks = torch.ones(weight.size())
-            #num_before = masks.sum()
             for idx in min_gm_idx:
                 masks[idx] = 0.
-            #print('pruned: {}'.format(masks.sum() / num_before))
-            return masks
-        else:
-            return torch.ones(weight.size())
+ 
+        self.mask_list.update({op_name: masks})
+        return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
-        """filter/kernel dimensions for Conv2d:
+        """supports Conv1d, Conv2d, Conv3d
+        filter/kernel dimensions for Conv2d:
         IN: number of input channel
         OUT: number of output channel
         H: filter height
         W: filter width
         """
-        assert len(weight.size()) >= 3 # supports Conv1d, Conv2d, Conv3d
+        assert len(weight.size()) >= 3
         assert weight.size(0) * weight.size(1) > 2
 
         dist_list = []
@@ -172,6 +170,6 @@ class FPGMPruner(Pruner):
         w = weight.view(-1, weight.size(-2), weight.size(-1))
         anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
         x = w - anchor_w
-        x = x*x
+        x = (x*x).sum((-2,-1))
         x = torch.sqrt(x)
         return x.sum()
