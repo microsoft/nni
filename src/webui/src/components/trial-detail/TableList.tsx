@@ -11,6 +11,7 @@ import { TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
+import Customize from '../Modal/CustomizedTrial';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -45,6 +46,8 @@ interface TableListState {
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
     intermediateId: string;
     intermediateOtherKeys: Array<string>;
+    isShowCustomizedModal: boolean;
+    trialParameter: string;
 }
 
 interface ColumnIndex {
@@ -71,7 +74,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
             intermediateId: '',
-            intermediateOtherKeys: []
+            intermediateOtherKeys: [],
+            isShowCustomizedModal: false,
+            trialParameter: ''
         };
     }
 
@@ -236,11 +241,27 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
+    // open customized trial modal
+    setCustomizedTrial = (parameters: object) => {
+        this.setState({
+            isShowCustomizedModal: true,
+            trialParameter: JSON.stringify(parameters)
+        });
+    }
+
+    closeCustomizedTrial = () => {
+        this.setState({
+            isShowCustomizedModal: false,
+            trialParameter: ''
+        });
+    }
     render() {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,
-            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
+            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys,
+            isShowCustomizedModal, trialParameter
+        } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
             onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>) => {
@@ -361,6 +382,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                                 </Button>
                                             </Popconfirm>
                                     }
+                                    {/* Add a new trial-customized trial */}
+                                    <Button
+                                        type="primary"
+                                        className="common-style"
+                                        onClick={
+                                            this.setCustomizedTrial.bind(
+                                                this,
+                                                TRIALS.getTrial(record.id)).description.parameters
+                                        }
+                                        title="Customized trial"
+                                    >
+                                        <Icon type="copy" />
+                                    </Button>
                                 </Row>
                             );
                         },
@@ -398,7 +432,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         expandedRowRender={this.openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
-                        scroll={{x: 'max-content'}}
+                        scroll={{ x: 'max-content' }}
                         pagination={pageSize > 0 ? { pageSize } : false}
                     />
                     {/* Intermediate Result Modal */}
@@ -458,7 +492,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
+                {/* compare trials based message */}
                 <Compare compareRows={selectRows} visible={isShowCompareModal} cancelFunc={this.hideCompareModal} />
+                {/* clone trial parameters and could submit a customized trial */}
+                <Customize
+                    visible={isShowCustomizedModal}
+                    hyperParameter={trialParameter}
+                    closeCustomizeModal={this.closeCustomizedTrial}
+                />
             </Row>
         );
     }
