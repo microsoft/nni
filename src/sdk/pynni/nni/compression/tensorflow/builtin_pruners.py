@@ -129,9 +129,7 @@ class FPGMPruner(Pruner):
         #assert op_type in ['Conv1D', 'Conv2D', 'Conv3D']
 
         if op_type == config['op_type']:
-            weight = tf.stop_gradient(tf.transpose(conv_kernel_weight, [2,3,0,1]))
-            
-            print(weight.shape)
+            weight = tf.stop_gradient(tf.transpose(conv_kernel_weight, [2,3,0,1]))          
             masks = tf.Variable(tf.ones_like(weight))
 
             num_kernels = weight.shape[0].value * weight.shape[1].value

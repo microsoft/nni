@@ -86,10 +86,8 @@ def main():
     pruner = LevelPruner(configure_list)
     '''
     configure_list = [{
-        'start_epoch': 0,
-        'end_epoch': 10,
         'pruning_rate': 0.5,
-        'op_type': 'default'
+        'op_type': 'Conv2D'
     }]
     pruner = FPGMPruner(configure_list)
     # if you want to load from yaml file
