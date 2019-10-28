@@ -54,9 +54,6 @@ class AGP_Pruner(Pruner):
         self.assign_handler = []
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        print('config:', config)
-        print('kwargs:', kwargs)
-        print('op_name:', op_name)
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
@@ -108,59 +105,74 @@ class FPGMPruner(Pruner):
         """
         config_list: supported keys:
             - pruning_rate: percentage of convolutional filters to be pruned.
-            - start_epoch: start epoch number begin update mask
-            - end_epoch: end epoch number stop update mask, you should make sure start_epoch <= end_epoch
         """
         super().__init__(config_list)
         self.mask_list = {}
+        self.assign_handler = []
 
-    def calc_mask(self, conv_kernel_weight, config, op, op_type, op_name):
-        print('config:', config)
-        print('op:', op)
-        print('op_type:', op_type)
-        print('op_name:', op_name)
+    def calc_mask(self, conv_kernel_weight, config, op, op_type, op_name, **kwargs):
+        """supports Conv1d, Conv2d, Conv3d
+        filter/kernel dimensions for Conv1D:
+        LEN: kernel length
+        IN: number of input channel
+        OUT: number of output channel
+
+        filter/kernel dimensions for Conv2D:
+        H: filter height
+        W: filter width
+        IN: number of input channel
+        OUT: number of output channel
+        """
+
         assert 0 <= config.get('pruning_rate') < 1
-        assert config['op_type'] in ['Conv1D', 'Conv2D', 'Conv3D']
-
-        weight = tf.stop_gradient(conv_kernel_weight)
-        masks = tf.ones_like(weight)
+        # TODO uncomment this
+        #assert op_type in ['Conv1D', 'Conv2D', 'Conv3D']
 
         if op_type == config['op_type']:
+            weight = tf.stop_gradient(tf.transpose(conv_kernel_weight, [2,3,0,1]))
+            
+            print(weight.shape)
+            masks = tf.Variable(tf.ones_like(weight))
+
             num_kernels = weight.shape[0].value * weight.shape[1].value
             num_prune = int(num_kernels * config.get('pruning_rate'))
             if num_kernels < 2 or num_prune < 1:
                 self.mask_list.update({op_name: masks})
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
-            for idx in min_gm_idx:
-                masks[idx] = 0.
- 
-        self.mask_list.update({op_name: masks})
+            tf.scatter_nd_update(masks, min_gm_idx, tf.zeros((min_gm_idx.shape[0].value, weight.shape[-2].value, weight.shape[-1].value)))
+            masks = tf.transpose(masks, [2,3,0,1])
+            self.assign_handler.append(tf.assign(conv_kernel_weight, conv_kernel_weight*masks))
+            self.mask_list.update({op_name: masks})
+        else:
+            masks = tf.Variable(tf.ones_like(conv_kernel_weight))
+            self.mask_list.update({op_name: masks})
+
         return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
-        """supports Conv1D, Conv2D, Conv3D
-        filter/kernel dimensions for Conv2d:
-        IN: number of input channel
-        OUT: number of output channel
-        H: filter height
-        W: filter width
-        """
         assert len(weight.shape) >= 3
         assert weight.shape[0].value * weight.shape[1].value > 2
 
-        dist_list = []
+        dist_list, idx_list = [], []
         for in_i in range(weight.shape[0].value):
             for out_i in range(weight.shape[1].value):
-                dist_sum = self._get_distance_sum_fast(weight, in_i, out_i)
-                dist_list.append((dist_sum, (in_i, out_i)))
-        min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
-        return [x[1] for x in min_gm_kernels]
+                dist_sum = self._get_distance_sum(weight, in_i, out_i)
+                dist_list.append(dist_sum)
+                idx_list.append([in_i, out_i])
+        dist_tensor = tf.convert_to_tensor(dist_list)
+        idx_tensor = tf.constant(idx_list)
+        
+        _, idx = tf.math.top_k(dist_tensor, k=n)
+        return tf.gather(idx_tensor, idx)
 
-    def _get_distance_sum_fast(self, weight, in_idx, out_idx):
+    def _get_distance_sum(self, weight, in_idx, out_idx):
         w = tf.reshape(weight, (-1, weight.shape[-2].value, weight.shape[-1].value))
         anchor_w = tf.tile(tf.expand_dims(weight[in_idx, out_idx], 0), [w.shape[0].value, 1, 1])
         x = w - anchor_w
         x = tf.math.reduce_sum((x*x), (-2, -1))
         x = tf.math.sqrt(x)
         return tf.math.reduce_sum(x)
+
+    def update_epoch(self, epoch, sess):
+        sess.run(self.assign_handler)
