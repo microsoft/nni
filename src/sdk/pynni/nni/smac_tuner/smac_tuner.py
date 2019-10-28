@@ -35,11 +35,10 @@ from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 from ConfigSpaceNNI import Configuration
 
-from .convert_ss_to_scenario import generate_scenario
-
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
+from .convert_ss_to_scenario import generate_scenario
 
 class SMACTuner(Tuner):
     """
@@ -77,8 +76,7 @@ class SMACTuner(Tuner):
 
         root_logger = logging.getLogger()
         root_logger.setLevel(args.verbose_level)
-        logger_handler = logging.StreamHandler(
-                stream=sys.stdout)
+        logger_handler = logging.StreamHandler(stream=sys.stdout)
         if root_logger.level >= logging.INFO:
             formatter = logging.Formatter(
                 "%(levelname)s:\t%(message)s")
