@@ -19,7 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import time
 import requests
 
 def rest_get(url, timeout):
@@ -34,7 +33,8 @@ def rest_get(url, timeout):
 def rest_post(url, data, timeout, rethrow_exception=False):
     '''Call rest post method'''
     try:
-        response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
+        response = requests.post(url, headers={'Accept': 'application/json',
+                                               'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)
         return response
     except Exception as e:
@@ -46,7 +46,8 @@ def rest_post(url, data, timeout, rethrow_exception=False):
 def rest_put(url, data, timeout):
     '''Call rest put method'''
     try:
-        response = requests.put(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
+        response = requests.put(url, headers={'Accept': 'application/json',
+                                              'Content-Type': 'application/json'},\
                                 data=data, timeout=timeout)
         return response
     except Exception as e:

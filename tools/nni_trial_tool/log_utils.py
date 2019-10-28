@@ -33,9 +33,9 @@ from logging import StreamHandler
 
 from queue import Queue
 
-from .rest_utils import rest_get, rest_post, rest_put, rest_delete
-from .constants import NNI_EXP_ID, NNI_TRIAL_JOB_ID, STDOUT_API
+from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
+
 
 @unique
 class LogType(Enum):
@@ -46,15 +46,18 @@ class LogType(Enum):
     Error = 'ERROR'
     Fatal = 'FATAL'
 
+
 @unique
 class StdOutputType(Enum):
-    Stdout = 'stdout',
+    Stdout = 'stdout'
     Stderr = 'stderr'
+
 
 def nni_log(log_type, log_message):
     '''Log message into stdout'''
     dt = datetime.now()
     print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))
+
 
 class NNIRestLogHanlder(StreamHandler):
     def __init__(self, host, port, tag, std_output_type=StdOutputType.Stdout):
@@ -73,16 +76,20 @@ class NNIRestLogHanlder(StreamHandler):
         log_entry['msg'] = self.format(record)
 
         try:
-            response = rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
+            response = rest_post(gen_send_stdout_url(self.host, self.port),
+                                 json.dumps(log_entry), 10, True)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()
 
-class RemoteLogger(object):
+
+class RemoteLogger():
     """
     NNI remote logger
     """
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, log_level=logging.INFO):
+
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type,
+                 log_collection, log_level=logging.INFO):
         '''
         constructor
         '''
@@ -115,10 +122,12 @@ class RemoteLogger(object):
             except Exception as e:
                 pass
 
+
 class PipeLogReader(threading.Thread):
     """
     The reader thread reads log data from pipe
     """
+
     def __init__(self, logger, log_collection, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
@@ -154,8 +163,8 @@ class PipeLogReader(threading.Thread):
                         self._is_read_completed = True
                         break
 
-        self.pip_log_reader_thread = threading.Thread(target = _populateQueue,
-                args = (self.pipeReader, self.queue))
+        self.pip_log_reader_thread = threading.Thread(target=_populateQueue,
+                                                      args=(self.pipeReader, self.queue))
         self.pip_log_reader_thread.daemon = True
         self.start()
         self.pip_log_reader_thread.start()
@@ -177,7 +186,7 @@ class PipeLogReader(threading.Thread):
                 search_result = self.log_pattern.search(line)
                 if search_result:
                     metrics = search_result.group(0)
-                    self.queue.put(metrics+'\n')
+                    self.queue.put(metrics + '\n')
             else:
                 self.queue.put(line)
 
