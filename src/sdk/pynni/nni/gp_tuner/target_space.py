@@ -139,7 +139,7 @@ class TargetSpace():
         except AssertionError:
             raise ValueError(
                 "Size of array ({}) is different than the ".format(len(x)) +
-                "expected number of parameters ({}).".format(self.dim())
+                "expected number of parameters ({}).".format(self.dim)
             )
 
         params = {}
