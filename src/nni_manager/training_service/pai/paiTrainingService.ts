@@ -489,8 +489,7 @@ class PAITrainingService implements TrainingService {
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage : string = (error !== undefined && error !== null) ? error.message :
-                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
-                this.log.error(errorMessage);
+                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body.message}`;
                 trialJobDetail.status = 'FAILED';
                 deferred.resolve(true);
             } else {
