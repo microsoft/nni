@@ -60,7 +60,6 @@ class SMACTuner(Tuner):
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
-
         Returns
         -------
         instance
@@ -128,7 +127,6 @@ class SMACTuner(Tuner):
     def update_search_space(self, search_space):
         """
         NOTE: updating search space is not supported.
-
         Parameters
         ----------
         search_space: dict
@@ -151,7 +149,6 @@ class SMACTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """receive_trial_result
-
         Parameters
         ----------
         parameter_id: int
@@ -160,7 +157,6 @@ class SMACTuner(Tuner):
             parameters
         value:
             value
-
         Raises
         ------
         RuntimeError
@@ -184,12 +180,10 @@ class SMACTuner(Tuner):
         1. Convert the values of type `loguniform` back to their initial range.
         2. Convert categorical: categorical values in search space are changed to list of numbers before,
         those original values will be changed back in this function.
-
         Parameters
         ----------
         challenger_dict: dict
             challenger dict
-
         Returns
         -------
         dict
@@ -210,12 +204,10 @@ class SMACTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         """generate one instance of hyperparameters
-
         Parameters
         ----------
         parameter_id: int
             parameter id
-
         Returns
         -------
         list
@@ -233,12 +225,10 @@ class SMACTuner(Tuner):
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """generate mutiple instances of hyperparameters
-
         Parameters
         ----------
         parameter_id_list: list
             list of parameter id
-
         Returns
         -------
         list
@@ -265,7 +255,6 @@ class SMACTuner(Tuner):
     def import_data(self, data):
         """
         Import additional data for tuning
-
         Parameters
         ----------
         data: list of dict

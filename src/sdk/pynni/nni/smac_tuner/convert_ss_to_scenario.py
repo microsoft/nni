@@ -25,12 +25,10 @@ import numpy as np
 
 def get_json_content(file_path):
     """Load json file content
-
     Parameters
     ----------
     file_path:
         path to the file
-
     Raises
     ------
     TypeError
@@ -47,7 +45,6 @@ def get_json_content(file_path):
 def generate_pcs(nni_search_space_content):
     """Generate the Parameter Configuration Space (PCS) which defines the
     legal ranges of the parameters to be optimized and their default values.
-
     Generally, the format is:
     # parameter_name categorical {value_1, ..., value_N} [default value]
     # parameter_name ordinal {value_1, ..., value_N} [default value]
@@ -55,19 +52,15 @@ def generate_pcs(nni_search_space_content):
     # parameter_name integer [min_value, max_value] [default value] log
     # parameter_name real [min_value, max_value] [default value]
     # parameter_name real [min_value, max_value] [default value] log
-
     Reference: https://automl.github.io/SMAC3/stable/options.html
-
     Parameters
     ----------
     nni_search_space_content: search_space
         The search space in this experiment in nni
-
     Returns
     -------
     Parameter Configuration Space (PCS)
         the legal ranges of the parameters to be optimized and their default values
-
     Raises
     ------
     RuntimeError
@@ -81,8 +74,8 @@ def generate_pcs(nni_search_space_content):
         if key in categorical_dict:
             raise RuntimeError(
                 '%s has already existed, please make sure search space has no duplicate key.' % key)
-        categorical_dict[key] = search_space[key]["_value"]
-        fd.write("%s categorical {%s} [0]\n" % (key, ",".join(map(str, range(choice_len)))))
+        categorical_dict[key] = search_space[key]['_value']
+        fd.write('%s categorical {%s} [0]\n' % (key, ','.join(map(str, range(choice_len)))))
 
     with open('param_config_space.pcs', 'w') as pcs_fd:
         if isinstance(search_space, dict):
@@ -90,7 +83,7 @@ def generate_pcs(nni_search_space_content):
                 if isinstance(search_space[key], dict):
                     try:
                         if search_space[key]['_type'] == 'choice':
-                            dump_categorical(pcs_fd, key, search_space[key]["_value"])
+                            dump_categorical(pcs_fd, key, search_space[key]['_value'])
                         elif search_space[key]['_type'] == 'randint':
                             lower, upper = search_space[key]['_value']
                             if lower + 1 == upper:
@@ -98,7 +91,7 @@ def generate_pcs(nni_search_space_content):
                             else:
                                 pcs_fd.write('%s integer [%d, %d] [%d]\n' % (key, lower, upper - 1, lower))
                         elif search_space[key]['_type'] == 'uniform':
-                            low, high = search_space[key]["_value"]
+                            low, high = search_space[key]['_value']
                             if low == high:
                                 dump_categorical(pcs_fd, key, [low])
                             else:
@@ -108,7 +101,7 @@ def generate_pcs(nni_search_space_content):
                             # which will be rounded in configure_space package
                             low, high = list(np.round(np.log(search_space[key]['_value']), 10))
                             if low == high:
-                                dump_categorical(pcs_fd, key, [search_space[key]["_value"][0]])
+                                dump_categorical(pcs_fd, key, [search_space[key]['_value'][0]])
                             else:
                                 pcs_fd.write('%s real [%s, %s] [%s]\n' % (key, low, high, low))
                         elif search_space[key]['_type'] == 'quniform':
@@ -131,14 +124,11 @@ def generate_pcs(nni_search_space_content):
 def generate_scenario(ss_content):
     """Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and
     can be constructed either by providing an actual scenario-object, or by specifing the options in a scenario file.
-
     Reference: https://automl.github.io/SMAC3/stable/options.html
-
     The format of the scenario file is one option per line:
     OPTION1 = VALUE1
     OPTION2 = VALUE2
     ...
-
     Parameters
     ----------
     abort_on_first_run_crash: bool
@@ -201,7 +191,6 @@ def generate_scenario(ss_content):
     wallclock_limit: int
         Maximum amount of wallclock-time used for optimization. Default: inf.
         Use default because this is controlled by nni
-
     Returns
     -------
     Scenario:
