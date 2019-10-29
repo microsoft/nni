@@ -16,7 +16,8 @@
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 import os
 import random
@@ -24,7 +25,6 @@ import sys
 
 import nni.metis_tuner.lib_acquisition_function as lib_acquisition_function
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
-import nni.metis_tuner.lib_data as lib_data
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -34,13 +34,16 @@ CONSTRAINT_UPPERBOUND = None
 CONSTRAINT_PARAMS_IDX = []
 
 
-def _ratio_scores(parameters_value, clusteringmodel_gmm_good, clusteringmodel_gmm_bad):
+def _ratio_scores(parameters_value, clusteringmodel_gmm_good,
+                  clusteringmodel_gmm_bad):
     '''
     The ratio is smaller the better
     '''
-    ratio = clusteringmodel_gmm_good.score([parameters_value]) / clusteringmodel_gmm_bad.score([parameters_value])
+    ratio = clusteringmodel_gmm_good.score(
+        [parameters_value]) / clusteringmodel_gmm_bad.score([parameters_value])
     sigma = 0
     return ratio, sigma
+
 
 def selection_r(x_bounds,
                 x_types,
@@ -51,15 +54,17 @@ def selection_r(x_bounds,
     '''
     Select using different types.
     '''
-    minimize_starting_points = clusteringmodel_gmm_good.sample(n_samples=num_starting_points)
-    
+    minimize_starting_points = clusteringmodel_gmm_good.sample(
+        n_samples=num_starting_points)
+
     outputs = selection(x_bounds, x_types,
                         clusteringmodel_gmm_good,
                         clusteringmodel_gmm_bad,
                         minimize_starting_points[0],
                         minimize_constraints_fun)
-      
+
     return outputs
+
 
 def selection(x_bounds,
               x_types,
@@ -70,12 +75,13 @@ def selection(x_bounds,
     '''
     Select the lowest mu value
     '''
-    results = lib_acquisition_function.next_hyperparameter_lowest_mu(\
-                    _ratio_scores, [clusteringmodel_gmm_good, clusteringmodel_gmm_bad],\
-                    x_bounds, x_types, minimize_starting_points, \
-                    minimize_constraints_fun=minimize_constraints_fun)
+    results = lib_acquisition_function.next_hyperparameter_lowest_mu(
+        _ratio_scores, [clusteringmodel_gmm_good, clusteringmodel_gmm_bad],
+        x_bounds, x_types, minimize_starting_points,
+        minimize_constraints_fun=minimize_constraints_fun)
 
     return results
+
 
 def _rand_with_constraints(x_bounds, x_types):
     '''
@@ -96,6 +102,7 @@ def _rand_with_constraints(x_bounds, x_types):
             if outputs[i] is None:
                 outputs[i] = random.randint(x_bounds[i][0], x_bounds[i][1])
     return outputs
+
 
 def _minimize_constraints_fun_summation(x):
     '''
