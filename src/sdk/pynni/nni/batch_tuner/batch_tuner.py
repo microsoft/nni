@@ -31,7 +31,7 @@ TYPE = '_type'
 CHOICE = 'choice'
 VALUE = '_value'
 
-logger = logging.getLogger('batch_tuner_AutoML')
+LOGGER = logging.getLogger('batch_tuner_AutoML')
 
 class BatchTuner(Tuner):
     """
@@ -42,6 +42,13 @@ class BatchTuner(Tuner):
                              '_value': '[{...}, {...}, {...}]',
                           }
     }
+
+    Attributes
+    ----------
+    count : int
+        count is the number of parameters that tuner has generated.
+    values : list
+        values is to save all the candidates contains in search space.
     """
 
     def __init__(self):
@@ -62,11 +69,14 @@ class BatchTuner(Tuner):
         for param in search_space:
             param_type = search_space[param][TYPE]
             if not param_type == CHOICE:
-                raise RuntimeError('BatchTuner only supprt one combined-paramreters type is choice.')
-            else:
-                if isinstance(search_space[param][VALUE], list):
-                    return search_space[param][VALUE]
-                raise RuntimeError('The combined-paramreters value in BatchTuner is not a list.')
+                raise RuntimeError('BatchTuner only supprt \
+                                    one combined-paramreters type is choice.')
+
+            if isinstance(search_space[param][VALUE], list):
+                return search_space[param][VALUE]
+
+            raise RuntimeError('The combined-paramreters \
+                                value in BatchTuner is not a list.')
         return None
 
     def update_search_space(self, search_space):
@@ -101,7 +111,7 @@ class BatchTuner(Tuner):
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         if len(self.values) == 0:
-            logger.info("Search space has not been initialized, skip this data import")
+            LOGGER .info("Search space has not been initialized, skip this data import")
             return
 
         self.values = self.values[(self.count+1):]
@@ -109,16 +119,18 @@ class BatchTuner(Tuner):
 
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
+            LOGGER .info("Importing data, current processing \
+                            progress %s / %s", _completed_num, len(data))
             # simply validate data format
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
+                LOGGER .info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             _completed_num += 1
             if _params in self.values:
                 self.values.remove(_params)
-        logger.info("Successfully import data to batch tuner, total data: %d, imported data: %d.", len(data), _completed_num)
+        LOGGER .info("Successfully import data to batch tuner, \
+                        total data: %d, imported data: %d.", len(data), _completed_num)
