@@ -1,6 +1,8 @@
 import logging
 import tensorflow as tf
 from .compressor import Pruner
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import control_flow_ops
 
 __all__ = ['LevelPruner', 'AGP_Pruner']
 
@@ -14,18 +16,24 @@ class LevelPruner(Pruner):
             - sparsity
         """
         super().__init__(config_list)
-        self.mask_list = {}
-        self.if_init_list = {}
+        self.assign_handler = []
+        self.now_epoch = tf.Variable(0)
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        if self.if_init_list.get(op_name, True):
-            threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
-            mask = tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
-            self.mask_list.update({op_name: mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            mask = self.mask_list[op_name]
-        return mask
+        new_mask = tf.Variable(0)
+        threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
+        mask = tf.stop_gradient(tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype))
+
+        def maybe_update():
+            return math_ops.equal(self.now_epoch, tf.constant(0))
+
+        assign_op = tf.cond(maybe_update(), tf.assign(new_mask, mask), control_flow_ops.no_op())
+        self.assign_handler.append(assign_op)
+        return new_mask
+
+    def update_epoch(self, epoch, sess):
+        sess.run(tf.assign(self.now_epoch, int(epoch)))
+        sess.run(self.assign_handler)
 
 
 class AGP_Pruner(Pruner):
@@ -56,18 +64,20 @@ class AGP_Pruner(Pruner):
     def calc_mask(self, weight, config, op_name, **kwargs):
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
-                self.now_epoch - start_epoch) % freq == 0:
-            target_sparsity = self.compute_target_sparsity(config)
-            threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
-            # stop gradient in case gradient change the mask
-            mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
-            self.assign_handler.append(tf.assign(weight, weight * mask))
-            self.mask_list.update({op_name: tf.constant(mask)})
-            self.if_init_list.update({op_name: False})
-        else:
-            mask = self.mask_list[op_name]
-        return mask
+        new_mask = tf.Variable(0)
+
+        def maybe_update():
+            return math_ops.logical_and(self.now_epoch >= start_epoch,
+                                        (self.now_epoch - start_epoch) % freq == 0)
+
+        target_sparsity = self.compute_target_sparsity(config)
+        threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
+        # stop gradient in case gradient change the mask
+        mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
+        assign_op = tf.cond(maybe_update(), tf.assign(new_mask, mask), control_flow_ops.no_op())
+        self.assign_handler.append(assign_op)
+        self.assign_handler.append(tf.assign(weight, weight * mask))
+        return new_mask
 
     def compute_target_sparsity(self, config):
         end_epoch = config.get('end_epoch', 1)
@@ -90,7 +100,5 @@ class AGP_Pruner(Pruner):
         return target_sparsity
 
     def update_epoch(self, epoch, sess):
-        sess.run(self.assign_handler)
         sess.run(tf.assign(self.now_epoch, int(epoch)))
-        for k in self.if_init_list.keys():
-            self.if_init_list[k] = True
+        sess.run(self.assign_handler)
