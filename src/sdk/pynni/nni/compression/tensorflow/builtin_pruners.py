@@ -112,12 +112,12 @@ class FPGMPruner(Pruner):
 
     def calc_mask(self, conv_kernel_weight, config, op, op_type, op_name, **kwargs):
         """supports Conv1d, Conv2d, Conv3d
-        filter/kernel dimensions for Conv1D:
-        LEN: kernel length
+        filter dimensions for Conv1D:
+        LEN: filter length
         IN: number of input channel
         OUT: number of output channel
 
-        filter/kernel dimensions for Conv2D:
+        filter dimensions for Conv2D:
         H: filter height
         W: filter width
         IN: number of input channel

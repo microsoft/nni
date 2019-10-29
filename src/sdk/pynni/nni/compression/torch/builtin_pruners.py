@@ -115,20 +115,18 @@ class FPGMPruner(Pruner):
         """
         config_list: supported keys:
             - pruning_rate: percentage of convolutional filters to be pruned.
-            - start_epoch: start epoch number begin update mask
-            - end_epoch: end epoch number stop update mask, you should make sure start_epoch <= end_epoch
         """
         super().__init__(config_list)
         self.mask_list = {}
 
     def calc_mask(self, weight, config, op, op_type, op_name, **kwargs):
         """supports Conv1d, Conv2d, Conv3d
-        filter/kernel dimensions for Conv1d:
+        filter dimensions for Conv1d:
         IN: number of input channel
         OUT: number of output channel
-        LEN: kernel length
+        LEN: filter length
 
-        filter/kernel dimensions for Conv2d:
+        filter dimensions for Conv2d:
         IN: number of input channel
         OUT: number of output channel
         H: filter height
