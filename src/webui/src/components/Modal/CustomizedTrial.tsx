@@ -2,6 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { Row, Col, Input, Modal, Form, Button, Icon } from 'antd';
 import { MANAGER_IP } from '../../static/const';
+import { EXPERIMENT } from '../../static/datamodel';
 import { FormComponentProps } from 'antd/lib/form';
 const FormItem = Form.Item;
 import './customized.scss';
@@ -29,64 +30,41 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             isShowSubmitSucceed: false,
             isShowSubmitFailed: false,
             isShowWarning: false,
-            searchSpace: {},
+            searchSpace: EXPERIMENT.searchSpace,
             customParameters: {}
         };
     }
 
-    getSearchSpace = () => {
-        // getSearchSpace = (): string => {
-        axios(`${MANAGER_IP}/experiment`, {
-            method: 'GET',
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    if (this._isCustomizeMount === true) {
-                        this.setState(() => ({ searchSpace: JSON.parse(res.data.params.searchSpace) }));
-                    }
-                }
-            });
-    }
-
     // [submit click] user add a new trial [submit a trial]
-    // ? experiment->done, add a new trial failed
     addNewTrial = () => {
         const { searchSpace } = this.state;
-
-        // get user edited hyperParameter
+        const { hyperParameter } = this.props;
+        const originParameter = JSON.parse(hyperParameter);
+        // get user edited hyperParameter, ps: will change data type if you modify the input val
         const customized = this.props.form.getFieldsValue();
-
-        console.info('custome', customized);
+        // true: parameters are wrong
         let flag = false;
         Object.keys(customized).map(item => {
-            // 1. hyper-parameter string-> number
-            if (typeof customized[item] === 'string') {
-                console.info(searchSpace[item]._type);
-                if (searchSpace[item]._type !== 'choice') {
+            if (item !== 'tag') {
+                // unified data type
+                if (typeof originParameter[item] === 'number' && typeof customized[item] === 'string') {
                     customized[item] = JSON.parse(customized[item]);
                 }
-                if (searchSpace[item]._type === 'choice' && typeof searchSpace[item]._value[0] === 'number') {
-                    customized[item] = JSON.parse(customized[item]);
+                if (searchSpace[item]._type === 'choice') {
+                    if (searchSpace[item]._value.find((val: string | number) =>
+                        val === customized[item]) === undefined) {
+                        flag = true;
+                        return;
+                    }
+                } else {
+                    if (customized[item] < searchSpace[item]._value[0]
+                        || customized[item] > searchSpace[item]._value[1]) {
+                        flag = true;
+                        return;
+                    }
                 }
             }
         });
-        Object.keys(customized).map(item => {
-            // 1. hyper-parameter string-> number
-            if (typeof customized[item] === 'string') {
-                if (searchSpace[item]._value.find((val: string) => val === customized[item]) === undefined) {
-                    flag = true;
-                    return;
-                }
-            } else {
-                if (customized[item] < searchSpace[item]._value[0] || customized[item] > searchSpace[item]._value[0]) {
-                    flag = true;
-                    return;
-                }
-            }
-            // 2. checkd hyper-parameter is in range: [true] hyperParameter is not in limit
-        });
-        console.info('edited', customized);
-
         if (flag !== false) {
             // open the warning modal
             if (this._isCustomizeMount === true) {
@@ -113,8 +91,13 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    // action
-    submitCustomize = (customized: object) => {
+    submitCustomize = (customized: Object) => {
+        // delete `tag` key
+        for (let i in customized) {
+            if (i === 'tag') {
+                delete customized[i];
+            }
+        }
         axios(`${MANAGER_IP}/trial-jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -157,7 +140,6 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     componentDidMount() {
         this._isCustomizeMount = true;
-        setTimeout(this.getSearchSpace, 2000);
     }
 
     componentWillUnmount() {
@@ -166,8 +148,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     render() {
         const { visible, closeCustomizeModal, hyperParameter } = this.props;
-        const { isShowSubmitSucceed, isShowWarning } = this.state;
-        // const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning } = this.state;
+        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning } = this.state;
         const {
             form: { getFieldDecorator },
             // form: { getFieldDecorator, getFieldValue },
@@ -210,7 +191,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                             }
                             <Row key="tag" className="hyper-form tag-input">
                                 <Col span={9} className="title">Tag</Col>
-                                <Col span={15}  className="inputs">
+                                <Col span={15} className="inputs">
                                     <FormItem key="tag" style={{ marginBottom: 0 }}>
                                         {getFieldDecorator('tag', {
                                             initialValue: 'Customized',
@@ -258,7 +239,8 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                             </h2>
                             <div className="hint">
                                 {/* don't return trial ID */}
-                                <span>You can find your customized trial by trial num.</span>
+                                {/* <span>You can find your customized trial by trial num.</span> */}
+                                <span>Submit successfully.</span>
                             </div>
                         </Row>
                         <Row className="modal-button">
@@ -272,8 +254,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                     </Row>
                 </Modal>
                 <Modal
-                    // visible={isShowSubmitFailed}
-                    visible={true}
+                    visible={isShowSubmitFailed}
                     footer={null}
                     destroyOnClose={true}
                     maskClosable={false}

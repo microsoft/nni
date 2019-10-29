@@ -7,7 +7,7 @@ const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
-import { TRIALS } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
@@ -268,6 +268,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
+        const disabledAddCustomizedTrial = [ 'DONE', 'ERROR', 'STOPPED' ].includes(EXPERIMENT.status);
         let showTitle = COLUMNPro;
         const showColumn: Array<object> = [];
 
@@ -386,11 +387,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <Button
                                         type="primary"
                                         className="common-style"
+                                        disabled={disabledAddCustomizedTrial}
                                         onClick={
                                             this.setCustomizedTrial.bind(
                                                 this,
-                                                TRIALS.getTrial(record.id)).description.parameters
-                                        }
+                                                TRIALS.getTrial(record.id).description.parameters
+                                            )}
                                         title="Customized trial"
                                     >
                                         <Icon type="copy" />
