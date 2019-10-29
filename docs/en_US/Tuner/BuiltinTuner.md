@@ -153,8 +153,6 @@ SMAC need to be installed by following command before first use. As a reminder, 
 nnictl package install --name=SMAC
 ```
 
-**Known limitations:** Currently, the tuner has only been tested and working on Ubuntu.
-
 **Suggested scenario**
 
 Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
