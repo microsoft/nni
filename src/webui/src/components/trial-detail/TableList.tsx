@@ -268,7 +268,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
-        const disabledAddCustomizedTrial = [ 'DONE', 'ERROR', 'STOPPED' ].includes(EXPERIMENT.status);
+        // [supportCustomizedTrial: true]
+        const supportCustomizedTrial = (EXPERIMENT.multiPhase === true) ? false : true;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
         let showTitle = COLUMNPro;
         const showColumn: Array<object> = [];
 
@@ -384,19 +386,25 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             </Popconfirm>
                                     }
                                     {/* Add a new trial-customized trial */}
-                                    <Button
-                                        type="primary"
-                                        className="common-style"
-                                        disabled={disabledAddCustomizedTrial}
-                                        onClick={
-                                            this.setCustomizedTrial.bind(
-                                                this,
-                                                TRIALS.getTrial(record.id).description.parameters
-                                            )}
-                                        title="Customized trial"
-                                    >
-                                        <Icon type="copy" />
-                                    </Button>
+                                    {
+                                        supportCustomizedTrial
+                                            ?
+                                            <Button
+                                                type="primary"
+                                                className="common-style"
+                                                disabled={disabledAddCustomizedTrial}
+                                                onClick={
+                                                    this.setCustomizedTrial.bind(
+                                                        this,
+                                                        TRIALS.getTrial(record.id).description.parameters
+                                                    )}
+                                                title="Customized trial"
+                                            >
+                                                <Icon type="copy" />
+                                            </Button>
+                                            :
+                                            null
+                                    }
                                 </Row>
                             );
                         },
