@@ -82,10 +82,14 @@ def get_experiment_id(experiment_url):
     experiment_id = requests.get(experiment_url).json()['id']
     return experiment_id
 
+def get_experiment_dir(experiment_url):
+    '''get experiment root directory'''
+    experiment_id = get_experiment_id(experiment_url)
+    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
+
 def get_nni_log_dir(experiment_url):
     '''get nni's log directory from nni's experiment url'''
-    experiment_id = get_experiment_id(experiment_url)
-    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id, 'log')
+    return os.path.join(get_experiment_dir(experiment_url), 'log')
 
 def get_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
@@ -131,7 +135,7 @@ def print_failed_job_log(training_service, trial_jobs_url):
         if training_service == 'local':
             log_filename = trial_job['stderrPath'].split(':')[-1]
         else:
-            log_filename = os.path.join(get_nni_log_dir(EXPERIMENT_URL), 'trial_' + trial_job['id'] + '.log')
+            log_filename = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'], 'stdout_log_collection.log')
         with open(log_filename, 'r') as f:
             log_content = f.read()
             print(log_filename, flush=True)
