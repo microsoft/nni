@@ -16,7 +16,8 @@
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 import math
 import random
@@ -31,7 +32,8 @@ def match_val_type(vals, vals_bounds, vals_types):
     for i, _ in enumerate(vals_types):
         if vals_types[i] == "discrete_int":
             # Find the closest integer in the array, vals_bounds
-            vals_new.append(min(vals_bounds[i], key=lambda x: abs(x - vals[i])))
+            vals_new.append(
+                min(vals_bounds[i], key=lambda x: abs(x - vals[i])))
         elif vals_types[i] == "range_int":
             # Round down to the nearest integer
             vals_new.append(math.floor(vals[i]))
@@ -55,7 +57,7 @@ def rand(x_bounds, x_types):
             temp = x_bounds[i][random.randint(0, len(x_bounds[i]) - 1)]
             outputs.append(temp)
         elif x_types[i] == "range_int":
-            temp = random.randint(x_bounds[i][0], x_bounds[i][1] -1)
+            temp = random.randint(x_bounds[i][0], x_bounds[i][1] - 1)
             outputs.append(temp)
         elif x_types[i] == "range_continuous":
             temp = random.uniform(x_bounds[i][0], x_bounds[i][1])
@@ -64,4 +66,3 @@ def rand(x_bounds, x_types):
             return None
 
     return outputs
-    
