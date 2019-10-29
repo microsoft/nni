@@ -29,7 +29,6 @@ import json_tricks
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
-from nni.nas_utils import rewrite_nas_space
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.utils import OptimizeMode, MetricType, extract_scalar_reward
@@ -459,7 +458,6 @@ class BOHB(MsgDispatcherBase):
             send(CommandType.NewTrialJob, json_tricks.dumps(ret))
             self.credit -= 1
 
-    @rewrite_nas_space
     def handle_update_search_space(self, data):
         """change json format to ConfigSpace format dict<dict> -> configspace
 

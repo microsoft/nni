@@ -30,7 +30,6 @@ import json_tricks
 import numpy as np
 from nni.common import multi_phase_enabled
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.nas_utils import rewrite_nas_space
 from nni.protocol import CommandType, send
 from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
 import nni.parameter_expressions as parameter_expressions
@@ -352,7 +351,6 @@ class Hyperband(MsgDispatcherBase):
         }
         return ret
 
-    @rewrite_nas_space
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
         """

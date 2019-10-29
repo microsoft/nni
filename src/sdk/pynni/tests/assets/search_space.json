@@ -57,9 +57,17 @@
     "_type": "loguniform",
     "_value": [0.001, 100]
   },
+  "loguniform_equal": {
+    "_type": "loguniform",
+    "_value": [1, 1]
+  },
   "qloguniform_ok": {
     "_type": "qloguniform",
     "_value": [0.001, 100, 1]
+  },
+  "qloguniform_equal": {
+    "_type": "qloguniform",
+    "_value": [2, 2, 1]
   },
   "normal_ok": {
     "_type": "normal",
@@ -76,25 +84,5 @@
   "qlognormal_ok": {
     "_type": "qlognormal",
     "_value": [-1.5, 5.0, 0.1]
-  },
-  "mutable_ok": {
-    "_type": "mutable_layer",
-    "_value": {
-      "layer_1": {
-        "layer_choice": ["conv(ch=128)", "pool", "identity"],
-        "optional_inputs": ["out1", "out2", "out3"],
-        "optional_input_size": 2
-      },
-      "layer_2": {
-        "layer_choice": ["conv", "p"],
-        "optional_inputs": [],
-        "optional_input_size": 0
-      },
-      "layer_3": {
-        "layer_choice": ["k"],
-        "optional_inputs": ["out1", "out2", "out3"],
-        "optional_input_size": [0, 3]
-      }
-    }
   }
 }

@@ -18,8 +18,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import os
 import json
+
 import numpy as np
 
 
@@ -75,39 +75,42 @@ def generate_pcs(nni_search_space_content):
     """
     categorical_dict = {}
     search_space = nni_search_space_content
+
+    def dump_categorical(fd, key, categories):
+        choice_len = len(categories)
+        if key in categorical_dict:
+            raise RuntimeError(
+                '%s has already existed, please make sure search space has no duplicate key.' % key)
+        categorical_dict[key] = search_space[key]["_value"]
+        fd.write("%s categorical {%s} [0]\n" % (key, ",".join(map(str, range(choice_len)))))
+
     with open('param_config_space.pcs', 'w') as pcs_fd:
         if isinstance(search_space, dict):
             for key in search_space.keys():
                 if isinstance(search_space[key], dict):
                     try:
                         if search_space[key]['_type'] == 'choice':
-                            choice_len = len(search_space[key]['_value'])
-                            pcs_fd.write('%s categorical {%s} [%s]\n' % (
-                                key,
-                                json.dumps(list(range(choice_len)))[1:-1],
-                                json.dumps(0)))
-                            if key in categorical_dict:
-                                raise RuntimeError(
-                                    '%s has already existed, please make sure search space has no duplicate key.' % key)
-                            categorical_dict[key] = search_space[key]['_value']
+                            dump_categorical(pcs_fd, key, search_space[key]["_value"])
                         elif search_space[key]['_type'] == 'randint':
-                            pcs_fd.write('%s integer [%d, %d] [%d]\n' % (
-                                key,
-                                search_space[key]['_value'][0],
-                                search_space[key]['_value'][1] - 1,
-                                search_space[key]['_value'][0]))
+                            lower, upper = search_space[key]['_value']
+                            if lower + 1 == upper:
+                                dump_categorical(pcs_fd, key, [lower])
+                            else:
+                                pcs_fd.write('%s integer [%d, %d] [%d]\n' % (key, lower, upper - 1, lower))
                         elif search_space[key]['_type'] == 'uniform':
-                            pcs_fd.write('%s real %s [%s]\n' % (
-                                key,
-                                json.dumps(search_space[key]['_value']),
-                                json.dumps(search_space[key]['_value'][0])))
+                            low, high = search_space[key]["_value"]
+                            if low == high:
+                                dump_categorical(pcs_fd, key, [low])
+                            else:
+                                pcs_fd.write('%s real [%s, %s] [%s]\n' % (key, low, high, low))
                         elif search_space[key]['_type'] == 'loguniform':
-                            # use np.round here to ensure that the rounded defaut value is in the range, which will be rounded in configure_space package
-                            vals = list(np.round(np.log(search_space[key]['_value']), 10))
-                            pcs_fd.write('%s real %s [%s]\n' % (
-                                key,
-                                json.dumps(vals),
-                                json.dumps(vals[0])))
+                            # use np.round here to ensure that the rounded default value is in the range,
+                            # which will be rounded in configure_space package
+                            low, high = list(np.round(np.log(search_space[key]['_value']), 10))
+                            if low == high:
+                                dump_categorical(pcs_fd, key, [search_space[key]["_value"][0]])
+                            else:
+                                pcs_fd.write('%s real [%s, %s] [%s]\n' % (key, low, high, low))
                         elif search_space[key]['_type'] == 'quniform':
                             low, high, q = search_space[key]['_value'][0:3]
                             vals = np.clip(np.arange(np.round(low / q), np.round(high / q) + 1) * q, low, high).tolist()
