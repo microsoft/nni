@@ -33,8 +33,7 @@ from logging import StreamHandler
 
 from queue import Queue
 
-from .rest_utils import rest_get, rest_post, rest_put, rest_delete
-from .constants import NNI_EXP_ID, NNI_TRIAL_JOB_ID, STDOUT_API
+from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
 
 @unique
@@ -154,8 +153,7 @@ class PipeLogReader(threading.Thread):
                         self._is_read_completed = True
                         break
 
-        self.pip_log_reader_thread = threading.Thread(target = _populateQueue,
-                args = (self.pipeReader, self.queue))
+        self.pip_log_reader_thread = threading.Thread(target=_populateQueue, args=(self.pipeReader, self.queue))
         self.pip_log_reader_thread.daemon = True
         self.start()
         self.pip_log_reader_thread.start()
