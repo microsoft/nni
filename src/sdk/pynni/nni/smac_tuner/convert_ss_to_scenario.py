@@ -74,8 +74,8 @@ def generate_pcs(nni_search_space_content):
         if key in categorical_dict:
             raise RuntimeError(
                 '%s has already existed, please make sure search space has no duplicate key.' % key)
-        categorical_dict[key] = search_space[key]["_value"]
-        fd.write("%s categorical {%s} [0]\n" % (key, ",".join(map(str, range(choice_len)))))
+        categorical_dict[key] = search_space[key]['_value']
+        fd.write('%s categorical {%s} [0]\n' % (key, ','.join(map(str, range(choice_len)))))
 
     with open('param_config_space.pcs', 'w') as pcs_fd:
         if isinstance(search_space, dict):
@@ -83,7 +83,7 @@ def generate_pcs(nni_search_space_content):
                 if isinstance(search_space[key], dict):
                     try:
                         if search_space[key]['_type'] == 'choice':
-                            dump_categorical(pcs_fd, key, search_space[key]["_value"])
+                            dump_categorical(pcs_fd, key, search_space[key]['_value'])
                         elif search_space[key]['_type'] == 'randint':
                             lower, upper = search_space[key]['_value']
                             if lower + 1 == upper:
@@ -91,7 +91,7 @@ def generate_pcs(nni_search_space_content):
                             else:
                                 pcs_fd.write('%s integer [%d, %d] [%d]\n' % (key, lower, upper - 1, lower))
                         elif search_space[key]['_type'] == 'uniform':
-                            low, high = search_space[key]["_value"]
+                            low, high = search_space[key]['_value']
                             if low == high:
                                 dump_categorical(pcs_fd, key, [low])
                             else:
@@ -101,7 +101,7 @@ def generate_pcs(nni_search_space_content):
                             # which will be rounded in configure_space package
                             low, high = list(np.round(np.log(search_space[key]['_value']), 10))
                             if low == high:
-                                dump_categorical(pcs_fd, key, [search_space[key]["_value"][0]])
+                                dump_categorical(pcs_fd, key, [search_space[key]['_value'][0]])
                             else:
                                 pcs_fd.write('%s real [%s, %s] [%s]\n' % (key, low, high, low))
                         elif search_space[key]['_type'] == 'quniform':
