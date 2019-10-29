@@ -262,7 +262,7 @@ class PAITrainingService implements TrainingService {
                 } else if(this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
                 } else {
-                    deferred.reject(new Error('pai cluster config format error, please set password or paiToken!'));
+                    deferred.reject(new Error('pai cluster config format error, please set password or token!'));
                 }
 
                 deferred.resolve();
