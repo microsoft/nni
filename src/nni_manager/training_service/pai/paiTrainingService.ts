@@ -256,9 +256,15 @@ class PAITrainingService implements TrainingService {
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
                 });
+                if(this.paiClusterConfig.passWord) {
+                    // Get PAI authentication token
+                    await this.updatePaiToken();
+                } else if(this.paiClusterConfig.token) {
+                    this.paiToken = this.paiClusterConfig.token;
+                } else {
+                    deferred.reject(new Error('pai cluster config format error, please set password or paiToken!'));
+                }
 
-                // Get PAI authentication token
-                await this.updatePaiToken();
                 deferred.resolve();
                 break;
 
@@ -498,13 +504,15 @@ class PAITrainingService implements TrainingService {
 
     private async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            try {
-                await this.updatePaiToken();
-            } catch (error) {
-                this.log.error(`${error}`);
-                //only throw error when initlize paiToken first time
-                if (this.paiToken === undefined) {
-                    throw new Error(error);
+            if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
+                try {
+                    await this.updatePaiToken();
+                } catch (error) {
+                    this.log.error(`${error}`);
+                    //only throw error when initlize paiToken first time
+                    if (this.paiToken === undefined) {
+                        throw new Error(error);
+                    }
                 }
             }
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);

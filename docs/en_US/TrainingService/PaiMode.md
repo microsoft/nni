@@ -82,6 +82,22 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
         portNumber: 1
     ```
 
+NNI support two kind of authorization method in PAI, including password and AAD token (could be viewed from PAI webportal). The authorization is configured in `paiConfig` field.  
+For password authorization, the `paiConfig` schema is:
+```
+paiConfig:
+  userName: your_pai_nni_user
+  passWord: your_pai_password
+  host: 10.1.1.1
+```  
+For AAD authorization, the `paiConfig` schema is:
+```
+paiConfig:
+  userName: your_pai_nni_user
+  token: your_aad_token
+  host: 10.1.1.1
+```
+
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
 nnictl create --config exp_pai.yml
