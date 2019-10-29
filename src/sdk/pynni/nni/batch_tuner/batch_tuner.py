@@ -62,6 +62,11 @@ class BatchTuner(Tuner):
         Parameters
         ----------
         search_space : dict
+
+        Returns
+        -------
+        None or list
+            If valid, return candidate values; else return None.
         """
         if not len(search_space) == 1:
             raise RuntimeError('BatchTuner only supprt one combined-paramreters key.')
@@ -94,6 +99,11 @@ class BatchTuner(Tuner):
         Parameters
         ----------
         parameter_id : int
+
+        Returns
+        -------
+        dict
+            A candidate parameter group.
         """
         self.count += 1
         if self.count > len(self.values) - 1:
@@ -105,6 +115,7 @@ class BatchTuner(Tuner):
 
     def import_data(self, data):
         """Import additional data for tuning
+
         Parameters
         ----------
         data:
