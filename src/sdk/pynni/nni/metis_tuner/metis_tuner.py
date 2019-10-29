@@ -355,7 +355,7 @@ class MetisTuner(Tuner):
                 results_outliers = gp_outlier_detection.outlierDetection_threaded(samples_x, samples_y_aggregation)
 
                 if results_outliers is not None:
-                    for results_outlier in results_outliers:
+                    for results_outlier in results_outliers:  # pylint: disable=not-an-iterable
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
                             temp_candidate = {'hyperparameter': samples_x[results_outlier['samples_idx']],\
                                                'expected_mu': results_outlier['expected_mu'],\
