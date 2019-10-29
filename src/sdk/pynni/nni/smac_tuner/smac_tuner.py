@@ -21,25 +21,20 @@
 smac_tuner.py
 """
 
-import sys
 import logging
-import numpy as np
+import sys
 
-from nni.nas_utils import rewrite_nas_space
+import numpy as np
+from ConfigSpaceNNI import Configuration
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
-
-from smac.utils.io.cmd_reader import CMDReader
-from smac.scenario.scenario import Scenario
-from smac.facade.smac_facade import SMAC
-from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
-from ConfigSpaceNNI import Configuration
+from smac.facade.roar_facade import ROAR
+from smac.facade.smac_facade import SMAC
+from smac.scenario.scenario import Scenario
+from smac.utils.io.cmd_reader import CMDReader
 
 from .convert_ss_to_scenario import generate_scenario
-
-from nni.tuner import Tuner
-from nni.utils import OptimizeMode, extract_scalar_reward
 
 
 class SMACTuner(Tuner):
@@ -61,12 +56,10 @@ class SMACTuner(Tuner):
         self.update_ss_done = False
         self.loguniform_key = set()
         self.categorical_dict = {}
-        self.fixed_value_set = dict()
         self.cs = None
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
-
         Returns
         -------
         instance
@@ -131,11 +124,9 @@ class SMACTuner(Tuner):
 
         return optimizer
 
-    @rewrite_nas_space
     def update_search_space(self, search_space):
         """
         NOTE: updating search space is not supported.
-
         Parameters
         ----------
         search_space: dict
@@ -146,31 +137,18 @@ class SMACTuner(Tuner):
         #         on search space, also because update_search_space is called at the beginning.
 
         if not self.update_ss_done:
-            updated_search_space = dict()
-            self.fixed_value_set = dict()
-            for key, val in search_space.items():
-                try:
-                    if "_type" in val and ((val["_type"] == "randint" and val["_value"][0] + 1 == val["_value"][1])
-                            or ("uniform" in val["_type"] and val["_value"][0] == val["_value"][1])):
-                        self.fixed_value_set[key] = val["_value"][0]
-                        continue
-                except:  # could encounter invalid/wrong/unexpected search space definition, ignore here
-                    pass
-                updated_search_space[key] = val
-            self.categorical_dict = generate_scenario(updated_search_space)
+            self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
                 raise RuntimeError('categorical dict is not correctly returned after parsing search space.')
             self.optimizer = self._main_cli()
             self.smbo_solver = self.optimizer.solver
-            self.loguniform_key = {key for key in updated_search_space.keys()
-                                   if updated_search_space[key]['_type'] == 'loguniform'}
+            self.loguniform_key = {key for key in search_space.keys() if search_space[key]['_type'] == 'loguniform'}
             self.update_ss_done = True
         else:
             self.logger.warning('update search space is not supported.')
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """receive_trial_result
-
         Parameters
         ----------
         parameter_id: int
@@ -179,7 +157,6 @@ class SMACTuner(Tuner):
             parameters
         value:
             value
-
         Raises
         ------
         RuntimeError
@@ -203,13 +180,10 @@ class SMACTuner(Tuner):
         1. Convert the values of type `loguniform` back to their initial range.
         2. Convert categorical: categorical values in search space are changed to list of numbers before,
         those original values will be changed back in this function.
-        3. Fill in the fixed value that was extracted previously.
-
         Parameters
         ----------
         challenger_dict: dict
             challenger dict
-
         Returns
         -------
         dict
@@ -226,17 +200,14 @@ class SMACTuner(Tuner):
                 converted_dict[key] = self.categorical_dict[key][idx]
             else:
                 converted_dict[key] = value
-        converted_dict.update(self.fixed_value_set)
         return converted_dict
 
     def generate_parameters(self, parameter_id, **kwargs):
         """generate one instance of hyperparameters
-
         Parameters
         ----------
         parameter_id: int
             parameter id
-
         Returns
         -------
         list
@@ -254,12 +225,10 @@ class SMACTuner(Tuner):
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """generate mutiple instances of hyperparameters
-
         Parameters
         ----------
         parameter_id_list: list
             list of parameter id
-
         Returns
         -------
         list
@@ -286,7 +255,6 @@ class SMACTuner(Tuner):
     def import_data(self, data):
         """
         Import additional data for tuning
-
         Parameters
         ----------
         data: list of dict
