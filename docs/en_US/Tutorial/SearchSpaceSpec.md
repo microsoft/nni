@@ -100,10 +100,6 @@ Known Limitations:
 
 * GP Tuner and Metis Tuner support only **numerical values** in search space (`choice` type values can be no-numeraical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
 
-* SMAC Tuner does not support randint/uniform with only one candidate, e.g., `[0, 1]` or `[0.9, 0.9]`, while others do not have such problem, as long as they support randint/uniform.
-
-* Currently, many tuners won't throw exceptions for invalid search space. For unsupported search space types, it's also possible that the tuner will ignore the field like nothing happened.
-
 * Note that for nested search space:
 
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
