@@ -25,13 +25,10 @@ metis_tuner.py
 import copy
 import logging
 
-from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
 import warnings
-import os
 import random
 import statistics
-import sys
 
 import numpy as np
 
@@ -128,10 +125,10 @@ class MetisTuner(Tuner):
 
         exploration_probability : float
             The probability of Metis to select parameter from exploration instead of exploitation.
-        
+
         x_bounds : list
             The constration of parameters.
-        
+
         x_types : list
             The type of parameters.
         """
@@ -208,10 +205,10 @@ class MetisTuner(Tuner):
                     self.x_types[idx] = 'discrete_int'
                 else:
                     logger.info(
-                        "Metis Tuner doesn't support this kind of variable: " +
+                        "Metis Tuner doesn't support this kind of variable: %s",
                         str(key_type))
                     raise RuntimeError(
-                        "Metis Tuner doesn't support this kind of variable: " +
+                        "Metis Tuner doesn't support this kind of variable: %s",
                         str(key_type))
         else:
             logger.info("The format of search space is not a dict.")
@@ -272,7 +269,7 @@ class MetisTuner(Tuner):
                 minimize_starting_points=self.minimize_starting_points,
                 minimize_constraints_fun=self.minimize_constraints_fun)
 
-        logger.info("Generate paramageters:\n" + str(results))
+        logger.info("Generate paramageters: \n%s", str(results))
         return results
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
@@ -291,8 +288,8 @@ class MetisTuner(Tuner):
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :" + str(value))
-        logger.info("parameter is : " + str(parameters))
+        logger.info("value is : %s", str(value))
+        logger.info("parameter is : %s", str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
@@ -440,7 +437,8 @@ class MetisTuner(Tuner):
                     # Try to decrease the number of components, or increase
                     # reg_covar.
                     logger.info(
-                        "DEBUG: No suitable exploitation_gmm candidates were found due to exception.")
+                        "DEBUG: No suitable exploitation_gmm \
+                        candidates were found due to exception.")
                     logger.info(exception)
 
             # ===== STEP 4: Get a list of outliers =====
@@ -453,7 +451,8 @@ class MetisTuner(Tuner):
                 if results_outliers is not None:
                     for results_outlier in results_outliers:
                         if _num_past_samples(
-                                samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
+                                samples_x[results_outlier['samples_idx']],
+                                samples_x, samples_y) < max_resampling_per_x:
                             temp_candidate = {
                                 'hyperparameter': samples_x[
                                     results_outlier['samples_idx']],
@@ -540,8 +539,7 @@ class MetisTuner(Tuner):
         _completed_num = 0
         for trial_info in data:
             logger.info(
-                "Importing data, current processing progress %s / %s" %
-                (_completed_num, len(data)))
+                "Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
@@ -549,7 +547,7 @@ class MetisTuner(Tuner):
             _value = trial_info['value']
             if not _value:
                 logger.info(
-                    "Useless trial data, value is %s, skip this trial data." %
+                    "Useless trial data, value is %s, skip this trial data.",
                     _value)
                 continue
             self.supplement_data_num += 1
@@ -623,7 +621,8 @@ def _calculate_lowest_mu_threaded(inputs):
             minimize_starting_points,
             minimize_constraints_fun=minimize_constraints_fun)
 
-        if outputs["expected_lowest_mu"] is None or outputs["expected_lowest_mu"] > temp_results['expected_mu']:
+        if outputs["expected_lowest_mu"] is None \
+            or outputs["expected_lowest_mu"] > temp_results['expected_mu']:
             outputs["expected_lowest_mu"] = temp_results['expected_mu']
 
     return outputs
