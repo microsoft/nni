@@ -28,7 +28,7 @@ enable= unused-wildcard-import,
         line-too-long,
         unused-variable,
         wildcard-import,
-        useless-super-delegation,
+#        useless-super-delegation,
         len-as-condition,
         logging-format-interpolation,
         redefined-builtin,
@@ -42,7 +42,7 @@ enable= unused-wildcard-import,
 #        too-many-branches,
 #        protected-access 
 
-ignore-patterns=test.py
+ignore-patterns=test*
 
 # List of members which are set dynamically and missed by pylint inference
 generated-members=numpy.*,torch.*
