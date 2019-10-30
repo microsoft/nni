@@ -19,11 +19,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import sys
-import numpy
-from . import lib_data
 
-from scipy.stats import norm
+import numpy
 from scipy.optimize import minimize
+from scipy.stats import norm
+
+from . import lib_data
 
 
 def next_hyperparameter_expected_improvement(fun_prediction,
@@ -133,7 +134,6 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
         outputs = {'hyperparameter': best_x, 'expected_mu': mu,
                    'expected_sigma': sigma, 'acquisition_func': "lc"}
     return outputs
-
 
 def _lowest_confidence(x, fun_prediction, fun_prediction_args,
                        x_bounds, x_types, minimize_constraints_fun):

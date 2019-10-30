@@ -39,7 +39,6 @@ def check_feasibility(x_bounds, lowerbound, upperbound):
     return (x_bounds_lowerbound <= lowerbound <= x_bounds_upperbound) or \
            (x_bounds_lowerbound <= upperbound <= x_bounds_upperbound)
 
-
 def rand(x_bounds, x_types, lowerbound, upperbound, max_retries=100):
     '''
     Key idea is that we try to move towards upperbound, by randomly choose one
