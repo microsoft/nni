@@ -57,9 +57,6 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-
 # next.js build output
 .next
 
@@ -72,8 +69,14 @@ build
 *.egg-info
 setup.pye
 
-# Python virtual env
-venv
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # VSCode
 .vscode
