@@ -35,7 +35,7 @@ class Compressor:
         for name, module in model.named_modules():
             layer = LayerInfo(name, module)
             config = self._select_config(layer)
-            if config is not None and layer.type in config['op_types']:
+            if config is not None:
                 self._instrument_layer(layer, config)
 
     def bind_model(self, model):
@@ -71,9 +71,8 @@ class Compressor:
     def _expand_config_op_types(self, config):
         if config is None:
             return []
-        op_types = config.get('op_types', [])
         expanded_op_types = []
-        for op_type in op_types:
+        for op_type in config.get('op_types', []):
             if op_type == 'default':
                 expanded_op_types.extend(default_layers.weighted_modules)
             else:
