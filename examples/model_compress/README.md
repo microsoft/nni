@@ -20,7 +20,7 @@ configure_list = [{
     'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
-    'op_types': 'default'
+    'op_types': ['default']
 }]
 pruner = AGP_Pruner(configure_list)
 ```
