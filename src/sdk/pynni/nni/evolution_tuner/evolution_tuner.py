@@ -155,7 +155,7 @@ class Individual:
 
 class EvolutionTuner(Tuner):
     """
-    EvolutionTuner is tuner using naive evolution algorithm.
+    EvolutionTuner is tuner using navie evolution algorithm.
     """
 
     def __init__(self, optimize_mode="maximize", population_size=32):

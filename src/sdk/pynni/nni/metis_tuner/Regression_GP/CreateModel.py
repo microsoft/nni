@@ -34,7 +34,7 @@ def create_model(samples_x, samples_y_aggregation,
     '''
     kernel = gp.kernels.ConstantKernel(constant_value=1,
                                        constant_value_bounds=(1e-12, 1e12)) * \
-             gp.kernels.Matern(nu=1.5)
+                                                gp.kernels.Matern(nu=1.5)
     if is_white_kernel is True:
         kernel += gp.kernels.WhiteKernel(noise_level=1, noise_level_bounds=(1e-12, 1e12))
     regressor = gp.GaussianProcessRegressor(kernel=kernel,

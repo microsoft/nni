@@ -26,13 +26,16 @@ import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 import numpy as np
 
+import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
+import nni.metis_tuner.lib_data as lib_data
+import nni.metis_tuner.Regression_GMM.CreateModel as gmm_create_model
+import nni.metis_tuner.Regression_GMM.Selection as gmm_selection
+import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
+import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
+import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
+import nni.metis_tuner.Regression_GP.Selection as gp_selection
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
-
-from . import lib_constraint_summation, lib_data
-from .Regression_GMM import CreateModel as gmm_create_model, Selection as gmm_selection
-from .Regression_GP import CreateModel as gp_create_model, OutlierDetection as gp_outlier_detection, \
-    Prediction as gp_prediction, Selection as gp_selection
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
@@ -444,9 +447,8 @@ def _rand_with_constraints(x_bounds, x_types):
     x_bounds_withconstraints = [x_bounds[i] for i in CONSTRAINT_PARAMS_IDX]
     x_types_withconstraints = [x_types[i] for i in CONSTRAINT_PARAMS_IDX]
 
-    x_val_withconstraints = lib_constraint_summation.rand(x_bounds_withconstraints,
-                                                          x_types_withconstraints, CONSTRAINT_LOWERBOUND,
-                                                          CONSTRAINT_UPPERBOUND)
+    x_val_withconstraints = lib_constraint_summation.rand(x_bounds_withconstraints,\
+                                x_types_withconstraints, CONSTRAINT_LOWERBOUND, CONSTRAINT_UPPERBOUND)
     if not x_val_withconstraints:
         outputs = [None] * len(x_bounds)
 

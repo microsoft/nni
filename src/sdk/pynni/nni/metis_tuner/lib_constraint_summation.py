@@ -80,7 +80,7 @@ def rand(x_bounds, x_types, lowerbound, upperbound, max_retries=100):
                                 outputs[x_idx] = temp[random.randint(0, len(temp) - 1)]
 
                         elif (x_types[x_idx] == "range_int") or \
-                                (x_types[x_idx] == "range_continuous"):
+                                    (x_types[x_idx] == "range_continuous"):
                             outputs[x_idx] = random.randint(x_bounds[x_idx][0],
                                                             min(x_bounds[x_idx][-1], budget_max))
 
@@ -113,3 +113,4 @@ def rand(x_bounds, x_types, lowerbound, upperbound, max_retries=100):
             if None not in outputs:
                 break
     return outputs
+    

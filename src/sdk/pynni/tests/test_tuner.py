@@ -17,22 +17,20 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
-import copy
 import glob
 import json
 import logging
 import os
 import shutil
-import sys
 from unittest import TestCase, main
 
-from nni.batch_tuner import BatchTuner
-from nni.evolution_tuner import EvolutionTuner
-from nni.gp_tuner import GPTuner
-from nni.gridsearch_tuner import GridSearchTuner
-from nni.hyperopt_tuner import HyperoptTuner
-from nni.metis_tuner import MetisTuner
-from nni.smac_tuner import SMACTuner
+from nni.batch_tuner.batch_tuner import BatchTuner
+from nni.evolution_tuner.evolution_tuner import EvolutionTuner
+from nni.gp_tuner.gp_tuner import GPTuner
+from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
+from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
+from nni.metis_tuner.metis_tuner import MetisTuner
+from nni.smac_tuner.smac_tuner import SMACTuner
 from nni.tuner import Tuner
 
 logging.basicConfig(level=logging.INFO)
