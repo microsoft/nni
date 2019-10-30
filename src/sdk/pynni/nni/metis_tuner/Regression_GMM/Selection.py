@@ -24,7 +24,6 @@ import sys
 
 import nni.metis_tuner.lib_acquisition_function as lib_acquisition_function
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
-import nni.metis_tuner.lib_data as lib_data
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -52,13 +51,13 @@ def selection_r(x_bounds,
     Select using different types.
     '''
     minimize_starting_points = clusteringmodel_gmm_good.sample(n_samples=num_starting_points)
-    
+
     outputs = selection(x_bounds, x_types,
                         clusteringmodel_gmm_good,
                         clusteringmodel_gmm_bad,
                         minimize_starting_points[0],
                         minimize_constraints_fun)
-      
+
     return outputs
 
 def selection(x_bounds,
