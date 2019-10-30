@@ -37,8 +37,8 @@ def _match_val_type(vals, bounds):
         _type = bound['_type']
         if _type == "choice":
             # Find the closest integer in the array, vals_bounds
-            vals_new.append(
-                min(bound['_value'], key=lambda x: abs(x - vals[i])))
+            # pylint: disable=cell-var-from-loop
+            vals_new.append(min(bound['_value'], key=lambda x: abs(x - vals[i])))
         elif _type in ['quniform', 'randint']:
             vals_new.append(np.around(vals[i]))
         else:
