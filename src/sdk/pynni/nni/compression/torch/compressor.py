@@ -77,6 +77,7 @@ class Compressor:
                 extended_op_types.extend(default_layers.weighted_modules)
             else:
                 extended_op_types.append(op_type)
+        return extended_op_types
 
 class Pruner(Compressor):
     """
