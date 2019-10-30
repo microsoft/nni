@@ -420,7 +420,7 @@ class PAITrainingService implements TrainingService {
         .replace(/\r\n|\n|\r/gm, '');
 
         // tslint:disable-next-line:no-console
-        console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
+        this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles : PAITaskRole[] = [
             new PAITaskRole(
                 `nni_trail_${trialJobId}`,

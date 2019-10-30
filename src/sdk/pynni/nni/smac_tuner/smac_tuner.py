@@ -21,15 +21,17 @@
 smac_tuner.py
 """
 
-import sys
 import logging
+import sys
+
 import numpy as np
 
-from smac.utils.io.cmd_reader import CMDReader
-from smac.scenario.scenario import Scenario
-from smac.facade.smac_facade import SMAC
-from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
+from smac.facade.roar_facade import ROAR
+from smac.facade.smac_facade import SMAC
+from smac.scenario.scenario import Scenario
+from smac.utils.io.cmd_reader import CMDReader
+
 from ConfigSpaceNNI import Configuration
 
 from nni.tuner import Tuner
@@ -43,9 +45,9 @@ class SMACTuner(Tuner):
     Parameters
     ----------
     optimize_mode: str
-        optimize mode, 'maximize' or 'minimize'
+        optimize mode, 'maximize' or 'minimize', by default 'maximize'
     """
-    def __init__(self, optimize_mode):
+    def __init__(self, optimize_mode="maximize"):
         """Constructor"""
         self.logger = logging.getLogger(
             self.__module__ + "." + self.__class__.__name__)
@@ -61,7 +63,6 @@ class SMACTuner(Tuner):
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
-
         Returns
         -------
         instance
@@ -125,15 +126,17 @@ class SMACTuner(Tuner):
         return optimizer
 
     def update_search_space(self, search_space):
-        """TODO: this is urgly, we put all the initialization work in this method, because initialization relies
-        on search space, also because update_search_space is called at the beginning.
+        """
         NOTE: updating search space is not supported.
-
         Parameters
         ----------
-        search_space:
+        search_space: dict
             search space
         """
+
+        # TODO: this is ugly, we put all the initialization work in this method, because initialization relies
+        #         on search space, also because update_search_space is called at the beginning.
+
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
@@ -147,7 +150,6 @@ class SMACTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """receive_trial_result
-
         Parameters
         ----------
         parameter_id: int
@@ -156,7 +158,6 @@ class SMACTuner(Tuner):
             parameters
         value:
             value
-
         Raises
         ------
         RuntimeError
@@ -174,17 +175,16 @@ class SMACTuner(Tuner):
         else:
             self.smbo_solver.nni_smac_receive_runs(self.total_data[parameter_id], reward)
 
-    def convert_loguniform_categorical(self, challenger_dict):
-        """Convert the values of type `loguniform` back to their initial range
-        Also, we convert categorical:
-        categorical values in search space are changed to list of numbers before,
-        those original values will be changed back in this function
-
+    def param_postprocess(self, challenger_dict):
+        """
+        Postprocessing for a set of parameter includes:
+        1. Convert the values of type `loguniform` back to their initial range.
+        2. Convert categorical: categorical values in search space are changed to list of numbers before,
+        those original values will be changed back in this function.
         Parameters
         ----------
         challenger_dict: dict
             challenger dict
-
         Returns
         -------
         dict
@@ -205,12 +205,10 @@ class SMACTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         """generate one instance of hyperparameters
-
         Parameters
         ----------
         parameter_id: int
             parameter id
-
         Returns
         -------
         list
@@ -219,21 +217,19 @@ class SMACTuner(Tuner):
         if self.first_one:
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
-            return self.convert_loguniform_categorical(init_challenger.get_dictionary())
+            return self.param_postprocess(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
                 self.total_data[parameter_id] = challenger
-                return self.convert_loguniform_categorical(challenger.get_dictionary())
+                return self.param_postprocess(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """generate mutiple instances of hyperparameters
-
         Parameters
         ----------
         parameter_id_list: list
             list of parameter id
-
         Returns
         -------
         list
@@ -244,7 +240,7 @@ class SMACTuner(Tuner):
             for one_id in parameter_id_list:
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
-                params.append(self.convert_loguniform_categorical(init_challenger.get_dictionary()))
+                params.append(self.param_postprocess(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             cnt = 0
@@ -253,16 +249,17 @@ class SMACTuner(Tuner):
                 if cnt >= len(parameter_id_list):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
-                params.append(self.convert_loguniform_categorical(challenger.get_dictionary()))
+                params.append(self.param_postprocess(challenger.get_dictionary()))
                 cnt += 1
         return params
 
     def import_data(self, data):
-        """Import additional data for tuning
+        """
+        Import additional data for tuning
         Parameters
         ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        data: list of dict
+            Each of which has at least two keys, `parameter` and `value`.
         """
         _completed_num = 0
         for trial_info in data:
