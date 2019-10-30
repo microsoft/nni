@@ -116,10 +116,19 @@ class Pruner(Compressor):
         layer.module.forward = new_forward
 
     def export_model(self, model, save_path=None, onnx_path=None, input_shape=None):
-        """Pruned model can be exported with `export_model`.
-        `save_path` must be specified for saving model's `state_dict` and `mask_dict`.
-        `onnx_path` can be optionally specified for saving model to `.onnx` format.
-        `input_shape` is needed for exporting model to `.onnx` format.
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model : pytorch model
+            pytorch model to save
+        save_path : str
+            path to save state_dict and mask_dict
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
         """
         export_dict = {}
         export_dict['state_dict'] = model.state_dict()
