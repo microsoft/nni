@@ -99,3 +99,8 @@ class LotteryTicketPruner(Pruner):
             for k in self.update_flags.keys():
                 self.update_flags[k] = True
         self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
+
+    def export_compressed_model(self):
+        """
+        Export two files, one is masks and the other is final weights.
+        """
