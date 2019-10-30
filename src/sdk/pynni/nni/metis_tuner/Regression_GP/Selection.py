@@ -51,7 +51,6 @@ def selection_r(acquisition_function,
 
     return outputs
 
-
 def selection(acquisition_function,
               samples_y_aggregation,
               x_bounds, x_types,
