@@ -84,12 +84,13 @@ def extract_scalar_reward(value, scalar_key='default'):
         Incorrect final result: the final result should be float/int,
         or a dict which has a key named "default" whose value is float/int.
     """
-    if isinstance(value, float) or isinstance(value, int):
+    if isinstance(value, (float, int)):
         reward = value
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
         reward = value[scalar_key]
     else:
-        raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
+        raise RuntimeError('Incorrect final result: the final result should be float/int, ' \
+            'or a dict which has a key named "default" whose value is float/int.')
     return reward
 
 
@@ -101,8 +102,7 @@ def convert_dict2tuple(value):
         for _keys in value:
             value[_keys] = convert_dict2tuple(value[_keys])
         return tuple(sorted(value.items()))
-    else:
-        return value
+    return value
 
 
 def init_dispatcher_logger():

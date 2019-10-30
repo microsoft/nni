@@ -19,12 +19,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import argparse, json, os, sys
+import os
+import sys
 from multiprocessing.dummy import Pool as ThreadPool
 
 import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
 import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
-import nni.metis_tuner.lib_data as lib_data
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -71,14 +71,15 @@ def outlierDetection_threaded(samples_x, samples_y_aggregation):
         else:
             print("error here.")
 
-    outliers = None if len(outliers) == 0 else outliers
+    outliers = outliers if outliers else None
     return outliers
 
 def outlierDetection(samples_x, samples_y_aggregation):
     '''
+    TODO
     '''
     outliers = []
-    for samples_idx in range(0, len(samples_x)):
+    for samples_idx, _ in enumerate(samples_x):
         #sys.stderr.write("[%s] DEBUG: Evaluating %d of %d samples\n"
         #  \ % (os.path.basename(__file__), samples_idx + 1, len(samples_x)))
         diagnostic_regressor_gp = gp_create_model.create_model(\
@@ -93,5 +94,5 @@ def outlierDetection(samples_x, samples_y_aggregation):
                              "expected_sigma": sigma,
                              "difference": abs(samples_y_aggregation[samples_idx] - mu) - (2.33 * sigma)})
 
-    outliers = None if len(outliers) == 0 else outliers
+    outliers = outliers if outliers else None
     return outliers

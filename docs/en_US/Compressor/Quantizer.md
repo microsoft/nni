@@ -31,14 +31,14 @@ You can quantize your model to 8 bits with the code below before your training c
 Tensorflow code
 ```python
 from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
 quantizer = QAT_Quantizer(config_list)
 quantizer(tf.get_default_graph())
 ```
 PyTorch code
 ```python
 from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
 quantizer = QAT_Quantizer(config_list)
 quantizer(model)
 ```

@@ -33,7 +33,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     changeInterval = (interval: number) => {
-        this.setState({ interval: interval });
+        this.setState({ interval });
         if (this.timerId === null && interval !== 0) {
             window.setTimeout(this.refresh);
         } else if (this.timerId !== null && interval === 0) {
