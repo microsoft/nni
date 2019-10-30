@@ -1,8 +1,6 @@
 nni/
-nni-yarn/
 dist/
 build/
 *.egg-info/
-nni-yarn.tar.gz
 node-*.tar.xz
 node-*/
