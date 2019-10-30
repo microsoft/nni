@@ -26,7 +26,6 @@ import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 import numpy as np
 
-import numpy as np
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
