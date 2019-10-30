@@ -2,7 +2,7 @@ import logging
 import tensorflow as tf
 from .compressor import Quantizer
 
-__all__ = [ 'NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer' ]
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
 
 _logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class NaiveQuantizer(Quantizer):
     """
     def __init__(self, config_list):
         super().__init__(config_list)
-        self.layer_scale = { }
+        self.layer_scale = {}
 
     def quantize_weight(self, weight, config, op_name, **kwargs):
         new_scale = tf.reduce_max(tf.abs(weight)) / 127
@@ -33,17 +33,17 @@ class QAT_Quantizer(Quantizer):
             - q_bits
         """
         super().__init__(config_list)
-        
+
     def quantize_weight(self, weight, config, **kwargs):
         a = tf.stop_gradient(tf.reduce_min(weight))
         b = tf.stop_gradient(tf.reduce_max(weight))
         n = tf.cast(2 ** config['q_bits'], tf.float32)
         scale = b-a/(n-1)
-        
+
         # use gradient_override_map to change round to idetity for gradient
         with tf.get_default_graph().gradient_override_map({'Round': 'Identity'}):
             qw = tf.round((weight-a)/scale)*scale +a
-        
+
         return qw
 
 
@@ -58,7 +58,7 @@ class DoReFaQuantizer(Quantizer):
             - q_bits
         """
         super().__init__(config_list)
-        
+
     def quantize_weight(self, weight, config, **kwargs):
         a = tf.math.tanh(weight)
         b = a/(2*tf.reduce_max(tf.abs(weight))) + 0.5

@@ -27,7 +27,6 @@ _logger = logging.getLogger(__name__)
 
 
 class Tuner(Recoverable):
-    # pylint: disable=no-self-use,unused-argument
 
     def generate_parameters(self, parameter_id, **kwargs):
         """Returns a set of trial (hyper-)parameters, as a serializable object.
@@ -47,7 +46,7 @@ class Tuner(Recoverable):
         result = []
         for parameter_id in parameter_id_list:
             try:
-                _logger.debug("generating param for {}".format(parameter_id))
+                _logger.debug("generating param for %s", parameter_id)
                 res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
                 return result
@@ -67,10 +66,12 @@ class Tuner(Recoverable):
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
     def accept_customized_trials(self, accept=True):
-        """Enable or disable receiving results of user-added hyper-parameters. 
+        """Enable or disable receiving results of user-added hyper-parameters.
         By default `receive_trial_result()` will only receive results of algorithm-generated hyper-parameters.
         If tuners want to receive those of customized parameters as well, they can call this function in `__init__()`.
         """
+        # pylint: disable=attribute-defined-outside-init
+        # FIXME: because tuner is designed as interface, this API should not be here
         self._accept_customized = accept
 
     def trial_end(self, parameter_id, success, **kwargs):
@@ -78,7 +79,6 @@ class Tuner(Recoverable):
         parameter_id: int
         success: True if the trial successfully completed; False if failed or terminated
         """
-        pass
 
     def update_search_space(self, search_space):
         """Update the search space of tuner. Must override.
@@ -91,20 +91,19 @@ class Tuner(Recoverable):
         path: checkpoint directory for tuner
         """
         checkpoin_path = self.get_checkpoint_path()
-        _logger.info('Load checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
+        _logger.info('Load checkpoint ignored by tuner, checkpoint path: %s', checkpoin_path)
 
     def save_checkpoint(self):
         """Save the checkpoint of tuner.
         path: checkpoint directory for tuner
         """
         checkpoin_path = self.get_checkpoint_path()
-        _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
+        _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s', checkpoin_path)
 
     def import_data(self, data):
         """Import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        pass
 
     def _on_exit(self):
         pass

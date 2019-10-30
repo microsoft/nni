@@ -51,7 +51,7 @@ def create_parameter_id():
     int
         parameter id
     """
-    global _next_parameter_id  # pylint: disable=global-statement
+    global _next_parameter_id
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
@@ -80,7 +80,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
     return params_id
 
 
-class Bracket(object):
+class Bracket:
     """
     A bracket in BOHB, all the information of a bracket is managed by
     an instance of this class.
@@ -98,7 +98,7 @@ class Bracket(object):
 	max_budget : float
 		The largest budget to consider. Needs to be larger than min_budget!
 		The budgets will be geometrically distributed
-        :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
+        :math:`a^2 + b^2 = c^2 \\sim \\eta^k` for :math:`k\\in [0, 1, ... , num\\_subsets - 1]`.
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     """
@@ -169,7 +169,7 @@ class Bracket(object):
             If we have generated new trials after this trial end, we will return a new trial parameters.
             Otherwise, we will return None.
         """
-        global _KEY  # pylint: disable=global-statement
+        global _KEY
         self.num_finished_configs[i] += 1
         logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d',
                      self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
@@ -377,8 +377,10 @@ class BOHB(MsgDispatcherBase):
         if self.curr_s < 0:
             logger.info("s < 0, Finish this round of Hyperband in BOHB. Generate new round")
             self.curr_s = self.s_max
-        self.brackets[self.curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
-                                    max_budget=self.max_budget, optimize_mode=self.optimize_mode)
+        self.brackets[self.curr_s] = Bracket(
+            s=self.curr_s, s_max=self.s_max, eta=self.eta,
+            max_budget=self.max_budget, optimize_mode=self.optimize_mode
+        )
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
         logger.debug(
             'new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
@@ -599,7 +601,7 @@ class BOHB(MsgDispatcherBase):
             logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
             s = int(s)
 
-            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here,
             # because when the first parameter_id is created, trial_job_id is not known yet.
             if data['trial_job_id'] in self.job_id_para_id_map:
                 assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
@@ -643,14 +645,14 @@ class BOHB(MsgDispatcherBase):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             budget_exist_flag = False
             barely_params = dict()
@@ -662,7 +664,7 @@ class BOHB(MsgDispatcherBase):
                     barely_params[keys] = _params[keys]
             if not budget_exist_flag:
                 _budget = self.max_budget
-                logger.info("Set \"TRIAL_BUDGET\" value to %s (max budget)" %self.max_budget)
+                logger.info("Set \"TRIAL_BUDGET\" value to %s (max budget)", self.max_budget)
             if self.optimize_mode is OptimizeMode.Maximize:
                 reward = -_value
             else:
