@@ -139,7 +139,7 @@ class TargetSpace():
         except AssertionError:
             raise ValueError(
                 "Size of array ({}) is different than the ".format(len(x)) +
-                "expected number of parameters ({}).".format(self.dim())
+                "expected number of parameters ({}).".format(self.dim)
             )
 
         params = {}
@@ -201,7 +201,7 @@ class TargetSpace():
             elif _bound['_type'] == 'qloguniform':
                 params[col] = parameter_expressions.qloguniform(
                     _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
-            
+
         return params
 
     def max(self):

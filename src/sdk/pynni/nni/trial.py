@@ -96,7 +96,7 @@ def report_final_result(metric):
         'parameter_id': _params['parameter_id'],
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'FINAL',
-        'sequence': 0,  # TODO: may be unnecessary
+        'sequence': 0,
         'value': metric
     })
     platform.send_metric(metric)

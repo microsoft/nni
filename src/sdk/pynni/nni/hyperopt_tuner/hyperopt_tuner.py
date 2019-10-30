@@ -191,6 +191,7 @@ def _add_index(in_x, parameter):
                     return {NodeType.INDEX: pos, NodeType.VALUE: item}
         else:
             return parameter
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 class HyperoptTuner(Tuner):
@@ -198,7 +199,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode='maximize',
+    def __init__(self, algorithm_name, optimize_mode='minimize',
                  parallel_optimize=False, constant_liar_type='min'):
         """
         Parameters
@@ -206,7 +207,6 @@ class HyperoptTuner(Tuner):
         algorithm_name : str
             algorithm_name includes "tpe", "random_search" and anneal".
         optimize_mode : str
-            "maximize" or "minimize". By default "maximize".
         parallel_optimize : bool
             More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
         constant_liar_type : str
@@ -291,7 +291,7 @@ class HyperoptTuner(Tuner):
 
         if self.parallel:
             self.running_data.append(parameter_id)
-        
+
         params = split_index(total_params)
         return params
 
@@ -410,8 +410,8 @@ class HyperoptTuner(Tuner):
 
         misc_by_id = {m['tid']: m for m in miscs}
         for m in miscs:
-            m['idxs'] = dict([(key, []) for key in idxs])
-            m['vals'] = dict([(key, []) for key in idxs])
+            m['idxs'] = {key: [] for key in idxs}
+            m['vals'] = {key: [] for key in idxs}
 
         for key in idxs:
             assert len(idxs[key]) == len(vals[key])
@@ -434,7 +434,7 @@ class HyperoptTuner(Tuner):
         total_params : dict
             parameter suggestion
         """
-        if self.parallel and len(self.total_data)>20 and len(self.running_data) and self.optimal_y is not None:
+        if self.parallel and len(self.total_data) > 20 and self.running_data and self.optimal_y is not None:
             self.CL_rval = copy.deepcopy(self.rval)
             if self.constant_liar_type == 'mean':
                 _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
@@ -448,7 +448,7 @@ class HyperoptTuner(Tuner):
         else:
             rval = self.rval
             random_state = rval.rstate.randint(2**31 - 1)
-    
+
         trials = rval.trials
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
@@ -482,8 +482,7 @@ class HyperoptTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %
-                        (_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             if self.algorithm_name == 'random_search':
                 return
@@ -492,9 +491,7 @@ class HyperoptTuner(Tuner):
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info(
-                    "Useless trial data, value is %s, skip this trial data." %
-                    _value)
+                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(

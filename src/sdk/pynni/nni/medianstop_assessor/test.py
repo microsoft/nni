@@ -22,7 +22,6 @@ import random
 from .medianstop_assessor import MedianstopAssessor
 from nni.assessor import AssessResult
 
-
 logger = logging.getLogger('nni.contrib.medianstop_assessor')
 logger.debug('START')
 

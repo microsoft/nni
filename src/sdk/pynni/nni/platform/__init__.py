@@ -19,8 +19,6 @@
 # ==================================================================================================
 
 
-# pylint: disable=wildcard-import
-
 from ..env_vars import trial_env_vars
 
 if trial_env_vars.NNI_PLATFORM is None:

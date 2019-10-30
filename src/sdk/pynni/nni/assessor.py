@@ -31,7 +31,6 @@ class AssessResult(Enum):
     Bad = False
 
 class Assessor(Recoverable):
-    # pylint: disable=no-self-use,unused-argument
 
     def assess_trial(self, trial_job_id, trial_history):
         """Determines whether a trial should be killed. Must override.
@@ -46,21 +45,20 @@ class Assessor(Recoverable):
         trial_job_id: identifier of the trial (str).
         success: True if the trial successfully completed; False if failed or terminated.
         """
-        pass
 
     def load_checkpoint(self):
         """Load the checkpoint of assessr.
         path: checkpoint directory for assessor
         """
         checkpoin_path = self.get_checkpoint_path()
-        _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s' % checkpoin_path)
+        _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
     def save_checkpoint(self):
         """Save the checkpoint of assessor.
         path: checkpoint directory for assessor
         """
         checkpoin_path = self.get_checkpoint_path()
-        _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s' % checkpoin_path)
+        _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
     def _on_exit(self):
         pass
