@@ -7,6 +7,16 @@ _logger = logging.getLogger(__name__)
 
 
 class LotteryTicketPruner(Pruner):
+    """
+    This is a Pytorch implementation of the paper "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks",
+    following NNI model compression interface.
+
+    Detail description...
+
+    See Also
+    --------
+    :class:
+    """
     def __init__(self, config_list):
         """
         config_list: supported keys:
@@ -22,7 +32,23 @@ class LotteryTicketPruner(Pruner):
 
     def calc_mask(self, weight, config, op_name, **kwargs):
         """
-        abc
+        Generate mask for the given ``weight``.
+
+        Parameters
+        ----------
+        weight: tensor
+            The weight to be pruned
+        config: dict
+            Pruning configurations for this weight
+        op_name: str
+            The name of this operation???
+        kwargs: dict
+            ...
+
+        Returns
+        -------
+        mask: tensor
+            The mask for this weight
         """
         self.prune_iterations = config.get('prune_iterations')
         self.epoch_per_iteration = config.get('epoch_per_iteration')
@@ -60,7 +86,12 @@ class LotteryTicketPruner(Pruner):
 
     def update_epoch(self, epoch):
         """
-        abc
+        Control the pruning procedure on updated epoch number.
+
+        Parameters
+        ----------
+        epoch: num
+            The current epoch number provided by user call
         """
         if self.epoch_per_iteration \
             and int(epoch) % self.epoch_per_iteration == 0 \
