@@ -407,7 +407,7 @@ class MetisTuner(Tuner):
         # take next config as exploration step
         outputs = self._pack_output(lm_current['hyperparameter'])
         ap = random.uniform(0, 1)
-        if outputs in self.total_data or ap<=self.exploration_probability:
+        if outputs in self.total_data or ap <= self.exploration_probability:
             if next_candidate is not None:
                 outputs = self._pack_output(next_candidate['hyperparameter'])
             else:
@@ -440,13 +440,12 @@ class MetisTuner(Tuner):
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to metis tuner.")
 
-
 def _rand_with_constraints(x_bounds, x_types):
     outputs = None
     x_bounds_withconstraints = [x_bounds[i] for i in CONSTRAINT_PARAMS_IDX]
     x_types_withconstraints = [x_types[i] for i in CONSTRAINT_PARAMS_IDX]
 
-    x_val_withconstraints = lib_constraint_summation.rand(x_bounds_withconstraints, \
+    x_val_withconstraints = lib_constraint_summation.rand(x_bounds_withconstraints,
                                                           x_types_withconstraints, CONSTRAINT_LOWERBOUND,
                                                           CONSTRAINT_UPPERBOUND)
     if not x_val_withconstraints:
