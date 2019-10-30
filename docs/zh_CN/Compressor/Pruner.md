@@ -12,7 +12,7 @@ NNI Compressor 中的 Pruner
 TensorFlow 代码
 ```
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model_graph)
 ```
@@ -20,7 +20,7 @@ pruner(model_graph)
 PyTorch 代码
 ```
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model)
 ```
