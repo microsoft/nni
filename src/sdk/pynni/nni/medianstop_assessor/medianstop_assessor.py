@@ -42,7 +42,7 @@ class MedianstopAssessor(Assessor):
             self.high_better = False
         else:
             self.high_better = True
-            logger.warning('unrecognized optimize_mode', optimize_mode)
+            logger.warning('unrecognized optimize_mode %s', optimize_mode)
 
     def _update_data(self, trial_job_id, trial_history):
         """update data
@@ -121,10 +121,10 @@ class MedianstopAssessor(Assessor):
             best_history = min(trial_history)
 
         avg_array = []
-        for id in self.completed_avg_history:
-            if len(self.completed_avg_history[id]) >= curr_step:
-                avg_array.append(self.completed_avg_history[id][curr_step - 1])
-        if len(avg_array) > 0:
+        for id_ in self.completed_avg_history:
+            if len(self.completed_avg_history[id_]) >= curr_step:
+                avg_array.append(self.completed_avg_history[id_][curr_step - 1])
+        if avg_array:
             avg_array.sort()
             if self.high_better:
                 median = avg_array[(len(avg_array)-1) // 2]

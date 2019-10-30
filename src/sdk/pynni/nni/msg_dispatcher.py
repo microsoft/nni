@@ -61,7 +61,7 @@ _customized_parameter_ids = set()
 
 
 def _create_parameter_id():
-    global _next_parameter_id  # pylint: disable=global-statement
+    global _next_parameter_id
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
@@ -106,15 +106,15 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
 
-    def send_trial_callback(self, id, params):
+    def send_trial_callback(self, id_, params):
         """For tuner to issue trial config when the config is generated
         """
-        send(CommandType.NewTrialJob, _pack_parameter(id, params))
+        send(CommandType.NewTrialJob, _pack_parameter(id_, params))
 
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
-        _logger.debug("requesting for generating params of {}".format(ids))
+        _logger.debug("requesting for generating params of %s", ids)
         params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
@@ -218,7 +218,8 @@ class MsgDispatcher(MsgDispatcherBase):
         try:
             result = self.assessor.assess_trial(trial_job_id, ordered_history)
         except Exception as e:
-            _logger.exception('Assessor error')
+            _logger.error('Assessor error')
+            _logger.exception(e)
 
         if isinstance(result, bool):
             result = AssessResult.Good if result else AssessResult.Bad

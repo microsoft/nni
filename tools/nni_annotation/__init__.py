@@ -154,4 +154,3 @@ def _generate_specific_file(src_path, dst_path, exp_id, trial_id, module):
                 raise RuntimeError(src_path + ' ' + '\n'.join(str(arg) for arg in exc.args))
             else:
                 raise RuntimeError('Failed to expand annotations for %s: %r' % (src_path, exc))
-

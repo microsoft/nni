@@ -69,3 +69,6 @@ build
 *.egg-info
 
 .vscode
+
+# In case you place source code in ~/nni/
+/experiments
