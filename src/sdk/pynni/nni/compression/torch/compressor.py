@@ -35,7 +35,7 @@ class Compressor:
         for name, module in model.named_modules():
             layer = LayerInfo(name, module)
             config = self._select_config(layer)
-            if config is not None:
+            if config is not None and layer.type in config['op_types']:
                 self._instrument_layer(layer, config)
 
     def bind_model(self, model):
@@ -58,10 +58,7 @@ class Compressor:
     def _select_config(self, layer):
         ret = None
         for config in self._config_list:
-            op_types = config.get('op_types')
-            if op_types == 'default':
-                op_types = default_layers.weighted_modules
-            if op_types and layer.type not in op_types:
+            if layer.type not in self._get_config_op_types(config):
                 continue
             if config.get('op_names') and layer.name not in config['op_names']:
                 continue
@@ -70,6 +67,16 @@ class Compressor:
             return None
         return ret
 
+    def _get_config_op_types(self, config):
+        if config is None:
+            return []
+        op_types = config.get('op_types', [])
+        extended_op_types = []
+        for op_type in op_types:
+            if op_type == 'default':
+                extended_op_types.extend(default_layers.weighted_modules)
+            else:
+                extended_op_types.append(op_type)
 
 class Pruner(Compressor):
     """
@@ -111,10 +118,6 @@ class Quantizer(Compressor):
     """
     Base quantizer for pytorch quantizer
     """
-
-    def __call__(self, model):
-        self.compress(model)
-        return model
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """user should know where dequantize goes and implement it in quantize method

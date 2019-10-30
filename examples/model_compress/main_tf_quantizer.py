@@ -82,7 +82,7 @@ def main():
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(configure_list).compress(tf.get_default_graph())
     '''
-    configure_list = [{'q_bits':8, 'op_type':'default'}]
+    configure_list = [{'q_bits':8, 'op_types':['default']}]
     quantizer = QAT_Quantizer(configure_list)
     quantizer(tf.get_default_graph())
     # you can also use compress(model) or compress_default_graph()
