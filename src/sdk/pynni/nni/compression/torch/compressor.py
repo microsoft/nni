@@ -58,7 +58,8 @@ class Compressor:
     def _select_config(self, layer):
         ret = None
         for config in self._config_list:
-            if layer.type not in self._get_config_op_types(config):
+            config['op_types'] = self._expand_config_op_types(config)
+            if layer.type not in config['op_types']:
                 continue
             if config.get('op_names') and layer.name not in config['op_names']:
                 continue
@@ -67,17 +68,17 @@ class Compressor:
             return None
         return ret
 
-    def _get_config_op_types(self, config):
+    def _expand_config_op_types(self, config):
         if config is None:
             return []
         op_types = config.get('op_types', [])
-        extended_op_types = []
+        expanded_op_types = []
         for op_type in op_types:
             if op_type == 'default':
-                extended_op_types.extend(default_layers.weighted_modules)
+                expanded_op_types.extend(default_layers.weighted_modules)
             else:
-                extended_op_types.append(op_type)
-        return extended_op_types
+                expanded_op_types.append(op_type)
+        return expanded_op_types
 
 class Pruner(Compressor):
     """
