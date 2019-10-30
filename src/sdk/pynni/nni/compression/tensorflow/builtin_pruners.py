@@ -2,7 +2,6 @@ import logging
 import tensorflow as tf
 from .compressor import Pruner
 from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import control_flow_ops
 
 __all__ = ['LevelPruner', 'AGP_Pruner']
 
@@ -20,15 +19,21 @@ class LevelPruner(Pruner):
         self.now_epoch = tf.Variable(0)
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        new_mask = tf.Variable(0)
+        new_mask = tf.Variable(tf.cast(tf.ones(tf.shape(weight)), tf.float32))
         threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
         mask = tf.stop_gradient(tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype))
 
         def maybe_update():
             return math_ops.equal(self.now_epoch, tf.constant(0))
 
-        assign_op = tf.cond(maybe_update(), tf.assign(new_mask, mask), control_flow_ops.no_op())
-        self.assign_handler.append(assign_op)
+        def update_mask():
+            return tf.assign(new_mask, mask)
+
+        def no_update_mask():
+            return tf.identity(new_mask)
+
+        new_mask = tf.stop_gradient(tf.cond(maybe_update(), update_mask, no_update_mask))
+        self.assign_handler.append(tf.assign(weight, weight * new_mask))
         return new_mask
 
     def update_epoch(self, epoch, sess):
@@ -56,27 +61,32 @@ class AGP_Pruner(Pruner):
             - frequency: if you want update every 2 epoch, you can set it 2
         """
         super().__init__(config_list)
-        self.mask_list = {}
-        self.if_init_list = {}
         self.now_epoch = tf.Variable(0)
         self.assign_handler = []
 
     def calc_mask(self, weight, config, op_name, **kwargs):
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        new_mask = tf.Variable(0)
-
-        def maybe_update():
-            return math_ops.logical_and(self.now_epoch >= start_epoch,
-                                        (self.now_epoch - start_epoch) % freq == 0)
+        new_mask = tf.Variable(tf.cast(tf.ones(tf.shape(weight)), tf.float32))
 
         target_sparsity = self.compute_target_sparsity(config)
         threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
         # stop gradient in case gradient change the mask
         mask = tf.stop_gradient(tf.cast(tf.math.greater(weight, threshold), weight.dtype))
-        assign_op = tf.cond(maybe_update(), tf.assign(new_mask, mask), control_flow_ops.no_op())
-        self.assign_handler.append(assign_op)
-        self.assign_handler.append(tf.assign(weight, weight * mask))
+
+        def maybe_update():
+            return math_ops.logical_and(math_ops.greater_equal(self.now_epoch, start_epoch),
+                                        math_ops.equal(tf.mod((self.now_epoch - start_epoch), freq), 0))
+
+        def update_mask():
+            return tf.assign(new_mask, mask)
+
+        def no_update_mask():
+            return tf.identity(new_mask)
+
+        new_mask = tf.stop_gradient(tf.cond(maybe_update(), update_mask, no_update_mask))
+        self.assign_handler.append(tf.assign(weight, weight * new_mask))
+
         return new_mask
 
     def compute_target_sparsity(self, config):
