@@ -1,4 +1,7 @@
 # Compressor
+
+We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute.
+
 NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It supports Tensorflow and PyTorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
 
 ## Supported algorithms
@@ -19,7 +22,7 @@ We use a simple example to show how to modify your trial code in order to apply 
 Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
@@ -27,7 +30,7 @@ pruner(tf.get_default_graph())
 PyTorch code
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model)
 ```
@@ -55,7 +58,7 @@ A simple example of configuration is shown below:
 [
     {
         'sparsity': 0.8,
-        'op_types': 'default'
+        'op_types': ['default']
     },
     {
         'sparsity': 0.6,
@@ -112,7 +115,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
     def calc_mask(self, weight, config, **kwargs):
         # weight is the target weight tensor
         # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_type, and op_name
+        # kwargs contains op, op_types, and op_name
         # design your mask and return your mask
         return your_mask
 
@@ -155,7 +158,7 @@ class YourPruner(nni.compression.tensorflow.Quantizer):
     def quantize_weight(self, weight, config, **kwargs):
         # weight is the target weight tensor
         # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_type, and op_name
+        # kwargs contains op, op_types, and op_name
         # design your quantizer and return new weight
         return new_weight
 

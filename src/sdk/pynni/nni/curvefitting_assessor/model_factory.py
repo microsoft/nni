@@ -18,7 +18,7 @@
 import logging
 import numpy as np
 from scipy import optimize
-from .curvefunctions import *
+from .curvefunctions import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Number of curve functions we prepared, more details can be found in "curvefunctions.py"
 NUM_OF_FUNCTIONS = 12
@@ -33,7 +33,7 @@ LEAST_FITTED_FUNCTION = 4
 
 logger = logging.getLogger('curvefitting_Assessor')
 
-class CurveModel(object):
+class CurveModel:
     """Build a Curve Model to predict the performance
 
     Algorithm: https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md
@@ -83,7 +83,7 @@ class CurveModel(object):
                 # Ignore exceptions caused by numerical calculations
                 pass
             except Exception as exception:
-                logger.critical("Exceptions in fit_theta:", exception)
+                logger.critical("Exceptions in fit_theta: %s", exception)
 
     def filter_curve(self):
         """filter the poor performing curve
@@ -113,7 +113,7 @@ class CurveModel(object):
             if y < median + epsilon and y > median - epsilon:
                 self.effective_model.append(model)
         self.effective_model_num = len(self.effective_model)
-        logger.info('List of effective model: ', self.effective_model)
+        logger.info('List of effective model: %s', self.effective_model)
 
     def predict_y(self, model, pos):
         """return the predict y of 'model' when epoch = pos
@@ -303,7 +303,7 @@ class CurveModel(object):
         """
         init_weight = np.ones((self.effective_model_num), dtype=np.float) / self.effective_model_num
         self.weight_samples = np.broadcast_to(init_weight, (NUM_OF_INSTANCE, self.effective_model_num))
-        for i in range(NUM_OF_SIMULATION_TIME):
+        for _ in range(NUM_OF_SIMULATION_TIME):
             # sample new value from Q(i, j)
             new_values = np.random.randn(NUM_OF_INSTANCE, self.effective_model_num) * STEP_SIZE + self.weight_samples
             new_values = self.normalize_weight(new_values)
