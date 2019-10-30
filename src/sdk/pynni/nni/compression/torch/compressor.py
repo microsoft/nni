@@ -124,15 +124,8 @@ class Pruner(Compressor):
         export_dict = {}
         export_dict['state_dict'] = model.state_dict()
         mask_dict = {}
-        for name, value in model.state_dict():
-            found = False
-            for layer_name, mask in self.mask_list:
-                if name == 'module.' + layer_name + '.weight' or layer_name + '.weight':
-                    mask_dict[layer_name] = self.mask_list[layer_name]
-                    found = True
-                    break
-            if not found:
-                mask_dict[name] = None
+        for layer_name in self.mask_list:
+            mask_dict[layer_name + '.weight'] = self.mask_list[layer_name]
         export_dict['mask_dict'] = mask_dict
         for name, m in model.named_modules():
             mask = self.mask_list.get(name)
