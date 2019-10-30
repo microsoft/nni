@@ -22,7 +22,7 @@ NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括�
 TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
@@ -30,7 +30,7 @@ pruner(tf.get_default_graph())
 PyTorch 代码
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model)
 ```
@@ -58,7 +58,7 @@ pruner(model)
 [
     {
         'sparsity': 0.8,
-        'op_types': 'default'
+        'op_types': ['default']
     },
     {
         'sparsity': 0.6,
@@ -99,33 +99,34 @@ __[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训
 
 ```python
 # TensorFlow 中定制 Pruner。
-# 如果要在 PyTorch 中定制 Pruner，可将
-# nni.compression.tensorflow.Pruner 替换为
+# For writing a pruner in PyTorch, you can simply replace
+# nni.compression.tensorflow.Pruner with
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
     def __init__(self, config_list):
-        # 建议使用 NNI 定义的规范来进行配置
+        # suggest you to use the NNI defined spec for config
         super().__init__(config_list)
 
     def bind_model(self, model):
-        # 此函数可通过成员变量，来保存模型和其权重，
-        # 从而能在训练过程中获取这些信息。
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
         pass
 
     def calc_mask(self, weight, config, **kwargs):
-        # weight 是目标的权重张量
-        # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
-        # 实现定制的 mask 并返回
+        # weight is the target weight tensor
+        # config is the selected dict object in config_list for this layer
+        # kwargs contains op, op_types, and op_name
+        # design your mask and return your mask
         return your_mask
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def step(self, sess):
-        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
         pass
 ```
 
@@ -141,34 +142,42 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# 如果要在 PyTorch 中定制 Quantizer，可将
-# nni.compression.tensorflow.Quantizer 替换为
+# For writing a Quantizer in PyTorch, you can simply replace
+# nni.compression.tensorflow.Quantizer with
 # nni.compression.torch.Quantizer
-class YourQuantizer(nni.compression.tensorflow.Quantizer):
+class YourPruner(nni.compression.tensorflow.Quantizer):
     def __init__(self, config_list):
-        # 建议使用 NNI 定义的规范来进行配置
+        # suggest you to use the NNI defined spec for config
         super().__init__(config_list)
 
     def bind_model(self, model):
-        # 此函数可通过成员变量，来保存模型和其权重，
-        # 从而能在训练过程中获取这些信息。
+        # this func can be used to remember the model or its weights
+        # in member variables, for getting their values during training
         pass
 
     def quantize_weight(self, weight, config, **kwargs):
-        # weight 是目标的权重张量
-        # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
-        # 实现定制的 Quantizer 并返回新的权重
+        # weight is the target weight tensor
+        # config is the selected dict object in config_list for this layer
+        # kwargs contains op, op_types, and op_name
+        # design your quantizer and return new weight
         return new_weight
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # 注意， PyTorch 不需要 sess 参数
+    # note for pytorch version, there is no sess in input arguments
     def step(self, sess):
-        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
+        # can do some processing based on the model or weights binded
+        # in the func bind_model
         pass
+
+    # you can also design your method
+    def your_method(self, your_input):
+        #your code
+
+    def bind_model(self, model):
+        #preprocess model
 ```
 
 __[TODO]__ 添加成员函数 `quantize_layer_output`，用于支持量化层输出的量化算法。
