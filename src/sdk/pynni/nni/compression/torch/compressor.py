@@ -79,6 +79,7 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
+
 class Pruner(Compressor):
     """
     Abstract base PyTorch pruner
@@ -113,6 +114,48 @@ class Pruner(Compressor):
             return ret
 
         layer.module.forward = new_forward
+
+    def export_model(self, model, save_path=None, onnx_path=None, input_shape=None):
+        """Pruned model can be exported with `export_model`.
+        `save_path` must be specified for saving model's `state_dict` and `mask_dict`.
+        `onnx_path` can be optionally specified for saving model to `.onnx` format.
+        `input_shape` is needed for exporting model to `.onnx` format.
+        """
+        export_dict = {}
+        export_dict['state_dict'] = model.state_dict()
+        mask_dict = {}
+        for name, value in model.state_dict():
+            found = False
+            for layer_name, mask in self.mask_list:
+                if name == 'module.' + layer_name + '.weight' or layer_name + '.weight':
+                    mask_dict[layer_name] = self.mask_list[layer_name]
+                    found = True
+                    break
+            if not found:
+                mask_dict[name] = None
+        export_dict['mask_dict'] = mask_dict
+        for name, m in model.named_modules():
+            mask = self.mask_list.get(name)
+            if mask is not None:
+                mask_sum = mask.sum().item()
+                mask_num = mask.numel()
+                _logger.info('Layer: {}  Sparsity: {}'.format(name, 1 - mask_sum / mask_num))
+                print('Layer: {}  Sparsity: {}'.format(name, 1 - mask_sum / mask_num))
+                m.weight.data = m.weight.data.mul(mask)
+            else:
+                _logger.info('Layer: {}  Sparsity: {}'.format(name, 0))
+                print('Layer: {}  Sparsity: {}'.format(name, 0))
+        assert save_path is not None, 'Save Path must be specified'
+        torch.save(export_dict, save_path)
+        _logger.info('Model state_dict and mask_dict saved to {}'.format(save_path))
+        print('Model state_dict and mask_dict saved to {}'.format(save_path))
+        if onnx_path is not None:
+            assert input_shape is not None, 'input_shape must be specified to export onnx model'
+            # input info needed
+            input = torch.Tensor(*input_shape)
+            torch.onnx.export(model, input, onnx_path)
+            _logger.info('Model in onnx with input shape saved to {}'.format(input.shape, onnx_path))
+            print('Model in onnx with input shape saved to {}'.format(input.shape, onnx_path))
 
 
 class Quantizer(Compressor):
