@@ -95,6 +95,7 @@ def is_experiment_done(nnimanager_log_path):
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
     if sys.platform == "win32":
         cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
+        print('cmds:', ' '.join(cmds))
     else:
         cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
     completed_process = subprocess.run(' '.join(cmds), shell=True)
