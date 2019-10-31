@@ -115,7 +115,7 @@ class Pruner(Compressor):
 
         layer.module.forward = new_forward
 
-    def export_model(self, model, save_path=None, onnx_path=None, input_shape=None):
+    def export_model(self, model, save_path, onnx_path=None, input_shape=None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
@@ -130,6 +130,7 @@ class Pruner(Compressor):
         input_shape : list or tuple
             input shape to onnx model
         """
+        assert save_path is not None, 'Save Path must be specified'
         export_dict = {}
         export_dict['state_dict'] = model.state_dict()
         mask_dict = {}
@@ -147,7 +148,6 @@ class Pruner(Compressor):
             else:
                 _logger.info('Layer: {}  Sparsity: {}'.format(name, 0))
                 print('Layer: {}  Sparsity: {}'.format(name, 0))
-        assert save_path is not None, 'Save Path must be specified'
         torch.save(export_dict, save_path)
         _logger.info('Model state_dict and mask_dict saved to {}'.format(save_path))
         print('Model state_dict and mask_dict saved to {}'.format(save_path))
