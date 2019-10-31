@@ -18,7 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import os
 import threading
 import logging
 from multiprocessing.dummy import Pool as ThreadPool
@@ -146,7 +145,7 @@ class MsgDispatcherBase(Recoverable):
             pass
 
     def process_command(self, command, data):
-        _logger.debug('process_command: command: [{}], data: [{}]'.format(command, data))
+        _logger.debug('process_command: command: [%s], data: [%s]', command, data)
 
         command_handlers = {
             # Tuner commands:

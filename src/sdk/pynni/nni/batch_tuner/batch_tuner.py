@@ -100,7 +100,7 @@ class BatchTuner(Tuner):
         data:
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        if len(self.values) == 0:
+        if not self.values:
             logger.info("Search space has not been initialized, skip this data import")
             return
 
