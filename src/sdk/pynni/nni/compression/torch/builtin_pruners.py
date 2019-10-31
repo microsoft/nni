@@ -167,13 +167,13 @@ class SlimPruner(Pruner):
         if op_types is not None:
             assert op_types == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
             for name, m in model.named_modules():
-                if type(m).__name__ is 'BatchNorm2d':
+                if type(m).__name__ == 'BatchNorm2d':
                     weight_list.append(m.weight.data.clone())
         else:
             for name, m in model.named_modules():
                 if name in op_names:
                     assert type(
-                        m).__name__ is 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+                        m).__name__ == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
                     weight_list.append(m.weight.data.clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
