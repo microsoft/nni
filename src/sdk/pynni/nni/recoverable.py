@@ -21,6 +21,7 @@
 import os
 
 class Recoverable:
+
     def load_checkpoint(self):
         pass
 

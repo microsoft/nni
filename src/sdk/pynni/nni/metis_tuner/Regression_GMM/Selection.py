@@ -54,8 +54,12 @@ def selection_r(x_bounds,
     '''
     Select using different types.
     '''
+<<<<<<< HEAD
     minimize_starting_points = clusteringmodel_gmm_good.sample(
         n_samples=num_starting_points)
+=======
+    minimize_starting_points = clusteringmodel_gmm_good.sample(n_samples=num_starting_points)
+>>>>>>> upstream/master
 
     outputs = selection(x_bounds, x_types,
                         clusteringmodel_gmm_good,

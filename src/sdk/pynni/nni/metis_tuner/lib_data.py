@@ -32,8 +32,8 @@ def match_val_type(vals, vals_bounds, vals_types):
     for i, _ in enumerate(vals_types):
         if vals_types[i] == "discrete_int":
             # Find the closest integer in the array, vals_bounds
-            vals_new.append(
-                min(vals_bounds[i], key=lambda x: abs(x - vals[i])))
+            # pylint: disable=cell-var-from-loop
+            vals_new.append(min(vals_bounds[i], key=lambda x: abs(x - vals[i])))
         elif vals_types[i] == "range_int":
             # Round down to the nearest integer
             vals_new.append(math.floor(vals[i]))

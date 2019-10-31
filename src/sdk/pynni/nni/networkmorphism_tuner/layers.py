@@ -19,7 +19,7 @@
 # ==================================================================================================
 
 from abc import abstractmethod
-from collections import Iterable
+from collections.abc import Iterable
 
 import torch
 from torch import nn
@@ -81,7 +81,6 @@ class StubLayer:
     def build(self, shape):
         '''build shape.
         '''
-        pass
 
     def set_weights(self, weights):
         '''set weights.
@@ -91,22 +90,18 @@ class StubLayer:
     def import_weights(self, torch_layer):
         '''import weights.
         '''
-        pass
 
     def import_weights_keras(self, keras_layer):
         '''import weights from keras layer.
         '''
-        pass
 
     def export_weights(self, torch_layer):
         '''export weights.
         '''
-        pass
 
     def export_weights_keras(self, keras_layer):
         '''export weights to keras layer.
         '''
-        pass
 
     def get_weights(self):
         '''get weights.
@@ -127,7 +122,6 @@ class StubLayer:
     def to_real_layer(self):
         '''to real layer.
         '''
-        pass
 
     def __str__(self):
         '''str() function to print.
@@ -616,6 +610,7 @@ def to_real_keras_layer(layer):
         return layers.Flatten()
     if is_layer(layer, "GlobalAveragePooling"):
         return layers.GlobalAveragePooling2D()
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 def is_layer(layer, layer_type):
@@ -648,6 +643,7 @@ def is_layer(layer, layer_type):
         return isinstance(layer, (StubFlatten,))
     elif layer_type == "GlobalAveragePooling":
         return isinstance(layer, StubGlobalPooling)
+    return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
 
 def layer_description_extractor(layer, node_to_id):
@@ -705,7 +701,6 @@ def layer_description_extractor(layer, node_to_id):
 def layer_description_builder(layer_information, id_to_node):
     '''build layer from description.
     '''
-    # pylint: disable=W0123
     layer_type = layer_information[0]
 
     layer_input_ids = layer_information[1]
@@ -719,27 +714,26 @@ def layer_description_builder(layer_information, id_to_node):
         filters = layer_information[4]
         kernel_size = layer_information[5]
         stride = layer_information[6]
-        return eval(layer_type)(
+        return globals()[layer_type](
             input_channel, filters, kernel_size, stride, layer_input, layer_output
         )
     elif layer_type.startswith("StubDense"):
         input_units = layer_information[3]
         units = layer_information[4]
-        return eval(layer_type)(input_units, units, layer_input, layer_output)
+        return globals()[layer_type](input_units, units, layer_input, layer_output)
     elif layer_type.startswith("StubBatchNormalization"):
         num_features = layer_information[3]
-        return eval(layer_type)(num_features, layer_input, layer_output)
+        return globals()[layer_type](num_features, layer_input, layer_output)
     elif layer_type.startswith("StubDropout"):
         rate = layer_information[3]
-        return eval(layer_type)(rate, layer_input, layer_output)
+        return globals()[layer_type](rate, layer_input, layer_output)
     elif layer_type.startswith("StubPooling"):
         kernel_size = layer_information[3]
         stride = layer_information[4]
         padding = layer_information[5]
-        return eval(layer_type)(kernel_size, stride,
-                                padding, layer_input, layer_output)
+        return globals()[layer_type](kernel_size, stride, padding, layer_input, layer_output)
     else:
-        return eval(layer_type)(layer_input, layer_output)
+        return globals()[layer_type](layer_input, layer_output)
 
 
 def layer_width(layer):

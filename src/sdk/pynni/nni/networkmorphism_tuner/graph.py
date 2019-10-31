@@ -19,7 +19,7 @@
 # ==================================================================================================
 
 import json
-from collections import Iterable
+from collections.abc import Iterable
 from copy import deepcopy, copy
 from queue import Queue
 
@@ -673,7 +673,7 @@ class Graph:
         return JSONModel(self).data
 
     @classmethod
-    def parsing_json_model(self, json_model):
+    def parsing_json_model(cls, json_model):
         '''build a graph from json
         '''
         return json_to_graph(json_model)
@@ -934,7 +934,6 @@ def graph_to_onnx(graph, onnx_model_path):
 
 
 def onnx_to_graph(onnx_model, input_shape):
-    import onnx
     # to do in the future using onnx ir
     graph = Graph(input_shape, False)
     graph.parsing_onnx_model(onnx_model)

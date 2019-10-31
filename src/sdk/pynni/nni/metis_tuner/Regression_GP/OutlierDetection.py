@@ -78,19 +78,18 @@ def outlierDetection_threaded(samples_x, samples_y_aggregation):
         else:
             sys.stderr.write("Error: threads_result is None.")
 
-    outliers = None if len(outliers) == 0 else outliers
+    outliers = outliers if outliers else None
     return outliers
 
 
 def outlierDetection(samples_x, samples_y_aggregation):
     outliers = []
-    for samples_idx in range(0, len(samples_x)):
-        sys.stderr.write("[%s] DEBUG: Evaluating %d of %d samples\n" \
-            % (os.path.basename(__file__), samples_idx + 1, len(samples_x)))
-
-        diagnostic_regressor_gp = gp_create_model.create_model(
-            samples_x[0:samples_idx] + samples_x[samples_idx + 1:],
-            samples_y_aggregation[0:samples_idx] + samples_y_aggregation[samples_idx + 1:])
+    for samples_idx, _ in enumerate(samples_x):
+        #sys.stderr.write("[%s] DEBUG: Evaluating %d of %d samples\n"
+        #  \ % (os.path.basename(__file__), samples_idx + 1, len(samples_x)))
+        diagnostic_regressor_gp = gp_create_model.create_model(\
+                                        samples_x[0:samples_idx] + samples_x[samples_idx + 1:],\
+                                        samples_y_aggregation[0:samples_idx] + samples_y_aggregation[samples_idx + 1:])
         mu, sigma = gp_prediction.predict(samples_x[samples_idx],
                                           diagnostic_regressor_gp['model'])
         # 2.33 is the z-score for 98% confidence level
@@ -101,5 +100,5 @@ def outlierDetection(samples_x, samples_y_aggregation):
                              "difference": \
                                 abs(samples_y_aggregation[samples_idx] - mu) - (2.33 * sigma)})
 
-    outliers = None if len(outliers) == 0 else outliers
+    outliers = outliers if outliers else None
     return outliers

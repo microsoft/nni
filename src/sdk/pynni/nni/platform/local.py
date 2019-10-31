@@ -39,8 +39,8 @@ if not os.path.exists(_outputdir):
 
 _nni_platform = trial_env_vars.NNI_PLATFORM
 if _nni_platform == 'local':
-   _log_file_path = os.path.join(_outputdir, 'trial.log')
-   init_logger(_log_file_path)
+    _log_file_path = os.path.join(_outputdir, 'trial.log')
+    init_logger(_log_file_path)
 
 _multiphase = trial_env_vars.MULTI_PHASE
 
@@ -58,7 +58,7 @@ def request_next_parameter():
 def get_next_parameter():
     global _param_index
     params_file_name = ''
-    if _multiphase and (_multiphase == 'true' or _multiphase == 'True'):
+    if _multiphase in ('true', 'True'):
         params_file_name = ('parameter_{}.cfg'.format(_param_index), 'parameter.cfg')[_param_index == 0]
     else:
         if _param_index > 0:
@@ -92,7 +92,7 @@ def send_metric(string):
             file = open(_metric_file.name)
             file.close()
         else:
-            subprocess.run(['touch', _metric_file.name], check = True)
+            subprocess.run(['touch', _metric_file.name], check=True)
 
 def get_experiment_id():
     return trial_env_vars.NNI_EXP_ID
