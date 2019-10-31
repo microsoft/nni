@@ -1,10 +1,10 @@
-# Automatic Model Compression on NNI
+# NNI 上的自动模型压缩
 
-It's convenient to implement auto model compression with NNI compression and NNI tuners
+使用 NNI 的压缩和 Tuner 能轻松实现自动模型压缩
 
-## First, model compression with NNI
+## 首先，使用 NNI 压缩模型
 
-You can easily compress a model with NNI compression. Take pruning for example, you can prune a pretrained model with LevelPruner like this
+可使用 NNI 轻松压缩模型。 以剪枝为例，可通过 LevelPruner 对预训练模型剪枝：
 
 ```python
 from nni.compression.torch import LevelPruner
@@ -13,15 +13,15 @@ pruner = LevelPruner(config_list)
 pruner(model)
 ```
 
-The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
+op_type 为 'default' 表示模块类型定义在了 [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py)。
 
-Therefore ```{ 'sparsity': 0.8, 'op_types': ['default'] }```means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ```pruner(model)``` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
+因此 `{ 'sparsity': 0.8, 'op_types': ['default'] }` 表示 **所有指定 op_types 的层都会被压缩到 0.8 的稀疏度**。 当调用 `pruner(model)` 时，模型会通过掩码进行压缩。随后还可以微调模型，此时**被剪除的权重不会被更新**。
 
-## Then, make this automatic
+## 然后，进行自动化
 
-The previous example manually choosed LevelPruner and pruned all layers with the same sparsity, this is obviously sub-optimal because different layers may have different redundancy. Layer sparsity should be carefully tuned to achieve least model performance degradation and this can be done with NNI tuners.
+前面的示例手工选择了 LevelPruner，并对所有层使用了相同的稀疏度，显然这不是最佳方法，因为不同层会有不同的冗余度。 每层的稀疏度都应该仔细调整，以便减少模型性能的下降，可通过 NNI Tuner 来完成。
 
-The first thing we need to do is to design a search space, here we use a nested search space which contains  choosing pruning algorithm and optimizing layer sparsity.
+首先需要设计搜索空间，这里使用了嵌套的搜索空间，其中包含了选择的剪枝函数以及需要优化稀疏度的层。
 
 ```json
 {
@@ -67,7 +67,7 @@ The first thing we need to do is to design a search space, here we use a nested 
 }
 ```
 
-Then we need to modify our codes for few lines
+然后需要修改几行代码。
 
 ```python
 import nni
@@ -75,7 +75,7 @@ from nni.compression.torch import *
 params = nni.get_parameters()
 conv0_sparsity = params['prune_method']['conv0_sparsity']
 conv1_sparsity = params['prune_method']['conv1_sparsity']
-# these raw sparsity should be scaled if you need total sparsity constrained
+# 如果对总稀疏度有要求，这些原始稀疏度就需要调整。
 config_list_level = [{ 'sparsity': conv0_sparsity, 'op_name': 'conv0' },
                      { 'sparsity': conv1_sparsity, 'op_name': 'conv1' }]
 config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
@@ -92,7 +92,7 @@ acc = evaluate(model) # evaluation
 nni.report_final_results(acc)
 ```
 
-Last, define our task and automatically tuning pruning methods with layers sparsity
+最后，定义任务，并使用任务来自动修剪层稀疏度。
 
 ```yaml
 authorName: default
@@ -100,16 +100,16 @@ experimentName: Auto_Compression
 trialConcurrency: 2
 maxExecDuration: 100h
 maxTrialNum: 500
-#choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: local
-#choice: true, false
+# 可选项: true, false
 useAnnotation: False
 searchSpacePath: search_space.json
 tuner:
-  #choice: TPE, Random, Anneal...
+  # 可选项: TPE, Random, Anneal...
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    # 可选项: maximize, minimize
     optimize_mode: maximize
 trial:
   command: bash run_prune.sh
