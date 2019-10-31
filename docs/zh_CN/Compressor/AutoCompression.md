@@ -13,15 +13,15 @@ pruner = LevelPruner(config_list)
 pruner(model)
 ```
 
-The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
+op_type 为 'default' 表示模块类型定义在了 [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py)。
 
-Therefore `{ 'sparsity': 0.8, 'op_types': ['default'] }`means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When `pruner(model)` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
+因此 `{ 'sparsity': 0.8, 'op_types': ['default'] }` 表示 **所有指定 op_types 的层都会被压缩到 0.8 的稀疏度**。 当调用 `pruner(model)` 时，模型会通过掩码进行压缩。随后还可以微调模型，此时**被剪除的权重不会被更新**。
 
 ## 然后，进行自动化
 
-The previous example manually choosed LevelPruner and pruned all layers with the same sparsity, this is obviously sub-optimal because different layers may have different redundancy. Layer sparsity should be carefully tuned to achieve least model performance degradation and this can be done with NNI tuners.
+前面的示例手工选择了 LevelPruner，并对所有层使用了相同的稀疏度，显然这不是最佳方法，因为不同层会有不同的冗余度。 每层的稀疏度都应该仔细调整，以便减少模型性能的下降，可通过 NNI Tuner 来完成。
 
-The first thing we need to do is to design a search space, here we use a nested search space which contains  choosing pruning algorithm and optimizing layer sparsity.
+首先需要设计搜索空间，这里使用了嵌套的搜索空间，其中包含了选择的剪枝函数以及需要优化稀疏度的层。
 
 ```json
 {
@@ -67,7 +67,7 @@ The first thing we need to do is to design a search space, here we use a nested 
 }
 ```
 
-Then we need to modify our codes for few lines
+然后需要修改几行代码。
 
 ```python
 import nni
@@ -92,7 +92,7 @@ acc = evaluate(model) # evaluation
 nni.report_final_results(acc)
 ```
 
-Last, define our task and automatically tuning pruning methods with layers sparsity
+最后，定义任务，并使用任务来自动修剪层稀疏度。
 
 ```yaml
 authorName: default
