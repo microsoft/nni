@@ -63,7 +63,7 @@ class AGP_Pruner(Pruner):
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
-                    self.now_epoch - start_epoch) % freq == 0:
+                self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
@@ -125,7 +125,7 @@ class FilterPruner(Pruner):
         self.if_init_list = {}
 
     def calc_mask(self, weight, config, op_name, op_type, **kwargs):
-        assert op_type is 'Conv2d', 'FilterPruner only supports 2d convolution layer pruning'
+        assert op_type == 'Conv2d', 'FilterPruner only supports 2d convolution layer pruning'
         if self.if_init_list.get(op_name, True):
             kernels = weight.shape[0]
             w_abs = weight.abs()
@@ -165,7 +165,7 @@ class SlimPruner(Pruner):
         op_types = config.get('op_types')
         op_names = config.get('op_names')
         if op_types is not None:
-            assert op_types is 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+            assert op_types == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
             for name, m in model.named_modules():
                 if type(m).__name__ is 'BatchNorm2d':
                     weight_list.append(m.weight.data.clone())
@@ -180,7 +180,7 @@ class SlimPruner(Pruner):
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
 
     def calc_mask(self, weight, config, op_name, op_type, **kwargs):
-        assert op_type is 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+        assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
         if self.if_init_list.get(op_name, True):
             w_abs = weight.abs()
             mask = torch.gt(w_abs, self.global_threshold).type_as(weight)
