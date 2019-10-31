@@ -20,7 +20,6 @@
 
 import contextlib
 import collections
-import json
 import os
 import socket
 import sys
@@ -29,7 +28,7 @@ import requests
 import time
 import ruamel.yaml as yaml
 
-EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
+EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
 GREEN = '\33[32m'
 RED = '\33[31m'
