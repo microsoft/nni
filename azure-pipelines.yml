@@ -8,8 +8,15 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools --user
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install pylint==2.3.1 --user
     displayName: 'Install python tools'
+  - script: |
+      python3 -m pylint --rcfile pylintrc tools
+      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
+      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pynni/nni
+    displayName: 'Run pylint'
   - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
