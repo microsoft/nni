@@ -159,7 +159,6 @@ class FPGMPruner(Pruner):
 
     def _get_min_gm_kernel_idx(self, weight, n):
         assert len(weight.size()) >= 3
-        assert weight.size(0) * weight.size(1) > 2
 
         dist_list = []
         for in_i in range(weight.size(0)):
