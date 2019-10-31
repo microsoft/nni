@@ -100,10 +100,16 @@ class TunerTestCase(TestCase):
                 if item["_type"] in ("qlognormal", "lognormal"):
                     self.assertGreaterEqual(v, 0)
                 if item["_type"] == "mutable_layer":
-                    for layer_name, info in item["_value"].items():
+                    for layer_name in item["_value"].keys():
                         self.assertIn(v[layer_name]["chosen_layer"], item["layer_choice"])
 
     def search_space_test_all(self, tuner_factory, supported_types=None, ignore_types=None):
+        # NOTE(yuge): ignore types
+        # Supported types are listed in the table. They are meant to be supported and should be correct.
+        # Other than those, all the rest are "unsupported", which are expected to produce ridiculous results
+        # or throw some exceptions. However, there are certain types I can't check. For example, generate
+        # "normal" using GP Tuner returns successfully and results are fine if we check the range (-inf to +inf),
+        # but they make no sense: it's not a normal distribution. So they are ignored in tests for now.
         with open(os.path.join(os.path.dirname(__file__), "assets/search_space.json"), "r") as fp:
             search_space_all = json.load(fp)
         if supported_types is None:
@@ -128,10 +134,10 @@ class TunerTestCase(TestCase):
                 # unsupported key
                 with self.assertRaises(Exception, msg="Testing {}".format(single)) as cm:
                     self.search_space_test_one(tuner_factory, single_search_space)
-                logger.info("{}, {}, {}".format(tuner_factory, single, cm.exception))
+                logger.info("%s %s %s", tuner_factory, single, cm.exception)
         if not any(t in self._testMethodName for t in ["batch", "grid_search"]):
             # grid search fails for too many combinations
-            logger.info("Full supported search space: {}".format(full_supported_search_space))
+            logger.info("Full supported search space: %s", full_supported_search_space)
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
     def test_grid_search(self):
