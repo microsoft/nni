@@ -85,7 +85,7 @@ class Experiments:
 
     def update_experiment(self, expId, key, value):
         '''Update experiment'''
-        if id not in self.experiments:
+        if expId not in self.experiments:
             return False
         self.experiments[expId][key] = value
         self.write_file()
