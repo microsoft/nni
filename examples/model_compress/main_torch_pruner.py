@@ -90,7 +90,7 @@ def main():
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
-    pruner.export_model(model, 'prune_dict.pth', 'model.onnx', [1, 1, 28, 28])
+    pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28])
 
 
 if __name__ == '__main__':
