@@ -65,7 +65,7 @@ config_list = [{
     'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
-    'op_types': 'default'
+    'op_types': ['default']
 }]
 pruner = AGP_Pruner(config_list)
 pruner(model)
@@ -92,3 +92,55 @@ You can view example for more information
 
 ***
 
+## Filter Pruner
+
+In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+
+![](../../img/filter_pruner.png)
+
+> The procedure of pruning m filters from the ith convolutional layer is as follows:
+> 1. For each filter $F_{i,j}$ , calculate the sum of its absolute kernel weights $s_j = \sum_{l=1}^{n_i}\sum|K_l|$
+> 2. Sort the filters by $s_j$.
+> 3. Prune $m$ filters with the smallest sum values and their corresponding feature maps. The
+>   kernels in the next convolutional layer corresponding to the pruned feature maps are also
+>   removed.
+> 4. A new kernel matrix is created for both the $i$th and $i+1$th layers, and the remaining kernel
+>   weights are copied to the new model.
+
+### Usage
+
+PyTorch code
+
+```
+from nni.compression.torch import FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = FilterPruner(config_list)
+pruner(model)
+```
+
+#### User configuration for Filter Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+
+## Slim Pruner
+
+In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+
+![](../../img/slim_pruner.png)
+
+> Slim Pruner prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+
+### Usage
+
+PyTorch code
+
+```
+from nni.compression.torch import SlimPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = SlimPruner(config_list)
+pruner(model)
+```
+
+#### User configuration for Filter Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to

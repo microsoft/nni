@@ -8,23 +8,20 @@ _logger = logging.getLogger(__name__)
 
 
 class LevelPruner(Pruner):
+    """Prune to an exact pruning level specification
+    """
+
     def __init__(self, config_list):
         """
         config_list: supported keys:
             - sparsity
         """
         super().__init__(config_list)
-        self.mask_list = {}
-        self.if_init_list = {}
+        self.now_epoch = tf.Variable(0)
 
     def calc_mask(self, weight, config, op_name, **kwargs):
-        if self.if_init_list.get(op_name, True):
-            threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
-            mask = tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
-            self.mask_list.update({op_name: mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            mask = self.mask_list[op_name]
+        threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
+        mask = tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
         return mask
 
 
@@ -57,7 +54,7 @@ class AGP_Pruner(Pruner):
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
-                self.now_epoch - start_epoch) % freq == 0:
+                    self.now_epoch - start_epoch) % freq == 0:
             target_sparsity = self.compute_target_sparsity(config)
             threshold = tf.contrib.distributions.percentile(weight, target_sparsity * 100)
             # stop gradient in case gradient change the mask
@@ -92,5 +89,5 @@ class AGP_Pruner(Pruner):
     def update_epoch(self, epoch, sess):
         sess.run(self.assign_handler)
         sess.run(tf.assign(self.now_epoch, int(epoch)))
-        for k in self.if_init_list:
+        for k in self.if_init_list.keys():
             self.if_init_list[k] = True
