@@ -1,7 +1,7 @@
 jobs:
 - job: 'pip_install_ubuntu_python36'
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
   strategy:
     matrix:
       Python36:
@@ -33,7 +33,9 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install --upgrade nni --user
       nnictl -v
-    displayName: 'Install python tools'
+      cd examples/trials/mnist
+      nnictl create --config config.yml
+    displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
       nnictl create --config config.yml
@@ -53,7 +55,9 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python -m pip install --upgrade nni --user
       nnictl -v
-    displayName: 'Install python tools'
+      cd examples/trials/mnist
+      nnictl create --config config.yml
+    displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
       nnictl create --config config.yml
