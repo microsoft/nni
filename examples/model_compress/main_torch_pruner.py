@@ -60,27 +60,27 @@ def init_pruner(pruner_name):
             'op_types': ['default']
         }]
         pruner = LevelPruner(configure_list)
-        epoch_num = 10
+        epoch_num = 30
     elif pruner_name == 'AGP_Pruner':
         configure_list = [{
             'initial_sparsity': 0,
             'final_sparsity': 0.8,
             'start_epoch': 0,
-            'end_epoch': 10,
-            'frequency': 1,
+            'end_epoch': 30,
+            'frequency': 5,
             'op_types': ['default']
         }]
         pruner = AGP_Pruner(configure_list)
-        epoch_num = 10
+        epoch_num = 30
     elif pruner_name == 'LotteryTicketPruner':
         configure_list = [{
             'prune_iterations': 5,
-            'epoch_per_iteration': 1,
+            'epoch_per_iteration': 5,
             'sparsity': 0.8,
             'op_types': ['default']
         }]
         pruner = LotteryTicketPruner(configure_list)
-        epoch_num = 5
+        epoch_num = 30
     else:
         raise
     return pruner, epoch_num

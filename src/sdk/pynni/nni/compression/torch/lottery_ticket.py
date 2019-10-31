@@ -81,22 +81,20 @@ class LotteryTicketPruner(Pruner):
             else:
                 sparsity = config.get('sparsity')
                 curr_sparsity = self._calc_sparsity(sparsity)
-                print('curr_sparsity: ', curr_sparsity)
 
                 assert self.mask_list.get(op_name) is not None
                 curr_mask = self.mask_list.get(op_name)
                 w_abs = weight.abs() * curr_mask
                 sorted_weights = np.sort(w_abs, None)
                 index = np.around(curr_sparsity * sorted_weights.size).astype(int)
-                print('index: ', index, sorted_weights.size, weight.numel(), w_abs.numel(), sorted_weights.shape)
                 index = min(index, sorted_weights.size - 1)
                 threshold = sorted_weights[index]
                 mask = torch.gt(w_abs, threshold).type_as(weight)
 
                 # reinitiate the weights to the initial weights
-                assert op_name in self.init_weights
-                init_weight = self.init_weights.get(op_name)
-                weight.data.copy_(init_weight.data)
+                #assert op_name in self.init_weights
+                #init_weight = self.init_weights.get(op_name)
+                #weight.data.copy_(init_weight.data)
 
             self.mask_list.update({op_name: mask})
             self.update_flags.update({op_name: False})
@@ -120,9 +118,3 @@ class LotteryTicketPruner(Pruner):
                 self.update_flags[k] = True
         if self.epoch_per_iteration is not None:
             self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
-        self._print_masks()
-
-    def export_compressed_model(self):
-        """
-        Export two files, one is masks and the other is final weights.
-        """
