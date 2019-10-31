@@ -28,7 +28,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-import traceback
 
 import ConfigSpace
 import ConfigSpace.hyperparameters
@@ -39,7 +38,7 @@ import statsmodels.api as sm
 
 logger = logging.getLogger('BOHB_Advisor')
 
-class CG_BOHB(object):
+class CG_BOHB:
     def __init__(self, configspace, min_points_in_model=None,
                  top_n_percent=15, num_samples=64, random_fraction=1/3,
                  bandwidth_factor=3, min_bandwidth=1e-3):
@@ -77,8 +76,8 @@ class CG_BOHB(object):
             self.min_points_in_model = len(self.configspace.get_hyperparameters())+1
 
         if self.min_points_in_model < len(self.configspace.get_hyperparameters())+1:
-            logger.warning('Invalid min_points_in_model value. Setting it to %i'%(len(self.configspace.get_hyperparameters())+1))
-            self.min_points_in_model =len(self.configspace.get_hyperparameters())+1
+            logger.warning('Invalid min_points_in_model value. Setting it to %i', len(self.configspace.get_hyperparameters()) + 1)
+            self.min_points_in_model = len(self.configspace.get_hyperparameters()) + 1
 
         self.num_samples = num_samples
         self.random_fraction = random_fraction
@@ -107,9 +106,9 @@ class CG_BOHB(object):
         self.kde_models = dict()
 
     def largest_budget_with_model(self):
-        if len(self.kde_models) == 0:
-            return(-float('inf'))
-        return(max(self.kde_models.keys()))
+        if not self.kde_models:
+            return -float('inf')
+        return max(self.kde_models.keys())
 
     def sample_from_largest_budget(self, info_dict):
         """We opted for a single multidimensional KDE compared to the
@@ -162,11 +161,11 @@ class CG_BOHB(object):
             val = minimize_me(vector)
 
             if not np.isfinite(val):
-                logger.warning('sampled vector: %s has EI value %s'%(vector, val))
-                logger.warning("data in the KDEs:\n%s\n%s"%(kde_good.data, kde_bad.data))
-                logger.warning("bandwidth of the KDEs:\n%s\n%s"%(kde_good.bw, kde_bad.bw))
-                logger.warning("l(x) = %s"%(l(vector)))
-                logger.warning("g(x) = %s"%(g(vector)))
+                logger.warning('sampled vector: %s has EI value %s', vector, val)
+                logger.warning("data in the KDEs:\n%s\n%s", kde_good.data, kde_bad.data)
+                logger.warning("bandwidth of the KDEs:\n%s\n%s", kde_good.bw, kde_bad.bw)
+                logger.warning("l(x) = %s", l(vector))
+                logger.warning("g(x) = %s", g(vector))
 
                 # right now, this happens because a KDE does not contain all values for a categorical parameter
                 # this cannot be fixed with the statsmodels KDE, so for now, we are just going to evaluate this one
@@ -181,19 +180,15 @@ class CG_BOHB(object):
                 best_vector = vector
 
         if best_vector is None:
-            logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
+            logger.debug("Sampling based optimization with %i samples failed -> using random configuration", self.num_samples)
             sample = self.configspace.sample_configuration().get_dictionary()
             info_dict['model_based_pick'] = False
 
         else:
-            logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
-            for i, hp_value in enumerate(best_vector):
-                if isinstance(
-                    self.configspace.get_hyperparameter(
-                        self.configspace.get_hyperparameter_by_idx(i)
-                    ),
-                    ConfigSpace.hyperparameters.CategoricalHyperparameter
-                ):
+            logger.debug('best_vector: %s, %s, %s, %s', best_vector, best, l(best_vector), g(best_vector))
+            for i, _ in enumerate(best_vector):
+                hp = self.configspace.get_hyperparameter(self.configspace.get_hyperparameter_by_idx(i))
+                if isinstance(hp, ConfigSpace.hyperparameters.CategoricalHyperparameter):
                     best_vector[i] = int(np.rint(best_vector[i]))
             sample = ConfigSpace.Configuration(self.configspace, vector=best_vector).get_dictionary()
 
@@ -224,12 +219,12 @@ class CG_BOHB(object):
 
         # If no model is available, sample from prior
         # also mix in a fraction of random configs
-        if len(self.kde_models.keys()) == 0 or np.random.rand() < self.random_fraction:
+        if not self.kde_models.keys() or np.random.rand() < self.random_fraction:
             sample = self.configspace.sample_configuration()
             info_dict['model_based_pick'] = False
 
         if sample is None:
-            sample, info_dict= self.sample_from_largest_budget(info_dict)
+            sample, info_dict = self.sample_from_largest_budget(info_dict)
 
         sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
             configuration_space=self.configspace,
@@ -245,10 +240,10 @@ class CG_BOHB(object):
         for i in range(array.shape[0]):
             datum = np.copy(array[i])
             nan_indices = np.argwhere(np.isnan(datum)).flatten()
-            while(np.any(nan_indices)):
+            while np.any(nan_indices):
                 nan_idx = nan_indices[0]
-                valid_indices = np.argwhere(np.isfinite(array[:,nan_idx])).flatten()
-                if len(valid_indices) > 0:
+                valid_indices = np.argwhere(np.isfinite(array[:, nan_idx])).flatten()
+                if valid_indices:
                     # pick one of them at random and overwrite all NaN values
                     row_idx = np.random.choice(valid_indices)
                     datum[nan_indices] = array[row_idx, nan_indices]
@@ -260,8 +255,8 @@ class CG_BOHB(object):
                     else:
                         datum[nan_idx] = np.random.randint(t)
                 nan_indices = np.argwhere(np.isnan(datum)).flatten()
-            return_array[i,:] = datum
-        return(return_array)
+            return_array[i, :] = datum
+        return return_array
 
     def new_result(self, loss, budget, parameters, update_model=True):
         """
@@ -305,7 +300,7 @@ class CG_BOHB(object):
         # a) if not enough points are available
         if len(self.configs[budget]) <= self.min_points_in_model - 1:
             logger.debug("Only %i run(s) for budget %f available, need more than %s \
-            -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
+            -> can't build model!", len(self.configs[budget]), budget, self.min_points_in_model+1)
             return
         # b) during warnm starting when we feed previous results in and only update once
         if not update_model:
@@ -345,5 +340,5 @@ class CG_BOHB(object):
         }
 
         # update probs for the categorical parameters for later sampling
-        logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n'
-                     %(budget, n_good, n_bad, np.min(train_losses)))
+        logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n',
+                     budget, n_good, n_bad, np.min(train_losses))

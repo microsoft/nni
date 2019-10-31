@@ -1,5 +1,5 @@
-import torch
 import logging
+import torch
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -43,17 +43,14 @@ class Compressor:
         Users can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
-        pass
 
     def update_epoch(self, epoch):
         """if user want to update model every epoch, user can override this method
         """
-        pass
 
     def step(self):
         """if user want to update model every step, user can override this method
         """
-        pass
 
     def _instrument_layer(self, layer, config):
         raise NotImplementedError()
@@ -61,10 +58,8 @@ class Compressor:
     def _select_config(self, layer):
         ret = None
         for config in self._config_list:
-            op_types = config.get('op_types')
-            if op_types == 'default':
-                op_types = default_layers.weighted_modules
-            if op_types and layer.type not in op_types:
+            config['op_types'] = self._expand_config_op_types(config)
+            if layer.type not in config['op_types']:
                 continue
             if config.get('op_names') and layer.name not in config['op_names']:
                 continue
@@ -73,12 +68,21 @@ class Compressor:
             return None
         return ret
 
+    def _expand_config_op_types(self, config):
+        if config is None:
+            return []
+        expanded_op_types = []
+        for op_type in config.get('op_types', []):
+            if op_type == 'default':
+                expanded_op_types.extend(default_layers.weighted_modules)
+            else:
+                expanded_op_types.append(op_type)
+        return expanded_op_types
 
 class Pruner(Compressor):
-    """Abstract base PyTorch pruner"""
-
-    def __init__(self, config_list):
-        super().__init__(config_list)
+    """
+    Abstract base PyTorch pruner
+    """
 
     def calc_mask(self, weight, config, op, op_type, op_name):
         """Pruners should overload this method to provide mask for weight tensors.
@@ -93,17 +97,17 @@ class Pruner(Compressor):
         # create a wrapper forward function to replace the original one
         assert layer._forward is None, 'Each model can only be compressed once'
         if not _check_weight(layer.module):
-            _logger.warning('Module {} does not have parameter "weight"'.format(layer.name))
+            _logger.warning('Module %s does not have parameter "weight"', layer.name)
             return
         layer._forward = layer.module.forward
 
-        def new_forward(*input):
+        def new_forward(*inputs):
             # apply mask to weight
             old_weight = layer.module.weight.data
             mask = self.calc_mask(old_weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
             layer.module.weight.data = old_weight.mul(mask)
             # calculate forward
-            ret = layer._forward(*input)
+            ret = layer._forward(*inputs)
             # recover original weight
             layer.module.weight.data = old_weight
             return ret
@@ -112,14 +116,9 @@ class Pruner(Compressor):
 
 
 class Quantizer(Compressor):
-    """Base quantizer for pytorch quantizer"""
-
-    def __init__(self, config_list):
-        super().__init__(config_list)
-
-    def __call__(self, model):
-        self.compress(model)
-        return model
+    """
+    Base quantizer for pytorch quantizer
+    """
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """user should know where dequantize goes and implement it in quantize method
@@ -130,15 +129,15 @@ class Quantizer(Compressor):
     def _instrument_layer(self, layer, config):
         assert layer._forward is None, 'Each model can only be compressed once'
         if not _check_weight(layer.module):
-            _logger.warning('Module {} does not have parameter "weight"'.format(layer.name))
+            _logger.warning('Module %s does not have parameter "weight"', layer.name)
             return
         layer._forward = layer.module.forward
 
-        def new_forward(*input):
+        def new_forward(*inputs):
             weight = layer.module.weight.data
             new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
             layer.module.weight.data = new_weight
-            return layer._forward(*input)
+            return layer._forward(*inputs)
 
         layer.module.forward = new_forward
 

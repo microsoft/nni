@@ -42,7 +42,7 @@ class LevelPruner(Pruner):
 
 
 class AGP_Pruner(Pruner):
-    """An automated gradual pruning algorithm that prunes the smallest magnitude 
+    """An automated gradual pruning algorithm that prunes the smallest magnitude
     weights to achieve a preset level of network sparsity.
 
     Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the

@@ -1,5 +1,5 @@
-import tensorflow as tf
 import logging
+import tensorflow as tf
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -51,17 +51,14 @@ class Compressor:
         Compressors can optionally overload this method to do model-specific initialization.
         It is guaranteed that only one model will be bound to each compressor instance.
         """
-        pass
-    
+
     def update_epoch(self, epoch, sess):
         """If user want to update mask every epoch, user can override this method
         """
-        pass
-    
+
     def step(self, sess):
         """If user want to update mask every step, user can override this method
         """
-        pass
 
 
     def _instrument_layer(self, layer, config):
@@ -84,10 +81,9 @@ class Compressor:
 
 
 class Pruner(Compressor):
-    """Abstract base TensorFlow pruner"""
-
-    def __init__(self, config_list):
-        super().__init__(config_list)
+    """
+    Abstract base TensorFlow pruner
+    """
 
     def calc_mask(self, weight, config, op, op_type, op_name):
         """Pruners should overload this method to provide mask for weight tensors.
@@ -105,7 +101,7 @@ class Pruner(Compressor):
         # not sure what will happen if the weight is calculated from other operations
         weight_index = _detect_weight_index(layer)
         if weight_index is None:
-            _logger.warning('Failed to detect weight for layer {}'.format(layer.name))
+            _logger.warning('Failed to detect weight for layer %s', layer.name)
             return
         weight_op = layer.op.inputs[weight_index].op
         weight = weight_op.inputs[0]
@@ -115,10 +111,9 @@ class Pruner(Compressor):
 
 
 class Quantizer(Compressor):
-    """Abstract base TensorFlow quantizer"""
-
-    def __init__(self, config_list):
-        super().__init__(config_list)
+    """
+    Abstract base TensorFlow quantizer
+    """
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
@@ -126,7 +121,7 @@ class Quantizer(Compressor):
     def _instrument_layer(self, layer, config):
         weight_index = _detect_weight_index(layer)
         if weight_index is None:
-            _logger.warning('Failed to detect weight for layer {}'.format(layer.name))
+            _logger.warning('Failed to detect weight for layer %s', layer.name)
             return
         weight_op = layer.op.inputs[weight_index].op
         weight = weight_op.inputs[0]
