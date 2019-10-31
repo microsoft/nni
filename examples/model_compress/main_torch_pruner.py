@@ -57,9 +57,10 @@ def init_pruner(pruner_name):
     if pruner_name == 'LevelPruner':
         configure_list = [{
             'sparsity': 0.8,
-            'op_type': 'default'
+            'op_types': ['default']
         }]
         pruner = LevelPruner(configure_list)
+        epoch_num = 10
     elif pruner_name == 'AGP_Pruner':
         configure_list = [{
             'initial_sparsity': 0,
@@ -67,26 +68,29 @@ def init_pruner(pruner_name):
             'start_epoch': 0,
             'end_epoch': 10,
             'frequency': 1,
-            'op_type': 'default'
+            'op_types': ['default']
         }]
         pruner = AGP_Pruner(configure_list)
+        epoch_num = 10
     elif pruner_name == 'LotteryTicketPruner':
         configure_list = [{
             'prune_iterations': 5,
-            'epoch_per_iteration': 2,
+            'epoch_per_iteration': 1,
             'sparsity': 0.8,
-            'op_type': 'default'
+            'op_types': ['default']
         }]
         pruner = LotteryTicketPruner(configure_list)
+        epoch_num = 5
     else:
         raise
-    return pruner
+    return pruner, epoch_num
 
 def apply_pruner(pruner_name, model):
-    pruner = init_pruner(pruner_name)
+    pruner, epoch_num = init_pruner(pruner_name)
     pruner(model)
     # you can also use compress(model) method
     # like that pruner.compress(model)
+    return pruner, epoch_num
 
 def main():
     parser = argparse.ArgumentParser()
@@ -107,10 +111,10 @@ def main():
 
     model = Mnist()
 
-    apply_pruner(pruner_name, model)
+    pruner, epoch_num = apply_pruner(pruner_name, model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    for epoch in range(10):
+    for epoch in range(epoch_num):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)

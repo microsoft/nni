@@ -1,6 +1,7 @@
 import copy
 import logging
 import torch
+import numpy as np
 from .compressor import Pruner
 
 _logger = logging.getLogger(__name__)
@@ -30,6 +31,23 @@ class LotteryTicketPruner(Pruner):
         self.mask_list = {}
         self.init_weights = {}
 
+    def _print_masks(self):
+        print('print masks:')
+        torch.set_printoptions(threshold=1000)
+        for op_name in self.mask_list.keys():
+            mask = self.mask_list[op_name]
+            print(op_name, mask)
+            # calculate current sparsity
+            mask_num = mask.sum().item()
+            mask_size = mask.numel()
+            print('sparsity: ', 1 - mask_num / mask_size)
+        torch.set_printoptions(profile='default')
+
+    def _calc_sparsity(self, sparsity):
+        keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)
+        curr_keep_ratio = keep_ratio_once ** self.curr_prune_iterations
+        return max(1 - curr_keep_ratio, 0)
+
     def calc_mask(self, weight, config, op_name, **kwargs):
         """
         Generate mask for the given ``weight``.
@@ -54,7 +72,7 @@ class LotteryTicketPruner(Pruner):
         self.epoch_per_iteration = config.get('epoch_per_iteration')
 
         # keep the initial weights
-        if self.init_weights.get(op_name) == None:
+        if self.init_weights.get(op_name) is None:
             self.init_weights.update({op_name: copy.deepcopy(weight)})
 
         if self.update_flags.get(op_name, True):
@@ -62,15 +80,17 @@ class LotteryTicketPruner(Pruner):
                 mask = torch.ones(weight.shape).type_as(weight)
             else:
                 sparsity = config.get('sparsity')
-                sparsity_once = sparsity ** (1/self.prune_iterations)
+                curr_sparsity = self._calc_sparsity(sparsity)
+                print('curr_sparsity: ', curr_sparsity)
 
-                assert self.mask_list.get(op_name)
+                assert self.mask_list.get(op_name) is not None
                 curr_mask = self.mask_list.get(op_name)
-                sorted_weights = np.sort(torch.abs(weight[curr_mask == 1]))
-                index = np.around(sparsity * sorted_weights.size).astype(int)
-                threshold = sorted_weights[index]
-
                 w_abs = weight.abs() * curr_mask
+                sorted_weights = np.sort(w_abs, None)
+                index = np.around(curr_sparsity * sorted_weights.size).astype(int)
+                print('index: ', index, sorted_weights.size, weight.numel(), w_abs.numel(), sorted_weights.shape)
+                index = min(index, sorted_weights.size - 1)
+                threshold = sorted_weights[index]
                 mask = torch.gt(w_abs, threshold).type_as(weight)
 
                 # reinitiate the weights to the initial weights
@@ -98,7 +118,9 @@ class LotteryTicketPruner(Pruner):
             and self.curr_prune_iterations <= self.prune_iterations:
             for k in self.update_flags.keys():
                 self.update_flags[k] = True
-        self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
+        if self.epoch_per_iteration is not None:
+            self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
+        self._print_masks()
 
     def export_compressed_model(self):
         """
