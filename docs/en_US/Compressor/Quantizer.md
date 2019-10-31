@@ -74,5 +74,5 @@ quantizer(model)
 
 You can view example for more information
 
-#### User configuration for QAT Quantizer
+#### User configuration for DoReFa Quantizer
 * **q_bits:** This is to specify the q_bits operations to be quantized to

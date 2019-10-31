@@ -10,6 +10,7 @@ nnictl 支持的命令：
 
 * [nnictl create](#create)
 * [nnictl resume](#resume)
+* [nnictl view](#view)
 * [nnictl stop](#stop)
 * [nnictl update](#update)
 * [nnictl trial](#trial)
@@ -104,6 +105,35 @@ nnictl 支持的命令：
   nnictl resume [experiment_id] --port 8088
   ```
 
+<a name="view"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+
+* 说明
+  
+  使用此命令查看已停止的 Experiment。
+
+* 用法
+  
+  ```bash
+  nnictl view [OPTIONS]
+  ```
+
+* 选项
+  
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | True  |     | 要查看的 Experiment 标识               |
+  | --port, -p | False |     | 要查看的 Experiment 使用的 RESTful 服务端口 |
+
+* 示例
+  
+  > 在指定的端口 8088 上查看 Experiment
+  
+  ```bash
+  nnictl view [experiment_id] --port 8088
+  ```
+
 <a name="stop"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
 
@@ -125,7 +155,7 @@ nnictl 支持的命令：
   | --port, -p | False |     | 要停止的 Experiment 使用的 RESTful 服务端口 |
   | --all, -a  | False |     | 停止所有 Experiment                  |
 
-* 详细信息及样例
+* 详细信息及示例
   
   1. 如果没有指定 id，并且当前有运行的 Experiment，则会停止该 Experiment，否则会输出错误信息。
     
@@ -183,7 +213,7 @@ nnictl 支持的命令：
   | id             | False |     | 需要设置的 Experiment 的 id |
   | --filename, -f | True  |     | 新的搜索空间文件名             |
   
-  * 样例
+  * 示例
     
     `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
     
@@ -207,7 +237,7 @@ nnictl 支持的命令：
   
   | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
   | ----------- | ----- | --- | --------------------- |
-  | id          | False |     | 需要设置的 Experiment 的 id |
+  | id          | False |     | 需要设置的 Experiment 的 ID |
   | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
   * 样例
@@ -232,12 +262,12 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                      |
-  | ----------- | ----- | --- | ----------------------------------------------------------------------- |
-  | id          | False |     | 需要设置的 Experiment 的 id                                                   |
-  | --value, -v | True  |     | Experiment 持续时间如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                       |
+  | ----------- | ----- | --- | ------------------------------------------------------------------------ |
+  | id          | False |     | 需要设置的 Experiment 的 ID                                                    |
+  | --value, -v | True  |     | Experiment 持续时间，如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
   
-  * 样例
+  * 示例
     
     > 修改 Experiment 的执行时间
     
@@ -264,7 +294,7 @@ nnictl 支持的命令：
   | id          | False |     | 需要设置的 Experiment 的 id |
   | --value, -v | True  |     | 需要设置的 maxtrialnum 的数量 |
   
-  * 样例
+  * 示例
     
     > 更新 Experiment 的 Trial 数量
     
@@ -312,7 +342,7 @@ nnictl 支持的命令：
   | id             | False |     | Trial 的 Experiment ID |
   | --trial_id, -T | True  |     | 需要终止的 Trial 的 ID。     |
   
-  * 样例
+  * 示例
     
     > 结束 Trial 任务
     
@@ -378,7 +408,7 @@ nnictl 支持的命令：
   
   | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
   | ----- | ----- | --- | --------------------- |
-  | id    | False |     | 需要设置的 Experiment 的 id |
+  | id    | False |     | 需要设置的 Experiment 的 ID |
 
 * **nnictl experiment list**
   
@@ -439,7 +469,7 @@ nnictl 支持的命令：
   | --filename, -f | True  |     | 文件的输出路径                   |
   | --type         | True  |     | 输出文件类型，仅支持 "csv" 和 "json" |
   
-  * 样例
+  * 示例
   
   > 将 Experiment 中所有 Trial 数据导出为 JSON 格式
   
@@ -478,7 +508,7 @@ nnictl 支持的命令：
     ]
     ```
     
-    最顶层列表的每个元素都是一个样例。 对于内置的 Tuner 和 Advisor，每个样本至少需要两个主键：`parameter` 和 `value`。 `parameter` 必须与 Experiment 的搜索空间相匹配，`parameter` 中的所有的主键（或超参）都必须与搜索空间中的主键相匹配。 否则， Tuner 或 Advisor 可能会有无法预期的行为。 `Value` 应当遵循与 `nni.report_final_result` 的输入值一样的规则，即要么时一个数字，或者是包含 `default` 主键的 dict。 对于自定义的 Tuner 或 Advisor，根据实现的不同，此文件可以是任意的 JSON 内容（例如，`import_data`）。
+    最顶层列表的每个元素都是一个示例。 对于内置的 Tuner 和 Advisor，每个样本至少需要两个主键：`parameter` 和 `value`。 `parameter` 必须与 Experiment 的搜索空间相匹配，`parameter` 中的所有的主键（或超参）都必须与搜索空间中的主键相匹配。 否则， Tuner 或 Advisor 可能会有无法预期的行为。 `Value` 应当遵循与 `nni.report_final_result` 的输入值一样的规则，即要么时一个数字，或者是包含 `default` 主键的 dict。 对于自定义的 Tuner 或 Advisor，根据实现的不同，此文件可以是任意的 JSON 内容（例如，`import_data`）。
     
     也可以用 [nnictl experiment export](#export) 命令导出 Experiment 已经运行过的 Trial 超参和结果。
     
@@ -489,7 +519,7 @@ nnictl 支持的命令：
     内置 Advisor: BOHB
     ```
     
-    *如果要将数据导入到 BOHB Advisor，建议像 NNI 一样，增加 "TRIAL_BUDGET" 参数，否则，BOHB 会使用 max_budget 作为 "TRIAL_BUDGET"。 样例如下：*
+    *如果要将数据导入到 BOHB Advisor，建议像 NNI 一样，增加 "TRIAL_BUDGET" 参数，否则，BOHB 会使用 max_budget 作为 "TRIAL_BUDGET"。 示例如下：*
     
     ```json
     [
@@ -497,7 +527,7 @@ nnictl 支持的命令：
     ]
     ```
   
-  * 样例
+  * 示例
     
     > 将数据导入运行中的 Experiment
     
@@ -563,7 +593,7 @@ nnictl 支持的命令：
   
   | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
   | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 ID |
+  | id         | False |     | 需要设置的 Experiment 的 id |
   | --head, -h | False |     | 显示 stdout 开始的若干行      |
   | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
   | --path, -p | False |     | 显示 stdout 文件的路径       |
@@ -592,7 +622,7 @@ nnictl 支持的命令：
   
   | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
   | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 ID |
+  | id         | False |     | 需要设置的 Experiment 的 id |
   | --head, -h | False |     | 显示 stderr 开始的若干行      |
   | --tail, -t | False |     | 显示 stderr 结尾的若干行      |
   | --path, -p | False |     | 显示 stderr 文件的路径       |
@@ -641,7 +671,7 @@ nnictl 支持的命令：
   | 参数及缩写          | 是否必需  | 默认值  | 说明                    |
   | -------------- | ----- | ---- | --------------------- |
   | id             | False |      | 需要设置的 Experiment 的 id |
-  | --trial_id, -T | False |      | Trial 的 id            |
+  | --trial_id, -T | False |      | Trial 的 ID            |
   | --port         | False | 6006 | Tensorboard 进程的端口     |
   
   * 详细说明
