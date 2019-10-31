@@ -72,7 +72,7 @@ def main():
     '''
     configure_list = [{
         'pruning_rate': 0.5,
-        'op_type': 'Conv2d'
+        'op_types': ['Conv2d']
     }]
 
     pruner = FPGMPruner(configure_list)

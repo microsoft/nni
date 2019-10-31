@@ -87,7 +87,7 @@ def main():
     '''
     configure_list = [{
         'pruning_rate': 0.5,
-        'op_type': 'Conv2D'
+        'op_types': ['Conv2D']
     }]
     pruner = FPGMPruner(configure_list)
     # if you want to load from yaml file

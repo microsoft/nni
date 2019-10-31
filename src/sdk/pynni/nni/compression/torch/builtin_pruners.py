@@ -135,20 +135,26 @@ class FPGMPruner(Pruner):
 
         assert 0 <= config.get('pruning_rate') < 1
         assert op_type in ['Conv1d', 'Conv2d', 'Conv3d']
+        assert op_type in config['op_types']
+
+        if op_name in self.epoch_pruned_layers:
+            assert op_name in self.mask_list
+            return self.mask_list.get(op_name)
 
         masks = torch.ones(weight.size())
 
-        if op_type == config['op_type']:
+        try:
             num_kernels = weight.size(0) * weight.size(1)
             num_prune = int(num_kernels * config.get('pruning_rate'))
             if num_kernels < 2 or num_prune < 1:
-                self.mask_list.update({op_name: masks})
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             for idx in min_gm_idx:
                 masks[idx] = 0.
- 
-        self.mask_list.update({op_name: masks})
+        finally:
+            self.mask_list.update({op_name: masks})
+            self.epoch_pruned_layers.add(op_name)
+
         return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
@@ -178,3 +184,6 @@ class FPGMPruner(Pruner):
         x = (x*x).sum((-2,-1))
         x = torch.sqrt(x)
         return x.sum()
+
+    def update_epoch(self, epoch):
+        self.epoch_pruned_layers = set()
