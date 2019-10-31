@@ -39,7 +39,6 @@ from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .convert_ss_to_scenario import generate_scenario
 
-
 class SMACTuner(Tuner):
     """
     Parameters
