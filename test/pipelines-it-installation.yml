@@ -10,7 +10,9 @@ jobs:
   steps:
   - script: |
       python3 -V
+      python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install --upgrade nni --user
+      nnictl -v
     displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
@@ -28,7 +30,9 @@ jobs:
   steps:
   - script: |
       python3 -V
+      python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install --upgrade nni --user
+      nnictl -v
     displayName: 'Install python tools'
   - script: |
       cd examples/trials/mnist
@@ -46,7 +50,9 @@ jobs:
   steps:
   - script: |
       python -V
+      python3 -m pip install --upgrade pip setuptools --user
       python -m pip install --upgrade nni --user
+      nnictl -v
     displayName: 'Install python tools'
   - script: |
       cd examples/trials/mnist
