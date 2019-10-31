@@ -18,31 +18,30 @@
 # ============================================================================================================================== #
 
 import argparse
-import sys
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen
 import time
 import logging
 import shlex
 import re
 import sys
-import select
 import json
 import threading
 from pyhdfs import HdfsClient
 import pkg_resources
 from .rest_utils import rest_post, rest_get
-from .url_utils import gen_send_stdout_url, gen_send_version_url, gen_parameter_meta_url
+from .url_utils import gen_send_version_url, gen_parameter_meta_url
 
-from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, \
+from .constants import LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, \
     MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal, copyHdfsFileToLocal
-from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
+from .log_utils import LogType, nni_log, RemoteLogger, StdOutputType
 
 logger = logging.getLogger('trial_keeper')
 regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,1}).*')
 
 _hdfs_client = None
+
 
 def get_hdfs_client(args):
     global _hdfs_client
@@ -62,14 +61,17 @@ def get_hdfs_client(args):
     if hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
         try:
             if args.webhdfs_path:
-                _hdfs_client = HdfsClient(hosts='{0}:80'.format(hdfs_host), user_name=args.pai_user_name, webhdfs_path=args.webhdfs_path, timeout=5)
+                _hdfs_client = HdfsClient(hosts='{0}:80'.format(hdfs_host), user_name=args.pai_user_name,
+                                          webhdfs_path=args.webhdfs_path, timeout=5)
             else:
                 # backward compatibility
-                _hdfs_client = HdfsClient(hosts='{0}:{1}'.format(hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+                _hdfs_client = HdfsClient(hosts='{0}:{1}'.format(hdfs_host, '50070'), user_name=args.pai_user_name,
+                                          timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
     return _hdfs_client
+
 
 def main_loop(args):
     '''main loop logic for trial keeper'''
@@ -79,9 +81,11 @@ def main_loop(args):
 
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.log_collection)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper',
+                                          StdOutputType.Stdout, args.log_collection)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.log_collection)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout,
+                                          args.log_collection)
     sys.stdout = sys.stderr = trial_keeper_syslogger
     hdfs_output_dir = None
 
@@ -97,8 +101,10 @@ def main_loop(args):
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
-    process = Popen(args.trial_command, shell = True, stdout = log_pipe_stdout, stderr = log_pipe_stdout)
-    nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid, shlex.split(args.trial_command)))
+    process = Popen(args.trial_command, shell=True, stdout=log_pipe_stdout, stderr=log_pipe_stdout)
+    nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid,
+                                                                                                  shlex.split(
+                                                                                                      args.trial_command)))
 
     while True:
         retCode = process.poll()
@@ -110,9 +116,11 @@ def main_loop(args):
                 nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:
                     if copyDirectoryToHdfs(nni_local_output_dir, hdfs_output_dir, hdfs_client):
-                        nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, hdfs_output_dir))
+                        nni_log(LogType.Info,
+                                'copy directory from {0} to {1} success!'.format(nni_local_output_dir, hdfs_output_dir))
                     else:
-                        nni_log(LogType.Info, 'copy directory from {0} to {1} failed!'.format(nni_local_output_dir, hdfs_output_dir))
+                        nni_log(LogType.Info,
+                                'copy directory from {0} to {1} failed!'.format(nni_local_output_dir, hdfs_output_dir))
                 except Exception as e:
                     nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
                     raise e
@@ -123,14 +131,16 @@ def main_loop(args):
 
         time.sleep(2)
 
+
 def trial_keeper_help_info(*args):
     print('please run --help to see guidance')
+
 
 def check_version(args):
     try:
         trial_keeper_version = pkg_resources.get_distribution('nni').version
     except pkg_resources.ResolutionError as err:
-        #package nni does not exist, try nni-tool package
+        # package nni does not exist, try nni-tool package
         nni_log(LogType.Error, 'Package nni does not exist!')
         os._exit(1)
     if not args.nni_manager_version:
@@ -145,20 +155,25 @@ def check_version(args):
             log_entry = {}
             if trial_keeper_version != nni_manager_version:
                 nni_log(LogType.Error, 'Version does not match!')
-                error_message = 'NNIManager version is {0}, TrialKeeper version is {1}, NNI version does not match!'.format(nni_manager_version, trial_keeper_version)
+                error_message = 'NNIManager version is {0}, TrialKeeper version is {1}, NNI version does not match!'.format(
+                    nni_manager_version, trial_keeper_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10,
+                          False)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
                 log_entry['tag'] = 'VCSuccess'
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10,
+                          False)
         except AttributeError as err:
             nni_log(LogType.Error, err)
 
+
 def is_multi_phase():
     return MULTI_PHASE and (MULTI_PHASE in ['True', 'true'])
+
 
 def download_parameter(meta_list, args):
     """
@@ -171,7 +186,8 @@ def download_parameter(meta_list, args):
     ]
     """
     nni_log(LogType.Debug, str(meta_list))
-    nni_log(LogType.Debug, 'NNI_SYS_DIR: {}, trial Id: {}, experiment ID: {}'.format(NNI_SYS_DIR, NNI_TRIAL_JOB_ID, NNI_EXP_ID))
+    nni_log(LogType.Debug,
+            'NNI_SYS_DIR: {}, trial Id: {}, experiment ID: {}'.format(NNI_SYS_DIR, NNI_TRIAL_JOB_ID, NNI_EXP_ID))
     nni_log(LogType.Debug, 'NNI_SYS_DIR files: {}'.format(os.listdir(NNI_SYS_DIR)))
     for meta in meta_list:
         if meta['experimentId'] == NNI_EXP_ID and meta['trialId'] == NNI_TRIAL_JOB_ID:
@@ -179,6 +195,7 @@ def download_parameter(meta_list, args):
             if not os.path.exists(param_fp):
                 hdfs_client = get_hdfs_client(args)
                 copyHdfsFileToLocal(meta['filePath'], param_fp, hdfs_client, override=False)
+
 
 def fetch_parameter_file(args):
     class FetchThread(threading.Thread):
@@ -203,6 +220,7 @@ def fetch_parameter_file(args):
     fetch_file_thread = FetchThread(args)
     fetch_file_thread.start()
 
+
 if __name__ == '__main__':
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
@@ -210,9 +228,9 @@ if __name__ == '__main__':
     PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
     PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager rest server IP')
     PARSER.add_argument('--nnimanager_port', type=str, default='8081', help='NNI manager rest server port')
-    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of pai_hdfs') # backward compatibility
+    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of pai_hdfs')  # backward compatibility
     PARSER.add_argument('--hdfs_output_dir', type=str, help='the output dir of hdfs')
-    PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of pai_hdfs') # backward compatibility
+    PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of pai_hdfs')  # backward compatibility
     PARSER.add_argument('--hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
@@ -233,4 +251,3 @@ if __name__ == '__main__':
     except Exception as e:
         nni_log(LogType.Error, 'Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
         os._exit(1)
-
