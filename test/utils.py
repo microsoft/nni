@@ -93,14 +93,11 @@ def get_nni_log_path(experiment_url):
 def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
-    if sys.platform == "win32":
-        cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
-        print('cmds:', ' '.join(cmds))
-    else:
-        cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
-    completed_process = subprocess.run(' '.join(cmds), shell=True)
-
-    return completed_process.returncode == 0
+    
+    with open(nnimanager_log_path, 'r') as f:
+        log_content = f.read()
+    
+    return EXPERIMENT_DONE_SIGNAL in log_content
 
 def get_experiment_status(status_url):
     nni_status = requests.get(status_url).json()
