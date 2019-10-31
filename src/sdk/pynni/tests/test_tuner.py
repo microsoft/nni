@@ -31,7 +31,10 @@ from nni.gp_tuner.gp_tuner import GPTuner
 from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
-from nni.smac_tuner.smac_tuner import SMACTuner
+try:
+    from nni.smac_tuner.smac_tuner import SMACTuner
+except ModuleNotFoundError:
+    assert sys.platform == "win32"
 from nni.tuner import Tuner
 
 logging.basicConfig(level=logging.INFO)
