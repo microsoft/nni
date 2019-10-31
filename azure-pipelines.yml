@@ -82,7 +82,7 @@ jobs:
 
 - job: 'basic_test_pr_Windows'
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'vs2017-win2016'
   strategy:
     matrix:
       Python36:
