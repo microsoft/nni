@@ -18,6 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import os.path as osp
 import subprocess
 import sys
 import time
@@ -32,7 +33,7 @@ ASSESSOR_LIST = ['Medianstop']
 
 def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
-    config_path = 'tuner_test/local.yml'
+    config_path = osp.join('tuner_test', 'local.yml')
     experiment_config = get_yml_content(config_path)
     if dispatch_name in ['GridSearch', 'BatchTuner', 'Random']:
         experiment_config[dispatch_type.lower()] = {
@@ -56,7 +57,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
-    proc = subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml'])
+    proc = subprocess.run(['nnictl', 'create', '--config', osp.join('tuner_test', 'local.yml')])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     nnimanager_log_path = get_nni_log_path(EXPERIMENT_URL)

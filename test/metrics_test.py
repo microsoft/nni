@@ -18,6 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import os.path as osp
 import subprocess
 import time
 import traceback
@@ -29,7 +30,7 @@ from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
 
 def run_test():
     '''run metrics test'''
-    config_file = 'metrics_test/metrics.test.yml'
+    config_file = osp.join('metrics_test', 'metrics.test.yml')
 
     print('Testing %s...' % config_file)
     proc = subprocess.run(['nnictl', 'create', '--config', config_file])
@@ -51,7 +52,7 @@ def run_test():
     assert status == 'DONE', 'Failed to finish in maxExecDuration'
 
 def check_metrics():
-    with open('metrics_test/expected_metrics.json', 'r') as f:
+    with open(osp.join('metrics_test', 'expected_metrics.json'), 'r') as f:
         expected_metrics = json.load(f)
     print(expected_metrics)
     metrics = requests.get(METRICS_URL).json()
