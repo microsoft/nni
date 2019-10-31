@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 from unittest import TestCase, main
 
 from nni.batch_tuner.batch_tuner import BatchTuner
@@ -154,6 +155,8 @@ class TunerTestCase(TestCase):
         self.search_space_test_all(lambda: HyperoptTuner("anneal"))
 
     def test_smac(self):
+        if sys.platform == "win32":
+            return  # smac doesn't work on windows
         self.search_space_test_all(lambda: SMACTuner(),
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
