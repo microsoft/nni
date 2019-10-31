@@ -20,14 +20,18 @@
 
 
 import argparse
+import os
 import pkg_resources
+from colorama import init
+from .common_utils import print_error
 from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
-from .nnictl_utils import *
-from .package_management import *
-from .constants import *
-from .tensorboard_utils import *
-from colorama import init
+from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
+                          log_trial, experiment_clean, platform_clean, experiment_list, \
+                          monitor_experiment, export_trials_data, trial_codegen, webui_url, get_config, log_stdout, log_stderr
+from .package_management import package_install, package_show
+from .constants import DEFAULT_REST_PORT
+from .tensorboard_utils import start_tensorboard, stop_tensorboard
 init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
@@ -38,7 +42,7 @@ def nni_info(*args):
     if args[0].version:
         try:
             print(pkg_resources.get_distribution('nni').version)
-        except pkg_resources.ResolutionError as err:
+        except pkg_resources.ResolutionError:
             print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')

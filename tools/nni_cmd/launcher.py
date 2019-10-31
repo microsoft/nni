@@ -22,22 +22,21 @@
 import json
 import os
 import sys
-import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output, check_call, CalledProcessError
-import tempfile
-from nni.constants import ModuleName, AdvisorModuleName
-from nni_annotation import *
-from .launcher_utils import validate_all_content
-from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
-from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port, get_user, get_python_dir
-from .constants import *
 import random
 import site
 import time
-from pathlib import Path
+import tempfile
+from subprocess import Popen, check_call, CalledProcessError
+from nni_annotation import expand_annotations, generate_search_space
+from nni.constants import ModuleName, AdvisorModuleName
+from .launcher_utils import validate_all_content
+from .rest_utils import rest_put, rest_post, check_rest_server, check_response
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
+from .config_utils import Config, Experiments
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
+                          detect_port, get_user, get_python_dir
+from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
 
@@ -83,7 +82,8 @@ def get_nni_installation_path():
         python_dir = os.getenv('VIRTUAL_ENV')
     else:
         python_sitepackage = site.getsitepackages()[0]
-        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
+        # that nni exists there
         if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
             python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
         else:
@@ -98,7 +98,6 @@ def get_nni_installation_path():
 
 def start_rest_server(port, platform, mode, config_file_name, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
-    nni_config = Config(config_file_name)
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
         'You could use \'nnictl create --help\' to get help information' % port)
@@ -114,7 +113,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 
     entry_dir = get_nni_installation_path()
     entry_file = os.path.join(entry_dir, 'main.js')
-    
+
     node_command = 'node'
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
@@ -132,7 +131,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
-        time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         #add time information in the header of log files
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
@@ -212,7 +211,7 @@ def setNNIManagerIp(experiment_config, port, config_file_name):
     if experiment_config.get('nniManagerIp') is None:
         return True, None
     ip_config_dict = dict()
-    ip_config_dict['nni_manager_ip'] = { 'nniManagerIp' : experiment_config['nniManagerIp'] }
+    ip_config_dict['nni_manager_ip'] = {'nniManagerIp': experiment_config['nniManagerIp']}
     response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
@@ -403,11 +402,12 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             stdout_full_path, stderr_full_path = get_log_path(config_file_name)
             with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
                 check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=stdout_file, stderr=stderr_file)
-        except CalledProcessError as e:
+        except CalledProcessError:
             print_error('some errors happen when import package %s.' %(package_name))
             print_log_content(config_file_name)
             if package_name in PACKAGE_REQUIREMENTS:
-                print_error('If %s is not installed, it should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
+                print_error('If %s is not installed, it should be installed through '\
+                            '\'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
@@ -416,7 +416,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
             log_level = 'debug'
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
+                                                 mode, config_file_name, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -450,8 +451,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         exit(1)
     if mode != 'view':
         # set platform configuration
-        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port, config_file_name, rest_process)
-        
+        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
+                            config_file_name, rest_process)
+
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
@@ -478,7 +480,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
     #save experiment information
     nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name, experiment_config['trainingServicePlatform'])
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,\
+                                            experiment_config['trainingServicePlatform'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
@@ -503,7 +506,6 @@ def manage_stopped_experiment(args, mode):
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     experiment_id = None
-    experiment_endTime = None
     #find the latest stopped experiment
     if not args.id:
         print_error('Please set experiment id! \nYou could use \'nnictl {0} {id}\' to {0} a stopped experiment!\n' \

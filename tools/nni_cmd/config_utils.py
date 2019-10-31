@@ -21,7 +21,6 @@
 
 import os
 import json
-import shutil
 from .constants import NNICTL_HOME_DIR
 
 class Config:
@@ -73,29 +72,29 @@ class Experiments:
         self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, id, port, time, file_name, platform):
+    def add_experiment(self, expId, port, time, file_name, platform):
         '''set {key:value} paris to self.experiment'''
-        self.experiments[id] = {}
-        self.experiments[id]['port'] = port
-        self.experiments[id]['startTime'] = time
-        self.experiments[id]['endTime'] = 'N/A'
-        self.experiments[id]['status'] = 'INITIALIZED'
-        self.experiments[id]['fileName'] = file_name
-        self.experiments[id]['platform'] = platform
+        self.experiments[expId] = {}
+        self.experiments[expId]['port'] = port
+        self.experiments[expId]['startTime'] = time
+        self.experiments[expId]['endTime'] = 'N/A'
+        self.experiments[expId]['status'] = 'INITIALIZED'
+        self.experiments[expId]['fileName'] = file_name
+        self.experiments[expId]['platform'] = platform
         self.write_file()
 
-    def update_experiment(self, id, key, value):
+    def update_experiment(self, expId, key, value):
         '''Update experiment'''
         if id not in self.experiments:
             return False
-        self.experiments[id][key] = value
+        self.experiments[expId][key] = value
         self.write_file()
         return True
 
-    def remove_experiment(self, id):
+    def remove_experiment(self, expId):
         '''remove an experiment by id'''
         if id in self.experiments:
-            self.experiments.pop(id)
+            self.experiments.pop(expId)
         self.write_file()
 
     def get_all_experiments(self):
@@ -109,7 +108,7 @@ class Experiments:
                 json.dump(self.experiments, file)
         except IOError as error:
             print('Error:', error)
-            return
+            return ''
 
     def read_file(self):
         '''load config from local file'''
@@ -119,4 +118,4 @@ class Experiments:
                     return json.load(file)
             except ValueError:
                 return {}
-        return {} 
+        return {}
