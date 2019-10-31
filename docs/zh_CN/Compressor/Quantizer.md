@@ -71,5 +71,5 @@ quantizer(model)
 
 查看示例进一步了解
 
-#### QAT Quantizer 的用户配置
+#### User configuration for DoReFa Quantizer
 * **q_bits:** 指定需要被量化的位数。
