@@ -99,34 +99,33 @@ __[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训
 
 ```python
 # TensorFlow 中定制 Pruner。
-# For writing a pruner in PyTorch, you can simply replace
-# nni.compression.tensorflow.Pruner with
+# 如果要在 PyTorch 中定制 Pruner，可将
+# nni.compression.tensorflow.Pruner 替换为
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
     def __init__(self, config_list):
-        # suggest you to use the NNI defined spec for config
+        # 建议使用 NNI 定义的规范来进行配置
         super().__init__(config_list)
 
     def bind_model(self, model):
-        # this func can be used to remember the model or its weights
-        # in member variables, for getting their values during training
+        # 此函数可通过成员变量，来保存模型和其权重，
+        # 从而能在训练过程中获取这些信息。
         pass
 
     def calc_mask(self, weight, config, **kwargs):
-        # weight is the target weight tensor
-        # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_types, and op_name
-        # design your mask and return your mask
+        # weight 是目标的权重张量
+        # config 是在 config_list 中为此层选定的 dict 对象
+        # kwargs 包括 op, op_types, 和 op_name
+        # 实现定制的 mask 并返回
         return your_mask
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def step(self, sess):
-        # can do some processing based on the model or weights binded
-        # in the func bind_model
+        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
         pass
 ```
 
@@ -142,42 +141,34 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# For writing a Quantizer in PyTorch, you can simply replace
-# nni.compression.tensorflow.Quantizer with
+# 如果要在 PyTorch 中定制 Quantizer，可将
+# nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
-class YourPruner(nni.compression.tensorflow.Quantizer):
+class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, config_list):
-        # suggest you to use the NNI defined spec for config
+        # 建议使用 NNI 定义的规范来进行配置
         super().__init__(config_list)
 
     def bind_model(self, model):
-        # this func can be used to remember the model or its weights
-        # in member variables, for getting their values during training
+        # 此函数可通过成员变量，来保存模型和其权重，
+        # 从而能在训练过程中获取这些信息。
         pass
 
     def quantize_weight(self, weight, config, **kwargs):
-        # weight is the target weight tensor
-        # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_types, and op_name
-        # design your quantizer and return new weight
+        # weight 是目标的权重张量
+        # config 是在 config_list 中为此层选定的 dict 对象
+        # kwargs 包括 op, op_types, 和 op_name
+        # 实现定制的 Quantizer 并返回新的权重
         return new_weight
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def step(self, sess):
-        # can do some processing based on the model or weights binded
-        # in the func bind_model
+        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
         pass
-
-    # you can also design your method
-    def your_method(self, your_input):
-        #your code
-
-    def bind_model(self, model):
-        #preprocess model
 ```
 
 __[TODO]__ 添加成员函数 `quantize_layer_output`，用于支持量化层输出的量化算法。
