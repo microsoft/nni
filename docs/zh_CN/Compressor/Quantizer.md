@@ -28,14 +28,14 @@ nni.compressors.torch.NaiveQuantizer()(model)
 TensorFlow 代码
 ```python
 from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
 quantizer = QAT_Quantizer(config_list)
 quantizer(tf.get_default_graph())
 ```
 PyTorch 代码
 ```python
 from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
 quantizer = QAT_Quantizer(config_list)
 quantizer(model)
 ```
@@ -71,5 +71,5 @@ quantizer(model)
 
 查看示例进一步了解
 
-#### DoReFa Quantizer 的用户配置
+#### QAT Quantizer 的用户配置
 * **q_bits:** 指定需要被量化的位数。

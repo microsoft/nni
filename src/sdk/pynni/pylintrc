@@ -1,0 +1,39 @@
+# This pylintrc file is a little more strick than the one in root of code directory
+# SDK source MUST pass lint rules in top level directory, and SHOULD pass rules here
+
+[SETTINGS]
+
+max-line-length=140
+
+disable =
+    missing-docstring,
+    invalid-name,                   # C0103
+    no-member,                      # E1101: sometimes pylint cannot detect members correctly due to a bug
+    c-extension-no-member,          # I1101
+    no-self-use,                    # R0201: many functions in this SDK are designed for override
+    duplicate-code,                 # R0801
+    too-many-instance-attributes,   # R0902
+    too-few-public-methods,         # R0903
+    too-many-public-methods,        # R0904
+    too-many-return-statements,     # R0911
+    too-many-branches,              # R0912
+    too-many-arguments,             # R0913
+    too-many-locals,                # R0914
+    too-many-statements,            # R0915
+    too-many-nested-blocks,         # R1702
+    no-else-return,                 # R1705
+    chained-comparison,             # R1716
+    no-else-raise,                  # R1720
+    protected-access,               # W0212: underscore variables may be protected by whole SDK instead of single module
+    arguments-differ,               # W0221: pylint cannot handle *args and **kwargs
+    super-init-not-called,          # W0231: some interface classes do not expect users to call init
+    useless-super-delegation,       # W0235: derived init may have different docstring
+    global-statement,               # W0603: globals are useful to hide SDK internal states from user
+    unused-argument,                # W0613: many functions in this SDK are designed for override
+    broad-except,                   # W0703: the SDK commonly catch exceptions to report error
+    fixme,                          # W0511
+
+ignore-patterns=test.*.py
+
+# List of members which are set dynamically and missed by pylint inference
+generated-members=numpy.*,torch.*

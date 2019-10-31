@@ -24,7 +24,7 @@ Tensorflow code
 
 ```python
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
@@ -33,7 +33,7 @@ PyTorch code
 
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model)
 ```
@@ -62,7 +62,7 @@ A simple example of configuration is shown below:
 [
     {
         'sparsity': 0.8,
-        'op_types': 'default'
+        'op_types': ['default']
     },
     {
         'sparsity': 0.6,
@@ -123,7 +123,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
     def calc_mask(self, weight, config, **kwargs):
         # weight is the target weight tensor
         # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_type, and op_name
+        # kwargs contains op, op_types, and op_name
         # design your mask and return your mask
         return your_mask
 
@@ -166,7 +166,7 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def quantize_weight(self, weight, config, **kwargs):
         # weight is the target weight tensor
         # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_type, and op_name
+        # kwargs contains op, op_types, and op_name
         # design your quantizer and return new weight
         return new_weight
 

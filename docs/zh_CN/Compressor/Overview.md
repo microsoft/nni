@@ -22,7 +22,7 @@ NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括�
 TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(tf.get_default_graph())
 ```
@@ -30,7 +30,7 @@ pruner(tf.get_default_graph())
 PyTorch 代码
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(config_list)
 pruner(model)
 ```
@@ -58,7 +58,7 @@ pruner(model)
 [
     {
         'sparsity': 0.8,
-        'op_types': 'default'
+        'op_types': ['default']
     },
     {
         'sparsity': 0.6,
@@ -115,7 +115,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
     def calc_mask(self, weight, config, **kwargs):
         # weight 是目标的权重张量
         # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
+        # kwargs 包括 op, op_types, 和 op_name
         # 实现定制的 mask 并返回
         return your_mask
 
@@ -157,7 +157,7 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def quantize_weight(self, weight, config, **kwargs):
         # weight 是目标的权重张量
         # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
+        # kwargs 包括 op, op_types, 和 op_name
         # 实现定制的 Quantizer 并返回新的权重
         return new_weight
 
