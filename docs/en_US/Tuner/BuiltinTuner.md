@@ -122,7 +122,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 
-* **population_size** (*int value(should >0), optional, default = 20*) - the initial size of the population(trial num) in evolution tuner.
+* **population_size** (*int value(should >0), optional, default = 20*) - the initial size of the population (trial num) in evolution tuner.
 
 **Usage example**
 
@@ -143,11 +143,11 @@ tuner:
 
 > Built-in Tuner Name: **SMAC**
 
-**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**Please note that SMAC doesn't support running on Windows currently. The specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
 
 **Installation**
 
-SMAC need to be installed by following command before first use.
+SMAC need to be installed by following command before first use. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
 
 ```bash
 nnictl package install --name=SMAC
