@@ -46,7 +46,7 @@ class LayerChoice(PyTorchMutable):
         self.choices = nn.ModuleList(ops)
 
     def forward(self, *inputs):
-        return self.controller.on_forward(self, self.choices, *inputs)
+        return self.mutator.on_forward(self, self.choices, *inputs)
 
     def similar(self, other):
         return type(self) == type(other) and self.length == other.length
@@ -62,7 +62,7 @@ class InputChoice(PyTorchMutable):
 
     def forward(self, *inputs):
         assert len(inputs) == self.n_candidates, "Length of the input list must be equal to number of candidates."
-        return self.controller.on_forward(self, *inputs)
+        return self.mutator.on_forward(self, *inputs)
 
     def similar(self, other):
         return type(self) == type(other) and \
