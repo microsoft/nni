@@ -74,6 +74,8 @@ def naive_test():
     expected = set(open(osp.join('naive_test', 'expected_tuner_result.txt')))
     # Trials may complete before NNI gets assessor's result,
     # so it is possible to have more final result than expected
+    print('Tuner result:', tuner_result)
+    print('Expected tuner result:', expected)
     assert tuner_result.issuperset(expected), 'Bad tuner result'
 
     assessor_result = set(open(osp.join('naive_test', 'assessor_result.txt')))
