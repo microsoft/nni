@@ -120,7 +120,7 @@ class FPGMPruner(Pruner):
         self.mask_list = {}
 
     def calc_mask(self, weight, config, op, op_type, op_name, **kwargs):
-        """supports Conv1d, Conv2d, Conv3d
+        """supports Conv1d, Conv2d
         filter dimensions for Conv1d:
         IN: number of input channel
         OUT: number of output channel
@@ -134,7 +134,7 @@ class FPGMPruner(Pruner):
         """
 
         assert 0 <= config.get('pruning_rate') < 1
-        assert op_type in ['Conv1d', 'Conv2d', 'Conv3d']
+        assert op_type in ['Conv1d', 'Conv2d']
         assert op_type in config['op_types']
 
         if op_name in self.epoch_pruned_layers:
@@ -158,7 +158,7 @@ class FPGMPruner(Pruner):
         return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
-        assert len(weight.size()) >= 3
+        assert len(weight.size()) in [3, 4]
 
         dist_list = []
         for in_i in range(weight.size(0)):
@@ -177,8 +177,14 @@ class FPGMPruner(Pruner):
                 dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
             return dist_sum
         """
-        w = weight.view(-1, weight.size(-2), weight.size(-1))
-        anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+        if len(weight.size()) == 4: # Conv2d
+            w = weight.view(-1, weight.size(-2), weight.size(-1))
+            anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+        elif len(weight.size()) == 3: # Conv1d
+            w = weight.view(-1, weight.size(-1))
+            anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1))
+        else:
+            raise RuntimeError('unsupported layer type')
         x = w - anchor_w
         x = (x*x).sum((-2,-1))
         x = torch.sqrt(x)
