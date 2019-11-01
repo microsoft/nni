@@ -116,10 +116,12 @@ def print_stderr(trial_jobs_url):
     trial_jobs = requests.get(trial_jobs_url).json()
     for trial_job in trial_jobs:
         if trial_job['status'] == 'FAILED':
-            stderr_path = trial_job['stderrPath'].split(':')[-1]
             if sys.platform == "win32":
+                p = trial_job['stderrPath'].split(':')
+                stderr_path = ':'.join([p[-2], p[-1]])
                 subprocess.run(['type', stderr_path], shell=True)
             else:
+                stderr_path = trial_job['stderrPath'].split(':')[-1]
                 subprocess.run(['cat', stderr_path])
 
 def parse_max_duration_time(max_exec_duration):
