@@ -122,7 +122,7 @@ class BatchTuner(Tuner):
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         if not self.values:
-            logger.info("Search space has not been initialized, skip this data import")
+            LOGGER.info("Search space has not been initialized, skip this data import")
             return
 
         self.values = self.values[(self.count+1):]
