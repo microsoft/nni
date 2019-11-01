@@ -25,8 +25,8 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(config_list)
-pruner(tf.get_default_graph())
+pruner = LevelPruner(tf.get_default_graph(), config_list)
+pruner.compress()
 ```
 
 PyTorch code
@@ -34,13 +34,13 @@ PyTorch code
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(config_list)
-pruner(model)
+pruner = LevelPruner(model, config_list)
+pruner.compress()
 ```
 
 You can use other compression algorithms in the package of `nni.compression`. The algorithms are implemented in both PyTorch and Tensorflow, under `nni.compression.torch` and `nni.compression.tensorflow` respectively. You can refer to [Pruner](./Pruner.md) and [Quantizer](./Quantizer.md) for detail description of supported algorithms.
 
-The function call `pruner(model)` receives user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph()`, while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
+The function call `pruner.compress()` modifies user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph()`, while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
 When instantiate a compression algorithm, there is `config_list` passed in. We describe how to write this config below.
 
@@ -111,20 +111,26 @@ If you want to write a new pruning algorithm, you can write a class that inherit
 # nni.compression.tensorflow.Pruner with
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
-    def __init__(self, config_list):
-        # suggest you to use the NNI defined spec for config
-        super().__init__(config_list)
+    def __init__(self, model, config_list):
+        """
+        Suggest you to use the NNI defined spec for config
+        """
+        super().__init__(model, config_list)
 
-    def bind_model(self, model):
-        # this func can be used to remember the model or its weights
-        # in member variables, for getting their values during training
-        pass
+    def calc_mask(self, layer, config):
+        """
+        Pruners should overload this method to provide mask for weight tensors.
+        The mask must have the same shape and type comparing to the weight.
+        It will be applied with `mul()` operation on the weight.
+        This method is effectively hooked to `forward()` method of the model.
 
-    def calc_mask(self, weight, config, **kwargs):
-        # weight is the target weight tensor
-        # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_types, and op_name
-        # design your mask and return your mask
+        Parameters
+        ----------
+        layer: LayerInfo
+            calculate mask for `layer`'s weight
+        config: dict
+            the configuration for generating the mask
+        """
         return your_mask
 
     # note for pytorch version, there is no sess in input arguments
@@ -133,16 +139,18 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
     # note for pytorch version, there is no sess in input arguments
     def step(self, sess):
-        # can do some processing based on the model or weights binded
-        # in the func bind_model
+        """
+        Can do some processing based on the model or weights binded
+        in the func bind_model
+        """
         pass
 ```
 
-For the simplest algorithm, you only need to override `calc_mask`. It receives each layer's weight and selected configuration, as well as op information. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+For the simplest algorithm, you only need to override `calc_mask`. It receives the to-be-compressed layers one by one along with their compression configuration. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
-Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress.
+Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress. It should be called at the beginning of each epoch.
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information), model optimizer's information. NNI supports this requirement using `bind_model`. `bind_model` receives the complete model, thus, it could record any information (e.g., reference to weights) it cares about. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
+Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information). Your can use `self.bound_model` in the Pruner class for accessing weights. If you also need optimizer's information (for example in Pytorch), you could override `__init__` to receive more arguments such as model's optimizer. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
 
 ### Quantization algorithm
 
@@ -154,20 +162,19 @@ The interface for customizing quantization algorithm is similar to that of pruni
 # nni.compression.tensorflow.Quantizer with
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
-    def __init__(self, config_list):
-        # suggest you to use the NNI defined spec for config
-        super().__init__(config_list)
-
-    def bind_model(self, model):
-        # this func can be used to remember the model or its weights
-        # in member variables, for getting their values during training
-        pass
+    def __init__(self, model, config_list):
+        """
+        Suggest you to use the NNI defined spec for config
+        """
+        super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
-        # weight is the target weight tensor
-        # config is the selected dict object in config_list for this layer
-        # kwargs contains op, op_types, and op_name
-        # design your quantizer and return new weight
+        """
+        weight is the target weight tensor
+        config is the selected dict object in config_list for this layer
+        kwargs contains op, op_types, and op_name
+        design your quantizer and return new weight
+        """
         return new_weight
 
     # note for pytorch version, there is no sess in input arguments
@@ -176,8 +183,10 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     # note for pytorch version, there is no sess in input arguments
     def step(self, sess):
-        # can do some processing based on the model or weights binded
-        # in the func bind_model
+        """
+        Can do some processing based on the model or weights binded
+        in the func bind_model
+        """
         pass
 ```
 
