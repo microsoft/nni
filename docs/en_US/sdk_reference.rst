@@ -27,7 +27,7 @@ Tuner
 ..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
     :members:
 
-..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
+..  autoclass:: nni.gridsearch_tuner.GridSearchTuner
     :members:
 
 ..  autoclass:: nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
