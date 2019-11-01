@@ -13,15 +13,16 @@ class LayerInfo:
 
         self._forward = None
 
-
 class Compressor:
     """Abstract base PyTorch compressor"""
 
     def __init__(self, config_list):
         self._bound_model = None
         self._config_list = config_list
+        self.modules_to_compress = []
 
-    def __call__(self, model):
+    def __call__(self, model, optimizer=None):
+        self._bound_optimizer = optimizer
         self.compress(model)
         return model
 
@@ -37,6 +38,7 @@ class Compressor:
             config = self._select_config(layer)
             if config is not None:
                 self._instrument_layer(layer, config)
+                self.modules_to_compress.append((layer, config))
 
     def bind_model(self, model):
         """This method is called when a model is bound to the compressor.

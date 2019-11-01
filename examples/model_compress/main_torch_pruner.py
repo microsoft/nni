@@ -85,9 +85,9 @@ def init_pruner(pruner_name):
         raise
     return pruner, epoch_num
 
-def apply_pruner(pruner_name, model):
+def apply_pruner(pruner_name, model, optimizer):
     pruner, epoch_num = init_pruner(pruner_name)
-    pruner(model)
+    pruner(model, optimizer)
     # you can also use compress(model) method
     # like that pruner.compress(model)
     return pruner, epoch_num
@@ -111,9 +111,10 @@ def main():
 
     model = Mnist()
 
-    pruner, epoch_num = apply_pruner(pruner_name, model)
-
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+
+    pruner, epoch_num = apply_pruner(pruner_name, model, optimizer)
+
     for epoch in range(epoch_num):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))

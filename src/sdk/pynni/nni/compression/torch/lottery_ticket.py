@@ -27,9 +27,14 @@ class LotteryTicketPruner(Pruner):
         self.prune_iterations = 1
         self.curr_prune_iterations = 0
         self.epoch_per_iteration = None
-        self.update_flags = {}
         self.mask_list = {}
-        self.init_weights = {}
+
+    def __call__(self, model, optimizer=None):
+        model = super().__call__(model, optimizer)
+        # save init weights and optimizer
+        self.model_state = self._bound_model.state_dict()
+        self.optimizer_state = self._bound_optimizer.state_dict()
+        return model
 
     def _print_masks(self):
         print('print masks:')
@@ -47,6 +52,21 @@ class LotteryTicketPruner(Pruner):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)
         curr_keep_ratio = keep_ratio_once ** self.curr_prune_iterations
         return max(1 - curr_keep_ratio, 0)
+
+    def _calc_mask(self, weight, sparsity, op_name):
+        if self.curr_prune_iterations == 0:
+            mask = torch.ones(weight.shape).type_as(weight)
+        else:
+            curr_sparsity = self._calc_sparsity(sparsity)
+            assert self.mask_list.get(op_name) is not None
+            curr_mask = self.mask_list.get(op_name)
+            w_abs = weight.abs() * curr_mask
+            sorted_weights = np.sort(w_abs, None)
+            index = np.around(curr_sparsity * sorted_weights.size).astype(int)
+            index = min(index, sorted_weights.size - 1)
+            threshold = sorted_weights[index]
+            mask = torch.gt(w_abs, threshold).type_as(weight)
+        return mask
 
     def calc_mask(self, weight, config, op_name, **kwargs):
         """
@@ -71,33 +91,9 @@ class LotteryTicketPruner(Pruner):
         self.prune_iterations = config.get('prune_iterations')
         self.epoch_per_iteration = config.get('epoch_per_iteration')
 
-        # keep the initial weights
-        if self.init_weights.get(op_name) is None:
-            self.init_weights.update({op_name: copy.deepcopy(weight)})
-
-        if self.update_flags.get(op_name, True):
-            if self.curr_prune_iterations == 0:
-                mask = torch.ones(weight.shape).type_as(weight)
-            else:
-                sparsity = config.get('sparsity')
-                curr_sparsity = self._calc_sparsity(sparsity)
-
-                assert self.mask_list.get(op_name) is not None
-                curr_mask = self.mask_list.get(op_name)
-                w_abs = weight.abs() * curr_mask
-                sorted_weights = np.sort(w_abs, None)
-                index = np.around(curr_sparsity * sorted_weights.size).astype(int)
-                index = min(index, sorted_weights.size - 1)
-                threshold = sorted_weights[index]
-                mask = torch.gt(w_abs, threshold).type_as(weight)
-
-                # reinitiate the weights to the initial weights
-                #assert op_name in self.init_weights
-                #init_weight = self.init_weights.get(op_name)
-                #weight.data.copy_(init_weight.data)
-
+        if self.mask_list.get(op_name) is None:
+            mask = torch.ones(weight.shape).type_as(weight)
             self.mask_list.update({op_name: mask})
-            self.update_flags.update({op_name: False})
         else:
             mask = self.mask_list[op_name]
         return mask
@@ -105,16 +101,23 @@ class LotteryTicketPruner(Pruner):
     def update_epoch(self, epoch):
         """
         Control the pruning procedure on updated epoch number.
+        Should be called at the beginning of the epoch.
 
         Parameters
         ----------
         epoch: num
             The current epoch number provided by user call
         """
+        if self.epoch_per_iteration is not None:
+            self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
+
         if self.epoch_per_iteration \
             and int(epoch) % self.epoch_per_iteration == 0 \
             and self.curr_prune_iterations <= self.prune_iterations:
-            for k in self.update_flags.keys():
-                self.update_flags[k] = True
-        if self.epoch_per_iteration is not None:
-            self.curr_prune_iterations = int(epoch) // self.epoch_per_iteration
+            for layer, config in self.modules_to_compress:
+                sparsity = config.get('sparsity')
+                mask = self._calc_mask(layer.module.weight.data, sparsity, layer.name)
+                self.mask_list.update({layer.name: mask})
+            # reinit weights back to original after new masks are generated
+            self._bound_model.load_state_dict(self.model_state)
+            self._bound_optimizer.load_state_dict(self.optimizer_state)
