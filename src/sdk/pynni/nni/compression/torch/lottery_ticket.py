@@ -36,12 +36,13 @@ class LotteryTicketPruner(Pruner):
         self.optimizer_state = self._bound_optimizer.state_dict()
         return model
 
-    def _print_masks(self):
-        print('print masks:')
+    def _print_masks(self, print_mask=False):
         torch.set_printoptions(threshold=1000)
         for op_name in self.mask_list.keys():
             mask = self.mask_list[op_name]
-            print(op_name, mask)
+            print('op name: ', op_name)
+            if print_mask:
+                print('mask: ', mask)
             # calculate current sparsity
             mask_num = mask.sum().item()
             mask_size = mask.numel()
@@ -118,6 +119,7 @@ class LotteryTicketPruner(Pruner):
                 sparsity = config.get('sparsity')
                 mask = self._calc_mask(layer.module.weight.data, sparsity, layer.name)
                 self.mask_list.update({layer.name: mask})
+            self._print_masks()
             # reinit weights back to original after new masks are generated
             self._bound_model.load_state_dict(self.model_state)
             self._bound_optimizer.load_state_dict(self.optimizer_state)
