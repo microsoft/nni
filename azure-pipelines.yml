@@ -26,6 +26,11 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      python3 -m pylint --rcfile pylintrc tools
+      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
+      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pynni/nni
+    displayName: 'Run pylint'
+  - script: |
       python3 -m pip install flake8 --user
       IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
       python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
