@@ -18,11 +18,6 @@ jobs:
       python3 -m pip install tensorflow==1.12.0 --user
     displayName: 'Install dependencies for integration'
   - script: |
-      python3 -m pylint --rcfile pylintrc tools
-      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
-      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pynni/nni
-    displayName: 'Run pylint'
-  - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
