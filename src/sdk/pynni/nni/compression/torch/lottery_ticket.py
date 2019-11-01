@@ -32,8 +32,8 @@ class LotteryTicketPruner(Pruner):
     def __call__(self, model, optimizer=None):
         model = super().__call__(model, optimizer)
         # save init weights and optimizer
-        self.model_state = self._bound_model.state_dict()
-        self.optimizer_state = self._bound_optimizer.state_dict()
+        self.model_state = copy.deepcopy(self._bound_model.state_dict())
+        self.optimizer_state = copy.deepcopy(self._bound_optimizer.state_dict())
         return model
 
     def _print_masks(self, print_mask=False):
