@@ -121,16 +121,10 @@ class Assessor(Recoverable):
         """
 
     def load_checkpoint(self):
-        """
-        Abstract method for loading checkpoint.
-        """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
     def save_checkpoint(self):
-        """
-        Abstract method for saving checkpoint.
-        """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
