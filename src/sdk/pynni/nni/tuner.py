@@ -186,8 +186,8 @@ class Tuner(Recoverable):
 
         Parameters
         ----------
-        trial_job_id: str
-            Unique identifier of the trial (parameter).
+        parameter_id: int
+            Unique identifier for hyper-parameters used by this trial.
         success: bool
             True if the trial successfully completed; False if failed or terminated.
         **kwargs:
