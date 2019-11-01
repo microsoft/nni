@@ -15,16 +15,31 @@ class LayerInfo:
 
 
 class Compressor:
-    """Abstract base TensorFlow compressor"""
+    """
+    Abstract base TensorFlow compressor
+    """
 
     def __init__(self, model, config_list):
+        """
+        Record necessary info in class members
+
+        Parameters
+        ----------
+        model: pytorch model
+            the model user wants to compress
+        config_list: list
+            the configurations that users specify for compression
+        """
         self.bound_model = model
         self.config_list = config_list
         self.modules_to_compress = []
 
     def compress(self):
-        """Compress given graph with algorithm implemented by subclass.
-        This will edit the graph.
+        """
+        Compress the model with algorithm implemented by subclass.
+
+        The model will be instrumented and user should never edit it after calling this method.
+        `self.modules_to_compress` records all the to-be-compressed layers
         """
         for op in self.bound_model.get_operations():
             weight_index = _detect_weight_index(op)
@@ -42,9 +57,32 @@ class Compressor:
         return self.bound_model
 
     def get_modules_to_compress(self):
+        """
+        To obtain all the to-be-compressed layers.
+
+        Returns
+        -------
+        self.modules_to_compress: list
+            a list of the layers, each of which is a tuple (`layer`, `config`),
+            `layer` is `LayerInfo`, `config` is a `dict`
+        """
         return self.modules_to_compress
 
     def select_config(self, layer):
+        """
+        Find the configuration for `layer` by parsing `self.config_list`
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            one layer
+
+        Returns
+        -------
+        ret: config or None
+            the retrieved configuration for this layer, if None, this layer should 
+            not be compressed
+        """
         ret = None
         for config in self.config_list:
             op_types = config.get('op_types')
@@ -60,15 +98,33 @@ class Compressor:
         return ret
 
     def update_epoch(self, epoch, sess):
-        """If user want to update mask every epoch, user can override this method
+        """
+        If user want to update model every epoch, user can override this method.
+        This method should be called at the beginning of each epoch
+
+        Parameters
+        ----------
+        epoch: num
+            the current epoch number
         """
 
     def step(self, sess):
-        """If user want to update mask every step, user can override this method
+        """
+        If user want to update mask every step, user can override this method
         """
 
 
     def _instrument_layer(self, layer, config):
+        """
+        This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            the layer to instrument the compression operation
+        config: dict
+            the configuration for compressing this layer
+        """
         raise NotImplementedError()
 
 
@@ -78,19 +134,32 @@ class Pruner(Compressor):
     """
 
     def calc_mask(self, layer, config):
-        """Pruners should overload this method to provide mask for weight tensors.
+        """
+        Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
-        It will be applied with `multiply()` operation.
-        This method works as a subgraph which will be inserted into the bound model.
+        It will be applied with `mul()` operation on the weight.
+        This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            calculate mask for `layer`'s weight
+        config: dict
+            the configuration for generating the mask
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
     def _instrument_layer(self, layer, config):
-        # it seems the graph editor can only swap edges of nodes or remove all edges from a node
-        # it cannot remove one edge from a node, nor can it assign a new edge to a node
-        # we assume there is a proxy operation between the weight and the Conv2D layer
-        # this is true as long as the weight is `tf.Value`
-        # not sure what will happen if the weight is calculated from other operations
+        """
+        Create a wrapper forward function to replace the original one.
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            the layer to instrument the mask
+        config: dict
+            the configuration for generating the mask
+        """
         mask = self.calc_mask(layer, config)
         new_weight = layer.weight * mask
         tf.contrib.graph_editor.swap_outputs(layer.weight_op, new_weight.op)

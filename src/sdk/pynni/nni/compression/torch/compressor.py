@@ -15,16 +15,31 @@ class LayerInfo:
 
 
 class Compressor:
-    """Abstract base PyTorch compressor"""
+    """
+    Abstract base PyTorch compressor
+    """
 
     def __init__(self, model, config_list):
+        """
+        Record necessary info in class members
+
+        Parameters
+        ----------
+        model: pytorch model
+            the model user wants to compress
+        config_list: list
+            the configurations that users specify for compression
+        """
         self.bound_model = model
         self.config_list = config_list
         self.modules_to_compress = []
 
     def compress(self):
-        """Compress the model with algorithm implemented by subclass.
+        """
+        Compress the model with algorithm implemented by subclass.
+
         The model will be instrumented and user should never edit it after calling this method.
+        `self.modules_to_compress` records all the to-be-compressed layers
         """
         for name, module in self.bound_model.named_modules():
             layer = LayerInfo(name, module)
@@ -35,9 +50,32 @@ class Compressor:
         return self.bound_model
 
     def get_modules_to_compress(self):
+        """
+        To obtain all the to-be-compressed layers.
+
+        Returns
+        -------
+        self.modules_to_compress: list
+            a list of the layers, each of which is a tuple (`layer`, `config`),
+            `layer` is `LayerInfo`, `config` is a `dict`
+        """
         return self.modules_to_compress
 
     def select_config(self, layer):
+        """
+        Find the configuration for `layer` by parsing `self.config_list`
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            one layer
+
+        Returns
+        -------
+        ret: config or None
+            the retrieved configuration for this layer, if None, this layer should 
+            not be compressed
+        """
         ret = None
         for config in self.config_list:
             config['op_types'] = self._expand_config_op_types(config)
@@ -51,14 +89,32 @@ class Compressor:
         return ret
 
     def update_epoch(self, epoch):
-        """if user want to update model every epoch, user can override this method
+        """
+        If user want to update model every epoch, user can override this method.
+        This method should be called at the beginning of each epoch
+
+        Parameters
+        ----------
+        epoch: num
+            the current epoch number
         """
 
     def step(self):
-        """if user want to update model every step, user can override this method
+        """
+        If user want to update model every step, user can override this method
         """
 
     def _instrument_layer(self, layer, config):
+        """
+        This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            the layer to instrument the compression operation
+        config: dict
+            the configuration for compressing this layer
+        """
         raise NotImplementedError()
 
     def _expand_config_op_types(self, config):
@@ -77,17 +133,33 @@ class Pruner(Compressor):
     Abstract base PyTorch pruner
     """
 
-    def calc_mask(self, layer: LayerInfo, config):
-        """Pruners should overload this method to provide mask for weight tensors.
+    def calc_mask(self, layer, config):
+        """
+        Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
-        It will be applied with `mul()` operation.
+        It will be applied with `mul()` operation on the weight.
         This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            calculate mask for `layer`'s weight
+        config: dict
+            the configuration for generating the mask
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
     def _instrument_layer(self, layer, config):
-        # TODO: support multiple weight tensors
-        # create a wrapper forward function to replace the original one
+        """
+        Create a wrapper forward function to replace the original one.
+
+        Parameters
+        ----------
+        layer: LayerInfo
+            the layer to instrument the mask
+        config: dict
+            the configuration for generating the mask
+        """
         assert layer._forward is None, 'Each model can only be compressed once'
         if not _check_weight(layer.module):
             _logger.warning('Module %s does not have parameter "weight"', layer.name)
