@@ -6,51 +6,58 @@ _logger = logging.getLogger(__name__)
 
 
 class LayerInfo:
-    def __init__(self, op):
+    def __init__(self, op, weight, weight_op):
         self.op = op
         self.name = op.name
         self.type = op.type
+        self.weight = weight
+        self.weight_op = weight_op
 
 
 class Compressor:
     """Abstract base TensorFlow compressor"""
 
-    def __init__(self, config_list):
-        self._bound_model = None
-        self._config_list = config_list
+    def __init__(self, model, config_list):
+        self.bound_model = model
+        self.config_list = config_list
+        self.modules_to_compress = []
 
-    def __call__(self, model):
-        """Compress given graph with algorithm implemented by subclass.
-        The graph will be editted and returned.
-        """
-        self.compress(model)
-        return model
-
-    def compress(self, model):
+    def compress(self):
         """Compress given graph with algorithm implemented by subclass.
         This will edit the graph.
         """
-        assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
-        self._bound_model = model
-        self.bind_model(model)
-        for op in model.get_operations():
-            layer = LayerInfo(op)
-            config = self._select_config(layer)
+        for op in self.bound_model.get_operations():
+            weight_index = _detect_weight_index(op)
+            if weight_index is None:
+                _logger.warning('Failed to detect weight for layer %s', op.name)
+                return
+            weight_op = op.inputs[weight_index].op
+            weight = weight_op.inputs[0]
+
+            layer = LayerInfo(op, weight, weight_op)
+            config = self.select_config(layer)
             if config is not None:
                 self._instrument_layer(layer, config)
+                self.modules_to_compress.append((layer, config))
+        return self.bound_model
 
-    def compress_default_graph(self):
-        """Compress the default graph with algorithm implemented by subclass.
-        This will edit the default graph.
-        """
-        self.compress(tf.get_default_graph())
+    def get_modules_to_compress(self):
+        return self.modules_to_compress
 
-
-    def bind_model(self, model):
-        """This method is called when a model is bound to the compressor.
-        Compressors can optionally overload this method to do model-specific initialization.
-        It is guaranteed that only one model will be bound to each compressor instance.
-        """
+    def select_config(self, layer):
+        ret = None
+        for config in self.config_list:
+            op_types = config.get('op_types')
+            if op_types == 'default':
+                op_types = default_layers.op_weight_index.keys()
+            if op_types and layer.type not in op_types:
+                continue
+            if config.get('op_names') and layer.name not in config['op_names']:
+                continue
+            ret = config
+        if ret is None or ret.get('exclude'):
+            return None
+        return ret
 
     def update_epoch(self, epoch, sess):
         """If user want to update mask every epoch, user can override this method
@@ -64,28 +71,13 @@ class Compressor:
     def _instrument_layer(self, layer, config):
         raise NotImplementedError()
 
-    def _select_config(self, layer):
-        ret = None
-        for config in self._config_list:
-            op_types = config.get('op_types')
-            if op_types == 'default':
-                op_types = default_layers.op_weight_index.keys()
-            if op_types and layer.type not in op_types:
-                continue
-            if config.get('op_names') and layer.name not in config['op_names']:
-                continue
-            ret = config
-        if ret is None or ret.get('exclude'):
-            return None
-        return ret
-
 
 class Pruner(Compressor):
     """
     Abstract base TensorFlow pruner
     """
 
-    def calc_mask(self, weight, config, op, op_type, op_name):
+    def calc_mask(self, layer, config):
         """Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
         It will be applied with `multiply()` operation.
@@ -99,15 +91,9 @@ class Pruner(Compressor):
         # we assume there is a proxy operation between the weight and the Conv2D layer
         # this is true as long as the weight is `tf.Value`
         # not sure what will happen if the weight is calculated from other operations
-        weight_index = _detect_weight_index(layer)
-        if weight_index is None:
-            _logger.warning('Failed to detect weight for layer %s', layer.name)
-            return
-        weight_op = layer.op.inputs[weight_index].op
-        weight = weight_op.inputs[0]
-        mask = self.calc_mask(weight, config, op=layer.op, op_type=layer.type, op_name=layer.name)
-        new_weight = weight * mask
-        tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
+        mask = self.calc_mask(layer, config)
+        new_weight = layer.weight * mask
+        tf.contrib.graph_editor.swap_outputs(layer.weight_op, new_weight.op)
 
 
 class Quantizer(Compressor):
@@ -133,7 +119,7 @@ def _detect_weight_index(layer):
     index = default_layers.op_weight_index.get(layer.type)
     if index is not None:
         return index
-    weight_indices = [i for i, op in enumerate(layer.op.inputs) if op.name.endswith('Variable/read')]
+    weight_indices = [i for i, op in enumerate(layer.inputs) if op.name.endswith('Variable/read')]
     if len(weight_indices) == 1:
         return weight_indices[0]
     return None

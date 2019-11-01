@@ -17,32 +17,38 @@ class LayerInfo:
 class Compressor:
     """Abstract base PyTorch compressor"""
 
-    def __init__(self, config_list):
-        self._bound_model = None
-        self._config_list = config_list
+    def __init__(self, model, config_list):
+        self.bound_model = model
+        self.config_list = config_list
+        self.modules_to_compress = []
 
-    def __call__(self, model):
-        self.compress(model)
-        return model
-
-    def compress(self, model):
+    def compress(self):
         """Compress the model with algorithm implemented by subclass.
         The model will be instrumented and user should never edit it after calling this method.
         """
-        assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
-        self._bound_model = model
-        self.bind_model(model)
-        for name, module in model.named_modules():
+        for name, module in self.bound_model.named_modules():
             layer = LayerInfo(name, module)
-            config = self._select_config(layer)
+            config = self.select_config(layer)
             if config is not None:
                 self._instrument_layer(layer, config)
+                self.modules_to_compress.append((layer, config))
+        return self.bound_model
 
-    def bind_model(self, model):
-        """This method is called when a model is bound to the compressor.
-        Users can optionally overload this method to do model-specific initialization.
-        It is guaranteed that only one model will be bound to each compressor instance.
-        """
+    def get_modules_to_compress(self):
+        return self.modules_to_compress
+
+    def select_config(self, layer):
+        ret = None
+        for config in self.config_list:
+            config['op_types'] = self._expand_config_op_types(config)
+            if layer.type not in config['op_types']:
+                continue
+            if config.get('op_names') and layer.name not in config['op_names']:
+                continue
+            ret = config
+        if ret is None or ret.get('exclude'):
+            return None
+        return ret
 
     def update_epoch(self, epoch):
         """if user want to update model every epoch, user can override this method
@@ -54,19 +60,6 @@ class Compressor:
 
     def _instrument_layer(self, layer, config):
         raise NotImplementedError()
-
-    def _select_config(self, layer):
-        ret = None
-        for config in self._config_list:
-            config['op_types'] = self._expand_config_op_types(config)
-            if layer.type not in config['op_types']:
-                continue
-            if config.get('op_names') and layer.name not in config['op_names']:
-                continue
-            ret = config
-        if ret is None or ret.get('exclude'):
-            return None
-        return ret
 
     def _expand_config_op_types(self, config):
         if config is None:
@@ -84,7 +77,7 @@ class Pruner(Compressor):
     Abstract base PyTorch pruner
     """
 
-    def calc_mask(self, weight, config, op, op_type, op_name):
+    def calc_mask(self, layer: LayerInfo, config):
         """Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
         It will be applied with `mul()` operation.
@@ -104,12 +97,10 @@ class Pruner(Compressor):
         def new_forward(*inputs):
             # apply mask to weight
             old_weight = layer.module.weight.data
-            mask = self.calc_mask(old_weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            mask = self.calc_mask(layer, config)
             layer.module.weight.data = old_weight.mul(mask)
             # calculate forward
             ret = layer._forward(*inputs)
-            # recover original weight
-            layer.module.weight.data = old_weight
             return ret
 
         layer.module.forward = new_forward
