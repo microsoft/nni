@@ -79,8 +79,8 @@ def main():
         'op_types': ['default']
     }]
 
-    pruner = AGP_Pruner(configure_list)
-    pruner(model)
+    pruner = AGP_Pruner(model, configure_list)
+    pruner.compress()
     # you can also use compress(model) method
     # like that pruner.compress(model)
 
