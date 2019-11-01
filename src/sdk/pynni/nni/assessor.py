@@ -60,12 +60,13 @@ class Assessor(Recoverable):
     it hints NNI framework that the trial is likely to result in a poor final accuracy,
     and therefore should be killed to save resource.
 
-    If an accessor want's to get notified when a trial ended, it can also override :meth:`trial_end`.
+    If an accessor want's to get notified when a trial ends, it can also override :meth:`trial_end`.
 
     To write a new assessor, you can reference :class:`~nni.medianstop_assessor.MedianstopAssessor`'s code as an example.
 
     See Also
     --------
+    Builtin assessors:
     :class:`~nni.medianstop_assessor.MedianstopAssessor`
     :class:`~nni.curvefitting_assessor.CurvefittingAssessor`
     """
@@ -76,13 +77,13 @@ class Assessor(Recoverable):
 
         The NNI framework has little guarantee on ``trial_history``.
         This method is not guaranteed to be invoked for each time ``trial_history`` get updated.
-        It is also possible that a trial's history get updated after receiving a negative result.
+        It is also possible that a trial's history keeps updateing after receiving a bad result.
         And if the trial failed and retried, ``trial_history`` may be inconsistent with its previous value.
 
         The only guarantee is that ``trial_history`` is always growing.
         It will not be empty and will always be longer than previous value.
 
-        This is an example of how :meth:`assess_trial` get invoked:
+        This is an example of how :meth:`assess_trial` get invoked sequentially:
 
         ::
 
@@ -97,8 +98,8 @@ class Assessor(Recoverable):
         ----------
         trial_job_id: str
             Unique identifier of the trial.
-        trial_history: list of object
-            Intermediate results of this trial. The object type is decided by trial code.
+        trial_history: list
+            Intermediate results of this trial. The element type is decided by trial code.
 
         Returns
         -------
@@ -122,11 +123,6 @@ class Assessor(Recoverable):
     def load_checkpoint(self):
         """
         Abstract method for loading checkpoint.
-
-        Parameters
-        ----------
-        path: str
-            Checkpoint directory for assessor.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
@@ -134,11 +130,6 @@ class Assessor(Recoverable):
     def save_checkpoint(self):
         """
         Abstract method for saving checkpoint.
-
-        Parameters
-        ----------
-        path: str
-            Checkpoint directory for assessor.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
