@@ -18,6 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
 import os.path as osp
 import subprocess
 import time
@@ -30,7 +31,10 @@ from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
 
 def run_test():
     '''run metrics test'''
-    config_file = osp.join('metrics_test', 'metrics.test.yml')
+    if sys.platform == 'win32':
+        config_file = osp.join('metrics_test', 'metrics_win32.test.yml')
+    else:
+        config_file = osp.join('metrics_test', 'metrics.test.yml')
 
     print('Testing %s...' % config_file)
     proc = subprocess.run(['nnictl', 'create', '--config', config_file])

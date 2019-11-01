@@ -18,6 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
 import os.path as osp
 import json
 import subprocess
@@ -34,7 +35,11 @@ def naive_test():
     to_remove = list(map(lambda file: osp.join('naive_test', file), to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', osp.join('naive_test' ,'local.yml')])
+    if sys.platform == 'win32':
+        config_file = 'local_win32.yml'
+    else:
+        config_file = 'local.yml'
+    proc = subprocess.run(['nnictl', 'create', '--config', osp.join('naive_test' , config_file)])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
