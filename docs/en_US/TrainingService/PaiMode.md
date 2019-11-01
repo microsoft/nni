@@ -82,7 +82,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
         portNumber: 1
     ```
 
-NNI support two kind of authorization method in PAI, including password and AAD token (could be viewed from PAI webportal). The authorization is configured in `paiConfig` field.  
+NNI support two kind of authorization method in PAI, including password and PAI token, [refer](https://github.com/microsoft/pai/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication). The authorization is configured in `paiConfig` field.  
 For password authorization, the `paiConfig` schema is:
 ```
 paiConfig:
@@ -90,11 +90,11 @@ paiConfig:
   passWord: your_pai_password
   host: 10.1.1.1
 ```  
-For AAD authorization, the `paiConfig` schema is:
+For pai token authorization, the `paiConfig` schema is:
 ```
 paiConfig:
   userName: your_pai_nni_user
-  token: your_aad_token
+  token: your_pai_token
   host: 10.1.1.1
 ```
 

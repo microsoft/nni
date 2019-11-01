@@ -116,7 +116,7 @@ export class PAIClusterConfig {
      * @param userName User name of PAI Cluster
      * @param passWord password of PAI Cluster
      * @param host Host IP of PAI Cluster
-     * @param token AAD token of PAI Cluster
+     * @param token PAI token of PAI Cluster
      */
     constructor(userName: string, host : string, passWord?: string, token?: string) {
         this.userName = userName;
