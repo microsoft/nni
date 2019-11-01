@@ -14,6 +14,9 @@ jobs:
       python3 -m pip install coverage --user
     displayName: 'Install python tools'
   - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+  - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user
@@ -21,10 +24,7 @@ jobs:
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
-    displayName: 'Install dependencies for integration'
-  - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
+    displayName: 'Install dependencies'
   - script: |
       python3 -m pylint --rcfile pylintrc tools
       python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
