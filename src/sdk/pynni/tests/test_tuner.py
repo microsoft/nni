@@ -33,7 +33,7 @@ from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
 try:
     from nni.smac_tuner.smac_tuner import SMACTuner
-except ModuleNotFoundError:
+except ImportError:
     assert sys.platform == "win32"
 from nni.tuner import Tuner
 
