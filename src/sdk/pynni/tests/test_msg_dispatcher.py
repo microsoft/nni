@@ -35,7 +35,7 @@ class NaiveTuner(Tuner):
         self.param = 0
         self.trial_results = []
         self.search_space = None
-        self.accept_customized_trials()
+        self._accept_customized_trials()
 
     def generate_parameters(self, parameter_id, **kwargs):
         # report Tuner's internal states to generated parameters,
