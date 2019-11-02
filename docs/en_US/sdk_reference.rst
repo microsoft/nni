@@ -41,10 +41,13 @@ Assessor
 ..  autoclass:: nni.assessor.Assessor
     :members:
 
-..  autoclass:: nni.curvefitting_assessor.curvefitting_assessor.CurvefittingAssessor
+..  autoclass:: nni.assessor.AssessResult
     :members:
 
-..  autoclass:: nni.medianstop_assessor.medianstop_assessor.MedianstopAssessor
+..  autoclass:: nni.curvefitting_assessor.CurvefittingAssessor
+    :members:
+
+..  autoclass:: nni.medianstop_assessor.MedianstopAssessor
     :members:
 
 
