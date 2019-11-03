@@ -131,19 +131,18 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
 class UtilityFunction():
     """
     A class to compute different acquisition function values.
+
+    Parameters
+    ----------
+    kind: string
+        specification of utility function to use
+    kappa: float
+        parameter usedd for 'ucb' acquisition function
+    xi: float
+        parameter usedd for 'ei' and 'poi' acquisition function
     """
 
     def __init__(self, kind, kappa, xi):
-        """
-        Parameters
-        ----------
-        kind: string
-            specification of utility function to use
-        kappa: float
-            parameter usedd for 'ucb' acquisition function
-        xi: float
-            parameter usedd for 'ei' and 'poi' acquisition function
-        """
         self.kappa = kappa
         self.xi = xi
 

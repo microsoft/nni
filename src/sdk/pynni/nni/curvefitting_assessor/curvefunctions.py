@@ -14,7 +14,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+"""
+A family of functions used by CurvefittingAssessor
+"""
 import numpy as np
 
 all_models = {}
@@ -100,6 +102,7 @@ def logx_linear(x, a, b):
     float
         a * np.log(x) + b
     """
+    # pylint: disable=assignment-from-no-return
     x = np.log(x)
     return a*x + b
 

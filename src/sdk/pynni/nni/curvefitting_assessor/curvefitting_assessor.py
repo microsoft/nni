@@ -105,7 +105,6 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
-        trial_job_id = trial_job_id
         self.trial_history = trial_history
         if not self.set_best_performance:
             return AssessResult.Good

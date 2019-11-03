@@ -308,6 +308,7 @@ class CurveModel:
             new_values = np.random.randn(NUM_OF_INSTANCE, self.effective_model_num) * STEP_SIZE + self.weight_samples
             new_values = self.normalize_weight(new_values)
             # compute alpha(i, j) = min{1, P(j)Q(j, i)/P(i)Q(i, j)}
+            # pylint: disable=assignment-from-no-return
             alpha = np.minimum(1, self.target_distribution(new_values) / self.target_distribution(self.weight_samples))
             # sample u
             u = np.random.rand(NUM_OF_INSTANCE)

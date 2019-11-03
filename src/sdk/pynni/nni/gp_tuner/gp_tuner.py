@@ -43,33 +43,32 @@ logger = logging.getLogger("GP_Tuner_AutoML")
 class GPTuner(Tuner):
     """
     GPTuner is a Bayesian Optimization method where Gaussian Process is used for modeling loss functions.
+
+    Parameters
+    ----------
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize', by default 'maximize'
+    utility: str
+        utility function(also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
+    kappa: float
+        value used by utility function 'ucb'. The bigger kappa is, the more the tuner will be exploratory. By default 5.
+    xi: float
+        used by utility function 'ei' and 'poi'. The bigger xi is, the more the tuner will be exploratory. By default 0.
+    nu: float
+        used to specify Matern kernel. The smaller nu, the less smooth the approximated function is. By default 2.5.
+    alpha: float
+        Used to specify Gaussian Process Regressor. Larger values correspond to increased noise level in the observations.
+        By default 1e-6.
+    cold_start_num: int
+        Number of random exploration to perform before Gaussian Process. By default 10.
+    selection_num_warm_up: int
+        Number of random points to evaluate for getting the point which maximizes the acquisition function. By default 100000
+    selection_num_starting_points: int
+        Number of times to run L-BFGS-B from a random starting point after the warmup. By default 250.
     """
 
     def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
                  selection_num_warm_up=100000, selection_num_starting_points=250):
-        """
-        Parameters
-        ----------
-        optimize_mode: str
-            optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        utility: str
-            utility function(also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
-        kappa: float
-            value used by utility function 'ucb'. The bigger kappa is, the more the tuner will be exploratory. By default 5.
-        xi: float
-            used by utility function 'ei' and 'poi'. The bigger xi is, the more the tuner will be exploratory. By default 0.
-        nu: float
-            used to specify Matern kernel. The smaller nu, the less smooth the approximated function is. By default 2.5.
-        alpha: float
-            Used to specify Gaussian Process Regressor. Larger values correspond to increased noise level in the observations.
-            By default 1e-6.
-        cold_start_num: int
-            Number of random exploration to perform before Gaussian Process. By default 10.
-        selection_num_warm_up: int
-            Number of random points to evaluate for getting the point which maximizes the acquisition function. By default 100000
-        selection_num_starting_points: int
-            Number of times to run L-BFGS-B from a random starting point after the warmup. By default 250.
-        """
         self.optimize_mode = OptimizeMode(optimize_mode)
 
         # utility function related

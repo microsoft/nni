@@ -46,18 +46,17 @@ def _hashable(params):
 class TargetSpace():
     """
     Holds the param-space coordinates (X) and target values (Y)
+
+    Parameters
+    ----------
+    pbounds : dict
+        Dictionary with parameters names and legal values.
+
+    random_state : int, RandomState, or None
+        optionally specify a seed for a random number generator, by default None.
     """
 
     def __init__(self, pbounds, random_state=None):
-        """
-        Parameters
-        ----------
-        pbounds : dict
-            Dictionary with parameters names and legal values.
-
-        random_state : int, RandomState, or None
-            optionally specify a seed for a random number generator, by default None.
-        """
         self.random_state = random_state
 
         # Get the name of the parameters
