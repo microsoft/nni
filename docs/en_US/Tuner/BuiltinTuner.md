@@ -122,7 +122,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 
-* **population_size** (*int value(should >0), optional, default = 20*) - the initial size of the population(trial num) in evolution tuner.
+* **population_size** (*int value (should > 0), optional, default = 20*) - the initial size of the population(trial num) in evolution tuner. Suggests `population_size` be much larger than `concurrency`, so users can get the most out of the algorithm (and at least `concurrency`, or the tuner will fail on their first generation of parameters).
 
 **Usage example**
 
