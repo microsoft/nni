@@ -20,6 +20,7 @@ class Compressor:
     def __init__(self, config_list):
         self._bound_model = None
         self._config_list = config_list
+        self._steps = 0
 
     def __call__(self, model):
         self.compress(model)
@@ -126,21 +127,31 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
+    def quantize_activation(self, weight, config, op, op_type, op_name):
+        raise NotImplementedError("Quantizer must overload quantize_activation()")
+
+    def instrument_layer_hook(self, layer, config):
+        """instrument layer before modify forward method
+        """
+        pass
+
     def _instrument_layer(self, layer, config):
         assert layer._forward is None, 'Each model can only be compressed once'
         if not _check_weight(layer.module):
             _logger.warning('Module %s does not have parameter "weight"', layer.name)
             return
         layer._forward = layer.module.forward
+        self._instrument_layer_hook(layer, config)
 
         def new_forward(*inputs):
             weight = layer.module.weight.data
             new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
             layer.module.weight.data = new_weight
-            return layer._forward(*inputs)
+            result = layer._forward(*inputs)
+            layer.module.weight.data = weight
+            return result
 
         layer.module.forward = new_forward
-
 
 def _check_weight(module):
     try:

@@ -21,6 +21,8 @@ class NaiveQuantizer(Quantizer):
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
+class EMA_range_check:
+    pass
 
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
@@ -34,18 +36,100 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(config_list)
 
-    def quantize_weight(self, weight, config, **kwargs):
+    def instrument_layer_hook(self, layer, config):
+        """override default hook
+        """
+        layer.module.register_buffer("zero_point", None)
+        layer.module.register_buffer("scale", None)
+        layer.module.register_buffer("range_checker", EMA_range_check())
+
+    def fixed_range_check(self, tensor):
+        return torch.min(tensor), torch.max(tensor)
+
+    def EMA_range_check(self, op, tensor):
+        return torch.min(tensor), torch.max(tensor)
+
+    def update_quantization_param(self, q_bits, op, rmin, rmax):
+        # We extend the [min, max] interval to ensure that it contains 0.
+        # Otherwise, we would not meet the requirement that 0 be an exactly
+        # representable value.
+        rmin = min(rmin, 0)
+        rmax = max(rmax, 0)
+
+        # the min and max quantized values, as floating-point values
+        qmin = 0
+        qmax = 1 << q_bits - 1
+
+        # First determine the scale.
+        scale = (rmax - rmin) / (qmax - qmin)
+
+        # Zero-point computation.
+        # First the initial floating-point computation. The zero-point can be
+        # determined from solving an affine equation for any known pair
+        # (real value, corresponding quantized value).
+        # We know two such pairs: (rmin, qmin) and (rmax, qmax).
+        # Let's use the first one here.
+        initial_zero_point = qmin - rmin / scale
+
+        # Now we need to nudge the zero point to be an integer
+        # (our zero points are integer, and this is motivated by the requirement
+        # to be able to represent the real value "0" exactly as a quantized value,
+        # which is required in multiple places, for example in Im2col with SAME
+        # padding).
+        nudged_zero_point = 0
+        if initial_zero_point < qmin:
+            nudged_zero_point = qmin
+        elif initial_zero_point > qmax:
+            nudged_zero_point = qmax
+        else:
+            nudged_zero_point = round(initial_zero_point)
+
+        op.scale = scale
+        op.zero_point = nudged_zero_point
+
+    def quantize(self, q_bits, op, real_val):
+        transformed_val = op.zero_point + real_val / op.scale
+        qmin = 0
+        qmax = 1 << q_bits - 1
+        clamped_val = torch.clamp(transformed_val, qmin, qmax)
+        quantized_val = torch.round(clamped_val)
+        return quantized_val
+
+    def dequantize(self, op, quantized_val):
+        real_val = op.scale * (quantized_val - op.zero_point)
+        return real_val
+
+    def quantize_weight(self, weight, config, op, **kwargs):
         if config['q_bits'] <= 1:
             return weight
-        a = torch.min(weight)
-        b = torch.max(weight)
-        n = pow(2, config['q_bits'])
-        scale = (b-a)/(n-1)
-        zero_point = a
-        out = torch.round((weight - zero_point)/scale)
-        out = out*scale + zero_point
-        orig_type = weight.dtype
-        return out.type(orig_type)
+        if config['quant_delay'] > self._steps:
+            return weight
+        rmin, rmax = self.fixed_range_check(weight)
+        self.update_quantization_param(config['q_bits'], op, rmin, rmax)
+        out = self.quantize(config['q_bits'], op, weight)
+        out = self.dequantize(op, out)
+        return out
+
+    def quantize_activation(self, activation, config, op, range_tracker, **kwargs):
+        if config['activation_bits'] <= 1:
+            return activation
+        if config['quant_delay'] > self._steps:
+            return activation
+        # TODO activation dynamic set a, b
+        rmin, rmax = self.EMA_range_check(op, activation)
+        self.update_quantization_param(config['q_bits'], op, rmin, rmax)
+        out = self.quantize(config['q_bits'], op, activation)
+        out = self.dequantize(op, out)
+        return out
+
+    def fold_bn(self, config, range_tracker, **kwargs):
+        # TODO simulate folded weight
+        pass
+
+    def step(self):
+        """override compressor step method, update _step attribute, quantization only happens after certain number of steps
+        """
+        self._steps += 1
 
 
 class DoReFaQuantizer(Quantizer):
