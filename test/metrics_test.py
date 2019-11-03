@@ -50,6 +50,8 @@ def run_test():
         if status == 'DONE':
             num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
             print_stderr(TRIAL_JOBS_URL)
+            if sys.platform == "win32":
+                time.sleep(sleep_interval)  # Windows seems to have some issues on updating in time
             assert num_succeeded == max_trial_num, 'only %d succeeded trial jobs, there should be %d' % (num_succeeded, max_trial_num)
             check_metrics()
             break
