@@ -1,5 +1,5 @@
 $CWD = $PWD
-
+$ErrorActionPreference = "Stop"
 # -------------For python unittest-------------
 
 ## ------Run annotation test------
