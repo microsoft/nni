@@ -17,16 +17,23 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
-target_space.py
-'''
+"""
+Tool class to hold the param-space coordinates (X) and target values (Y).
+"""
+
 
 import numpy as np
 import nni.parameter_expressions as parameter_expressions
 
 
 def _hashable(params):
-    """ ensure that an point is hashable by a python dict """
+    """ 
+    ensure that an point is hashable by a python dict.
+
+    Parameters
+        ----------
+        params:  
+    """
     return tuple(map(float, params))
 
 
@@ -44,12 +51,13 @@ class TargetSpace():
             and maximum values.
 
         random_state : int, RandomState, or None
-            optionally specify a seed for a random number generator
+            optionally specify a seed for a random number generator, by default None.
         """
         self.random_state = random_state
 
         # Get the name of the parameters
         self._keys = sorted(pbounds)
+
         # Create an array with parameters bounds
         self._bounds = np.array(
             [item[1] for item in sorted(pbounds.items(), key=lambda x: x[0])]
@@ -73,6 +81,11 @@ class TargetSpace():
     def __contains__(self, params):
         '''
         check if a parameter is already registered
+
+        Parameters
+        ----------
+        params: list
+
         '''
         return _hashable(params) in self._cache
 
@@ -86,6 +99,9 @@ class TargetSpace():
     @property
     def params(self):
         '''
+
+        Returns
+        -------
         params: numpy array
         '''
         return self._params
@@ -160,6 +176,7 @@ class TargetSpace():
         Parameters
         ----------
         x : dict
+            parameters
 
         y : float
             target function value
@@ -179,6 +196,10 @@ class TargetSpace():
     def random_sample(self):
         """
         Creates a random point within the bounds of the space.
+
+        Returns
+        -------
+        params: one groupe of parameter
 
         """
         params = np.empty(self.dim)
@@ -205,7 +226,9 @@ class TargetSpace():
         return params
 
     def max(self):
-        """Get maximum target value found and corresponding parametes."""
+        """
+        Get maximum target value found and corresponding parametes.
+        """
         try:
             res = {
                 'target': self.target.max(),
@@ -218,7 +241,9 @@ class TargetSpace():
         return res
 
     def res(self):
-        """Get all target values found and corresponding parametes."""
+        """
+        Get all target values found and corresponding parametes.
+        """
         params = [dict(zip(self.keys, p)) for p in self.params]
 
         return [

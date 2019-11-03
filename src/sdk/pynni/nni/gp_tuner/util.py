@@ -60,7 +60,7 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
     :param f_acq:
         The acquisition function object that return its point-wise value.
 
-    :param gp:
+    :param gp: 
         A gaussian process fitted to the relevant data.
 
     :param y_max:

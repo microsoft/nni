@@ -17,9 +17,11 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
-gp_tuner.py
-'''
+"""
+GPTuner is a Bayesian Optimization method where Gaussian Process is used for modeling loss functions.
+
+See : class:`GPTuner` for details.
+"""
 
 import warnings
 import logging
@@ -38,12 +40,37 @@ logger = logging.getLogger("GP_Tuner_AutoML")
 
 
 class GPTuner(Tuner):
-    '''
-    GPTuner
-    '''
+    """
+    GPTuner is a Bayesian Optimization method where Gaussian Process is used for modeling loss functions.
+    """
 
     def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
                  selection_num_warm_up=100000, selection_num_starting_points=250):
+        """
+        Constructor function
+
+        Parameters
+        ----------
+        optimize_mode: str
+            optimize mode, 'maximize' or 'minimize', by default 'maximize'
+        utility: str
+            utility function(also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
+        kappa: float
+            value used by utility function 'ucb'. The bigger kappa is, the more the tuner will be exploratory. By default 5.
+        xi: float
+            used by utility function 'ei' and 'poi'. The bigger xi is, the more the tuner will be exploratory. By default 0.
+        nu: float
+            used to specify Matern kernel. The smaller nu, the less smooth the approximated function is. By default 2.5.
+        alpha: float
+            Used to specify Gaussian Process Regressor. Larger values correspond to increased noise level in the observations.
+            By default 1e-6.
+        cold_start_num: int
+            Number of random exploration to perform before Gaussian Process. By default 10.
+        selection_num_warm_up: int
+            Number of random points to evaluate for getting the point which maximizes the acquisition function. By default 100000
+        selection_num_starting_points: int
+            Number of times to run L-BFGS-B from a random starting point after the warmup. By default 250.
+        """
         self.optimize_mode = OptimizeMode(optimize_mode)
 
         # utility function related
@@ -75,27 +102,20 @@ class GPTuner(Tuner):
         self.supplement_data_num = 0
 
     def update_search_space(self, search_space):
-        """Update the self.bounds and self.types by the search_space.json
-
-        Parameters
-        ----------
-        search_space : dict
+        """
+        Update the self.bounds and self.types by the search_space.json file.
+        
+        Override of the abstract method in class:`Tuner`.
         """
         self._space = TargetSpace(search_space, self._random_state)
 
     def generate_parameters(self, parameter_id, **kwargs):
-        """Generate next parameter for trial
-        If the number of trial result is lower than cold start number,
-        gp will first randomly generate some parameters.
-        Otherwise, choose the parameters by the Gussian Process Model
+        """
+        Method which provides one set of hyper-parameters.
+        If the number of trial result is lower than cold_start_number, GPTuner will first randomly generate some parameters.
+        Otherwise, choose the parameters by the Gussian Process Model.
 
-        Parameters
-        ----------
-        parameter_id : int
-
-        Returns
-        -------
-        result : dict
+        Override of the abstract method in class:`Tuner`.
         """
         if self._space.len() < self._cold_start_num:
             results = self._space.random_sample()
@@ -124,14 +144,10 @@ class GPTuner(Tuner):
         return results
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-        """Tuner receive result from trial.
-
-        Parameters
-        ----------
-        parameter_id : int
-        parameters : dict
-        value : dict/float
-            if value is dict, it should have "default" key.
+        """
+        Method invoked when a trial reports its final result.
+   
+        Override of the abstract method in class:`Tuner`.
         """
         value = extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Minimize:
@@ -143,22 +159,22 @@ class GPTuner(Tuner):
         self._space.register(parameters, value)
 
     def import_data(self, data):
-        """Import additional data for tuning
-        Parameters
-        ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        Import additional data for tuning.
+        Override of the abstract method in class:`Tuner`.
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
+            logger.info(
+                "Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
+                logger.info(
+                    "Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(
