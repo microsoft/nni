@@ -27,7 +27,7 @@ import * as component from '../../../common/component';
 
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import {
-    JobApplicationForm, NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail
+    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
@@ -59,7 +59,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         super();
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
-        this.nextTrialSequenceId = -1;
         this.log.info('Construct Kubeflow training service.');
     }
 
@@ -84,7 +83,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         this.log.info('Kubeflow training service exit.');
     }
 
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.kubernetesCRDClient === undefined) {
             throw new Error('Kubeflow job operator client is undefined');
         }
@@ -96,20 +95,22 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const kubeflowJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
-        const curTrialSequenceId: number = this.generateSequenceId();
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //prepare the runscript
-        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, curTrialSequenceId, form);
+        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
         //upload files to sotrage
         const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
+        let initStatus: TrialJobStatus = 'WAITING';
+        if (!trialJobOutputUrl) {
+            initStatus = 'FAILED';
+        }
         const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
             trialJobId,
-            'WAITING',
+            initStatus,
             Date.now(),
             trialWorkingFolder,
             form,
             kubeflowJobName,
-            curTrialSequenceId,
             trialJobOutputUrl
         );
 
@@ -215,23 +216,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             if (this.azureStorageClient === undefined) {
                 throw new Error('azureStorageClient is not initialized');
             }
-            try {
-                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
-                await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                                                                `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                                                                `${trialLocalTempFolder}`);
-                //upload code files to azure storage
-                await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                                                                `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                                                                `${this.kubeflowTrialConfig.codeDir}`);
-
-                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
-                                    `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
-            } catch (error) {
-                this.log.error(error);
-
-                return Promise.reject(error);
-            }
+            const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
+            trialJobOutputUrl = await this.uploadFilesToAzureStorage(trialJobId, trialLocalTempFolder, this.kubeflowTrialConfig.codeDir, azureKubeflowClusterConfig.uploadRetryCount);
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             // Creat work dir for current trial in NFS directory
@@ -247,8 +233,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobOutputUrl);
     }
 
-    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number,
-                                   form: JobApplicationForm): Promise<void> {
+    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string,
+                                   form: TrialJobApplicationForm): Promise<void> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -273,7 +259,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         if (kubeflowTrialConfig.worker !== undefined) {
            const workerRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                kubeflowTrialConfig.worker.command,
-                                                                               curTrialSequenceId.toString(), 'worker',
+                                                                               form.sequenceId.toString(), 'worker',
                                                                                kubeflowTrialConfig.worker.gpuNum);
            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
@@ -283,7 +269,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
            if (tensorflowTrialConfig.ps !== undefined) {
                const psRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                tensorflowTrialConfig.ps.command,
-                                                                               curTrialSequenceId.toString(),
+                                                                               form.sequenceId.toString(),
                                                                                'ps', tensorflowTrialConfig.ps.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
            }
@@ -292,16 +278,15 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
            if (pytorchTrialConfig.master !== undefined) {
                const masterRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder,
                                                                                    pytorchTrialConfig.master.command,
-                                                                                   curTrialSequenceId.toString(), 'master',
+                                                                                   form.sequenceId.toString(), 'master',
                                                                                    pytorchTrialConfig.master.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
            }
         }
         // Write file content ( parameter.cfg ) to local tmp folders
-        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form);
-        if (trialForm !== undefined && trialForm.hyperParameters !== undefined) {
-           await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)),
-                                       trialForm.hyperParameters.value, { encoding: 'utf8' });
+        if (form !== undefined) {
+           await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(form.hyperParameters)),
+                                       form.hyperParameters.value, { encoding: 'utf8' });
         }
     }
 
@@ -347,7 +332,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         // Generate kubeflow job resource config object
-        const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources,
+        const kubeflowJobConfig: any = await this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources,
                                                                       nonWorkerResources);
 
         return Promise.resolve(kubeflowJobConfig);
@@ -361,8 +346,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
      * @param workerPodResources worker pod template
      * @param nonWorkerPodResources non-worker pod template, like ps or master
      */
-    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any,
-                                      nonWorkerPodResources?: any) : any {
+    private async generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any,
+                                            nonWorkerPodResources?: any) : Promise<any> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -377,29 +362,32 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
         const replicaSpecsObj: any = {};
         const replicaSpecsObjMap: Map<string, object> = new Map<string, object>();
-
         if (this.kubeflowTrialConfig.operatorType === 'tf-operator') {
             const tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+            let privateRegistrySecretName = await this.createRegistrySecret(tensorflowTrialConfig.worker.privateRegistryAuthPath);
             replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.worker.replicas,
-                                                                tensorflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
+                                                                tensorflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             if (tensorflowTrialConfig.ps !== undefined) {
+                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(tensorflowTrialConfig.ps.privateRegistryAuthPath);
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas,
-                                                                tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
+                                                                tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources, privateRegistrySecretName);
             }
             replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {tfReplicaSpecs: replicaSpecsObj});
         } else if (this.kubeflowTrialConfig.operatorType === 'pytorch-operator') {
             const pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             if (pytorchTrialConfig.worker !== undefined) {
+                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.worker.privateRegistryAuthPath);
                 replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.worker.replicas,
-                                                                    pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
+                                                                    pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             }
+            let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.master.privateRegistryAuthPath);
             replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas,
-                                                                pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
+                                                                pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources, privateRegistrySecretName);
 
             replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {pytorchReplicaSpecs: replicaSpecsObj});
         }
 
-        return {
+        return Promise.resolve({
             apiVersion: `kubeflow.org/${this.kubernetesCRDClient.apiVersion}`,
             kind: this.kubernetesCRDClient.jobKind,
             metadata: {
@@ -412,7 +400,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
             },
             spec: replicaSpecsObjMap.get(this.kubernetesCRDClient.jobKind)
-        };
+        });
     }
 
     /**
@@ -424,7 +412,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
      * @param podResources pod resource config section
      */
     private generateReplicaConfig(trialWorkingFolder: string, replicaNumber: number, replicaImage: string, runScriptFile: string,
-                                  podResources: any): any {
+                                  podResources: any, privateRegistrySecretName: string | undefined): any {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -436,7 +424,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         if (this.kubernetesCRDClient === undefined) {
             throw new Error('Kubeflow operator client is not initialized');
         }
-
+        // The config spec for volume field
         const volumeSpecMap: Map<string, object> = new Map<string, object>();
         if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
             volumeSpecMap.set('nniVolumes', [
@@ -459,7 +447,34 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
             }]);
         }
-
+        // The config spec for container field
+        const containersSpecMap: Map<string, object> = new Map<string, object>(); 
+        containersSpecMap.set('containers', [
+        {
+                // Kubeflow tensorflow operator requires that containers' name must be tensorflow
+                // TODO: change the name based on operator's type
+                name: this.kubernetesCRDClient.containerName,
+                image: replicaImage,
+                args: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
+                volumeMounts: [
+                {
+                    name: 'nni-vol',
+                    mountPath: this.CONTAINER_MOUNT_PATH
+                }],
+                resources: podResources
+            }
+        ]);
+        let spec: any = {
+            containers: containersSpecMap.get('containers'),
+            restartPolicy: 'ExitCode',
+            volumes: volumeSpecMap.get('nniVolumes')
+        }
+        if (privateRegistrySecretName) {
+            spec.imagePullSecrets = [
+                {
+                    name: privateRegistrySecretName
+                }]
+        }
         return {
             replicas: replicaNumber,
             template: {
@@ -467,26 +482,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                     // tslint:disable-next-line:no-null-keyword
                     creationTimestamp: null
                 },
-                spec: {
-                    containers: [
-                    {
-                        // Kubeflow tensorflow operator requires that containers' name must be tensorflow
-                        // TODO: change the name based on operator's type
-                        name: this.kubernetesCRDClient.containerName,
-                        image: replicaImage,
-                        args: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
-                        volumeMounts: [
-                        {
-                            name: 'nni-vol',
-                            mountPath: this.CONTAINER_MOUNT_PATH
-                        }],
-                        resources: podResources
-                    }],
-                    restartPolicy: 'ExitCode',
-                    volumes: volumeSpecMap.get('nniVolumes')
-                }
+                spec: spec
             }
-        };
+        }
     }
 }
 // tslint:enable: no-unsafe-any no-any

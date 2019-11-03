@@ -27,9 +27,10 @@ import logging
 import json
 import importlib
 
+from .common import enable_multi_thread, enable_multi_phase
 from .constants import ModuleName, ClassName, ClassArgs, AdvisorModuleName, AdvisorClassName
-from nni.common import enable_multi_thread, enable_multi_phase
-from nni.msg_dispatcher import MsgDispatcher
+from .msg_dispatcher import MsgDispatcher
+
 logger = logging.getLogger('nni.main')
 logger.debug('START')
 
@@ -44,7 +45,7 @@ def augment_classargs(input_class_args, classname):
                 input_class_args[key] = value
     return input_class_args
 
-def create_builtin_class_instance(classname, jsonstr_args, is_advisor = False):
+def create_builtin_class_instance(classname, jsonstr_args, is_advisor=False):
     if is_advisor:
         if classname not in AdvisorModuleName or \
             importlib.util.find_spec(AdvisorModuleName[classname]) is None:
@@ -130,57 +131,15 @@ def main():
 
     if args.advisor_class_name:
         # advisor is enabled and starts to run
-        if args.multi_phase:
-            raise AssertionError('multi_phase has not been supported in advisor')
-        if args.advisor_class_name in AdvisorModuleName:
-            dispatcher = create_builtin_class_instance(
-                args.advisor_class_name,
-                args.advisor_args, True)
-        else:
-            dispatcher = create_customized_class_instance(
-                args.advisor_directory,
-                args.advisor_class_filename,
-                args.advisor_class_name,
-                args.advisor_args)
-        if dispatcher is None:
-            raise AssertionError('Failed to create Advisor instance')
-        try:
-            dispatcher.run()
-        except Exception as exception:
-            logger.exception(exception)
-            raise
+        _run_advisor(args)
+
     else:
         # tuner (and assessor) is enabled and starts to run
-        tuner = None
-        assessor = None
-        if args.tuner_class_name in ModuleName:
-            tuner = create_builtin_class_instance(
-                args.tuner_class_name,
-                args.tuner_args)
-        else:
-            tuner = create_customized_class_instance(
-                args.tuner_directory,
-                args.tuner_class_filename,
-                args.tuner_class_name,
-                args.tuner_args)
-
-        if tuner is None:
-            raise AssertionError('Failed to create Tuner instance')
-
+        tuner = _create_tuner(args)
         if args.assessor_class_name:
-            if args.assessor_class_name in ModuleName:
-                assessor = create_builtin_class_instance(
-                    args.assessor_class_name,
-                    args.assessor_args)
-            else:
-                assessor = create_customized_class_instance(
-                    args.assessor_directory,
-                    args.assessor_class_filename,
-                    args.assessor_class_name,
-                    args.assessor_args)
-            if assessor is None:
-                raise AssertionError('Failed to create Assessor instance')
-
+            assessor = _create_assessor(args)
+        else:
+            assessor = None
         dispatcher = MsgDispatcher(tuner, assessor)
 
         try:
@@ -194,6 +153,59 @@ def main():
             if assessor is not None:
                 assessor._on_error()
             raise
+
+
+def _run_advisor(args):
+    if args.advisor_class_name in AdvisorModuleName:
+        dispatcher = create_builtin_class_instance(
+            args.advisor_class_name,
+            args.advisor_args, True)
+    else:
+        dispatcher = create_customized_class_instance(
+            args.advisor_directory,
+            args.advisor_class_filename,
+            args.advisor_class_name,
+            args.advisor_args)
+    if dispatcher is None:
+        raise AssertionError('Failed to create Advisor instance')
+    try:
+        dispatcher.run()
+    except Exception as exception:
+        logger.exception(exception)
+        raise
+
+
+def _create_tuner(args):
+    if args.tuner_class_name in ModuleName:
+        tuner = create_builtin_class_instance(
+            args.tuner_class_name,
+            args.tuner_args)
+    else:
+        tuner = create_customized_class_instance(
+            args.tuner_directory,
+            args.tuner_class_filename,
+            args.tuner_class_name,
+            args.tuner_args)
+    if tuner is None:
+        raise AssertionError('Failed to create Tuner instance')
+    return tuner
+
+
+def _create_assessor(args):
+    if args.assessor_class_name in ModuleName:
+        assessor = create_builtin_class_instance(
+            args.assessor_class_name,
+            args.assessor_args)
+    else:
+        assessor = create_customized_class_instance(
+            args.assessor_directory,
+            args.assessor_class_filename,
+            args.assessor_class_name,
+            args.assessor_args)
+    if assessor is None:
+        raise AssertionError('Failed to create Assessor instance')
+    return assessor
+
 
 if __name__ == '__main__':
     try:

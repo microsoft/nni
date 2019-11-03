@@ -221,7 +221,12 @@ class MockedDataStore implements DataStore {
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
-        throw new Error("Method not implemented.");
+        return Promise.resolve({
+            id: '1234',
+            status: 'SUCCEEDED',
+            startTime: Date.now(),
+            endTime: Date.now()
+        });
     }
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {

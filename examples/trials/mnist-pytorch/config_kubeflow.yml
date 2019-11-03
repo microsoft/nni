@@ -1,0 +1,32 @@
+authorName: default
+experimentName: example_dist_pytorch
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  codeDir: .
+  worker:
+    replicas: 1
+    command: python3 mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 8192
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: tf-operator
+  apiVersion: v1alpha2
+  storage: nfs
+  nfs:
+    server: 10.10.10.10
+    path: /var/nfs/general

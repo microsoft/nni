@@ -21,7 +21,7 @@
 
 import argparse
 import pkg_resources
-from .launcher import create_experiment, resume_experiment
+from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import *
 from .package_management import *
@@ -66,6 +66,12 @@ def parse_args():
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.set_defaults(func=resume_experiment)
 
+    # parse view command
+    parser_resume = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.set_defaults(func=view_experiment)
+
     # parse update command
     parser_updater = subparsers.add_parser('update', help='update the experiment')
     #add subparsers for parser_updater
@@ -90,6 +96,8 @@ def parse_args():
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
     parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
+    parser_stop.add_argument('--port', '-p', dest='port', help='the port of restful server')
+    parser_stop.add_argument('--all', '-a', action='store_true', help='stop all of experiments')
     parser_stop.set_defaults(func=stop_experiment)
 
     #parse trial command
@@ -119,8 +127,21 @@ def parse_args():
     parser_experiment_status.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_status.set_defaults(func=experiment_status)
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
-    parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
+    parser_experiment_list.add_argument('--all', action='store_true', default=False, help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
+    parser_experiment_clean = parser_experiment_subparsers.add_parser('delete', help='clean up the experiment data')
+    parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
+    parser_experiment_clean.set_defaults(func=experiment_clean)
+
+    #parse experiment command
+    parser_platform = subparsers.add_parser('platform', help='get platform information')
+    #add subparsers for parser_experiment
+    parser_platform_subparsers = parser_platform.add_subparsers()
+    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the platform data')
+    parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
+    parser_platform_clean.set_defaults(func=platform_clean)
+
     #import tuning data
     parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
     parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
@@ -188,9 +209,9 @@ def parse_args():
     parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
     parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
     parser_tensorboard_start.set_defaults(func=start_tensorboard)
-    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
-    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_start.set_defaults(func=stop_tensorboard)
+    parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
+    parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_stop.set_defaults(func=stop_tensorboard)
 
     #parse top command
     parser_top = subparsers.add_parser('top', help='monitor the experiment')

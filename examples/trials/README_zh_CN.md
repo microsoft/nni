@@ -137,7 +137,7 @@ def train(args, params):
 
     _, acc = model.evaluate(x_test, y_test, verbose=0)
 
-...    
+...
 ```
 
 **4) 发送最终结果**
@@ -160,7 +160,7 @@ def train(args, params):
 
     _, acc = model.evaluate(x_test, y_test, verbose=0)
     nni.report_final_result(acc)
-...    
+...
 ```
 
 这是完整的样例：

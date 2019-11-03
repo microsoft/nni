@@ -20,13 +20,10 @@
 
 import copy
 import logging
-import os
 import random
 import statistics
-import sys
-from enum import Enum, unique
+import warnings
 from multiprocessing.dummy import Pool as ThreadPool
-
 import numpy as np
 
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
@@ -41,8 +38,6 @@ from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
-
-
 
 NONE_TYPE = ''
 CONSTRAINT_LOWERBOUND = None
@@ -93,7 +88,7 @@ class MetisTuner(Tuner):
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.key_order = []
         self.cold_start_num = cold_start_num
         self.selection_num_starting_points = selection_num_starting_points
@@ -101,6 +96,8 @@ class MetisTuner(Tuner):
         self.minimize_constraints_fun = None
         self.minimize_starting_points = None
         self.supplement_data_num = 0
+        self.x_bounds = []
+        self.x_types = []
 
 
     def update_search_space(self, search_space):
@@ -123,13 +120,12 @@ class MetisTuner(Tuner):
                 key_range = search_space[key]['_value']
                 idx = self.key_order.index(key)
                 if key_type == 'quniform':
-                    if key_range[2] == 1:
-                        self.x_bounds[idx] = [key_range[0], key_range[1]]
+                    if key_range[2] == 1 and key_range[0].is_integer() and key_range[1].is_integer():
+                        self.x_bounds[idx] = [key_range[0], key_range[1]+1]
                         self.x_types[idx] = 'range_int'
                     else:
-                        bounds = []
-                        for value in np.arange(key_range[0], key_range[1], key_range[2]):
-                            bounds.append(value)
+                        low, high, q = key_range
+                        bounds = np.clip(np.arange(np.round(low/q), np.round(high/q)+1) * q, low, high)
                         self.x_bounds[idx] = bounds
                         self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':
@@ -147,7 +143,7 @@ class MetisTuner(Tuner):
 
                     self.x_types[idx] = 'discrete_int'
                 else:
-                    logger.info("Metis Tuner doesn't support this kind of variable: " + str(key_type))
+                    logger.info("Metis Tuner doesn't support this kind of variable: %s", key_type)
                     raise RuntimeError("Metis Tuner doesn't support this kind of variable: " + str(key_type))
         else:
             logger.info("The format of search space is not a dict.")
@@ -201,7 +197,7 @@ class MetisTuner(Tuner):
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
 
-        logger.info("Generate paramageters:\n" + str(results))
+        logger.info("Generate paramageters:\n%s", results)
         return results
 
 
@@ -220,8 +216,8 @@ class MetisTuner(Tuner):
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :" + str(value))
-        logger.info("parameter is : " + str(parameters))
+        logger.info("value is :%s", value)
+        logger.info("parameter is : %s", parameters)
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
@@ -254,6 +250,9 @@ class MetisTuner(Tuner):
                    threshold_samplessize_resampling=50, no_candidates=False,
                    minimize_starting_points=None, minimize_constraints_fun=None):
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
         next_candidate = None
         candidates = []
         samples_size_all = sum([len(i) for i in samples_y])
@@ -271,13 +270,14 @@ class MetisTuner(Tuner):
             minimize_constraints_fun=minimize_constraints_fun)
         if not lm_current:
             return None
+        logger.info({
+            'hyperparameter': lm_current['hyperparameter'],
+            'expected_mu': lm_current['expected_mu'],
+            'expected_sigma': lm_current['expected_sigma'],
+            'reason': "exploitation_gp"
+        })
 
         if no_candidates is False:
-            candidates.append({'hyperparameter': lm_current['hyperparameter'],
-                               'expected_mu': lm_current['expected_mu'],
-                               'expected_sigma': lm_current['expected_sigma'],
-                               'reason': "exploitation_gp"})
-
             # ===== STEP 2: Get recommended configurations for exploration =====
             results_exploration = gp_selection.selection(
                 "lc",
@@ -290,34 +290,53 @@ class MetisTuner(Tuner):
 
             if results_exploration is not None:
                 if _num_past_samples(results_exploration['hyperparameter'], samples_x, samples_y) == 0:
-                    candidates.append({'hyperparameter': results_exploration['hyperparameter'],
-                                       'expected_mu': results_exploration['expected_mu'],
-                                       'expected_sigma': results_exploration['expected_sigma'],
-                                       'reason': "exploration"})
+                    temp_candidate = {
+                        'hyperparameter': results_exploration['hyperparameter'],
+                        'expected_mu': results_exploration['expected_mu'],
+                        'expected_sigma': results_exploration['expected_sigma'],
+                        'reason': "exploration"
+                    }
+                    candidates.append(temp_candidate)
+
                     logger.info("DEBUG: 1 exploration candidate selected\n")
+                    logger.info(temp_candidate)
             else:
                 logger.info("DEBUG: No suitable exploration candidates were")
 
             # ===== STEP 3: Get recommended configurations for exploitation =====
             if samples_size_all >= threshold_samplessize_exploitation:
-                print("Getting candidates for exploitation...\n")
+                logger.info("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
-                    results_exploitation = gmm_selection.selection(
-                        x_bounds,
-                        x_types,
-                        gmm['clusteringmodel_good'],
-                        gmm['clusteringmodel_bad'],
-                        minimize_starting_points,
-                        minimize_constraints_fun=minimize_constraints_fun)
+
+                    if ("discrete_int" in x_types) or ("range_int" in x_types):
+                        results_exploitation = gmm_selection.selection(x_bounds, x_types,
+                                                                       gmm['clusteringmodel_good'],
+                                                                       gmm['clusteringmodel_bad'],
+                                                                       minimize_starting_points,
+                                                                       minimize_constraints_fun=minimize_constraints_fun)
+                    else:
+                        # If all parameters are of "range_continuous", let's use GMM to generate random starting points
+                        results_exploitation = gmm_selection.selection_r(x_bounds, x_types,
+                                                                         gmm['clusteringmodel_good'],
+                                                                         gmm['clusteringmodel_bad'],
+                                                                         num_starting_points=self.selection_num_starting_points,
+                                                                         minimize_constraints_fun=minimize_constraints_fun)
 
                     if results_exploitation is not None:
                         if _num_past_samples(results_exploitation['hyperparameter'], samples_x, samples_y) == 0:
-                            candidates.append({'hyperparameter': results_exploitation['hyperparameter'],\
-                                               'expected_mu': results_exploitation['expected_mu'],\
-                                               'expected_sigma': results_exploitation['expected_sigma'],\
-                                               'reason': "exploitation_gmm"})
+                            temp_expected_mu, temp_expected_sigma = \
+                                    gp_prediction.predict(results_exploitation['hyperparameter'], gp_model['model'])
+                            temp_candidate = {
+                                'hyperparameter': results_exploitation['hyperparameter'],
+                                'expected_mu': temp_expected_mu,
+                                'expected_sigma': temp_expected_sigma,
+                                'reason': "exploitation_gmm"
+                            }
+                            candidates.append(temp_candidate)
+
                             logger.info("DEBUG: 1 exploitation_gmm candidate selected\n")
+                            logger.info(temp_candidate)
                     else:
                         logger.info("DEBUG: No suitable exploitation_gmm candidates were found\n")
 
@@ -336,13 +355,15 @@ class MetisTuner(Tuner):
                 results_outliers = gp_outlier_detection.outlierDetection_threaded(samples_x, samples_y_aggregation)
 
                 if results_outliers is not None:
-                    for results_outlier in results_outliers:
+                    for results_outlier in results_outliers:  # pylint: disable=not-an-iterable
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
-                            candidates.append({'hyperparameter': samples_x[results_outlier['samples_idx']],\
+                            temp_candidate = {'hyperparameter': samples_x[results_outlier['samples_idx']],\
                                                'expected_mu': results_outlier['expected_mu'],\
                                                'expected_sigma': results_outlier['expected_sigma'],\
-                                               'reason': "resampling"})
+                                               'reason': "resampling"}
+                            candidates.append(temp_candidate)
                     logger.info("DEBUG: %d re-sampling candidates selected\n")
+                    logger.info(temp_candidate)
                 else:
                     logger.info("DEBUG: No suitable resampling candidates were found\n")
 
@@ -383,10 +404,12 @@ class MetisTuner(Tuner):
                 next_candidate = {'hyperparameter': next_candidate, 'reason': "random",
                                   'expected_mu': expected_mu, 'expected_sigma': expected_sigma}
 
-        # ===== STEP 7: If current optimal hyperparameter occurs in the history or exploration probability is less than the threshold, take next config as exploration step  =====
+        # ===== STEP 7 =====
+        # If current optimal hyperparameter occurs in the history or exploration probability is less than the threshold,
+        # take next config as exploration step
         outputs = self._pack_output(lm_current['hyperparameter'])
         ap = random.uniform(0, 1)
-        if outputs in self.total_data or ap<=self.exploration_probability:
+        if outputs in self.total_data or ap <= self.exploration_probability:
             if next_candidate is not None:
                 outputs = self._pack_output(next_candidate['hyperparameter'])
             else:
@@ -404,14 +427,14 @@ class MetisTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])

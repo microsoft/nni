@@ -19,8 +19,8 @@ time, mark, audio, video {
 	margin: 0;
 	padding: 0;
 	border: 0;
+	font: inherit;	
 	font-size: 100%;
-	font: inherit;
 }
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
@@ -49,8 +49,3 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
-@font-face {
-	font-family: 'Segoe';
-	src: url('./static/font/SegoePro-Regular.ttf');
-}
-

@@ -48,11 +48,13 @@ jobs:
       cat test/port
     displayName: 'Get docker port'
   - script: |
+      set -e
       cd test
       python3 generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
       --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude cifar10
+      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'integration test'
   - task: SSH@0
     inputs:

@@ -26,17 +26,20 @@ import * as azureStorage from 'azure-storage';
 import { EventEmitter } from 'events';
 import { Base64 } from 'js-base64';
 import { String } from 'typescript-string-operations';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
+import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
+
+var yaml = require('js-yaml');
+var fs = require('fs');
 
 /**
  * Training Service implementation for Kubernetes
@@ -50,7 +53,6 @@ abstract class KubernetesTrainingService {
     protected readonly trialLocalNFSTempFolder: string;
     protected stopping: boolean = false;
     protected experimentId! : string;
-    protected nextTrialSequenceId: number;
     protected kubernetesRestServerPort?: number;
     protected readonly CONTAINER_MOUNT_PATH: string;
     protected azureStorageClient?: azureStorage.FileService;
@@ -71,7 +73,6 @@ abstract class KubernetesTrainingService {
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();
-        this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
         this.logCollection = 'none';
@@ -90,9 +91,7 @@ abstract class KubernetesTrainingService {
         const jobs: TrialJobDetail[] = [];
 
         for (const [key, value] of this.trialJobsMap) {
-            if (value.form.jobType === 'TRIAL') {
-                jobs.push(await this.getTrialJob(key));
-            }
+            jobs.push(await this.getTrialJob(key));
         }
 
         return Promise.resolve(jobs);
@@ -219,14 +218,6 @@ abstract class KubernetesTrainingService {
         return Promise.resolve();
     }
 
-    protected generateSequenceId(): number {
-        if (this.nextTrialSequenceId === -1) {
-            this.nextTrialSequenceId = getInitTrialSequenceId();
-        }
-
-        return this.nextTrialSequenceId++;
-    }
-
     // tslint:disable: no-unsafe-any no-any
     protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
         try {
@@ -327,5 +318,80 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
+
+    protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
+        if(filePath === undefined || filePath === '') {
+            return undefined;
+        }
+        let body = fs.readFileSync(filePath).toString('base64');
+        let registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
+                                                                            .toLowerCase());
+        await this.genericK8sClient.createSecret(
+            {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: registrySecretName,
+                    namespace: 'default',
+                    labels: {
+                        app: this.NNI_KUBERNETES_TRIAL_LABEL,
+                        expId: getExperimentId()
+                    }
+                },
+                type: 'kubernetes.io/dockerconfigjson',
+                data: {
+                    '.dockerconfigjson': body
+                }
+            }
+        );
+        return registrySecretName;
+    }
+
+    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: String, codeDir: String, uploadRetryCount: number | undefined): Promise<string> {
+        if (this.azureStorageClient === undefined) {
+            throw new Error('azureStorageClient is not initialized');
+        }
+        let trialJobOutputUrl: string = '';
+        let retryCount: number = 1;
+        if(uploadRetryCount) {
+            retryCount = uploadRetryCount;
+        }
+        let resultUploadNNIScript: boolean = false;
+        let resultUploadCodeFile: boolean = false;
+        try {
+            do {
+                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
+                if(!resultUploadNNIScript) {
+                    resultUploadNNIScript = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${trialLocalTempFolder}`);
+                }
+                //upload code files to azure storage
+                if(!resultUploadCodeFile) {
+                    resultUploadCodeFile = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
+                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
+                        `${codeDir}`);
+                }
+                if (resultUploadNNIScript && resultUploadCodeFile) {
+                    trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
+                    `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
+                    break;
+                } else {
+                    //wait for 5 seconds to re-upload files
+                    await delay(5000);
+                    this.log.info('Upload failed, Retry: upload files to azure-storage');
+                }
+            } while (retryCount-- >= 0)
+        } catch (error) {
+            this.log.error(error);
+            //return a empty url when got error
+            return Promise.resolve("");
+        }
+        if(!trialJobOutputUrl) {
+            this.log.info(`Retry-count is used up, upload files to azureStorage for trial ${trialJobId} failed!`);
+        }
+        return Promise.resolve(trialJobOutputUrl);
+    }
+     
 }
 export { KubernetesTrainingService };

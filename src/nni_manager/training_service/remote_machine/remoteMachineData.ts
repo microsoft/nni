@@ -22,7 +22,7 @@
 import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 
 /**
@@ -82,20 +82,18 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
-    public sequenceId: number;
+    public form: TrialJobApplicationForm;
     public rmMeta?: RemoteMachineMeta;
     public isEarlyStopped?: boolean;
     public gpuIndices: GPUInfo[];
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+                workingDirectory: string, form: TrialJobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.sequenceId = sequenceId;
         this.tags = [];
         this.gpuIndices = [];
     }
@@ -211,7 +209,8 @@ export class SSHClientManager {
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
-            username: this.rmMeta.username };
+            username: this.rmMeta.username,
+            tryKeyboard: true };
         if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
         } else if (this.rmMeta.sshKeyPath !== undefined) {
@@ -233,6 +232,8 @@ export class SSHClientManager {
           .on('error', (err: Error) => {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
+        }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
+            finish([this.rmMeta.passwd]);
         })
           .connect(connectConfig);
 

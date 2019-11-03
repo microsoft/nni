@@ -124,7 +124,7 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
     student_w = teacher_w.copy()
     student_b = teacher_b.copy()
     # target layer update (i)
-    for i in range(len(rand)):
+    for i, _ in enumerate(rand):
         teacher_index = rand[i]
         new_weight = teacher_w[teacher_index, ...]
         new_weight = new_weight[np.newaxis, ...]

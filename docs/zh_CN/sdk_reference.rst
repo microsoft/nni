@@ -8,6 +8,8 @@ Trial（尝试）
 ..  autofunction:: nni.get_current_parameter
 ..  autofunction:: nni.report_intermediate_result
 ..  autofunction:: nni.report_final_result
+..  autofunction:: nni.get_experiment_id
+..  autofunction:: nni.get_trial_id
 ..  autofunction:: nni.get_sequence_id
 
 
@@ -48,6 +50,9 @@ Assessor（评估器）
 
 Advisor
 ------------------------
+..  autoclass:: nni.msg_dispatcher_base.MsgDispatcherBase
+    :members:
+
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
     :members:
 

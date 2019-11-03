@@ -72,15 +72,14 @@ describe('Unit test for dataStore', () => {
                 }`,
                 tuner: {
                     className: 'testTuner',
-                    checkpointDir: '/tmp/cp',
-                    gpuNum: 0
+                    checkpointDir: '/tmp/cp'
                 }
             },
             id: 'exp123',
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
-            maxSequenceId: 0,
+            nextSequenceId: 0,
             revision: 0
         }
         const id: string = profile.id;

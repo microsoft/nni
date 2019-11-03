@@ -18,25 +18,30 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
+import os.path as osp
 import subprocess
 import sys
 import time
 import traceback
 
-from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, is_experiment_done
-
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
+from utils import get_yml_content, dump_yml_content, setup_experiment, get_nni_log_path, is_experiment_done
+from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 TUNER_LIST = ['GridSearch', 'BatchTuner', 'TPE', 'Random', 'Anneal', 'Evolution']
 ASSESSOR_LIST = ['Medianstop']
-EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
+
+def get_config_file_path():
+    if sys.platform == 'win32':
+        config_file = osp.join('tuner_test', 'local_win32.yml')
+    else:
+        config_file = osp.join('tuner_test', 'local.yml')
+    return config_file
 
 def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
-    config_path = 'tuner_test/local.yml'
+    config_path = get_config_file_path()
     experiment_config = get_yml_content(config_path)
     if dispatch_name in ['GridSearch', 'BatchTuner', 'Random']:
         experiment_config[dispatch_type.lower()] = {
@@ -60,10 +65,10 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
-    proc = subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml'])
+    proc = subprocess.run(['nnictl', 'create', '--config', get_config_file_path()])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
-    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
+    nnimanager_log_path = get_nni_log_path(EXPERIMENT_URL)
 
     for _ in range(20):
         time.sleep(3)

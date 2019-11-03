@@ -1,178 +1,100 @@
 import * as React from 'react';
-import {
-    Row, Col, Popover, Button, message
-} from 'antd';
+import { Row, Col, Popover, message } from 'antd';
 import axios from 'axios';
-import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
-import { Experiment, TrialNumber } from '../../static/interface';
+import { MANAGER_IP } from '../../static/const';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { convertTime } from '../../static/function';
+import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
+import LogDrawer from '../Modal/LogDrawer';
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 
 interface ProgressProps {
-    trialProfile: Experiment;
-    trialNumber: TrialNumber;
+    concurrency: number;
     bestAccuracy: number;
-    status: string;
-    errors: string;
-    updateFile: Function;
+    changeConcurrency: (val: number) => void;
+    experimentUpdateBroadcast: number;
 }
 
 interface ProgressState {
-    btnName: string;
-    isEnable: boolean;
-    userInputVal: string; // get user input
-    cancelSty: string;
+    isShowLogDrawer: boolean;
 }
 
 class Progressed extends React.Component<ProgressProps, ProgressState> {
-
-    public conInput: HTMLInputElement | null;
-    public _isMounted = false;
     constructor(props: ProgressProps) {
         super(props);
         this.state = {
-            btnName: 'Edit',
-            isEnable: true,
-            userInputVal: this.props.trialProfile.runConcurren.toString(),
-            cancelSty: 'none'
+            isShowLogDrawer: false
         };
     }
 
-    editTrialConcurrency = () => {
-        const { btnName } = this.state;
-        if (this._isMounted) {
-            if (btnName === 'Edit') {
-                this.setState(() => ({
-                    isEnable: false,
-                    btnName: 'Save',
-                    cancelSty: 'inline-block'
-                }));
-            } else {
-                axios(`${MANAGER_IP}/experiment`, {
-                    method: 'GET'
-                })
-                    .then(rese => {
-                        if (rese.status === 200) {
-                            const { userInputVal } = this.state;
-                            const experimentFile = rese.data;
-                            const trialConcurrency = experimentFile.params.trialConcurrency;
-                            if (userInputVal !== undefined) {
-                                if (userInputVal === trialConcurrency.toString() || userInputVal === '0') {
-                                    message.destroy();
-                                    message.info(
-                                        `trialConcurrency's value is ${trialConcurrency}, you did not modify it`, 2);
-                                } else {
-                                    experimentFile.params.trialConcurrency = parseInt(userInputVal, 10);
-                                    // rest api, modify trial concurrency value
-                                    axios(`${MANAGER_IP}/experiment`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json;charset=utf-8'
-                                        },
-                                        data: experimentFile,
-                                        params: {
-                                            update_type: CONTROLTYPE[1]
-                                        }
-                                    }).then(res => {
-                                        if (res.status === 200) {
-                                            message.destroy();
-                                            message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()}
-                                            successfully`);
-                                            // rerender trial profile message
-                                            const { updateFile } = this.props;
-                                            updateFile();
-                                        }
-                                    })
-                                        .catch(error => {
-                                            if (error.response.status === 500) {
-                                                if (error.response.data.error) {
-                                                    message.error(error.response.data.error);
-                                                } else {
-                                                    message.error(
-                                                        `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
-                                                }
-                                            }
-                                        });
-                                    // btn -> edit
-                                    this.setState(() => ({
-                                        btnName: 'Edit',
-                                        isEnable: true,
-                                        cancelSty: 'none'
-                                    }));
-                                }
-                            }
-                        }
-                    });
-            }
-        }
-    }
-
-    cancelFunction = () => {
-        const { trialProfile } = this.props;
-        if (this._isMounted) {
-            this.setState(
-                () => ({
-                    btnName: 'Edit',
-                    isEnable: true,
-                    cancelSty: 'none',
-                }));
-        }
-        if (this.conInput !== null) {
-            this.conInput.value = trialProfile.runConcurren.toString();
-        }
-    }
-
-    getUserTrialConcurrency = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        if (value.match(/^[1-9]\d*$/) || value === '') {
-            this.setState(() => ({
-                userInputVal: value
-            }));
-        } else {
+    editTrialConcurrency = async (userInput: string) => {
+        if (!userInput.match(/^[1-9]\d*$/)) {
             message.error('Please enter a positive integer!', 2);
-            if (this.conInput !== null) {
-                const { trialProfile } = this.props;
-                this.conInput.value = trialProfile.runConcurren.toString();
+            return;
+        }
+        const newConcurrency = parseInt(userInput, 10);
+        if (newConcurrency === this.props.concurrency) {
+            message.info(`Trial concurrency has not changed`, 2);
+            return;
+        }
+
+        const newProfile = Object.assign({}, EXPERIMENT.profile);
+        newProfile.params.trialConcurrency = newConcurrency;
+
+        // rest api, modify trial concurrency value
+        try {
+            const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
+                params: { update_type: 'TRIAL_CONCURRENCY' }
+            });
+            if (res.status === 200) {
+                message.success(`Successfully updated trial concurrency`);
+                // NOTE: should we do this earlier in favor of poor networks?
+                this.props.changeConcurrency(newConcurrency);
+            }
+        } catch (error) {
+            if (error.response && error.response.data.error) {
+                message.error(`Failed to update trial concurrency\n${error.response.data.error}`);
+            } else if (error.response) {
+                message.error(`Failed to update trial concurrency\nServer responsed ${error.response.status}`);
+            } else if (error.message) {
+                message.error(`Failed to update trial concurrency\n${error.message}`);
+            } else {
+                message.error(`Failed to update trial concurrency\nUnknown error`);
             }
         }
     }
 
-    componentWillReceiveProps() {
-        const { trialProfile } = this.props;
-        if (this.conInput !== null) {
-            this.conInput.value = trialProfile.runConcurren.toString();
-        }
+    isShowDrawer = () => {
+        this.setState({ isShowLogDrawer: true });
     }
 
-    componentDidMount() {
-        this._isMounted = true;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
+    closeDrawer = () => {
+        this.setState({ isShowLogDrawer: false });
     }
 
     render() {
-        const { trialProfile, trialNumber, bestAccuracy, status, errors } = this.props;
-        const { isEnable, btnName, cancelSty } = this.state;
-        const bar2 = trialNumber.totalCurrentTrial - trialNumber.waitTrial - trialNumber.unknowTrial;
-        const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
-        const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
-        const runDuration = convertTime(trialProfile.execDuration);
-        const temp = trialProfile.maxDuration - trialProfile.execDuration;
-        let remaining;
+        const { bestAccuracy } = this.props;
+        const { isShowLogDrawer } = this.state;
+
+        const count = TRIALS.countStatus();
+        const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
+        const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
+
+        const bar2Percent = (bar2 / EXPERIMENT.profile.params.maxTrialNum) * 100;
+        const percent = (EXPERIMENT.profile.execDuration / EXPERIMENT.profile.params.maxExecDuration) * 100;
+        const remaining = convertTime(EXPERIMENT.profile.params.maxExecDuration - EXPERIMENT.profile.execDuration);
+        const maxDuration = convertTime(EXPERIMENT.profile.params.maxExecDuration);
+        const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
+        const execDuration = convertTime(EXPERIMENT.profile.execDuration);
+
         let errorContent;
-        if (temp < 0) {
-            remaining = '0';
-        } else {
-            remaining = convertTime(temp);
-        }
-        if (errors !== '') {
+        if (EXPERIMENT.error) {
             errorContent = (
                 <div className="errors">
-                    {errors}
+                    {EXPERIMENT.error}
+                    <div><a href="#" onClick={this.isShowDrawer}>Learn about</a></div>
                 </div>
             );
         }
@@ -181,9 +103,9 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 <Row className="basic lineBasic">
                     <p>Status</p>
                     <div className="status">
-                        <span className={status}>{status}</span>
+                        <span className={EXPERIMENT.status}>{EXPERIMENT.status}</span>
                         {
-                            status === 'ERROR'
+                            EXPERIMENT.status === 'ERROR'
                                 ?
                                 <Popover
                                     placement="rightTop"
@@ -201,26 +123,26 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 <ProgressBar
                     who="Duration"
                     percent={percent}
-                    description={runDuration}
-                    bgclass={status}
-                    maxString={`Max duration: ${convertTime(trialProfile.maxDuration)}`}
+                    description={execDuration}
+                    bgclass={EXPERIMENT.status}
+                    maxString={`Max duration: ${maxDuration}`}
                 />
                 <ProgressBar
                     who="Trial numbers"
                     percent={bar2Percent}
                     description={bar2.toString()}
-                    bgclass={status}
-                    maxString={`Max trial number: ${trialProfile.MaxTrialNum}`}
+                    bgclass={EXPERIMENT.status}
+                    maxString={`Max trial number: ${maxTrialNum}`}
                 />
                 <Row className="basic colorOfbasic mess">
                     <p>Best metric</p>
-                    <div>{bestAccuracy.toFixed(6)}</div>
+                    <div>{isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}</div>
                 </Row>
                 <Row className="mess">
                     <Col span={6}>
                         <Row className="basic colorOfbasic">
                             <p>Spent</p>
-                            <div>{convertTime(trialProfile.execDuration)}</div>
+                            <div>{execDuration}</div>
                         </Row>
                     </Col>
                     <Col span={6}>
@@ -232,58 +154,42 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     <Col span={12}>
                         {/* modify concurrency */}
                         <p>Concurrency</p>
-                        <Row className="inputBox">
-                            <input
-                                type="number"
-                                disabled={isEnable}
-                                onChange={this.getUserTrialConcurrency}
-                                className="concurrencyInput"
-                                ref={(input) => this.conInput = input}
-                            />
-                            <Button
-                                type="primary"
-                                className="tableButton editStyle"
-                                onClick={this.editTrialConcurrency}
-                            >{btnName}
-                            </Button>
-                            <Button
-                                type="primary"
-                                onClick={this.cancelFunction}
-                                style={{ display: cancelSty, marginLeft: 1 }}
-                                className="tableButton editStyle"
-                            >
-                                Cancel
-                            </Button>
-                        </Row>
+                        <ConcurrencyInput value={this.props.concurrency} updateValue={this.editTrialConcurrency} />
                     </Col>
                 </Row>
                 <Row className="mess">
                     <Col span={6}>
                         <Row className="basic colorOfbasic">
                             <p>Running</p>
-                            <div>{trialNumber.runTrial}</div>
+                            <div>{count.get('RUNNING')}</div>
                         </Row>
                     </Col>
                     <Col span={6}>
                         <Row className="basic colorOfbasic">
                             <p>Succeeded</p>
-                            <div>{trialNumber.succTrial}</div>
+                            <div>{count.get('SUCCEEDED')}</div>
                         </Row>
                     </Col>
                     <Col span={6}>
                         <Row className="basic">
                             <p>Stopped</p>
-                            <div>{trialNumber.stopTrial}</div>
+                            <div>{stoppedCount}</div>
                         </Row>
                     </Col>
                     <Col span={6}>
                         <Row className="basic">
                             <p>Failed</p>
-                            <div>{trialNumber.failTrial}</div>
+                            <div>{count.get('FAILED')}</div>
                         </Row>
                     </Col>
-
                 </Row>
+                {/* learn about click -> default active key is dispatcher. */}
+                {isShowLogDrawer ? (
+                    <LogDrawer
+                        closeDrawer={this.closeDrawer}
+                        activeTab="dispatcher"
+                    />
+                ) : null}
             </Row>
         );
     }

@@ -36,3 +36,7 @@ jobs:
       cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+    displayName: 'nnicli test'

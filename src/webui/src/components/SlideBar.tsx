@@ -3,10 +3,14 @@ import { Link } from 'react-router';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import MediaQuery from 'react-responsive';
-import { DOWNLOAD_IP } from '../static/const';
-import { Row, Col, Menu, Dropdown, Icon, Select } from 'antd';
+import { Row, Col, Menu, Dropdown, Icon, Select, Button, Form } from 'antd';
+import { FormComponentProps } from 'antd/lib/form';
+import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 const { SubMenu } = Menu;
 const { Option } = Select;
+const FormItem = Form.Item;
+import LogDrawer from './Modal/LogDrawer';
+import ExperimentDrawer from './Modal/ExperimentDrawer';
 import '../static/style/slideBar.scss';
 import '../static/style/button.scss';
 
@@ -14,11 +18,14 @@ interface SliderState {
     version: string;
     menuVisible: boolean;
     navBarVisible: boolean;
+    isdisabledFresh: boolean;
+    isvisibleLogDrawer: boolean;
+    isvisibleExperimentDrawer: boolean;
+    activeKey: string;
 }
 
-interface SliderProps {
+interface SliderProps extends FormComponentProps {
     changeInterval: (value: number) => void;
-    changeFresh: (value: string) => void;
 }
 
 interface EventPer {
@@ -27,9 +34,7 @@ interface EventPer {
 
 class SlideBar extends React.Component<SliderProps, SliderState> {
 
-    public _isMounted = false;
     public divMenu: HTMLDivElement | null;
-    public countOfMenu: number = 0;
     public selectHTML: Select | null;
 
     constructor(props: SliderProps) {
@@ -38,121 +43,11 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             version: '',
             menuVisible: false,
             navBarVisible: false,
+            isdisabledFresh: false,
+            isvisibleLogDrawer: false, // download button (nnimanager·dispatcher) click -> drawer
+            isvisibleExperimentDrawer: false,
+            activeKey: 'dispatcher'
         };
-    }
-
-    downExperimentContent = () => {
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((res, res1, res2) => {
-                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
-                    if (res.data.params.searchSpace) {
-                        res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
-                    }
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    let trialMessagesArr = res1.data;
-                    const interResultList = res2.data;
-                    Object.keys(trialMessagesArr).map(item => {
-                        // transform hyperparameters as object to show elegantly
-                        trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
-                        const trialId = trialMessagesArr[item].id;
-                        // add intermediate result message
-                        trialMessagesArr[item].intermediate = [];
-                        Object.keys(interResultList).map(key => {
-                            const interId = interResultList[key].trialJobId;
-                            if (trialId === interId) {
-                                trialMessagesArr[item].intermediate.push(interResultList[key]);
-                            }
-                        });
-                    });
-                    const result = {
-                        experimentParameters: res.data,
-                        trialMessage: trialMessagesArr
-                    };
-                    const aTag = document.createElement('a');
-                    const file = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
-                    aTag.download = 'experiment.json';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.json';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            }));
-    }
-
-    downnnimanagerLog = () => {
-        axios(`${DOWNLOAD_IP}/nnimanager.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const nniLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([nniLogfile], { type: 'application/json' });
-                    aTag.download = 'nnimanagerLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'nnimanagerLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
-    }
-
-    downDispatcherlog = () => {
-        axios(`${DOWNLOAD_IP}/dispatcher.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const dispatchLogfile = res.data;
-                    const aTag = document.createElement('a');
-                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-                    const file = new Blob([dispatchLogfile], { type: 'application/json' });
-                    aTag.download = 'dispatcherLog.log';
-                    aTag.href = URL.createObjectURL(file);
-                    aTag.click();
-                    if (!isEdge) {
-                        URL.revokeObjectURL(aTag.href);
-                    }
-                    if (navigator.userAgent.indexOf('Firefox') > -1) {
-                        const downTag = document.createElement('a');
-                        downTag.addEventListener('click', function () {
-                            downTag.download = 'dispatcherLog.log';
-                            downTag.href = URL.createObjectURL(file);
-                        });
-                        let eventMouse = document.createEvent('MouseEvents');
-                        eventMouse.initEvent('click', false, false);
-                        downTag.dispatchEvent(eventMouse);
-                    }
-                }
-            });
     }
 
     getNNIversion = () => {
@@ -160,26 +55,26 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             method: 'GET'
         })
             .then(res => {
-                if (res.status === 200 && this._isMounted) {
+                if (res.status === 200) {
                     this.setState({ version: res.data });
                 }
             });
     }
 
     handleMenuClick = (e: EventPer) => {
-        if (this._isMounted) { this.setState({ menuVisible: false }); }
+        this.setState({ menuVisible: false });
         switch (e.key) {
-            // download experiment related content
+            // to see & download experiment parameters
             case '1':
-                this.downExperimentContent();
+                this.setState({ isvisibleExperimentDrawer: true });
                 break;
-            // download nnimanager log file
+            // to see & download nnimanager log
             case '2':
-                this.downnnimanagerLog();
+                this.setState({ activeKey: 'nnimanager', isvisibleLogDrawer: true });
                 break;
-            // download dispatcher log file
+            // to see & download dispatcher log
             case '3':
-                this.downDispatcherlog();
+                this.setState({ isvisibleLogDrawer: true, activeKey: 'dispatcher' });
                 break;
             case 'close':
             case '10':
@@ -193,13 +88,10 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     handleVisibleChange = (flag: boolean) => {
-        if (this._isMounted === true) {
-            this.setState({ menuVisible: flag });
-        }
+        this.setState({ menuVisible: flag });
     }
 
     getInterval = (value: string) => {
-
         if (value === 'close') {
             this.props.changeInterval(0);
         } else {
@@ -208,7 +100,6 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     menu = () => {
-        this.countOfMenu = 0;
         return (
             <Menu onClick={this.handleMenuClick}>
                 <Menu.Item key="1">Experiment Parameters</Menu.Item>
@@ -223,12 +114,8 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         const { version } = this.state;
         const feedBackLink = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
-            <Menu onClick={this.handleMenuClick} mode="inline">
-                <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
-                <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
-                <Menu.Item key="fresh">
-                    <span className="fresh" onClick={this.fresh}><span>Fresh</span></span>
-                </Menu.Item>
+            <Menu onClick={this.handleMenuClick} className="menu-list" style={{ width: 216 }}>
+                {/* <Menu onClick={this.handleMenuClick} className="menu-list" style={{width: window.innerWidth}}> */}
                 <Menu.Item key="feedback">
                     <a href={feedBackLink} target="_blank">Feedback</a>
                 </Menu.Item>
@@ -238,7 +125,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                     onChange={this.handleVisibleChange}
                     title={
                         <span>
-                            <span>Download</span>
+                            <span>View</span>
                         </span>
                     }
                 >
@@ -250,124 +137,225 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    // nav bar <1299
-    showMenu = () => {
-        if (this.divMenu !== null) {
-            this.countOfMenu = this.countOfMenu + 1;
-            if (this.countOfMenu % 2 === 0) {
-                this.divMenu.setAttribute('class', 'hide');
-            } else {
-                this.divMenu.setAttribute('class', 'show');
-            }
-        }
+    mobileTabs = () => {
+        return (
+            // <Menu className="menuModal" style={{width: 880, position: 'fixed', left: 0, top: 56}}>
+            <Menu className="menuModal" style={{ padding: '0 10px' }}>
+                <Menu.Item key="overview"><Link to={'/oview'}>Overview</Link></Menu.Item>
+                <Menu.Item key="detail"><Link to={'/detail'}>Trials detail</Link></Menu.Item>
+            </Menu>
+        );
+    }
+
+    refreshInterval = () => {
+        const {
+            form: { getFieldDecorator },
+            // form: { getFieldDecorator, getFieldValue },
+        } = this.props;
+        return (
+            <Form>
+                <FormItem style={{ marginBottom: 0 }}>
+                    {getFieldDecorator('interval', {
+                        initialValue: 'Refresh every 10s',
+                    })(
+                        <Select onSelect={this.getInterval}>
+                            <Option value="close">Disable Auto Refresh</Option>
+                            <Option value="10">Refresh every 10s</Option>
+                            <Option value="20">Refresh every 20s</Option>
+                            <Option value="30">Refresh every 30s</Option>
+                            <Option value="60">Refresh every 1min</Option>
+                        </Select>,
+                    )}
+                </FormItem>
+            </Form>
+        );
     }
 
     select = () => {
+        const { isdisabledFresh } = this.state;
+
         return (
-            <Select
-                onSelect={this.getInterval}
-                defaultValue="Refresh every 10s"
-                className="interval"
-            >
-                <Option value="close">Disable Auto Refresh</Option>
-                <Option value="10">Refresh every 10s</Option>
-                <Option value="20">Refresh every 20s</Option>
-                <Option value="30">Refresh every 30s</Option>
-                <Option value="60">Refresh every 1min</Option>
-            </Select>
+            <div className="interval">
+                {this.refreshInterval()}
+                <Button
+                    className="fresh"
+                    onClick={this.fresh}
+                    type="ghost"
+                    disabled={isdisabledFresh}
+                >
+                    <Icon type="sync" /><span>Refresh</span>
+                </Button>
+            </div>
         );
     }
 
     fresh = (event: React.SyntheticEvent<EventTarget>) => {
         event.preventDefault();
-        const whichPage = window.location.pathname;
-        this.props.changeFresh(whichPage);
+        event.stopPropagation();
+        this.setState({ isdisabledFresh: true }, () => {
+            setTimeout(() => { this.setState({ isdisabledFresh: false }); }, 1000);
+        });
     }
 
-    componentDidMount() {
-        this._isMounted = true;
-        this.getNNIversion();
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
-    }
-
-    render() {
+    desktopHTML = () => {
         const { version, menuVisible } = this.state;
         const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
-            <Row>
-                <MediaQuery query="(min-width: 1299px)">
-                    <Row className="nav">
-                        <ul className="link">
-                            <li className="logo">
-                                <Link to={'/oview'}>
-                                    <img
-                                        src={require('../static/img/logo2.png')}
-                                        style={{ width: 88 }}
-                                        alt="NNI logo"
-                                    />
-                                </Link>
-                            </li>
-                            <li className="tab firstTab">
-                                <Link to={'/oview'} activeClassName="high">
-                                    Overview
-                                    </Link>
-                            </li>
-                            <li className="tab">
-                                <Link to={'/detail'} activeClassName="high">
-                                    Trials detail
-                                    </Link>
-                            </li>
-                            <li className="feedback">
-                                <span className="fresh" onClick={this.fresh}>
-                                    <Icon type="sync"/><span>Fresh</span>
-                                </span>
-                                <Dropdown
-                                    className="dropdown"
-                                    overlay={this.menu()}
-                                    onVisibleChange={this.handleVisibleChange}
-                                    visible={menuVisible}
-                                    trigger={['click']}
-                                >
-                                    <a className="ant-dropdown-link" href="#">
-                                        Download <Icon type="down" />
-                                    </a>
-                                </Dropdown>
-                                <a href={feed} target="_blank">
-                                    <img
-                                        src={require('../static/img/icon/issue.png')}
-                                        alt="NNI github issue"
-                                    />
-                                    Feedback
-                            </a>
-                                <span className="version">Version: {version}</span>
-                            </li>
-                        </ul>
-                    </Row>
-                </MediaQuery>
-                <MediaQuery query="(max-width: 1299px)">
-                    <Row className="little">
-                        <Col span={6} className="menu">
-                            <Icon type="unordered-list" className="more" onClick={this.showMenu} />
-                            <div ref={div => this.divMenu = div} className="hide">{this.navigationBar()}</div>
-                        </Col>
-                        <Col span={10} className="logo">
-                            <Link to={'/oview'}>
+            <Row className="nav">
+                <Col span={8}>
+                    <span className="desktop-logo">{NNILOGO}</span>
+                    <span className="left-right-margin">{OVERVIEWTABS}</span>
+                    <span>{DETAILTABS}</span>
+                </Col>
+                <Col span={16} className="desktop-right">
+                    <span>
+                        <Button
+                            className="fresh"
+                            type="ghost"
+                        >
+                            <a target="_blank" href="https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html">
                                 <img
-                                    src={require('../static/img/logo2.png')}
-                                    style={{ width: 88 }}
-                                    alt="NNI logo"
+                                    src={require('../static/img/icon/ques.png')}
+                                    alt="question"
+                                    className="question"
                                 />
-                            </Link>
-                        </Col>
-                    </Row>
-                </MediaQuery>
-                {this.select()}
+                                <span>Help</span>
+                            </a>
+                        </Button>
+                    </span>
+                    <span>{this.select()}</span>
+                    <span>
+                        <Dropdown
+                            className="dropdown"
+                            overlay={this.menu()}
+                            onVisibleChange={this.handleVisibleChange}
+                            visible={menuVisible}
+                            trigger={['click']}
+                        >
+                            <a className="ant-dropdown-link" href="#">
+                                <Icon type="download" className="down-icon" />
+                                <span>View</span>
+                                {
+                                    menuVisible
+                                        ?
+                                        <Icon type="up" className="margin-icon" />
+                                        :
+                                        <Icon type="down" className="margin-icon" />
+                                }
+                            </a>
+                        </Dropdown>
+                    </span>
+                    <span className="feedback">
+                        <a href={feed} target="_blank">
+                            <img
+                                src={require('../static/img/icon/issue.png')}
+                                alt="NNI github issue"
+                            />
+                            Feedback
+                        </a>
+                    </span>
+                    <span className="version">Version: {version}</span>
+                </Col>
             </Row>
+        );
+    }
+
+    tabeltHTML = () => {
+        return (
+            <Row className="nav">
+                <Col className="tabelt-left" span={14}>
+                    <span>
+                        <Dropdown overlay={this.navigationBar()} trigger={['click']}>
+                            <Icon type="unordered-list" className="more" />
+                        </Dropdown>
+                    </span>
+                    <span className="left-right-margin tabelt-img">{NNILOGO}</span>
+                    <span>{OVERVIEWTABS}</span>
+                    <span className="left-margin">{DETAILTABS}</span>
+                </Col>
+                <Col className="tabelt-right" span={10}>
+                    {this.select()}
+                </Col>
+            </Row>
+        );
+    }
+
+    mobileHTML = () => {
+        const { isdisabledFresh } = this.state;
+        return (
+            <Row className="nav">
+                <Col className="left" span={8}>
+                    <span>
+                        <Dropdown className="more-mobile" overlay={this.navigationBar()} trigger={['click']}>
+                            <Icon type="unordered-list" className="more" />
+                        </Dropdown>
+                    </span>
+                    <span>
+                        <Dropdown overlay={this.mobileTabs()} trigger={['click']}>
+                            <a className="ant-dropdown-link" href="#">
+                                <span>NNI <Icon type="down" /></span>
+                            </a>
+                        </Dropdown>
+                    </span>
+                </Col>
+                <Col className="center" span={8}>
+                    <img
+                        src={require('../static/img/logo2.png')}
+                        alt="NNI logo"
+                    />
+                </Col>
+                {/* the class interval have other style ! */}
+                <Col className="right interval" span={8}>
+                    <Button
+                        className="fresh"
+                        onClick={this.fresh}
+                        type="ghost"
+                        disabled={isdisabledFresh}
+                    >
+                        <Icon type="sync" /><span>Refresh</span>
+                    </Button>
+                </Col>
+            </Row>
+        );
+    }
+    // close log drawer (nnimanager.dispatcher)
+    closeLogDrawer = () => {
+        this.setState({ isvisibleLogDrawer: false, activeKey: '' });
+    }
+
+    // close download experiment parameters drawer
+    closeExpDrawer = () => {
+        this.setState({ isvisibleExperimentDrawer: false });
+    }
+
+    componentDidMount() {
+        this.getNNIversion();
+    }
+
+    render() {
+        const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
+        const tablet = (<MediaQuery minWidth={885} maxWidth={1281}>{this.tabeltHTML()}</MediaQuery>);
+        const desktop = (<MediaQuery minWidth={1282}>{this.desktopHTML()}</MediaQuery>);
+        const { isvisibleLogDrawer, activeKey, isvisibleExperimentDrawer } = this.state;
+        return (
+            <div>
+                {mobile}
+                {tablet}
+                {desktop}
+                {/* the drawer for dispatcher & nnimanager log message */}
+                {isvisibleLogDrawer ? (
+                    <LogDrawer
+                        closeDrawer={this.closeLogDrawer}
+                        activeTab={activeKey}
+                    />
+                ) : null}
+                <ExperimentDrawer
+                    isVisble={isvisibleExperimentDrawer}
+                    closeExpDrawer={this.closeExpDrawer}
+                />
+            </div>
         );
     }
 }
 
-export default SlideBar;
+export default Form.create<FormComponentProps>()(SlideBar);

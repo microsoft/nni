@@ -1,3 +1,7 @@
+// when there are more trials than this threshold, metrics will be updated in group of this size to avoid freezing
+const METRIC_GROUP_UPDATE_THRESHOLD = 100;
+const METRIC_GROUP_UPDATE_SIZE = 20;
+
 const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const trialJobStatus = [
@@ -19,6 +23,11 @@ const MONACO = {
     readOnly: true,
     automaticLayout: true
 };
+const DRAWEROPTION = {
+    minimap: { enabled: false },
+    readOnly: true,
+    automaticLayout: true
+};
 const COLUMN_INDEX = [
     {
         name: 'Trial No.',
@@ -29,28 +38,41 @@ const COLUMN_INDEX = [
         index: 2
     },
     {
-        name: 'Duration',
+        name: 'Start Time',
         index: 3
     },
     {
-        name: 'Status',
+        name: 'End Time',
         index: 4
     },
     {
-        name: 'Default',
+        name: 'Duration',
         index: 5
+    },
+    {
+        name: 'Status',
+        index: 6
+    },
+    {
+        name: 'Intermediate result',
+        index: 7
+    },
+    {
+        name: 'Default',
+        index: 8
     },
     {
         name: 'Operation',
         index: 10000
-    },
-    {
-        name: 'Intermediate result',
-        index: 10001
     }
 ];
-const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation', 'Intermediate result'];
+// defatult selected column
+const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', 'Operation'];
+// all choice column !dictory final
+const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
+'Intermediate result', 'Default', 'Operation'];
 export {
-    MANAGER_IP, DOWNLOAD_IP, trialJobStatus,
-    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX
+    MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro,
+    CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX, DRAWEROPTION,
+    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE,
 };

@@ -143,5 +143,47 @@
             "(2 * 3 + 4)",
             "(lambda x: 1 + x)"
         ]
+    },
+    "nas/mutable_block_39": {
+        "_type": "mutable_layer",
+        "_value": {
+            "mutable_layer_0": {
+                "layer_choice": [
+                    "add_one()",
+                    "add_two()",
+                    "add_three()",
+                    "add_four()"
+                ],
+                "optional_inputs": [
+                    "images"
+                ],
+                "optional_input_size": 1
+            },
+            "mutable_layer_1": {
+                "layer_choice": [
+                    "add_one()",
+                    "add_two()",
+                    "add_three()",
+                    "add_four()"
+                ],
+                "optional_inputs": [
+                    "layer_1_out"
+                ],
+                "optional_input_size": 1
+            },
+            "mutable_layer_2": {
+                "layer_choice": [
+                    "add_one()",
+                    "add_two()",
+                    "add_three()",
+                    "add_four()"
+                ],
+                "optional_inputs": [
+                    "layer_1_out",
+                    "layer_2_out"
+                ],
+                "optional_input_size": 1
+            }
+        }
     }
 }

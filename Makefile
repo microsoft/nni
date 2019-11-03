@@ -54,7 +54,7 @@ NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
 NNI_YARN_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn
-NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
+NNI_YARN ?= PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
 NNI_VERSION_VALUE = $(shell git describe --tags)
@@ -167,6 +167,7 @@ dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
 	mkdir -p build
 	ln -sf ../src/sdk/pynni/nni build/nni
+	ln -sf ../src/sdk/pynni/nnicli build/nnicli
 	ln -sf ../tools/nni_annotation build/nni_annotation
 	ln -sf ../tools/nni_cmd build/nni_cmd
 	ln -sf ../tools/nni_trial_tool build/nni_trial_tool

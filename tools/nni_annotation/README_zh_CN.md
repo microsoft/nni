@@ -27,7 +27,7 @@ NNI 中，有 4 种类型的 Annotation；
 
 **参数**
 
-- **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](https://nni.readthedocs.io/zh/latest/SearchSpaceSpec.html)。 
+- **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](https://nni.readthedocs.io/zh/latest/Tutorial/SearchSpaceSpec.html)。
 - **name**: 将被赋值的变量名称。 注意，此参数应该与下面一行等号左边的值相同。
 
 NNI 支持如下 10 种类型来表示搜索空间：
@@ -72,10 +72,10 @@ h_pooling = max_pool(hidden_layer, pool_size)
 
 `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` 用来返回中间结果，这和 [Trials.md](https://nni.readthedocs.io/zh/latest/Trials.html) 中的 `nni.report_intermediate_result` 用法一样。
+`@nni.report_intermediate_result` 用来返回中间结果，这和[在 NNI 上实现 Trial](https://nni.readthedocs.io/zh/latest/TrialExample/Trials.html) 中 `nni.report_intermediate_result` 的用法一样。
 
 ### 4. 最终结果
 
 `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和 [Trials.md](https://nni.readthedocs.io/zh/latest/Trials.html) 中的 `nni.report_final_result` 用法一样。
+`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和[在 NNI 上实现 Trial](https://nni.readthedocs.io/zh/latest/TrialExample/Trials.html) 中的 `nni.report_final_result` 用法一样。

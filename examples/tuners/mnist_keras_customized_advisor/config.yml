@@ -1,0 +1,20 @@
+authorName: default
+experimentName: example_customized_advisor
+trialConcurrency: 4
+maxExecDuration: 1h
+maxTrialNum: 200
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+advisor:
+  codeDir: .
+  classFileName: dummy_advisor.py
+  className: DummyAdvisor
+  classArgs:
+    k: 3
+trial:
+  command: python3 mnist_keras.py --epochs 100 --num_train 600 --num_test 100
+  codeDir: .
+  gpuNum: 0

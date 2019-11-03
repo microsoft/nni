@@ -22,8 +22,6 @@ interface DurationState {
 
 class Duration extends React.Component<DurationProps, DurationState> {
 
-    public _isMounted = false;
-
     constructor(props: DurationProps) {
 
         super(props);
@@ -142,15 +140,12 @@ class Duration extends React.Component<DurationProps, DurationState> {
             trialId: trialId,
             trialTime: trialTime
         });
-        if (this._isMounted) {
-            this.setState({
-                durationSource: this.getOption(trialRun[0])
-            });
-        }
+        this.setState({
+            durationSource: this.getOption(trialRun[0])
+        });
     }
 
     componentDidMount() {
-        this._isMounted = true;
         const { source } = this.props;
         this.drawDurationGraph(source);
     }
@@ -163,9 +158,9 @@ class Duration extends React.Component<DurationProps, DurationState> {
     }
 
     shouldComponentUpdate(nextProps: DurationProps, nextState: DurationState) {
-    
+
         const { whichGraph, source } = nextProps;
-        if (whichGraph === '3') { 
+        if (whichGraph === '3') {
             const beforeSource = this.props.source;
             if (whichGraph !== this.props.whichGraph) {
                 return true;
@@ -174,20 +169,17 @@ class Duration extends React.Component<DurationProps, DurationState> {
             if (source.length !== beforeSource.length) {
                 return true;
             }
-            
-            if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                return true;
-            }
 
-            if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                return true;
+            if (beforeSource[beforeSource.length - 1] !== undefined) {
+                if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
+                    return true;
+                }
+                if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
+                    return true;
+                }
             }
         }
         return false;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
     }
 
     render() {

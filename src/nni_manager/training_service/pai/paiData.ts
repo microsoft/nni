@@ -19,7 +19,7 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
 /**
  * PAI trial job detail
@@ -34,20 +34,18 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
-    public form: JobApplicationForm;
-    public sequenceId: number;
+    public form: TrialJobApplicationForm;
     public hdfsLogPath: string;
     public isEarlyStopped?: boolean;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string,
-                submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {
+                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.sequenceId = sequenceId;
         this.tags = [];
         this.hdfsLogPath = hdfsLogPath;
     }
@@ -69,9 +67,6 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 && python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}' \
 --pai_hdfs_output_dir '{9}' --pai_hdfs_host '{10}' --pai_user_name {11} --nni_hdfs_exp_dir '{12}' --webhdfs_path '/webhdfs/api/v1' \
 --nni_manager_version '{13}' --log_collection '{14}'`;
-
-export const PAI_OUTPUT_DIR_FORMAT: string =
-`hdfs://{0}:9000/`;
 
 // tslint:disable:no-http-string
 export const PAI_LOG_PATH_FORMAT: string =

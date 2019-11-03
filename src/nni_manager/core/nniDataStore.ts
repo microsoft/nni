@@ -141,6 +141,7 @@ class NNIDataStore implements DataStore {
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
         const trialJobs: TrialJobInfo[] = await this.queryTrialJobs(undefined, trialJobId);
+        assert(trialJobs.length <= 1);
 
         return trialJobs[0];
     }

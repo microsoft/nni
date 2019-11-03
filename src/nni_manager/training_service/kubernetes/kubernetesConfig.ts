@@ -75,16 +75,19 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: KeyVaultConfig;
     public readonly azureStorage: AzureStorage;
+    public readonly uploadRetryCount: number | undefined;
 
     constructor(
             apiVersion: string,
             keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
-            storage?: KubernetesStorageKind
+            storage?: KubernetesStorageKind,
+            uploadRetryCount?: number
         ) {
         super(apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+        this.uploadRetryCount = uploadRetryCount;
     }
 
     public get storageType(): KubernetesStorageKind {
@@ -98,7 +101,8 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
             kubernetesClusterConfigObjectAzure.apiVersion,
             kubernetesClusterConfigObjectAzure.keyVault,
             kubernetesClusterConfigObjectAzure.azureStorage,
-            kubernetesClusterConfigObjectAzure.storage
+            kubernetesClusterConfigObjectAzure.storage,
+            kubernetesClusterConfigObjectAzure.uploadRetryCount
         );
     }
 }
@@ -179,6 +183,9 @@ export class KubernetesTrialConfigTemplate {
     // Docker image
     public readonly image: string;
 
+    // Private registry config file path to download docker iamge
+    public readonly privateRegistryAuthPath?: string;
+
     // Trail command
     public readonly command : string;
 
@@ -186,12 +193,13 @@ export class KubernetesTrialConfigTemplate {
     public readonly gpuNum : number;
 
     constructor(command : string, gpuNum : number,
-                cpuNum: number, memoryMB: number, image: string) {
+                cpuNum: number, memoryMB: number, image: string, privateRegistryAuthPath?: string) {
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
+        this.privateRegistryAuthPath = privateRegistryAuthPath;
     }
 }
 

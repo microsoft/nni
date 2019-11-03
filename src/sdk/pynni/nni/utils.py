@@ -51,6 +51,14 @@ class NodeType:
     NAME = '_name'
 
 
+class MetricType:
+    """The types of metric data
+    """
+    FINAL = 'FINAL'
+    PERIODICAL = 'PERIODICAL'
+    REQUEST_PARAMETER = 'REQUEST_PARAMETER'
+
+
 def split_index(params):
     """
     Delete index infromation from params
@@ -76,12 +84,13 @@ def extract_scalar_reward(value, scalar_key='default'):
         Incorrect final result: the final result should be float/int,
         or a dict which has a key named "default" whose value is float/int.
     """
-    if isinstance(value, float) or isinstance(value, int):
+    if isinstance(value, (float, int)):
         reward = value
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
         reward = value[scalar_key]
     else:
-        raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
+        raise RuntimeError('Incorrect final result: the final result should be float/int, ' \
+            'or a dict which has a key named "default" whose value is float/int.')
     return reward
 
 
@@ -93,8 +102,7 @@ def convert_dict2tuple(value):
         for _keys in value:
             value[_keys] = convert_dict2tuple(value[_keys])
         return tuple(sorted(value.items()))
-    else:
-        return value
+    return value
 
 
 def init_dispatcher_logger():
@@ -103,23 +111,3 @@ def init_dispatcher_logger():
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
     init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
-
-
-def randint_to_quniform(in_x):
-    if isinstance(in_x, dict):
-        if NodeType.TYPE in in_x.keys():
-            if in_x[NodeType.TYPE] == 'randint':
-                value = in_x[NodeType.VALUE]
-                value.append(1)
-
-                in_x[NodeType.TYPE] = 'quniform'
-                in_x[NodeType.VALUE] = value
- 
-            elif in_x[NodeType.TYPE] == 'choice':
-                randint_to_quniform(in_x[NodeType.VALUE])
-        else:
-            for key in in_x.keys():
-                randint_to_quniform(in_x[key])
-    elif isinstance(in_x, list):
-        for temp in in_x:
-            randint_to_quniform(temp)

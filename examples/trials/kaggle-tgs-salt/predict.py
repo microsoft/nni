@@ -133,7 +133,7 @@ def generate_preds(outputs, target_size, pad_mode, threshold=0.5):
         if pad_mode == 'resize':
             cropped = resize_image(output, target_size=target_size)
         else:
-            cropped = crop_image_softmax(output, target_size=target_size)
+            cropped = crop_image(output, target_size=target_size)
         pred = binarize(cropped, threshold)
         preds.append(pred)
 

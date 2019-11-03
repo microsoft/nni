@@ -20,14 +20,15 @@
 
 import contextlib
 import collections
-import json
 import os
+import socket
 import sys
 import subprocess
 import requests
+import time
 import ruamel.yaml as yaml
 
-EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
+EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -76,10 +77,13 @@ def setup_experiment(installed=True):
             pypath = ':'.join([sdk_path, cmd_path])
         os.environ['PYTHONPATH'] = pypath
 
-def fetch_nni_log_path(experiment_url):
+def get_experiment_id(experiment_url):
+    experiment_id = requests.get(experiment_url).json()['id']
+    return experiment_id
+
+def get_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
-    experiment_profile = requests.get(experiment_url)
-    experiment_id = json.loads(experiment_profile.text)['id']
+    experiment_id = get_experiment_id(experiment_url)
     experiment_path = os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
     nnimanager_log_path = os.path.join(experiment_path, 'log', 'nnimanager.log')
 
@@ -88,17 +92,14 @@ def fetch_nni_log_path(experiment_url):
 def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
-    if sys.platform == "win32":
-        cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
-    else:
-        cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
-    completed_process = subprocess.run(' '.join(cmds), shell=True)
-
-    return completed_process.returncode == 0
+    
+    with open(nnimanager_log_path, 'r') as f:
+        log_content = f.read()
+    
+    return EXPERIMENT_DONE_SIGNAL in log_content
 
 def get_experiment_status(status_url):
     nni_status = requests.get(status_url).json()
-    #print(nni_status)
     return nni_status['status']
 
 def get_succeeded_trial_num(trial_jobs_url):
@@ -115,10 +116,12 @@ def print_stderr(trial_jobs_url):
     trial_jobs = requests.get(trial_jobs_url).json()
     for trial_job in trial_jobs:
         if trial_job['status'] == 'FAILED':
-            stderr_path = trial_job['stderrPath'].split(':')[-1]
             if sys.platform == "win32":
+                p = trial_job['stderrPath'].split(':')
+                stderr_path = ':'.join([p[-2], p[-1]])
                 subprocess.run(['type', stderr_path], shell=True)
             else:
+                stderr_path = trial_job['stderrPath'].split(':')[-1]
                 subprocess.run(['cat', stderr_path])
 
 def parse_max_duration_time(max_exec_duration):
@@ -139,3 +142,17 @@ def deep_update(source, overrides):
         else:
             source[key] = overrides[key]
     return source
+
+def detect_port(port):
+    '''Detect if the port is used'''
+    socket_test = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    try:
+        socket_test.connect(('127.0.0.1', int(port)))
+        socket_test.close()
+        return True
+    except:
+        return False
+
+def snooze():
+    '''Sleep to make sure previous stopped exp has enough time to exit'''
+    time.sleep(6)

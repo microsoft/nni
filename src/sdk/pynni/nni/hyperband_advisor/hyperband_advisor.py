@@ -21,18 +21,18 @@
 hyperband_advisor.py
 """
 
-import sys
-import math
 import copy
 import logging
-import numpy as np
-import json_tricks
+import math
+import sys
 
-from nni.protocol import CommandType, send
+import json_tricks
+import numpy as np
+from nni.common import multi_phase_enabled
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.common import init_logger
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, randint_to_quniform
-import nni.parameter_expressions as parameter_expressions
+from nni.protocol import CommandType, send
+from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
+from nni import parameter_expressions
 
 _logger = logging.getLogger(__name__)
 
@@ -49,9 +49,10 @@ def create_parameter_id():
     int
         parameter id
     """
-    global _next_parameter_id  # pylint: disable=global-statement
+    global _next_parameter_id
     _next_parameter_id += 1
     return _next_parameter_id - 1
+
 
 def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-1):
     """Create a full id for a specific bracket's hyperparameter configuration
@@ -77,6 +78,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
                           increased_id])
     return params_id
 
+
 def json2parameter(ss_spec, random_state):
     """Randomly generate values for hyperparameters from hyperparameter space i.e., x.
 
@@ -100,8 +102,7 @@ def json2parameter(ss_spec, random_state):
                 _index = random_state.randint(len(_value))
                 chosen_params = json2parameter(ss_spec[NodeType.VALUE][_index], random_state)
             else:
-                chosen_params = eval('parameter_expressions.' + # pylint: disable=eval-used
-                                     _type)(*(_value + [random_state]))
+                chosen_params = getattr(parameter_expressions, _type)(*(_value + [random_state]))
         else:
             chosen_params = dict()
             for key in ss_spec.keys():
@@ -113,6 +114,7 @@ def json2parameter(ss_spec, random_state):
     else:
         chosen_params = copy.deepcopy(ss_spec)
     return chosen_params
+
 
 class Bracket():
     """A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
@@ -137,14 +139,14 @@ class Bracket():
         self.bracket_id = s
         self.s_max = s_max
         self.eta = eta
-        self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1) - _epsilon) # pylint: disable=invalid-name
-        self.r = R / eta**s                     # pylint: disable=invalid-name
+        self.n = math.ceil((s_max + 1) * (eta ** s) / (s + 1) - _epsilon)
+        self.r = R / eta ** s
         self.i = 0
-        self.hyper_configs = []         # [ {id: params}, {}, ... ]
-        self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
-        self.num_configs_to_run = []    # [ n, n, n, ... ]
+        self.hyper_configs = []  # [ {id: params}, {}, ... ]
+        self.configs_perf = []  # [ {id: [seq, acc]}, {}, ... ]
+        self.num_configs_to_run = []  # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
-        self.optimize_mode = optimize_mode
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.no_more_trial = False
 
     def is_completed(self):
@@ -153,7 +155,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        return math.floor(self.n / self.eta**self.i + _epsilon), math.floor(self.r * self.eta**self.i + _epsilon)
+        return math.floor(self.n / self.eta ** self.i + _epsilon), math.floor(self.r * self.eta ** self.i + _epsilon)
 
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
@@ -185,7 +187,6 @@ class Bracket():
         else:
             self.configs_perf[i][parameter_id] = [seq, value]
 
-
     def inform_trial_end(self, i):
         """If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
         it will choose the top k trials for the next round (i.e., i+1)
@@ -195,16 +196,17 @@ class Bracket():
         i: int
             the ith round
         """
-        global _KEY # pylint: disable=global-statement
+        global _KEY
         self.num_finished_configs[i] += 1
-        _logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.bracket_id, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
+        _logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.bracket_id, self.i, i,
+                      self.num_finished_configs[i], self.num_configs_to_run[i])
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
-            and self.no_more_trial is False:
+                and self.no_more_trial is False:
             # choose candidate configs from finished configs to run in the next round
             assert self.i == i + 1
             this_round_perf = self.configs_perf[i]
             if self.optimize_mode is OptimizeMode.Maximize:
-                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
+                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True)  # reverse
             else:
                 sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
             _logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.bracket_id, self.i, sorted_perf)
@@ -214,7 +216,7 @@ class Bracket():
             for k in range(next_n):
                 params_id = sorted_perf[k][0]
                 params = self.hyper_configs[i][params_id]
-                params[_KEY] = next_r # modify r
+                params[_KEY] = next_r  # modify r
                 # generate new id
                 increased_id = params_id.split('_')[-1]
                 new_id = create_bracket_parameter_id(self.bracket_id, self.i, increased_id)
@@ -223,7 +225,7 @@ class Bracket():
             return [[key, value] for key, value in hyper_configs.items()]
         return None
 
-    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state): # pylint: disable=invalid-name
+    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state):
         """Randomly generate num hyperparameter configurations from search space
 
         Parameters
@@ -236,7 +238,7 @@ class Bracket():
         list
             a list of hyperparameter configurations. Format: [[key1, value1], [key2, value2], ...]
         """
-        global _KEY # pylint: disable=global-statement
+        global _KEY
         assert self.i == 0
         hyperparameter_configs = dict()
         for _ in range(num):
@@ -263,6 +265,7 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+
 class Hyperband(MsgDispatcherBase):
     """Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
     This is an implementation that could fully leverage available resources, i.e., high parallelism.
@@ -277,14 +280,15 @@ class Hyperband(MsgDispatcherBase):
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     """
-    def __init__(self, R, eta=3, optimize_mode='maximize'):
+
+    def __init__(self, R=60, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
-        self.R = R                        # pylint: disable=invalid-name
+        self.R = R
         self.eta = eta
-        self.brackets = dict()            # dict of Bracket
-        self.generated_hyper_configs = [] # all the configs waiting for run
-        self.completed_hyper_configs = [] # all the completed configs
+        self.brackets = dict()  # dict of Bracket
+        self.generated_hyper_configs = []  # all the configs waiting for run
+        self.completed_hyper_configs = []  # all the completed configs
         self.s_max = math.floor(math.log(self.R, self.eta) + _epsilon)
         self.curr_s = self.s_max
 
@@ -296,19 +300,17 @@ class Hyperband(MsgDispatcherBase):
         # In this case, tuner increases self.credit to issue a trial config sometime later.
         self.credit = 0
 
-    def load_checkpoint(self):
-        pass
-
-    def save_checkpoint(self):
-        pass
+        # record the latest parameter_id of the trial job trial_job_id.
+        # if there is no running parameter_id, self.job_id_para_id_map[trial_job_id] == None
+        # new trial job is added to this dict and finished trial job is removed from it.
+        self.job_id_para_id_map = dict()
 
     def handle_initialize(self, data):
-        """data is search space
-
+        """callback for initializing the advisor
         Parameters
         ----------
-        data: int
-            number of trial jobs
+        data: dict
+            search space
         """
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
@@ -321,9 +323,10 @@ class Hyperband(MsgDispatcherBase):
             number of trial jobs
         """
         for _ in range(data):
-            self._request_one_trial_job()
+            ret = self._get_one_trial_job()
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
 
-    def _request_one_trial_job(self):
+    def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
@@ -340,25 +343,31 @@ class Hyperband(MsgDispatcherBase):
             self.curr_s -= 1
 
         assert self.generated_hyper_configs
-        params = self.generated_hyper_configs.pop()
+        params = self.generated_hyper_configs.pop(0)
         ret = {
             'parameter_id': params[0],
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
-        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+        return ret
 
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
-
-        Parameters
-        ----------
-        data: int
-            number of trial jobs
         """
         self.searchspace_json = data
-        randint_to_quniform(self.searchspace_json)
         self.random_state = np.random.RandomState()
+
+    def _handle_trial_end(self, parameter_id):
+        """
+        Parameters
+        ----------
+        parameter_id: parameter id of the finished config
+        """
+        bracket_id, i, _ = parameter_id.split('_')
+        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
+        if hyper_configs is not None:
+            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
+            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
 
     def handle_trial_end(self, data):
         """
@@ -371,22 +380,9 @@ class Hyperband(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         hyper_params = json_tricks.loads(data['hyper_params'])
-        bracket_id, i, _ = hyper_params['parameter_id'].split('_')
-        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
-        if hyper_configs is not None:
-            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
-            self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            for _ in range(self.credit):
-                if not self.generated_hyper_configs:
-                    break
-                params = self.generated_hyper_configs.pop()
-                ret = {
-                    'parameter_id': params[0],
-                    'parameter_source': 'algorithm',
-                    'parameters': params[1]
-                }
-                send(CommandType.NewTrialJob, json_tricks.dumps(ret))
-                self.credit -= 1
+        self._handle_trial_end(hyper_params['parameter_id'])
+        if data['trial_job_id'] in self.job_id_para_id_map:
+            del self.job_id_para_id_map[data['trial_job_id']]
 
     def handle_report_metric_data(self, data):
         """
@@ -400,18 +396,40 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        value = extract_scalar_reward(data['value'])
-        bracket_id, i, _ = data['parameter_id'].split('_')
-        bracket_id = int(bracket_id)
-        if data['type'] == 'FINAL':
-            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
-            # and PERIODICAL metric are independent, thus, not comparable.
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
-            self.completed_hyper_configs.append(data)
-        elif data['type'] == 'PERIODICAL':
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+        if data['type'] == MetricType.REQUEST_PARAMETER:
+            assert multi_phase_enabled()
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            assert data['trial_job_id'] in self.job_id_para_id_map
+            self._handle_trial_end(self.job_id_para_id_map[data['trial_job_id']])
+            ret = self._get_one_trial_job()
+            if data['trial_job_id'] is not None:
+                ret['trial_job_id'] = data['trial_job_id']
+            if data['parameter_index'] is not None:
+                ret['parameter_index'] = data['parameter_index']
+            self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
+            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
         else:
-            raise ValueError('Data type not supported: {}'.format(data['type']))
+            value = extract_scalar_reward(data['value'])
+            bracket_id, i, _ = data['parameter_id'].split('_')
+            bracket_id = int(bracket_id)
+
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here,
+            # because when the first parameter_id is created, trial_job_id is not known yet.
+            if data['trial_job_id'] in self.job_id_para_id_map:
+                assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']
+            else:
+                self.job_id_para_id_map[data['trial_job_id']] = data['parameter_id']
+
+            if data['type'] == MetricType.FINAL:
+                # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
+                # and PERIODICAL metric are independent, thus, not comparable.
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+                self.completed_hyper_configs.append(data)
+            elif data['type'] == MetricType.PERIODICAL:
+                self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            else:
+                raise ValueError('Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
         pass

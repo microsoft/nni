@@ -1,19 +1,19 @@
-# Hyperparameter Optimization Comparison
+# Hyper Parameter Optimization Comparison
 *Posted by Anonymous Author*
 
-Comparison of Hyperparameter Optimization algorithms on several problems.
+Comparison of Hyperparameter Optimization (HPO) algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
-- [Random Search](../BuiltinTuner.md)
-- [Grid Search](../BuiltinTuner.md)
-- [Evolution](../BuiltinTuner.md)
-- [Anneal](../BuiltinTuner.md)
-- [Metis](../BuiltinTuner.md)
-- [TPE](../BuiltinTuner.md)
-- [SMAC](../BuiltinTuner.md)
-- [HyperBand](../BuiltinTuner.md)
-- [BOHB](../BuiltinTuner.md)
+- [Random Search](../Tuner/BuiltinTuner.md)
+- [Grid Search](../Tuner/BuiltinTuner.md)
+- [Evolution](../Tuner/BuiltinTuner.md)
+- [Anneal](../Tuner/BuiltinTuner.md)
+- [Metis](../Tuner/BuiltinTuner.md)
+- [TPE](../Tuner/BuiltinTuner.md)
+- [SMAC](../Tuner/BuiltinTuner.md)
+- [HyperBand](../Tuner/BuiltinTuner.md)
+- [BOHB](../Tuner/BuiltinTuner.md)
 
 All algorithms run in NNI local environment.
 
@@ -34,7 +34,7 @@ is running in docker?: no
 
 ### Problem Description
 
-Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
+Nonconvex problem on the hyper-parameter search of [AutoGBDT](../TrialExample/GbdtExample.md) example.
 
 ### Search Space
 
@@ -98,8 +98,11 @@ The total search space is 1,204,224, we set the number of maximum trial to 1000.
 | HyperBand     |0.414065|0.415222|0.417628|
 | HyperBand     |0.416807|0.417549|0.418828|
 | HyperBand     |0.415550|0.415977|0.417186|
+| GP            |0.414353|0.418563|0.420263|
+| GP            |0.414395|0.418006|0.420431|
+| GP            |0.412943|0.416566|0.418443|
 
-For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
+In this example, all the algorithms are used with default parameters. For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
 
 ## RocksDB Benchmark 'fillrandom' and 'readrandom'
 

@@ -1,64 +1,41 @@
+import { Col, Row, Tooltip } from 'antd';
 import * as React from 'react';
-import {
-    Row, Col,
-    Tooltip
-} from 'antd';
-import { Experiment } from '../../static/interface';
+import { EXPERIMENT } from '../../static/datamodel';
+import { formatTimestamp } from '../../static/function';
 
 interface BasicInfoProps {
-    trialProfile: Experiment;
-    status: string;
+    experimentUpdateBroadcast: number;
 }
 
 class BasicInfo extends React.Component<BasicInfoProps, {}> {
-
     constructor(props: BasicInfoProps) {
         super(props);
     }
 
     render() {
-        const { trialProfile } = this.props;
         return (
             <Row className="main">
                 <Col span={8} className="padItem basic">
                     <p>Name</p>
-                    <div>{trialProfile.experName}</div>
+                    <div>{EXPERIMENT.profile.params.experimentName}</div>
                     <p>ID</p>
-                    <div>{trialProfile.id}</div>
+                    <div>{EXPERIMENT.profile.id}</div>
                 </Col>
                 <Col span={8} className="padItem basic">
                     <p>Start time</p>
-                    <div className="nowrap">
-                        {new Date(trialProfile.startTime).toLocaleString('en-US')}
-                    </div>
+                    <div className="nowrap">{formatTimestamp(EXPERIMENT.profile.startTime)}</div>
                     <p>End time</p>
-                    <div className="nowrap">
-                        {
-                            trialProfile.endTime
-                                ?
-                                new Date(trialProfile.endTime).toLocaleString('en-US')
-                                :
-                                'none'
-                        }
-                    </div>
+                    <div className="nowrap">{formatTimestamp(EXPERIMENT.profile.endTime)}</div>
                 </Col>
                 <Col span={8} className="padItem basic">
                     <p>Log directory</p>
                     <div className="nowrap">
-                        <Tooltip placement="top" title={trialProfile.logDir}>
-                            {trialProfile.logDir}
+                        <Tooltip placement="top" title={EXPERIMENT.profile.logDir || ''}>
+                            {EXPERIMENT.profile.logDir || 'unknown'}
                         </Tooltip>
                     </div>
                     <p>Training platform</p>
-                    <div className="nowrap">
-                        {
-                            trialProfile.trainingServicePlatform
-                                ?
-                                trialProfile.trainingServicePlatform
-                                :
-                                'none'
-                        }
-                    </div>
+                    <div className="nowrap">{EXPERIMENT.profile.params.trainingServicePlatform}</div>
                 </Col>
             </Row>
         );

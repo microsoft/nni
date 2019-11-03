@@ -19,10 +19,12 @@
 # ==================================================================================================
 
 
-import random
+import numpy as np
 
 from .env_vars import trial_env_vars
 from . import trial
+from . import parameter_expressions as param_exp
+from .nas_utils import classic_mode, enas_mode, oneshot_mode, darts_mode
 
 
 __all__ = [
@@ -41,43 +43,41 @@ __all__ = [
 ]
 
 
-# pylint: disable=unused-argument
-
 if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
-        return random.choice(options)
+        return param_exp.choice(options, np.random.RandomState())
 
-    def randint(upper, name=None):
-        return random.randrange(upper)
+    def randint(lower, upper, name=None):
+        return param_exp.randint(lower, upper, np.random.RandomState())
 
     def uniform(low, high, name=None):
-        return random.uniform(low, high)
+        return param_exp.uniform(low, high, np.random.RandomState())
 
     def quniform(low, high, q, name=None):
         assert high > low, 'Upper bound must be larger than lower bound'
-        return round(random.uniform(low, high) / q) * q
+        return param_exp.quniform(low, high, q, np.random.RandomState())
 
     def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
-        return np.exp(random.uniform(np.log(low), np.log(high)))
+        return param_exp.loguniform(low, high, np.random.RandomState())
 
     def qloguniform(low, high, q, name=None):
-        return round(loguniform(low, high) / q) * q
+        return param_exp.qloguniform(low, high, q, np.random.RandomState())
 
     def normal(mu, sigma, name=None):
-        return random.gauss(mu, sigma)
+        return param_exp.normal(mu, sigma, np.random.RandomState())
 
     def qnormal(mu, sigma, q, name=None):
-        return round(random.gauss(mu, sigma) / q) * q
+        return param_exp.qnormal(mu, sigma, q, np.random.RandomState())
 
     def lognormal(mu, sigma, name=None):
-        return np.exp(random.gauss(mu, sigma))
+        return param_exp.lognormal(mu, sigma, np.random.RandomState())
 
     def qlognormal(mu, sigma, q, name=None):
-        return round(lognormal(mu, sigma) / q) * q
+        return param_exp.qlognormal(mu, sigma, q, np.random.RandomState())
 
     def function_choice(*funcs, name=None):
-        return random.choice(funcs)()
+        return param_exp.choice(funcs, np.random.RandomState())()
 
     def mutable_layer():
         raise RuntimeError('Cannot call nni.mutable_layer in this mode')
@@ -87,7 +87,7 @@ else:
     def choice(options, name=None, key=None):
         return options[_get_param(key)]
 
-    def randint(upper, name=None, key=None):
+    def randint(lower, upper, name=None, key=None):
         return _get_param(key)
 
     def uniform(low, high, name=None, key=None):
@@ -124,7 +124,9 @@ else:
             funcs_args,
             fixed_inputs,
             optional_inputs,
-            optional_input_size):
+            optional_input_size,
+            mode='classic_mode',
+            tf=None):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
@@ -144,16 +146,21 @@ else:
         fixed_inputs:
         optional_inputs: dict of optional inputs
         optional_input_size: number of candidate inputs to be chosen
+        tf: tensorflow module
         '''
-        mutable_block = _get_param(mutable_id)
-        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
-        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
-        real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
-        layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
-        
-        return layer_out
+        args = (mutable_id, mutable_layer_id, funcs, funcs_args, fixed_inputs, optional_inputs, optional_input_size)
+        if mode == 'classic_mode':
+            return classic_mode(*args)
+        assert tf is not None, 'Internal Error: Tensorflow should not be None in modes other than classic_mode'
+        if mode == 'enas_mode':
+            return enas_mode(*args, tf)
+        if mode == 'oneshot_mode':
+            return oneshot_mode(*args, tf)
+        if mode == 'darts_mode':
+            return darts_mode(*args, tf)
+        raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):
-        if trial._params is None:
+        if trial.get_current_parameter() is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)

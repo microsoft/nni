@@ -1,0 +1,9 @@
+AGPruner: 
+  config:
+    -
+        start_epoch: 0
+        end_epoch: 10
+        frequency: 1
+        initial_sparsity: 0.05
+        final_sparsity: 0.8
+        op_types: ['default']

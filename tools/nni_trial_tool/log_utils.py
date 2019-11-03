@@ -134,7 +134,7 @@ class PipeLogReader(threading.Thread):
         self._is_read_completed = False
         self.process_exit = False
         self.log_collection = log_collection
-        self.log_pattern = re.compile(r'^NNISDK_MEb\'.*\'$')
+        self.log_pattern = re.compile(r'NNISDK_MEb\'.*\'$')
 
         def _populateQueue(stream, queue):
             '''
@@ -172,11 +172,14 @@ class PipeLogReader(threading.Thread):
         for line in iter(self.pipeReader.readline, ''):
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
+
             if self.log_collection == 'none':
-                # If not match metrics, do not put the line into queue
-                if not self.log_pattern.match(line):
-                    continue
-            self.queue.put(line)
+                search_result = self.log_pattern.search(line)
+                if search_result:
+                    metrics = search_result.group(0)
+                    self.queue.put(metrics+'\n')
+            else:
+                self.queue.put(line)
 
         self.pipeReader.close()
 

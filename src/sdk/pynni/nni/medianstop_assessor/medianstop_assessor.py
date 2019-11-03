@@ -42,7 +42,7 @@ class MedianstopAssessor(Assessor):
             self.high_better = False
         else:
             self.high_better = True
-            logger.warning('unrecognized optimize_mode', optimize_mode)
+            logger.warning('unrecognized optimize_mode %s', optimize_mode)
 
     def _update_data(self, trial_job_id, trial_history):
         """update data
@@ -79,7 +79,7 @@ class MedianstopAssessor(Assessor):
                     self.completed_avg_history[trial_job_id].append(history_sum / cnt)
             self.running_history.pop(trial_job_id)
         else:
-            logger.warning('trial_end: trial_job_id does not in running_history')
+            logger.warning('trial_end: trial_job_id does not exist in running_history')
 
     def assess_trial(self, trial_job_id, trial_history):
         """assess_trial
@@ -112,7 +112,7 @@ class MedianstopAssessor(Assessor):
             logger.exception(error)
         except Exception as error:
             logger.warning('unrecognized exception in medianstop_assessor:')
-            logger.excpetion(error)
+            logger.exception(error)
 
         self._update_data(trial_job_id, num_trial_history)
         if self.high_better:
@@ -121,10 +121,10 @@ class MedianstopAssessor(Assessor):
             best_history = min(trial_history)
 
         avg_array = []
-        for id in self.completed_avg_history:
-            if len(self.completed_avg_history[id]) >= curr_step:
-                avg_array.append(self.completed_avg_history[id][curr_step - 1])
-        if len(avg_array) > 0:
+        for id_ in self.completed_avg_history:
+            if len(self.completed_avg_history[id_]) >= curr_step:
+                avg_array.append(self.completed_avg_history[id_][curr_step - 1])
+        if avg_array:
             avg_array.sort()
             if self.high_better:
                 median = avg_array[(len(avg_array)-1) // 2]

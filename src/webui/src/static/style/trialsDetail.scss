@@ -15,10 +15,12 @@
     .ant-tabs-tab-active{
         .panelTitle{
             background-color: #999;
+            /*
             span{
                 color: #fff;
                 font-weight: normal;
             }
+            */
         }
     }
     .panelTitle{
@@ -69,4 +71,28 @@
 
 .allList{
     margin-top: 15px;
+}
+
+.default-metric{
+    width: 90%;
+    text-align: right;
+    margin-top: 15px;
+    .position{
+        color: #333;
+        .bold{
+                font-weight: 600;
+                margin-right: 10px;
+            }
+    }
+}
+
+/* for # intermediate in intermediate graph*/
+.intermediate-graph{
+    position: relative;
+    .yAxis{
+        color: #333;
+        position: absolute;
+        left: 45%;
+        top: 86%;
+    }
 }

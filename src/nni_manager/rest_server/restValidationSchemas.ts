@@ -51,9 +51,17 @@ export namespace ValidationSchemas {
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
+                authFile: joi.string(),
+                nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
+                portList: joi.array().items(joi.object({
+                    label: joi.string().required(),
+                    beginAt: joi.number().required(),
+                    portNumber: joi.number().required(),
+                })),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -63,6 +71,7 @@ export namespace ValidationSchemas {
                 ps: joi.object({
                         replicas: joi.number().min(1).required(),
                         image: joi.string().min(1),
+                        privateRegistryAuthPath: joi.string().min(1),
                         outputDir: joi.string(),
                         cpuNum: joi.number().min(1),
                         memoryMB: joi.number().min(100),
@@ -72,6 +81,7 @@ export namespace ValidationSchemas {
                 master: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -82,6 +92,7 @@ export namespace ValidationSchemas {
                     name: joi.string().min(1),
                     taskNum: joi.number().min(1).required(),
                     image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
@@ -114,7 +125,8 @@ export namespace ValidationSchemas {
                 azureStorage: joi.object({
                     accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
-                })
+                }),
+                uploadRetryCount: joi.number().min(1)
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
@@ -130,7 +142,8 @@ export namespace ValidationSchemas {
                 azureStorage: joi.object({
                     accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
-                })
+                }),
+                uploadRetryCount: joi.number().min(1)
             }),
             nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1)
@@ -157,18 +170,18 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
-                checkpointDir: joi.string().allow('')
+                checkpointDir: joi.string().allow(''),
+                gpuIndices: joi.string()
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow(''),
-                includeIntermediateResults: joi.boolean()
+                includeIntermediateResults: joi.boolean(),
+                gpuIndices: joi.string()
             }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
@@ -176,7 +189,6 @@ export namespace ValidationSchemas {
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
-                gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow('')
             }),
             clusterMetaData: joi.array().items(joi.object({
@@ -197,7 +209,7 @@ export namespace ValidationSchemas {
             startTime: joi.number(),
             endTime: joi.number(),
             logDir: joi.string(),
-            maxSequenceId: joi.number()
+            nextSequenceId: joi.number()
         }
     };
 }

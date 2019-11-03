@@ -4,15 +4,16 @@ Builtin-Tuners
 ..  toctree::
     :maxdepth: 1
     
-    Overview<BuiltinTuner>
-    TPE<HyperoptTuner>
-    Random Search<HyperoptTuner>
-    Anneal<HyperoptTuner>
-    Naive Evolution<EvolutionTuner>
-    SMAC<SmacTuner>
-    Batch Tuner<BatchTuner>
-    Grid Search<GridsearchTuner>
-    Hyperband<HyperbandAdvisor>
-    Network Morphism<NetworkmorphismTuner>
-    Metis Tuner<MetisTuner>
-    BOHB<BohbAdvisor>
+    Overview <Tuner/BuiltinTuner>
+    TPE <Tuner/HyperoptTuner>
+    Random Search <Tuner/HyperoptTuner>
+    Anneal <Tuner/HyperoptTuner>
+    Naive Evolution <Tuner/EvolutionTuner>
+    SMAC <Tuner/SmacTuner>
+    Metis Tuner <Tuner/MetisTuner>
+    Batch Tuner <Tuner/BatchTuner>
+    Grid Search <Tuner/GridsearchTuner>
+    GP Tuner <Tuner/GPTuner>
+    Network Morphism <Tuner/NetworkmorphismTuner>
+    Hyperband <Tuner/HyperbandAdvisor>
+    BOHB <Tuner/BohbAdvisor>

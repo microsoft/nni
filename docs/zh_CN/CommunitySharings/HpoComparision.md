@@ -2,19 +2,19 @@
 
 *匿名作者*
 
-超参优化算法在几个问题上的对比。
+超参优化算法（HPO）在几个问题上的对比。
 
 超参数优化算法如下：
 
-- [Random Search（随机搜索）](../BuiltinTuner.md)
-- [Grid Search（遍历搜索）](../BuiltinTuner.md)
-- [Evolution](../BuiltinTuner.md)
-- [Anneal（退火算法）](../BuiltinTuner.md)
-- [Metis](../BuiltinTuner.md)
-- [TPE](../BuiltinTuner.md)
-- [SMAC](../BuiltinTuner.md)
-- [HyperBand](../BuiltinTuner.md)
-- [BOHB](../BuiltinTuner.md)
+- [Random Search（随机搜索）](../Tuner/BuiltinTuner.md)
+- [Grid Search（遍历搜索）](../Tuner/BuiltinTuner.md)
+- [Evolution](../Tuner/BuiltinTuner.md)
+- [Anneal（退火算法）](../Tuner/BuiltinTuner.md)
+- [Metis](../Tuner/BuiltinTuner.md)
+- [TPE](../Tuner/BuiltinTuner.md)
+- [SMAC](../Tuner/BuiltinTuner.md)
+- [HyperBand](../Tuner/BuiltinTuner.md)
+- [BOHB](../Tuner/BuiltinTuner.md)
 
 所有算法都在 NNI 本机环境下运行。
 
@@ -34,7 +34,7 @@
 
 ### 问题描述
 
-超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
+超参搜索上的非凸问题 [AutoGBDT](../TrialExample/GbdtExample.md)。
 
 ### 搜索空间
 
@@ -98,8 +98,11 @@
 | HyperBand     | 0.414065     | 0.415222      | 0.417628      |
 | HyperBand     | 0.416807     | 0.417549      | 0.418828      |
 | HyperBand     | 0.415550     | 0.415977      | 0.417186      |
+| GP            | 0.414353     | 0.418563      | 0.420263      |
+| GP            | 0.414395     | 0.418006      | 0.420431      |
+| GP            | 0.412943     | 0.416566      | 0.418443      |
 
-Metis 算法因为其高斯计算过程的复杂度为 O(n^3) 而运行非常慢，因此仅执行了 300 次 Trial。
+此例中，所有算法都使用了默认参数。 Metis 算法因为其高斯计算过程的复杂度为 O(n^3) 而运行非常慢，因此仅执行了 300 次 Trial。
 
 ## RocksDB 的 'fillrandom' 和 'readrandom' 基准测试
 

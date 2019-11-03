@@ -49,7 +49,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 #
 # update pip
 #
-RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools==39.1.0
 
 # numpy 1.14.3  scipy 1.1.0
 RUN python3 -m pip --no-cache-dir install \
@@ -68,8 +68,8 @@ RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 #
 # PyTorch
 #
-RUN python3 -m pip --no-cache-dir install torch==0.4.1
-RUN python3 -m pip install torchvision==0.2.1
+RUN python3 -m pip --no-cache-dir install torch==1.2.0
+RUN python3 -m pip install torchvision==0.4.0
 
 #
 # sklearn 0.20.0

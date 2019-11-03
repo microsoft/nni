@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
-import { TableObj } from '../../static/interface';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { Trial } from '../../static/model/trial';
 import { Row, Tabs, Button, message, Modal } from 'antd';
 import { MANAGER_IP } from '../../static/const';
 import '../../static/style/overview.scss';
@@ -11,10 +12,7 @@ import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
-    trainingPlatform: string;
-    record: TableObj;
-    logCollection: boolean;
-    multiphase: boolean;
+    trialId: string;
 }
 
 interface OpenRowState {
@@ -24,7 +22,6 @@ interface OpenRowState {
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
-    public _isMounted: boolean;
     constructor(props: OpenRowProps) {
         super(props);
         this.state = {
@@ -33,20 +30,16 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         };
     }
 
-    showFormatModal = (record: TableObj) => {
+    showFormatModal = (trial: Trial) => {
         // get copy parameters
-        const params = JSON.stringify(record.description.parameters, null, 4);
+        const params = JSON.stringify(trial.info.hyperParameters, null, 4);
         // open modal with format string
-        if (this._isMounted === true) {
-            this.setState(() => ({ isShowFormatModal: true, formatStr: params }));
-        }
+        this.setState({ isShowFormatModal: true, formatStr: params });
     }
 
     hideFormatModal = () => {
         // close modal, destroy state format string data
-        if (this._isMounted === true) {
-            this.setState(() => ({ isShowFormatModal: false, formatStr: '' }));
-        }
+        this.setState({ isShowFormatModal: false, formatStr: '' });
     }
 
     copyParams = () => {
@@ -62,66 +55,47 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.hideFormatModal();
     }
 
-    componentDidMount() {
-        this._isMounted = true;
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
-    }
     render() {
-        const { trainingPlatform, record, logCollection, multiphase } = this.props;
         const { isShowFormatModal, formatStr } = this.state;
-        let isClick = false;
-        let isHasParameters = true;
-        if (record.description.parameters.error) {
-            isHasParameters = false;
-        }
-        const openRowDataSource = record.description.parameters;
-        const trialink: string = `${MANAGER_IP}/trial-jobs/${record.id}`;
-        const logPathRow = record.description.logPath !== undefined
-            ?
-            record.description.logPath
-            :
-            'This trial\'s log path are not available.';
+        const trialId = this.props.trialId;
+        const trial = TRIALS.getTrial(trialId);
+        const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
+        const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
+        const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
             <Row className="openRowContent hyperpar">
                 <Tabs tabPosition="left" className="card">
                     <TabPane tab="Parameters" key="1">
                         {
-                            multiphase
+                            EXPERIMENT.multiPhase
                                 ?
                                 <Row className="link">
                                     Trails for multiphase experiment will return a set of parameters,
                                     we are listing the latest parameter in webportal.
                                     <br />
                                     For the entire parameter set, please refer to the following "
-                                    <a href={trialink} target="_blank">{trialink}</a>".
+                                    <a href={trialLink} target="_blank">{trialLink}</a>".
+                                    <br />
+                                    Current Phase: {multiProgress}.
                                 </Row>
                                 :
                                 <div />
                         }
                         {
-                            isHasParameters
+                            trial.info.hyperParameters !== undefined
                                 ?
                                 <Row id="description">
                                     <Row className="bgHyper">
-                                        {
-                                            isClick
-                                                ?
-                                                <pre>{JSON.stringify(openRowDataSource, null, 4)}</pre>
-                                                :
-                                                <JSONTree
-                                                    hideRoot={true}
-                                                    shouldExpandNode={() => true}  // default expandNode
-                                                    getItemString={() => (<span />)}  // remove the {} items
-                                                    data={openRowDataSource}
-                                                />
-                                        }
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={trial.description.parameters}
+                                        />
                                     </Row>
                                     <Row className="copy">
                                         <Button
-                                            onClick={this.showFormatModal.bind(this, record)}
+                                            onClick={this.showFormatModal.bind(this, trial)}
                                         >
                                             Copy as json
                                         </Button>
@@ -136,15 +110,16 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                     </TabPane>
                     <TabPane tab="Log" key="2">
                         {
-                            trainingPlatform !== 'local'
+                            // FIXME: this should not be handled in web UI side
+                            EXPERIMENT.trainingServicePlatform !== 'local'
                                 ?
                                 <PaiTrialLog
                                     logStr={logPathRow}
-                                    id={record.id}
-                                    logCollection={logCollection}
+                                    id={trialId}
+                                    logCollection={EXPERIMENT.logCollectionEnabled}
                                 />
                                 :
-                                <TrialLog logStr={logPathRow} id={record.id} />
+                                <TrialLog logStr={logPathRow} id={trialId} />
                         }
                     </TabPane>
                 </Tabs>

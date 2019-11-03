@@ -39,17 +39,13 @@ jobs:
     displayName: 'Install nni toolkit via source code'
 
   - script: |
-      python3 -m pip install scikit-learn==0.20.0 --user
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
-      python3 -m pip install keras==2.1.6 --user
-      python3 -m pip install tensorflow-gpu==1.12.0 --user
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
     displayName: 'Install dependencies for integration tests in PAI mode'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi
@@ -75,5 +71,6 @@ jobs:
       python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) \
       --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
 
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai --exclude multi_phase
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai
+      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'integration test'

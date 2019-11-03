@@ -17,7 +17,7 @@
 
 将目录 0-3 训练 100 个 epoch，对于每个目录，训练三个模型：
 
-    python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV4 
+    python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV4
     python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV5 --layers 50
     python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV6
     
@@ -26,7 +26,7 @@
 
 使用余弦退火学习率调度器运行 300 次 epoch 来微调阶段 1 的模型：
 
-    python3 train.py --ifolds 0 --epochs 300 --lrs cosine --lr 0.001 --min_lr 0.0001 --model_name UNetResNetV4 
+    python3 train.py --ifolds 0 --epochs 300 --lrs cosine --lr 0.001 --min_lr 0.0001 --model_name UNetResNetV4
     
 
 阶段 3：
