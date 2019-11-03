@@ -17,10 +17,10 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 gridsearch_tuner.py including:
     class GridSearchTuner
-'''
+"""
 
 import copy
 import logging
@@ -39,15 +39,20 @@ logger = logging.getLogger('grid_search_AutoML')
 class GridSearchTuner(Tuner):
     """
     GridSearchTuner will search all the possible configures that the user define in the searchSpace.
-    The only acceptable types of search space are 'choice', 'quniform', 'randint'
+    The only acceptable types of search space are ``choice``, ``quniform``, ``randint``
 
-    Type 'choice' will select one of the options. Note that it can also be nested.
+    Type ``choice`` will select one of the options. Note that it can also be nested.
 
-    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
-    It will be sampled in a way that the first sampled value is 'low',
+    Type ``quniform`` will receive three values [``low``, ``high``, ``q``], where [``low``, ``high``] specifies a range and ``q`` specifies the interval.
+    It will be sampled in a way that the first sampled value is ``low``,
     and each of the following values is 'interval' larger than the value in front of it.
 
-    Type 'randint' gives all possible intergers in range[low, high). Note that 'high' is not included.
+    Type ``randint`` gives all possible intergers in range[``low``, ``high``). Note that ``high`` is not included.
+
+    See Also
+    --------
+    Abstrat tuner class:
+    :class:`~nni.tuner.Tuner`
     """
 
     def __init__(self):
@@ -61,13 +66,14 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        ss_spec: dict or list or 
-            hyperparameter space
+        ss_spec: dict or list
+            hyperparameter space or the ``_value`` of a hyperparameter
 
         Returns
         -------
-        chosen_params: abc
-            abc
+        chosen_params: list or dict
+            all the candidate choices of hyperparameters. for a hyperparameter, chosen_params
+            is a list. for multiple hyperparameters (e.g., search space), chosen_params is a dict.
         """
         if isinstance(ss_spec, dict):
             if '_type' in ss_spec.keys():
@@ -148,18 +154,35 @@ class GridSearchTuner(Tuner):
 
     def update_search_space(self, search_space):
         """
-        Check if the search space is valid and expand it: support only 'choice', 'quniform', randint'
+        Check if the search space is valid and expand it: support only ``choice``, ``quniform``, ``randint``.
 
         Parameters
         ----------
-        search_space: abc
-            abc
+        search_space: dict
+            the format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         self.expanded_search_space = self._json2parameter(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
-        abc
+        Generate parameters for one trial.
+
+        Parameters
+        ----------
+        parameter_id: int
+            the id for the generated hyperparameter
+        **kwargs
+            unstable parameters which should be ignored by normal users
+
+        Returns
+        -------
+        : dict
+            one configuration from the expanded search space. If all the configurations has been sent,
+            raise ``nni.NoMoreTrialError``.
+
+        See Also
+        --------
+        :class:`~nni.NoMoreTrialError`
         """
         self.count += 1
         while self.count <= len(self.expanded_search_space) - 1:
@@ -172,7 +195,12 @@ class GridSearchTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
-        abc
+        Receive a trial's final performance result reported through ``nni.report_final_result`` by the trial.
+        GridSearchTuner does not need trial's results.
+
+        See Also
+        --------
+        :class:`~nni.report_final_result`
         """
         pass
 
@@ -182,8 +210,8 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        data: list
+            a list of dictionarys, each of which has at least two keys, ``parameter`` and ``value``
         """
         _completed_num = 0
         for trial_info in data:
