@@ -70,11 +70,11 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
  */
 export async function execMkdir(directory: string, share: boolean = false): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe New-Item -Path ${directory} -ItemType "directory" -Force`);
+        await cpp.exec(`powershell.exe New-Item -Path '${directory}' -ItemType "directory" -Force`);
     } else if (share) {
-        await cpp.exec(`(umask 0; mkdir -p ${directory})`);
+        await cpp.exec(`(umask 0; mkdir -p '${directory}')`);
     } else {
-        await cpp.exec(`mkdir -p ${directory}`);
+        await cpp.exec(`mkdir -p '${directory}'`);
     }
 
     return Promise.resolve();
@@ -87,9 +87,9 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Copy-Item ${source} -Destination ${destination} -Recurse`);
+        await cpp.exec(`powershell.exe Copy-Item '${source}' -Destination '${destination}' -Recurse`);
     } else {
-        await cpp.exec(`cp -r ${source} ${destination}`);
+        await cpp.exec(`cp -r '${source}' '${destination}'`);
     }
 
     return Promise.resolve();
@@ -101,9 +101,9 @@ export async function execCopydir(source: string, destination: string): Promise<
  */
 export async function execNewFile(filename: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe New-Item -Path ${filename} -ItemType "file" -Force`);
+        await cpp.exec(`powershell.exe New-Item -Path '${filename}' -ItemType "file" -Force`);
     } else {
-        await cpp.exec(`touch ${filename}`);
+        await cpp.exec(`touch '${filename}'`);
     }
 
     return Promise.resolve();
@@ -115,9 +115,9 @@ export async function execNewFile(filename: string): Promise<void> {
  */
 export function runScript(filePath: string): cp.ChildProcess {
     if (process.platform === 'win32') {
-        return cp.exec(`powershell.exe -ExecutionPolicy Bypass -file ${filePath}`);
+        return cp.exec(`powershell.exe -ExecutionPolicy Bypass -file '${filePath}'`);
     } else {
-        return cp.exec(`bash ${filePath}`);
+        return cp.exec(`bash '${filePath}'`);
     }
 }
 
@@ -128,9 +128,9 @@ export function runScript(filePath: string): cp.ChildProcess {
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
     if (process.platform === 'win32') {
-        cmdresult = await cpp.exec(`powershell.exe Get-Content ${filePath} -Tail 1`);
+        cmdresult = await cpp.exec(`powershell.exe Get-Content '${filePath}' -Tail 1`);
     } else {
-        cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
+        cmdresult = await cpp.exec(`tail -n 1 '${filePath}'`);
     }
 
     return Promise.resolve(cmdresult);
@@ -142,9 +142,9 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  */
 export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
+        await cpp.exec(`powershell.exe Remove-Item '${directory}' -Recurse -Force`);
     } else {
-        await cpp.exec(`rm -rf ${directory}`);
+        await cpp.exec(`rm -rf '${directory}'`);
     }
 
     return Promise.resolve();

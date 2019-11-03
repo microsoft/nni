@@ -380,9 +380,9 @@ class LocalTrainingService implements TrainingService {
         const envVariables: { key: string; value: string }[] = [
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_EXP_ID', value: this.experimentId },
-            { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_SYS_DIR', value: `'${trialJobDetail.workingDirectory}'` },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_OUTPUT_DIR', value: `'${trialJobDetail.workingDirectory}'` },
             { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
@@ -490,18 +490,18 @@ class LocalTrainingService implements TrainingService {
         const script: string[] = [];
         if (process.platform === 'win32') {
             script.push(
-                `cmd.exe /c ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+                `cmd.exe /c ${localTrialConfig.command} 2>'${path.join(workingDirectory, 'stderr')}'`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
-                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
+                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File '${path.join(workingDirectory, '.nni', 'state')}' -NoNewline -encoding utf8`);
         } else {
-            script.push(`eval ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            script.push(`eval ${localTrialConfig.command} 2>'${path.join(workingDirectory, 'stderr')}'`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
-                script.push(`echo $? \`date +%s999\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                script.push(`echo $? \`date +%s999\` >'${path.join(workingDirectory, '.nni', 'state')}'`);
             } else {
-                script.push(`echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                script.push(`echo $? \`date +%s%3N\` >'${path.join(workingDirectory, '.nni', 'state')}'`);
             }
         }
 
@@ -522,7 +522,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         }
-        runScriptContent.push(`cd ${this.localTrialConfig.codeDir}`);
+        runScriptContent.push(`cd '${this.localTrialConfig.codeDir}'`);
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }
