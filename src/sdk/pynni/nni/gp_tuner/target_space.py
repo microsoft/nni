@@ -27,12 +27,18 @@ import nni.parameter_expressions as parameter_expressions
 
 
 def _hashable(params):
-    """ 
-    ensure that an point is hashable by a python dict.
+    """
+    Transform list params to tuple format. Ensure that an point is hashable by a python dict.
 
     Parameters
-        ----------
-        params:  
+    ----------
+    params: numpy array
+        array format of parameters
+
+    Returns
+    -------
+    result: tuple
+        tuple format of parameters
     """
     return tuple(map(float, params))
 
@@ -47,8 +53,7 @@ class TargetSpace():
         Parameters
         ----------
         pbounds : dict
-            Dictionary with parameters names as keys and a tuple with minimum
-            and maximum values.
+            Dictionary with parameters names and legal values.
 
         random_state : int, RandomState, or None
             optionally specify a seed for a random number generator, by default None.
@@ -79,62 +84,100 @@ class TargetSpace():
         self._cache = {}
 
     def __contains__(self, params):
-        '''
+        """
         check if a parameter is already registered
 
         Parameters
         ----------
-        params: list
+        params: numpy array
 
-        '''
+        Returns
+        -------
+        result: bool
+            True if the parameter is already registered, else false
+        """
         return _hashable(params) in self._cache
 
     def len(self):
-        '''
+        """
         length of registered params and targets
-        '''
+
+        Returns
+        -------
+        result: int
+        """
         assert len(self._params) == len(self._target)
         return len(self._target)
 
     @property
     def params(self):
-        '''
+        """
+        registered parameters
 
         Returns
         -------
         params: numpy array
-        '''
+        """
         return self._params
 
     @property
     def target(self):
-        '''
+        """
+        registered target values
+
+        Returns
+        -------
         target: numpy array
-        '''
+        """
         return self._target
 
     @property
     def dim(self):
-        '''
+        """
+        dimension of parameters
+
+        Returns
+        -------
         dim: int
-            length of keys
-        '''
+        """
         return len(self._keys)
 
     @property
     def keys(self):
-        '''
+        """
+        keys of parameters
+
+        Returns
+        -------
         keys: numpy array
-        '''
+        """
         return self._keys
 
     @property
     def bounds(self):
-        '''bounds'''
+        """
+        bounds of parameters
+
+        Returns
+        -------
+        bounds: numpy array
+        """
         return self._bounds
 
     def params_to_array(self, params):
-        ''' dict to array '''
+        """
+        dict to array
+
+        Parameters
+        ----------
+        params: dict
+            dict format of parameters
+
+        Returns
+        -------
+        result: numpy array
+            array format of parameters
+        """
         try:
             assert set(params) == set(self.keys)
         except AssertionError:
@@ -145,11 +188,20 @@ class TargetSpace():
         return np.asarray([params[key] for key in self.keys])
 
     def array_to_params(self, x):
-        '''
+        """
         array to dict
 
         maintain int type if the paramters is defined as int in search_space.json
-        '''
+        Parameters
+        ----------
+        x: numpy array
+            array format of parameters
+
+        Returns
+        -------
+        params: dict
+            dict format of parameters
+        """
         try:
             assert len(x) == len(self.keys)
         except AssertionError:
@@ -175,16 +227,15 @@ class TargetSpace():
 
         Parameters
         ----------
-        x : dict
+        params: dict
             parameters
 
-        y : float
+        target: float
             target function value
         """
 
         x = self.params_to_array(params)
         if x in self:
-            #raise KeyError('Data point {} is not unique'.format(x))
             print('Data point {} is not unique'.format(x))
 
         # Insert data into unique dictionary
@@ -199,8 +250,8 @@ class TargetSpace():
 
         Returns
         -------
-        params: one groupe of parameter
-
+        params: numpy array
+            one groupe of parameter
         """
         params = np.empty(self.dim)
         for col, _bound in enumerate(self._bounds):
@@ -227,7 +278,12 @@ class TargetSpace():
 
     def max(self):
         """
-        Get maximum target value found and corresponding parametes.
+        Get maximum target value found and its corresponding parameters.
+
+        Returns
+        -------
+        res: dict
+            target value and parameters, empty dict if nothing registered
         """
         try:
             res = {
@@ -242,7 +298,12 @@ class TargetSpace():
 
     def res(self):
         """
-        Get all target values found and corresponding parametes.
+        Get all target values found and corresponding parameters.
+
+        Returns
+        -------
+        result: list
+            a list of target values and their corresponding parameters
         """
         params = [dict(zip(self.keys, p)) for p in self.params]
 

@@ -27,6 +27,7 @@ import warnings
 import logging
 import numpy as np
 
+# pylint: disable=no-name-in-module, import-error
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
@@ -47,8 +48,6 @@ class GPTuner(Tuner):
     def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
                  selection_num_warm_up=100000, selection_num_starting_points=250):
         """
-        Constructor function
-
         Parameters
         ----------
         optimize_mode: str
@@ -104,7 +103,7 @@ class GPTuner(Tuner):
     def update_search_space(self, search_space):
         """
         Update the self.bounds and self.types by the search_space.json file.
-        
+
         Override of the abstract method in class:`Tuner`.
         """
         self._space = TargetSpace(search_space, self._random_state)
@@ -146,7 +145,7 @@ class GPTuner(Tuner):
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
         Method invoked when a trial reports its final result.
-   
+
         Override of the abstract method in class:`Tuner`.
         """
         value = extract_scalar_reward(value)
@@ -161,6 +160,7 @@ class GPTuner(Tuner):
     def import_data(self, data):
         """
         Import additional data for tuning.
+
         Override of the abstract method in class:`Tuner`.
         """
         _completed_num = 0
