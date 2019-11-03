@@ -136,7 +136,6 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: parameters
         id_ = _create_parameter_id()
         _customized_parameter_ids.add(id_)
-        send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
 
     def handle_report_metric_data(self, data):
         """
