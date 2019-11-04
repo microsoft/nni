@@ -36,7 +36,7 @@ LOGGER = logging.getLogger('batch_tuner_AutoML')
 class BatchTuner(Tuner):
     """
     BatchTuner is tuner will running all the configure that user want to run batchly.
-    
+
     Examples
     --------
     The search space only be accepted like:
