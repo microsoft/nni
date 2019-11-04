@@ -68,16 +68,16 @@ class QAT_Quantizer(Quantizer):
             result = layer._forward(*inputs)
             layer.module.weight.data = weight
             return result
-        
+
         def activation_forward(*inputs):
             result = layer._forward(*inputs)
             return self.quantize_activation(result, config, op=layer.module)
-        
+
         if layer.type in ['Conv2d', 'Linear']:
             return new_forward
         elif layer.type in ['relu']:
             return activation_forward
-    
+
     def fixed_range_check(self, tensor):
         return torch.min(tensor), torch.max(tensor)
 
@@ -165,7 +165,7 @@ class QAT_Quantizer(Quantizer):
         """override compressor step method, update _step attribute, quantization only happens after certain number of steps
         """
         self._steps += 1
-        logger.info("step {}".format(self._steps))
+        logger.info("step %d", self._steps)
 
 
 class DoReFaQuantizer(Quantizer):
