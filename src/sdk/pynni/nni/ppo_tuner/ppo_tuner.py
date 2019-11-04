@@ -22,11 +22,9 @@ ppo_tuner.py including:
     class PPOTuner
 """
 
-import os
 import copy
 import logging
 import numpy as np
-import json_tricks
 from gym import spaces
 
 import nni
@@ -236,7 +234,8 @@ class PPOModel:
                 nextnonterminal = 1.0 - trials_info.dones[t+1]
                 nextvalues = trials_info.values[t+1]
             delta = mb_rewards[t] + self.model_config.gamma * nextvalues * nextnonterminal - trials_info.values[t]
-            mb_advs[t] = lastgaelam = delta + self.model_config.gamma * self.model_config.lam * nextnonterminal * lastgaelam
+            lastgaelam = delta + self.model_config.gamma * self.model_config.lam * nextnonterminal * lastgaelam
+            mb_advs[t] = lastgaelam # pylint: disable=unsupported-assignment-operation
         mb_returns = mb_advs + trials_info.values
 
         trials_info.update_rewards(mb_rewards, mb_returns)
@@ -536,8 +535,10 @@ class PPOTuner(Tuner):
         # generate new trials
         self.trials_result = [None for _ in range(self.inf_batch_size)]
         mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values = self.model.inference(self.inf_batch_size)
-        self.trials_info = TrialsInfo(mb_obs, mb_actions, mb_values, mb_neglogpacs,
-                                        mb_dones, last_values, self.inf_batch_size)
+        self.trials_info = TrialsInfo(mb_obs, mb_actions,
+                                      mb_values, mb_neglogpacs,
+                                      mb_dones, last_values,
+                                      self.inf_batch_size)
         # check credit and submit new trials
         for _ in range(self.credit):
             trial_info_idx, actions = self.trials_info.get_next()
@@ -581,8 +582,8 @@ class PPOTuner(Tuner):
             assert trial_info_idx is not None
             # use mean of finished trials as the result of this failed trial
             values = [val for val in self.trials_result if val is not None]
-            logger.warning('zql values: {0}'.format(values))
-            self.trials_result[trial_info_idx] = (sum(values) / len(values)) if len(values) > 0 else 0
+            logger.warning('zql values: %s', values)
+            self.trials_result[trial_info_idx] = (sum(values) / len(values)) if values else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
                 self._next_round_inference()
