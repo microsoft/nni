@@ -45,15 +45,15 @@ class BatchTuner(Tuner):
 
     Attributes
     ----------
-    count : int
-        count is the number of parameters that tuner has generated.
-    values : list
-        values is to save all the candidates contains in search space.
+    _count : int
+        _count is the number of parameters that tuner has generated.
+    _values : list
+        _values is to save all the candidates contains in search space.
     """
 
     def __init__(self):
-        self.count = -1
-        self.values = []
+        self._count = -1
+        self._values = []
 
     def is_valid(self, search_space):
         """
@@ -91,7 +91,7 @@ class BatchTuner(Tuner):
         ----------
         search_space : dict
         """
-        self.values = self.is_valid(search_space)
+        self._values = self.is_valid(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):
         """Returns a dict of trial (hyper-)parameters, as a serializable object.
@@ -105,10 +105,10 @@ class BatchTuner(Tuner):
         dict
             A candidate parameter group.
         """
-        self.count += 1
-        if self.count > len(self.values) - 1:
+        self._count += 1
+        if self._count > len(self._values) - 1:
             raise nni.NoMoreTrialError('no more parameters now.')
-        return self.values[self.count]
+        return self._values[self._count]
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         pass
@@ -121,12 +121,12 @@ class BatchTuner(Tuner):
         data:
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        if not self.values:
+        if not self._values:
             LOGGER.info("Search space has not been initialized, skip this data import")
             return
 
-        self.values = self.values[(self.count+1):]
-        self.count = -1
+        self._values = self._values[(self._count+1):]
+        self._count = -1
 
         _completed_num = 0
         for trial_info in data:
@@ -141,7 +141,7 @@ class BatchTuner(Tuner):
                 LOGGER .info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             _completed_num += 1
-            if _params in self.values:
-                self.values.remove(_params)
+            if _params in self._values:
+                self._values.remove(_params)
         LOGGER .info("Successfully import data to batch tuner, \
                         total data: %d, imported data: %d.", len(data), _completed_num)
