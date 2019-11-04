@@ -32,8 +32,7 @@ import pkg_resources
 from .rest_utils import rest_post, rest_get
 from .url_utils import gen_send_version_url, gen_parameter_meta_url
 
-from .constants import LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, \
-    MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
+from .constants import LOG_DIR, NNI_PLATFORM, MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal, copyHdfsFileToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, StdOutputType
 
@@ -79,8 +78,6 @@ def main_loop(args):
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
 
-    stdout_file = open(STDOUT_FULL_PATH, 'a+')
-    stderr_file = open(STDERR_FULL_PATH, 'a+')
     trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper',
                                           StdOutputType.Stdout, args.log_collection)
     # redirect trial keeper's stdout and stderr to syslog
