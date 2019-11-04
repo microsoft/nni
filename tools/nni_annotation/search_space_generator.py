@@ -20,8 +20,9 @@
 
 
 import ast
-import astor
 import numbers
+
+import astor
 
 # pylint: disable=unidiomatic-typecheck
 

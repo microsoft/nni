@@ -14,8 +14,35 @@ max-attributes=15
 
 const-naming-style=any
 
-disable=duplicate-code,
-        super-init-not-called
+# based on pylint 2.1.1
+disable=W,C,R,I,no-member
+
+# will be enforced on CI Pipeline
+enable= unused-wildcard-import,
+        bad-whitespace,
+        unused-import,
+        bad-continuation,
+        wrong-import-order,
+        trailing-whitespace,
+        logging-not-lazy,
+        line-too-long,
+        unused-variable,
+        wildcard-import,
+#        useless-super-delegation,
+        len-as-condition,
+        logging-format-interpolation,
+        redefined-builtin,
+        deprecated-method 
+
+# will change to `enable` one day
+# disable= missing-docstring
+
+# will not be enforced on CI but highly recommend contributor fixing it
+# enable=no-member,
+#        too-many-branches,
+#        protected-access 
+
+ignore-patterns=test*
 
 # List of members which are set dynamically and missed by pylint inference
 generated-members=numpy.*,torch.*

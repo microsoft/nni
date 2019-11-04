@@ -40,8 +40,7 @@ const expParams1: ExperimentParams = {
     searchSpace: 'SS',
     tuner: {
         className: 'testTuner',
-        checkpointDir: '/tmp',
-        gpuNum: 0
+        checkpointDir: '/tmp'
     }
 };
 

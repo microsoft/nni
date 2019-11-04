@@ -4,12 +4,11 @@ A config file is needed when creating an experiment. The path of the config file
 The config file is in YAML format.
 This document describes the rules to write the config file, and provides some examples and templates.
 
-- [Experiment config reference](#Experiment-config-reference)
-  - [Template](#Template)
-  - [Configuration spec](#Configuration-spec)
-  - [Examples](#Examples)
+- [Experiment config reference](#experiment-config-reference)
+  - [Template](#template)
+  - [Configuration spec](#configuration-spec)
+  - [Examples](#examples)
 
-<a name="Template"></a>
 ## Template
 
 * __light weight(without Annotation and Assessor)__
@@ -131,7 +130,6 @@ machineList:
     passwd:
 ```
 
-<a name="Configuration"></a>
 ## Configuration spec
 
 * __authorName__
@@ -333,7 +331,7 @@ machineList:
 
   * __gpuIndices__
 
-      __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+      __gpuIndices__ specifies the gpus that can be used by the advisor process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
 
   Note: users could only use one way to specify advisor, either specifying `builtinAdvisorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
 
@@ -563,7 +561,6 @@ machineList:
 
     __host__ is the host of pai.
 
-<a name="Examples"></a>
 ## Examples
 
 * __local mode__

@@ -43,7 +43,7 @@ class Trial implements TableObj {
     }
 
     get sortable(): boolean {
-        return this.finalAcc !== undefined && !isNaN(this.finalAcc);
+        return this.metricsInitialized && this.finalAcc !== undefined && !isNaN(this.finalAcc);
     }
 
     /* table obj start */
@@ -132,7 +132,7 @@ class Trial implements TableObj {
     /* table obj end */
 
     public initialized(): boolean {
-        return !!(this.infoField && this.metricsInitialized);
+        return Boolean(this.infoField);
     }
 
     public updateMetrics(metrics: MetricDataRecord[]): boolean {

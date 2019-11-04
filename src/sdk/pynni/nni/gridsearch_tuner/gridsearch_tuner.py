@@ -23,8 +23,8 @@ gridsearch_tuner.py including:
 '''
 
 import copy
-import numpy as np
 import logging
+import numpy as np
 
 import nni
 from nni.tuner import Tuner
@@ -44,7 +44,8 @@ class GridSearchTuner(Tuner):
     Type 'choice' will select one of the options. Note that it can also be nested.
 
     Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the interval
-    It will be sampled in a way that the first sampled value is 'low', and each of the following values is 'interval' larger than the value in front of it.
+    It will be sampled in a way that the first sampled value is 'low',
+    and each of the following values is 'interval' larger than the value in front of it.
 
     Type 'randint' gives all possible intergers in range[low, high). Note that 'high' is not included.
     '''
@@ -132,7 +133,7 @@ class GridSearchTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         self.count += 1
-        while (self.count <= len(self.expanded_search_space)-1):
+        while self.count <= len(self.expanded_search_space) - 1:
             _params_tuple = convert_dict2tuple(self.expanded_search_space[self.count])
             if _params_tuple in self.supplement_data:
                 self.count += 1
@@ -153,14 +154,14 @@ class GridSearchTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             _params_tuple = convert_dict2tuple(_params)
             self.supplement_data[_params_tuple] = True

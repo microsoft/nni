@@ -20,7 +20,6 @@
 
 import contextlib
 import collections
-import json
 import os
 import socket
 import sys
@@ -29,7 +28,7 @@ import requests
 import time
 import ruamel.yaml as yaml
 
-EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
+EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -98,13 +97,11 @@ def get_nni_log_path(experiment_url):
 def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
-    if sys.platform == "win32":
-        cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
-    else:
-        cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
-    completed_process = subprocess.run(' '.join(cmds), shell=True)
-
-    return completed_process.returncode == 0
+    
+    with open(nnimanager_log_path, 'r') as f:
+        log_content = f.read()
+    
+    return EXPERIMENT_DONE_SIGNAL in log_content
 
 def get_experiment_status(status_url):
     nni_status = requests.get(status_url).json()
@@ -133,7 +130,11 @@ def print_failed_job_log(training_service, trial_jobs_url):
     trial_jobs = get_failed_trial_jobs(trial_jobs_url)
     for trial_job in trial_jobs:
         if training_service == 'local':
-            log_filename = trial_job['stderrPath'].split(':')[-1]
+            if sys.platform == "win32":
+                p = trial_job['stderrPath'].split(':')
+                log_filename = ':'.join([p[-2], p[-1]])
+            else:
+                log_filename = trial_job['stderrPath'].split(':')[-1]
         else:
             log_filename = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'], 'stdout_log_collection.log')
         with open(log_filename, 'r') as f:

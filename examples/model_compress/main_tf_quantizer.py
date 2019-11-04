@@ -82,9 +82,9 @@ def main():
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(configure_list).compress(tf.get_default_graph())
     '''
-    configure_list = [{'q_bits':8, 'op_type':'default'}]
-    quantizer = QAT_Quantizer(configure_list)
-    quantizer(tf.get_default_graph())
+    configure_list = [{'q_bits':8, 'op_types':['default']}]
+    quantizer = QAT_Quantizer(tf.get_default_graph(), configure_list)
+    quantizer.compress()
     # you can also use compress(model) or compress_default_graph()
     # method like QATquantizer(q_bits = 8).compress_default_graph()
     
@@ -114,4 +114,6 @@ def main():
         })
         print('final result is', test_acc)
 
-main()
+
+if __name__ == '__main__':
+    main()

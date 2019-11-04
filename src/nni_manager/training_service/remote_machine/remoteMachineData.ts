@@ -209,7 +209,8 @@ export class SSHClientManager {
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
-            username: this.rmMeta.username };
+            username: this.rmMeta.username,
+            tryKeyboard: true };
         if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
         } else if (this.rmMeta.sshKeyPath !== undefined) {
@@ -231,6 +232,8 @@ export class SSHClientManager {
           .on('error', (err: Error) => {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
+        }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
+            finish([this.rmMeta.passwd]);
         })
           .connect(connectConfig);
 

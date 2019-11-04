@@ -8,30 +8,34 @@
 
 上述情况都可以通过多阶段执行的功能来支持。 为了支持这些情况，一个 Trial 任务需要能从 Tuner 请求多个配置。 Tuner 需要知道两次配置请求是否来自同一个 Trial 任务。 同时，多阶段中的 Trial 任务需要多次返回最终结果。
 
-注意， `nni.get_next_parameter()` 和 `nni.report_final_result()` 需要被依次调用：**先调用前者，然后调用后者，并按此顺序重复调用**。 如果 `nni.get_next_parameter()` 被连续多次调用，然后再调用 `nni.report_final_result()`，这会造成最终结果只会与 get_next_parameter 所返回的最后一个配置相关联。 因此，前面的 get_next_parameter 调用都没有关联的结果，这可能会造成一些多阶段算法出问题。
-
 ## 创建多阶段的 Experiment
 
 ### 实现使用多阶段的 Trial 代码：
 
 **1. 更新 Trial 代码**
 
-Trial 代码中使用多阶段非常容易，样例如下：
+Trial 代码中使用多阶段非常容易，示例如下：
 
-    ```python
+```python
+# ...
+for i in range(5):
+    # 从 Tuner 中获得参数
+    tuner_param = nni.get_next_parameter()
+    # 如果没有更多超参可生成，nni.get_next_parameter 会返回 None。
+    if tuner_param is None:
+      break
+
+    # 使用参数
     # ...
-    for i in range(5):
-        # 从 Tuner 中获得参数
-        tuner_param = nni.get_next_parameter()
-    
-        # 使用参数
-        # ...
-        # 为上面获取的参数返回最终结果
+    # 返回最终结果
         nni.report_final_result()
         # ...
-    # ...
-    ```
-    
+# ...
+```
+
+在多阶段 Experiment 中，每次 API `nni.get_next_parameter()` 被调用时，会返回 Tuner 新生成的超参，然后 Trial 代码会使用新的超参，并返回其最终结果。 `nni.get_next_parameter()` 和 `nni.report_final_result()` 需要依次被调用：**先调用前者，然后调用后者，并按此顺序重复调用**。 如果 `nni.get_next_parameter()` 被连续多次调用，然后再调用 `nni.report_final_result()`，这会造成最终结果只会与 get_next_parameter 所返回的最后一个配置相关联。 因此，前面的 get_next_parameter 调用都没有关联的结果，这可能会造成一些多阶段算法出问题。
+
+注意，如果 `nni.get_next_parameter` 返回 None，表示 Tuner 没有生成更多的超参。
 
 **2. Experiment 配置**
 
@@ -39,35 +43,37 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 多阶段 Experiment 配置示例：
 
-    authorName: default
-    experimentName: multiphase experiment
-    trialConcurrency: 2
-    maxExecDuration: 1h
-    maxTrialNum: 8
-    trainingServicePlatform: local
-    searchSpacePath: search_space.json
-    multiPhase: true
-    useAnnotation: false
-    tuner:
-      builtinTunerName: TPE
-      classArgs:
-        optimize_mode: maximize
-    trial:
-      command: python3 mytrial.py
-      codeDir: .
-      gpuNum: 0
-    
+```yaml
+authorName: default
+experimentName: multiphase experiment
+trialConcurrency: 2
+maxExecDuration: 1h
+maxTrialNum: 8
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+multiPhase: true
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mytrial.py
+  codeDir: .
+  gpuNum: 0
+```
 
 ### 实现使用多阶段的 Tuner：
 
 强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/zh/latest/Tuner/CustomizeTuner.html)，再开始实现多阶段 Tuner。 与普通 Tuner 一样，需要从 `Tuner` 类继承。 当通过配置启用多阶段时（将 `multiPhase` 设为 true），Tuner 会通过下列方法得到一个新的参数 `trial_job_id`：
 
-    generate_parameters
-    generate_multiple_parameters
-    receive_trial_result
-    receive_customized_trial_result
-    trial_end
-    
+```text
+generate_parameters
+generate_multiple_parameters
+receive_trial_result
+receive_customized_trial_result
+trial_end
+```
 
 有了这个信息， Tuner 能够知道哪个 Trial 在请求配置信息， 返回的结果是哪个 Trial 的。 通过此信息，Tuner 能够灵活的为不同的 Trial 及其阶段实现功能。 例如，可在 generate_parameters 方法中使用 trial_job_id 来为特定的 Trial 任务生成超参。
 

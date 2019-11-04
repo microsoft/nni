@@ -219,11 +219,6 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         if (advisor.classFileName !== undefined && advisor.classFileName.length > 1) {
             command += ` --advisor_class_filename ${advisor.classFileName}`;
         }
-        if (advisor.gpuIndices !== undefined) {
-            command = `CUDA_VISIBLE_DEVICES=${advisor.gpuIndices} ` + command;
-        } else {
-            command = `CUDA_VISIBLE_DEVICES='' ` + command;
-        }
     } else {
         command += ` --tuner_class_name ${tuner.className}`;
         if (tuner.classArgs !== undefined) {
@@ -247,12 +242,6 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
             if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
                 command += ` --assessor_class_filename ${assessor.classFileName}`;
             }
-        }
-
-        if (tuner.gpuIndices !== undefined) {
-            command = `CUDA_VISIBLE_DEVICES=${tuner.gpuIndices} ` + command;
-        } else {
-            command = `CUDA_VISIBLE_DEVICES='' ` + command;
         }
     }
 
@@ -456,10 +445,10 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
 /**
  * judge whether the process is alive
  */
-async function isAlive(pid:any): Promise<boolean> {
+async function isAlive(pid: any): Promise<boolean> {
     let deferred : Deferred<boolean> = new Deferred<boolean>();
     let alive: boolean = false;
-    if(process.platform ==='win32'){
+    if (process.platform === 'win32') {
         try {
             const str = cp.execSync(`powershell.exe Get-Process -Id ${pid} -ErrorAction SilentlyContinue`).toString();
             if (str) {
@@ -469,7 +458,7 @@ async function isAlive(pid:any): Promise<boolean> {
         catch (error) {
         }
     }
-    else{
+    else {
         try {
             await cpp.exec(`kill -0 ${pid}`);
             alive = true;
@@ -484,11 +473,11 @@ async function isAlive(pid:any): Promise<boolean> {
 /**
  * kill process
  */
-async function killPid(pid:any): Promise<void> {
+async function killPid(pid: any): Promise<void> {
     let deferred : Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
-            await cpp.exec(`cmd /c taskkill /PID ${pid} /F`);
+            await cpp.exec(`cmd.exe /c taskkill /PID ${pid} /F`);
         }
         else{
             await cpp.exec(`kill -9 ${pid}`);
