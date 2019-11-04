@@ -84,8 +84,8 @@
   
   * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
   * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
-  * The following HPO tuners can be adapted to tune this search space: TPE, Random, Anneal, Evolution, Grid Search, Hyperband and BOHB.
-  * For detailed usage, please refer to [General NAS Interfaces](../AdvancedFeature/GeneralNasInterfaces.md).
+  * 下列超参优化 Tuner 可用于此搜索空间：TPE, Random, Anneal, Evolution, Grid Search, Hyperband 以及 BOHB。
+  * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
 
 ## 每种 Tuner 支持的搜索空间类型
 
@@ -102,12 +102,11 @@
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 |      GP Tuner       | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   |          |          |           |            |
 
-Known Limitations:
+已知的局限：
 
 * GP Tuner and Metis Tuner support only **numerical values** in search space (`choice` type values can be no-numeraical with other tuners, e.g. string values). GP Tuner 和 Metis Tuner 都使用了高斯过程的回归（Gaussian Process Regressor, GPR）。 GPR 基于计算不同点距离的和函数来进行预测，其无法计算非数值值的距离。
 
 * 请注意，对于嵌套搜索空间：
   
-      * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
-      
-      * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in [#1110](https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+      * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
+      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 [#1110](https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
