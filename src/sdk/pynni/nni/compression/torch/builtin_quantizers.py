@@ -42,27 +42,63 @@ class QAT_Quantizer(Quantizer):
     """
     def __init__(self, model, config_list):
         """
-        config_list: supported keys:
-            - weight_bits
-            - activation_bits
-            - quant_delay
+        Create a wrapper forward function to replace the original one.
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the mask
+        config_list : list of dict
+            list of configurations for quantization
+            supported keys for dict:
+                - weight_quantization
+                - weight_bits
+                - activation_quantization
+                - activation_bits
+                - quant_delay
         """
         super().__init__(model, config_list)
         for layer, config in self.get_modules_to_compress():
-            # TODO: 
-            if "weight_quantization" in config:
+            if config.get("weight_quantization", False):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
-            if "activation_quantization" in config:
+            if config.get("activation_quantization", False):
                 layer.module.register_buffer("range_checker", EMA_RangeChecker(0.9))
+        self.steps = 0
 
     def fixed_range_check(self, tensor):
+        """
+        determine the max value and min value of quantization target.
+
+        Parameters
+        ----------
+        tensor : Tensor
+            the Tensor to be quantized
+        
+        Returns
+        -------
+        (min, max) : (float, float)
+        """
         return torch.min(tensor), torch.max(tensor)
 
     # def EMA_range_check(self, op, tensor):
     #     return torch.min(tensor), torch.max(tensor)
 
-    def update_quantization_param(self, q_bits, op, rmin, rmax):
+    def update_quantization_param(self, bits, op, rmin, rmax):
+        """
+        update the `zero_point` and `scale` of op.
+
+        Parameters
+        ----------
+        bits : int
+            quantization bits length
+        op : torch.nn.module
+            target module
+        rmin : float
+            min value of real value
+        rmax : float
+            max value of real value
+        """
         # extend the [min, max] interval to ensure that it contains 0.
         # Otherwise, we would not meet the requirement that 0 be an exactly
         # representable value.
@@ -71,24 +107,15 @@ class QAT_Quantizer(Quantizer):
 
         # the min and max quantized values, as floating-point values
         qmin = 0
-        qmax = 1 << q_bits - 1
+        qmax = 1 << bits - 1
 
         # First determine the scale.
         scale = (rmax - rmin) / (qmax - qmin)
 
         # Zero-point computation.
-        # First the initial floating-point computation. The zero-point can be
-        # determined from solving an affine equation for any known pair
-        # (real value, corresponding quantized value).
-        # We know two such pairs: (rmin, qmin) and (rmax, qmax).
-        # Let's use the first one here.
         initial_zero_point = qmin - rmin / scale
 
         # Now we need to nudge the zero point to be an integer
-        # (our zero points are integer, and this is motivated by the requirement
-        # to be able to represent the real value "0" exactly as a quantized value,
-        # which is required in multiple places, for example in Im2col with SAME
-        # padding).
         nudged_zero_point = 0
         if initial_zero_point < qmin:
             nudged_zero_point = qmin
@@ -100,15 +127,45 @@ class QAT_Quantizer(Quantizer):
         op.scale = scale
         op.zero_point = nudged_zero_point
 
-    def quantize(self, q_bits, op, real_val):
+    def quantize(self, bits, op, real_val):
+        """
+        quantize real value.
+
+        Parameters
+        ----------
+        bits : int
+            quantization bits length
+        op : torch.nn.module
+            target module
+        real_val : float
+            real value to be quantized
+        
+        Returns
+        -------
+        quantized_val : float
+        """
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
-        qmax = 1 << q_bits - 1
+        qmax = 1 << bits - 1
         clamped_val = torch.clamp(transformed_val, qmin, qmax)
         quantized_val = torch.round(clamped_val)
         return quantized_val
 
     def dequantize(self, op, quantized_val):
+        """
+        dequantize quantized value.
+
+        Parameters
+        ----------
+        op : torch.nn.module
+            target module
+        quantized_val : float
+            quantized_val value to be dequantized
+
+        Returns
+        -------
+        real_val : float
+        """
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
@@ -126,8 +183,8 @@ class QAT_Quantizer(Quantizer):
     def quantize_activation(self, activation, config, op, **kwargs):
         if config['activation_bits'] <= 1:
             return activation
-        if config['quant_delay'] > self._steps:
-            return activation
+        # if config['quant_delay'] > self._steps:
+        #     return activation
         # TODO activation dynamic set a, b
         rmin, rmax = self.fixed_range_check(activation)
         self.update_quantization_param(config['activation_bits'], op, rmin, rmax)
@@ -142,8 +199,7 @@ class QAT_Quantizer(Quantizer):
     def step(self):
         """override compressor step method, update _step attribute, quantization only happens after certain number of steps
         """
-        self._steps += 1
-        logger.info("step %d", self._steps)
+        self.steps += 1
 
 
 class DoReFaQuantizer(Quantizer):

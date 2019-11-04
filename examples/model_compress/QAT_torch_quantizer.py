@@ -69,13 +69,14 @@ def main():
     DoReFaQuantizer(configure_list).compress(model)
     '''
     configure_list = [{
+        'weight_quantization': True,
         'weight_bits':8,
-        'activation_bits': 8,
+        # 'activation_bits': 8,
         'quant_delay': 10,
         'op_types':['default']
     }]
-    quantizer = QAT_Quantizer(configure_list)
-    quantizer(model)
+    quantizer = QAT_Quantizer(model, configure_list)
+    quantizer.compress()
     # you can also use compress(model) method
     # like thaht quantizer.compress(model)
 

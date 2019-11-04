@@ -207,7 +207,7 @@ class Quantizer(Compressor):
         weight : Tensor
             weight that needs to be quantized
         config : dict
-            the configuration for generating the mask
+            the configuration for weight quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
@@ -218,12 +218,26 @@ class Quantizer(Compressor):
 
         Parameters
         ----------
-        weight : activations
+        activations : Tensor
             activations that needs to be quantized
         config : dict
-            the configuration for generating the mask
+            the configuration for activation quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_activation()")
+    
+    def quantize_inputs(self, *input, config, op):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        input : Tensor
+            activations that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+        raise NotImplementedError("Quantizer must overload quantize_inputs()")
     
     def _instrument_layer(self, layer, config):
         """
@@ -234,7 +248,7 @@ class Quantizer(Compressor):
         layer : LayerInfo
             the layer to instrument the mask
         config : dict
-            the configuration for generating the mask
+            the configuration for quantization
         """
         assert layer._forward is None, 'Each model can only be compressed once'
         # if not _check_weight(layer.module):
@@ -243,13 +257,21 @@ class Quantizer(Compressor):
         layer.save_forward()
 
         def new_forward(*inputs):
-            weight = layer.module.weight.data
-            new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-            layer.module.weight.data = new_weight
-            result = layer._forward(*inputs)
-            if "activation_quantization" in config:
+            if config.get("input_quantization", False):
+                inputs = self.quantize_inputs(inputs, config, op)
+            
+            if config.get("weight_quantization", False):
+                weight = layer.module.weight.data
+                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                layer.module.weight.data = new_weight
+                result = layer._forward(*inputs)
+                layer.module.weight.data = weight
+            else:
+                result = layer._forward(*inputs)
+            
+            if config.get("activation_quantization", False):
                 result = self.quantize_activation(result, config, op)
-            layer.module.weight.data = weight
+        
             return result
         
         layer.mount_forward(new_forward)
