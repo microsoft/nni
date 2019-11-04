@@ -3,7 +3,7 @@ import sys
 import os
 import signal
 import psutil
-from .common_utils import print_error, print_normal, print_warning
+from .common_utils import print_error
 
 
 def check_output_command(file_path, head=None, tail=None):

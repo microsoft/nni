@@ -18,16 +18,17 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import unittest
-import json
-import sys
-from pyhdfs import HdfsClient
-sys.path.append("..")
-from trial.hdfsClientUtility import copyFileToHdfs, copyDirectoryToHdfs
 import os
 import shutil
 import random
 import string
+import unittest
+import json
+import sys
+from pyhdfs import HdfsClient
+from tools.nni_trial_tool.hdfsClientUtility import copyFileToHdfs, copyDirectoryToHdfs
+sys.path.append("..")
+
 
 class HDFSClientUtilityTest(unittest.TestCase):
     '''Unit test for hdfsClientUtility.py'''
@@ -82,7 +83,8 @@ class HDFSClientUtilityTest(unittest.TestCase):
             with open('./{0}/{1}'.format(directory_name, file_name), 'w') as file:
                 file.write(file_content)
 
-        result = copyDirectoryToHdfs('./{}'.format(directory_name), '/{0}/{1}'.format(self.hdfs_config['userName'], directory_name), self.hdfs_client)
+        result = copyDirectoryToHdfs('./{}'.format(directory_name),
+                                     '/{0}/{1}'.format(self.hdfs_config['userName'], directory_name), self.hdfs_client)
         self.assertTrue(result)
 
         directory_list = self.hdfs_client.listdir('/{0}'.format(self.hdfs_config['userName']))

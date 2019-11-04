@@ -21,10 +21,10 @@
 import os
 import sys
 import json
-import ruamel.yaml as yaml
-import psutil
 import socket
 from pathlib import Path
+import ruamel.yaml as yaml
+import psutil
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO, COLOR_RED_FORMAT, COLOR_YELLOW_FORMAT
 
 def get_yml_content(file_path):
@@ -34,6 +34,7 @@ def get_yml_content(file_path):
             return yaml.load(file, Loader=yaml.Loader)
     except yaml.scanner.ScannerError as err:
         print_error('yaml file format error!')
+        print_error(err)
         exit(1)
     except Exception as exception:
         print_error(exception)
@@ -46,6 +47,7 @@ def get_json_content(file_path):
             return json.load(file)
     except TypeError as err:
         print_error('json file format error!')
+        print_error(err)
         return None
 
 def print_error(content):
@@ -70,7 +72,7 @@ def detect_process(pid):
 
 def detect_port(port):
     '''Detect if the port is used'''
-    socket_test = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    socket_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         socket_test.connect(('127.0.0.1', int(port)))
         socket_test.close()
@@ -79,7 +81,7 @@ def detect_port(port):
         return False
 
 def get_user():
-    if sys.platform =='win32':
+    if sys.platform == 'win32':
         return os.environ['USERNAME']
     else:
         return os.environ['USER']
