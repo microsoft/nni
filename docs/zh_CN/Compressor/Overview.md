@@ -157,34 +157,33 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# For writing a Quantizer in PyTorch, you can simply replace
-# nni.compression.tensorflow.Quantizer with
+# 如果要在 PyTorch 中定制 Quantizer，可将
+# nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来进行配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        weight 是目标的权重张量
+        config 是在 config_list 中为此层选定的 dict 对象
+        kwargs 包括 op, op_types, 和 op_name
+        设计实现定制的 Quantizer 并返回新的权重
         """
         return new_weight
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据在 bind_model 函数中引用的模型或权重进行一些处理
         """
         pass
 ```
