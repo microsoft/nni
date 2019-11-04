@@ -128,6 +128,7 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
+
 class Pruner(Compressor):
     """
     Abstract base PyTorch pruner

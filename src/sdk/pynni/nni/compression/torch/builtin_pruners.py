@@ -8,7 +8,8 @@ logger = logging.getLogger('torch pruner')
 
 
 class LevelPruner(Pruner):
-    """Prune to an exact pruning level specification
+    """
+    Prune to an exact pruning level specification
 
     Attributes
     ----------
@@ -24,27 +25,27 @@ class LevelPruner(Pruner):
 
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
             List on pruning configs
 
         """
+
         super().__init__(model, config_list)
         self.mask_list = {}
         self._if_init_list = {}
 
     def calc_mask(self, layer, config):
-        """Calculate the mask of given layer
+        """
+        Calculate the mask of given layer
 
         Parameters
         ----------
-        weight : torch.nn.Parameter
-            weight of layer to prune
+        layer : LayerInfo
+            the layer to instrument the compression operation
         config : dict
             layer's pruning config
-        op_name : str
-            layer name to be pruned
-        **kwargs
-            Arbitrary keyword arguments.
 
         Returns
         -------
@@ -70,7 +71,7 @@ class LevelPruner(Pruner):
 
 
 class AGP_Pruner(Pruner):
-    """Prune to an exact pruning level specification
+    """
     An automated gradual pruning algorithm that prunes the smallest magnitude
     weights to achieve a preset level of network sparsity.
 
@@ -97,35 +98,36 @@ class AGP_Pruner(Pruner):
 
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
             List on pruning configs
 
         """
+
         super().__init__(model, config_list)
         self.mask_list = {}
         self.now_epoch = 0
         self._if_init_list = {}
 
     def calc_mask(self, layer, config):
-        """Calculate the mask of given layer
+        """
+        Calculate the mask of given layer
 
         Parameters
         ----------
-        weight : torch.nn.Parameter
-            Weight of layer to prune
+        layer : LayerInfo
+            the layer to instrument the compression operation
         config : dict
-            Layer's pruning config
-        op_name : str
-            Layer name to be pruned
-        **kwargs
-            Arbitrary keyword arguments.
+            layer's pruning config
 
         Returns
         -------
         torch.Tensor
-            Mask of the layer's weight
+            mask of the layer's weight
 
         """
+
         weight = layer.module.weight.data
         op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
@@ -148,7 +150,8 @@ class AGP_Pruner(Pruner):
         return new_mask
 
     def compute_target_sparsity(self, config):
-        """Calculate the sparsity for pruning
+        """
+        Calculate the sparsity for pruning
 
         Parameters
         ----------
@@ -196,7 +199,8 @@ class AGP_Pruner(Pruner):
 
 
 class FilterPruner(Pruner):
-    """A structured pruning algorithm that prunes the filters of smallest magnitude
+    """
+    A structured pruning algorithm that prunes the filters of smallest magnitude
     weights sum in the convolution layers to achieve a preset level of network sparsity.
 
     Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf,
@@ -210,44 +214,42 @@ class FilterPruner(Pruner):
 
     """
 
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """Initiate `FilterPruner` from `config_list`
         config_list: supported keys:
             - sparsity
 
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
-            List of pruning configs
+            List on pruning configs
 
         """
 
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self._if_init_list = {}
 
     def calc_mask(self, layer, config):
-        """Calculate the mask of given layer
+        """
+        Calculate the mask of given layer
 
-         Parameters
-         ----------
-         weight : torch.nn.Parameter
-             Weight of layer to prune
-         config : dict
-             Layer's pruning config
-         op_name : str
-             Layer name to be pruned
-         op_type : str
-             Layer type to be pruned
-         **kwargs
-             Arbitrary keyword arguments.
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the compression operation
+        config : dict
+            layer's pruning config
 
-         Returns
-         -------
-         torch.Tensor
-             Mask of the layer's weight
+        Returns
+        -------
+        torch.Tensor
+            mask of the layer's weight
 
-         """
+        """
+
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
@@ -269,8 +271,8 @@ class FilterPruner(Pruner):
 
 
 class SlimPruner(Pruner):
-    """A structured pruning algorithm that prunes channels by pruning the weights of BN layers.
-
+    """
+    A structured pruning algorithm that prunes channels by pruning the weights of BN layers.
     Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang
     "Learning Efficient Convolutional Networks through Network Slimming", 2017 ICCV
     https://arxiv.org/pdf/1708.06519.pdf
@@ -282,7 +284,7 @@ class SlimPruner(Pruner):
 
     """
 
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """Initiate `FilterPruner` from `config_list`
         config_list: supported keys:
             - sparsity
@@ -293,19 +295,10 @@ class SlimPruner(Pruner):
             List of pruning configs
 
         """
-        super().__init__(config_list)
+
+        super().__init__(model, config_list)
         self.mask_list = {}
         self._if_init_list = {}
-
-    def bind_model(self, model):
-        """Calculate the global threshold for pruning
-
-        Parameters
-        ----------
-        model : torch.nn.Module
-            Model to be pruned
-
-        """
         weight_list = []
         config = self.config_list[0]
         op_types = config.get('op_types')
@@ -326,27 +319,23 @@ class SlimPruner(Pruner):
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
 
     def calc_mask(self, layer, config):
-        """Calculate the mask of given layer
+        """
+        Calculate the mask of given layer
 
-         Parameters
-         ----------
-         weight : torch.nn.Parameter
-             Weight of layer to prune
-         config : dict
-             Layer's pruning config
-         op_name : str
-             Layer name to be pruned
-         op_type : str
-             Layer type to be pruned
-         **kwargs
-             Arbitrary keyword arguments.
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the compression operation
+        config : dict
+            layer's pruning config
 
-         Returns
-         -------
-         torch.Tensor
-             Mask of the layer's weight
+        Returns
+        -------
+        torch.Tensor
+            mask of the layer's weight
 
-         """
+        """
+
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
