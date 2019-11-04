@@ -173,7 +173,7 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
     } else {
-        return `export ${variable.key}=${variable.value}`;
+        return `export ${variable.key}='${variable.value}'`;
     }
 }
 
