@@ -207,7 +207,7 @@ class MetisTuner(Tuner):
                         "Metis Tuner doesn't support this kind of variable: %s",
                         str(key_type))
                     raise RuntimeError(
-                        "Metis Tuner doesn't support this kind of variable: %s",
+                        "Metis Tuner doesn't support this kind of variable: %s" %
                         str(key_type))
         else:
             logger.info("The format of search space is not a dict.")
