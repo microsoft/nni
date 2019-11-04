@@ -487,9 +487,9 @@ class Graph:
         # Add the conv layer
         new_conv_layer = get_conv_class(
             self.n_dim)(
-            filters_start,
-            filters_end,
-            1)
+                filters_start,
+                filters_end,
+                1)
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
 
         # Add the add layer.
