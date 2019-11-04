@@ -42,27 +42,27 @@ class NetworkMorphismTuner(Tuner):
     Attributes
     ----------
     n_classes : int
-        The class number or output node number (default: {10})
+        The class number or output node number (default: ``10``)
     input_shape : tuple
         A tuple including: (input_width, input_width, input_channel)
     t_min : float
-        The minimum temperature for simulated annealing. (default: {Constant.T_MIN})
+        The minimum temperature for simulated annealing. (default: ``Constant.T_MIN``)
     beta : float
-        The beta in acquisition function. (default: {Constant.BETA})
+        The beta in acquisition function. (default: ``Constant.BETA``)
     algorithm_name : str
-        algorithm name used in the network morphism (default: {"Bayesian"})
+        algorithm name used in the network morphism (default: ``"Bayesian"``)
     optimize_mode : str
-        optimize mode "minimize" or "maximize" (default: {"minimize"})
+        optimize mode "minimize" or "maximize" (default: ``"minimize"``)
     verbose : bool
-        verbose to print the log (default: {True})
+        verbose to print the log (default: ``True``)
     bo : BayesianOptimizer
         The optimizer used in networkmorphsim tuner.
     max_model_size : int
-        max model size to the graph (default: {Constant.MAX_MODEL_SIZE})
+        max model size to the graph (default: ``Constant.MAX_MODEL_SIZE``)
     default_model_len : int
-        default model length (default: {Constant.MODEL_LEN})
+        default model length (default: ``Constant.MODEL_LEN``)
     default_model_width : int
-        default model width (default: {Constant.MODEL_WIDTH})
+        default model width (default: ``Constant.MODEL_WIDTH``)
     search_space : dict
     """
 
@@ -84,35 +84,6 @@ class NetworkMorphismTuner(Tuner):
     ):
         """
         initilizer of the NetworkMorphismTuner.
-
-        Parameters
-        ----------
-        task : str
-            task mode, such as "cv","common" etc. (default: {"cv"})
-        input_width : int
-            input sample shape (default: {32})
-        input_channel : int
-            input sample shape (default: {3})
-        n_output_node : int
-            output node number (default: {10})
-        algorithm_name : str
-            algorithm name used in the network morphism (default: {"Bayesian"})
-        optimize_mode : str
-            optimize mode "minimize" or "maximize" (default: {"minimize"})
-        path : str
-            default mode path to save the model file (default: {"model_path"})
-        verbose : bool
-            verbose to print the log (default: {True})
-        beta : float
-            The beta in acquisition function. (default: {Constant.BETA})
-        t_min : float
-            The minimum temperature for simulated annealing. (default: {Constant.T_MIN})
-        max_model_size : int
-            max model size to the graph (default: {Constant.MAX_MODEL_SIZE})
-        default_model_len : int
-            default model length (default: {Constant.MODEL_LEN})
-        default_model_width : int
-            default model width (default: {Constant.MODEL_WIDTH})
         """
 
         if not os.path.exists(path):
@@ -237,8 +208,8 @@ class NetworkMorphismTuner(Tuner):
         """
         Generate the next neural architecture.
 
-        Returns
-        -------
+        Return
+        ------
         other_info: any object
             Anything to be saved in the training queue together with the architecture.
         generated_graph: Graph
@@ -281,8 +252,8 @@ class NetworkMorphismTuner(Tuner):
         graph : dict
         model_id : int
 
-        Returns
-        -------
+        Return
+        ------
         model : dict
         """
         if self.verbose:
@@ -318,8 +289,8 @@ class NetworkMorphismTuner(Tuner):
         model_id : int
             model index
 
-        Returns
-        -------
+        Return
+        ------
         load_model : Graph
             the model graph representation
         """
@@ -334,8 +305,8 @@ class NetworkMorphismTuner(Tuner):
         """
         Get the best model by model id
 
-        Returns
-        -------
+        Return
+        ------
         load_model : Graph
             the model graph representation
         """
@@ -350,8 +321,8 @@ class NetworkMorphismTuner(Tuner):
         model_id : int
             model index
 
-        Returns
-        -------
+        Return
+        ------
         float
              the model metric
         """
