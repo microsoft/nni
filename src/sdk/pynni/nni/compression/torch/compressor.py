@@ -211,7 +211,7 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
-    def quantize_activation(self, activation, config, op):
+    def quantize_activation(self, activation, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize activations.
         This method is effectively hooked to `forward()` method of the model.
@@ -225,7 +225,7 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_activation()")
     
-    def quantize_inputs(self, *input, config, op):
+    def quantize_inputs(self, *input, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to `forward()` method of the model.
@@ -259,7 +259,7 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if config.get("input_quantization", False):
-                inputs = self.quantize_inputs(inputs, config, op)
+                inputs = self.quantize_inputs(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
             
             if config.get("weight_quantization", False):
                 weight = layer.module.weight.data
@@ -271,7 +271,7 @@ class Quantizer(Compressor):
                 result = layer._forward(*inputs)
             
             if config.get("activation_quantization", False):
-                result = self.quantize_activation(result, config, op)
+                result = self.quantize_activation(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
         
             return result
         
