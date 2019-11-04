@@ -380,9 +380,9 @@ class LocalTrainingService implements TrainingService {
         const envVariables: { key: string; value: string }[] = [
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_EXP_ID', value: this.experimentId },
-            { key: 'NNI_SYS_DIR', value: `${trialJobDetail.workingDirectory}` },
+            { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: `${trialJobDetail.workingDirectory}` },
+            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
