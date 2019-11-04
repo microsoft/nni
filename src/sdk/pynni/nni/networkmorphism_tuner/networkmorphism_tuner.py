@@ -38,7 +38,7 @@ logger = logging.getLogger("NetworkMorphism_AutoML")
 class NetworkMorphismTuner(Tuner):
     """
     NetworkMorphismTuner is a tuner which using network morphism techniques.
-    
+
     Attributes
     ----------
     n_classes : int
