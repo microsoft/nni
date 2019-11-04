@@ -172,7 +172,7 @@ class GridSearchTuner(Tuner):
         parameter_id: int
             the id for the generated hyperparameter
         **kwargs
-            unstable parameters which should be ignored by normal users
+            not used
 
         Returns
         -------
@@ -200,7 +200,7 @@ class GridSearchTuner(Tuner):
 
         See Also
         --------
-        :class:`~nni.report_final_result`
+        :func:`~nni.report_final_result`
         """
         pass
 

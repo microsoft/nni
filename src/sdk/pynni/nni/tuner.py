@@ -76,7 +76,7 @@ class Tuner(Recoverable):
     Builtin tuners:
     :class:`~nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner`
     :class:`~nni.evolution_tuner.evolution_tuner.EvolutionTuner`
-    :class:`~nni.smac_tuner.smac_tuner.SMACTuner`
+    :class:`~nni.smac_tuner.SMACTuner`
     :class:`~nni.gridsearch_tuner.GridSearchTuner`
     :class:`~nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner`
     :class:`~nni.metis_tuner.mets_tuner.MetisTuner`
