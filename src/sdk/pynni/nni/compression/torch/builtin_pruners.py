@@ -17,8 +17,8 @@ class LevelPruner(Pruner):
 
     """
 
-    def __init__(self, config_list):
-        """Initiate `LevelPruner` from `config_list`
+    def __init__(self, model, config_list):
+        """
         config_list: supported keys:
             - sparsity
 
@@ -28,12 +28,11 @@ class LevelPruner(Pruner):
             List on pruning configs
 
         """
-
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self._if_init_list = {}
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
+    def calc_mask(self, layer, config):
         """Calculate the mask of given layer
 
         Parameters
@@ -54,6 +53,8 @@ class LevelPruner(Pruner):
 
         """
 
+        weight = layer.module.weight.data
+        op_name = layer.name
         if self._if_init_list.get(op_name, True):
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
@@ -85,8 +86,8 @@ class AGP_Pruner(Pruner):
 
     """
 
-    def __init__(self, config_list):
-        """Initiate `AGP_Pruner` from `config_list`
+    def __init__(self, model, config_list):
+        """
         config_list: supported keys:
             - initial_sparsity
             - final_sparsity: you should make sure initial_sparsity <= final_sparsity
@@ -100,13 +101,12 @@ class AGP_Pruner(Pruner):
             List on pruning configs
 
         """
-
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self.now_epoch = 0
         self._if_init_list = {}
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
+    def calc_mask(self, layer, config):
         """Calculate the mask of given layer
 
         Parameters
@@ -126,6 +126,8 @@ class AGP_Pruner(Pruner):
             Mask of the layer's weight
 
         """
+        weight = layer.module.weight.data
+        op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self._if_init_list.get(op_name, True) and (
@@ -224,7 +226,7 @@ class FilterPruner(Pruner):
         self.mask_list = {}
         self._if_init_list = {}
 
-    def calc_mask(self, weight, config, op_name, op_type, **kwargs):
+    def calc_mask(self, layer, config):
         """Calculate the mask of given layer
 
          Parameters
@@ -246,7 +248,9 @@ class FilterPruner(Pruner):
              Mask of the layer's weight
 
          """
-
+        weight = layer.module.weight.data
+        op_name = layer.name
+        op_type = layer.type
         assert op_type == 'Conv2d', 'FilterPruner only supports 2d convolution layer pruning'
         if self._if_init_list.get(op_name, True):
             kernels = weight.shape[0]
@@ -303,7 +307,7 @@ class SlimPruner(Pruner):
 
         """
         weight_list = []
-        config = self._config_list[0]
+        config = self.config_list[0]
         op_types = config.get('op_types')
         op_names = config.get('op_names')
         if op_types is not None:
@@ -321,7 +325,7 @@ class SlimPruner(Pruner):
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
 
-    def calc_mask(self, weight, config, op_name, op_type, **kwargs):
+    def calc_mask(self, layer, config):
         """Calculate the mask of given layer
 
          Parameters
@@ -343,7 +347,9 @@ class SlimPruner(Pruner):
              Mask of the layer's weight
 
          """
-
+        weight = layer.module.weight.data
+        op_name = layer.name
+        op_type = layer.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
         if self._if_init_list.get(op_name, True):
             w_abs = weight.abs()
