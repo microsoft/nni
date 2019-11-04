@@ -9,13 +9,13 @@
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(config_list)
-pruner(model)
+pruner = LevelPruner(model, config_list)
+pruner.compress()
 ```
 
 op_type 为 'default' 表示模块类型定义在了 [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py)。
 
-因此 `{ 'sparsity': 0.8, 'op_types': ['default'] }` 表示 **所有指定 op_types 的层都会被压缩到 0.8 的稀疏度**。 当调用 `pruner(model)` 时，模型会通过掩码进行压缩。随后还可以微调模型，此时**被剪除的权重不会被更新**。
+因此 `{ 'sparsity': 0.8, 'op_types': ['default'] }` 表示 **所有指定 op_types 的层都会被压缩到 0.8 的稀疏度**。 When `pruner.compress()` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
 
 ## 然后，进行自动化
 
@@ -75,7 +75,7 @@ from nni.compression.torch import *
 params = nni.get_parameters()
 conv0_sparsity = params['prune_method']['conv0_sparsity']
 conv1_sparsity = params['prune_method']['conv1_sparsity']
-# 如果对总稀疏度有要求，这些原始稀疏度就需要调整。
+# these raw sparsity should be scaled if you need total sparsity constrained
 config_list_level = [{ 'sparsity': conv0_sparsity, 'op_name': 'conv0' },
                      { 'sparsity': conv1_sparsity, 'op_name': 'conv1' }]
 config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
@@ -84,9 +84,9 @@ config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
                    {'initial_sparsity': 0, 'final_sparsity': conv1_sparsity,
                     'start_epoch': 0, 'end_epoch': 3,
                     'frequency': 1,'op_name': 'conv1' },]
-PRUNERS = {'level':LevelPruner(config_list_level)，'agp':AGP_Pruner(config_list_agp)}
+PRUNERS = {'level':LevelPruner(model, config_list_level)，'agp':AGP_Pruner(model, config_list_agp)}
 pruner = PRUNERS(params['prune_method']['_name'])
-pruner(model)
+pruner.compress()
 ... # fine tuning
 acc = evaluate(model) # evaluation
 nni.report_final_results(acc)

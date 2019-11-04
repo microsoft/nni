@@ -8,11 +8,11 @@ Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试�
 ### 用法
 Tensorflow
 ```python
-nni.compressors.tensorflow.NaiveQuantizer()(model_graph)
+nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
 ```
 PyTorch
 ```python
-nni.compressors.torch.NaiveQuantizer()(model)
+nni.compressors.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -29,15 +29,15 @@ TensorFlow 代码
 ```python
 from nni.compressors.tensorflow import QAT_Quantizer
 config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(tf.get_default_graph())
+quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
 ```
 PyTorch 代码
 ```python
 from nni.compressors.torch import QAT_Quantizer
 config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(model)
+quantizer = QAT_Quantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解
@@ -58,15 +58,15 @@ TensorFlow 代码
 ```python
 from nni.compressors.tensorflow import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(tf.get_default_graph())
+quantizer = DoReFaQuantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
 ```
 PyTorch 代码
 ```python
 from nni.compressors.torch import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(model)
+quantizer = DoReFaQuantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解

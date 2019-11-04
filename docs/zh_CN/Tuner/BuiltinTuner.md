@@ -120,7 +120,7 @@ tuner:
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-* **population_size** (*int 类型(大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的种群（Trial 数量）。
+* **population_size** (*int value (should > 0), optional, default = 20*) - the initial size of the population (trial num) in evolution tuner. 建议 `population_size` 比 `concurrency` 取值更大，这样用户能充分利用算法（至少要等于 `concurrency`，否则 Tuner 在生成第一代参数的时候就会失败）。
 
 **示例**
 
@@ -141,11 +141,11 @@ tuner:
 
 > 名称：**SMAC**
 
-**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
+**Please note that SMAC doesn't support running on Windows currently. 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
 
 **安装**
 
-SMAC 在第一次使用前，必须用下面的命令先安装。
+SMAC need to be installed by following command before first use. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
 
 ```bash
 nnictl package install --name=SMAC
