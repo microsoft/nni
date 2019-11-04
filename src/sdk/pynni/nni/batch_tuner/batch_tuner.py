@@ -36,19 +36,17 @@ LOGGER = logging.getLogger('batch_tuner_AutoML')
 class BatchTuner(Tuner):
     """
     BatchTuner is tuner will running all the configure that user want to run batchly.
+    
+    Examples
+    --------
     The search space only be accepted like:
+    ```
     {
         'combine_params': { '_type': 'choice',
                              '_value': '[{...}, {...}, {...}]',
                           }
     }
-
-    Attributes
-    ----------
-    _count : int
-        _count is the number of parameters that tuner has generated.
-    _values : list
-        _values is to save all the candidates contains in search space.
+    ```
     """
 
     def __init__(self):
@@ -63,8 +61,8 @@ class BatchTuner(Tuner):
         ----------
         search_space : dict
 
-        Returns
-        -------
+        Return
+        ------
         None or list
             If valid, return candidate values; else return None.
         """
@@ -100,8 +98,8 @@ class BatchTuner(Tuner):
         ----------
         parameter_id : int
 
-        Returns
-        -------
+        Return
+        ------
         dict
             A candidate parameter group.
         """
