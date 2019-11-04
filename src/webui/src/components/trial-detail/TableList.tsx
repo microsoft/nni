@@ -47,7 +47,7 @@ interface TableListState {
     intermediateId: string;
     intermediateOtherKeys: Array<string>;
     isShowCustomizedModal: boolean;
-    trialParameter: string;
+    copyTrialId: string; // user copy trial to submit a new customized trial
 }
 
 interface ColumnIndex {
@@ -76,7 +76,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             intermediateId: '',
             intermediateOtherKeys: [],
             isShowCustomizedModal: false,
-            trialParameter: ''
+            copyTrialId: ''
         };
     }
 
@@ -242,17 +242,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     // open customized trial modal
-    setCustomizedTrial = (parameters: object) => {
+    setCustomizedTrial = (trialId: string) => {
         this.setState({
             isShowCustomizedModal: true,
-            trialParameter: JSON.stringify(parameters)
+            copyTrialId: trialId
         });
     }
 
     closeCustomizedTrial = () => {
         this.setState({
             isShowCustomizedModal: false,
-            trialParameter: ''
+            copyTrialId: ''
         });
     }
     render() {
@@ -260,7 +260,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,
             selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys,
-            isShowCustomizedModal, trialParameter
+            isShowCustomizedModal, copyTrialId
         } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
@@ -393,11 +393,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                                 type="primary"
                                                 className="common-style"
                                                 disabled={disabledAddCustomizedTrial}
-                                                onClick={
-                                                    this.setCustomizedTrial.bind(
-                                                        this,
-                                                        TRIALS.getTrial(record.id).description.parameters
-                                                    )}
+                                                onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                                // onClick={
+                                                //     this.setCustomizedTrial.bind(
+                                                //         this,
+                                                //         TRIALS.getTrial(record.id).description.parameters
+                                                //     )}
                                                 title="Customized trial"
                                             >
                                                 <Icon type="copy" />
@@ -507,7 +508,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 {/* clone trial parameters and could submit a customized trial */}
                 <Customize
                     visible={isShowCustomizedModal}
-                    hyperParameter={trialParameter}
+                    copyTrialId={copyTrialId}
                     closeCustomizeModal={this.closeCustomizedTrial}
                 />
             </Row>

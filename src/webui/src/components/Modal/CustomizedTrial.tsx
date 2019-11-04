@@ -2,14 +2,14 @@ import * as React from 'react';
 import axios from 'axios';
 import { Row, Col, Input, Modal, Form, Button, Icon } from 'antd';
 import { MANAGER_IP } from '../../static/const';
-import { EXPERIMENT } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { FormComponentProps } from 'antd/lib/form';
 const FormItem = Form.Item;
 import './customized.scss';
 
 interface CustomizeProps extends FormComponentProps {
-    hyperParameter: string;
     visible: boolean;
+    copyTrialId: string;
     closeCustomizeModal: () => void;
 }
 
@@ -18,13 +18,13 @@ interface CustomizeState {
     isShowSubmitFailed: boolean;
     isShowWarning: boolean;
     searchSpace: object;
-    customParameters: object; // customized trial
-    customID: number;
+    copyTrialParameter: object; // user click the trial's parameters
+    customParameters: object; // customized trial, maybe user change trial's parameters
+    customID: number; // submit customized trial succeed, return the new customized trial id
 }
 
 class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
-    public _isCustomizeMount: boolean;
     constructor(props: CustomizeProps) {
         super(props);
         this.state = {
@@ -32,6 +32,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             isShowSubmitFailed: false,
             isShowWarning: false,
             searchSpace: EXPERIMENT.searchSpace,
+            copyTrialParameter: {},
             customParameters: {},
             customID: NaN
         };
@@ -39,9 +40,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     // [submit click] user add a new trial [submit a trial]
     addNewTrial = () => {
-        const { searchSpace } = this.state;
-        const { hyperParameter } = this.props;
-        const originParameter = JSON.parse(hyperParameter);
+        const { searchSpace, copyTrialParameter } = this.state;
         // get user edited hyperParameter, ps: will change data type if you modify the input val
         const customized = this.props.form.getFieldsValue();
         // true: parameters are wrong
@@ -49,7 +48,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         Object.keys(customized).map(item => {
             if (item !== 'tag') {
                 // unified data type
-                if (typeof originParameter[item] === 'number' && typeof customized[item] === 'string') {
+                if (typeof copyTrialParameter[item] === 'number' && typeof customized[item] === 'string') {
                     customized[item] = JSON.parse(customized[item]);
                 }
                 if (searchSpace[item]._type === 'choice') {
@@ -69,9 +68,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         });
         if (flag !== false) {
             // open the warning modal
-            if (this._isCustomizeMount === true) {
-                this.setState(() => ({ isShowWarning: true, customParameters: customized }));
-            }
+            this.setState(() => ({ isShowWarning: true, customParameters: customized }));
         } else {
             // submit a customized job
             this.submitCustomize(customized);
@@ -80,17 +77,13 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
     }
 
     warningConfirm = () => {
-        if (this._isCustomizeMount === true) {
-            this.setState(() => ({ isShowWarning: false }));
-        }
+        this.setState(() => ({ isShowWarning: false }));
         const { customParameters } = this.state;
         this.submitCustomize(customParameters);
     }
 
     warningCancel = () => {
-        if (this._isCustomizeMount === true) {
-            this.setState(() => ({ isShowWarning: false }));
-        }
+        this.setState(() => ({ isShowWarning: false }));
     }
 
     submitCustomize = (customized: Object) => {
@@ -107,55 +100,52 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         })
             .then(res => {
                 if (res.status === 200) {
-                    if (this._isCustomizeMount === true) {
-                        this.setState(() => ({ customID: res.data.sequenceId , isShowSubmitSucceed: true }));
-                        this.props.closeCustomizeModal();
-                    }
+                    this.setState(() => ({ isShowSubmitSucceed: true, customID: res.data.sequenceId }));
+                    this.props.closeCustomizeModal();
                 } else {
-                    if (this._isCustomizeMount === true) {
-                        this.setState(() => ({ isShowSubmitFailed: true }));
-                    }
+                    this.setState(() => ({ isShowSubmitFailed: true }));
                 }
             })
             .catch(error => {
-                if (this._isCustomizeMount === true) {
-                    this.setState(() => ({ isShowSubmitFailed: true }));
-                }
+                this.setState(() => ({ isShowSubmitFailed: true }));
             });
     }
 
     closeSucceedHint = () => {
         // also close customized trial modal
-        if (this._isCustomizeMount === true) {
-            this.setState(() => ({ isShowSubmitSucceed: false }));
-            this.props.closeCustomizeModal();
-        }
+        this.setState(() => ({ isShowSubmitSucceed: false }));
+        this.props.closeCustomizeModal();
     }
 
     closeFailedHint = () => {
         // also close customized trial modal
-        if (this._isCustomizeMount === true) {
-            this.setState(() => ({ isShowSubmitFailed: false }));
-            this.props.closeCustomizeModal();
-        }
+        this.setState(() => ({ isShowSubmitFailed: false }));
+        this.props.closeCustomizeModal();
     }
 
     componentDidMount() {
-        this._isCustomizeMount = true;
+        const { copyTrialId } = this.props;
+        if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
+            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
+            this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
+        }
     }
 
-    componentWillUnmount() {
-        this._isCustomizeMount = false;
+    componentWillReceiveProps(nextProps: CustomizeProps) {
+        const { copyTrialId } = nextProps;
+        if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
+            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
+            this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
+        }
     }
 
     render() {
-        const { visible, closeCustomizeModal, hyperParameter } = this.props;
-        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID } = this.state;
+        const { closeCustomizeModal, visible } = this.props;
+        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
         const {
             form: { getFieldDecorator },
             // form: { getFieldDecorator, getFieldValue },
         } = this.props;
-        const parameters = (hyperParameter !== '') ? JSON.parse(hyperParameter) : '';
         const warning = 'The parameters you set are not in our search space, this may cause the tuner to crash, Are'
             + ' you sure you want to continue submitting?';
         return (
@@ -174,22 +164,21 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                     <Row className="hyper-box">
                         <Form>
                             {
-                                Object.keys(parameters).map(item => {
-                                    return (
-                                        <Row key={item} className="hyper-form">
-                                            <Col span={9} className="title">{item}</Col>
-                                            <Col span={15} className="inputs">
-                                                <FormItem key={item} style={{ marginBottom: 0 }}>
-                                                    {getFieldDecorator(item, {
-                                                        initialValue: parameters[item],
-                                                    })(
-                                                        <Input />
-                                                    )}
-                                                </FormItem>
-                                            </Col>
-                                        </Row>
-                                    );
-                                })
+                                Object.keys(copyTrialParameter).map(item => (
+                                    <Row key={item} className="hyper-form">
+                                        <Col span={9} className="title">{item}</Col>
+                                        <Col span={15} className="inputs">
+                                            <FormItem key={item} style={{ marginBottom: 0 }}>
+                                                {getFieldDecorator(item, {
+                                                    initialValue: copyTrialParameter[item],
+                                                })(
+                                                    <Input />
+                                                )}
+                                            </FormItem>
+                                        </Col>
+                                    </Row>
+                                )
+                                )
                             }
                             <Row key="tag" className="hyper-form tag-input">
                                 <Col span={9} className="title">Tag</Col>
@@ -240,7 +229,6 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                                 </span>
                             </h2>
                             <div className="hint">
-                                {/* don't return trial ID */}
                                 <span>You can find your customized trial by Trial No.{customID}</span>
                             </div>
                         </Row>
