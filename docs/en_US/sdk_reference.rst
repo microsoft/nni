@@ -36,6 +36,9 @@ Tuner
 ..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
     :members:
 
+..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
+    :members:
+
 Assessor
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
