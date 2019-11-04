@@ -251,9 +251,10 @@ class Quantizer(Compressor):
             the configuration for quantization
         """
         assert layer._forward is None, 'Each model can only be compressed once'
-        # if not _check_weight(layer.module):
-        #     _logger.warning('Module %s does not have parameter "weight"', layer.name)
-        #     return
+        if config.get("weight_quantization", False):
+            if not _check_weight(layer.module):
+                _logger.warning('Module %s does not have parameter "weight"', layer.name)
+                return
         layer.save_forward()
 
         def new_forward(*inputs):
