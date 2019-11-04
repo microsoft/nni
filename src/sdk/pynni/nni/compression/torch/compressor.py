@@ -37,7 +37,7 @@ class Compressor:
         """
         self.bound_model = model
         self.config_list = config_list
-        self.modules_to_compress = []
+        self.modules_to_compress = None
         self.detect_modules_to_compress()
 
     def detect_modules_to_compress(self):
@@ -46,12 +46,15 @@ class Compressor:
 
         The model will be instrumented and user should never edit it after calling this method.
         """
-        for name, module in self.bound_model.named_modules():
-            layer = LayerInfo(name, module)
-            config = self.select_config(layer)
-            if config is not None:
-                self.modules_to_compress.append((layer, config))
-    
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for name, module in self.bound_model.named_modules():
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
+
     def compress(self):
         """
         Compress the model with algorithm implemented by subclass.
@@ -224,8 +227,8 @@ class Quantizer(Compressor):
             the configuration for activation quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_activation()")
-    
-    def quantize_inputs(self, *input, config, op, op_type, op_name):
+
+    def quantize_inputs(self, *inputs, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to `forward()` method of the model.
@@ -238,7 +241,8 @@ class Quantizer(Compressor):
             the configuration for inputs quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_inputs()")
-    
+
+
     def _instrument_layer(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
@@ -259,8 +263,8 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if config.get("input_quantization", False):
-                inputs = self.quantize_inputs(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-            
+                inputs = self.quantize_inputs(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
             if config.get("weight_quantization", False):
                 weight = layer.module.weight.data
                 new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
@@ -269,12 +273,12 @@ class Quantizer(Compressor):
                 layer.module.weight.data = weight
             else:
                 result = layer._forward(*inputs)
-            
+
             if config.get("activation_quantization", False):
                 result = self.quantize_activation(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-        
+
             return result
-        
+
         layer.mount_forward(new_forward)
 
 def _check_weight(module):

@@ -74,7 +74,6 @@ class QAT_Quantizer(Quantizer):
         ----------
         tensor : Tensor
             the Tensor to be quantized
-        
         Returns
         -------
         (min, max) : (float, float)
@@ -139,7 +138,6 @@ class QAT_Quantizer(Quantizer):
             target module
         real_val : float
             real value to be quantized
-        
         Returns
         -------
         quantized_val : float
