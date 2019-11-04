@@ -21,11 +21,11 @@
 
 将第一行作为样例。 `dropout_rate` 定义了一个变量，先验分布为均匀分布，范围从 `0.1` 到 `0.5`。
 
-Note that the ability of a search space is highly connected with your tuner. We listed the supported types for each builtin tuner below. For a customized tuner, you don't have to follow our convention and you will have the flexibility to define any type you want.
+注意，搜索空间的效果与 Tuner 高度相关。 此处列出了内置 Tuner 所支持的类型。 对于自定义的 Tuner，不必遵循鞋标，可使用任何的类型。
 
 ## 类型
 
-All types of sampling strategies and their parameter are listed here:
+所有采样策略和参数如下：
 
 * `{"_type": "choice", "_value": options}`
   
@@ -84,8 +84,8 @@ All types of sampling strategies and their parameter are listed here:
   
   * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
   * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
-  * The following HPO tuners can be adapted to tune this search space: TPE, Random, Anneal, Evolution, Grid Search, Hyperband and BOHB.
-  * For detailed usage, please refer to [General NAS Interfaces](../AdvancedFeature/GeneralNasInterfaces.md).
+  * 下列超参优化 Tuner 可用于此搜索空间：TPE, Random, Anneal, Evolution, Grid Search, Hyperband 以及 BOHB。
+  * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
 
 ## 每种 Tuner 支持的搜索空间类型
 
@@ -102,12 +102,11 @@ All types of sampling strategies and their parameter are listed here:
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 |      GP Tuner       | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   |          |          |           |            |
 
-Known Limitations:
+已知的局限：
 
-* GP Tuner and Metis Tuner support only **numerical values** in search space (`choice` type values can be no-numeraical with other tuners, e.g. string values). GP Tuner 和 Metis Tuner 都使用了高斯过程的回归（Gaussian Process Regressor, GPR）。 GPR 基于计算不同点距离的和函数来进行预测，其无法计算非数值值的距离。
+* GP Tuner 和 Metis Tuner 的搜索空间只支持**数值**，（`choice` 类型在其它 Tuner 中可以使用非数值，如：字符串等）。 GP Tuner 和 Metis Tuner 都使用了高斯过程的回归（Gaussian Process Regressor, GPR）。 GPR 基于计算不同点距离的和函数来进行预测，其无法计算非数值值的距离。
 
 * 请注意，对于嵌套搜索空间：
   
-      * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
-      
-      * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in [#1110](https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+      * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
+      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 [#1110](https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。

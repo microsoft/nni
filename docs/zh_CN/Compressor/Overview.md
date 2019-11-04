@@ -40,7 +40,7 @@ pruner.compress()
 
 可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。
 
-The function call `pruner.compress()` modifies user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph()`, while in PyTorch the model is the defined model class), and the model is modified with masks inserted. 然后运行模型时，这些 mask 即会生效。 mask 可在运行时通过算法来调整。
+函数调用 `pruner.compress()` 来修改用户定义的模型（在 Tensorflow 中，通过 `tf.get_default_graph()` 来获得模型，而 PyTorch 中 model 是定义的模型类），并修改模型来插入 mask。 然后运行模型时，这些 mask 即会生效。 mask 可在运行时通过算法来调整。
 
 实例化压缩算法时，会传入 `config_list`。 配置说明如下。
 
@@ -107,50 +107,49 @@ __[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训
 
 ```python
 # TensorFlow 中定制 Pruner。
-# For writing a pruner in PyTorch, you can simply replace
-# nni.compression.tensorflow.Pruner with
+# PyTorch 的 Pruner，只需将
+# nni.compression.tensorflow.Pruner 替换为
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def calc_mask(self, layer, config):
         """
-        Pruners should overload this method to provide mask for weight tensors.
-        The mask must have the same shape and type comparing to the weight.
-        It will be applied with ``mul()`` operation on the weight.
-        This method is effectively hooked to ``forward()`` method of the model.
+        Pruner 需要重载此方法来为权重提供掩码
+        掩码必须与权重有相同的形状和类型。
+        将对权重执行 ``mul()`` 操作。
+        此方法会挂载到模型的 ``forward()`` 方法上。
 
         Parameters
         ----------
         layer: LayerInfo
-            calculate mask for ``layer``'s weight
+            为 ``layer`` 的权重计算掩码
         config: dict
-            the configuration for generating the mask
+            生成权重所需要的掩码
         """
         return your_mask
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据需要可基于 bind_model 方法中的模型或权重进行操作
         """
         pass
 ```
 
-对于最简单的算法，只需要重写 `calc_mask` 函数。 It receives the to-be-compressed layers one by one along with their compression configuration. 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
+对于最简单的算法，只需要重写 `calc_mask` 函数。 它会接收需要压缩的层以及其压缩配置。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
 
-一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。 It should be called at the beginning of each epoch.
+一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。 应在每个 Epoch 之前调用它。
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information). Your can use `self.bound_model` in the Pruner class for accessing weights. If you also need optimizer's information (for example in Pytorch), you could override `__init__` to receive more arguments such as model's optimizer. 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
+一些算法可能需要全局的信息来生成 mask，例如模型的所有权重（用于生成统计信息）. 可在 Pruner 类中通过 `self.bound_model` 来访问权重。 如果需要优化器的信息（如在 Pytorch 中），可重载 `__init__` 来接收优化器等参数。 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
 
 ### 量化算法
 
@@ -158,34 +157,33 @@ Some algorithms may want global information for generating masks, for example, a
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# For writing a Quantizer in PyTorch, you can simply replace
-# nni.compression.tensorflow.Quantizer with
+# 如果要在 PyTorch 中定制 Quantizer，可将
+# nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来进行配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        weight 是目标的权重张量
+        config 是在 config_list 中为此层选定的 dict 对象
+        kwargs 包括 op, op_types, 和 op_name
+        设计实现定制的 Quantizer 并返回新的权重
         """
         return new_weight
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    # 注意， PyTorch 不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据在 bind_model 函数中引用的模型或权重进行一些处理
         """
         pass
 ```
