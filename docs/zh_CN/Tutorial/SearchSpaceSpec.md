@@ -21,11 +21,11 @@
 
 将第一行作为样例。 `dropout_rate` 定义了一个变量，先验分布为均匀分布，范围从 `0.1` 到 `0.5`。
 
-Note that the ability of a search space is highly connected with your tuner. We listed the supported types for each builtin tuner below. For a customized tuner, you don't have to follow our convention and you will have the flexibility to define any type you want.
+注意，搜索空间的效果与 Tuner 高度相关。 此处列出了内置 Tuner 所支持的类型。 对于自定义的 Tuner，不必遵循鞋标，可使用任何的类型。
 
 ## 类型
 
-All types of sampling strategies and their parameter are listed here:
+所有采样策略和参数如下：
 
 * `{"_type": "choice", "_value": options}`
   
