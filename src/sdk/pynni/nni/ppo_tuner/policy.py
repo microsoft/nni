@@ -34,14 +34,20 @@ class PolicyWithValue:
 
     def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, np_mask=None, is_act_model=False, **tensors):
         """
-        Parameters:
+        Parameters
         ----------
-        env:             RL environment
-        observations:    tensorflow placeholder in which the observations will be fed
-        latent:          latent state from which policy distribution parameters should be inferred
-        vf_latent:       latent state from which value function should be inferred (if None, then latent is used)
-        sess:            tensorflow session to run calculations in (if None, default session is used)
-        **tensors:       tensorflow tensors for additional attributes such as state or mask
+        env
+            RL environment
+        observations
+            tensorflow placeholder in which the observations will be fed
+        latent
+            latent state from which policy distribution parameters should be inferred
+        vf_latent
+            latent state from which value function should be inferred (if None, then latent is used)
+        sess
+            tensorflow session to run calculations in (if None, default session is used)
+        **tensors
+            tensorflow tensors for additional attributes such as state or mask
         """
 
         self.X = observations
@@ -138,12 +144,14 @@ class PolicyWithValue:
         """
         Compute next action(s) given the observation(s)
 
-        Parameters:
+        Parameters
         ----------
-        observation:     observation data (either single or a batch)
-        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation
+            observation data (either single or a batch)
+        **extra_feed
+            additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
-        Returns:
+        Returns
         -------
         (action, value estimate, next state, negative log likelihood of the action under current policy parameters) tuple
         """
@@ -157,12 +165,14 @@ class PolicyWithValue:
         """
         Compute value estimate(s) given the observation(s)
 
-        Parameters:
+        Parameters
         ----------
-        observation:     observation data (either single or a batch)
-        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation
+            observation data (either single or a batch)
+        **extra_feed
+            additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
-        Returns:
+        Returns
         -------
         value estimate
         """
@@ -171,8 +181,24 @@ class PolicyWithValue:
 
 def build_lstm_policy(model_config, value_network=None, estimate_q=False, **policy_kwargs):
     """
-    build lstm policy and value network, they share the same lstm network.
+    Build lstm policy and value network, they share the same lstm network.
     the parameters all use their default values.
+
+    Parameter
+    ---------
+    model_config
+        configurations of the model
+    value_network
+        the network for value function
+    estimate_q : bool
+        whether to estimate ``q``
+    **policy_kwargs
+        the kwargs for policy network, i.e., lstm model
+
+    Returns
+    -------
+    policy_fn : func
+        the policy network
     """
     policy_network = lstm_model(**policy_kwargs)
 

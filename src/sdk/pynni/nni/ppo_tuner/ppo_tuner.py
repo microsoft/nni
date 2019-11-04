@@ -40,8 +40,10 @@ from .policy import build_lstm_policy
 
 logger = logging.getLogger('ppo_tuner_AutoML')
 
-def constfn(val):
-    """wrap as function"""
+def _constfn(val):
+    """
+    Wrap as function
+    """
     def f(_):
         return val
     return f
@@ -92,7 +94,7 @@ class TrialsInfo:
 
     def get_next(self):
         """
-        get actions of the next trial
+        Get actions of the next trial
         """
         if self.iter >= self.inf_batch_size:
             return None, None
@@ -104,14 +106,14 @@ class TrialsInfo:
 
     def update_rewards(self, rewards, returns):
         """
-        after the trial is finished, reward and return of this trial is updated
+        After the trial is finished, reward and return of this trial is updated
         """
         self.rewards = rewards
         self.returns = returns
 
     def convert_shape(self):
         """
-        convert shape
+        Convert shape
         """
         def sf01(arr):
             """
@@ -140,9 +142,9 @@ class PPOModel:
 
         set_global_seeds(None)
         assert isinstance(self.model_config.lr, float)
-        self.lr = constfn(self.model_config.lr)
+        self.lr = _constfn(self.model_config.lr)
         assert isinstance(self.model_config.cliprange, float)
-        self.cliprange = constfn(self.model_config.cliprange)
+        self.cliprange = _constfn(self.model_config.cliprange)
 
         # build lstm policy network, value share the same network
         policy = build_lstm_policy(model_config)
@@ -167,12 +169,28 @@ class PPOModel:
 
     def inference(self, num):
         """
-        generate actions along with related info from policy network.
+        Generate actions along with related info from policy network.
         observation is the action of the last step.
 
-        Parameters:
+        Parameters
         ----------
-        num:             the number of trials to generate
+        num: int
+            the number of trials to generate
+
+        Returns
+        -------
+        mb_obs
+            observation of the ``num`` configurations
+        mb_actions
+            actions of the ``num`` configurations
+        mb_values
+            values from the value function of the ``num`` configurations
+        mb_neglogpacs
+            ``neglogp`` of the ``num`` configurations
+        mb_dones
+            to show whether the play is done, always ``True``
+        last_values
+            the last values of the ``num`` configurations
         """
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_actions, mb_values, mb_dones, mb_neglogpacs = [], [], [], [], []
@@ -214,13 +232,15 @@ class PPOModel:
 
     def compute_rewards(self, trials_info, trials_result):
         """
-        compute the rewards of the trials in trials_info based on trials_result,
+        Compute the rewards of the trials in trials_info based on trials_result,
         and update the rewards in trials_info
 
-        Parameters:
+        Parameters
         ----------
-        trials_info:             info of the generated trials
-        trials_result:           final results (e.g., acc) of the generated trials
+        trials_info
+            info of the generated trials
+        trials_result
+            final results (e.g., acc) of the generated trials
         """
         mb_rewards = np.asarray([trials_result for _ in trials_info.actions], dtype=np.float32)
         # discount/bootstrap off value fn
@@ -244,12 +264,14 @@ class PPOModel:
 
     def train(self, trials_info, nenvs):
         """
-        train the policy/value network using trials_info
+        Train the policy/value network using trials_info
 
-        Parameters:
+        Parameters
         ----------
-        trials_info:             complete info of the generated trials from the previous inference
-        nenvs:                   the batch size of the (previous) inference
+        trials_info
+            complete info of the generated trials from the previous inference
+        nenvs
+            the batch size of the (previous) inference
         """
         # keep frac decay for future optimization
         if self.cur_update <= self.nupdates:
@@ -283,27 +305,40 @@ class PPOModel:
 
 class PPOTuner(Tuner):
     """
-    PPOTuner
+    PPOTuner, the implementation inherits the main logic of the implementation 
+    [ppo2 from openai](https://github.com/openai/baselines/tree/master/baselines/ppo2), and is adapted for NAS scenario.
+    It uses ``lstm`` for its policy network and value network, policy and value share the same network.
     """
 
     def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4, minibatch_size=4,
                  ent_coef=0.0, lr=3e-4, vf_coef=0.5, max_grad_norm=0.5, gamma=0.99, lam=0.95, cliprange=0.2):
         """
-        initialization, PPO model is not initialized here as search space is not received yet.
+        Initialization, PPO model is not initialized here as search space is not received yet.
 
-        Parameters:
+        Parameters
         ----------
-        optimize_mode:         maximize or minimize
-        trials_per_update:     number of trials to have for each model update
-        epochs_per_update:     number of epochs to run for each model update
-        minibatch_size:        minibatch size (number of trials) for the update
-        ent_coef:              policy entropy coefficient in the optimization objective
-        lr:                    learning rate of the model (lstm network), constant
-        vf_coef:               value function loss coefficient in the optimization objective
-        max_grad_norm:         gradient norm clipping coefficient
-        gamma:                 discounting factor
-        lam:                   advantage estimation discounting factor (lambda in the paper)
-        cliprange:             cliprange in the PPO algorithm, constant
+        optimize_mode
+            maximize or minimize
+        trials_per_update
+            number of trials to have for each model update
+        epochs_per_update
+            number of epochs to run for each model update
+        minibatch_size
+            minibatch size (number of trials) for the update
+        ent_coef
+            policy entropy coefficient in the optimization objective
+        lr
+            learning rate of the model (lstm network), constant
+        vf_coef
+            value function loss coefficient in the optimization objective
+        max_grad_norm
+            gradient norm clipping coefficient
+        gamma
+            discounting factor
+        lam
+            advantage estimation discounting factor (lambda in the paper)
+        cliprange
+            cliprange in the PPO algorithm, constant
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
@@ -331,21 +366,25 @@ class PPOTuner(Tuner):
         self.model_config.nminibatches = minibatch_size
 
         self.send_trial_callback = None
-        logger.info('=== finished PPOTuner initialization')
+        logger.info('Finished PPOTuner initialization')
 
     def _process_one_nas_space(self, block_name, block_space):
         """
-        process nas space to determine observation space and action space
+        Process nas space to determine observation space and action space
 
-        Parameters:
+        Parameters
         ----------
-        block_name:              the name of the mutable block
-        block_space:             search space of this mutable block
+        block_name
+            the name of the mutable block
+        block_space
+            search space of this mutable block
 
-        Returns:
-        ----------
-        actions_spaces:          list of the space of each action
-        actions_to_config:       the mapping from action to generated configuration
+        Returns
+        -------
+        actions_spaces
+            list of the space of each action
+        actions_to_config
+            the mapping from action to generated configuration
         """
         actions_spaces = []
         actions_to_config = []
@@ -386,7 +425,7 @@ class PPOTuner(Tuner):
 
     def _process_nas_space(self, search_space):
         """
-        process nas search space to get action/observation space
+        Process nas search space to get action/observation space
         """
         actions_spaces = []
         actions_to_config = []
@@ -413,7 +452,7 @@ class PPOTuner(Tuner):
 
     def _generate_action_mask(self):
         """
-        different step could have different action space. to deal with this case, we merge all the
+        Different step could have different action space. to deal with this case, we merge all the
         possible actions into one action space, and use mask to indicate available actions for each step
         """
         two_masks = []
@@ -440,15 +479,13 @@ class PPOTuner(Tuner):
 
     def update_search_space(self, search_space):
         """
-        get search space, currently the space only includes that for NAS
+        Get search space, currently the space only includes that for NAS
 
-        Parameters:
+        Parameters
         ----------
-        search_space:                  search space for NAS
-
-        Returns:
-        -------
-        no return
+        search_space: dict
+            search space for NAS
+            the format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         logger.info('=== update search space %s', search_space)
         assert self.search_space is None
@@ -471,7 +508,7 @@ class PPOTuner(Tuner):
 
     def _actions_to_config(self, actions):
         """
-        given actions, to generate the corresponding trial configuration
+        Given actions, to generate the corresponding trial configuration
         """
         chosen_arch = copy.deepcopy(self.chosen_arch_template)
         for cnt, act in enumerate(actions):
@@ -491,6 +528,19 @@ class PPOTuner(Tuner):
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
         Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
+
+        Parameters
+        ----------
+        parameter_id_list: list of int
+            Unique identifiers for each set of requested hyper-parameters.
+            These will later be used in :meth:`receive_trial_result`.
+        **kwargs
+            not used
+
+        Returns
+        -------
+        list
+            a list of newly generated configurations
         """
         result = []
         self.send_trial_callback = kwargs['st_callback']
@@ -507,7 +557,17 @@ class PPOTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
-        generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
+        Generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
+
+        parameter_id: int
+            unique identifier for requested hyper-parameters. This will later be used in :meth:`receive_trial_result`.
+        **kwargs
+            not used
+
+        Returns
+        -------
+        new_config: dict
+            one newly generated configuration
         """
         if self.first_inf:
             self.trials_result = [None for _ in range(self.inf_batch_size)]
@@ -528,6 +588,7 @@ class PPOTuner(Tuner):
 
     def _next_round_inference(self):
         """
+        Run a inference to generate next batch of configurations
         """
         self.finished_trials = 0
         self.model.compute_rewards(self.trials_info, self.trials_result)
@@ -553,8 +614,17 @@ class PPOTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
-        receive trial's result. if the number of finished trials equals self.inf_batch_size, start the next update to
-        train the model
+        Receive trial's result. if the number of finished trials equals self.inf_batch_size, start the next update to
+        train the model.
+
+        Parameters
+        ----------
+        parameter_id: int
+            Unique identifier of used hyper-parameters, same with :meth:`generate_parameters`.
+        parameters
+            Hyper-parameters generated by :meth:`generate_parameters`.
+        value
+            Result from trial (the return value of :func:`nni.report_final_result`).
         """
         trial_info_idx = self.running_trials.pop(parameter_id, None)
         assert trial_info_idx is not None
@@ -571,7 +641,17 @@ class PPOTuner(Tuner):
 
     def trial_end(self, parameter_id, success, **kwargs):
         """
-        to deal with trial failure
+        To deal with trial failure. If a trial fails, it is popped out from ``self.running_trials``,
+        and the final result of this trial is assigned with the average of the finished trials.
+
+        Parameters
+        ----------
+        parameter_id : int
+            Unique identifier for hyper-parameters used by this trial.
+        success : bool
+            True if the trial successfully completed; False if failed or terminated.
+        **kwargs
+            not used
         """
         if not success:
             if parameter_id not in self.running_trials:
@@ -581,7 +661,7 @@ class PPOTuner(Tuner):
             assert trial_info_idx is not None
             # use mean of finished trials as the result of this failed trial
             values = [val for val in self.trials_result if val is not None]
-            logger.warning('zql values: {0}'.format(values))
+            logger.warning('In trial_end, values: {0}'.format(values))
             self.trials_result[trial_info_idx] = (sum(values) / len(values)) if len(values) > 0 else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
@@ -589,10 +669,11 @@ class PPOTuner(Tuner):
 
     def import_data(self, data):
         """
-        Import additional data for tuning
+        Import additional data for tuning, not supported yet.
 
         Parameters
         ----------
-        data:               a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        data
+            a list of dictionarys, each of which has at least two keys, ``parameter`` and ``value``
         """
         logger.warning('PPOTuner cannot leverage imported data.')

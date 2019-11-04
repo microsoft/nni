@@ -94,12 +94,14 @@ def lstm_model(nlstm=128, layer_norm=False):
 
     An example of usage of lstm-based policy can be found here: common/tests/test_doc_examples.py/test_lstm_example
 
-    Parameters:
+    Parameters
     ----------
-    nlstm: int          LSTM hidden state size
-    layer_norm: bool    if True, layer-normalized version of LSTM is used
+    nlstm : int
+        LSTM hidden state size
+    layer_norm : bool
+        if True, layer-normalized version of LSTM is used
 
-    Returns:
+    Returns
     -------
     function that builds LSTM with a given input tensor / placeholder
     """
@@ -171,11 +173,15 @@ def adjust_shape(placeholder, data):
     adjust shape of the data to the shape of the placeholder if possible.
     If shape is incompatible, AssertionError is thrown
 
-    Parameters:
-    placeholder:     tensorflow input placeholder
-    data:            input data to be (potentially) reshaped to be fed into placeholder
+    Parameters
+    ----------
+    placeholder
+        tensorflow input placeholder
+    data
+        input data to be (potentially) reshaped to be fed into placeholder
 
-    Returns:
+    Returns
+    -------
     reshaped data
     """
     if not isinstance(data, np.ndarray) and not isinstance(data, list):
@@ -230,13 +236,16 @@ def observation_placeholder(ob_space, batch_size=None, name='Ob'):
     """
     Create placeholder to feed observations into of the size appropriate to the observation space
 
-    Parameters:
+    Parameters
     ----------
-    ob_space: gym.Space     observation space
-    batch_size: int         size of the batch to be fed into input. Can be left None in most cases.
-    name: str               name of the placeholder
+    ob_space : gym.Space
+        observation space
+    batch_size : int
+        size of the batch to be fed into input. Can be left None in most cases.
+    name : str
+        name of the placeholder
 
-    Returns:
+    Returns
     -------
     tensorflow placeholder tensor
     """

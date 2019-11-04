@@ -80,6 +80,7 @@ class Tuner(Recoverable):
     :class:`~nni.gridsearch_tuner.GridSearchTuner`
     :class:`~nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner`
     :class:`~nni.metis_tuner.mets_tuner.MetisTuner`
+    :class:`~nni.ppo_tuner.PPOTuner`
     """
 
     def generate_parameters(self, parameter_id, **kwargs):
