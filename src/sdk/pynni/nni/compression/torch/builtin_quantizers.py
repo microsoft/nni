@@ -21,8 +21,19 @@ class NaiveQuantizer(Quantizer):
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
-class EMA_range_check:
-    pass
+class EMA_RangeChecker:
+    def __init__(self, alpha):
+        self.alpha = alpha
+        self.args = None
+
+    def update(self, args):
+        if self.args is None:
+            if not isinstance(args, list):
+                raise TypeError("expect type list of parameter args")
+            self.args = args
+        else:
+            self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
+        return self.args
 
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
@@ -32,25 +43,28 @@ class QAT_Quantizer(Quantizer):
     def __init__(self, config_list):
         """
         config_list: supported keys:
-            - q_bits
+            - weight_bits
+            - activation_bits
+            - quant_delay
         """
         super().__init__(config_list)
 
     def instrument_layer_hook(self, layer, config):
         """override default hook
         """
+        print("hook called {}".format(layer.name))
         layer.module.register_buffer("zero_point", None)
         layer.module.register_buffer("scale", None)
-        layer.module.register_buffer("range_checker", EMA_range_check())
+        # layer.module.register_buffer("range_checker", EMA_RangeChecker(0.9))
 
     def fixed_range_check(self, tensor):
         return torch.min(tensor), torch.max(tensor)
 
-    def EMA_range_check(self, op, tensor):
-        return torch.min(tensor), torch.max(tensor)
+    # def EMA_range_check(self, op, tensor):
+    #     return torch.min(tensor), torch.max(tensor)
 
     def update_quantization_param(self, q_bits, op, rmin, rmax):
-        # We extend the [min, max] interval to ensure that it contains 0.
+        # extend the [min, max] interval to ensure that it contains 0.
         # Otherwise, we would not meet the requirement that 0 be an exactly
         # representable value.
         rmin = min(rmin, 0)
@@ -82,7 +96,7 @@ class QAT_Quantizer(Quantizer):
         elif initial_zero_point > qmax:
             nudged_zero_point = qmax
         else:
-            nudged_zero_point = round(initial_zero_point)
+            nudged_zero_point = torch.round(initial_zero_point)
 
         op.scale = scale
         op.zero_point = nudged_zero_point
@@ -100,13 +114,13 @@ class QAT_Quantizer(Quantizer):
         return real_val
 
     def quantize_weight(self, weight, config, op, **kwargs):
-        if config['q_bits'] <= 1:
+        if config['weight_bits'] <= 1:
             return weight
-        if config['quant_delay'] > self._steps:
-            return weight
+        # if config['quant_delay'] > self._steps:
+        #     return weight
         rmin, rmax = self.fixed_range_check(weight)
-        self.update_quantization_param(config['q_bits'], op, rmin, rmax)
-        out = self.quantize(config['q_bits'], op, weight)
+        self.update_quantization_param(config['weight_bits'], op, rmin, rmax)
+        out = self.quantize(config['weight_bits'], op, weight)
         out = self.dequantize(op, out)
         return out
 
@@ -116,9 +130,9 @@ class QAT_Quantizer(Quantizer):
         if config['quant_delay'] > self._steps:
             return activation
         # TODO activation dynamic set a, b
-        rmin, rmax = self.EMA_range_check(op, activation)
-        self.update_quantization_param(config['q_bits'], op, rmin, rmax)
-        out = self.quantize(config['q_bits'], op, activation)
+        rmin, rmax = self.fixed_range_check(activation)
+        self.update_quantization_param(config['activation_bits'], op, rmin, rmax)
+        out = self.quantize(config['activation_bits'], op, activation)
         out = self.dequantize(op, out)
         return out
 
@@ -130,6 +144,7 @@ class QAT_Quantizer(Quantizer):
         """override compressor step method, update _step attribute, quantization only happens after certain number of steps
         """
         self._steps += 1
+        print("step called")
 
 
 class DoReFaQuantizer(Quantizer):

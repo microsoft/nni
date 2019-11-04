@@ -127,9 +127,6 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
-    def quantize_activation(self, weight, config, op, op_type, op_name):
-        raise NotImplementedError("Quantizer must overload quantize_activation()")
-
     def instrument_layer_hook(self, layer, config):
         """instrument layer before modify forward method
         """
@@ -141,7 +138,7 @@ class Quantizer(Compressor):
             _logger.warning('Module %s does not have parameter "weight"', layer.name)
             return
         layer._forward = layer.module.forward
-        self._instrument_layer_hook(layer, config)
+        self.instrument_layer_hook(layer, config)
 
         def new_forward(*inputs):
             weight = layer.module.weight.data
