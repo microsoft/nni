@@ -394,11 +394,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                                 className="common-style"
                                                 disabled={disabledAddCustomizedTrial}
                                                 onClick={this.setCustomizedTrial.bind(this, record.id)}
-                                                // onClick={
-                                                //     this.setCustomizedTrial.bind(
-                                                //         this,
-                                                //         TRIALS.getTrial(record.id).description.parameters
-                                                //     )}
                                                 title="Customized trial"
                                             >
                                                 <Icon type="copy" />
