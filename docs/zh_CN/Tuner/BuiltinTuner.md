@@ -120,7 +120,7 @@ tuner:
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-* **population_size** (*int value (should > 0), optional, default = 20*) - the initial size of the population(trial num) in evolution tuner. Suggests `population_size` be much larger than `concurrency`, so users can get the most out of the algorithm (and at least `concurrency`, or the tuner will fail on their first generation of parameters).
+* **population_size** (*int 类型(大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的种群（Trial 数量）。 建议 `population_size` 比 `concurrency` 取值更大，这样用户能充分利用算法（至少要等于 `concurrency`，否则 Tuner 在生成第一代参数的时候就会失败）。
 
 **示例**
 
