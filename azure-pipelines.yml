@@ -27,11 +27,12 @@ jobs:
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
-      python3 -m pylint --rcfile pylintrc tools/nni_cmd
-      python3 -m pylint --rcfile pylintrc tools/nni_gpu_tool
-      python3 -m pylint --rcfile pylintrc tools/nni_trial_tool
-      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
-      python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pynni/nni
+      python3 -m pylint --rcfile pylintrc nni_annotation
+      python3 -m pylint --rcfile pylintrc nni_cmd
+      python3 -m pylint --rcfile pylintrc nni_gpu_tool
+      python3 -m pylint --rcfile pylintrc nni_trial_tool
+      python3 -m pylint --rcfile pylintrc nni
+      python3 -m pylint --rcfile pylintrc nnicli
     displayName: 'Run pylint'
   - script: |
       python3 -m pip install flake8 --user
