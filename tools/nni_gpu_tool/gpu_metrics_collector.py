@@ -27,19 +27,20 @@ from xml.dom import minidom
 
 def check_ready_to_run():
     if sys.platform == 'win32':
-        pgrep_output = subprocess.check_output('wmic process where "CommandLine like \'%nni_gpu_tool.gpu_metrics_collector%\' and name like \'%python%\'" get processId')
+        pgrep_output = subprocess.check_output(
+            'wmic process where "CommandLine like \'%nni_gpu_tool.gpu_metrics_collector%\' and name like \'%python%\'" get processId')
         pidList = pgrep_output.decode("utf-8").strip().split()
         pidList.pop(0) # remove the key word 'ProcessId'
         pidList = list(map(int, pidList))
         pidList.remove(os.getpid())
-        return len(pidList) == 0
+        return not pidList
     else:
         pgrep_output = subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
         pidList = []
         for pid in pgrep_output.splitlines():
             pidList.append(int(pid))
         pidList.remove(os.getpid())
-        return len(pidList) == 0
+        return not pidList
 
 def main(argv):
     metrics_output_dir = os.environ['METRIC_OUTPUT_DIR']
@@ -69,10 +70,14 @@ def parse_nvidia_smi_result(smi, outputDir):
             outPut["gpuCount"] = len(gpuList)
             outPut["gpuInfos"] = []
             for gpuIndex, gpu in enumerate(gpuList):
-                gpuInfo ={}
+                gpuInfo = {}
                 gpuInfo['index'] = gpuIndex
-                gpuInfo['gpuUtil'] = gpu.getElementsByTagName('utilization')[0].getElementsByTagName('gpu_util')[0].childNodes[0].data.replace("%", "").strip()
-                gpuInfo['gpuMemUtil'] = gpu.getElementsByTagName('utilization')[0].getElementsByTagName('memory_util')[0].childNodes[0].data.replace("%", "").strip()
+                gpuInfo['gpuUtil'] = gpu.getElementsByTagName('utilization')[0]\
+                    .getElementsByTagName('gpu_util')[0]\
+                    .childNodes[0].data.replace("%", "").strip()
+                gpuInfo['gpuMemUtil'] = gpu.getElementsByTagName('utilization')[0]\
+                    .getElementsByTagName('memory_util')[0]\
+                    .childNodes[0].data.replace("%", "").strip()
                 processes = gpu.getElementsByTagName('processes')
                 runningProNumber = len(processes[0].getElementsByTagName('process_info'))
                 gpuInfo['activeProcessNum'] = runningProNumber
@@ -81,8 +86,8 @@ def parse_nvidia_smi_result(smi, outputDir):
             print(outPut)
             outputFile.write("{}\n".format(json.dumps(outPut, sort_keys=True)))
             outputFile.flush();
-    except :
-        e_info = sys.exc_info()
+    except:
+        # e_info = sys.exc_info()
         print('xmldoc paring error')
     finally:
         os.umask(old_umask)

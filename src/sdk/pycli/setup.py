@@ -1,18 +1,18 @@
 import setuptools
 
 setuptools.setup(
-    name = 'nnicli',
-    version = '999.0.0-developing',
-    packages = setuptools.find_packages(),
+    name='nnicli',
+    version='999.0.0-developing',
+    packages=setuptools.find_packages(),
 
-    python_requires = '>=3.5',
-    install_requires = [
+    python_requires='>=3.5',
+    install_requires=[
         'requests'
     ],
 
-    author = 'Microsoft NNI Team',
-    author_email = 'nni@microsoft.com',
-    description = 'nnicli for Neural Network Intelligence project',
-    license = 'MIT',
-    url = 'https://github.com/Microsoft/nni',
+    author='Microsoft NNI Team',
+    author_email='nni@microsoft.com',
+    description='nnicli for Neural Network Intelligence project',
+    license='MIT',
+    url='https://github.com/Microsoft/nni',
 )
