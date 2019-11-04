@@ -48,7 +48,7 @@ def uniform(low, high, random_state):
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
-    assert high > low, 'Upper bound must be larger than lower bound'
+    assert high >= low, 'Upper bound must be larger than lower bound'
     return random_state.uniform(low, high)
 
 
