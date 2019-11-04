@@ -52,11 +52,32 @@ class QAT_Quantizer(Quantizer):
     def instrument_layer_hook(self, layer, config):
         """override default hook
         """
-        print("hook called {}".format(layer.name))
-        layer.module.register_buffer("zero_point", None)
-        layer.module.register_buffer("scale", None)
-        # layer.module.register_buffer("range_checker", EMA_RangeChecker(0.9))
+        if layer.type in ['Conv2d', 'Linear']:
+            layer.module.register_buffer("zero_point", None)
+            layer.module.register_buffer("scale", None)
+        elif layer.type in ['relu']:
+            layer.module.register_buffer("range_checker", EMA_RangeChecker(0.9))
 
+    def instrument_layer_forward(self, layer, config):
+        """instrument layer forward method
+        """
+        def new_forward(*inputs):
+            weight = layer.module.weight.data
+            new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            layer.module.weight.data = new_weight
+            result = layer._forward(*inputs)
+            layer.module.weight.data = weight
+            return result
+        
+        def activation_forward(*inputs):
+            result = layer._forward(*inputs)
+            return self.quantize_activation(result, config, op=layer.module)
+        
+        if layer.type in ['Conv2d', 'Linear']:
+            return new_forward
+        elif layer.type in ['relu']:
+            return activation_forward
+    
     def fixed_range_check(self, tensor):
         return torch.min(tensor), torch.max(tensor)
 
@@ -124,7 +145,7 @@ class QAT_Quantizer(Quantizer):
         out = self.dequantize(op, out)
         return out
 
-    def quantize_activation(self, activation, config, op, range_tracker, **kwargs):
+    def quantize_activation(self, activation, config, op, **kwargs):
         if config['activation_bits'] <= 1:
             return activation
         if config['quant_delay'] > self._steps:
@@ -136,7 +157,7 @@ class QAT_Quantizer(Quantizer):
         out = self.dequantize(op, out)
         return out
 
-    def fold_bn(self, config, range_tracker, **kwargs):
+    def fold_bn(self, config, **kwargs):
         # TODO simulate folded weight
         pass
 
@@ -144,7 +165,7 @@ class QAT_Quantizer(Quantizer):
         """override compressor step method, update _step attribute, quantization only happens after certain number of steps
         """
         self._steps += 1
-        print("step called")
+        logger.info("step {}".format(self._steps))
 
 
 class DoReFaQuantizer(Quantizer):

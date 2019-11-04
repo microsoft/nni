@@ -13,6 +13,11 @@ class LayerInfo:
 
         self._forward = None
 
+    def save_forward(self):
+        self._forward = self.module.forward
+
+    def mount_forward(self, new_forward):
+        self.module.forward = new_forward
 
 class Compressor:
     """Abstract base PyTorch compressor"""
@@ -128,18 +133,13 @@ class Quantizer(Compressor):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
     def instrument_layer_hook(self, layer, config):
-        """instrument layer before modify forward method
+        """instrument layer before changing forward method
         """
         pass
 
-    def _instrument_layer(self, layer, config):
-        assert layer._forward is None, 'Each model can only be compressed once'
-        if not _check_weight(layer.module):
-            _logger.warning('Module %s does not have parameter "weight"', layer.name)
-            return
-        layer._forward = layer.module.forward
-        self.instrument_layer_hook(layer, config)
-
+    def instrument_layer_forward(self, layer, config):
+        """instrument layer forward default method
+        """
         def new_forward(*inputs):
             weight = layer.module.weight.data
             new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
@@ -147,8 +147,17 @@ class Quantizer(Compressor):
             result = layer._forward(*inputs)
             layer.module.weight.data = weight
             return result
+        return new_forward
 
-        layer.module.forward = new_forward
+    def _instrument_layer(self, layer, config):
+        assert layer._forward is None, 'Each model can only be compressed once'
+        if not _check_weight(layer.module):
+            _logger.warning('Module %s does not have parameter "weight"', layer.name)
+            return
+        self.instrument_layer_hook(layer, config)
+        layer.save_forward()
+        new_forward = self.instrument_layer_forward(layer, config)
+        layer.mount_forward(new_forward)
 
 def _check_weight(module):
     try:
