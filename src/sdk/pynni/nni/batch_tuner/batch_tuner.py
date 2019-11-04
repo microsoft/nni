@@ -138,7 +138,7 @@ class BatchTuner(Tuner):
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                LOGGER .info("Useless trial data, value is %s, skip this trial data.", _value)
+                LOGGER.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
             _completed_num += 1
             if _params in self._values:
