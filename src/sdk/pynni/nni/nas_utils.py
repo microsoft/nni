@@ -265,6 +265,8 @@ def convert_nas_search_space(search_space):
         param search_space: raw search space
         return: the new search space, mutable_layers will be converted into choice
     """
+    if not isinstance(search_space, dict):
+        return search_space
     ret = dict()
     for k, v in search_space.items():
         if "_type" not in v:
