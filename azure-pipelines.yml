@@ -27,7 +27,9 @@ jobs:
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
-      python3 -m pylint --rcfile pylintrc tools
+      python3 -m pylint --rcfile pylintrc tools/nni_cmd
+      python3 -m pylint --rcfile pylintrc tools/nni_gpu_tool
+      python3 -m pylint --rcfile pylintrc tools/nni_trial_tool
       python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pycli/nnicli
       python3 -m pylint --rcfile src/sdk/pynni/pylintrc src/sdk/pynni/nni
     displayName: 'Run pylint'
