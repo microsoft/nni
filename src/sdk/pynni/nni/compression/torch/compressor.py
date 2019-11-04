@@ -25,9 +25,9 @@ class Compressor:
 
         Parameters
         ----------
-        model: pytorch model
+        model : pytorch model
             the model user wants to compress
-        config_list: list
+        config_list : list
             the configurations that users specify for compression
         """
         self.bound_model = model
@@ -55,7 +55,7 @@ class Compressor:
 
         Returns
         -------
-        self.modules_to_compress: list
+        self.modules_to_compress : list
             a list of the layers, each of which is a tuple (`layer`, `config`),
             `layer` is `LayerInfo`, `config` is a `dict`
         """
@@ -67,12 +67,12 @@ class Compressor:
 
         Parameters
         ----------
-        layer: LayerInfo
+        layer : LayerInfo
             one layer
 
         Returns
         -------
-        ret: config or None
+        ret : config or None
             the retrieved configuration for this layer, if None, this layer should 
             not be compressed
         """
@@ -95,7 +95,7 @@ class Compressor:
 
         Parameters
         ----------
-        epoch: num
+        epoch : num
             the current epoch number
         """
 
@@ -110,9 +110,9 @@ class Compressor:
 
         Parameters
         ----------
-        layer: LayerInfo
+        layer : LayerInfo
             the layer to instrument the compression operation
-        config: dict
+        config : dict
             the configuration for compressing this layer
         """
         raise NotImplementedError()
@@ -142,9 +142,9 @@ class Pruner(Compressor):
 
         Parameters
         ----------
-        layer: LayerInfo
+        layer : LayerInfo
             calculate mask for `layer`'s weight
-        config: dict
+        config : dict
             the configuration for generating the mask
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
@@ -155,9 +155,9 @@ class Pruner(Compressor):
 
         Parameters
         ----------
-        layer: LayerInfo
+        layer : LayerInfo
             the layer to instrument the mask
-        config: dict
+        config : dict
             the configuration for generating the mask
         """
         assert layer._forward is None, 'Each model can only be compressed once'

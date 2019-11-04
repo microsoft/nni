@@ -121,13 +121,13 @@ class YourPruner(nni.compression.tensorflow.Pruner):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
-        It will be applied with `mul()` operation on the weight.
-        This method is effectively hooked to `forward()` method of the model.
+        It will be applied with ``mul()`` operation on the weight.
+        This method is effectively hooked to ``forward()`` method of the model.
 
         Parameters
         ----------
         layer: LayerInfo
-            calculate mask for `layer`'s weight
+            calculate mask for ``layer``'s weight
         config: dict
             the configuration for generating the mask
         """
@@ -146,7 +146,7 @@ class YourPruner(nni.compression.tensorflow.Pruner):
         pass
 ```
 
-For the simplest algorithm, you only need to override `calc_mask`. It receives the to-be-compressed layers one by one along with their compression configuration. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+For the simplest algorithm, you only need to override ``calc_mask``. It receives the to-be-compressed layers one by one along with their compression configuration. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
 
 Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress. It should be called at the beginning of each epoch.
 
