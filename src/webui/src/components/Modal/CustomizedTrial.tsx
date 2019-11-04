@@ -19,6 +19,7 @@ interface CustomizeState {
     isShowWarning: boolean;
     searchSpace: object;
     customParameters: object; // customized trial
+    customID: number;
 }
 
 class Customize extends React.Component<CustomizeProps, CustomizeState> {
@@ -31,7 +32,8 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             isShowSubmitFailed: false,
             isShowWarning: false,
             searchSpace: EXPERIMENT.searchSpace,
-            customParameters: {}
+            customParameters: {},
+            customID: NaN
         };
     }
 
@@ -106,7 +108,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             .then(res => {
                 if (res.status === 200) {
                     if (this._isCustomizeMount === true) {
-                        this.setState(() => ({ isShowSubmitSucceed: true }));
+                        this.setState(() => ({ customID: res.data.sequenceId , isShowSubmitSucceed: true }));
                         this.props.closeCustomizeModal();
                     }
                 } else {
@@ -148,7 +150,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     render() {
         const { visible, closeCustomizeModal, hyperParameter } = this.props;
-        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning } = this.state;
+        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID } = this.state;
         const {
             form: { getFieldDecorator },
             // form: { getFieldDecorator, getFieldValue },
@@ -239,8 +241,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                             </h2>
                             <div className="hint">
                                 {/* don't return trial ID */}
-                                {/* <span>You can find your customized trial by trial num.</span> */}
-                                <span>Submit successfully.</span>
+                                <span>You can find your customized trial by Trial No.{customID}</span>
                             </div>
                         </Row>
                         <Row className="modal-button">
