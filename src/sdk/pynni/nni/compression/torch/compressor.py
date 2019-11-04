@@ -73,7 +73,7 @@ class Compressor:
         Returns
         -------
         ret : config or None
-            the retrieved configuration for this layer, if None, this layer should 
+            the retrieved configuration for this layer, if None, this layer should
             not be compressed
         """
         ret = None
