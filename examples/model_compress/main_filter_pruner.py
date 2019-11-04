@@ -22,7 +22,7 @@ class vgg(nn.Module):
         if init_weights:
             self._initialize_weights()
 
-    def make_layers(self, cfg, batch_norm=False):
+    def make_layers(self, cfg, batch_norm=True):
         layers = []
         in_channels = 3
         for v in cfg:
