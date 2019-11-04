@@ -490,12 +490,12 @@ class LocalTrainingService implements TrainingService {
         const script: string[] = [];
         if (process.platform === 'win32') {
             script.push(
-                `cmd.exe /c ${localTrialConfig.command} 2>'${path.join(workingDirectory, 'stderr')}'`,
+                `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
-                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File '${path.join(workingDirectory, '.nni', 'state')}' -NoNewline -encoding utf8`);
+                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
-            script.push(`eval ${localTrialConfig.command} 2>'${path.join(workingDirectory, 'stderr')}'`);
+            script.push(`eval ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
