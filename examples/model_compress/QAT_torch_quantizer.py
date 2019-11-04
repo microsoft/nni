@@ -1,7 +1,7 @@
-from nni.compression.torch import QAT_Quantizer
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
+from nni.compression.torch import QAT_Quantizer
 
 
 class Mnist(torch.nn.Module):
@@ -20,7 +20,7 @@ class Mnist(torch.nn.Module):
         x = x.view(-1, 4 * 4 * 50)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        return F.log_softmax(x, dim = 1)
+        return F.log_softmax(x, dim=1)
 
 
 def train(model, device, train_loader, optimizer):
@@ -43,8 +43,8 @@ def test(model, device, test_loader):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction = 'sum').item()
-            pred = output.argmax(dim = 1, keepdim = True)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()
+            pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
 
@@ -57,11 +57,11 @@ def main():
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train = True, download = True, transform = trans),
-        batch_size = 64, shuffle = True)
+        datasets.MNIST('data', train=True, download=True, transform=trans),
+        batch_size=64, shuffle=True)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train = False, transform = trans),
-        batch_size = 1000, shuffle = True)
+        datasets.MNIST('data', train=False, transform=trans),
+        batch_size=1000, shuffle=True)
 
     model = Mnist()
 
@@ -80,7 +80,7 @@ def main():
     # you can also use compress(model) method
     # like thaht quantizer.compress(model)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.5)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
