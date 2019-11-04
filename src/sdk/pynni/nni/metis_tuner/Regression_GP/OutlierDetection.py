@@ -16,8 +16,7 @@
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 OutlierDectection.py
 """
@@ -33,9 +32,9 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 
 def _outlierDetection_threaded(inputs):
-    '''
+    """
     Detect the outlier
-    '''
+    """
     [samples_idx, samples_x, samples_y_aggregation] = inputs
     sys.stderr.write("[%s] DEBUG: Evaluating %dth of %d samples\n"
                      % (os.path.basename(__file__), samples_idx + 1, len(samples_x)))
@@ -59,9 +58,9 @@ def _outlierDetection_threaded(inputs):
 
 
 def outlierDetection_threaded(samples_x, samples_y_aggregation):
-    '''
+    """
     Use Multi-thread to detect the outlier
-    '''
+    """
     outliers = []
 
     threads_inputs = [[samples_idx, samples_x, samples_y_aggregation]
