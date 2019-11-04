@@ -18,12 +18,10 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import nni
 import os
-import sys
-from subprocess import call
+import nni
 from .constants import PACKAGE_REQUIREMENTS
-from .common_utils import print_normal, print_error
+from .common_utils import print_error
 from .command_utils import install_requirements_command
 
 def process_install(package_name):
