@@ -34,7 +34,7 @@ jobs:
     displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
-      BIN_FOLDER = $(python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')/bin
+      $BIN_FOLDER = $(python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')/bin
       $CMD = $BIN_FOLDER + '/nnictl create --config config.yml'
       echo $CMD
       $CMD
@@ -54,8 +54,8 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python -m pip install --upgrade nni --user
     displayName: 'Install nni'
-  - script: |
+  - powershell: |
       cd examples/trials/mnist
       $CMD = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))') + '\Scripts\nnictl.exe create --config config.yml'
-      cmd.exe /c $CMD
+      cmd /c $CMD
     displayName: 'mnist test'
