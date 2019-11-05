@@ -21,19 +21,22 @@ class NaiveQuantizer(Quantizer):
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
-# class EMA_RangeChecker:
-#     def __init__(self, alpha):
-#         self.alpha = alpha
-#         self.args = None
+class EMA:
+    def __init__(self, alpha, delay):
+        self.alpha = alpha
+        self.delay = delay
+        self.args = None
 
-#     def update(self, args):
-#         if self.args is None:
-#             if not isinstance(args, list):
-#                 raise TypeError("expect type list of parameter args")
-#             self.args = args
-#         else:
-#             self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
-#         return self.args
+    def record(self, args):
+        if self.args is None:
+            self.args += self.args / self.delay
+
+    def update(self, args):
+        if self.args is None:
+            self.args = args
+        else:
+            self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
+        return self.args
 
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
@@ -55,8 +58,9 @@ class QAT_Quantizer(Quantizer):
                     type of quantization you want to apply, currently support 'weight', 'input', 'output'
                 - quant_bits : dict
                     bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8
-                - quant_delay : int
-                    disable quantization until steps are larger than quant_delay
+                - quant_start_step : int
+                    disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
+                    state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
@@ -68,7 +72,7 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
 
-    def fixed_range_check(self, tensor):
+    def range_check(self, tensor):
         """
         determine the max value and min value of quantization target.
 
@@ -80,6 +84,7 @@ class QAT_Quantizer(Quantizer):
         -------
         (min, max) : (float, float)
         """
+        # TODO: use EMA to check activation range instead
         return torch.min(tensor), torch.max(tensor)
 
     # def EMA_range_check(self, op, tensor):
@@ -175,11 +180,12 @@ class QAT_Quantizer(Quantizer):
         """
         quant_bits = config.get('quant_bits', {})
         weight_bits = quant_bits.get('weight', 8)
+        quant_start_step = config.get('quant_start_step', 0)
         if weight_bits <= 1:
             return weight
-        if config['quant_delay'] > self.steps:
+        if quant_start_step > self.steps:
             return weight
-        rmin, rmax = self.fixed_range_check(weight)
+        rmin, rmax = self.range_check(weight)
         self.update_quantization_param(weight_bits, op, rmin, rmax)
         out = self.quantize(weight_bits, op, weight)
         out = self.dequantize(op, out)
@@ -191,12 +197,14 @@ class QAT_Quantizer(Quantizer):
         """
         quant_bits = config.get('quant_bits', {})
         output_bits = quant_bits.get('output', 8)
+        quant_start_step = config.get('quant_start_step', 0)
+
         if output_bits <= 1:
             return output
-        if config['quant_delay'] > self.steps:
+        if quant_start_step > self.steps:
             return output
         # TODO output dynamic set a, b
-        rmin, rmax = self.fixed_range_check(output)
+        rmin, rmax = self.range_check(output)
         self.update_quantization_param(output_bits, op, rmin, rmax)
         out = self.quantize(output_bits, op, output)
         out = self.dequantize(op, out)

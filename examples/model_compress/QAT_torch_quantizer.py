@@ -77,14 +77,13 @@ def main():
         'quant_bits': {
             'weight': 8,
         },
-        'quant_delay': 7000,
         'op_types':['Conv2d', 'Linear']
     }, {
         'quant_types': ['output'],
         'quant_bits': {
             'output': 8,
         },
-        'quant_delay': 7000,
+        'quant_start_step': 7000,
         'op_types':['ReLU6']
     }]
     quantizer = QAT_Quantizer(model, configure_list)
