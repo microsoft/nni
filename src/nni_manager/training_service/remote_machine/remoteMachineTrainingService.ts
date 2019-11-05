@@ -35,7 +35,7 @@ import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getRemoteTmpDir,
@@ -203,6 +203,19 @@ class RemoteMachineTrainingService implements TrainingService {
         } else {
             return trialJob;
         }
+    }
+
+    public getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        const client: Client = this.trialSSHClientMap.get(trialJobId)!;
+        let logPath: string;
+        if (logType === 'TRIAL_LOG') {
+            logPath = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId, 'trial.log');
+        } else if (logType === 'TRIAL_STDERR') {
+            logPath = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId, 'stderr');
+        } else {
+            throw new Error('unexpected log type');
+        }
+        return SSHClientUtility.getRemoteFileContent(logPath, client);
     }
 
     /**

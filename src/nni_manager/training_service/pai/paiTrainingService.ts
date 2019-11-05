@@ -34,7 +34,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { delay, generateParamFileName,
     getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../common/utils';
@@ -128,6 +128,20 @@ class PAITrainingService implements TrainingService {
         }
 
         return Promise.resolve(paiTrialJob);
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        const dir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig!.userName, trialJobId);
+        let logPath: string;
+        if (logType === 'TRIAL_LOG') {
+            logPath = unixPathJoin(dir, 'trial.log');
+        } else if (logType === 'TRIAL_STDERR') {
+            logPath = unixPathJoin(dir, 'stderr');
+        } else {
+            throw new Error('unexpected log type');
+        }
+        const buffer: Buffer = await HDFSClientUtility.readFileFromHDFS(logPath, this.hdfsClient);
+        return buffer.toString();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
