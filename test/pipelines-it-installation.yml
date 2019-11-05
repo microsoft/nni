@@ -57,6 +57,5 @@ jobs:
   - script: |
       cd examples/trials/mnist
       $CMD = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))') + '\Scripts\nnictl.exe create --config config.yml'
-      echo $CMD
-      $CMD
+      cmd.exe /c $CMD
     displayName: 'mnist test'
