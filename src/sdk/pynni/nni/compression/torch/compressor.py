@@ -38,7 +38,6 @@ class Compressor:
         self.bound_model = model
         self.config_list = config_list
         self.modules_to_compress = None
-        self.detect_modules_to_compress()
 
     def detect_modules_to_compress(self):
         """
@@ -214,21 +213,21 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
-    def quantize_activation(self, activation, config, op, op_type, op_name):
+    def quantize_output(self, output, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize activations.
         This method is effectively hooked to `forward()` method of the model.
 
         Parameters
         ----------
-        activations : Tensor
-            activations that needs to be quantized
+        output : Tensor
+            output that needs to be quantized
         config : dict
             the configuration for activation quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_activation()")
 
-    def quantize_inputs(self, *inputs, config, op, op_type, op_name):
+    def quantize_input(self, *inputs, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to `forward()` method of the model.
@@ -240,7 +239,7 @@ class Quantizer(Compressor):
         config : dict
             the configuration for inputs quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_inputs()")
+        raise NotImplementedError("Quantizer must overload quantize_input()")
 
 
     def _instrument_layer(self, layer, config):
@@ -254,18 +253,22 @@ class Quantizer(Compressor):
         config : dict
             the configuration for quantization
         """
+        print(layer.type, config)
         assert layer._forward is None, 'Each model can only be compressed once'
-        if config.get("weight_quantization", False):
+        assert "quant_types" in config, 'must provide quant_types in config'
+        assert isinstance(config["quant_types"], list), 'quant_types must be list type'
+
+        if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
                 return
         layer.save_forward()
 
         def new_forward(*inputs):
-            if config.get("input_quantization", False):
-                inputs = self.quantize_inputs(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            if 'input' in config["quant_types"]:
+                inputs = self.quantize_input(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
 
-            if config.get("weight_quantization", False):
+            if 'weight' in config["quant_types"]:
                 weight = layer.module.weight.data
                 new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
                 layer.module.weight.data = new_weight
@@ -274,8 +277,8 @@ class Quantizer(Compressor):
             else:
                 result = layer._forward(*inputs)
 
-            if config.get("activation_quantization", False):
-                result = self.quantize_activation(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            if 'output' in config["quant_types"]:
+                result = self.quantize_output(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
 
             return result
 

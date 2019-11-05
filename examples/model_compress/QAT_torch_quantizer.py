@@ -11,19 +11,22 @@ class Mnist(torch.nn.Module):
         self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
         self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
         self.fc2 = torch.nn.Linear(500, 10)
+        self.relu1 = torch.nn.ReLU6()
+        self.relu2 = torch.nn.ReLU6()
+        self.relu3 = torch.nn.ReLU6()
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
+        x = self.relu1(self.conv1(x))
         x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
+        x = self.relu2(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
         x = x.view(-1, 4 * 4 * 50)
-        x = F.relu(self.fc1(x))
+        x = self.relu3(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
 
-def train(model, device, train_loader, optimizer):
+def train(model, quantizer, device, train_loader, optimizer):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -32,6 +35,7 @@ def train(model, device, train_loader, optimizer):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
+        quantizer.step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
 
@@ -69,21 +73,29 @@ def main():
     DoReFaQuantizer(configure_list).compress(model)
     '''
     configure_list = [{
-        'weight_quantization': True,
-        'weight_bits':8,
-        # 'activation_bits': 8,
-        'quant_delay': 10,
-        'op_types':['default']
+        'quant_types': ['weight'],
+        'quant_bits': {
+            'weight': 8,
+        },
+        'quant_delay': 7000,
+        'op_types':['Conv2d', 'Linear']
+    }, {
+        'quant_types': ['output'],
+        'quant_bits': {
+            'output': 8,
+        },
+        'quant_delay': 7000,
+        'op_types':['ReLU6']
     }]
     quantizer = QAT_Quantizer(model, configure_list)
     quantizer.compress()
     # you can also use compress(model) method
-    # like thaht quantizer.compress(model)
+    # like quantizer.compress(model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         print('# Epoch {} #'.format(epoch))
-        train(model, device, train_loader, optimizer)
+        train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)
 
 

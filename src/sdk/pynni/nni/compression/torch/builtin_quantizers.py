@@ -21,19 +21,19 @@ class NaiveQuantizer(Quantizer):
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
-class EMA_RangeChecker:
-    def __init__(self, alpha):
-        self.alpha = alpha
-        self.args = None
+# class EMA_RangeChecker:
+#     def __init__(self, alpha):
+#         self.alpha = alpha
+#         self.args = None
 
-    def update(self, args):
-        if self.args is None:
-            if not isinstance(args, list):
-                raise TypeError("expect type list of parameter args")
-            self.args = args
-        else:
-            self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
-        return self.args
+#     def update(self, args):
+#         if self.args is None:
+#             if not isinstance(args, list):
+#                 raise TypeError("expect type list of parameter args")
+#             self.args = args
+#         else:
+#             self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
+#         return self.args
 
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
@@ -51,20 +51,18 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             list of configurations for quantization
             supported keys for dict:
-                - weight_quantization
-                - weight_bits
-                - activation_quantization
-                - activation_bits
+                - quant_types
+                - quant_bits
                 - quant_delay
+                - op_types
         """
         super().__init__(model, config_list)
+        self.detect_modules_to_compress()
+        self.steps = 0
         for layer, config in self.get_modules_to_compress():
-            if config.get("weight_quantization", False):
+            if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
-            if config.get("activation_quantization", False):
-                layer.module.register_buffer("range_checker", EMA_RangeChecker(0.9))
-        self.steps = 0
 
     def fixed_range_check(self, tensor):
         """
@@ -168,25 +166,29 @@ class QAT_Quantizer(Quantizer):
         return real_val
 
     def quantize_weight(self, weight, config, op, **kwargs):
-        if config['weight_bits'] <= 1:
+        quant_bits = config.get('quant_bits', {})
+        weight_bits = quant_bits.get('weight', 8)
+        if weight_bits <= 1:
             return weight
-        # if config['quant_delay'] > self._steps:
-        #     return weight
+        if config['quant_delay'] > self.steps:
+            return weight
         rmin, rmax = self.fixed_range_check(weight)
-        self.update_quantization_param(config['weight_bits'], op, rmin, rmax)
-        out = self.quantize(config['weight_bits'], op, weight)
+        self.update_quantization_param(weight_bits, op, rmin, rmax)
+        out = self.quantize(weight_bits, op, weight)
         out = self.dequantize(op, out)
         return out
 
-    def quantize_activation(self, activation, config, op, **kwargs):
-        if config['activation_bits'] <= 1:
-            return activation
-        # if config['quant_delay'] > self._steps:
-        #     return activation
-        # TODO activation dynamic set a, b
-        rmin, rmax = self.fixed_range_check(activation)
-        self.update_quantization_param(config['activation_bits'], op, rmin, rmax)
-        out = self.quantize(config['activation_bits'], op, activation)
+    def quantize_output(self, output, config, op, **kwargs):
+        quant_bits = config.get('quant_bits', {})
+        output_bits = quant_bits.get('output', 8)
+        if output_bits <= 1:
+            return output
+        if config['quant_delay'] > self.steps:
+            return output
+        # TODO output dynamic set a, b
+        rmin, rmax = self.fixed_range_check(output)
+        self.update_quantization_param(output_bits, op, rmin, rmax)
+        out = self.quantize(output_bits, op, output)
         out = self.dequantize(op, out)
         return out
 
@@ -195,7 +197,7 @@ class QAT_Quantizer(Quantizer):
         pass
 
     def step(self):
-        """override compressor step method, update _step attribute, quantization only happens after certain number of steps
+        """override compressor step method, quantization only happens after certain number of steps
         """
         self.steps += 1
 
