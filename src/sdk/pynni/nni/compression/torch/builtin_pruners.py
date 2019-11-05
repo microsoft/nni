@@ -17,7 +17,6 @@ class LevelPruner(Pruner):
             - sparsity
         """
         super().__init__(model, config_list)
-        self.mask_dict = {}
         self.if_init_list = {}
 
     def calc_mask(self, layer, config):
@@ -57,7 +56,6 @@ class AGP_Pruner(Pruner):
             - frequency: if you want update every 2 epoch, you can set it 2
         """
         super().__init__(model, config_list)
-        self.mask_dict = {}
         self.now_epoch = 0
         self.if_init_list = {}
 
