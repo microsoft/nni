@@ -51,10 +51,14 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             list of configurations for quantization
             supported keys for dict:
-                - quant_types
-                - quant_bits
-                - quant_delay
-                - op_types
+                - quant_types : list of string
+                    type of quantization you want to apply, currently support 'weight', 'input', 'output'
+                - quant_bits : dict
+                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8
+                - quant_delay : int
+                    disable quantization until steps are larger than quant_delay
+                - op_types : list of string
+                    types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list)
         self.detect_modules_to_compress()
@@ -166,6 +170,9 @@ class QAT_Quantizer(Quantizer):
         return real_val
 
     def quantize_weight(self, weight, config, op, **kwargs):
+        """
+        overwrite default `Quantizer` `quantize_weight` method
+        """
         quant_bits = config.get('quant_bits', {})
         weight_bits = quant_bits.get('weight', 8)
         if weight_bits <= 1:
@@ -179,6 +186,9 @@ class QAT_Quantizer(Quantizer):
         return out
 
     def quantize_output(self, output, config, op, **kwargs):
+        """
+        overwrite default `Quantizer` `quantize_output` method
+        """
         quant_bits = config.get('quant_bits', {})
         output_bits = quant_bits.get('output', 8)
         if output_bits <= 1:
@@ -197,7 +207,8 @@ class QAT_Quantizer(Quantizer):
         pass
 
     def step(self):
-        """override compressor step method, quantization only happens after certain number of steps
+        """
+        override `compressor` `step` method, quantization only happens after certain number of steps
         """
         self.steps += 1
 
