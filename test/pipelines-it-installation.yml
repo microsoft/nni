@@ -12,7 +12,6 @@ jobs:
       python3 -V
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install --upgrade nni --user
-      nnictl -v
     displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
@@ -35,9 +34,10 @@ jobs:
     displayName: 'Install nni'
   - script: |
       cd examples/trials/mnist
-      $CMD = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))') + '/Scripts/nnictl create --config config.yml'
+      BIN_FOLDER = $(python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')/bin
+      $CMD = $BIN_FOLDER + '/nnictl create --config config.yml'
       echo $CMD
-      cmd.exe /c $CMD
+      $CMD
     displayName: 'mnist test'
 
 - job: 'pip_install_windows_python36'
@@ -58,5 +58,5 @@ jobs:
       cd examples/trials/mnist
       $CMD = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))') + '\Scripts\nnictl.exe create --config config.yml'
       echo $CMD
-      cmd.exe /c $CMD
+      $CMD
     displayName: 'mnist test'
