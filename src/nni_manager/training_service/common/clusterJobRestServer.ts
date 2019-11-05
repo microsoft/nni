@@ -30,7 +30,7 @@ import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { RestServer } from '../../common/restServer';
-import { getLogDir } from '../../common/utils';
+import { getExperimentRootDir, mkDirPSync } from '../../common/utils';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -146,7 +146,9 @@ export abstract class ClusterJobRestServer extends RestServer {
                 this.errorMessage = `Version check failed, didn't get version check response from trialKeeper,`
                  + ` please check your NNI version in NNIManager and TrialKeeper!`;
             }
-            const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
+            const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', req.params.trialId);
+            mkDirPSync(trialLogDir);
+            const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
             try {
                 let skipLogging: boolean = false;
                 if (req.body.tag === 'trial' && req.body.msg !== undefined) {

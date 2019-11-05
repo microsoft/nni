@@ -1,3 +1,6 @@
+all:
+  logCollection: http
+
 kubeflow:
   maxExecDuration: 15m
   nniManagerIp:
