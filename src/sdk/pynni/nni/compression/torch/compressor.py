@@ -46,13 +46,16 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         """
         if self.modules_to_compress is None:
-            self.modules_to_compress = []
+            modules_to_compress = []
             for name, module in self.bound_model.named_modules():
                 layer = LayerInfo(name, module)
                 config = self.select_config(layer)
                 if config is not None:
-                    self.modules_to_compress.append((layer, config))
-        return self.modules_to_compress
+                    modules_to_compress.append((layer, config))
+            return modules_to_compress
+        else:
+            return self.modules_to_compress
+
 
     def compress(self):
         """
@@ -61,7 +64,7 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
-        self.detect_modules_to_compress()
+        self.modules_to_compress = self.detect_modules_to_compress()
         for layer, config in self.modules_to_compress:
             self._instrument_layer(layer, config)
         return self.bound_model
