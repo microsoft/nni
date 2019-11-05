@@ -27,7 +27,6 @@ import warnings
 import logging
 import numpy as np
 
-# pylint: disable=no-name-in-module, import-error
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
