@@ -21,22 +21,6 @@ class NaiveQuantizer(Quantizer):
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
-class EMA:
-    def __init__(self, alpha, delay):
-        self.alpha = alpha
-        self.delay = delay
-        self.args = None
-
-    def record(self, args):
-        if self.args is None:
-            self.args += self.args / self.delay
-
-    def update(self, args):
-        if self.args is None:
-            self.args = args
-        else:
-            self.args = [self.alpha * args[idx] + (1 - self.alpha) * self.args[idx] for idx in range(len(self.args))]
-        return self.args
 
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
