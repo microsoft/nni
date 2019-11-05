@@ -143,6 +143,8 @@ class QAT_Quantizer(Quantizer):
     def dequantize(self, op, quantized_val):
         """
         dequantize quantized value.
+        Because we simulate quantization in training process, all the computations still happen as float point computations, which means we
+        first quantize tensors then dequantize them. For more details, please refer to the paper.
 
         Parameters
         ----------
