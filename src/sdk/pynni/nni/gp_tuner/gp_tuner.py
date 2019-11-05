@@ -20,7 +20,7 @@
 """
 GPTuner is a Bayesian Optimization method where Gaussian Process is used for modeling loss functions.
 
-See : class:`GPTuner` for details.
+See :class:`GPTuner` for details.
 """
 
 import warnings
@@ -46,35 +46,35 @@ class GPTuner(Tuner):
 
     Parameters
     ----------
-    optimize_mode: str
+    optimize_mode : str
         optimize mode, 'maximize' or 'minimize', by default 'maximize'
-    utility: str
+    utility : str
         utility function(also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
-    kappa: float
+    kappa : float
         value used by utility function 'ucb'. The bigger kappa is, the more the tuner will be exploratory. By default 5.
-    xi: float
+    xi : float
         used by utility function 'ei' and 'poi'. The bigger xi is, the more the tuner will be exploratory. By default 0.
-    nu: float
+    nu : float
         used to specify Matern kernel. The smaller nu, the less smooth the approximated function is. By default 2.5.
-    alpha: float
+    alpha : float
         Used to specify Gaussian Process Regressor. Larger values correspond to increased noise level in the observations.
         By default 1e-6.
-    cold_start_num: int
+    cold_start_num : int
         Number of random exploration to perform before Gaussian Process. By default 10.
-    selection_num_warm_up: int
+    selection_num_warm_up : int
         Number of random points to evaluate for getting the point which maximizes the acquisition function. By default 100000
-    selection_num_starting_points: int
+    selection_num_starting_points : int
         Number of times to run L-BFGS-B from a random starting point after the warmup. By default 250.
     """
 
     def __init__(self, optimize_mode="maximize", utility='ei', kappa=5, xi=0, nu=2.5, alpha=1e-6, cold_start_num=10,
                  selection_num_warm_up=100000, selection_num_starting_points=250):
-        self.optimize_mode = OptimizeMode(optimize_mode)
+        self._optimize_mode = OptimizeMode(optimize_mode)
 
         # utility function related
-        self.utility = utility
-        self.kappa = kappa
-        self.xi = xi
+        self._utility = utility
+        self._kappa = kappa
+        self._xi = xi
 
         # target space
         self._space = None
@@ -97,7 +97,7 @@ class GPTuner(Tuner):
         self._selection_num_starting_points = selection_num_starting_points
 
         # num of imported data
-        self.supplement_data_num = 0
+        self._supplement_data_num = 0
 
     def update_search_space(self, search_space):
         """
@@ -125,7 +125,7 @@ class GPTuner(Tuner):
                 self._gp.fit(self._space.params, self._space.target)
 
             util = UtilityFunction(
-                kind=self.utility, kappa=self.kappa, xi=self.xi)
+                kind=self._utility, kappa=self._kappa, xi=self._xi)
 
             results = acq_max(
                 f_acq=util.utility,
@@ -148,7 +148,7 @@ class GPTuner(Tuner):
         Override of the abstract method in class:`Tuner`.
         """
         value = extract_scalar_reward(value)
-        if self.optimize_mode == OptimizeMode.Minimize:
+        if self._optimize_mode == OptimizeMode.Minimize:
             value = -value
 
         logger.info("Received trial result.")
@@ -175,9 +175,9 @@ class GPTuner(Tuner):
                 logger.info(
                     "Useless trial data, value is %s, skip this trial data.", _value)
                 continue
-            self.supplement_data_num += 1
+            self._supplement_data_num += 1
             _parameter_id = '_'.join(
-                ["ImportData", str(self.supplement_data_num)])
+                ["ImportData", str(self._supplement_data_num)])
             self.receive_trial_result(
                 parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to GP tuner.")

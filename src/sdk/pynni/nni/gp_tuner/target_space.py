@@ -32,12 +32,12 @@ def _hashable(params):
 
     Parameters
     ----------
-    params: numpy array
+    params : numpy array
         array format of parameters
 
     Returns
     -------
-    result: tuple
+    tuple
         tuple format of parameters
     """
     return tuple(map(float, params))
@@ -57,7 +57,7 @@ class TargetSpace():
     """
 
     def __init__(self, pbounds, random_state=None):
-        self.random_state = random_state
+        self._random_state = random_state
 
         # Get the name of the parameters
         self._keys = sorted(pbounds)
@@ -88,11 +88,11 @@ class TargetSpace():
 
         Parameters
         ----------
-        params: numpy array
+        params : numpy array
 
         Returns
         -------
-        result: bool
+        bool
             True if the parameter is already registered, else false
         """
         return _hashable(params) in self._cache
@@ -103,7 +103,7 @@ class TargetSpace():
 
         Returns
         -------
-        result: int
+        int
         """
         assert len(self._params) == len(self._target)
         return len(self._target)
@@ -115,7 +115,7 @@ class TargetSpace():
 
         Returns
         -------
-        params: numpy array
+        numpy array
         """
         return self._params
 
@@ -126,7 +126,7 @@ class TargetSpace():
 
         Returns
         -------
-        target: numpy array
+        numpy array
         """
         return self._target
 
@@ -137,7 +137,7 @@ class TargetSpace():
 
         Returns
         -------
-        dim: int
+        int
         """
         return len(self._keys)
 
@@ -148,7 +148,7 @@ class TargetSpace():
 
         Returns
         -------
-        keys: numpy array
+        numpy array
         """
         return self._keys
 
@@ -159,7 +159,7 @@ class TargetSpace():
 
         Returns
         -------
-        bounds: numpy array
+        numpy array
         """
         return self._bounds
 
@@ -169,12 +169,12 @@ class TargetSpace():
 
         Parameters
         ----------
-        params: dict
+        params : dict
             dict format of parameters
 
         Returns
         -------
-        result: numpy array
+        numpy array
             array format of parameters
         """
         try:
@@ -193,12 +193,12 @@ class TargetSpace():
         maintain int type if the paramters is defined as int in search_space.json
         Parameters
         ----------
-        x: numpy array
+        x : numpy array
             array format of parameters
 
         Returns
         -------
-        params: dict
+        dict
             dict format of parameters
         """
         try:
@@ -226,10 +226,10 @@ class TargetSpace():
 
         Parameters
         ----------
-        params: dict
+        params : dict
             parameters
 
-        target: float
+        target : float
             target function value
         """
 
@@ -256,22 +256,22 @@ class TargetSpace():
         for col, _bound in enumerate(self._bounds):
             if _bound['_type'] == 'choice':
                 params[col] = parameter_expressions.choice(
-                    _bound['_value'], self.random_state)
+                    _bound['_value'], self._random_state)
             elif _bound['_type'] == 'randint':
-                params[col] = self.random_state.randint(
+                params[col] = self._random_state.randint(
                     _bound['_value'][0], _bound['_value'][1], size=1)
             elif _bound['_type'] == 'uniform':
                 params[col] = parameter_expressions.uniform(
-                    _bound['_value'][0], _bound['_value'][1], self.random_state)
+                    _bound['_value'][0], _bound['_value'][1], self._random_state)
             elif _bound['_type'] == 'quniform':
                 params[col] = parameter_expressions.quniform(
-                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
+                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self._random_state)
             elif _bound['_type'] == 'loguniform':
                 params[col] = parameter_expressions.loguniform(
-                    _bound['_value'][0], _bound['_value'][1], self.random_state)
+                    _bound['_value'][0], _bound['_value'][1], self._random_state)
             elif _bound['_type'] == 'qloguniform':
                 params[col] = parameter_expressions.qloguniform(
-                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self.random_state)
+                    _bound['_value'][0], _bound['_value'][1], _bound['_value'][2], self._random_state)
 
         return params
 
@@ -301,7 +301,7 @@ class TargetSpace():
 
         Returns
         -------
-        result: list
+        list
             a list of target values and their corresponding parameters
         """
         params = [dict(zip(self.keys, p)) for p in self.params]

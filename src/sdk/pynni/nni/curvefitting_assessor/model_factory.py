@@ -40,7 +40,7 @@ class CurveModel:
 
     Parameters
     ----------
-    target_pos: int
+    target_pos : int
         The point we need to predict
     """
     def __init__(self, target_pos):
@@ -120,14 +120,14 @@ class CurveModel:
 
         Parameters
         ----------
-        model: string
+        model : string
             name of the curve function model
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
 
         Returns
         -------
-        int:
+        int :
             The expected matrix at pos
         """
         if model_para_num[model] == 2:
@@ -143,9 +143,9 @@ class CurveModel:
 
         Parameters
         ----------
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -165,7 +165,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -187,7 +187,7 @@ class CurveModel:
 
         Parameters
         ----------
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -206,9 +206,9 @@ class CurveModel:
 
         Parameters
         ----------
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -225,7 +225,7 @@ class CurveModel:
 
         Parameters
         ----------
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -244,7 +244,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -267,7 +267,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -308,7 +308,6 @@ class CurveModel:
             new_values = np.random.randn(NUM_OF_INSTANCE, self.effective_model_num) * STEP_SIZE + self.weight_samples
             new_values = self.normalize_weight(new_values)
             # compute alpha(i, j) = min{1, P(j)Q(j, i)/P(i)Q(i, j)}
-            # pylint: disable=assignment-from-no-return
             alpha = np.minimum(1, self.target_distribution(new_values) / self.target_distribution(self.weight_samples))
             # sample u
             u = np.random.rand(NUM_OF_INSTANCE)
@@ -323,7 +322,7 @@ class CurveModel:
 
         Parameters
         ----------
-        trial_history: list
+        trial_history : list
             The history performance matrix of each trial.
 
         Returns

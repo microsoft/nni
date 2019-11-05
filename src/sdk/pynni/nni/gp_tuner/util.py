@@ -33,14 +33,14 @@ def _match_val_type(vals, bounds):
 
     Parameters
     ----------
-    vals:numpy array
+    vals :numpy array
         values of parameters
-    bounds:numpy array
+    bounds :numpy array
         list of dictionary which stores parameters names and legal values.
 
     Returns
     -------
-    vals_new: list
+    vals_new : list
         The closest legal value to the original value
     """
     vals_new = []
@@ -69,27 +69,27 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
 
     Parameters
     ----------
-    param f_acq: UtilityFunction.utility
+    param f_acq : UtilityFunction.utility
         The acquisition function object that return its point-wise value.
 
-    param gp: GaussianProcessRegressor
+    param gp : GaussianProcessRegressor
         A gaussian process fitted to the relevant data.
 
-    param y_max: float
+    param y_max : float
         The current maximum known value of the target function.
 
-    param bounds: numpy array
+    param bounds : numpy array
         The variables bounds to limit the search of the acq max.
 
-    param num_warmup: int
+    param num_warmup : int
         number of times to randomly sample the aquisition function
 
-    param num_starting_points: int
+    param num_starting_points : int
         number of times to run scipy.minimize
 
     Returns
     -------
-    x_max: numpy array
+    numpy array
         The parameter which achieves max of the acquisition function.
     """
 
@@ -134,24 +134,24 @@ class UtilityFunction():
 
     Parameters
     ----------
-    kind: string
+    kind : string
         specification of utility function to use
-    kappa: float
+    kappa : float
         parameter usedd for 'ucb' acquisition function
-    xi: float
+    xi : float
         parameter usedd for 'ei' and 'poi' acquisition function
     """
 
     def __init__(self, kind, kappa, xi):
-        self.kappa = kappa
-        self.xi = xi
+        self._kappa = kappa
+        self._xi = xi
 
         if kind not in ['ucb', 'ei', 'poi']:
             err = "The utility function " \
                 "{} has not been implemented, " \
                 "please choose one of ucb, ei, or poi.".format(kind)
             raise NotImplementedError(err)
-        self.kind = kind
+        self._kind = kind
 
     def utility(self, x, gp, y_max):
         """
@@ -169,12 +169,12 @@ class UtilityFunction():
         -------
         result: float
         """
-        if self.kind == 'ucb':
-            return self._ucb(x, gp, self.kappa)
-        if self.kind == 'ei':
-            return self._ei(x, gp, y_max, self.xi)
-        if self.kind == 'poi':
-            return self._poi(x, gp, y_max, self.xi)
+        if self._kind == 'ucb':
+            return self._ucb(x, gp, self._kappa)
+        if self._kind == 'ei':
+            return self._ei(x, gp, y_max, self._xi)
+        if self._kind == 'poi':
+            return self._poi(x, gp, y_max, self._xi)
         return None
 
     @staticmethod
@@ -184,14 +184,14 @@ class UtilityFunction():
 
         Parameters
         ----------
-        x: numpy array
+        x : numpy array
             parameters
-        gp: GaussianProcessRegressor
-        kappa: float
+        gp : GaussianProcessRegressor
+        kappa : float
 
         Returns
         -------
-        result: float
+        float
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -206,16 +206,16 @@ class UtilityFunction():
 
         Parameters
         ----------
-        x: numpy array
+        x : numpy array
             parameters
-        gp: GaussianProcessRegressor
-        y_max: float
+        gp : GaussianProcessRegressor
+        y_max : float
             maximum target value observed so far
-        xi: float
+        xi : float
 
         Returns
         -------
-        result: float
+        float
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -231,16 +231,16 @@ class UtilityFunction():
 
         Parameters
         ----------
-        x: numpy array
+        x : numpy array
             parameters
-        gp: GaussianProcessRegressor
-        y_max: float
+        gp : GaussianProcessRegressor
+        y_max : float
             maximum target value observed so far
-        xi: float
+        xi : float
 
         Returns
         -------
-        result: float
+        float
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
