@@ -34,7 +34,7 @@ class QAT_Quantizer(Quantizer):
         Parameters
         ----------
         layer : LayerInfo
-            the layer to instrument the mask
+            the layer to quantize
         config_list : list of dict
             list of configurations for quantization
             supported keys for dict:
