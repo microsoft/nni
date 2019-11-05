@@ -53,3 +53,9 @@ trainer.export_model()
 Different trainers could have different input arguments depending on their algorithms. After training, users could export the best one of the found models through `trainer.export_model()`.
 
 [Here](https://github.com/microsoft/nni/blob/dev-nas-refactor/examples/nas/darts/main.py) is a trial example using DartsTrainer.
+
+[1]: https://arxiv.org/abs/1802.03268
+[2]: https://arxiv.org/abs/1707.07012
+[3]: https://arxiv.org/abs/1806.09055
+[4]: https://arxiv.org/abs/1806.10282
+[5]: https://arxiv.org/abs/1703.01041
