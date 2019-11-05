@@ -130,7 +130,8 @@ class Compressor:
 
 
 class Pruner(Compressor):
-    """Prune to an exact pruning level specification
+    """
+    Prune to an exact pruning level specification
 
     Attributes
     ----------
@@ -213,15 +214,15 @@ class Pruner(Compressor):
                 print('Layer: %s  Sparsity: %.2f' % (name, 1 - mask_sum / mask_num))
                 m.weight.data = m.weight.data.mul(mask)
             else:
-                _logger.info('Layer: %s  Sparsity: %.2f', name, 0)
-                print('Layer: %s  Sparsity: %.2f' % (name, 0))
+                _logger.info('Layer: %s  NOT compressed', name)
+                print('Layer: %s  NOT compressed' % name)
         torch.save(self.bound_model.state_dict(), model_path)
-        _logger.info('Model state_dict saved to %s', (model_path))
-        print('Model state_dict saved to %s' % (model_path))
+        _logger.info('Model state_dict saved to %s', model_path)
+        print('Model state_dict saved to %s' % model_path)
         if mask_path is not None:
             torch.save(self.mask_dict, mask_path)
-            _logger.info('Mask dict saved to %s', (mask_path))
-            print('Mask dict saved to %s' % (mask_path))
+            _logger.info('Mask dict saved to %s', mask_path)
+            print('Mask dict saved to %s' % mask_path)
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
