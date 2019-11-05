@@ -1,26 +1,34 @@
-# 使用 NNI 调优 RocksDB
+# 在 NNI 上调优 RocksDB
 
 ## 概述
 
-[RocksDB](https://github.com/facebook/rocksdb) 是一种很受欢迎的高性能嵌入式键值数据库，被许多公司，如 Facebook， Yahoo! 和 LinkedIn 等，广泛应用于各种网络规模的产品中。它是 Facebook 在 [LevelDB](https://github.com/google/leveldb) 的基础上，通过充分利用多核心中央处理器和快速存储器（如固态硬盘）的特点，针对IO密集型应用优化而成的。
+[RocksDB](https://github.com/facebook/rocksdb) 是流行的高性能、嵌入式的生产级别的键值数据库，它在 Facebook，Yahoo!，和 LinkedIn 等各种规模的网站上使用。 这是 Facebook 的 [LevelDB](https://github.com/google/leveldb) 分支，为多 CPU，快速存储（如 SSD）的输入输出进行了优化。
 
-RocksDB 的性能高度依赖于运行参数的调优。然而，由于其底层技术极为复杂，需要调整的参数过多，有时很难找到合适的运行参数。NNI 可以帮助数据库运维工程师解决这个问题。NNI 支持多种自动调参算法，并且支持运行于本地、远程和云端的各种负载。
+RocksDB 的性能表现非常依赖于调优操作。 但由于其底层技术较复杂，可配置参数非常多，很难获得较好的配置。 NNI 可帮助解决此问题。 NNI 支持多种调优算法来为 RocksDB 搜索最好的配置，并支持本机、远程服务器和云服务等多种环境。
 
-本例展示了如何使用 NNI 搜索 RocksDB 在 `fillrandom` 基准测试中的最佳运行参数，`fillrandom` 基准测试是 RocksDB 官方提供的基准测试工具 `db_bench` 所支持的一种基准测试，因此在运行本例之前请确保您已经安装了 NNI，并且 `db_bench` 在您的 `PATH` 路径中。关于如何安装和准备 NNI 环境，请参考[这里](../Tuner/BuiltinTuner.md)，关于如何编译 RocksDB 以及 `db_bench`，请参考[这里](https://github.com/facebook/rocksdb/blob/master/INSTALL.md)。
+本示例展示了如何使用 NNI，通过评测工具 `db_bench` 来找到 `fillrandom` 基准的最佳配置，此工具是 RocksDB 官方提供的评测工具。 在运行示例前，需要检查 NNI 已安装，
 
-我们还提供了一个简单的脚本 [`db_bench_installation.sh`](../../../examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh)，用来在 Ubuntu 系统上编译和安装 `db_bench` 和相关依赖。在其他系统中的安装也可以参考该脚本实现。
+db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/QuickStart.md)，了解如何安装并准备 NNI 环境，参考[这里](https://github.com/facebook/rocksdb/blob/master/INSTALL.md)来编译 RocksDB 以及 `db_bench`。</p> 
 
-*代码目录: [`example/trials/systems/rocksdb-fillrandom`](../../../examples/trials/systems/rocksdb-fillrandom)*
+此简单脚本 [`db_bench_installation.sh`](../../../examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) 可帮助编译并在 Ubuntu 上安装 `db_bench` 及其依赖包。 可遵循相同的过程在其它系统中安装 RocksDB。
 
-## 实验配置
+*代码目录：[`example/trials/systems/rocksdb-fillrandom`](../../../examples/trials/systems/rocksdb-fillrandom)*
 
-使用 NNI 进行调优系统主要有三个步骤，分别是，使用一个 `json` 文件定义搜索空间；准备一个基准测试程序；和一个用来启动 NNI 实验的配置文件。
+
+
+## Experiment 设置
+
+在 NNI 上配置调优的 Experiment 主要有三个步骤。 使用 `json` 文件定义搜索空间，编写评测代码，将配置传入 NNI 管理器来启动 Experiment。
+
+
 
 ### 搜索空间
 
-简便起见，本例基于 Rocks_DB 每秒的写入操作数（Operations Per Second, OPS），在随机写入 16M 个键长为 20 字节值长为 100 字节的键值对的情况下，对三个系统运行参数，`write_buffer_size`，`min_write_buffer_num` 和 `level0_file_num_compaction_trigger`，进行了调优。`write_buffer_size` 控制了单个 memtable 的大小。在写入过程中，当 memtable 的大小超过了 `write_buffer_size` 指定的数值，该 memtable 将会被标记为不可变，并创建一个新的 memtable。`min_write_buffer_num` 是在写入（flush）磁盘之前需要合并（merge）的 memtable 的最小数量。一旦 level 0 中的文件数量超过了 `level0_file_num_compaction_trigger` 所指定的数，level 0 向 level 1 的压缩（compaction）将会被触发。
+为简单起见，此示例仅调优三个参数，`write_buffer_size`, `min_write_buffer_num` 以及 `level0_file_num_compaction_trigger`，场景为测试随机写入 16M 数据的每秒写操作数（OPS），其 Key 为 20 字节，值为 100 字节。 `write_buffer_size` 设置单个内存表的大小。 一旦内存表超过此大小，会被标记为不可变，并创建新内存表。 `min_write_buffer_num` 是要合并写入存储的最小内存表数量。 一旦 Level 0 的文件数量达到了 `level0_file_num_compaction_trigger`，就会触发 Level 0 到 Level 1 的压缩。
 
-搜索空间由如下所示的文件 `search_space.json` 指定。更多关于搜索空间的解释请参考[这里](../Tutorial/SearchSpaceSpec.md)。
+此示例中，下列 `search_space.json` 文件指定了搜索空间。 搜索空间的详细说明参考[这里](../Tutorial/SearchSpaceSpec.md)。
+
+
 
 ```json
 {
@@ -39,59 +47,69 @@ RocksDB 的性能高度依赖于运行参数的调优。然而，由于其底层
 }
 ```
 
-*代码目录: [`example/trials/systems/rocksdb-fillrandom/search_space.json`](../../../examples/trials/systems/rocksdb-fillrandom/search_space.json)*
 
-### 基准测试
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/search_space.json`](../../../examples/trials/systems/rocksdb-fillrandom/search_space.json)*
 
-基准测试程序需要从 NNI manager 接收一个运行参数，并在运行基准测试以后向 NNI manager 汇报基准测试结果。NNI 提供了下面两个 APIs 来完成这些任务。更多关于 NNI trials 的信息请参考[这里](Trials.md)。
 
-* 使用 `nni.get_next_parameter()` 从 NNI manager 得到需要测试的系统运行参数。
-* 使用 `nni.report_final_result(metric)` 向 NNI manager 汇报基准测试的结果。
 
-*代码目录: [`example/trials/systems/rocksdb-fillrandom/main.py`](../../../examples/trials/systems/rocksdb-fillrandom/main.py)*
+### 评测代码
+
+评测代码从 NNI 管理器接收配置，并返回相应的基准测试结果。 下列 NNI API 用于相应的操作。 此示例中，每秒写操作数（OPS）作为了性能指标。 参考[这里](Trials.md)，了解详情。
+
+* 使用 `nni.get_next_parameter()` 来获取下一个系统配置。
+* 使用 `nni.report_final_result(metric)` 来返回测试结果。
+
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/main.py`](../../../examples/trials/systems/rocksdb-fillrandom/main.py)*
+
+
 
 ### 配置文件
 
-NNI 实验可以通过配置文件来启动。通常而言，NNI 配置文件是一个 `yaml` 文件，通常包含实验设置（`trialConcurrency`，`maxExecDuration`，`maxTrialNum`，`trial gpuNum` 等），运行平台设置（`trainingServicePlatform` 等），路径设置（`searchSpacePath`，`trial codeDir` 等）和 调参器设置（`tuner`，`tuner optimize_mode` 等）。更多关于 NNI 配置文件的信息请参考[这里](../Tutorial/QuickStart.md)。
+用于启动 NNI Experiment 的配置文件。 NNI 的配置文件是 `YAML` 格式，通常包括了 Experiment 设置 (`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等)，平台设置 (`trainingServicePlatform`, 等), 路径设置 (`searchSpacePath`, `trial codeDir`, 等) 以及 Tuner 设置 (`tuner`, `tuner optimize_mode`, 等)。 参考[这里](../Tutorial/QuickStart.md)了解详情。
 
-下面是使用 SMAC 算法调优 RocksDB 配置文件的例子：
+这是使用 SMAC 算法调优 RocksDB 的示例：
 
-*代码目录: [`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
+*代码目录：[`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
 
-下面是使用 TPE 算法调优 RocksDB 配置文件的例子：
+这是使用 TPE 算法调优 RocksDB 的示例：
 
 *代码目录: [`example/trials/systems/rocksdb-fillrandom/config_tpe.yml`](../../../examples/trials/systems/rocksdb-fillrandom/config_tpe.yml)*
 
-其他的调参器可以使用同样的方式应用，更多关于调参器的信息请参考[这里](../Tuner/BuiltinTuner.md)。
+其它 Tuner 算法可以通过相同的方式来使用。 参考[这里](../Tuner/BuiltinTuner.md)了解详情。
 
-最后，我们可以进入本例的文件夹内，用下面的命令启动实验：
+最后，进入示例目录，并通过下列命令启动 Experiment：
+
+
 
 ```bash
-# tuning RocksDB with SMAC tuner
+# 使用 SMAC Tuner 调优 RocksDB
 nnictl create --config ./config_smac.yml
-# tuning RocksDB with TPE tuner
+# 使用 TPE Tuner 调优 RocksDB
 nnictl create --config ./config_tpe.yml
 ```
 
-## 实验结果
 
-我们在同一台机器上运行了这两个实验，相关信息如下：
+
+
+## Experiment 结果
+
+在同一台计算机上运行这两个示例的详细信息：
 
 * 16 * Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz
-* 465 GB of rotational hard drive with ext4 file system
-* 128 GB of RAM
-* Kernel version: 4.15.0-58-generic
-* NNI version: v1.0-37-g1bd24577
-* RocksDB version: 6.4
+* 465 GB 磁盘，安装 ext4 操作系统
+* 128 GB 内存
+* 内核版本: 4.15.0-58-generic
+* NNI 版本: v1.0-37-g1bd24577
+* RocksDB 版本: 6.4
 * RocksDB DEBUG_LEVEL: 0
 
-具体的实验结果如下图所示。横轴是基准测试的顺序，纵轴是基准测试得到的结果，在本例中是每秒钟写操作的次数。蓝色的圆点代表用 SMAC 调优 RocksDB 得到的基准测试结果，而橘黄色的圆点表示用 TPE 调优得到的基准测试结果。
+详细的实验结果如下图所示。 水平轴是 Trial 的顺序。 垂直轴是指标，此例中为写入的 OPS。 蓝点表示使用的是 SMAC Tuner，橙色表示使用的是 TPE Tuner。 
 
 ![image](../../../examples/trials/systems/rocksdb-fillrandom/plot.png)
 
-下面的表格列出了使用两种调参器得到的最好的基准测试结果及相对应的参数。毫不意外，使用这两种调参器在 `fillrandom` 基准测试中搜索得到了相同的最优参数。
+下表列出了两个 Tuner 获得的最佳 Trial 以及相应的参数和指标。 不出所料，两个 Tuner 都为 `fillrandom` 测试找到了一样的最佳配置。
 
-| Tuner | Best trial | Best OPS | write_buffer_size | min_write_buffer_number_to_merge | level0_file_num_compaction_trigger |
-| :---: | :--------: | :------: | :---------------: | :------------------------------: | :--------------------------------: |
-| SMAC  | 255        | 779289   | 2097152           | 7.0                              | 7.0                                |
-| TPE   | 169        | 761456   | 2097152           | 7.0                              | 7.0                                |
+| Tuner | 最佳 Trial | 最佳 OPS | write_buffer_size | min_write_buffer_number_to_merge | level0_file_num_compaction_trigger |
+|:-----:|:--------:|:------:|:-------------------:|:------------------------------------:|:--------------------------------------:|
+| SMAC  |   255    | 779289 |       2097152       |                 7.0                  |                  7.0                   |
+|  TPE  |   169    | 761456 |       2097152       |                 7.0                  |                  7.0                   |

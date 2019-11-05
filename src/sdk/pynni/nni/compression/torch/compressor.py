@@ -15,49 +15,69 @@ class LayerInfo:
 
 
 class Compressor:
-    """Abstract base PyTorch compressor"""
+    """
+    Abstract base PyTorch compressor
+    """
 
-    def __init__(self, config_list):
-        self._bound_model = None
-        self._config_list = config_list
-
-    def __call__(self, model):
-        self.compress(model)
-        return model
-
-    def compress(self, model):
-        """Compress the model with algorithm implemented by subclass.
-        The model will be instrumented and user should never edit it after calling this method.
+    def __init__(self, model, config_list):
         """
-        assert self._bound_model is None, "Each NNI compressor instance can only compress one model"
-        self._bound_model = model
-        self.bind_model(model)
-        for name, module in model.named_modules():
+        Record necessary info in class members
+
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list : list
+            the configurations that users specify for compression
+        """
+        self.bound_model = model
+        self.config_list = config_list
+        self.modules_to_compress = []
+
+    def compress(self):
+        """
+        Compress the model with algorithm implemented by subclass.
+
+        The model will be instrumented and user should never edit it after calling this method.
+        `self.modules_to_compress` records all the to-be-compressed layers
+        """
+        for name, module in self.bound_model.named_modules():
             layer = LayerInfo(name, module)
-            config = self._select_config(layer)
+            config = self.select_config(layer)
             if config is not None:
                 self._instrument_layer(layer, config)
+                self.modules_to_compress.append((layer, config))
+        return self.bound_model
 
-    def bind_model(self, model):
-        """This method is called when a model is bound to the compressor.
-        Users can optionally overload this method to do model-specific initialization.
-        It is guaranteed that only one model will be bound to each compressor instance.
+    def get_modules_to_compress(self):
         """
+        To obtain all the to-be-compressed layers.
 
-    def update_epoch(self, epoch):
-        """if user want to update model every epoch, user can override this method
+        Returns
+        -------
+        self.modules_to_compress : list
+            a list of the layers, each of which is a tuple (`layer`, `config`),
+            `layer` is `LayerInfo`, `config` is a `dict`
         """
+        return self.modules_to_compress
 
-    def step(self):
-        """if user want to update model every step, user can override this method
+    def select_config(self, layer):
         """
+        Find the configuration for `layer` by parsing `self.config_list`
 
-    def _instrument_layer(self, layer, config):
-        raise NotImplementedError()
+        Parameters
+        ----------
+        layer : LayerInfo
+            one layer
 
-    def _select_config(self, layer):
+        Returns
+        -------
+        ret : config or None
+            the retrieved configuration for this layer, if None, this layer should
+            not be compressed
+        """
         ret = None
-        for config in self._config_list:
+        for config in self.config_list:
             config['op_types'] = self._expand_config_op_types(config)
             if layer.type not in config['op_types']:
                 continue
@@ -67,6 +87,35 @@ class Compressor:
         if ret is None or ret.get('exclude'):
             return None
         return ret
+
+    def update_epoch(self, epoch):
+        """
+        If user want to update model every epoch, user can override this method.
+        This method should be called at the beginning of each epoch
+
+        Parameters
+        ----------
+        epoch : num
+            the current epoch number
+        """
+
+    def step(self):
+        """
+        If user want to update model every step, user can override this method
+        """
+
+    def _instrument_layer(self, layer, config):
+        """
+        This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the compression operation
+        config : dict
+            the configuration for compressing this layer
+        """
+        raise NotImplementedError()
 
     def _expand_config_op_types(self, config):
         if config is None:
@@ -95,17 +144,33 @@ class Pruner(Compressor):
         super().__init__(config_list)
         self.mask_dict = {}
 
-    def calc_mask(self, weight, config, op, op_type, op_name):
-        """Pruners should overload this method to provide mask for weight tensors.
+    def calc_mask(self, layer, config):
+        """
+        Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
-        It will be applied with `mul()` operation.
+        It will be applied with `mul()` operation on the weight.
         This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
     def _instrument_layer(self, layer, config):
-        # TODO: support multiple weight tensors
-        # create a wrapper forward function to replace the original one
+        """
+        Create a wrapper forward function to replace the original one.
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the mask
+        config : dict
+            the configuration for generating the mask
+        """
         assert layer._forward is None, 'Each model can only be compressed once'
         if not _check_weight(layer.module):
             _logger.warning('Module %s does not have parameter "weight"', layer.name)
@@ -115,12 +180,10 @@ class Pruner(Compressor):
         def new_forward(*inputs):
             # apply mask to weight
             old_weight = layer.module.weight.data
-            mask = self.calc_mask(old_weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+            mask = self.calc_mask(layer, config)
             layer.module.weight.data = old_weight.mul(mask)
             # calculate forward
             ret = layer._forward(*inputs)
-            # recover original weight
-            layer.module.weight.data = old_weight
             return ret
 
         layer.module.forward = new_forward

@@ -20,7 +20,6 @@
 
 import os
 from .common_utils import print_error
-from subprocess import call
 from .command_utils import install_package_command
 
 def check_environment():
@@ -29,6 +28,8 @@ def check_environment():
         import paramiko
     except:
         install_package_command('paramiko')
+        import paramiko
+    return paramiko
 
 def copy_remote_directory_to_local(sftp, remote_path, local_path):
     '''copy remote directory to local machine'''
@@ -49,8 +50,7 @@ def copy_remote_directory_to_local(sftp, remote_path, local_path):
 def create_ssh_sftp_client(host_ip, port, username, password):
     '''create ssh client'''
     try:
-        check_environment()
-        import paramiko
+        paramiko = check_environment()
         conn = paramiko.Transport(host_ip, port)
         conn.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(conn)
