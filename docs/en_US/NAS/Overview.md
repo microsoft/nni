@@ -17,7 +17,12 @@ For expressing neural architecture search space, we provide two APIs:
 
 ```python
 # choose one ``op`` from ``ops``, for pytorch this is a module.
-# ops: for pytorch ``ops`` is a list of modules, for tensorflow it is a list of keras layers.
+# ops: for pytorch ``ops`` is a list of modules, for tensorflow it is a list of keras layers. An example in pytroch:
+# ops = [PoolBN('max', channels, 3, stride, 1, affine=False),
+#        PoolBN('avg', channels, 3, stride, 1, affine=False),
+#        FactorizedReduce(channels, channels, affine=False),
+#        SepConv(channels, channels, 3, stride, 1, affine=False),
+#        DilConv(channels, channels, 3, stride, 2, 2, affine=False)]
 # key: the name of this ``LayerChoice`` instance
 nni.nas.LayerChoice(ops, key)
 # choose ``n_selected`` from ``n_candidates`` inputs.
