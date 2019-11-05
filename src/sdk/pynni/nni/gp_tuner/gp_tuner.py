@@ -103,7 +103,7 @@ class GPTuner(Tuner):
         """
         Update the self.bounds and self.types by the search_space.json file.
 
-        Override of the abstract method in class:`Tuner`.
+        Override of the abstract method in :class:`~nni.tuner.Tuner`.
         """
         self._space = TargetSpace(search_space, self._random_state)
 
@@ -113,7 +113,7 @@ class GPTuner(Tuner):
         If the number of trial result is lower than cold_start_number, GPTuner will first randomly generate some parameters.
         Otherwise, choose the parameters by the Gussian Process Model.
 
-        Override of the abstract method in class:`Tuner`.
+        Override of the abstract method in :class:`~nni.tuner.Tuner`.
         """
         if self._space.len() < self._cold_start_num:
             results = self._space.random_sample()
@@ -145,7 +145,7 @@ class GPTuner(Tuner):
         """
         Method invoked when a trial reports its final result.
 
-        Override of the abstract method in class:`Tuner`.
+        Override of the abstract method in :class:`~nni.tuner.Tuner`.
         """
         value = extract_scalar_reward(value)
         if self._optimize_mode == OptimizeMode.Minimize:
@@ -160,7 +160,7 @@ class GPTuner(Tuner):
         """
         Import additional data for tuning.
 
-        Override of the abstract method in class:`Tuner`.
+        Override of the abstract method in :class:`~nni.tuner.Tuner`.
         """
         _completed_num = 0
         for trial_info in data:
