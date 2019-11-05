@@ -66,6 +66,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
+    model.to(device)
 
     '''you can change this to LevelPruner to implement it
     pruner = LevelPruner(configure_list)
@@ -80,7 +81,7 @@ def main():
     }]
 
     pruner = AGP_Pruner(model, configure_list)
-    pruner.compress()
+    model = pruner.compress()
     # you can also use compress(model) method
     # like that pruner.compress(model)
 
