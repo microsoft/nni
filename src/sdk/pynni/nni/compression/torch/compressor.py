@@ -140,8 +140,8 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, config_list):
-        super().__init__(config_list)
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
         self.mask_dict = {}
 
     def calc_mask(self, layer, config):
@@ -204,7 +204,7 @@ class Pruner(Compressor):
             input shape to onnx model
         """
         assert model_path is not None, 'model_path must be specified'
-        for name, m in self._bound_model.named_modules():
+        for name, m in self.bound_model.named_modules():
             mask = self.mask_dict.get(name)
             if mask is not None:
                 mask_sum = mask.sum().item()
@@ -215,7 +215,7 @@ class Pruner(Compressor):
             else:
                 _logger.info('Layer: {}  Sparsity: {}'.format(name, 0))
                 print('Layer: {}  Sparsity: {}'.format(name, 0))
-        torch.save(self._bound_model.state_dict(), model_path)
+        torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to {}'.format(model_path))
         print('Model state_dict saved to {}'.format(model_path))
         if mask_path is not None:
@@ -226,7 +226,7 @@ class Pruner(Compressor):
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
             input = torch.Tensor(*input_shape)
-            torch.onnx.export(self._bound_model, input, onnx_path)
+            torch.onnx.export(self.bound_model, input, onnx_path)
             _logger.info('Model in onnx with input shape saved to {}'.format(input.shape, onnx_path))
             print('Model in onnx with input shape {} saved to {}'.format(input.shape, onnx_path))
 
