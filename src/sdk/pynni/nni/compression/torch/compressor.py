@@ -61,6 +61,7 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
+        self.detect_modules_to_compress()
         for layer, config in self.modules_to_compress:
             self._instrument_layer(layer, config)
         return self.bound_model
@@ -253,7 +254,6 @@ class Quantizer(Compressor):
         config : dict
             the configuration for quantization
         """
-        print(layer.type, config)
         assert layer._forward is None, 'Each model can only be compressed once'
         assert "quant_types" in config, 'must provide quant_types in config'
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
@@ -262,7 +262,7 @@ class Quantizer(Compressor):
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
                 return
-        layer.save_forward()
+        layer._forward = layer.module.forward
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
@@ -282,7 +282,7 @@ class Quantizer(Compressor):
 
             return result
 
-        layer.mount_forward(new_forward)
+        layer.module.forward = new_forward
 
 def _check_weight(module):
     try:
