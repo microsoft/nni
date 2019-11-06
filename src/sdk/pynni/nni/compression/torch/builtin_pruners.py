@@ -33,8 +33,7 @@ class LevelPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_list = {}
-        self._if_init_list = {}
+        self.if_init_list = {}
 
     def calc_mask(self, layer, config):
         """
@@ -56,17 +55,17 @@ class LevelPruner(Pruner):
 
         weight = layer.module.weight.data
         op_name = layer.name
-        if self._if_init_list.get(op_name, True):
+        if self.if_init_list.get(op_name, True):
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
-            self.mask_list.update({op_name: mask})
-            self._if_init_list.update({op_name: False})
+            self.mask_dict.update({op_name: mask})
+            self.if_init_list.update({op_name: False})
         else:
-            mask = self.mask_list[op_name]
+            mask = self.mask_dict[op_name]
         return mask
 
 
@@ -106,9 +105,8 @@ class AGP_Pruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_list = {}
         self.now_epoch = 0
-        self._if_init_list = {}
+        self.if_init_list = {}
 
     def calc_mask(self, layer, config):
         """
@@ -132,9 +130,9 @@ class AGP_Pruner(Pruner):
         op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self._if_init_list.get(op_name, True) and (
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
                 self.now_epoch - start_epoch) % freq == 0:
-            mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
+            mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
             if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
@@ -143,10 +141,10 @@ class AGP_Pruner(Pruner):
             w_abs = weight.abs() * mask
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             new_mask = torch.gt(w_abs, threshold).type_as(weight)
-            self.mask_list.update({op_name: new_mask})
-            self._if_init_list.update({op_name: False})
+            self.mask_dict.update({op_name: new_mask})
+            self.if_init_list.update({op_name: False})
         else:
-            new_mask = self.mask_list.get(op_name, torch.ones(weight.shape).type_as(weight))
+            new_mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
         return new_mask
 
     def compute_target_sparsity(self, config):
@@ -194,8 +192,8 @@ class AGP_Pruner(Pruner):
         """
         if epoch > 0:
             self.now_epoch = epoch
-            for k in self._if_init_list.keys():
-                self._if_init_list[k] = True
+            for k in self.if_init_list.keys():
+                self.if_init_list[k] = True
 
 
 class FilterPruner(Pruner):
@@ -229,8 +227,7 @@ class FilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_list = {}
-        self._if_init_list = {}
+        self.if_init_list = {}
 
     def calc_mask(self, layer, config):
         """
@@ -254,7 +251,7 @@ class FilterPruner(Pruner):
         op_name = layer.name
         op_type = layer.type
         assert op_type == 'Conv2d', 'FilterPruner only supports 2d convolution layer pruning'
-        if self._if_init_list.get(op_name, True):
+        if self.if_init_list.get(op_name, True):
             kernels = weight.shape[0]
             w_abs = weight.abs()
             k = int(kernels * config['sparsity'])
@@ -263,10 +260,10 @@ class FilterPruner(Pruner):
             w_abs_structured = w_abs.view(kernels, -1).sum(dim=1)
             threshold = torch.topk(w_abs_structured.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-            self.mask_list.update({op_name: mask})
-            self._if_init_list.update({op_name: False})
+            self.mask_dict.update({op_name: mask})
+            self.if_init_list.update({op_name: False})
         else:
-            mask = self.mask_list[op_name]
+            mask = self.mask_dict[op_name]
         return mask
 
 
@@ -297,8 +294,7 @@ class SlimPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_list = {}
-        self._if_init_list = {}
+        self.if_init_list = {}
         weight_list = []
         config = self.config_list[0]
         op_types = config.get('op_types')
@@ -340,11 +336,11 @@ class SlimPruner(Pruner):
         op_name = layer.name
         op_type = layer.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if self._if_init_list.get(op_name, True):
+        if self.if_init_list.get(op_name, True):
             w_abs = weight.abs()
             mask = torch.gt(w_abs, self.global_threshold).type_as(weight)
-            self.mask_list.update({op_name: mask})
-            self._if_init_list.update({op_name: False})
+            self.mask_dict.update({op_name: mask})
+            self.if_init_list.update({op_name: False})
         else:
-            mask = self.mask_list[op_name]
+            mask = self.mask_dict[op_name]
         return mask

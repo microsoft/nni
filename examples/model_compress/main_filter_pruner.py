@@ -1,9 +1,9 @@
-from nni.compression.torch import AGP_Pruner
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
+from nni.compression.torch import FilterPruner
 
 
 class vgg(nn.Module):
@@ -84,9 +84,11 @@ def test(model, device, test_loader):
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
+    acc = 100 * correct / len(test_loader.dataset)
 
     print('Loss: {}  Accuracy: {}%)\n'.format(
-        test_loss, 100 * correct / len(test_loader.dataset)))
+        test_loss, acc))
+    return acc
 
 
 def main():
@@ -111,36 +113,58 @@ def main():
 
     model = vgg()
     model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 150, 0)
-    for epoch in range(300):
-        train(model, device, train_loader, optimizer)
-        test(model, device, test_loader)
-        lr_scheduler.step(epoch)
-    torch.save(model.state_dict(), 'vgg16.pth')
-    '''you can change this to LevelPruner to implement it
-    pruner = LevelPruner(configure_list)
-    '''
-    # configure_list = [{
-    #     'initial_sparsity': 0,
-    #     'final_sparsity': 0.8,
-    #     'start_epoch': 0,
-    #     'end_epoch': 10,
-    #     'frequency': 1,
-    #     'op_types': ['default']
-    # }]
-    #
-    # pruner = AGP_Pruner(model, configure_list)
-    # pruner.compress()
-    # # you can also use compress(model) method
-    # # like that pruner.compress(model)
-    #
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    # for epoch in range(10):
-    #     pruner.update_epoch(epoch)
-    #     print('# Epoch {} #'.format(epoch))
+
+    # Train the base VGG-16 model
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300, 0)
+    # for epoch in range(300):
     #     train(model, device, train_loader, optimizer)
     #     test(model, device, test_loader)
+    #     lr_scheduler.step(epoch)
+    # torch.save(model.state_dict(), 'vgg16.pth')
+
+    # Pretrained model 'vgg16.pth' can also be downloaded from
+    # https://drive.google.com/open?id=1eaIBg_hu4T0JTqIMpg_51dIWbAvvm5ya
+
+    model.load_state_dict(torch.load('vgg16.pth'))
+
+    # Test base model accuracy
+    # top1 = 93.47%
+    test(model, device, test_loader)
+
+    # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
+    # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+    configure_list = [{
+        'sparsity': 0.5,
+        'op_types': ['default'],
+        'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+    }]
+
+    # Prune model and test accuracy without fine tuning.
+    # top1 = 47.22%
+    pruner = FilterPruner(model, configure_list)
+    model = pruner.compress()
+    test(model, device, test_loader)
+
+    # Fine tune the pruned model for 40 epochs and test accuracy
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.004, momentum=0.9, weight_decay=1e-4)
+    best_top1 = 0
+    for epoch in range(40):
+        pruner.update_epoch(epoch)
+        print('# Epoch {} #'.format(epoch))
+        train(model, device, train_loader, optimizer_finetune)
+        top1 = test(model, device, test_loader)
+        if top1 > best_top1:
+            best_top1 = top1
+            # Export the best model, 'model_path' stores state_dict of the pruned model,
+            # mask_path stores mask_dict of the pruned model
+            pruner.export_model(model_path='pruned_vgg16.pth', mask_path='mask_vgg16.pth')
+
+    # Test the exported model
+    new_model = vgg()
+    new_model.to(device)
+    new_model.load_state_dict(torch.load('pruned_vgg16.pth'))
+    test(new_model, device, test_loader)
 
 
 if __name__ == '__main__':
