@@ -170,12 +170,30 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
+        weight is the target weight tensor of a layer
         config is the selected dict object in config_list for this layer
         kwargs contains op, op_types, and op_name
         design your quantizer and return new weight
         """
         return new_weight
+    
+    def quantize_output(self, output, config, **kwargs):
+        """
+        output is the target output tensor of a layer
+        config is the selected dict object in config_list for this layer
+        kwargs contains op, op_types, and op_name
+        design your quantizer and return new output
+        """
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        input is the target input tensor of a layer
+        config is the selected dict object in config_list for this layer
+        kwargs contains op, op_types, and op_name
+        design your quantizer and return new input
+        """
+        return new_input
 
     # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
@@ -189,8 +207,6 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
-
-__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### Usage of user customized compression algorithm
 
