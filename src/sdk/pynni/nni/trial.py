@@ -82,7 +82,7 @@ def report_intermediate_result(metric):
         'type': 'PERIODICAL',
         'sequence': _intermediate_seq,
         'value': metric
-    })
+    }, allow_nan=True)
     _intermediate_seq += 1
     platform.send_metric(metric)
 
@@ -98,5 +98,5 @@ def report_final_result(metric):
         'type': 'FINAL',
         'sequence': 0,
         'value': metric
-    })
+    }, allow_nan=True)
     platform.send_metric(metric)

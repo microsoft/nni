@@ -52,7 +52,7 @@ def request_next_parameter():
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
         'parameter_index': _param_index
-    })
+    }, allow_nan=True)
     send_metric(metric)
 
 def get_next_parameter():
