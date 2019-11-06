@@ -49,9 +49,9 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list)
-        self.modules_to_compress = self.detect_modules_to_compress()
         self.steps = 0
-        for layer, config in self.get_modules_to_compress():
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
