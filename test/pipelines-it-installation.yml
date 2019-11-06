@@ -18,26 +18,6 @@ jobs:
       ~/.local/bin/nnictl create --config config.yml
     displayName: 'mnist test'
 
-- job: 'dev_install_ubuntu_python36'
-  pool:
-    vmImage: 'ubuntu-18.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
-
-  steps:
-  - script: |
-      python3 -V
-      python3 -m pip install --upgrade pip setuptools --user
-      make dev-install
-    displayName: 'make dev install'
-  - script: |
-      cd examples/trials/mnist
-      ~/.local/bin/nnictl create --config config.yml
-    displayName: 'mnist test'
-
-
 - job: 'pip_install_macOS_python36'
   pool:
     vmImage: 'macOS-10.13'
