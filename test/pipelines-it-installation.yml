@@ -18,7 +18,6 @@ jobs:
       ~/.local/bin/nnictl create --config config.yml
     displayName: 'mnist test'
 
-jobs:
 - job: 'dev_install_ubuntu_python36'
   pool:
     vmImage: 'ubuntu-18.04'
