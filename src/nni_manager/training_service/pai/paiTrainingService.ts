@@ -208,7 +208,7 @@ class PAITrainingService implements TrainingService {
 
         const stopJobRequest: request.Options = {
             uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
-/jobs/${trialJobDetail.paiJobName}/executionType`,
+/jobs/${trialJobDetail.paiJobName}/executionType`, 
             method: 'PUT',
             json: true,
             body: {value: 'STOP'},
