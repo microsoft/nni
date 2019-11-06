@@ -32,8 +32,30 @@ class Compressor:
         """
         self.bound_model = model
         self.config_list = config_list
-        self.modules_to_compress = []
+        self.modules_to_compress = None
 
+    def detect_modules_to_compress(self):
+        """
+        detect all modules should be compressed, and save the result in `self.modules_to_compress`.
+
+        The model will be instrumented and user should never edit it after calling this method.
+        """
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for op in self.bound_model.get_operations():
+                weight_index = _detect_weight_index(op)
+                if weight_index is None:
+                    _logger.warning('Failed to detect weight for layer %s', op.name)
+                    return
+                weight_op = op.inputs[weight_index].op
+                weight = weight_op.inputs[0]
+
+                layer = LayerInfo(op, weight, weight_op)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
+    
     def compress(self):
         """
         Compress the model with algorithm implemented by subclass.
@@ -41,19 +63,9 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
-        for op in self.bound_model.get_operations():
-            weight_index = _detect_weight_index(op)
-            if weight_index is None:
-                _logger.warning('Failed to detect weight for layer %s', op.name)
-                return
-            weight_op = op.inputs[weight_index].op
-            weight = weight_op.inputs[0]
-
-            layer = LayerInfo(op, weight, weight_op)
-            config = self.select_config(layer)
-            if config is not None:
-                self._instrument_layer(layer, config)
-                self.modules_to_compress.append((layer, config))
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
+            self._instrument_layer(layer, config)
         return self.bound_model
 
     def get_modules_to_compress(self):
