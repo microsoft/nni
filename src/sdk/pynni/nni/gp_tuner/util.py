@@ -167,7 +167,7 @@ class UtilityFunction():
 
         Returns
         -------
-        function 
+        function
             return corresponding function, return None if parameter is illegal
         """
         if self._kind == 'ucb':
