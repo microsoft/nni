@@ -107,7 +107,8 @@ export namespace ValidationSchemas {
             }),
             pai_config: joi.object({
                 userName: joi.string().min(1).required(),
-                passWord: joi.string().min(1).required(),
+                passWord: joi.string().min(1),
+                token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
             kubeflow_config: joi.object({
