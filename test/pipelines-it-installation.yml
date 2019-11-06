@@ -28,6 +28,8 @@ jobs:
 
   steps:
   - script: |
+      python3 -V
+      python3 -m pip install --upgrade pip setuptools --user
       make dev-install
     displayName: 'make dev install'
   - script: |
