@@ -249,7 +249,7 @@ class TargetSpace():
 
         Returns
         -------
-        params: numpy array
+        numpy array
             one groupe of parameter
         """
         params = np.empty(self.dim)
@@ -281,7 +281,7 @@ class TargetSpace():
 
         Returns
         -------
-        res: dict
+        dict
             target value and parameters, empty dict if nothing registered
         """
         try:

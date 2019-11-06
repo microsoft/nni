@@ -167,7 +167,8 @@ class UtilityFunction():
 
         Returns
         -------
-        result: float
+        function 
+            return corresponding function, return None if parameter is illegal
         """
         if self._kind == 'ucb':
             return self._ucb(x, gp, self._kappa)

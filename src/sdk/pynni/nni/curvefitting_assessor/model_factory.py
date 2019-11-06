@@ -127,7 +127,7 @@ class CurveModel:
 
         Returns
         -------
-        int :
+        int
             The expected matrix at pos
         """
         if model_para_num[model] == 2:
