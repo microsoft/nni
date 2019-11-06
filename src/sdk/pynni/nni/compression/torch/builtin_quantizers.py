@@ -71,9 +71,6 @@ class QAT_Quantizer(Quantizer):
         # TODO: use EMA to check activation range instead
         return torch.min(tensor), torch.max(tensor)
 
-    # def EMA_range_check(self, op, tensor):
-    #     return torch.min(tensor), torch.max(tensor)
-
     def update_quantization_param(self, bits, op, rmin, rmax):
         """
         update the `zero_point` and `scale` of op.
@@ -131,7 +128,7 @@ class QAT_Quantizer(Quantizer):
             real value to be quantized
         Returns
         -------
-        quantized_val : float
+        float
         """
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
@@ -155,7 +152,7 @@ class QAT_Quantizer(Quantizer):
 
         Returns
         -------
-        real_val : float
+        float
         """
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val

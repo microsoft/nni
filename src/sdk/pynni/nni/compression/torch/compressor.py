@@ -73,7 +73,7 @@ class Compressor:
 
         Returns
         -------
-        self.modules_to_compress : list
+        list
             a list of the layers, each of which is a tuple (`layer`, `config`),
             `layer` is `LayerInfo`, `config` is a `dict`
         """
@@ -90,7 +90,7 @@ class Compressor:
 
         Returns
         -------
-        ret : config or None
+        config or None
             the retrieved configuration for this layer, if None, this layer should
             not be compressed
         """
