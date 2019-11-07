@@ -75,7 +75,7 @@ def outlierDetection_threaded(samples_x, samples_y_aggregation):
         if threads_result is not None:
             outliers.append(threads_result)
         else:
-            sys.stderr.write("Error: threads_result is None.")
+            print("Error: threads_result is None.")
 
     outliers = outliers if outliers else None
     return outliers
