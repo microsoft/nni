@@ -101,7 +101,7 @@
 
 已知的局限：
 
-* 注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
+* GP Tuner 和 Metis Tuner 的搜索空间只支持**数值**，（`choice` 类型在其它 Tuner 中可以使用非数值，如：字符串等）。 GP Tuner 和 Metis Tuner 都使用了高斯过程的回归（Gaussian Process Regressor, GPR）。 GPR 基于计算不同点距离的和函数来进行预测，其无法计算非数值值的距离。
 
 * 请注意，对于嵌套搜索空间：
   

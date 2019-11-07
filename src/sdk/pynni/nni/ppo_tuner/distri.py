@@ -143,14 +143,14 @@ class CategoricalPd(Pd):
             re_masked_res = tf.reshape(masked_res, [-1, self.size])
 
             u = tf.random_uniform(tf.shape(re_masked_res), dtype=self.logits.dtype)
-            return tf.argmax(re_masked_res - tf.log(-tf.log(u)), axis=-1)
+            return tf.argmax(re_masked_res - tf.log(-1*tf.log(u)), axis=-1)
         else:
             u = tf.random_uniform(tf.shape(self.logits), dtype=self.logits.dtype)
-            return tf.argmax(self.logits - tf.log(-tf.log(u)), axis=-1)
+            return tf.argmax(self.logits - tf.log(-1*tf.log(u)), axis=-1)
 
     @classmethod
     def fromflat(cls, flat):
-        return cls(flat)
+        return cls(flat) # pylint: disable=no-value-for-parameter
 
 class CategoricalPdType(PdType):
     """

@@ -110,6 +110,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
+    model.to(device)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
 
@@ -120,6 +121,7 @@ def main():
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
+    pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28])
 
 
 if __name__ == '__main__':

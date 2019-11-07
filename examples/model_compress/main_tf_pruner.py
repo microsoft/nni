@@ -93,15 +93,13 @@ def main():
         'frequency': 1,
         'op_types': ['default']
     }]
-    pruner = AGP_Pruner(configure_list)
+    pruner = AGP_Pruner(tf.get_default_graph(), configure_list)
     # if you want to load from yaml file
     # configure_file = nni.compressors.tf_compressor._nnimc_tf._tf_default_load_configure_file('configure_example.yaml','AGPruner')
     # configure_list = configure_file.get('config',[])
     # pruner.load_configure(configure_list)
     # you can also handle it yourself and input an configure list in json
-    pruner(tf.get_default_graph())
-    # you can also use compress(model) or compress_default_graph() for tensorflow compressor
-    # pruner.compress(tf.get_default_graph())
+    pruner.compress()
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
