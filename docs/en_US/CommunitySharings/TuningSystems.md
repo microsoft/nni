@@ -3,7 +3,7 @@
 As computer systems and networking get increasingly complicated, optimizing them manually with explicit rules and heuristics becomes harder than ever before, sometimes impossible. Below are two examples of tuning systems with NNI. Anyone can easily tune their own systems by following them.
 
 * [Tuning RocksDB with NNI](../TrialExample/RocksdbExamples.md)
-* [Tuning parameters of SPTAG (Space Partition Tree And Graph) with NNI](https://github.com/microsoft/SPTAG/blob/master/docs/Parameters.md)
+* [Tuning parameters of SPTAG (Space Partition Tree And Graph) with NNI](SptagAutoTune.md)
 
 Please see [this paper](https://dl.acm.org/citation.cfm?id=3352031) for more details:
 
