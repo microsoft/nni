@@ -105,20 +105,20 @@ Token 认证的 `paiConfig` 配置如下：
       host: 10.1.1.1
     
 
-Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
+完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
     nnictl create --config exp_pai.yml
     
 
-to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see jobs created by NNI in the OpenPAI cluster's web portal, like: ![](../../img/nni_pai_joblist.jpg)
+来在 pai 模式下启动 Experiment。 NNI 会为每个 Trial 创建 OpenPAI 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](../../img/nni_pai_joblist.jpg)
 
-Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
+注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的 Trial 作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
-Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
+当一个 Trial 作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看 Trial 的信息。
 
-Expand a trial information in trial list view, click the logPath link like: ![](../../img/nni_webui_joblist.jpg)
+在 Trial 列表页面中展开 Trial 信息，点击如下的 logPath： ![](../../img/nni_webui_joblist.jpg)
 
-And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS: ![](../../img/nni_trial_hdfs_output.jpg)
+接着将会打开 HDFS 的 WEB 界面，并浏览到 Trial 的输出文件： ![](../../img/nni_trial_hdfs_output.jpg)
 
 在输出目录中可以看到三个文件：stderr, stdout, 以及 trial.log
 
