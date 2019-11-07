@@ -265,11 +265,15 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-    'paiConfig':{
+    'paiConfig': Or({
         'userName': setType('userName', str),
         'passWord': setType('passWord', str),
         'host': setType('host', str)
-    }
+    }, {
+        'userName': setType('userName', str),
+        'token': setType('token', str),
+        'host': setType('host', str)
+    })
 }
 
 kubeflow_trial_schema = {
