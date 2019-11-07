@@ -182,7 +182,8 @@ class AGP_Pruner(Pruner):
         return target_sparsity
 
     def update_epoch(self, epoch):
-        """Update epoch
+        """
+        Update epoch
 
         Parameters
         ----------
@@ -213,7 +214,8 @@ class FilterPruner(Pruner):
     """
 
     def __init__(self, model, config_list):
-        """Initiate `FilterPruner` from `config_list`
+        """
+        Initiate `FilterPruner` from `config_list`
         config_list: supported keys:
             - sparsity
 
@@ -282,7 +284,8 @@ class SlimPruner(Pruner):
     """
 
     def __init__(self, model, config_list):
-        """Initiate `FilterPruner` from `config_list`
+        """
+        Initiate `FilterPruner` from `config_list`
         config_list: supported keys:
             - sparsity
 
