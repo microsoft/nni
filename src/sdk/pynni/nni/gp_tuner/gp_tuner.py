@@ -48,7 +48,7 @@ class GPTuner(Tuner):
     optimize_mode : str
         optimize mode, 'maximize' or 'minimize', by default 'maximize'
     utility : str
-        utility function(also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
+        utility function (also called 'acquisition funcition') to use, which can be 'ei', 'ucb' or 'poi'. By default 'ei'.
     kappa : float
         value used by utility function 'ucb'. The bigger kappa is, the more the tuner will be exploratory. By default 5.
     xi : float

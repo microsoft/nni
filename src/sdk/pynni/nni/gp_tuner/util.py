@@ -181,7 +181,7 @@ class UtilityFunction():
     @staticmethod
     def _ucb(x, gp, kappa):
         """
-        Upper Confidence Bound(UCB) utility function
+        Upper Confidence Bound (UCB) utility function
 
         Parameters
         ----------
@@ -203,7 +203,7 @@ class UtilityFunction():
     @staticmethod
     def _ei(x, gp, y_max, xi):
         """
-        Expected Improvement(EI) utility function
+        Expected Improvement (EI) utility function
 
         Parameters
         ----------
@@ -228,7 +228,7 @@ class UtilityFunction():
     @staticmethod
     def _poi(x, gp, y_max, xi):
         """
-        Possibility Of Improvement(POI) utility function
+        Possibility Of Improvement (POI) utility function
 
         Parameters
         ----------
