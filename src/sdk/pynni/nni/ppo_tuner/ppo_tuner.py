@@ -175,22 +175,22 @@ class PPOModel:
         Parameters
         ----------
         num: int
-            the number of trials to generate
+            The number of trials to generate
 
         Returns
         -------
-        mb_obs
-            observation of the ``num`` configurations
-        mb_actions
-            actions of the ``num`` configurations
-        mb_values
-            values from the value function of the ``num`` configurations
-        mb_neglogpacs
+        mb_obs : list
+            Observation of the ``num`` configurations
+        mb_actions : list
+            Actions of the ``num`` configurations
+        mb_values : list
+            Values from the value function of the ``num`` configurations
+        mb_neglogpacs : list
             ``neglogp`` of the ``num`` configurations
-        mb_dones
-            to show whether the play is done, always ``True``
-        last_values
-            the last values of the ``num`` configurations
+        mb_dones : list
+            To show whether the play is done, always ``True``
+        last_values : tensorflow tensor
+            The last values of the ``num`` configurations, got with session run
         """
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_actions, mb_values, mb_dones, mb_neglogpacs = [], [], [], [], []
@@ -237,10 +237,10 @@ class PPOModel:
 
         Parameters
         ----------
-        trials_info
-            info of the generated trials
-        trials_result
-            final results (e.g., acc) of the generated trials
+        trials_info : TrialsInfo
+            Info of the generated trials
+        trials_result : list
+            Final results (e.g., acc) of the generated trials
         """
         mb_rewards = np.asarray([trials_result for _ in trials_info.actions], dtype=np.float32)
         # discount/bootstrap off value fn
@@ -268,10 +268,10 @@ class PPOModel:
 
         Parameters
         ----------
-        trials_info
-            complete info of the generated trials from the previous inference
-        nenvs
-            the batch size of the (previous) inference
+        trials_info : TrialsInfo
+            Complete info of the generated trials from the previous inference
+        nenvs : int
+            The batch size of the (previous) inference
         """
         # keep frac decay for future optimization
         if self.cur_update <= self.nupdates:
@@ -317,28 +317,28 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        optimize_mode
+        optimize_mode : str
             maximize or minimize
-        trials_per_update
-            number of trials to have for each model update
-        epochs_per_update
-            number of epochs to run for each model update
-        minibatch_size
-            minibatch size (number of trials) for the update
-        ent_coef
-            policy entropy coefficient in the optimization objective
-        lr
-            learning rate of the model (lstm network), constant
-        vf_coef
-            value function loss coefficient in the optimization objective
-        max_grad_norm
-            gradient norm clipping coefficient
-        gamma
-            discounting factor
-        lam
-            advantage estimation discounting factor (lambda in the paper)
-        cliprange
-            cliprange in the PPO algorithm, constant
+        trials_per_update : int
+            Number of trials to have for each model update
+        epochs_per_update : int
+            Number of epochs to run for each model update
+        minibatch_size : int
+            Minibatch size (number of trials) for the update
+        ent_coef : float
+            Policy entropy coefficient in the optimization objective
+        lr : float
+            Learning rate of the model (lstm network), constant
+        vf_coef : float
+            Value function loss coefficient in the optimization objective
+        max_grad_norm : float
+            Gradient norm clipping coefficient
+        gamma : float
+            Discounting factor
+        lam : float
+            Advantage estimation discounting factor (lambda in the paper)
+        cliprange : float
+            Cliprange in the PPO algorithm, constant
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
@@ -374,17 +374,17 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        block_name
-            the name of the mutable block
-        block_space
-            search space of this mutable block
+        block_name : str
+            The name of the mutable block
+        block_space : dict
+            Search space of this mutable block
 
         Returns
         -------
-        actions_spaces
-            list of the space of each action
-        actions_to_config
-            the mapping from action to generated configuration
+        actions_spaces : list
+            List of the space of each action
+        actions_to_config : list
+            The mapping from action to generated configuration
         """
         actions_spaces = []
         actions_to_config = []
@@ -483,8 +483,8 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        search_space: dict
-            search space for NAS
+        search_space : dict
+            Search space for NAS
             the format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         logger.info('=== update search space %s', search_space)
@@ -531,16 +531,16 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        parameter_id_list: list of int
+        parameter_id_list : list of int
             Unique identifiers for each set of requested hyper-parameters.
             These will later be used in :meth:`receive_trial_result`.
         **kwargs
-            not used
+            Not used
 
         Returns
         -------
         list
-            a list of newly generated configurations
+            A list of newly generated configurations
         """
         result = []
         self.send_trial_callback = kwargs['st_callback']
@@ -559,15 +559,15 @@ class PPOTuner(Tuner):
         """
         Generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
 
-        parameter_id: int
-            unique identifier for requested hyper-parameters. This will later be used in :meth:`receive_trial_result`.
+        parameter_id : int
+            Unique identifier for requested hyper-parameters. This will later be used in :meth:`receive_trial_result`.
         **kwargs
-            not used
+            Not used
 
         Returns
         -------
-        new_config: dict
-            one newly generated configuration
+        dict
+            One newly generated configuration
         """
         if self.first_inf:
             self.trials_result = [None for _ in range(self.inf_batch_size)]
@@ -619,11 +619,11 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        parameter_id: int
+        parameter_id : int
             Unique identifier of used hyper-parameters, same with :meth:`generate_parameters`.
-        parameters
+        parameters : dict
             Hyper-parameters generated by :meth:`generate_parameters`.
-        value
+        value : dict
             Result from trial (the return value of :func:`nni.report_final_result`).
         """
         trial_info_idx = self.running_trials.pop(parameter_id, None)
@@ -651,7 +651,7 @@ class PPOTuner(Tuner):
         success : bool
             True if the trial successfully completed; False if failed or terminated.
         **kwargs
-            not used
+            Not used
         """
         if not success:
             if parameter_id not in self.running_trials:
@@ -673,7 +673,7 @@ class PPOTuner(Tuner):
 
         Parameters
         ----------
-        data
-            a list of dictionarys, each of which has at least two keys, ``parameter`` and ``value``
+        data : list
+            A list of dictionarys, each of which has at least two keys, ``parameter`` and ``value``
         """
         logger.warning('PPOTuner cannot leverage imported data.')

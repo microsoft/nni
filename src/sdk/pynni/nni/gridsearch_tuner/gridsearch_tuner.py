@@ -61,7 +61,7 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        ss_spec: dict or list
+        ss_spec : dict or list
             Hyperparameter space or the ``_value`` of a hyperparameter
 
         Returns
@@ -125,7 +125,7 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        para: dict
+        para : dict
             {key1: [v11, v12, ...], key2: [v21, v22, ...], ...}
 
         Returns
@@ -153,7 +153,7 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        search_space: dict
+        search_space : dict
             The format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         self.expanded_search_space = self._json2parameter(search_space)
@@ -164,7 +164,7 @@ class GridSearchTuner(Tuner):
 
         Parameters
         ----------
-        parameter_id: int
+        parameter_id : int
             The id for the generated hyperparameter
         **kwargs
             Not used

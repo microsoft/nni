@@ -36,18 +36,18 @@ class PolicyWithValue:
         """
         Parameters
         ----------
-        env
+        env : obj
             RL environment
-        observations
-            tensorflow placeholder in which the observations will be fed
-        latent
-            latent state from which policy distribution parameters should be inferred
-        vf_latent
-            latent state from which value function should be inferred (if None, then latent is used)
-        sess
-            tensorflow session to run calculations in (if None, default session is used)
+        observations : tensorflow placeholder
+            Tensorflow placeholder in which the observations will be fed
+        latent : tensor
+            Latent state from which policy distribution parameters should be inferred
+        vf_latent : tensor
+            Latent state from which value function should be inferred (if None, then latent is used)
+        sess : tensorflow session
+            Tensorflow session to run calculations in (if None, default session is used)
         **tensors
-            tensorflow tensors for additional attributes such as state or mask
+            Tensorflow tensors for additional attributes such as state or mask
         """
 
         self.X = observations
@@ -146,10 +146,10 @@ class PolicyWithValue:
 
         Parameters
         ----------
-        observation
-            observation data (either single or a batch)
+        observation : np array
+            Observation data (either single or a batch)
         **extra_feed
-            additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+            Additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
         Returns
         -------
@@ -167,14 +167,14 @@ class PolicyWithValue:
 
         Parameters
         ----------
-        observation
-            observation data (either single or a batch)
+        observation : np array
+            Observation data (either single or a batch)
         **extra_feed
-            additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+            Additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
         Returns
         -------
-        value estimate
+        Value estimate
         """
         return self._evaluate(self.vf, ob, *args, **kwargs)
 
@@ -186,19 +186,19 @@ def build_lstm_policy(model_config, value_network=None, estimate_q=False, **poli
 
     Parameter
     ---------
-    model_config
-        configurations of the model
-    value_network
-        the network for value function
+    model_config : obj
+        Configurations of the model
+    value_network : obj
+        The network for value function
     estimate_q : bool
-        whether to estimate ``q``
+        Whether to estimate ``q``
     **policy_kwargs
-        the kwargs for policy network, i.e., lstm model
+        The kwargs for policy network, i.e., lstm model
 
     Returns
     -------
-    policy_fn : func
-        the policy network
+    func
+        The policy network
     """
     policy_network = lstm_model(**policy_kwargs)
 
