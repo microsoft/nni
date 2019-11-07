@@ -108,40 +108,42 @@ class AGP_Pruner(Pruner):
                 self.if_init_list[k] = True
 
 class FPGMPruner(Pruner):
-    """A filter pruner via geometric median.
-    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration", 
+    """
+    A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
 
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
         config_list: supported keys:
             - pruning_rate: percentage of convolutional filters to be pruned.
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
 
-    def calc_mask(self, weight, config, op, op_type, op_name, **kwargs):
-        """supports Conv1d, Conv2d
+    def calc_mask(self, layer, config):
+        """
+        Supports Conv1d, Conv2d
         filter dimensions for Conv1d:
-        IN: number of input channel
         OUT: number of output channel
+        IN: number of input channel
         LEN: filter length
 
         filter dimensions for Conv2d:
-        IN: number of input channel
         OUT: number of output channel
+        IN: number of input channel
         H: filter height
         W: filter width
         """
-
+        weight = layer.module.weight.data
         assert 0 <= config.get('pruning_rate') < 1
-        assert op_type in ['Conv1d', 'Conv2d']
-        assert op_type in config['op_types']
+        assert layer.type in ['Conv1d', 'Conv2d']
+        assert layer.type in config['op_types']
 
-        if op_name in self.epoch_pruned_layers:
-            assert op_name in self.mask_list
-            return self.mask_list.get(op_name)
+        if layer.name in self.epoch_pruned_layers:
+            assert layer.name in self.mask_list
+            return self.mask_list.get(layer.name)
 
         masks = torch.ones(weight.size())
 
@@ -154,8 +156,8 @@ class FPGMPruner(Pruner):
             for idx in min_gm_idx:
                 masks[idx] = 0.
         finally:
-            self.mask_list.update({op_name: masks})
-            self.epoch_pruned_layers.add(op_name)
+            self.mask_list.update({layer.name: masks})
+            self.epoch_pruned_layers.add(layer.name)
 
         return masks
 
@@ -163,15 +165,16 @@ class FPGMPruner(Pruner):
         assert len(weight.size()) in [3, 4]
 
         dist_list = []
-        for in_i in range(weight.size(0)):
-            for out_i in range(weight.size(1)):
-                dist_sum = self._get_distance_sum(weight, in_i, out_i)
-                dist_list.append((dist_sum, (in_i, out_i)))
+        for out_i in range(weight.size(0)):
+            for in_i in range(weight.size(1)):
+                dist_sum = self._get_distance_sum(weight, out_i, in_i)
+                dist_list.append((dist_sum, (out_i, in_i)))
         min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
         return [x[1] for x in min_gm_kernels]
 
     def _get_distance_sum(self, weight, in_idx, out_idx):
-        """ Optimized verision of following naive implementation:
+        """
+        Optimized verision of following naive implementation:
         def _get_distance_sum(self, weight, in_idx, out_idx):
             w = weight.view(-1, weight.size(-2), weight.size(-1))
             dist_sum = 0.
@@ -188,7 +191,7 @@ class FPGMPruner(Pruner):
         else:
             raise RuntimeError('unsupported layer type')
         x = w - anchor_w
-        x = (x*x).sum((-2,-1))
+        x = (x*x).sum((-2, -1))
         x = torch.sqrt(x)
         return x.sum()
 
