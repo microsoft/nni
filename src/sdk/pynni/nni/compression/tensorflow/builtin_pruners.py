@@ -148,7 +148,7 @@ class FPGMPruner(Pruner):
         assert op_type in ['Conv1D', 'Conv2D']
 
         if op_type == config['op_type']:
-            weight = tf.stop_gradient(tf.transpose(weight, [2,3,0,1]))  
+            weight = tf.stop_gradient(tf.transpose(weight, [2, 3, 0, 1]))
             masks = tf.Variable(tf.ones_like(weight))
 
             num_kernels = weight.shape[0].value * weight.shape[1].value
@@ -158,7 +158,7 @@ class FPGMPruner(Pruner):
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             tf.scatter_nd_update(masks, min_gm_idx, tf.zeros((min_gm_idx.shape[0].value, weight.shape[-2].value, weight.shape[-1].value)))
-            masks = tf.transpose(masks, [2,3,0,1])
+            masks = tf.transpose(masks, [2, 3, 0, 1])
             self.assign_handler.append(tf.assign(weight, weight*masks))
             self.mask_list.update({op_name: masks})
         else:
@@ -179,7 +179,7 @@ class FPGMPruner(Pruner):
                 idx_list.append([in_i, out_i])
         dist_tensor = tf.convert_to_tensor(dist_list)
         idx_tensor = tf.constant(idx_list)
-        
+
         _, idx = tf.math.top_k(dist_tensor, k=n)
         return tf.gather(idx_tensor, idx)
 

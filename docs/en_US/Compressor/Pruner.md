@@ -92,3 +92,50 @@ You can view example for more information
 
 ***
 
+## FPGM Pruner
+FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+
+Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+
+### Usage
+You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
+
+First, you should import pruner and add mask to model.
+
+Tensorflow code
+```python
+from nni.compression.tensorflow import FPGMPruner
+config_list = [{
+    'pruning_rate': 0.5,
+    'op_types': ['Conv2D']
+}]
+pruner = FPGMPruner(tf.get_default_graph(), config_list)
+pruner.compress()
+```
+PyTorch code
+```python
+from nni.compression.torch import FPGMPruner
+config_list = [{
+    'pruning_rate': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = FPGMPruner(model, config_list)
+pruner.compress()
+```
+
+Second, you should add code below to update epoch number when you finish one epoch in your training code.
+
+Tensorflow code
+```python
+pruner.update_epoch(epoch, sess)
+```
+PyTorch code
+```python
+pruner.update_epoch(epoch)
+```
+You can view example for more information
+
+#### User configuration for FPGM Pruner
+* **pruning_rate:** How much percentage of convolutional filters are to be pruned.
+
+***
