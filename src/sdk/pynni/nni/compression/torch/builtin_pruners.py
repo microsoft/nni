@@ -116,8 +116,13 @@ class FPGMPruner(Pruner):
 
     def __init__(self, model, config_list):
         """
-        config_list: supported keys:
-            - pruning_rate: percentage of convolutional filters to be pruned.
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - pruning_rate: percentage of convolutional filters to be pruned.
         """
         super().__init__(model, config_list)
         self.mask_list = {}
@@ -135,6 +140,13 @@ class FPGMPruner(Pruner):
         IN: number of input channel
         H: filter height
         W: filter width
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
         """
         weight = layer.module.weight.data
         assert 0 <= config.get('pruning_rate') < 1
@@ -172,7 +184,7 @@ class FPGMPruner(Pruner):
         min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
         return [x[1] for x in min_gm_kernels]
 
-    def _get_distance_sum(self, weight, in_idx, out_idx):
+    def _get_distance_sum(self, weight, out_idx, in_idx):
         """
         Optimized verision of following naive implementation:
         def _get_distance_sum(self, weight, in_idx, out_idx):
@@ -182,12 +194,13 @@ class FPGMPruner(Pruner):
                 dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
             return dist_sum
         """
+        logger.debug('weight size: %s', weight.size())
         if len(weight.size()) == 4: # Conv2d
             w = weight.view(-1, weight.size(-2), weight.size(-1))
-            anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
         elif len(weight.size()) == 3: # Conv1d
             w = weight.view(-1, weight.size(-1))
-            anchor_w = weight[in_idx, out_idx].unsqueeze(0).expand(w.size(0), w.size(1))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1))
         else:
             raise RuntimeError('unsupported layer type')
         x = w - anchor_w
