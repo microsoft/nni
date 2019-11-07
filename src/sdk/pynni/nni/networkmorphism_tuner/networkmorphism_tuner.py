@@ -208,11 +208,11 @@ class NetworkMorphismTuner(Tuner):
         """
         Generate the next neural architecture.
 
-        Return
-        ------
-        other_info: any object
+        Returns
+        -------
+        other_info : any object
             Anything to be saved in the training queue together with the architecture.
-        generated_graph: Graph
+        generated_graph : Graph
             An instance of Graph.
         """
         generated_graph, new_father_id = self.bo.generate(self.descriptors)
@@ -252,8 +252,8 @@ class NetworkMorphismTuner(Tuner):
         graph : dict
         model_id : int
 
-        Return
-        ------
+        Returns
+        -------
         model : dict
         """
         if self.verbose:
@@ -289,8 +289,8 @@ class NetworkMorphismTuner(Tuner):
         model_id : int
             model index
 
-        Return
-        ------
+        Returns
+        -------
         load_model : Graph
             the model graph representation
         """
@@ -305,8 +305,8 @@ class NetworkMorphismTuner(Tuner):
         """
         Get the best model by model id
 
-        Return
-        ------
+        Returns
+        -------
         load_model : Graph
             the model graph representation
         """
@@ -321,8 +321,8 @@ class NetworkMorphismTuner(Tuner):
         model_id : int
             model index
 
-        Return
-        ------
+        Returns
+        -------
         float
              the model metric
         """

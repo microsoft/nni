@@ -61,8 +61,8 @@ class BatchTuner(Tuner):
         ----------
         search_space : dict
 
-        Return
-        ------
+        Returns
+        -------
         None or list
             If valid, return candidate values; else return None.
         """
@@ -98,8 +98,8 @@ class BatchTuner(Tuner):
         ----------
         parameter_id : int
 
-        Return
-        ------
+        Returns
+        -------
         dict
             A candidate parameter group.
         """

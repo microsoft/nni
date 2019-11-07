@@ -232,7 +232,7 @@ class EvolutionTuner(Tuner):
 
         Returns
         -------
-        config : dict
+        dict
             A group of candaidte parameters that evolution tuner generated.
         """
         if not self.population:
