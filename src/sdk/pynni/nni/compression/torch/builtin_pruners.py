@@ -186,6 +186,8 @@ class FPGMPruner(Pruner):
 
     def _get_distance_sum(self, weight, out_idx, in_idx):
         """
+        Calculate the total distance between a specified filter (by out_idex and in_idx) and
+        all other filters.
         Optimized verision of following naive implementation:
         def _get_distance_sum(self, weight, in_idx, out_idx):
             w = weight.view(-1, weight.size(-2), weight.size(-1))
@@ -193,6 +195,21 @@ class FPGMPruner(Pruner):
             for k in w:
                 dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
             return dist_sum
+
+        Parameters
+        ----------
+        weight: Tensor
+            convolutional filter weight
+        out_idx: int
+            output channel index of specified filter, this method calculates the total distance
+            between this specified filter and all other filters.
+        in_idx: int
+            input channel index of specified filter
+
+        Returns
+        -------
+        float32
+            The total distance
         """
         logger.debug('weight size: %s', weight.size())
         if len(weight.size()) == 4: # Conv2d
