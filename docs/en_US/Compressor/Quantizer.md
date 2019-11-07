@@ -8,11 +8,11 @@ We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it
 ### Usage
 tensorflow
 ```python
-nni.compressors.tensorflow.NaiveQuantizer()(model_graph)
+nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
 ```
 pytorch
 ```python
-nni.compressors.torch.NaiveQuantizer()(model)
+nni.compressors.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -32,15 +32,15 @@ Tensorflow code
 ```python
 from nni.compressors.tensorflow import QAT_Quantizer
 config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(tf.get_default_graph())
+quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
 ```
 PyTorch code
 ```python
 from nni.compressors.torch import QAT_Quantizer
 config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(model)
+quantizer = QAT_Quantizer(model, config_list)
+quantizer.compress()
 ```
 
 You can view example for more information
@@ -61,18 +61,18 @@ Tensorflow code
 ```python
 from nni.compressors.tensorflow import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(tf.get_default_graph())
+quantizer = DoReFaQuantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
 ```
 PyTorch code
 ```python
 from nni.compressors.torch import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(model)
+quantizer = DoReFaQuantizer(model, config_list)
+quantizer.compress()
 ```
 
 You can view example for more information
 
-#### User configuration for QAT Quantizer
+#### User configuration for DoReFa Quantizer
 * **q_bits:** This is to specify the q_bits operations to be quantized to

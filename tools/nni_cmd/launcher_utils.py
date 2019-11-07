@@ -20,11 +20,11 @@
 
 import os
 import json
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
-tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
-from schema import SchemaMissingKeyError, SchemaForbiddenKeyError, SchemaUnexpectedTypeError, SchemaWrongKeyError, SchemaError
-from .common_utils import get_json_content, print_error, print_warning, print_normal
-from schema import Schema, And, Use, Optional, Regex, Or
+from schema import SchemaError
+from schema import Schema
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
+                           FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
+from .common_utils import print_error, print_warning, print_normal
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -164,11 +164,11 @@ def validate_common_content(experiment_config):
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
-            'local': LOCAL_CONFIG_SCHEMA,
-            'remote': REMOTE_CONFIG_SCHEMA,
-            'pai': PAI_CONFIG_SCHEMA,
-            'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
-            'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+        'local': LOCAL_CONFIG_SCHEMA,
+        'remote': REMOTE_CONFIG_SCHEMA,
+        'pai': PAI_CONFIG_SCHEMA,
+        'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
+        'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
         }
     separate_schema_dict = {
         'tuner': tuner_schema_dict,

@@ -33,8 +33,7 @@ from logging import StreamHandler
 
 from queue import Queue
 
-from .rest_utils import rest_get, rest_post, rest_put, rest_delete
-from .constants import NNI_EXP_ID, NNI_TRIAL_JOB_ID, STDOUT_API
+from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
 
 @unique
@@ -73,7 +72,7 @@ class NNIRestLogHanlder(StreamHandler):
         log_entry['msg'] = self.format(record)
 
         try:
-            response = rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
+            rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()
@@ -112,7 +111,7 @@ class RemoteLogger(object):
             self.orig_stdout.flush()
             try:
                 self.logger.log(self.log_level, line.rstrip())
-            except Exception as e:
+            except Exception:
                 pass
 
 class PipeLogReader(threading.Thread):
@@ -147,15 +146,14 @@ class PipeLogReader(threading.Thread):
                     line = self.queue.get(True, 5)
                     try:
                         self.logger.log(self.log_level, line.rstrip())
-                    except Exception as e:
+                    except Exception:
                         pass
-                except Exception as e:
+                except Exception:
                     if cur_process_exit == True:
                         self._is_read_completed = True
                         break
 
-        self.pip_log_reader_thread = threading.Thread(target = _populateQueue,
-                args = (self.pipeReader, self.queue))
+        self.pip_log_reader_thread = threading.Thread(target=_populateQueue, args=(self.pipeReader, self.queue))
         self.pip_log_reader_thread.daemon = True
         self.start()
         self.pip_log_reader_thread.start()

@@ -18,18 +18,23 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
+import os.path as osp
 import subprocess
 import time
 import traceback
 import json
 import requests
 
-from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num
+from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num, print_failed_job_log
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
 
 def run_test():
     '''run metrics test'''
-    config_file = 'metrics_test/metrics.test.yml'
+    if sys.platform == 'win32':
+        config_file = osp.join('metrics_test', 'metrics_win32.test.yml')
+    else:
+        config_file = osp.join('metrics_test', 'metrics.test.yml')
 
     print('Testing %s...' % config_file)
     proc = subprocess.run(['nnictl', 'create', '--config', config_file])
@@ -44,6 +49,9 @@ def run_test():
         #print('experiment status:', status)
         if status == 'DONE':
             num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
+            print_failed_job_log('local', TRIAL_JOBS_URL)
+            if sys.platform == "win32":
+                time.sleep(sleep_interval)  # Windows seems to have some issues on updating in time
             assert num_succeeded == max_trial_num, 'only %d succeeded trial jobs, there should be %d' % (num_succeeded, max_trial_num)
             check_metrics()
             break
@@ -51,7 +59,7 @@ def run_test():
     assert status == 'DONE', 'Failed to finish in maxExecDuration'
 
 def check_metrics():
-    with open('metrics_test/expected_metrics.json', 'r') as f:
+    with open(osp.join('metrics_test', 'expected_metrics.json'), 'r') as f:
         expected_metrics = json.load(f)
     print(expected_metrics)
     metrics = requests.get(METRICS_URL).json()
