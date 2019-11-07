@@ -314,7 +314,6 @@ You can use these commands to get more information about the experiment
 * [实现 NNI 训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
 * [使用进化算法为阅读理解任务找到好模型](docs/zh_CN/TrialExample/SquadEvolutionExamples.md)
 * [高级神经网络架构搜索](docs/zh_CN/AdvancedFeature/AdvancedNas.md)
-* [为系统自动调参](docs/zh_CN/Tutorial/TuningSystems.md)
 
 ## **贡献**
 

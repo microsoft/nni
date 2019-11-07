@@ -327,7 +327,6 @@ Maybe you want to read:
 * [Implement TrainingService in NNI](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 * [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](docs/en_US/TrialExample/SquadEvolutionExamples.md)
 * [Advanced Neural Architecture Search](docs/en_US/AdvancedFeature/AdvancedNas.md)
-* [Automatically tune systems with NNI](docs/en_US/Tutorial/TuningSystems.md)
 
 
 ## **Contribute**
