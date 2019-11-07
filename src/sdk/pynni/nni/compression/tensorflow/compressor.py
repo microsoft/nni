@@ -6,12 +6,10 @@ _logger = logging.getLogger(__name__)
 
 
 class LayerInfo:
-    def __init__(self, op, weight, weight_op):
+    def __init__(self, op):
         self.op = op
         self.name = op.name
         self.type = op.type
-        self.weight = weight
-        self.weight_op = weight_op
 
 
 class Compressor:
@@ -43,14 +41,7 @@ class Compressor:
         if self.modules_to_compress is None:
             self.modules_to_compress = []
             for op in self.bound_model.get_operations():
-                weight_index = _detect_weight_index(op)
-                if weight_index is None:
-                    _logger.warning('Failed to detect weight for layer %s', op.name)
-                    return
-                weight_op = op.inputs[weight_index].op
-                weight = weight_op.inputs[0]
-
-                layer = LayerInfo(op, weight, weight_op)
+                layer = LayerInfo(op)
                 config = self.select_config(layer)
                 if config is not None:
                     self.modules_to_compress.append((layer, config))
@@ -196,11 +187,13 @@ class Quantizer(Compressor):
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
 
 
-def _detect_weight_index(layer):
-    index = default_layers.op_weight_index.get(layer.type)
+def _detect_weight_index(op):
+    index = default_layers.op_weight_index.get(op.type)
     if index is not None:
         return index
-    weight_indices = [i for i, op in enumerate(layer.inputs) if op.name.endswith('Variable/read')]
+    # TODO should use "Weight(_\d+)?/read:0$" ?
+    pattern = "Variable(_\d+)?/read:0$"
+    weight_indices = [i for i, op_input in enumerate(op.inputs) if re.search(pattern, op_input.name)]
     if len(weight_indices) == 1:
         return weight_indices[0]
     return None
