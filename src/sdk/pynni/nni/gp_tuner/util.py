@@ -33,9 +33,9 @@ def _match_val_type(vals, bounds):
 
     Parameters
     ----------
-    vals :numpy array
+    vals : numpy array
         values of parameters
-    bounds :numpy array
+    bounds : numpy array
         list of dictionary which stores parameters names and legal values.
 
     Returns
@@ -64,27 +64,27 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
     A function to find the maximum of the acquisition function
 
     It uses a combination of random sampling (cheap) and the 'L-BFGS-B'
-    optimization method. First by sampling `num_warmup` points at random,
-    and then running L-BFGS-B from `num_starting_points` random starting points.
+    optimization method. First by sampling ``num_warmup`` points at random,
+    and then running L-BFGS-B from ``num_starting_points`` random starting points.
 
     Parameters
     ----------
-    param f_acq : UtilityFunction.utility
+    f_acq : UtilityFunction.utility
         The acquisition function object that return its point-wise value.
 
-    param gp : GaussianProcessRegressor
+    gp : GaussianProcessRegressor
         A gaussian process fitted to the relevant data.
 
-    param y_max : float
+    y_max : float
         The current maximum known value of the target function.
 
-    param bounds : numpy array
+    bounds : numpy array
         The variables bounds to limit the search of the acq max.
 
-    param num_warmup : int
+    num_warmup : int
         number of times to randomly sample the aquisition function
 
-    param num_starting_points : int
+    num_starting_points : int
         number of times to run scipy.minimize
 
     Returns
@@ -159,10 +159,10 @@ class UtilityFunction():
 
         Parameters
         ----------
-        x: numpy array
+        x : numpy array
             parameters
-        gp: GaussianProcessRegressor
-        y_max: float
+        gp : GaussianProcessRegressor
+        y_max : float
             maximum target value observed so far
 
         Returns
