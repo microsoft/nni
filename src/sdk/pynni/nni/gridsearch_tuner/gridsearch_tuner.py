@@ -154,7 +154,7 @@ class GridSearchTuner(Tuner):
         Parameters
         ----------
         search_space : dict
-            The format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
+            The format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         self.expanded_search_space = self._json2parameter(search_space)
 

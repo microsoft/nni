@@ -485,7 +485,7 @@ class PPOTuner(Tuner):
         ----------
         search_space : dict
             Search space for NAS
-            the format could be referred to [search space spec](https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
+            the format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         logger.info('=== update search space %s', search_space)
         assert self.search_space is None
