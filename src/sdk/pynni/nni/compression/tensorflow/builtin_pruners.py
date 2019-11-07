@@ -105,16 +105,21 @@ class FPGMPruner(Pruner):
     https://arxiv.org/pdf/1811.00250.pdf
     """
 
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
-        config_list: supported keys:
-            - pruning_rate: percentage of convolutional filters to be pruned.
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - pruning_rate: percentage of convolutional filters to be pruned.
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self.assign_handler = []
 
-    def calc_mask(self, conv_kernel_weight, config, op, op_type, op_name, **kwargs):
+    def calc_mask(self, layer, config):
         """supports Conv1d, Conv2d, Conv3d
         filter dimensions for Conv1D:
         LEN: filter length
@@ -126,14 +131,24 @@ class FPGMPruner(Pruner):
         W: filter width
         IN: number of input channel
         OUT: number of output channel
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
+
         """
 
+        weight = layer.weight
+        op_type = layer.type
+        op_name = layer.name
         assert 0 <= config.get('pruning_rate') < 1
-        # TODO uncomment this
-        #assert op_type in ['Conv1D', 'Conv2D', 'Conv3D']
+        assert op_type in ['Conv1D', 'Conv2D']
 
         if op_type == config['op_type']:
-            weight = tf.stop_gradient(tf.transpose(conv_kernel_weight, [2,3,0,1]))          
+            weight = tf.stop_gradient(tf.transpose(weight, [2,3,0,1]))  
             masks = tf.Variable(tf.ones_like(weight))
 
             num_kernels = weight.shape[0].value * weight.shape[1].value
@@ -144,10 +159,10 @@ class FPGMPruner(Pruner):
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             tf.scatter_nd_update(masks, min_gm_idx, tf.zeros((min_gm_idx.shape[0].value, weight.shape[-2].value, weight.shape[-1].value)))
             masks = tf.transpose(masks, [2,3,0,1])
-            self.assign_handler.append(tf.assign(conv_kernel_weight, conv_kernel_weight*masks))
+            self.assign_handler.append(tf.assign(weight, weight*masks))
             self.mask_list.update({op_name: masks})
         else:
-            masks = tf.Variable(tf.ones_like(conv_kernel_weight))
+            masks = tf.Variable(tf.ones_like(weight))
             self.mask_list.update({op_name: masks})
 
         return masks

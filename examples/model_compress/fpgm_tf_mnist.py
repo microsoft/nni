@@ -82,20 +82,21 @@ def main():
 
     model = Mnist()
 
-    '''you can change this to LevelPruner to implement it
+    """
+    You can change this to LevelPruner to implement it
     pruner = LevelPruner(configure_list)
-    '''
+    """
     configure_list = [{
         'pruning_rate': 0.5,
         'op_types': ['Conv2D']
     }]
-    pruner = FPGMPruner(configure_list)
+    pruner = FPGMPruner(tf.get_default_graph(), configure_list)
+    pruner.compress()
     # if you want to load from yaml file
     # configure_file = nni.compressors.tf_compressor._nnimc_tf._tf_default_load_configure_file('configure_example.yaml','AGPruner')
     # configure_list = configure_file.get('config',[])
     # pruner.load_configure(configure_list)
     # you can also handle it yourself and input an configure list in json
-    pruner(tf.get_default_graph())
     # you can also use compress(model) or compress_default_graph() for tensorflow compressor
     # pruner.compress(tf.get_default_graph())
 
