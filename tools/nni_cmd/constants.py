@@ -21,7 +21,7 @@
 import os
 from colorama import Fore
 
-NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local',  'nnictl')
+NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local', 'nnictl')
 
 ERROR_INFO = 'ERROR: %s'
 
@@ -58,7 +58,8 @@ LOG_HEADER = '------------------------------------------------------------------
              '-----------------------------------------------------------------------\n'
 
 EXPERIMENT_START_FAILED_INFO = 'There is an experiment running in the port %d, please stop it first or set another port!\n' \
-                               'You could use \'nnictl stop --port [PORT]\' command to stop an experiment!\nOr you could use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
+                               'You could use \'nnictl stop --port [PORT]\' command to stop an experiment!\nOr you could ' \
+                               'use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
 
 EXPERIMENT_INFORMATION_FORMAT = '----------------------------------------------------------------------------------------\n' \
                      '                Experiment information\n' \

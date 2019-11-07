@@ -26,7 +26,7 @@ import traceback
 import json
 import requests
 
-from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num, print_stderr
+from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num, print_failed_job_log
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
 
 def run_test():
@@ -49,7 +49,7 @@ def run_test():
         #print('experiment status:', status)
         if status == 'DONE':
             num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
-            print_stderr(TRIAL_JOBS_URL)
+            print_failed_job_log('local', TRIAL_JOBS_URL)
             if sys.platform == "win32":
                 time.sleep(sleep_interval)  # Windows seems to have some issues on updating in time
             assert num_succeeded == max_trial_num, 'only %d succeeded trial jobs, there should be %d' % (num_succeeded, max_trial_num)
