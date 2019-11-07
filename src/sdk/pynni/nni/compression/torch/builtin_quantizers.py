@@ -64,9 +64,11 @@ class QAT_Quantizer(Quantizer):
         ----------
         tensor : Tensor
             the Tensor to be quantized
+
         Returns
         -------
-        (min, max) : (float, float)
+        min : float
+        max : float
         """
         # TODO: use EMA to check activation range instead
         return torch.min(tensor), torch.max(tensor)
@@ -126,6 +128,7 @@ class QAT_Quantizer(Quantizer):
             target module
         real_val : float
             real value to be quantized
+
         Returns
         -------
         float
@@ -145,7 +148,7 @@ class QAT_Quantizer(Quantizer):
 
         Parameters
         ----------
-        op : torch.nn.module
+        op : torch.nn.Module
             target module
         quantized_val : float
             quantized_val value to be dequantized
