@@ -8,5 +8,5 @@ class Trainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def finalize(self):
+    def export(self):
         raise NotImplementedError
