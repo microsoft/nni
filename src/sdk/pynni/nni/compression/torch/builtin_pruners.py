@@ -303,7 +303,7 @@ class SlimPruner(Pruner):
         op_types = config.get('op_types')
         op_names = config.get('op_names')
         if op_types is not None:
-            assert op_types == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+            assert op_types == ['BatchNorm2d'], 'SlimPruner only supports 2d batch normalization layer pruning'
             for name, m in model.named_modules():
                 if type(m).__name__ == 'BatchNorm2d':
                     weight_list.append(m.weight.data.clone())

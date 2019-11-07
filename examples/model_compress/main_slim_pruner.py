@@ -3,26 +3,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import FilterPruner
+from nni.compression.torch import SlimPruner
 
 
 class vgg(nn.Module):
     def __init__(self, init_weights=True):
         super(vgg, self).__init__()
-        cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512]
-        self.cfg = cfg
+        cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512]
         self.feature = self.make_layers(cfg, True)
         num_classes = 10
-        self.classifier = nn.Sequential(
-            nn.Linear(cfg[-1], 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(inplace=True),
-            nn.Linear(512, num_classes)
-        )
+        self.classifier = nn.Linear(cfg[-1], num_classes)
         if init_weights:
             self._initialize_weights()
 
-    def make_layers(self, cfg, batch_norm=True):
+    def make_layers(self, cfg, batch_norm=False):
         layers = []
         in_channels = 3
         for v in cfg:
@@ -59,7 +53,13 @@ class vgg(nn.Module):
                 m.bias.data.zero_()
 
 
-def train(model, device, train_loader, optimizer):
+def updateBN(model):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))  # L1
+
+
+def train(model, device, train_loader, optimizer, sparse_bn=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -67,6 +67,9 @@ def train(model, device, train_loader, optimizer):
         output = model(data)
         loss = F.cross_entropy(output, target)
         loss.backward()
+        # L1 regularization on BN layer
+        if sparse_bn:
+            updateBN(model)
         optimizer.step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
@@ -103,7 +106,7 @@ def main():
                              transforms.ToTensor(),
                              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
                          ])),
-        batch_size=256, shuffle=True)
+        batch_size=64, shuffle=True)
     test_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
@@ -114,40 +117,40 @@ def main():
     model = vgg()
     model.to(device)
 
-    # Train the base VGG-16 model
+    # Train the base VGG-19 model
+    # epochs = 160
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300, 0)
-    # for epoch in range(300):
-    #     train(model, device, train_loader, optimizer)
+    # for epoch in range(epochs):
+    #     if epoch in [epochs * 0.5, epochs * 0.75]:
+    #         for param_group in optimizer.param_groups:
+    #             param_group['lr'] *= 0.1
+    #     train(model, device, train_loader, optimizer, True)
     #     test(model, device, test_loader)
-    #     lr_scheduler.step(epoch)
-    # torch.save(model.state_dict(), 'vgg16_cifar10.pth')
+    # torch.save(model.state_dict(), 'vgg19_cifar10.pth')
 
-    # Pretrained model 'vgg16_cifar10.pth' can also be downloaded from
+    # Pretrained model 'vgg19_cifar10.pth' can also be downloaded from
     # https://drive.google.com/open?id=1eaIBg_hu4T0JTqIMpg_51dIWbAvvm5ya
 
-    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
 
     # Test base model accuracy
-    # top1 = 93.47%
+    # top1 = 93.93%
     test(model, device, test_loader)
 
-    # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
-    # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+    # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
     configure_list = [{
-        'sparsity': 0.5,
-        'op_types': ['default'],
-        'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+        'sparsity': 0.7,
+        'op_types': ['BatchNorm2d'],
     }]
 
     # Prune model and test accuracy without fine tuning.
-    # top1 = 47.22%
-    pruner = FilterPruner(model, configure_list)
+    # top1 = 93.91%
+    pruner = SlimPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
 
     # Fine tune the pruned model for 40 epochs and test accuracy
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.004, momentum=0.9, weight_decay=1e-4)
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
         pruner.update_epoch(epoch)
@@ -158,12 +161,12 @@ def main():
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
-            pruner.export_model(model_path='pruned_vgg16_cifar10.pth', mask_path='mask_vgg16_cifar10.pth')
+            pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
     # Test the exported model
     new_model = vgg()
     new_model.to(device)
-    new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
+    new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
     test(new_model, device, test_loader)
 
 
