@@ -102,12 +102,15 @@ class DartsTrainer(Trainer):
     def train(self):
         for epoch in range(self.num_epochs):
             # training
-            print("Epoch {} Training".format(epoch))
-            self.train_epoch(epoch)
+            # print("Epoch {} Training1".format(epoch))
+            # self.train_epoch(epoch)
 
             # validation
-            print("Epoch {} Validating".format(epoch))
-            self.validate_epoch(epoch)
+            # print("Epoch {} Validating2".format(epoch))
+            # self.validate_epoch(epoch)
+            if epoch == 0:
+                with open('log/parameters_%d.txt' % epoch, "w")  as f:
+                    f.write(str(self.model.parameters))
 
     def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):
         """

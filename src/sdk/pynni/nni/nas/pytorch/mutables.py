@@ -34,9 +34,6 @@ class Mutable(nn.Module):
     def forward(self, *inputs):
         raise NotImplementedError("Mutable forward must be implemented")
 
-    # def __repr__(self):
-    #     return "{} ({})".format(self.name, self.key)
-
     def similar(self, other):
         return self == other
 

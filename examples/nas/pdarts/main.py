@@ -1,12 +1,11 @@
 from argparse import ArgumentParser
 
+import datasets
 import torch
 import torch.nn as nn
-
-import datasets
-from nni.nas.pytorch.darts import DartsTrainer
-from nni.nas.pytorch.darts.cnn_network import CnnNetwork
-
+import nni.nas.pytorch as nas
+from nni.nas.pytorch.pdarts import PdartsTrainer
+from nni.nas.pytorch.darts import CnnNetwork
 
 def accuracy(output, target, topk=(1,)):
     """ Computes the precision@k for the specified values of k """
@@ -41,13 +40,16 @@ if __name__ == "__main__":
     model = CnnNetwork(3, 16, 10, args.layers, n_nodes=args.nodes)
     criterion = nn.CrossEntropyLoss()
 
-    optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
+    optim = torch.optim.SGD(model.parameters(), 0.025,
+                            momentum=0.9, weight_decay=3.0E-4)
     n_epochs = 50
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, n_epochs, eta_min=0.001)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optim, n_epochs, eta_min=0.001)
 
-    trainer = DartsTrainer(model,
+    trainer = PdartsTrainer(model,
                            loss=criterion,
-                           metrics=lambda output, target: accuracy(output, target, topk=(1,)),
+                           metrics=lambda output, target: accuracy(
+                               output, target, topk=(1,)),
                            model_optim=optim,
                            lr_scheduler=lr_scheduler,
                            num_epochs=50,
