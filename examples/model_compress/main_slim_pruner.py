@@ -118,24 +118,22 @@ def main():
     model.to(device)
 
     # Train the base VGG-19 model
-    # epochs = 160
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    # for epoch in range(epochs):
-    #     if epoch in [epochs * 0.5, epochs * 0.75]:
-    #         for param_group in optimizer.param_groups:
-    #             param_group['lr'] *= 0.1
-    #     train(model, device, train_loader, optimizer, True)
-    #     test(model, device, test_loader)
-    # torch.save(model.state_dict(), 'vgg19_cifar10.pth')
-
-    # Pretrained model 'vgg19_cifar10.pth' can also be downloaded from
-    # https://drive.google.com/open?id=1eaIBg_hu4T0JTqIMpg_51dIWbAvvm5ya
-
-    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
+    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+    epochs = 160
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    for epoch in range(epochs):
+        if epoch in [epochs * 0.5, epochs * 0.75]:
+            for param_group in optimizer.param_groups:
+                param_group['lr'] *= 0.1
+        train(model, device, train_loader, optimizer, True)
+        test(model, device, test_loader)
+    torch.save(model.state_dict(), 'vgg19_cifar10.pth')
 
     # Test base model accuracy
-    # top1 = 93.93%
+    print('=' * 10 + 'Test the original model' + '=' * 10)
+    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     test(model, device, test_loader)
+    # top1 = 93.93%
 
     # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
     configure_list = [{
@@ -144,12 +142,14 @@ def main():
     }]
 
     # Prune model and test accuracy without fine tuning.
-    # top1 = 93.91%
+    print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
     pruner = SlimPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
+    # top1 = 93.91%
 
     # Fine tune the pruned model for 40 epochs and test accuracy
+    print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
@@ -164,10 +164,12 @@ def main():
             pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
     # Test the exported model
+    print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
     new_model = vgg()
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
     test(new_model, device, test_loader)
+    # top1 = 93.91%
 
 
 if __name__ == '__main__':

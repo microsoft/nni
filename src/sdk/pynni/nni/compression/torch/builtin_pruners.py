@@ -13,7 +13,7 @@ class LevelPruner(Pruner):
 
     Attributes
     ----------
-    mask_list : dict
+    mask_dict : dict
         Dictionary for saving masks.
 
     """
@@ -81,7 +81,7 @@ class AGP_Pruner(Pruner):
 
     Attributes
     ----------
-    mask_list : dict
+    mask_dict : dict
         Dictionary for saving masks.
 
     """
@@ -208,7 +208,7 @@ class FilterPruner(Pruner):
 
     Attributes
     ----------
-    mask_list : dict
+    mask_dict : dict
         Dictionary for saving masks.
 
     """
@@ -278,7 +278,7 @@ class SlimPruner(Pruner):
 
     Attributes
     ----------
-    mask_list : dict
+    mask_dict : dict
         Dictionary for saving masks.
 
     """

@@ -115,22 +115,20 @@ def main():
     model.to(device)
 
     # Train the base VGG-16 model
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300, 0)
-    # for epoch in range(300):
-    #     train(model, device, train_loader, optimizer)
-    #     test(model, device, test_loader)
-    #     lr_scheduler.step(epoch)
-    # torch.save(model.state_dict(), 'vgg16_cifar10.pth')
-
-    # Pretrained model 'vgg16_cifar10.pth' can also be downloaded from
-    # https://drive.google.com/open?id=1eaIBg_hu4T0JTqIMpg_51dIWbAvvm5ya
-
-    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300, 0)
+    for epoch in range(300):
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+        lr_scheduler.step(epoch)
+    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
 
     # Test base model accuracy
-    # top1 = 93.47%
+    print('=' * 10 + 'Test on the original model' + '=' * 10)
+    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
+    # top1 = 93.47%
 
     # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
     # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
@@ -141,12 +139,14 @@ def main():
     }]
 
     # Prune model and test accuracy without fine tuning.
-    # top1 = 47.22%
+    print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
     pruner = FilterPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
+    # top1 = 47.22%
 
     # Fine tune the pruned model for 40 epochs and test accuracy
+    print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.004, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
@@ -161,10 +161,12 @@ def main():
             pruner.export_model(model_path='pruned_vgg16_cifar10.pth', mask_path='mask_vgg16_cifar10.pth')
 
     # Test the exported model
+    print('=' * 10 + 'Test on the pruned model after fine tune' + '=' * 10)
     new_model = vgg()
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
     test(new_model, device, test_loader)
+    # top1 = 93.18%
 
 
 if __name__ == '__main__':
