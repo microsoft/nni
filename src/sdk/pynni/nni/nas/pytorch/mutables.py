@@ -61,6 +61,12 @@ class PyTorchMutable(nn.Module):
 
 
 class MutableScope(PyTorchMutable):
+    """
+    Mutable scope labels a subgraph to help mutators make better decisions. Mutators get notified when a mutable scope
+    is entered and exited. Mutators can override ``enter_mutable_scope`` and ``exit_mutable_scope`` to catch
+    corresponding events, and do status dump or update.
+    """
+
     def __init__(self, key):
         super().__init__(key=key)
 

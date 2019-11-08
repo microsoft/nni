@@ -79,9 +79,6 @@ class PyTorchMutator(nn.Module):
     def exit_mutable_scope(self, mutable_scope):
         pass
 
-    def on_finish_mutable_cell(self):
-        pass
-
     def forward(self, *inputs):
         raise NotImplementedError("Mutator is not forward-able")
 
@@ -101,6 +98,21 @@ class PyTorchMutator(nn.Module):
         raise NotImplementedError("Forward has to be implemented")
 
     def on_forward_layer_choice(self, mutable, *inputs):
+        """
+        Callback of layer choice forward. Override if you are an advanced user.
+        On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
+        (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy speicified
+        in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
+
+        Parameters
+        ----------
+        mutable: LayerChoice
+        inputs: list of torch.Tensor
+
+        Returns
+        -------
+        torch.Tensor
+        """
         def _map_fn(op, *inputs):
             return op(*inputs)
         mask = self._cache.setdefault(mutable.key, self.on_calc_layer_choice_mask(mutable))
@@ -108,44 +120,68 @@ class PyTorchMutator(nn.Module):
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list, semantic_labels):
+        """
+        Callback of input choice forward. Override if you are an advanced user.
+        On default, this method calls :meth:`on_calc_input_choice_mask` with `semantic_labels`
+        to get a mask on how to choose between inputs (either by switch or by weights), then it will reduce
+        the list of all tensor outputs with the policy speicified in `mutable.reduction`. It will also cache the
+        mask with corresponding `mutable.key`.
+
+        Parameters
+        ----------
+        mutable: InputChoice
+        inputs: list of torch.Tensor
+
+        Returns
+        -------
+        torch.Tensor
+        """
         mask = self._cache.setdefault(mutable.key, self.on_calc_input_choice_mask(mutable, semantic_labels))
         out = self._select_with_mask(lambda x: x, [(t, ) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_calc_layer_choice_mask(self, mutable):
         """
-        Recommend to override mask method. Only override on_forward method when you are confident enough.
+        Recommended to override. Calculate a mask tensor for a layer choice.
 
         Parameters
         ----------
-        mutable
+        mutable: LayerChoice
+            Corresponding layer choice object.
 
         Returns
         -------
         torch.Tensor
+            Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
+            the numbers are treated as switch.
         """
         raise NotImplementedError("Layer choice mask calculation must be implemented")
 
     def on_calc_input_choice_mask(self, mutable, semantic_labels):
         """
+        Recommended to override. Calculate a mask tensor for a input choice.
 
         Parameters
         ----------
-        mutable
+        mutable: InputChoice
+            Corresponding input choice object.
         semantic_labels: list of string
-            The name of labels of input tensors given by user.
+            The name of labels of input tensors given by user. Usually it's a
+            :class:`~nni.nas.pytorch.mutables.MutableScope` marked by user.
 
         Returns
         -------
-
+        torch.Tensor
+            Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
+            the numbers are treated as switch.
         """
         raise NotImplementedError("Input choice mask calculation must be implemented")
 
     def _select_with_mask(self, map_fn, candidates, mask):
-        if isinstance(mask, torch.BoolTensor):
+        if "BoolTensor" in mask.type():
             # print(candidates[0], len(mask))
             out = [map_fn(*cand) for cand, m in zip(candidates, mask) if m]
-        elif isinstance(mask, torch.FloatTensor):
+        elif "FloatTensor" in mask.type():
             out = [map_fn(*cand) * m for cand, m in zip(candidates, mask)]
         else:
             raise ValueError("Unrecognized mask")
