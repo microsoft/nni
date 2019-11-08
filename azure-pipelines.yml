@@ -15,8 +15,6 @@ jobs:
     displayName: 'Install python tools'
   - script: |
       source install.sh
-      npm --version
-      node --version
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install torch==0.4.1 --user
@@ -44,7 +42,7 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      source unittest.sh
+      PATH=$HOME/.local/bin:$PATH source unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
@@ -75,6 +73,9 @@ jobs:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+  - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user
@@ -83,9 +84,6 @@ jobs:
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
       PATH=$HOME/Library/Python/3.7/bin:$PATH nnictl package install --name=SMAC
     displayName: 'Install dependencies'
-  - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH source unittest.sh
