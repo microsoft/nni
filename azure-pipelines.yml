@@ -9,6 +9,8 @@ jobs:
 
   steps:
   - script: |
+      python3 --version
+      python --version
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
       python3 -m pip install coverage --user
