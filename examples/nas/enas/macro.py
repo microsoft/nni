@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 import datasets
-from enas_ops import FactorizedReduce, ConvBranch, PoolBranch
+from ops import FactorizedReduce, ConvBranch, PoolBranch
 from nni.nas.pytorch import mutables, enas
 
 
