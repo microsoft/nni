@@ -5,6 +5,7 @@
 NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
 
 ## 支持的算法
+
 NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括两种剪枝算法以及三种量化算法：
 
 | 名称                                                  | 算法简介                                                                                                                                                                       |
@@ -20,24 +21,26 @@ NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括�
 通过简单的示例来展示如何修改 Trial 代码来使用压缩算法。 比如，需要通过 Level Pruner 来将权重剪枝 80%，首先在代码中训练模型前，添加以下内容（[完整代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)）。
 
 TensorFlow 代码
+
 ```python
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = LevelPruner(config_list)
-pruner(tf.get_default_graph())
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(tf.get_default_graph(), config_list)
+pruner.compress()
 ```
 
 PyTorch 代码
+
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = LevelPruner(config_list)
-pruner(model)
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(model, config_list)
+pruner.compress()
 ```
 
 可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。
 
-函数调用 `pruner(model)` 接收用户定义的模型（在 Tensorflow 中，通过 `tf.get_default_graph()` 来获得模型，而 PyTorch 中 model 是定义的模型类），并修改模型来插入 mask。 然后运行模型时，这些 mask 即会生效。 mask 可在运行时通过算法来调整。
+函数调用 `pruner.compress()` 来修改用户定义的模型（在 Tensorflow 中，通过 `tf.get_default_graph()` 来获得模型，而 PyTorch 中 model 是定义的模型类），并修改模型来插入 mask。 然后运行模型时，这些 mask 即会生效。 mask 可在运行时通过算法来调整。
 
 实例化压缩算法时，会传入 `config_list`。 配置说明如下。
 
@@ -54,11 +57,12 @@ pruner(model)
 `list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
 
 配置的简单示例如下：
+
 ```python
 [
     {
         'sparsity': 0.8,
-        'op_types': 'default'
+        'op_types': ['default']
     },
     {
         'sparsity': 0.6,
@@ -70,6 +74,7 @@ pruner(model)
     }
 ]
 ```
+
 其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
 ### 其它 API
@@ -77,10 +82,13 @@ pruner(model)
 一些压缩算法使用 Epoch 来控制压缩进度（如[AGP](./Pruner.md#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此提供了另外两个 API。 一个是 `update_epoch`，可参考下例使用：
 
 TensorFlow 代码
+
 ```python
 pruner.update_epoch(epoch, sess)
 ```
+
 PyTorch 代码
+
 ```python
 pruner.update_epoch(epoch)
 ```
@@ -99,41 +107,49 @@ __[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训
 
 ```python
 # TensorFlow 中定制 Pruner。
-# 如果要在 PyTorch 中定制 Pruner，可将
+# PyTorch 的 Pruner，只需将
 # nni.compression.tensorflow.Pruner 替换为
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
-    def __init__(self, config_list):
-        # 建议使用 NNI 定义的规范来进行配置
-        super().__init__(config_list)
+    def __init__(self, model, config_list):
+        """
+        建议使用 NNI 定义的规范来配置
+        """
+        super().__init__(model, config_list)
 
-    def bind_model(self, model):
-        # 此函数可通过成员变量，来保存模型和其权重，
-        # 从而能在训练过程中获取这些信息。
-        pass
+    def calc_mask(self, layer, config):
+        """
+        Pruner 需要重载此方法来为权重提供掩码
+        掩码必须与权重有相同的形状和类型。
+        将对权重执行 ``mul()`` 操作。
+        此方法会挂载到模型的 ``forward()`` 方法上。
 
-    def calc_mask(self, weight, config, **kwargs):
-        # weight 是目标的权重张量
-        # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
-        # 实现定制的 mask 并返回
+        Parameters
+        ----------
+        layer: LayerInfo
+            为 ``layer`` 的权重计算掩码
+        config: dict
+            生成权重所需要的掩码
+        """
         return your_mask
 
-    # 注意， PyTorch 不需要 sess 参数
+    #  PyTorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # 注意， PyTorch 不需要 sess 参数
+    #  PyTorch 版本不需要 sess 参数
     def step(self, sess):
-        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
+        """
+        根据需要可基于 bind_model 方法中的模型或权重进行操作
+        """
         pass
 ```
 
-对于最简单的算法，只需要重写 `calc_mask` 函数。 它可接收每层的权重，并选择对应的配置和操作的信息。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
+对于最简单的算法，只需要重写 `calc_mask` 函数。 它会接收需要压缩的层以及其压缩配置。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
 
-一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。
+一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。 应在每个 Epoch 之前调用它。
 
-一些算法可能需要全局的信息来生成 mask，例如模型的所有权重（用于生成统计信息），模型优化器的信息。 可使用 `bind_model` 来支持此类需求。 `bind_model` 接受完整模型作为参数，因而其记录了所有信息（例如，权重的引用）。 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
+一些算法可能需要全局的信息来生成 mask，例如模型的所有权重（用于生成统计信息）. 可在 Pruner 类中通过 `self.bound_model` 来访问权重。 如果需要优化器的信息（如在 Pytorch 中），可重载 `__init__` 来接收优化器等参数。 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
 
 ### 量化算法
 
@@ -145,20 +161,19 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 # nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
-    def __init__(self, config_list):
-        # 建议使用 NNI 定义的规范来进行配置
-        super().__init__(config_list)
-
-    def bind_model(self, model):
-        # 此函数可通过成员变量，来保存模型和其权重，
-        # 从而能在训练过程中获取这些信息。
-        pass
+    def __init__(self, model, config_list):
+        """
+        建议使用 NNI 定义的规范来进行配置
+        """
+        super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
-        # weight 是目标的权重张量
-        # config 是在 config_list 中为此层选定的 dict 对象
-        # kwargs 包括 op, op_type, 和 op_name
-        # 实现定制的 Quantizer 并返回新的权重
+        """
+        weight 是目标的权重张量
+        config 是在 config_list 中为此层选定的 dict 对象
+        kwargs 包括 op, op_types, 和 op_name
+        设计实现定制的 Quantizer 并返回新的权重
+        """
         return new_weight
 
     # 注意， PyTorch 不需要 sess 参数
@@ -167,7 +182,9 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     # 注意， PyTorch 不需要 sess 参数
     def step(self, sess):
-        # 根据在 bind_model 函数中引用的模型或权重进行一些处理
+        """
+        根据在 bind_model 函数中引用的模型或权重进行一些处理
+        """
         pass
 ```
 

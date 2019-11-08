@@ -21,6 +21,8 @@
 
 将第一行作为样例。 `dropout_rate` 定义了一个变量，先验分布为均匀分布，范围从 `0.1` 到 `0.5`。
 
+注意，搜索空间的效果与 Tuner 高度相关。 此处列出了内置 Tuner 所支持的类型。 对于自定义的 Tuner，不必遵循鞋标，可使用任何的类型。
+
 ## 类型
 
 所有采样策略和参数如下：
@@ -82,6 +84,7 @@
   
   * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
   * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
+  * 下列超参优化 Tuner 可用于此搜索空间：TPE, Random, Anneal, Evolution, Grid Search, Hyperband 以及 BOHB。
   * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
 
 ## 每种 Tuner 支持的搜索空间类型
@@ -106,4 +109,4 @@
 * 请注意，对于嵌套搜索空间：
   
       * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
-      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。
+      * 不支持嵌套搜索空间 "超参" 的可视化，对其的改进通过 [#1110](https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。

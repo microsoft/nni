@@ -88,6 +88,23 @@ paiConfig:
         portNumber: 1
     ```
 
+NNI 支持 OpenPAI 中的两种认证授权方法，即密码和 Token，[参考](https://github.com/microsoft/pai/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 认证在 `paiConfig` 字段中配置。   
+密码认证的 `paiConfig` 配置如下：
+
+    paiConfig:
+      userName: your_pai_nni_user
+      passWord: your_pai_password
+      host: 10.1.1.1
+    
+
+Token 认证的 `paiConfig` 配置如下：
+
+    paiConfig:
+      userName: your_pai_nni_user
+      token: your_pai_token
+      host: 10.1.1.1
+    
+
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
     nnictl create --config exp_pai.yml
@@ -107,7 +124,7 @@ paiConfig:
 
 ## 数据管理
 
-如果训练数据集不大，可放在 codeDir中，NNI会将其上传到 HDFS，或者构建 Docker 映像来包含数据。 如果数据集非常大，则不可放在 codeDir 中，可参考此[指南](https://github.com/microsoft/pai/blob/master/docs/user/storage.md)来将数据目录挂载到容器中。
+如果训练数据集不大，可放在 codeDir 中，NNI会将其上传到 HDFS，或者构建 Docker 映像来包含数据。 如果数据集非常大，则不可放在 codeDir 中，可参考此[指南](https://github.com/microsoft/pai/blob/master/docs/user/storage.md)来将数据目录挂载到容器中。
 
 如果要将 Trial 的其它输出保存到 HDFS 上，如模型文件等，需要在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来保存输出文件。NNI 的 SDK 会将文件从 Trial 容器的 `NNI_OUTPUT_DIR` 复制到 HDFS 上，目标路径为：`hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`。
 

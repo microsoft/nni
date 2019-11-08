@@ -25,7 +25,7 @@ from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, 
 from .url_utils import experiment_url, import_data_url
 from .config_utils import Config
 from .common_utils import get_json_content, print_normal, print_error, print_warning
-from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
+from .nnictl_utils import get_experiment_port, get_config_filename
 from .launcher_utils import parse_time
 from .constants import REST_TIME_OUT, TUNERS_SUPPORTING_IMPORT_DATA, TUNERS_NO_NEED_TO_IMPORT_DATA
 

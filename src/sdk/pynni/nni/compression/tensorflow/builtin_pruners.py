@@ -8,16 +8,18 @@ _logger = logging.getLogger(__name__)
 
 
 class LevelPruner(Pruner):
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
         config_list: supported keys:
             - sparsity
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self.if_init_list = {}
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
+    def calc_mask(self, layer, config):
+        weight = layer.weight
+        op_name = layer.name
         if self.if_init_list.get(op_name, True):
             threshold = tf.contrib.distributions.percentile(tf.abs(weight), config['sparsity'] * 100)
             mask = tf.cast(tf.math.greater(tf.abs(weight), threshold), weight.dtype)
@@ -29,7 +31,7 @@ class LevelPruner(Pruner):
 
 
 class AGP_Pruner(Pruner):
-    """An automated gradual pruning algorithm that prunes the smallest magnitude 
+    """An automated gradual pruning algorithm that prunes the smallest magnitude
     weights to achieve a preset level of network sparsity.
 
     Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
@@ -38,7 +40,7 @@ class AGP_Pruner(Pruner):
     https://arxiv.org/pdf/1710.01878.pdf
     """
 
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
         config_list: supported keys:
             - initial_sparsity
@@ -47,13 +49,15 @@ class AGP_Pruner(Pruner):
             - end_epoch: end epoch number stop update mask
             - frequency: if you want update every 2 epoch, you can set it 2
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.mask_list = {}
         self.if_init_list = {}
         self.now_epoch = tf.Variable(0)
         self.assign_handler = []
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
+    def calc_mask(self, layer, config):
+        weight = layer.weight
+        op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
@@ -92,5 +96,5 @@ class AGP_Pruner(Pruner):
     def update_epoch(self, epoch, sess):
         sess.run(self.assign_handler)
         sess.run(tf.assign(self.now_epoch, int(epoch)))
-        for k in self.if_init_list.keys():
+        for k in self.if_init_list:
             self.if_init_list[k] = True

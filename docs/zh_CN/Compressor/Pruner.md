@@ -12,17 +12,17 @@ NNI Compressor 中的 Pruner
 TensorFlow 代码
 ```
 from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = LevelPruner(config_list)
-pruner(model_graph)
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(model_graph, config_list)
+pruner.compress()
 ```
 
 PyTorch 代码
 ```
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = LevelPruner(config_list)
-pruner(model)
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(model, config_list)
+pruner.compress()
 ```
 
 #### Level Pruner 的用户配置
@@ -50,8 +50,8 @@ config_list = [{
     'frequency': 1,
     'op_types': 'default'
 }]
-pruner = AGP_Pruner(config_list)
-pruner(tf.get_default_graph())
+pruner = AGP_Pruner(tf.get_default_graph(), config_list)
+pruner.compress()
 ```
 PyTorch 代码
 ```python
@@ -64,8 +64,8 @@ config_list = [{
     'frequency': 1,
     'op_types': 'default'
 }]
-pruner = AGP_Pruner(config_list)
-pruner(model)
+pruner = AGP_Pruner(model, config_list)
+pruner.compress()
 ```
 
 其次，在训练代码中每完成一个 Epoch，更新一下 Epoch 数值。
