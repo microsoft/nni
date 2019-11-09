@@ -11,18 +11,10 @@ class LevelPruner(Pruner):
     """
     Prune to an exact pruning level specification
 
-    Attributes
-    ----------
-    mask_dict : dict
-        Dictionary for saving masks.
-
     """
 
     def __init__(self, model, config_list):
         """
-        config_list: supported keys:
-            - sparsity
-
         Parameters
         ----------
         model : torch.nn.module
@@ -79,22 +71,10 @@ class AGP_Pruner(Pruner):
     Learning of Phones and other Consumer Devices,
     https://arxiv.org/pdf/1710.01878.pdf
 
-    Attributes
-    ----------
-    mask_dict : dict
-        Dictionary for saving masks.
-
     """
 
     def __init__(self, model, config_list):
         """
-        config_list: supported keys:
-            - initial_sparsity
-            - final_sparsity: you should make sure initial_sparsity <= final_sparsity
-            - start_epoch: start epoch number begin update mask
-            - end_epoch: end epoch number stop update mask, you should make sure start_epoch <= end_epoch
-            - frequency: if you want update every 2 epoch, you can set it 2
-
         Parameters
         ----------
         model : torch.nn.module
@@ -162,6 +142,7 @@ class AGP_Pruner(Pruner):
             Target sparsity to be pruned
 
         """
+
         end_epoch = config.get('end_epoch', 1)
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
@@ -191,6 +172,7 @@ class AGP_Pruner(Pruner):
             current training epoch
 
         """
+
         if epoch > 0:
             self.now_epoch = epoch
             for k in self.if_init_list.keys():
@@ -206,19 +188,10 @@ class FilterPruner(Pruner):
     "PRUNING FILTERS FOR EFFICIENT CONVNETS", 2017 ICLR
     https://arxiv.org/abs/1608.08710
 
-    Attributes
-    ----------
-    mask_dict : dict
-        Dictionary for saving masks.
-
     """
 
     def __init__(self, model, config_list):
         """
-        Initiate `FilterPruner` from `config_list`
-        config_list: supported keys:
-            - sparsity
-
         Parameters
         ----------
         model : torch.nn.module
@@ -233,7 +206,8 @@ class FilterPruner(Pruner):
 
     def calc_mask(self, layer, config):
         """
-        Calculate the mask of given layer
+        Calculate the mask of given layer.
+        Filters with the smallest sum of its absolute kernel weights are masked.
 
         Parameters
         ----------
@@ -276,19 +250,10 @@ class SlimPruner(Pruner):
     "Learning Efficient Convolutional Networks through Network Slimming", 2017 ICCV
     https://arxiv.org/pdf/1708.06519.pdf
 
-    Attributes
-    ----------
-    mask_dict : dict
-        Dictionary for saving masks.
-
     """
 
     def __init__(self, model, config_list):
         """
-        Initiate `FilterPruner` from `config_list`
-        config_list: supported keys:
-            - sparsity
-
         Parameters
         ----------
         config_list : list
@@ -299,7 +264,9 @@ class SlimPruner(Pruner):
         super().__init__(model, config_list)
         self.if_init_list = {}
         weight_list = []
-        config = self.config_list[0]
+        if len(config_list) > 1:
+            logger.warning('Slim pruner only supports 1 configuration')
+        config = config_list[0]
         op_types = config.get('op_types')
         op_names = config.get('op_names')
         if op_types is not None:
@@ -319,7 +286,8 @@ class SlimPruner(Pruner):
 
     def calc_mask(self, layer, config):
         """
-        Calculate the mask of given layer
+        Calculate the mask of given layer.
+        Scale factors with the smallest absolute value in the BN layer are masked.
 
         Parameters
         ----------

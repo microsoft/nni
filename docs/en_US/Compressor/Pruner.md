@@ -98,14 +98,17 @@ In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710),
 
 ![](../../img/filter_pruner.png)
 
+> Filter Pruner prunes filters in the **convolution layers**
+>
 > The procedure of pruning m filters from the ith convolutional layer is as follows:
+>
 > 1. For each filter $F_{i,j}$ , calculate the sum of its absolute kernel weights $s_j = \sum_{l=1}^{n_i}\sum|K_l|$
 > 2. Sort the filters by $s_j$.
 > 3. Prune $m$ filters with the smallest sum values and their corresponding feature maps. The
->   kernels in the next convolutional layer corresponding to the pruned feature maps are also
->   removed.
+> kernels in the next convolutional layer corresponding to the pruned feature maps are also
+> removed.
 > 4. A new kernel matrix is created for both the $i$th and $i+1$th layers, and the remaining kernel
->   weights are copied to the new model.
+> weights are copied to the new model.
 
 ### Usage
 
@@ -114,13 +117,14 @@ PyTorch code
 ```
 from nni.compression.torch import FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-pruner = FilterPruner(config_list)
-pruner(model)
+pruner = FilterPruner(model, config_list)
+pruner.compress()
 ```
 
 #### User configuration for Filter Pruner
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only Conv2d is supported in Filter Pruner
 
 ## Slim Pruner
 
@@ -128,7 +132,7 @@ In ['Learning Efficient Convolutional Networks through Network Slimming'](https:
 
 ![](../../img/slim_pruner.png)
 
-> Slim Pruner prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
 
 ### Usage
 
@@ -136,11 +140,13 @@ PyTorch code
 
 ```
 from nni.compression.torch import SlimPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-pruner = SlimPruner(config_list)
-pruner(model)
+config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+pruner = SlimPruner(model, config_list)
+pruner.compress()
 ```
 
 #### User configuration for Filter Pruner
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+
