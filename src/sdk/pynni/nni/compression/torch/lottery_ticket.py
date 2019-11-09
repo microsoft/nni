@@ -18,28 +18,28 @@ class LotteryTicketPruner(Pruner):
     --------
     :class:
     """
-    def __init__(self, config_list):
+    def __init__(self, model, config_list, optimizer, reset_weights=True):
         """
         config_list: supported keys:
             - sparsity
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
         self.prune_iterations = 1
         self.curr_prune_iterations = 0
         self.epoch_per_iteration = None
-        self.mask_list = {}
 
-    def __call__(self, model, optimizer=None):
-        model = super().__call__(model, optimizer)
         # save init weights and optimizer
-        self.model_state = copy.deepcopy(self._bound_model.state_dict())
-        self.optimizer_state = copy.deepcopy(self._bound_optimizer.state_dict())
-        return model
+        self.reset_weights = reset_weights
+        if self.reset_weights:
+            self._model = model
+            self._optimizer = optimizer
+            self._model_state = copy.deepcopy(model.state_dict())
+            self._optimizer_state = copy.deepcopy(optimizer.state_dict())
 
     def _print_masks(self, print_mask=False):
         torch.set_printoptions(threshold=1000)
-        for op_name in self.mask_list.keys():
-            mask = self.mask_list[op_name]
+        for op_name in self.mask_dict.keys():
+            mask = self.mask_dict[op_name]
             print('op name: ', op_name)
             if print_mask:
                 print('mask: ', mask)
@@ -59,8 +59,8 @@ class LotteryTicketPruner(Pruner):
             mask = torch.ones(weight.shape).type_as(weight)
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            assert self.mask_list.get(op_name) is not None
-            curr_mask = self.mask_list.get(op_name)
+            assert self.mask_dict.get(op_name) is not None
+            curr_mask = self.mask_dict.get(op_name)
             w_abs = weight.abs() * curr_mask
             sorted_weights = np.sort(w_abs, None)
             index = np.around(curr_sparsity * sorted_weights.size).astype(int)
@@ -69,7 +69,7 @@ class LotteryTicketPruner(Pruner):
             mask = torch.gt(w_abs, threshold).type_as(weight)
         return mask
 
-    def calc_mask(self, weight, config, op_name, **kwargs):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Generate mask for the given ``weight``.
 
@@ -89,14 +89,16 @@ class LotteryTicketPruner(Pruner):
         mask: tensor
             The mask for this weight
         """
+        weight = layer.module.weight.data
+        op_name = layer.name
         self.prune_iterations = config.get('prune_iterations')
         self.epoch_per_iteration = config.get('epoch_per_iteration')
 
-        if self.mask_list.get(op_name) is None:
+        if self.mask_dict.get(op_name) is None:
             mask = torch.ones(weight.shape).type_as(weight)
-            self.mask_list.update({op_name: mask})
+            self.mask_dict.update({op_name: mask})
         else:
-            mask = self.mask_list[op_name]
+            mask = self.mask_dict[op_name]
         return mask
 
     def update_epoch(self, epoch):
@@ -115,11 +117,13 @@ class LotteryTicketPruner(Pruner):
         if self.epoch_per_iteration \
             and int(epoch) % self.epoch_per_iteration == 0 \
             and self.curr_prune_iterations <= self.prune_iterations:
-            for layer, config in self.modules_to_compress:
+            modules_to_compress = self.detect_modules_to_compress()
+            for layer, config in modules_to_compress:
                 sparsity = config.get('sparsity')
                 mask = self._calc_mask(layer.module.weight.data, sparsity, layer.name)
-                self.mask_list.update({layer.name: mask})
+                self.mask_dict.update({layer.name: mask})
             self._print_masks()
             # reinit weights back to original after new masks are generated
-            self._bound_model.load_state_dict(self.model_state)
-            self._bound_optimizer.load_state_dict(self.optimizer_state)
+            if self.reset_weights:
+                self._model.load_state_dict(self._model_state)
+                self._optimizer.load_state_dict(self._optimizer_state)

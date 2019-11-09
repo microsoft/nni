@@ -31,7 +31,21 @@ class Compressor:
         """
         self.bound_model = model
         self.config_list = config_list
-        self.modules_to_compress = []
+        self.modules_to_compress = None
+
+    def detect_modules_to_compress(self):
+        """
+        detect all modules should be compressed, and save the result in `self.modules_to_compress`.
+        The model will be instrumented and user should never edit it after calling this method.
+        """
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for name, module in self.bound_model.named_modules():
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
 
     def compress(self):
         """
@@ -40,25 +54,10 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
-        for name, module in self.bound_model.named_modules():
-            layer = LayerInfo(name, module)
-            config = self.select_config(layer)
-            if config is not None:
-                self._instrument_layer(layer, config)
-                self.modules_to_compress.append((layer, config))
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
+            self._instrument_layer(layer, config)
         return self.bound_model
-
-    def get_modules_to_compress(self):
-        """
-        To obtain all the to-be-compressed layers.
-
-        Returns
-        -------
-        self.modules_to_compress : list
-            a list of the layers, each of which is a tuple (`layer`, `config`),
-            `layer` is `LayerInfo`, `config` is a `dict`
-        """
-        return self.modules_to_compress
 
     def select_config(self, layer):
         """
@@ -203,6 +202,9 @@ class Pruner(Compressor):
         input_shape : list or tuple
             input shape to onnx model
         """
+        if self.detect_modules_to_compress() and not self.mask_dict:
+            _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
+            print('Warning: You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         for name, m in self.bound_model.named_modules():
             mask = self.mask_dict.get(name)

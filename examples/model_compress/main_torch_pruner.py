@@ -53,13 +53,13 @@ def test(model, device, test_loader):
     print('Loss: {}  Accuracy: {}%)\n'.format(
         test_loss, 100 * correct / len(test_loader.dataset)))
 
-def init_pruner(pruner_name):
+def apply_pruner(pruner_name, model, optimizer):
     if pruner_name == 'LevelPruner':
         configure_list = [{
             'sparsity': 0.8,
             'op_types': ['default']
         }]
-        pruner = LevelPruner(configure_list)
+        pruner = LevelPruner(model, configure_list)
         epoch_num = 30
     elif pruner_name == 'AGP_Pruner':
         configure_list = [{
@@ -70,7 +70,7 @@ def init_pruner(pruner_name):
             'frequency': 5,
             'op_types': ['default']
         }]
-        pruner = AGP_Pruner(configure_list)
+        pruner = AGP_Pruner(model, configure_list)
         epoch_num = 30
     elif pruner_name == 'LotteryTicketPruner':
         configure_list = [{
@@ -79,17 +79,11 @@ def init_pruner(pruner_name):
             'sparsity': 0.8,
             'op_types': ['default']
         }]
-        pruner = LotteryTicketPruner(configure_list)
+        pruner = LotteryTicketPruner(model, configure_list, optimizer)
         epoch_num = 30
     else:
         raise
-    return pruner, epoch_num
-
-def apply_pruner(pruner_name, model, optimizer):
-    pruner, epoch_num = init_pruner(pruner_name)
-    pruner(model, optimizer)
-    # you can also use compress(model) method
-    # like that pruner.compress(model)
+    pruner.compress()
     return pruner, epoch_num
 
 def main():
