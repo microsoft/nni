@@ -12,16 +12,27 @@ class LotteryTicketPruner(Pruner):
     This is a Pytorch implementation of the paper "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks",
     following NNI model compression interface.
 
-    Detail description...
-
-    See Also
-    --------
-    :class:
+    1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
+    2. Train the network for j iterations, arriving at parameters theta_j.
+    3. Prune p% of the parameters in theta_j, creating a mask m.
+    4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
+    5. Repeat step 2, 3, and 4.
     """
     def __init__(self, model, config_list, optimizer, reset_weights=True):
         """
-        config_list: supported keys:
-            - sparsity
+        Parameters
+        ----------
+        model : pytorch model
+            The model to be pruned
+        config_list : list
+            Supported keys:
+                - prune_iterations : The number of rounds for the iterative pruning.
+                - epoch_per_iteration : The number of epochs for each round.
+                - sparsity : The final sparsity when the compression is done.
+        optimizer : pytorch optimizer
+            The optimizer for the model
+        reset_weights : bool
+            Whether reset weights and optimizer at the beginning of each round.
         """
         super().__init__(model, config_list)
         self.prune_iterations = 1
@@ -75,18 +86,16 @@ class LotteryTicketPruner(Pruner):
 
         Parameters
         ----------
-        weight: tensor
-            The weight to be pruned
+        layer : LayerInfo
+            The layer to be pruned
         config: dict
             Pruning configurations for this weight
-        op_name: str
-            The name of this operation???
-        kwargs: dict
-            ...
+        **kwargs
+            Not used
 
         Returns
         -------
-        mask: tensor
+        tensor
             The mask for this weight
         """
         weight = layer.module.weight.data

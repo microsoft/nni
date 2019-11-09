@@ -92,3 +92,48 @@ You can view example for more information
 
 ***
 
+## Lottery Ticket Hypothesis
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+
+In this paper, the authors use the following process to prune a model, called *iterative prunning*:
+>1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
+>2. Train the network for j iterations, arriving at parameters theta_j.
+>3. Prune p% of the parameters in theta_j, creating a mask m.
+>4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
+>5. Repeat step 2, 3, and 4.
+
+If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+
+### Usage
+
+PyTorch code
+```python
+from nni.compression.torch import LotteryTicketPruner
+config_list = [{
+    'prune_iterations': 5,
+    'epoch_per_iteration': 6,
+    'sparsity': 0.8,
+    'op_types': ['default']
+}]
+pruner = LotteryTicketPruner(model, config_list, optimizer)
+pruner.compress()
+```
+
+The above configuration means that there are 5 times iterative pruning and 6 epochs run for each pruning. As the n times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` to reset their states every time a new pruning starts, so it has one more initial argument `optimizer`.
+
+Second, you should add code below to update epoch number at the beginning of each epoch.
+
+PyTorch code
+```python
+pruner.update_epoch(epoch)
+```
+
+*Tensorflow version will be supported later.*
+
+#### User configuration for LotteryTicketPruner
+
+* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
+* **epoch_per_iteration:** The number of epochs for each round. This number is better to be large enough for model convergence, because the hypothesis is that the performance got in latter rounds with high sparsity could be comparable with that got in the first round.
+* **sparsity:** The final sparsity when the compression is done.
+
+***
