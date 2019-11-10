@@ -8,16 +8,34 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools --user
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
+      python3 -m pip install coverage --user
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user
+      python3 -m pip install keras==2.1.6 --user
+      python3 -m pip install gym onnx --user
+      sudo apt-get install swig -y
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
+      set -e
+      python3 -m pylint --rcfile pylintrc nni_annotation
+      python3 -m pylint --rcfile pylintrc nni_cmd
+      python3 -m pylint --rcfile pylintrc nni_gpu_tool
+      python3 -m pylint --rcfile pylintrc nni_trial_tool
+      python3 -m pylint --rcfile pylintrc nni
+      python3 -m pylint --rcfile pylintrc nnicli
+    displayName: 'Run pylint'
   - script: |
       python3 -m pip install flake8 --user
       IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
@@ -29,19 +47,19 @@ jobs:
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
+      python3 naive_test.py
     displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
+      python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
+      python3 metrics_test.py
     displayName: 'Trial job metrics test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+      python3 cli_test.py
     displayName: 'nnicli test'
 
 - job: 'basic_test_pr_macOS'
@@ -56,28 +74,33 @@ jobs:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
+      source install.sh
+      echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
+    displayName: 'Install nni toolkit via source code'
+  - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user
+      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+      brew install swig@3
+      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      nnictl package install --name=SMAC
     displayName: 'Install dependencies'
   - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
-  - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
+      source unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
+      python3 naive_test.py
     displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
+      python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 cli_test.py
+      python3 cli_test.py
     displayName: 'nnicli test'
 
 - job: 'basic_test_pr_Windows'

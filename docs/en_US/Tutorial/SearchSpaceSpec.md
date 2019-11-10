@@ -21,6 +21,8 @@ To define a search space, users should define the name of variable, the type of 
 
 Take the first line as an example. `dropout_rate` is defined as a variable whose priori distribution is a uniform distribution of a range from `0.1` and `0.5`.
 
+Note that the ability of a search space is highly connected with your tuner. We listed the supported types for each builtin tuner below. For a customized tuner, you don't have to follow our convention and you will have the flexibility to define any type you want.
+
 ## Types
 
 All types of sampling strategies and their parameter are listed here:
@@ -74,6 +76,8 @@ All types of sampling strategies and their parameter are listed here:
 * `{"_type": "mutable_layer", "_value": {mutable_layer_infomation}}`
   * Type for [Neural Architecture Search Space][1]. Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
   * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
+  * The following HPO tuners can be adapted to tune this search space: TPE, Random, Anneal, Evolution, Grid Search,
+  Hyperband and BOHB.
   * For detailed usage, please refer to [General NAS Interfaces][1].
 
 ## Search Space Types Supported by Each Tuner
@@ -86,20 +90,20 @@ All types of sampling strategies and their parameter are listed here:
 | Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
 | Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
-| Grid Search Tuner | &#10003; | &#10003; |  | &#10003;  |     | |  |  |    |     |
+| Grid Search Tuner | &#10003; | &#10003; |  | &#10003; |     | |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
-| GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |  |  |    |     |
+| GP Tuner   | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; | &#10003; |  |  |  |  |
 
 
 Known Limitations:
 
-* GP Tuner and Metis Tuner support only **numerical values** in search space(`choice` type values can be no-numeraical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
+* GP Tuner and Metis Tuner support only **numerical values** in search space (`choice` type values can be no-numeraical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
 
 * Note that for nested search space:
 
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
 
-    * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
+    * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in [#1110](https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
 
 [1]: ../AdvancedFeature/GeneralNasInterfaces.md

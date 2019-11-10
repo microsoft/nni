@@ -158,11 +158,11 @@ class EvolutionTuner(Tuner):
     EvolutionTuner is tuner using navie evolution algorithm.
     """
 
-    def __init__(self, optimize_mode, population_size=32):
+    def __init__(self, optimize_mode="maximize", population_size=32):
         """
         Parameters
         ----------
-        optimize_mode : str
+        optimize_mode : str, default 'maximize'
         population_size : int
             initial population size. The larger population size,
         the better evolution performance.
