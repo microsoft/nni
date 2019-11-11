@@ -59,9 +59,12 @@ class NetworkMorphismTestCase(TestCase):
             graph_recover.layer_id_to_input_node_ids,
         )
         self.assertEqual(graph_init.adj_list, graph_recover.adj_list)
-        self.assertEqual(graph_init.reverse_adj_list, graph_recover.reverse_adj_list)
         self.assertEqual(
-            len(graph_init.operation_history), len(graph_recover.operation_history)
+            graph_init.reverse_adj_list,
+            graph_recover.reverse_adj_list)
+        self.assertEqual(
+            len(graph_init.operation_history), len(
+                graph_recover.operation_history)
         )
         self.assertEqual(graph_init.n_dim, graph_recover.n_dim)
         self.assertEqual(graph_init.conv, graph_recover.conv)
@@ -71,7 +74,8 @@ class NetworkMorphismTestCase(TestCase):
         node_list_init = [node.shape for node in graph_init.node_list]
         node_list_recover = [node.shape for node in graph_recover.node_list]
         self.assertEqual(node_list_init, node_list_recover)
-        self.assertEqual(len(graph_init.node_to_id), len(graph_recover.node_to_id))
+        self.assertEqual(len(graph_init.node_to_id),
+                         len(graph_recover.node_to_id))
         layer_list_init = [
             layer_description_extractor(item, graph_init.node_to_id)
             for item in graph_init.layer_list
@@ -82,7 +86,8 @@ class NetworkMorphismTestCase(TestCase):
         ]
         self.assertEqual(layer_list_init, layer_list_recover)
 
-        node_to_id_init = [graph_init.node_to_id[node] for node in graph_init.node_list]
+        node_to_id_init = [graph_init.node_to_id[node]
+                           for node in graph_init.node_list]
         node_to_id_recover = [
             graph_recover.node_to_id[node] for node in graph_recover.node_list
         ]
@@ -192,8 +197,8 @@ class NetworkMorphismTestCase(TestCase):
         """
 
         tuner = NetworkMorphismTuner()
-        tuner.add_model(0.8,  0)
-        tuner.add_model(0.9,  1)
+        tuner.add_model(0.8, 0)
+        tuner.add_model(0.9, 1)
         self.assertEqual(tuner.get_best_model_id(), 1)
 
 
