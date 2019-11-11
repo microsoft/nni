@@ -1,7 +1,6 @@
 import copy
 import logging
 import torch
-import numpy as np
 from .compressor import Pruner
 
 _logger = logging.getLogger(__name__)
@@ -99,7 +98,7 @@ class LotteryTicketPruner(Pruner):
         ----------
         layer : LayerInfo
             The layer to be pruned
-        config: dict
+        config : dict
             Pruning configurations for this weight
         **kwargs
             Not used
@@ -114,7 +113,15 @@ class LotteryTicketPruner(Pruner):
         return mask
 
     def get_prune_iterations(self):
-        # in the first prune iteration, masks are all one, thus, add one more iteration
+        """
+        Return the range for iterations.
+        In the first prune iteration, masks are all one, thus, add one more iteration
+
+        Returns
+        -------
+        list
+            A list for pruning iterations
+        """
         return range(self.prune_iterations + 1)
 
     def prune_iteration_start(self):
@@ -124,7 +131,7 @@ class LotteryTicketPruner(Pruner):
 
         Parameters
         ----------
-        epoch: num
+        epoch : num
             The current epoch number provided by user call
         """
         if self.curr_prune_iteration is None:

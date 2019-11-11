@@ -93,7 +93,6 @@ def main():
         test(model, device, test_loader)
     pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28])
 
-
 if __name__ == '__main__':
     main()
     
