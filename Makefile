@@ -52,6 +52,7 @@ $(shell mkdir -p $(NNI_DEPENDENCY_FOLDER))
 NNI_NODE_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64.tar.xz
 NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
+NNI_NPM ?= $(BIN_FOLDER)/npm
 NNI_YARN_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn
 NNI_YARN ?= PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
@@ -149,8 +150,9 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 	mkdir $(NNI_NODE_FOLDER)
 	tar -xf $(NNI_NODE_TARBALL) -C $(NNI_NODE_FOLDER) --strip-components 1
 	mkdir -p $(BIN_FOLDER)
-	rm -f $(NNI_NODE)
-	cp $(NNI_NODE_FOLDER)/bin/node $(NNI_NODE)
+	rm -f $(NNI_NODE) $(NNI_NPM)
+	ln -s $(NNI_NODE_FOLDER)/bin/node $(NNI_NODE)
+	ln -s $(NNI_NODE_FOLDER)/bin/npm $(NNI_NPM)
 	
 	#$(_INFO) Extracting Yarn $(_END)
 	rm -rf $(NNI_YARN_FOLDER)

@@ -422,7 +422,8 @@ class HyperoptTuner(Tuner):
                     misc_by_id[tid]['vals'][key] = [val]
 
     def get_suggestion(self, random_search=False):
-        """get suggestion from hyperopt
+        """
+        get suggestion from hyperopt
 
         Parameters
         ----------
@@ -473,7 +474,8 @@ class HyperoptTuner(Tuner):
         return total_params
 
     def import_data(self, data):
-        """Import additional data for tuning
+        """
+        Import additional data for tuning
 
         Parameters
         ----------

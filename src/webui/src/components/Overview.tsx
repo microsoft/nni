@@ -19,31 +19,33 @@ require('../static/style/overviewTitle.scss');
 interface OverviewProps {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
+    metricGraphMode: 'max' | 'min';
+    changeMetricGraphMode: (val: 'max' | 'min') => void;
 }
 
 interface OverviewState {
     trialConcurrency: number;
-    metricGraphMode: 'max' | 'min';
 }
 
 class Overview extends React.Component<OverviewProps, OverviewState> {
     constructor(props: OverviewProps) {
         super(props);
         this.state = {
-            trialConcurrency: EXPERIMENT.trialConcurrency,
-            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'),
+            trialConcurrency: EXPERIMENT.trialConcurrency
         };
     }
 
     clickMaxTop = (event: React.SyntheticEvent<EventTarget>) => {
         event.stopPropagation();
         // #999 panel active bgcolor; #b3b3b3 as usual
-        this.setState({ metricGraphMode: 'max' });
+        const { changeMetricGraphMode } = this.props;
+        changeMetricGraphMode('max');
     }
 
     clickMinTop = (event: React.SyntheticEvent<EventTarget>) => {
         event.stopPropagation();
-        this.setState({ metricGraphMode: 'min' });
+        const { changeMetricGraphMode } = this.props;
+        changeMetricGraphMode('min');
     }
 
     changeConcurrency = (val: number) => {
@@ -51,8 +53,8 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     }
 
     render() {
-        const { trialConcurrency, metricGraphMode } = this.state;
-        const { experimentUpdateBroadcast } = this.props;
+        const { trialConcurrency } = this.state;
+        const { experimentUpdateBroadcast, metricGraphMode } = this.props;
 
         const searchSpace = this.convertSearchSpace();
 
@@ -160,7 +162,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
     private findBestTrials(): Trial[] {
         let bestTrials = TRIALS.sort();
-        if (this.state.metricGraphMode === 'max') {
+        if (this.props.metricGraphMode === 'max') {
             bestTrials.reverse().splice(10);
         } else {
             bestTrials.splice(10);
