@@ -35,6 +35,7 @@ from smac.utils.io.cmd_reader import CMDReader
 from ConfigSpaceNNI import Configuration
 
 from nni.tuner import Tuner
+from nni.nas_utils import rewrite_nas_space
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .convert_ss_to_scenario import generate_scenario
@@ -124,6 +125,7 @@ class SMACTuner(Tuner):
 
         return optimizer
 
+    @rewrite_nas_space
     def update_search_space(self, search_space):
         """
         NOTE: updating search space is not supported.
