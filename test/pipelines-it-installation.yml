@@ -13,10 +13,6 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install --upgrade nni --user
     displayName: 'Install nni'
-  - script: |
-      cd examples/trials/mnist
-      ~/.local/bin/nnictl create --config config.yml
-    displayName: 'mnist test'
 
 - job: 'pip_install_macOS_python36'
   pool:
