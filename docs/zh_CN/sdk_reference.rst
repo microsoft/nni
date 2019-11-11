@@ -39,6 +39,9 @@ Tuner（调参器）
 ..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
     :members:
 
+..  autoclass:: nni.gp_tuner.gp_tuner.GPTuner
+    :members:
+
 Assessor（评估器）
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
