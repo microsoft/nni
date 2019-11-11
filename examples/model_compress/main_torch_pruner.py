@@ -1,5 +1,4 @@
-import argparse
-from nni.compression.torch import AGP_Pruner, LevelPruner, LotteryTicketPruner
+from nni.compression.torch import AGP_Pruner
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -53,45 +52,8 @@ def test(model, device, test_loader):
     print('Loss: {}  Accuracy: {}%)\n'.format(
         test_loss, 100 * correct / len(test_loader.dataset)))
 
-def apply_pruner(pruner_name, model, optimizer):
-    if pruner_name == 'LevelPruner':
-        configure_list = [{
-            'sparsity': 0.8,
-            'op_types': ['default']
-        }]
-        pruner = LevelPruner(model, configure_list)
-        epoch_num = 30
-    elif pruner_name == 'AGP_Pruner':
-        configure_list = [{
-            'initial_sparsity': 0,
-            'final_sparsity': 0.8,
-            'start_epoch': 0,
-            'end_epoch': 30,
-            'frequency': 5,
-            'op_types': ['default']
-        }]
-        pruner = AGP_Pruner(model, configure_list)
-        epoch_num = 30
-    elif pruner_name == 'LotteryTicketPruner':
-        configure_list = [{
-            'prune_iterations': 5,
-            'epoch_per_iteration': 5,
-            'sparsity': 0.8,
-            'op_types': ['default']
-        }]
-        pruner = LotteryTicketPruner(model, configure_list, optimizer)
-        epoch_num = 30
-    else:
-        raise
-    pruner.compress()
-    return pruner, epoch_num
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--pruner', type=str, default='LevelPruner', help='specify the pruner to use')
-    args, _ = parser.parse_known_args()
-    pruner_name = args.pruner
-
     torch.manual_seed(0)
     device = torch.device('cpu')
 
@@ -106,11 +68,25 @@ def main():
     model = Mnist()
     model.to(device)
 
+    '''you can change this to LevelPruner to implement it
+    pruner = LevelPruner(configure_list)
+    '''
+    configure_list = [{
+        'initial_sparsity': 0,
+        'final_sparsity': 0.8,
+        'start_epoch': 0,
+        'end_epoch': 10,
+        'frequency': 1,
+        'op_types': ['default']
+    }]
+
+    pruner = AGP_Pruner(model, configure_list)
+    model = pruner.compress()
+    # you can also use compress(model) method
+    # like that pruner.compress(model)
+
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-
-    pruner, epoch_num = apply_pruner(pruner_name, model, optimizer)
-
-    for epoch in range(epoch_num):
+    for epoch in range(10):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
@@ -120,3 +96,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
