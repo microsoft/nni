@@ -36,6 +36,9 @@ Tuner（调参器）
 ..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
     :members:
 
+..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
+    :members:
+
 Assessor（评估器）
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
