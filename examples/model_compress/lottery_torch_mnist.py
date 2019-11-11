@@ -1,4 +1,3 @@
-import argparse
 from nni.compression.torch import AGP_Pruner, LevelPruner, LotteryTicketPruner
 import torch
 import torch.nn.functional as F

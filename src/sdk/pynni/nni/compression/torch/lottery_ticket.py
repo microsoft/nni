@@ -38,7 +38,6 @@ class LotteryTicketPruner(Pruner):
         super().__init__(model, config_list)
         self.curr_prune_iteration = None
         self.prune_iterations = self._validate_config(config_list)
-        self.prune_iterations += 1 # in the first prune iteration, masks are all one, thus, add one more iteration
 
         # save init weights and optimizer
         self.reset_weights = reset_weights
@@ -117,7 +116,8 @@ class LotteryTicketPruner(Pruner):
         return mask
 
     def get_prune_iterations(self):
-        return range(self.prune_iterations)
+        # in the first prune iteration, masks are all one, thus, add one more iteration
+        return range(self.prune_iterations + 1)
 
     def prune_iteration_start(self):
         """
@@ -133,7 +133,7 @@ class LotteryTicketPruner(Pruner):
             self.curr_prune_iteration = 0
         else:
             self.curr_prune_iteration += 1
-        assert self.curr_prune_iteration < self.prune_iterations, 'Exceed the configured prune_iterations'
+        assert self.curr_prune_iteration < self.prune_iterations + 1, 'Exceed the configured prune_iterations'
 
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
