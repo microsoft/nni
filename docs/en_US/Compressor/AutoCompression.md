@@ -8,12 +8,14 @@ You can easily compress a model with NNI compression. Take pruning for example, 
 
 ```python
 from nni.compression.torch import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': 'default' }]
-pruner = LevelPruner(config_list)
-pruner(model)
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(model, config_list)
+pruner.compress()
 ```
 
-```{ 'sparsity': 0.8, 'op_types': 'default' }```means that **all layers with weight will be compressed with the same 0.8 sparsity**. When ```pruner(model)``` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
+The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
+
+Therefore ```{ 'sparsity': 0.8, 'op_types': ['default'] }```means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ```pruner.compress()``` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
 
 ## Then, make this automatic
 
@@ -82,9 +84,9 @@ config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
                    {'initial_sparsity': 0, 'final_sparsity': conv1_sparsity,
                     'start_epoch': 0, 'end_epoch': 3,
                     'frequency': 1,'op_name': 'conv1' },]
-PRUNERS = {'level':LevelPruner(config_list_level)，'agp':AGP_Pruner(config_list_agp)}
+PRUNERS = {'level':LevelPruner(model, config_list_level)，'agp':AGP_Pruner(model, config_list_agp)}
 pruner = PRUNERS(params['prune_method']['_name'])
-pruner(model)
+pruner.compress()
 ... # fine tuning
 acc = evaluate(model) # evaluation
 nni.report_final_results(acc)

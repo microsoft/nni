@@ -33,7 +33,7 @@ from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.nas_utils import rewrite_nas_space
 from nni.protocol import CommandType, send
 from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
-import nni.parameter_expressions as parameter_expressions
+from nni import parameter_expressions
 
 _logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def create_parameter_id():
     int
         parameter id
     """
-    global _next_parameter_id  # pylint: disable=global-statement
+    global _next_parameter_id
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
@@ -103,8 +103,7 @@ def json2parameter(ss_spec, random_state):
                 _index = random_state.randint(len(_value))
                 chosen_params = json2parameter(ss_spec[NodeType.VALUE][_index], random_state)
             else:
-                chosen_params = eval('parameter_expressions.' +  # pylint: disable=eval-used
-                                     _type)(*(_value + [random_state]))
+                chosen_params = getattr(parameter_expressions, _type)(*(_value + [random_state]))
         else:
             chosen_params = dict()
             for key in ss_spec.keys():
@@ -141,8 +140,8 @@ class Bracket():
         self.bracket_id = s
         self.s_max = s_max
         self.eta = eta
-        self.n = math.ceil((s_max + 1) * (eta ** s) / (s + 1) - _epsilon)  # pylint: disable=invalid-name
-        self.r = R / eta ** s  # pylint: disable=invalid-name
+        self.n = math.ceil((s_max + 1) * (eta ** s) / (s + 1) - _epsilon)
+        self.r = R / eta ** s
         self.i = 0
         self.hyper_configs = []  # [ {id: params}, {}, ... ]
         self.configs_perf = []  # [ {id: [seq, acc]}, {}, ... ]
@@ -198,7 +197,7 @@ class Bracket():
         i: int
             the ith round
         """
-        global _KEY  # pylint: disable=global-statement
+        global _KEY
         self.num_finished_configs[i] += 1
         _logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.bracket_id, self.i, i,
                       self.num_finished_configs[i], self.num_configs_to_run[i])
@@ -227,7 +226,7 @@ class Bracket():
             return [[key, value] for key, value in hyper_configs.items()]
         return None
 
-    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state):  # pylint: disable=invalid-name
+    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state):
         """Randomly generate num hyperparameter configurations from search space
 
         Parameters
@@ -240,7 +239,7 @@ class Bracket():
         list
             a list of hyperparameter configurations. Format: [[key1, value1], [key2, value2], ...]
         """
-        global _KEY  # pylint: disable=global-statement
+        global _KEY
         assert self.i == 0
         hyperparameter_configs = dict()
         for _ in range(num):
@@ -286,7 +285,7 @@ class Hyperband(MsgDispatcherBase):
     def __init__(self, R=60, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
-        self.R = R  # pylint: disable=invalid-name
+        self.R = R
         self.eta = eta
         self.brackets = dict()  # dict of Bracket
         self.generated_hyper_configs = []  # all the configs waiting for run
@@ -417,7 +416,7 @@ class Hyperband(MsgDispatcherBase):
             bracket_id, i, _ = data['parameter_id'].split('_')
             bracket_id = int(bracket_id)
 
-            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here, 
+            # add <trial_job_id, parameter_id> to self.job_id_para_id_map here,
             # because when the first parameter_id is created, trial_job_id is not known yet.
             if data['trial_job_id'] in self.job_id_para_id_map:
                 assert self.job_id_para_id_map[data['trial_job_id']] == data['parameter_id']

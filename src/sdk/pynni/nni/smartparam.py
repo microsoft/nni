@@ -43,8 +43,6 @@ __all__ = [
 ]
 
 
-# pylint: disable=unused-argument
-
 if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return param_exp.choice(options, np.random.RandomState())
@@ -150,42 +148,16 @@ else:
         optional_input_size: number of candidate inputs to be chosen
         tf: tensorflow module
         '''
+        args = (mutable_id, mutable_layer_id, funcs, funcs_args, fixed_inputs, optional_inputs, optional_input_size)
         if mode == 'classic_mode':
-            return classic_mode(mutable_id,
-                            mutable_layer_id,
-                            funcs,
-                            funcs_args,
-                            fixed_inputs,
-                            optional_inputs,
-                            optional_input_size)
+            return classic_mode(*args)
         assert tf is not None, 'Internal Error: Tensorflow should not be None in modes other than classic_mode'
         if mode == 'enas_mode':
-            return enas_mode(mutable_id,
-                            mutable_layer_id,
-                            funcs,
-                            funcs_args,
-                            fixed_inputs,
-                            optional_inputs,
-                            optional_input_size,
-                            tf)
+            return enas_mode(*args, tf)
         if mode == 'oneshot_mode':
-            return oneshot_mode(mutable_id,
-                            mutable_layer_id,
-                            funcs,
-                            funcs_args,
-                            fixed_inputs,
-                            optional_inputs,
-                            optional_input_size,
-                            tf)
+            return oneshot_mode(*args, tf)
         if mode == 'darts_mode':
-            return darts_mode(mutable_id,
-                            mutable_layer_id,
-                            funcs,
-                            funcs_args,
-                            fixed_inputs,
-                            optional_inputs,
-                            optional_input_size,
-                            tf)
+            return darts_mode(*args, tf)
         raise RuntimeError('Unrecognized mode: %s' % mode)
 
     def _get_param(key):

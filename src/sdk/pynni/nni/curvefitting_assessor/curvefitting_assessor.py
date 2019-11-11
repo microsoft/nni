@@ -50,7 +50,7 @@ class CurvefittingAssessor(Assessor):
             self.higher_better = False
         else:
             self.higher_better = True
-            logger.warning('unrecognized optimize_mode', optimize_mode)
+            logger.warning('unrecognized optimize_mode %s', optimize_mode)
         # Start forecasting when historical data reaches start step
         self.start_step = start_step
         # Record the compared threshold
@@ -81,9 +81,9 @@ class CurvefittingAssessor(Assessor):
             else:
                 self.set_best_performance = True
                 self.completed_best_performance = self.trial_history[-1]
-            logger.info('Updated complted best performance, trial job id:', trial_job_id)
+            logger.info('Updated complted best performance, trial job id: %s', trial_job_id)
         else:
-            logger.info('No need to update, trial job id: ', trial_job_id)
+            logger.info('No need to update, trial job id: %s', trial_job_id)
 
     def assess_trial(self, trial_job_id, trial_history):
         """assess whether a trial should be early stop by curve fitting algorithm
@@ -105,7 +105,7 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
-        self.trial_job_id = trial_job_id
+        trial_job_id = trial_job_id
         self.trial_history = trial_history
         if not self.set_best_performance:
             return AssessResult.Good
@@ -122,7 +122,7 @@ class CurvefittingAssessor(Assessor):
             # Predict the final result
             curvemodel = CurveModel(self.target_pos)
             predict_y = curvemodel.predict(trial_history)
-            logger.info('Prediction done. Trial job id = ', trial_job_id, '. Predict value = ', predict_y)
+            logger.info('Prediction done. Trial job id = %s. Predict value = %s', trial_job_id, predict_y)
             if predict_y is None:
                 logger.info('wait for more information to predict precisely')
                 return AssessResult.Good
@@ -130,7 +130,10 @@ class CurvefittingAssessor(Assessor):
 
             end_time = datetime.datetime.now()
             if (end_time - start_time).seconds > 60:
-                logger.warning('Curve Fitting Assessor Runtime Exceeds 60s, Trial Id = ', self.trial_job_id, 'Trial History = ', self.trial_history)
+                logger.warning(
+                    'Curve Fitting Assessor Runtime Exceeds 60s, Trial Id = %s Trial History = %s',
+                    trial_job_id, self.trial_history
+                )
 
             if self.higher_better:
                 if predict_y > standard_performance:
@@ -142,4 +145,4 @@ class CurvefittingAssessor(Assessor):
                 return AssessResult.Bad
 
         except Exception as exception:
-            logger.exception('unrecognize exception in curvefitting_assessor', exception)
+            logger.exception('unrecognize exception in curvefitting_assessor %s', exception)
