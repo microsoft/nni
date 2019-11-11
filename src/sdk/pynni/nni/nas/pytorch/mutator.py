@@ -69,6 +69,12 @@ class Mutator(nn.Module):
             if hooks is not None:
                 for hook in hooks:
                     hook(mutable)
+            else:
+                # fallback to general init
+                self.on_init_general(mutable)
+
+    def on_init_general(self, mutable):
+        pass
 
     @contextmanager
     def forward_pass(self):
