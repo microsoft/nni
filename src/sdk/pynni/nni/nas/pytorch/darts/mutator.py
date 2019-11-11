@@ -17,6 +17,5 @@ class DartsMutator(Mutator):
         self.choices[mutable.key] = nn.Parameter(
             1.0E-3 * torch.randn(mutable.length))
 
-    def on_forward_layer_choice(self, mutable: LayerChoice, ops, *inputs):
-        weights = F.softmax(self.choices[mutable.key], dim=-1)
-        return sum(w * op(*inputs) for w, op in zip(weights, ops))
+    def on_calc_layer_choice_mask(self, mutable: LayerChoice):
+        return F.softmax(self.choices[mutable.key], dim=-1)

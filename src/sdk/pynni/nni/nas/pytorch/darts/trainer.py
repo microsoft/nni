@@ -61,7 +61,8 @@ class DartsTrainer(Trainer):
 
             # phase 1. child network step
             self.model_optim.zero_grad()
-            logits = self.model(trn_X)
+            with self.mutator.forward_pass():
+                logits = self.model(trn_X)
             loss = self.loss(logits, trn_y)
             loss.backward()
             # gradient clipping
@@ -120,7 +121,8 @@ class DartsTrainer(Trainer):
         v_model: backup model before this step
         lr: learning rate for virtual gradient step (same as net lr)
         """
-        loss = self.loss(self.model(val_X), val_y)
+        with self.mutator.forward_pass():
+            loss = self.loss(self.model(val_X), val_y)
         w_model = tuple(self.model.parameters())
         w_ctrl = tuple(self.mutator.parameters())
         w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
@@ -151,7 +153,8 @@ class DartsTrainer(Trainer):
                 for p, d in zip(self.model.parameters(), dw):
                     p += eps * d
 
-            loss = self.loss(self.model(trn_X), trn_y)  # TODO: should use model instead of self.model
+            with self.mutator.forward_pass():
+                loss = self.loss(self.model(trn_X), trn_y)
             if e > 0:
                 dalpha_pos = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w+) }
             elif e < 0:
@@ -160,5 +163,5 @@ class DartsTrainer(Trainer):
         hessian = [(p - n) / 2. * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian
 
-    def finalize(self):
+    def export(self):
         pass
