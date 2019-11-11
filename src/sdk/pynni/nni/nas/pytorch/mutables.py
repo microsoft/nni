@@ -18,12 +18,10 @@ class PyTorchMutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                print(
-                    "Warning: key \"{}\" is not string, converted to string.".format(key))
+                print("Warning: key \"{}\" is not string, converted to string.".format(key))
             self._key = key
         else:
-            self._key = self.__class__.__name__ + \
-                str(global_mutable_counting())
+            self._key = self.__class__.__name__ + str(global_mutable_counting())
         self.name = self.key
 
     def __deepcopy__(self, memodict=None):

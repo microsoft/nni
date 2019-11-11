@@ -1,31 +1,30 @@
 import torch
 import torch.nn as nn
 
-class ops:
-    PRIMITIVES = [
-        'none',
-        'max_pool_3x3',
-        'avg_pool_3x3',
-        'skip_connect', # identity
-        'sep_conv_3x3',
-        'sep_conv_5x5',
-        'dil_conv_3x3',
-        'dil_conv_5x5',
-    ]
+PRIMITIVES = [
+    'none',
+    'max_pool_3x3',
+    'avg_pool_3x3',
+    'skip_connect', # identity
+    'sep_conv_3x3',
+    'sep_conv_5x5',
+    'dil_conv_3x3',
+    'dil_conv_5x5',
+]
 
-    OPS_TABLE = {
-        'none': lambda C, stride, affine: Zero(stride),
-        'avg_pool_3x3': lambda C, stride, affine: PoolBN('avg', C, 3, stride, 1, affine=affine),
-        'max_pool_3x3': lambda C, stride, affine: PoolBN('max', C, 3, stride, 1, affine=affine),
-        'skip_connect': lambda C, stride, affine: \
-            Identity() if stride == 1 else FactorizedReduce(C, C, affine=affine),
-        'sep_conv_3x3': lambda C, stride, affine: SepConv(C, C, 3, stride, 1, affine=affine),
-        'sep_conv_5x5': lambda C, stride, affine: SepConv(C, C, 5, stride, 2, affine=affine),
-        'sep_conv_7x7': lambda C, stride, affine: SepConv(C, C, 7, stride, 3, affine=affine),
-        'dil_conv_3x3': lambda C, stride, affine: DilConv(C, C, 3, stride, 2, 2, affine=affine), # 5x5
-        'dil_conv_5x5': lambda C, stride, affine: DilConv(C, C, 5, stride, 4, 2, affine=affine), # 9x9
-        'conv_7x1_1x7': lambda C, stride, affine: FacConv(C, C, 7, stride, 3, affine=affine)
-    }
+OPS = {
+    'none': lambda C, stride, affine: Zero(stride),
+    'avg_pool_3x3': lambda C, stride, affine: PoolBN('avg', C, 3, stride, 1, affine=affine),
+    'max_pool_3x3': lambda C, stride, affine: PoolBN('max', C, 3, stride, 1, affine=affine),
+    'skip_connect': lambda C, stride, affine: \
+        Identity() if stride == 1 else FactorizedReduce(C, C, affine=affine),
+    'sep_conv_3x3': lambda C, stride, affine: SepConv(C, C, 3, stride, 1, affine=affine),
+    'sep_conv_5x5': lambda C, stride, affine: SepConv(C, C, 5, stride, 2, affine=affine),
+    'sep_conv_7x7': lambda C, stride, affine: SepConv(C, C, 7, stride, 3, affine=affine),
+    'dil_conv_3x3': lambda C, stride, affine: DilConv(C, C, 3, stride, 2, 2, affine=affine), # 5x5
+    'dil_conv_5x5': lambda C, stride, affine: DilConv(C, C, 5, stride, 4, 2, affine=affine), # 9x9
+    'conv_7x1_1x7': lambda C, stride, affine: FacConv(C, C, 7, stride, 3, affine=affine)
+}
 
 def drop_path_(x, drop_prob, training):
     if training and drop_prob > 0.:

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 import nni.nas.pytorch as nas
-from .cnn_ops import ops, Zero, FactorizedReduce, StdConv, Identity
+from .cnn_ops import PRIMITIVES, OPS, Zero, FactorizedReduce, StdConv, Identity
 from nni.nas.pytorch.modules import RankedModule
 
 
@@ -53,8 +53,8 @@ class CnnCell(RankedModule):
                 # reduction should be used only for input node
                 stride = 2 if reduction and i < 2 else 1
                 m_ops = []
-                for primitive in ops.PRIMITIVES:
-                    op = ops.OPS_TABLE[primitive](channels, stride, False)
+                for primitive in PRIMITIVES:
+                    op = OPS[primitive](channels, stride, False)
                     m_ops.append(op)
                 op = nas.mutables.LayerChoice(m_ops,
                                               key="r{}_d{}_i{}".format(reduction, depth, i))

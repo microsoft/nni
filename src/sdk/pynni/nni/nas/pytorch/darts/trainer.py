@@ -103,7 +103,7 @@ class DartsTrainer(Trainer):
     def train(self):
         for epoch in range(self.num_epochs):
             # training
-            # print("Epoch {} Training1".format(epoch))
+            # print("Epoch {} Training".format(epoch))
             # self.train_epoch(epoch)
 
             # validation
