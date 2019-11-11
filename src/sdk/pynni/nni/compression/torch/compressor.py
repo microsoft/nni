@@ -203,7 +203,7 @@ class Quantizer(Compressor):
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
-        quantize should overload this method to quantize weight tensors.
+        quantize should overload this method to quantize weight.
         This method is effectively hooked to `forward()` method of the model.
 
         Parameters
@@ -217,7 +217,7 @@ class Quantizer(Compressor):
 
     def quantize_output(self, output, config, op, op_type, op_name):
         """
-        quantize should overload this method to quantize activations.
+        quantize should overload this method to quantize output.
         This method is effectively hooked to `forward()` method of the model.
 
         Parameters
@@ -236,8 +236,8 @@ class Quantizer(Compressor):
 
         Parameters
         ----------
-        input : Tensor
-            activations that needs to be quantized
+        inputs : Tensor
+            inputs that needs to be quantized
         config : dict
             the configuration for inputs quantization
         """

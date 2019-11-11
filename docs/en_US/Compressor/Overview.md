@@ -170,28 +170,43 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor of a layer
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
         return new_weight
     
     def quantize_output(self, output, config, **kwargs):
         """
-        output is the target output tensor of a layer
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new output
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for activation quantization
         """
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
-        input is the target input tensor of a layer
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new input
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to `forward()` method of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
         """
         return new_input
 
