@@ -11,7 +11,6 @@ class DartsMutator(Mutator):
     def before_build(self, model):
         self.choices = nn.ParameterDict()
         self.register_on_init_hook(LayerChoice, self.on_init_layer_choice)
-        self.register_on_forward_hook(LayerChoice, self.on_forward_layer_choice)
 
     def on_init_layer_choice(self, mutable: LayerChoice):
         self.choices[mutable.key] = nn.Parameter(

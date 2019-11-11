@@ -20,10 +20,12 @@ class Mutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                print("Warning: key \"{}\" is not string, converted to string.".format(key))
+                print(
+                    "Warning: key \"{}\" is not string, converted to string.".format(key))
             self._key = key
         else:
-            self._key = self.__class__.__name__ + str(global_mutable_counting())
+            self._key = self.__class__.__name__ + \
+                str(global_mutable_counting())
         self.name = self.key
 
     def __deepcopy__(self, memodict=None):
@@ -56,8 +58,8 @@ class Mutable(nn.Module):
                 "Mutator not set for {}. Did you initialize a mutable on the fly in forward pass? Move to __init__"
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
 
-    def __repr__(self):
-        return "{} ({})".format(self.name, self.key)
+    # def __repr__(self):
+    #     return "{} ({})".format(self.name, self.key)
 
 
 class MutableScope(Mutable):
@@ -109,11 +111,12 @@ class InputChoice(Mutable):
             "Length of the input list must be equal to number of candidates."
         if semantic_labels is None:
             semantic_labels = ["default_label"] * self.n_candidates
-        out, mask = self.mutator.on_forward(self, optional_inputs, semantic_labels)
+        out, mask = self.mutator.on_forward(
+            self, optional_inputs, semantic_labels)
         if self.return_mask:
             return out, mask
         return out
 
     def similar(self, other):
         return type(self) == type(other) and \
-               self.n_candidates == other.n_candidates and self.n_selected and other.n_selected
+            self.n_candidates == other.n_candidates and self.n_selected and other.n_selected
