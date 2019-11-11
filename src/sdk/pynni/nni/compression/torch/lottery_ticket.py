@@ -38,6 +38,7 @@ class LotteryTicketPruner(Pruner):
         super().__init__(model, config_list)
         self.curr_prune_iteration = None
         self.prune_iterations = self._validate_config(config_list)
+        self.prune_iterations += 1 # in the first prune iteration, masks are all one, thus, add one more iteration
 
         # save init weights and optimizer
         self.reset_weights = reset_weights
