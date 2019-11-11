@@ -3,10 +3,10 @@ from torch import nn as nn
 from torch.nn import functional as F
 
 from nni.nas.pytorch.mutables import LayerChoice
-from nni.nas.pytorch.mutator import Mutator
+from nni.nas.pytorch.mutator import PyTorchMutator
 
 
-class DartsMutator(Mutator):
+class DartsMutator(PyTorchMutator):
 
     def before_build(self, model):
         self.choices = nn.ParameterDict()
