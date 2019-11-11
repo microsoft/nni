@@ -13,11 +13,6 @@ class LayerInfo:
 
         self._forward = None
 
-    def save_forward(self):
-        self._forward = self.module.forward
-
-    def mount_forward(self, new_forward):
-        self.module.forward = new_forward
 
 class Compressor:
     """
