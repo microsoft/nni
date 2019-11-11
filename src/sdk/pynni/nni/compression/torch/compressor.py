@@ -163,7 +163,7 @@ class Pruner(Compressor):
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
         It will be applied with `mul()` operation on the weight.
-        This method is effectively hooked to `:meth:`forward` method of the model.
+        This method is effectively hooked to `forward()` method of the model.
 
         Parameters
         ----------
@@ -253,7 +253,7 @@ class Quantizer(Compressor):
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize weight.
-        This method is effectively hooked to `:meth:`forward` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
@@ -267,21 +267,21 @@ class Quantizer(Compressor):
     def quantize_output(self, output, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize output.
-        This method is effectively hooked to `:meth:`forward` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
         output : Tensor
             output that needs to be quantized
         config : dict
-            the configuration for activation quantization
+            the configuration for output quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_activation()")
+        raise NotImplementedError("Quantizer must overload quantize_output()")
 
     def quantize_input(self, *inputs, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
-        This method is effectively hooked to `:meth:`forward` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------

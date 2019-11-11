@@ -181,7 +181,7 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def quantize_weight(self, weight, config, **kwargs):
         """
         quantize should overload this method to quantize weight tensors.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
@@ -195,21 +195,21 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def quantize_output(self, output, config, **kwargs):
         """
         quantize should overload this method to quantize output.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to `:meth:`forward` of the model.
 
         Parameters
         ----------
         output : Tensor
             output that needs to be quantized
         config : dict
-            the configuration for activation quantization
+            the configuration for output quantization
         """
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
         quantize should overload this method to quantize input.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
