@@ -4,19 +4,15 @@ from contextlib import contextmanager
 import torch
 import torch.nn as nn
 
-from nni.nas.pytorch.mutables import Mutable
+from nni.nas.pytorch.mutables import PyTorchMutable
 from nni.nas.utils import to_snake_case
 
 logger = logging.getLogger(__name__)
 
 
-class Mutator(nn.Module):
+class PyTorchMutator(nn.Module):
     def __init__(self, model):
         super().__init__()
-
-        self._on_init_hooks = {}
-        self._on_forward_hooks = {}
-
         self.before_build(model)
         self.parse_search_space(model)
         self.after_build(model)
@@ -27,26 +23,15 @@ class Mutator(nn.Module):
     def after_build(self, model):
         pass
 
-    def register_on_init_hook(self, mutable_type, hook):
-        hooks = self._on_init_hooks.get(mutable_type, [])
-        hooks.append(hook)
-        self._on_init_hooks[mutable_type] = hooks
-
-    def register_on_forward_hook(self, mutable_type, hook):
-        hooks = self._on_forward_hooks.get(mutable_type, [])
-        hooks.append(hook)
-        self._on_forward_hooks[mutable_type] = hooks
-
     def named_mutables(self, model):
         # if distinct is true, the method will filter out those with duplicated keys
         key2module = dict()
         for name, module in model.named_modules():
-            if isinstance(module, Mutable):
+            if isinstance(module, PyTorchMutable):
                 distinct = False
                 if module.key in key2module:
                     assert key2module[module.key].similar(module), \
-                        "Mutable \"{}\" that share the same key must be similar to each other".format(
-                            module.key)
+                        "Mutable \"{}\" that share the same key must be similar to each other".format(module.key)
                 else:
                     distinct = True
                     key2module[module.key] = module
@@ -54,8 +39,7 @@ class Mutator(nn.Module):
 
     def __setattr__(self, key, value):
         if key in ["model", "net", "network"]:
-            logger.warning(
-                "Think twice if you are including the network into mutator.")
+            logger.warning("Think twice if you are including the network into mutator.")
         return super().__setattr__(key, value)
 
     def parse_search_space(self, model):
@@ -64,11 +48,9 @@ class Mutator(nn.Module):
             mutable.set_mutator(self)
             if not distinct:
                 continue
-
-            hooks = self._on_init_hooks.get(type(mutable))
-            if hooks is not None:
-                for hook in hooks:
-                    hook(mutable)
+            init_method_name = "on_init_{}".format(to_snake_case(mutable.__class__.__name__))
+            if hasattr(self, init_method_name) and callable(getattr(self, init_method_name)):
+                getattr(self, init_method_name)(mutable)
             else:
                 # fallback to general init
                 self.on_init_general(mutable)
@@ -105,11 +87,9 @@ class Mutator(nn.Module):
         if not hasattr(self, "_in_forward_pass") or not self._in_forward_pass:
             raise ValueError("Not in forward pass. Did you forget to call mutator.forward_pass(), or forget to call "
                              "super().before_pass() and after_pass() in your override method?")
-
-        hooks = self._on_forward_hooks.get(type(mutable))
-        if hooks is not None:
-            for hook in hooks:
-                hook(mutable, *inputs)
+        forward_method_name = "on_forward_{}".format(to_snake_case(mutable.__class__.__name__))
+        if hasattr(self, forward_method_name) and callable(getattr(self, forward_method_name)):
+            return getattr(self, forward_method_name)(mutable, *inputs)
         else:
             # fallback to general forward
             return self.on_forward_general(mutable, *inputs)
@@ -123,22 +103,18 @@ class Mutator(nn.Module):
         On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
         (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy speicified
         in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
-
         Parameters
         ----------
         mutable: LayerChoice
         inputs: list of torch.Tensor
-
         Returns
         -------
         torch.Tensor
         """
         def _map_fn(op, *inputs):
             return op(*inputs)
-        mask = self._cache.setdefault(
-            mutable.key, self.on_calc_layer_choice_mask(mutable))
-        out = self._select_with_mask(
-            _map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
+        mask = self._cache.setdefault(mutable.key, self.on_calc_layer_choice_mask(mutable))
+        out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list, semantic_labels):
@@ -148,44 +124,36 @@ class Mutator(nn.Module):
         to get a mask on how to choose between inputs (either by switch or by weights), then it will reduce
         the list of all tensor outputs with the policy speicified in `mutable.reduction`. It will also cache the
         mask with corresponding `mutable.key`.
-
         Parameters
         ----------
         mutable: InputChoice
         inputs: list of torch.Tensor
-
         Returns
         -------
         torch.Tensor
         """
-        mask = self._cache.setdefault(
-            mutable.key, self.on_calc_input_choice_mask(mutable, semantic_labels))
-        out = self._select_with_mask(
-            lambda x: x, [(t, ) for t in tensor_list], mask)
+        mask = self._cache.setdefault(mutable.key, self.on_calc_input_choice_mask(mutable, semantic_labels))
+        out = self._select_with_mask(lambda x: x, [(t, ) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_calc_layer_choice_mask(self, mutable):
         """
         Recommended to override. Calculate a mask tensor for a layer choice.
-
         Parameters
         ----------
         mutable: LayerChoice
             Corresponding layer choice object.
-
         Returns
         -------
         torch.Tensor
             Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
             the numbers are treated as switch.
         """
-        raise NotImplementedError(
-            "Layer choice mask calculation must be implemented")
+        raise NotImplementedError("Layer choice mask calculation must be implemented")
 
     def on_calc_input_choice_mask(self, mutable, semantic_labels):
         """
         Recommended to override. Calculate a mask tensor for a input choice.
-
         Parameters
         ----------
         mutable: InputChoice
@@ -193,15 +161,13 @@ class Mutator(nn.Module):
         semantic_labels: list of string
             The name of labels of input tensors given by user. Usually it's a
             :class:`~nni.nas.pytorch.mutables.MutableScope` marked by user.
-
         Returns
         -------
         torch.Tensor
             Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
             the numbers are treated as switch.
         """
-        raise NotImplementedError(
-            "Input choice mask calculation must be implemented")
+        raise NotImplementedError("Input choice mask calculation must be implemented")
 
     def _select_with_mask(self, map_fn, candidates, mask):
         if "BoolTensor" in mask.type():
@@ -226,5 +192,4 @@ class Mutator(nn.Module):
             return sum(tensor_list) / len(tensor_list)
         if reduction_type == "concat":
             return torch.cat(tensor_list, dim=1)
-        raise ValueError(
-            "Unrecognized reduction policy: \"{}\"".format(reduction_type))
+        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
