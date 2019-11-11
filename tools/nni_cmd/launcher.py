@@ -478,10 +478,12 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
 
-    #save experiment information
+    # save experiment information
     nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,\
-                                            experiment_config['trainingServicePlatform'])
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['authorName'],
+                                            experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
