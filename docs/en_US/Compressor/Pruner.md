@@ -111,29 +111,25 @@ PyTorch code
 from nni.compression.torch import LotteryTicketPruner
 config_list = [{
     'prune_iterations': 5,
-    'epoch_per_iteration': 6,
     'sparsity': 0.8,
     'op_types': ['default']
 }]
 pruner = LotteryTicketPruner(model, config_list, optimizer)
 pruner.compress()
+for _ in pruner.get_prune_iterations():
+    pruner.prune_iteration_start()
+    for epoch in range(epoch_num):
+        ...
 ```
 
-The above configuration means that there are 5 times iterative pruning and 6 epochs run for each pruning. As the n times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` to reset their states every time a new pruning starts, so it has one more initial argument `optimizer`.
+The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round.
 
-Second, you should add code below to update epoch number at the beginning of each epoch.
-
-PyTorch code
-```python
-pruner.update_epoch(epoch)
-```
 
 *Tensorflow version will be supported later.*
 
 #### User configuration for LotteryTicketPruner
 
 * **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **epoch_per_iteration:** The number of epochs for each round. This number is better to be large enough for model convergence, because the hypothesis is that the performance got in latter rounds with high sparsity could be comparable with that got in the first round.
 * **sparsity:** The final sparsity when the compression is done.
 
 ***
