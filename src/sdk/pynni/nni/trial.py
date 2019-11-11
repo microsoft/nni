@@ -91,7 +91,8 @@ def get_experiment_id():
 
 def get_trial_id():
     """
-    Get trial job ID.
+    Get trial job ID which is string identifier of a trial job, for example 'MoXrp'. In one experiment, each trial
+    job has an unique string ID.
 
     Returns
     -------
@@ -103,7 +104,8 @@ def get_trial_id():
 def get_sequence_id():
     """
     Get trial job sequence nubmer. A sequence number is an integer value assigned to each trial job base on the
-    order they are submitted, incremental starting from 0.
+    order they are submitted, incremental starting from 0. In one experiment, both trial job ID and sequence number
+    are unique for each trial job, they are of different data types.
 
     Returns
     -------
