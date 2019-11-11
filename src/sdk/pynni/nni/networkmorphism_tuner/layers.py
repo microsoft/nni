@@ -665,7 +665,7 @@ def to_real_keras_layer(layer):
 def is_layer(layer, layer_type):
     """
     Judge the layer type.
-    
+
     Returns
     -------
     bool
