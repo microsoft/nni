@@ -100,8 +100,6 @@ class LotteryTicketPruner(Pruner):
             The layer to be pruned
         config : dict
             Pruning configurations for this weight
-        **kwargs
-            Not used
 
         Returns
         -------
@@ -128,11 +126,6 @@ class LotteryTicketPruner(Pruner):
         """
         Control the pruning procedure on updated epoch number.
         Should be called at the beginning of the epoch.
-
-        Parameters
-        ----------
-        epoch : num
-            The current epoch number provided by user call
         """
         if self.curr_prune_iteration is None:
             self.curr_prune_iteration = 0
