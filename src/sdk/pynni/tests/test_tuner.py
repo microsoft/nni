@@ -118,7 +118,7 @@ class TunerTestCase(TestCase):
             search_space_all = json.load(fp)
         if supported_types is None:
             supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",
-                               "normal", "qnormal", "lognormal", "qlognormal"]
+                               "normal", "qnormal", "lognormal", "qlognormal", "mutable"]
         full_supported_search_space = dict()
         for single in search_space_all:
             single_keyword = single.split("_")
@@ -146,7 +146,7 @@ class TunerTestCase(TestCase):
 
     def test_grid_search(self):
         self.search_space_test_all(lambda: GridSearchTuner(),
-                                   supported_types=["choice", "randint", "quniform"])
+                                   supported_types=["choice", "randint", "quniform", "mutable"])
 
     def test_tpe(self):
         self.search_space_test_all(lambda: HyperoptTuner("tpe"))
@@ -161,7 +161,7 @@ class TunerTestCase(TestCase):
         if sys.platform == "win32":
             return  # smac doesn't work on windows
         self.search_space_test_all(lambda: SMACTuner(),
-                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform", "mutable"])
 
     def test_batch(self):
         self.search_space_test_all(lambda: BatchTuner(),
