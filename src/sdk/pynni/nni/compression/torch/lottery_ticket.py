@@ -86,10 +86,8 @@ class LotteryTicketPruner(Pruner):
             assert self.mask_dict.get(op_name) is not None
             curr_mask = self.mask_dict.get(op_name)
             w_abs = weight.abs() * curr_mask
-            sorted_weights = np.sort(w_abs, None)
-            index = np.around(curr_sparsity * sorted_weights.size).astype(int)
-            index = min(index, sorted_weights.size - 1)
-            threshold = sorted_weights[index]
+            k = int(w_abs.numel() * curr_sparsity)
+            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
         return mask
 
