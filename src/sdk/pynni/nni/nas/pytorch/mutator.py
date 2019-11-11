@@ -103,10 +103,12 @@ class PyTorchMutator(nn.Module):
         On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
         (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy speicified
         in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
+
         Parameters
         ----------
         mutable: LayerChoice
         inputs: list of torch.Tensor
+
         Returns
         -------
         torch.Tensor
@@ -124,10 +126,12 @@ class PyTorchMutator(nn.Module):
         to get a mask on how to choose between inputs (either by switch or by weights), then it will reduce
         the list of all tensor outputs with the policy speicified in `mutable.reduction`. It will also cache the
         mask with corresponding `mutable.key`.
+
         Parameters
         ----------
         mutable: InputChoice
         inputs: list of torch.Tensor
+
         Returns
         -------
         torch.Tensor
@@ -139,10 +143,12 @@ class PyTorchMutator(nn.Module):
     def on_calc_layer_choice_mask(self, mutable):
         """
         Recommended to override. Calculate a mask tensor for a layer choice.
+
         Parameters
         ----------
         mutable: LayerChoice
             Corresponding layer choice object.
+
         Returns
         -------
         torch.Tensor
@@ -154,6 +160,7 @@ class PyTorchMutator(nn.Module):
     def on_calc_input_choice_mask(self, mutable, semantic_labels):
         """
         Recommended to override. Calculate a mask tensor for a input choice.
+
         Parameters
         ----------
         mutable: InputChoice
@@ -161,6 +168,7 @@ class PyTorchMutator(nn.Module):
         semantic_labels: list of string
             The name of labels of input tensors given by user. Usually it's a
             :class:`~nni.nas.pytorch.mutables.MutableScope` marked by user.
+
         Returns
         -------
         torch.Tensor
