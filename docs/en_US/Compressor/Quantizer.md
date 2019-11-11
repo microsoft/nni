@@ -28,24 +28,17 @@ In [Quantization and Training of Neural Networks for Efficient Integer-Arithmeti
 ### Usage
 You can quantize your model to 8 bits with the code below before your training code.
 
+Tensorflow code
+```python
+from nni.compressors.tensorflow import QAT_Quantizer
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
+quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
+```
 PyTorch code
 ```python
 from nni.compressors.torch import QAT_Quantizer
-model = Mnist()
-config_list = [{
-    'quant_types': ['weight'],
-    'quant_bits': {
-        'weight': 8,
-    },
-    'op_types':['Conv2d', 'Linear']
-}, {
-    'quant_types': ['output'],
-    'quant_bits': {
-        'output': 8,
-    },
-    'quant_start_step': 7000,
-    'op_types':['ReLU6']
-}]
+config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
 quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
@@ -53,12 +46,9 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **quant_types:** This is to specify the quantization types that need to be applied, 'weight', 'input' and 'output' are supported
-* **quant_bits:** This is to specify the bits length that operations should be quantized to, default is 8
-* **quant_start_step:** This is to specify the number of steps before quantization is enabled
+* **q_bits:** This is to specify the q_bits operations to be quantized to
 
-### note
-batch normalization folding is currently not supported.
+
 ***
 
 ## DoReFa Quantizer
