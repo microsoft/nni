@@ -14,7 +14,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+"""
+A family of functions used by CurvefittingAssessor
+"""
 import numpy as np
 
 all_models = {}
@@ -29,10 +31,10 @@ def vap(x, a, b, c):
 
     Parameters
     ----------
-    x: int
-    a: float
-    b: float
-    c: float
+    x : int
+    a : float
+    b : float
+    c : float
 
     Returns
     -------
@@ -50,10 +52,10 @@ def pow3(x, c, a, alpha):
 
     Parameters
     ----------
-    x: int
-    c: float
-    a: float
-    alpha: float
+    x : int
+    c : float
+    a : float
+    alpha : float
 
     Returns
     -------
@@ -71,9 +73,9 @@ def linear(x, a, b):
 
     Parameters
     ----------
-    x: int
-    a: float
-    b: float
+    x : int
+    a : float
+    b : float
 
     Returns
     -------
@@ -91,9 +93,9 @@ def logx_linear(x, a, b):
 
     Parameters
     ----------
-    x: int
-    a: float
-    b: float
+    x : int
+    a : float
+    b : float
 
     Returns
     -------
@@ -112,10 +114,10 @@ def dr_hill_zero_background(x, theta, eta, kappa):
 
     Parameters
     ----------
-    x: int
-    theta: float
-    eta: float
-    kappa: float
+    x : int
+    theta : float
+    eta : float
+    kappa : float
 
     Returns
     -------
@@ -133,10 +135,10 @@ def log_power(x, a, b, c):
 
     Parameters
     ----------
-    x: int
-    a: float
-    b: float
-    c: float
+    x : int
+    a : float
+    b : float
+    c : float
 
     Returns
     -------
@@ -154,11 +156,11 @@ def pow4(x, alpha, a, b, c):
 
     Parameters
     ----------
-    x: int
-    alpha: float
-    a: float
-    b: float
-    c: float
+    x : int
+    alpha : float
+    a : float
+    b : float
+    c : float
 
     Returns
     -------
@@ -177,11 +179,11 @@ def mmf(x, alpha, beta, kappa, delta):
 
     Parameters
     ----------
-    x: int
-    alpha: float
-    beta: float
-    kappa: float
-    delta: float
+    x : int
+    alpha : float
+    beta : float
+    kappa : float
+    delta : float
 
     Returns
     -------
@@ -199,11 +201,11 @@ def exp4(x, c, a, b, alpha):
 
     Parameters
     ----------
-    x: int
-    c: float
-    a: float
-    b: float
-    alpha: float
+    x : int
+    c : float
+    a : float
+    b : float
+    alpha : float
 
     Returns
     -------
@@ -221,9 +223,9 @@ def ilog2(x, c, a):
 
     Parameters
     ----------
-    x: int
-    c: float
-    a: float
+    x : int
+    c : float
+    a : float
 
     Returns
     -------
@@ -242,11 +244,11 @@ def weibull(x, alpha, beta, kappa, delta):
 
     Parameters
     ----------
-    x: int
-    alpha: float
-    beta: float
-    kappa: float
-    delta: float
+    x : int
+    alpha : float
+    beta : float
+    kappa : float
+    delta : float
 
     Returns
     -------
@@ -264,11 +266,11 @@ def janoschek(x, a, beta, k, delta):
 
     Parameters
     ----------
-    x: int
-    a: float
-    beta: float
-    k: float
-    delta: float
+    x : int
+    a : float
+    beta : float
+    k : float
+    delta : float
 
     Returns
     -------
