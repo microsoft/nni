@@ -3,15 +3,13 @@ import torch.nn as nn
 from nni.nas.utils import global_mutable_counting
 
 
-class Mutable(nn.Module):
+class PyTorchMutable(nn.Module):
     """
     Mutable is designed to function as a normal layer, with all necessary operators' weights.
     States and weights of architectures should be included in mutator, instead of the layer itself.
-
     Mutable has a key, which marks the identity of the mutable. This key can be used by users to share
     decisions among different mutables. In mutator's implementation, mutators should use the key to
     distinguish different mutables. Mutables that share the same key should be "similar" to each other.
-
     Currently the default scope for keys is global.
     """
 
@@ -62,7 +60,7 @@ class Mutable(nn.Module):
     #     return "{} ({})".format(self.name, self.key)
 
 
-class MutableScope(Mutable):
+class MutableScope(PyTorchMutable):
     """
     Mutable scope labels a subgraph to help mutators make better decisions. Mutators get notified when a mutable scope
     is entered and exited. Mutators can override ``enter_mutable_scope`` and ``exit_mutable_scope`` to catch
@@ -79,7 +77,7 @@ class MutableScope(Mutable):
         self.mutator.exit_mutable_scope(self)
 
 
-class LayerChoice(Mutable):
+class LayerChoice(PyTorchMutable):
     def __init__(self, op_candidates, reduction="mean", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
@@ -97,7 +95,7 @@ class LayerChoice(Mutable):
         return type(self) == type(other) and self.length == other.length
 
 
-class InputChoice(Mutable):
+class InputChoice(PyTorchMutable):
     def __init__(self, n_candidates, n_selected=None, reduction="mean", return_mask=False, key=None):
         super().__init__(key=key)
         assert n_candidates > 0, "Number of candidates must be greater than 0."
