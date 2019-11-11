@@ -20,15 +20,13 @@
 
 import csv
 import os
-import psutil
 import json
-from datetime import datetime, timezone
 import time
 import re
-from pathlib import Path
-from pyhdfs import HdfsClient, HdfsFileNotFoundException
 import shutil
-from subprocess import call, check_output
+from datetime import datetime, timezone
+from pathlib import Path
+from pyhdfs import HdfsClient
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
@@ -102,7 +100,8 @@ def check_experiment_id(args, update=True):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'],\
+                experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -157,23 +156,24 @@ def parse_ids(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
+                experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
             result_list = running_experiment_list
     elif args.id.endswith('*'):
-        for id in running_experiment_list:
-            if id.startswith(args.id[:-1]):
-                result_list.append(id)
+        for expId in running_experiment_list:
+            if expId.startswith(args.id[:-1]):
+                result_list.append(expId)
     elif args.id in running_experiment_list:
         result_list.append(args.id)
     else:
-        for id in running_experiment_list:
-            if id.startswith(args.id):
-                result_list.append(id)
+        for expId in running_experiment_list:
+            if expId.startswith(args.id):
+                result_list.append(expId)
         if len(result_list) > 1:
-            print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
+            print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list))
             return None
     if not result_list and (args.id  or args.port):
         print_error('There are no experiments matched, please set correct experiment id or restful server port')
@@ -235,7 +235,6 @@ def stop_experiment(args):
         for experiment_id in experiment_id_list:
             print_normal('Stoping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
-            rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 kill_command(rest_pid)
@@ -249,7 +248,7 @@ def stop_experiment(args):
                     nni_config.set_config('tensorboardPidList', [])
             print_normal('Stop experiment success.')
             experiment_config.update_experiment(experiment_id, 'status', 'STOPPED')
-            time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+            time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
             experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))
 
 def trial_ls(args):
@@ -401,9 +400,9 @@ def local_clean(directory):
     print_normal('removing folder {0}'.format(directory))
     try:
         shutil.rmtree(directory)
-    except FileNotFoundError as err:
+    except FileNotFoundError:
         print_error('{0} does not exist.'.format(directory))
-    
+
 def remote_clean(machine_list, experiment_id=None):
     '''clean up remote data'''
     for machine in machine_list:
@@ -418,7 +417,7 @@ def remote_clean(machine_list, experiment_id=None):
         sftp = create_ssh_sftp_client(host, port, userName, passwd)
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remove_remote_directory(sftp, remote_dir)
-    
+
 def hdfs_clean(host, user_name, output_dir, experiment_id=None):
     '''clean up hdfs data'''
     hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
@@ -475,7 +474,7 @@ def experiment_clean(args):
             machine_list = nni_config.get_config('experimentConfig').get('machineList')
             remote_clean(machine_list, experiment_id)
         elif platform == 'pai':
-            host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')	
+            host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')
             user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
             output_dir = nni_config.get_config('experimentConfig').get('trial').get('outputDir')
             hdfs_clean(host, user_name, output_dir, experiment_id)
@@ -492,7 +491,7 @@ def experiment_clean(args):
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
         experiment_config.remove_experiment(experiment_id)
-        print_normal('Done.') 
+        print_normal('Done.')
 
 def get_platform_dir(config_content):
     '''get the dir list to be deleted'''
@@ -505,8 +504,7 @@ def get_platform_dir(config_content):
             port = machine.get('port')
             dir_list.append(host + ':' + str(port) + '/tmp/nni')
     elif platform == 'pai':
-        pai_config = config_content.get('paiConfig')
-        host = config_content.get('paiConfig').get('host')	
+        host = config_content.get('paiConfig').get('host')
         user_name = config_content.get('paiConfig').get('userName')
         output_dir = config_content.get('trial').get('outputDir')
         dir_list.append('server: {0}, path: {1}/nni'.format(host, user_name))
@@ -529,17 +527,15 @@ def platform_clean(args):
         print_normal('platform {0} not supported.'.format(platform))
         exit(0)
     update_experiment()
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    id_list = list(experiment_dict.keys())
     dir_list = get_platform_dir(config_content)
     if not dir_list:
         print_normal('No folder of NNI caches is found.')
         exit(1)
     while True:
-        print_normal('This command will remove below folders of NNI caches. If other users are using experiments on below hosts, it will be broken.')
-        for dir in dir_list:
-            print('       ' + dir)
+        print_normal('This command will remove below folders of NNI caches. If other users are using experiments' \
+                     ' on below hosts, it will be broken.')
+        for value in dir_list:
+            print('       ' + value)
         inputs = input('INFO: do you want to continue?[y/N]:')
         if not inputs.lower() or inputs.lower() in ['n', 'no']:
             exit(0)
@@ -549,11 +545,9 @@ def platform_clean(args):
             break
     if platform == 'remote':
         machine_list = config_content.get('machineList')
-        for machine in machine_list:
-            remote_clean(machine_list, None)
+        remote_clean(machine_list, None)
     elif platform == 'pai':
-        pai_config = config_content.get('paiConfig')
-        host = config_content.get('paiConfig').get('host')	
+        host = config_content.get('paiConfig').get('host')
         user_name = config_content.get('paiConfig').get('userName')
         output_dir = config_content.get('trial').get('outputDir')
         hdfs_clean(host, user_name, output_dir, None)
@@ -618,7 +612,8 @@ def show_experiment_info():
         return
     for key in experiment_id_list:
         print(EXPERIMENT_MONITOR_INFO % (key, experiment_dict[key]['status'], experiment_dict[key]['port'], \
-             experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
+             experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
+             get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiment_dict[key]['port'])
         if running:
@@ -627,7 +622,8 @@ def show_experiment_info():
                 content = json.loads(response.text)
                 for index, value in enumerate(content):
                     content[index] = convert_time_stamp_to_date(value)
-                    print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), content[index].get('endTime'), content[index].get('status')))
+                    print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), \
+                          content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
 def monitor_experiment(args):

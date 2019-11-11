@@ -56,7 +56,7 @@ def seq_to_batch(h, flat=False):
 
 def lstm(xs, ms, s, scope, nh, init_scale=1.0):
     """lstm cell"""
-    nbatch, nin = [v.value for v in xs[0].get_shape()]
+    _, nin = [v.value for v in xs[0].get_shape()] # the first is nbatch
     with tf.variable_scope(scope):
         wx = tf.get_variable("wx", [nin, nh*4], initializer=ortho_init(init_scale))
         wh = tf.get_variable("wh", [nh, nh*4], initializer=ortho_init(init_scale))

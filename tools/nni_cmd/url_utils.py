@@ -18,8 +18,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import socket
 import psutil
-from socket import AddressFamily
 
 BASE_URL = 'http://localhost'
 
@@ -83,8 +83,8 @@ def tensorboard_url(port):
 def get_local_urls(port):
     '''get urls of local machine'''
     url_list = []
-    for name, info in psutil.net_if_addrs().items():
+    for _, info in psutil.net_if_addrs().items():
         for addr in info:
-            if AddressFamily.AF_INET == addr.family:
+            if socket.AddressFamily.AF_INET == addr.family:
                 url_list.append('http://{}:{}'.format(addr.address, port))
     return url_list

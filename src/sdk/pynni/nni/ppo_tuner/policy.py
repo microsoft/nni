@@ -113,7 +113,7 @@ class PolicyWithValue:
         def sample(logits, mask_npinf):
             new_logits = tf.math.add(logits, mask_npinf)
             u = tf.random_uniform(tf.shape(new_logits), dtype=logits.dtype)
-            return tf.argmax(new_logits - tf.log(-tf.log(u)), axis=-1)
+            return tf.argmax(new_logits - tf.log(-1*tf.log(u)), axis=-1)
 
         def neglogp(logits, x):
             # return tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=x)

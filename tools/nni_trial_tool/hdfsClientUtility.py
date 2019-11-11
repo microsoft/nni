@@ -20,7 +20,6 @@
 
 import os
 import posixpath
-from pyhdfs import HdfsClient
 from .log_utils import LogType, nni_log
 
 def copyHdfsDirectoryToLocal(hdfsDirectory, localDirectory, hdfsClient):
@@ -79,7 +78,8 @@ def copyDirectoryToHdfs(localDirectory, hdfsDirectory, hdfsClient):
             try:
                 result = result and copyDirectoryToHdfs(file_path, hdfs_directory, hdfsClient)
             except Exception as exception:
-                nni_log(LogType.Error, 'Copy local directory {0} to hdfs directory {1} error: {2}'.format(file_path, hdfs_directory, str(exception)))
+                nni_log(LogType.Error,
+                        'Copy local directory {0} to hdfs directory {1} error: {2}'.format(file_path, hdfs_directory, str(exception)))
                 result = False
         else:
             hdfs_file_path = os.path.join(hdfsDirectory, file)

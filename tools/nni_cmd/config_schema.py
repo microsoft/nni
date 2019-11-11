@@ -19,13 +19,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
-from schema import Schema, And, Use, Optional, Regex, Or
+from schema import Schema, And, Optional, Regex, Or
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
 
 
-def setType(key, type):
+def setType(key, valueType):
     '''check key type'''
-    return And(type, error=SCHEMA_TYPE_ERROR % (key, type.__name__))
+    return And(valueType, error=SCHEMA_TYPE_ERROR % (key, valueType.__name__))
 
 def setChoice(key, *args):
     '''check choice'''
@@ -47,7 +47,7 @@ common_schema = {
     'experimentName': setType('experimentName', str),
     Optional('description'): setType('description', str),
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
-    Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$',error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
+    Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
@@ -106,7 +106,7 @@ tuner_schema_dict = {
         'builtinTunerName': 'NetworkMorphism',
         Optional('classArgs'): {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('task'): setChoice('task', 'cv','nlp','common'),
+            Optional('task'): setChoice('task', 'cv', 'nlp', 'common'),
             Optional('input_width'): setType('input_width', int),
             Optional('input_channel'): setType('input_channel', int),
             Optional('n_output_node'): setType('n_output_node', int),
@@ -139,7 +139,7 @@ tuner_schema_dict = {
             Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
             Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
             },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool), 
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
     },
     'PPOTuner': {
@@ -232,48 +232,52 @@ assessor_schema_dict = {
 }
 
 common_trial_schema = {
-'trial':{
-    'command': setType('command', str),
-    'codeDir': setPathCheck('codeDir'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-    Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode')
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode')
     }
 }
 
 pai_trial_schema = {
-'trial':{
-    'command': setType('command', str),
-    'codeDir': setPathCheck('codeDir'),
-    'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-    'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
-    'memoryMB': setType('memoryMB', int),
-    'image': setType('image', str),
-    Optional('authFile'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'authFile'),
-    Optional('shmMB'): setType('shmMB', int),
-    Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                         error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
-    Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                         error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
-    Optional('virtualCluster'): setType('virtualCluster', str),
-    Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
-    Optional('portList'): [{
-        "label": setType('label', str),
-        "beginAt": setType('beginAt', int),
-        "portNumber": setType('portNumber', int)
-    }]
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
+        'memoryMB': setType('memoryMB', int),
+        'image': setType('image', str),
+        Optional('authFile'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'authFile'),
+        Optional('shmMB'): setType('shmMB', int),
+        Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                            error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
+                            error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
+        Optional('portList'): [{
+            "label": setType('label', str),
+            "beginAt": setType('beginAt', int),
+            "portNumber": setType('portNumber', int)
+        }]
     }
 }
 
 pai_config_schema = {
-    'paiConfig':{
+    'paiConfig': Or({
         'userName': setType('userName', str),
         'passWord': setType('passWord', str),
         'host': setType('host', str)
-    }
+    }, {
+        'userName': setType('userName', str),
+        'token': setType('token', str),
+        'host': setType('host', str)
+    })
 }
 
 kubeflow_trial_schema = {
-'trial':{
+    'trial':{
         'codeDir':  setPathCheck('codeDir'),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('ps'): {
@@ -315,7 +319,7 @@ kubeflow_config_schema = {
             'server': setType('server', str),
             'path': setType('path', str)
         }
-    },{
+    }, {
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
@@ -363,7 +367,7 @@ frameworkcontroller_config_schema = {
             'server': setType('server', str),
             'path': setType('path', str)
         }
-    },{
+    }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
@@ -383,24 +387,24 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-Optional('machineList'):[Or({
-    'ip': setType('ip', str),
-    Optional('port'): setNumberRange('port', int, 1, 65535),
-    'username': setType('username', str),
-    'passwd': setType('passwd', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-    Optional('useActiveGpu'): setType('useActiveGpu', bool)
-    },{
-    'ip': setType('ip', str),
-    Optional('port'): setNumberRange('port', int, 1, 65535),
-    'username': setType('username', str),
-    'sshKeyPath': setPathCheck('sshKeyPath'),
-    Optional('passphrase'): setType('passphrase', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-    Optional('useActiveGpu'): setType('useActiveGpu', bool)
-})]
+    Optional('machineList'):[Or({
+        'ip': setType('ip', str),
+        Optional('port'): setNumberRange('port', int, 1, 65535),
+        'username': setType('username', str),
+        'passwd': setType('passwd', str),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        }, {
+            'ip': setType('ip', str),
+            Optional('port'): setNumberRange('port', int, 1, 65535),
+            'username': setType('username', str),
+            'sshKeyPath': setPathCheck('sshKeyPath'),
+            Optional('passphrase'): setType('passphrase', str),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+            Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        })]
 }
 
 LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
