@@ -311,14 +311,13 @@ class Quantizer(Compressor):
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
-                return
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
                 inputs = self.quantize_input(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
 
-            if 'weight' in config["quant_types"]:
+            if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
                 new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
                 layer.module.weight.data = new_weight
