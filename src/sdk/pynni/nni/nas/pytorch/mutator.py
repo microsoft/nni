@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 from contextlib import contextmanager
 
 import torch
@@ -46,7 +45,8 @@ class Mutator(nn.Module):
                 distinct = False
                 if module.key in key2module:
                     assert key2module[module.key].similar(module), \
-                        "Mutable \"{}\" that share the same key must be similar to each other".format(module.key)
+                        "Mutable \"{}\" that share the same key must be similar to each other".format(
+                            module.key)
                 else:
                     distinct = True
                     key2module[module.key] = module
@@ -99,9 +99,6 @@ class Mutator(nn.Module):
         if not hasattr(self, "_in_forward_pass") or not self._in_forward_pass:
             raise ValueError("Not in forward pass. Did you forget to call mutator.forward_pass(), or forget to call "
                              "super().before_pass() and after_pass() in your override method?")
-        forward_method_name = "on_forward_{}".format(to_snake_case(mutable.__class__.__name__))
-        if hasattr(self, forward_method_name) and callable(getattr(self, forward_method_name)):
-            return getattr(self, forward_method_name)(mutable, *inputs)
 
         hooks = self._on_forward_hooks.get(type(mutable))
         if hooks is not None:
@@ -132,8 +129,10 @@ class Mutator(nn.Module):
         """
         def _map_fn(op, *inputs):
             return op(*inputs)
-        mask = self._cache.setdefault(mutable.key, self.on_calc_layer_choice_mask(mutable))
-        out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
+        mask = self._cache.setdefault(
+            mutable.key, self.on_calc_layer_choice_mask(mutable))
+        out = self._select_with_mask(
+            _map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list, semantic_labels):
@@ -153,8 +152,10 @@ class Mutator(nn.Module):
         -------
         torch.Tensor
         """
-        mask = self._cache.setdefault(mutable.key, self.on_calc_input_choice_mask(mutable, semantic_labels))
-        out = self._select_with_mask(lambda x: x, [(t, ) for t in tensor_list], mask)
+        mask = self._cache.setdefault(
+            mutable.key, self.on_calc_input_choice_mask(mutable, semantic_labels))
+        out = self._select_with_mask(
+            lambda x: x, [(t, ) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_calc_layer_choice_mask(self, mutable):
@@ -172,7 +173,8 @@ class Mutator(nn.Module):
             Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
             the numbers are treated as switch.
         """
-        raise NotImplementedError("Layer choice mask calculation must be implemented")
+        raise NotImplementedError(
+            "Layer choice mask calculation must be implemented")
 
     def on_calc_input_choice_mask(self, mutable, semantic_labels):
         """
@@ -192,7 +194,8 @@ class Mutator(nn.Module):
             Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
             the numbers are treated as switch.
         """
-        raise NotImplementedError("Input choice mask calculation must be implemented")
+        raise NotImplementedError(
+            "Input choice mask calculation must be implemented")
 
     def _select_with_mask(self, map_fn, candidates, mask):
         if "BoolTensor" in mask.type():
@@ -217,4 +220,5 @@ class Mutator(nn.Module):
             return sum(tensor_list) / len(tensor_list)
         if reduction_type == "concat":
             return torch.cat(tensor_list, dim=1)
-        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+        raise ValueError(
+            "Unrecognized reduction policy: \"{}\"".format(reduction_type))

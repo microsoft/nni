@@ -3,7 +3,7 @@ import torch.nn as nn
 from nni.nas.utils import global_mutable_counting
 
 
-class PyTorchMutable(nn.Module):
+class Mutable(nn.Module):
     """
     Mutable is designed to function as a normal layer, with all necessary operators' weights.
     States and weights of architectures should be included in mutator, instead of the layer itself.
@@ -60,7 +60,7 @@ class PyTorchMutable(nn.Module):
         return "{} ({})".format(self.name, self.key)
 
 
-class MutableScope(PyTorchMutable):
+class MutableScope(Mutable):
     """
     Mutable scope labels a subgraph to help mutators make better decisions. Mutators get notified when a mutable scope
     is entered and exited. Mutators can override ``enter_mutable_scope`` and ``exit_mutable_scope`` to catch
@@ -77,7 +77,7 @@ class MutableScope(PyTorchMutable):
         self.mutator.exit_mutable_scope(self)
 
 
-class LayerChoice(PyTorchMutable):
+class LayerChoice(Mutable):
     def __init__(self, op_candidates, reduction="mean", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
@@ -95,7 +95,7 @@ class LayerChoice(PyTorchMutable):
         return type(self) == type(other) and self.length == other.length
 
 
-class InputChoice(PyTorchMutable):
+class InputChoice(Mutable):
     def __init__(self, n_candidates, n_selected=None, reduction="mean", return_mask=False, key=None):
         super().__init__(key=key)
         assert n_candidates > 0, "Number of candidates must be greater than 0."
