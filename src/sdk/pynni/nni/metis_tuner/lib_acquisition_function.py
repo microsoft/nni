@@ -16,7 +16,11 @@
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+"""
+lib_acquisition_function.py
+"""
 
 import sys
 import numpy
@@ -33,9 +37,9 @@ def next_hyperparameter_expected_improvement(fun_prediction,
                                              samples_y_aggregation,
                                              minimize_starting_points,
                                              minimize_constraints_fun=None):
-    '''
+    """
     "Expected Improvement" acquisition function
-    '''
+    """
     best_x = None
     best_acquisition_value = None
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
@@ -70,6 +74,7 @@ def next_hyperparameter_expected_improvement(fun_prediction,
 
     return outputs
 
+
 def _expected_improvement(x, fun_prediction, fun_prediction_args,
                           x_bounds, x_types, samples_y_aggregation,
                           minimize_constraints_fun):
@@ -77,7 +82,8 @@ def _expected_improvement(x, fun_prediction, fun_prediction_args,
     x = lib_data.match_val_type(x, x_bounds, x_types)
 
     expected_improvement = sys.maxsize
-    if (minimize_constraints_fun is None) or (minimize_constraints_fun(x) is True):
+    if (minimize_constraints_fun is None) or (
+            minimize_constraints_fun(x) is True):
         mu, sigma = fun_prediction(x, *fun_prediction_args)
 
         loss_optimum = min(samples_y_aggregation)
@@ -87,7 +93,7 @@ def _expected_improvement(x, fun_prediction, fun_prediction_args,
         with numpy.errstate(divide="ignore"):
             Z = scaling_factor * (mu - loss_optimum) / sigma
             expected_improvement = scaling_factor * (mu - loss_optimum) * \
-                                        norm.cdf(Z) + sigma * norm.pdf(Z)
+                norm.cdf(Z) + sigma * norm.pdf(Z)
             expected_improvement = 0.0 if sigma == 0.0 else expected_improvement
 
         # We want expected_improvement to be as large as possible
@@ -101,9 +107,9 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
                                           x_bounds, x_types,
                                           minimize_starting_points,
                                           minimize_constraints_fun=None):
-    '''
+    """
     "Lowest Confidence" acquisition function
-    '''
+    """
     best_x = None
     best_acquisition_value = None
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
@@ -120,10 +126,12 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
                              x_types,
                              minimize_constraints_fun))
 
-        if (best_acquisition_value) is None or (res.fun < best_acquisition_value):
+        if (best_acquisition_value) is None or (
+                res.fun < best_acquisition_value):
             res.x = numpy.ndarray.tolist(res.x)
             res.x = lib_data.match_val_type(res.x, x_bounds, x_types)
-            if (minimize_constraints_fun is None) or (minimize_constraints_fun(res.x) is True):
+            if (minimize_constraints_fun is None) or (
+                    minimize_constraints_fun(res.x) is True):
                 best_acquisition_value = res.fun
                 best_x = res.x
 
@@ -134,13 +142,15 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
                    'expected_sigma': sigma, 'acquisition_func': "lc"}
     return outputs
 
+
 def _lowest_confidence(x, fun_prediction, fun_prediction_args,
                        x_bounds, x_types, minimize_constraints_fun):
     # This is only for step-wise optimization
     x = lib_data.match_val_type(x, x_bounds, x_types)
 
     ci = sys.maxsize
-    if (minimize_constraints_fun is None) or (minimize_constraints_fun(x) is True):
+    if (minimize_constraints_fun is None) or (
+            minimize_constraints_fun(x) is True):
         mu, sigma = fun_prediction(x, *fun_prediction_args)
         ci = (sigma * 1.96 * 2) / mu
         # We want ci to be as large as possible
@@ -156,9 +166,9 @@ def next_hyperparameter_lowest_mu(fun_prediction,
                                   x_bounds, x_types,
                                   minimize_starting_points,
                                   minimize_constraints_fun=None):
-    '''
+    """
     "Lowest Mu" acquisition function
-    '''
+    """
     best_x = None
     best_acquisition_value = None
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
@@ -169,13 +179,15 @@ def next_hyperparameter_lowest_mu(fun_prediction,
                        x0=starting_point.reshape(1, -1),
                        bounds=x_bounds_minmax,
                        method="L-BFGS-B",
-                       args=(fun_prediction, fun_prediction_args, \
+                       args=(fun_prediction, fun_prediction_args,
                              x_bounds, x_types, minimize_constraints_fun))
 
-        if (best_acquisition_value is None) or (res.fun < best_acquisition_value):
+        if (best_acquisition_value is None) or (
+                res.fun < best_acquisition_value):
             res.x = numpy.ndarray.tolist(res.x)
             res.x = lib_data.match_val_type(res.x, x_bounds, x_types)
-            if (minimize_constraints_fun is None) or (minimize_constraints_fun(res.x) is True):
+            if (minimize_constraints_fun is None) or (
+                    minimize_constraints_fun(res.x) is True):
                 best_acquisition_value = res.fun
                 best_x = res.x
 
@@ -189,14 +201,14 @@ def next_hyperparameter_lowest_mu(fun_prediction,
 
 def _lowest_mu(x, fun_prediction, fun_prediction_args,
                x_bounds, x_types, minimize_constraints_fun):
-    '''
+    """
     Calculate the lowest mu
-    '''
+    """
     # This is only for step-wise optimization
     x = lib_data.match_val_type(x, x_bounds, x_types)
 
     mu = sys.maxsize
-    if (minimize_constraints_fun is None) or (minimize_constraints_fun(x) is True):
+    if (minimize_constraints_fun is None) or (
+            minimize_constraints_fun(x) is True):
         mu, _ = fun_prediction(x, *fun_prediction_args)
     return mu
-    

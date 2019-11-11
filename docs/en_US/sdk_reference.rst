@@ -39,6 +39,9 @@ Tuner
 ..  autoclass:: nni.ppo_tuner.PPOTuner
     :members:
 
+..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
+    :members:
+
 Assessor
 ------------------------
 ..  autoclass:: nni.assessor.Assessor

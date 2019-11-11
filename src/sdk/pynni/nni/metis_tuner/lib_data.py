@@ -16,7 +16,8 @@
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 import math
 import random
@@ -56,7 +57,7 @@ def rand(x_bounds, x_types):
             temp = x_bounds[i][random.randint(0, len(x_bounds[i]) - 1)]
             outputs.append(temp)
         elif x_types[i] == "range_int":
-            temp = random.randint(x_bounds[i][0], x_bounds[i][1] -1)
+            temp = random.randint(x_bounds[i][0], x_bounds[i][1] - 1)
             outputs.append(temp)
         elif x_types[i] == "range_continuous":
             temp = random.uniform(x_bounds[i][0], x_bounds[i][1])
