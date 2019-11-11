@@ -304,7 +304,7 @@ class PPOModel:
 
 class PPOTuner(Tuner):
     """
-    PPOTuner, the implementation inherits the main logic of the implementation 
+    PPOTuner, the implementation inherits the main logic of the implementation
     [ppo2 from openai](https://github.com/openai/baselines/tree/master/baselines/ppo2), and is adapted for NAS scenario.
     It uses ``lstm`` for its policy network and value network, policy and value share the same network.
     """

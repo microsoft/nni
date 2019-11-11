@@ -42,7 +42,7 @@ from .convert_ss_to_scenario import generate_scenario
 class SMACTuner(Tuner):
     """
     This is a wrapper of [SMAC](https://github.com/automl/SMAC3) following NNI tuner interface.
-    It only supports ``SMAC`` mode, and does not support the multiple instances of SMAC3 (i.e., 
+    It only supports ``SMAC`` mode, and does not support the multiple instances of SMAC3 (i.e.,
     the same configuration is run multiple times).
     """
     def __init__(self, optimize_mode="maximize"):
@@ -66,7 +66,7 @@ class SMACTuner(Tuner):
 
     def _main_cli(self):
         """
-        Main function of SMAC for CLI interface. Some initializations of the wrapped SMAC are done 
+        Main function of SMAC for CLI interface. Some initializations of the wrapped SMAC are done
         in this function.
 
         Returns
@@ -137,7 +137,7 @@ class SMACTuner(Tuner):
         are supported. In this function, we also do the initialization of `SMAC3`, i.e., calling ``self._main_cli``.
 
         NOTE: updating search space during experiment running is not supported.
-        
+
         Parameters
         ----------
         search_space : dict
@@ -285,7 +285,7 @@ class SMACTuner(Tuner):
     def import_data(self, data):
         """
         Import additional data for tuning.
-        
+
         Parameters
         ----------
         data : list of dict

@@ -43,7 +43,8 @@ class GridSearchTuner(Tuner):
 
     Type ``choice`` will select one of the options. Note that it can also be nested.
 
-    Type ``quniform`` will receive three values [``low``, ``high``, ``q``], where [``low``, ``high``] specifies a range and ``q`` specifies the interval.
+    Type ``quniform`` will receive three values [``low``, ``high``, ``q``],
+    where [``low``, ``high``] specifies a range and ``q`` specifies the interval.
     It will be sampled in a way that the first sampled value is ``low``,
     and each of the following values is 'interval' larger than the value in front of it.
 

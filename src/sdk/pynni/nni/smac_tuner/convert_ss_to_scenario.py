@@ -199,7 +199,7 @@ def generate_scenario(ss_content):
     wallclock_limit: int
         Maximum amount of wallclock-time used for optimization. Default: inf.
         Use default because this is controlled by nni
-        
+
     Returns
     -------
     Scenario:
