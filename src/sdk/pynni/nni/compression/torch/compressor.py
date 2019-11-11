@@ -206,6 +206,8 @@ class Pruner(Compressor):
         """
         assert model_path is not None, 'model_path must be specified'
         for name, m in self.bound_model.named_modules():
+            if name == "":
+                continue
             mask = self.mask_dict.get(name)
             if mask is not None:
                 mask_sum = mask.sum().item()
