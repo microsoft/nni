@@ -90,7 +90,7 @@ class LotteryTicketPruner(Pruner):
             mask = torch.gt(w_abs, threshold).type_as(weight)
         return mask
 
-    def calc_mask(self, layer, config, **kwargs):
+    def calc_mask(self, layer, config):
         """
         Generate mask for the given ``weight``.
 
