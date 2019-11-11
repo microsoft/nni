@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 class NaiveQuantizer(Quantizer):
     """quantize weight to 8 bits
     """
-    def __init__(self, config_list):
-        super().__init__(config_list)
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
         self.layer_scale = {}
 
     def quantize_weight(self, weight, config, op_name, **kwargs):
@@ -27,12 +27,12 @@ class QAT_Quantizer(Quantizer):
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
         config_list: supported keys:
             - q_bits
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         if config['q_bits'] <= 1:
@@ -53,12 +53,12 @@ class DoReFaQuantizer(Quantizer):
     Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
     (https://arxiv.org/abs/1606.06160)
     """
-    def __init__(self, config_list):
+    def __init__(self, model, config_list):
         """
         config_list: supported keys:
             - q_bits
         """
-        super().__init__(config_list)
+        super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         out = weight.tanh()
