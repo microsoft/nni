@@ -57,9 +57,17 @@
     "_type": "loguniform",
     "_value": [0.001, 100]
   },
+  "loguniform_equal": {
+    "_type": "loguniform",
+    "_value": [1, 1]
+  },
   "qloguniform_ok": {
     "_type": "qloguniform",
     "_value": [0.001, 100, 1]
+  },
+  "qloguniform_equal": {
+    "_type": "qloguniform",
+    "_value": [2, 2, 1]
   },
   "normal_ok": {
     "_type": "normal",
