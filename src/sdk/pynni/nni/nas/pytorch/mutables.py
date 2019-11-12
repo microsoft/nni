@@ -54,9 +54,6 @@ class PyTorchMutable(nn.Module):
                 "Mutator not set for {}. Did you initialize a mutable on the fly in forward pass? Move to __init__"
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
 
-    # def __repr__(self):
-    #     return "{} ({})".format(self.name, self.key)
-
 
 class MutableScope(PyTorchMutable):
     """
