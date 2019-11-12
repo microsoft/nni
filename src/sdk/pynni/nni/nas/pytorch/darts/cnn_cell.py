@@ -64,8 +64,7 @@ class CnnCell(RankedModule):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
         tensors = [self.preproc0(s0), self.preproc1(s1)]
         for ops in self.mutable_ops:
-            # print(ops)
-            print("ops:%s, tensors:%s" % (len(ops), len(tensors)))
+
             assert len(ops) == len(tensors)
             cur_tensor = sum(op(tensor) for op, tensor in zip(ops, tensors))
             tensors.append(cur_tensor)

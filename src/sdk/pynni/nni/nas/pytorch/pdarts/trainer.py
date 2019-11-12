@@ -53,11 +53,13 @@ class PdartsTrainer(Trainer):
                                    lr_scheduler=lr_scheduler, mutator=mutator,
                                    **self.darts_parameters)
             print("start training")
-            trainer.train()
 
-            for key in mutator.choices:
-                item = mutator.choices[key]
-                print("key: %s, %s" % (key, item.cpu().data))
+            with mutator.forward_pass():
+                trainer.train()
+
+            # for key in mutator.choices:
+            #     item = mutator.choices[key]
+            #     print("key: %s, %s" % (key, item.cpu().data))
 
             # with open('log/parameters_%d.txt' % epoch, "w") as f:
             #     f.write(str(model.parameters))
