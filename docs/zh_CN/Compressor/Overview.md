@@ -101,7 +101,7 @@ pruner.update_epoch(epoch)
 pruner.export_model(model_path='model.pth')
 ```
 
-`mask_dict` and pruned model in `onnx` format(`input_shape` need to be specified) can also be exported like this:
+`mask_dict` 和 `onnx` 格式的剪枝模型（需要指定 `input_shape`）可这样导出：
 
 ```python
 pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
@@ -130,41 +130,40 @@ class YourPruner(nni.compression.tensorflow.Pruner):
     def calc_mask(self, layer, config):
         """
         Pruner 需要重载此方法来为权重提供掩码
-        The mask must have the same shape and type comparing to the weight.
-        It will be applied with ``mul()`` operation on the weight.
-        This method is effectively hooked to ``forward()`` method of the model.
+        掩码必须与权重有相同的形状和类型。
+        将对权重执行 ``mul()`` 操作。
+        此方法会挂载到模型的 ``forward()`` 方法上。
 
         Parameters
         ----------
         layer: LayerInfo
-            calculate mask for ``layer``'s weight
+            为 ``layer`` 的权重计算掩码
         config: dict
-            the configuration for generating the mask
+            生成权重所需要的掩码
         """
         return your_mask
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据需要可基于 bind_model 方法中的模型或权重进行操作
         """
         pass
 ```
 
-For the simplest algorithm, you only need to override `calc_mask`. It receives the to-be-compressed layers one by one along with their compression configuration. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+对于最简单的算法，只需要重写 `calc_mask` 函数。 它会接收需要压缩的层以及其压缩配置。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
 
-Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress. It should be called at the beginning of each epoch.
+一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。 应在每个 Epoch 之前调用它。
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information). Your can use `self.bound_model` in the Pruner class for accessing weights. If you also need optimizer's information (for example in Pytorch), you could override `__init__` to receive more arguments such as model's optimizer. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
+一些算法可能需要全局的信息来生成 mask，例如模型的所有权重（用于生成统计信息）. 可在 Pruner 类中通过 `self.bound_model` 来访问权重。 如果需要优化器的信息（如在 Pytorch 中），可重载 `__init__` 来接收优化器等参数。 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
 
 ### 量化算法
 
-The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+定制量化算法的接口与剪枝算法类似。 The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
 
 ```python
 # This is writing a Quantizer in tensorflow.
