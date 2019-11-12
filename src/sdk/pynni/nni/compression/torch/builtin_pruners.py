@@ -111,7 +111,7 @@ class AGP_Pruner(Pruner):
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
-                self.now_epoch - start_epoch) % freq == 0:
+                    self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
@@ -267,19 +267,9 @@ class SlimPruner(Pruner):
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
         config = config_list[0]
-        op_types = config.get('op_types')
-        op_names = config.get('op_names')
-        if op_types is not None:
-            assert op_types == ['BatchNorm2d'], 'SlimPruner only supports 2d batch normalization layer pruning'
-            for name, m in model.named_modules():
-                if type(m).__name__ == 'BatchNorm2d':
-                    weight_list.append(m.weight.data.clone())
-        else:
-            for name, m in model.named_modules():
-                if name in op_names:
-                    assert type(
-                        m).__name__ == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-                    weight_list.append(m.weight.data.clone())
+        for (layer, config) in self.detect_modules_to_compress():
+            assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+            weight_list.append(layer.module.weight.data.clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
