@@ -190,6 +190,9 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         config : dict
             the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
     
     def quantize_output(self, output, config, **kwargs):
@@ -204,6 +207,9 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         config : dict
             the configuration for output quantization
         """
+
+        # Put your code to generate `new_output` here
+
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
@@ -218,6 +224,9 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         config : dict
             the configuration for inputs quantization
         """
+
+        # Put your code to generate `new_input` here
+
         return new_input
 
     # note for pytorch version, there is no sess in input arguments
