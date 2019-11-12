@@ -48,13 +48,13 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 
 ## 3. 如何运行 NNI
 
-### 3.1 Install all the requirments
+### 3.1 安装所有要求的包
 
     pip install lightgbm
     pip install pandas
     
 
-### 3.2 Prepare your trial code
+### 3.2 准备 Trial 代码
 
 基础代码如下：
 
@@ -68,23 +68,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    Load or create dataset
+    读取或创建数据集
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # train
+    # 训练
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # predict
+    # 预测
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval
+    # 评估
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.3 Prepare your search space.
+### 3.3 准备搜索空间
 
 如果要调优 `num_leaves`, `learning_rate`, `bagging_fraction` 和 `bagging_freq`, 可创建一个 [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) 文件：
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
 参考[这里](../Tutorial/SearchSpaceSpec.md)，了解更多变量类型。
 
-### 3.4 Add SDK of nni into your code.
+### 3.4 在代码中使用 NNI SDK
 
 ```diff
 +import nni
@@ -124,23 +124,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    Load or create dataset
+    读取或创建数据集
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # train
+    # 训练
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # predict
+    # 预测
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval
+    # 评估
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -155,11 +155,11 @@ if __name__ == '__main__':
     PARAMS = get_default_parameters()
     PARAMS.update(RECEIVED_PARAMS)
 
-    # train
+    # 训练
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.5 Write a config file and run it.
+### 3.5 实现配置文件并运行
 
 在配置文件中，可以设置如下内容：
 
@@ -176,17 +176,17 @@ experimentName: example_auto-gbdt
 trialConcurrency: 1
 maxExecDuration: 10h
 maxTrialNum: 10
-#choice: local, remote, pai
+#可选项: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
+  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: minimize
 trial:
   command: python3 main.py
