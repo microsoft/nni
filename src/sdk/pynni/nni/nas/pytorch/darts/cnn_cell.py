@@ -31,8 +31,7 @@ class CnnCell(RankedModule):
         reduction: bool
             Flag for whether the current cell is reduction cell or not.
         """
-        super(CnnCell, self).__init__(rank=1)
-        self.reduction = reduction
+        super(CnnCell, self).__init__(rank=1, reduction=reduction)
         self.n_nodes = n_nodes
 
         # If previous cell is reduction cell, current input size does not match with
@@ -48,7 +47,7 @@ class CnnCell(RankedModule):
         # generate dag
         self.mutable_ops = nn.ModuleList()
         for depth in range(self.n_nodes):
-            # self.mutable_ops.append(nn.ModuleList())
+            self.mutable_ops.append(nn.ModuleList())
             for i in range(2 + depth):  # include 2 input nodes
                 # reduction should be used only for input node
                 stride = 2 if reduction and i < 2 else 1
@@ -58,12 +57,15 @@ class CnnCell(RankedModule):
                     m_ops.append(op)
                 op = nas.mutables.LayerChoice(m_ops,
                                               key="r{}_d{}_i{}".format(reduction, depth, i))
-                self.mutable_ops.append(op)
+                # self.mutable_ops.append(op)
+                self.mutable_ops[depth].append(op)
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
         tensors = [self.preproc0(s0), self.preproc1(s1)]
         for ops in self.mutable_ops:
+            # print(ops)
+            print("ops:%s, tensors:%s" % (len(ops), len(tensors)))
             assert len(ops) == len(tensors)
             cur_tensor = sum(op(tensor) for op, tensor in zip(ops, tensors))
             tensors.append(cur_tensor)

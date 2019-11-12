@@ -18,10 +18,12 @@ class PyTorchMutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                print("Warning: key \"{}\" is not string, converted to string.".format(key))
+                print(
+                    "Warning: key \"{}\" is not string, converted to string.".format(key))
             self._key = key
         else:
-            self._key = self.__class__.__name__ + str(global_mutable_counting())
+            self._key = self.__class__.__name__ + \
+                str(global_mutable_counting())
         self.name = self.key
 
     def __deepcopy__(self, memodict=None):
@@ -82,6 +84,9 @@ class LayerChoice(PyTorchMutable):
         self.choices = nn.ModuleList(op_candidates)
         self.reduction = reduction
         self.return_mask = return_mask
+
+    def __len__(self):
+        return self.length
 
     def forward(self, *inputs):
         out, mask = self.mutator.on_forward(self, *inputs)
