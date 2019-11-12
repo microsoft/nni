@@ -128,16 +128,8 @@ jobs:
     displayName: 'unit test'
   - script: |
       cd test
-      python naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
       python tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python metrics_test.py
-    displayName: 'Trial job metrics test'
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 cli_test.py
