@@ -180,12 +180,54 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
+    
+    def quantize_output(self, output, config, **kwargs):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `:meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+
+        # Put your code to generate `new_output` here
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+
+        # Put your code to generate `new_input` here
+
+        return new_input
 
     # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
@@ -199,8 +241,6 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
-
-__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### Usage of user customized compression algorithm
 
