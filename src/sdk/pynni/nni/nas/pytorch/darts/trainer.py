@@ -94,7 +94,8 @@ class DartsTrainer(Trainer):
         with torch.no_grad():
             for step, (X, y) in enumerate(self.valid_loader):
                 X, y = X.to(self.device), y.to(self.device)
-                logits = self.model(X)
+                with self.mutator.forward_pass():
+                    logits = self.model(X)
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
@@ -107,7 +108,7 @@ class DartsTrainer(Trainer):
             self.train_epoch(epoch)
 
             # validation
-            print("Epoch {} Validating2".format(epoch))
+            print("Epoch {} Validating".format(epoch))
             self.validate_epoch(epoch)
 
     def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):

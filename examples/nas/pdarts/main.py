@@ -6,6 +6,7 @@ import torch.nn as nn
 import nni.nas.pytorch as nas
 from nni.nas.pytorch.pdarts import PdartsTrainer
 from nni.nas.pytorch.darts import CnnNetwork
+from nni.nas.pytorch.darts import CnnCell
 
 
 def accuracy(output, target, topk=(1,)):
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 
 
     def model_creator(layers, n_nodes):
-        model = CnnNetwork(3, 16, 10, layers, n_nodes=n_nodes)
+        model = CnnNetwork(3, 16, 10, layers, n_nodes=n_nodes, cell_type=CnnCell)
         loss = nn.CrossEntropyLoss()
 
         model_optim = torch.optim.SGD(model.parameters(), 0.025,

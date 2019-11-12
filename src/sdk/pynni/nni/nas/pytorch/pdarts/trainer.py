@@ -54,8 +54,7 @@ class PdartsTrainer(Trainer):
                                    **self.darts_parameters)
             print("start training")
 
-            with mutator.forward_pass():
-                trainer.train()
+            trainer.train()
 
             # for key in mutator.choices:
             #     item = mutator.choices[key]
