@@ -95,7 +95,17 @@ pruner.update_epoch(epoch)
 
 另一个是 `step`，可在每个批处理后调用 `pruner.step()`。 注意，并不是所有的算法都需要这两个 API，对于不需要它们的算法，调用它们不会有影响。
 
-__[TODO]__ 最后一个 API 可供用户导出压缩后的模型。 当完成训练后使用此 API，可得到压缩后的模型。 同时也可导出另一个文件用来存储 mask 的数值。
+使用下列 API 可轻松将压缩后的模型导出，稀疏模型的 `state_dict` 会保存在 `model.pth` 文件中，可通过 `torch.load('model.pth')` 加载。
+
+```
+pruner.export_model(model_path='model.pth')
+```
+
+`mask_dict` 和 `onnx` 格式的剪枝模型（需要指定 `input_shape`）可这样导出：
+
+```python
+pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
+```
 
 ## 定制新的压缩算法
 
@@ -157,38 +167,78 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ```python
 # TensorFlow 中定制 Quantizer。
-# 如果要在 PyTorch 中定制 Quantizer，可将
+# PyTorch 的 Quantizer，只需将
 # nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, model, config_list):
         """
-        建议使用 NNI 定义的规范来进行配置
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight 是目标的权重张量
-        config 是在 config_list 中为此层选定的 dict 对象
-        kwargs 包括 op, op_types, 和 op_name
-        设计实现定制的 Quantizer 并返回新的权重
+        quantize 需要重载此方法来为权重提供掩码
+        此方法挂载于模型的 :meth:`forward`。
+
+        Parameters
+        ----------
+        weight : Tensor
+            要被量化的权重
+        config : dict
+            权重量化的配置
         """
+
+        # 此处逻辑生成 `new_weight`
+
         return new_weight
 
-    # 注意， PyTorch 不需要 sess 参数
+    def quantize_output(self, output, config, **kwargs):
+        """
+        重载此方法输出量化
+        此方法挂载于模型的 `:meth:`forward`。
+
+        Parameters
+        ----------
+        output : Tensor
+            需要被量化的输出
+        config : dict
+            输出量化的配置
+        """
+
+        # 实现生成 `new_output`
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        重载此方法量化输入
+        此方法挂载于模型的 :meth:`forward`。
+
+        Parameters
+        ----------
+        inputs : Tensor
+            需要量化的输入
+        config : dict
+            输入量化用的配置
+        """
+
+        # 实现生成 `new_input`
+
+        return new_input
+
+    # Pytorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # 注意， PyTorch 不需要 sess 参数
+    # Pytorch 版本不需要 sess 参数
     def step(self, sess):
         """
-        根据在 bind_model 函数中引用的模型或权重进行一些处理
+       根据需要可基于 bind_model 方法中的模型或权重进行操作
         """
         pass
 ```
-
-__[TODO]__ 添加成员函数 `quantize_layer_output`，用于支持量化层输出的量化算法。
 
 ### 使用用户自定义的压缩算法
 
