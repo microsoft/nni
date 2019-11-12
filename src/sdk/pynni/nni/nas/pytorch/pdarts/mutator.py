@@ -88,7 +88,7 @@ class PdartsMutator(DartsMutator):
             w = w[1:]
             index.append(0)
             k = k - 1
-        for i in range(k):
+        for _ in range(k):
             idx = np.argmin(w)
             w[idx] = 1
             if zf:
