@@ -146,10 +146,22 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
+
 class Pruner(Compressor):
     """
-    Abstract base PyTorch pruner
+    Prune to an exact pruning level specification
+
+    Attributes
+    ----------
+    mask_dict : dict
+        Dictionary for saving masks, `key` should be layer name and
+        `value` should be a tensor which has the same shape with layer's weight
+
     """
+
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        self.mask_dict = {}
 
     def calc_mask(self, layer, config):
         """
@@ -195,6 +207,50 @@ class Pruner(Compressor):
 
         layer.module.forward = new_forward
 
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model_path : str
+            path to save pruned model state_dict
+        mask_path : str
+            (optional) path to save mask dict
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        """
+        assert model_path is not None, 'model_path must be specified'
+        for name, m in self.bound_model.named_modules():
+            if name == "":
+                continue
+            mask = self.mask_dict.get(name)
+            if mask is not None:
+                mask_sum = mask.sum().item()
+                mask_num = mask.numel()
+                _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
+                print('Layer: %s  Sparsity: %.2f' % (name, 1 - mask_sum / mask_num))
+                m.weight.data = m.weight.data.mul(mask)
+            else:
+                _logger.info('Layer: %s  NOT compressed', name)
+                print('Layer: %s  NOT compressed' % name)
+        torch.save(self.bound_model.state_dict(), model_path)
+        _logger.info('Model state_dict saved to %s', model_path)
+        print('Model state_dict saved to %s' % model_path)
+        if mask_path is not None:
+            torch.save(self.mask_dict, mask_path)
+            _logger.info('Mask dict saved to %s', mask_path)
+            print('Mask dict saved to %s' % mask_path)
+        if onnx_path is not None:
+            assert input_shape is not None, 'input_shape must be specified to export onnx model'
+            # input info needed
+            input_data = torch.Tensor(*input_shape)
+            torch.onnx.export(self.bound_model, input_data, onnx_path)
+            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+            print('Model in onnx with input shape %s saved to %s' % (input_data.shape, onnx_path))
+
 
 class Quantizer(Compressor):
     """
@@ -204,7 +260,7 @@ class Quantizer(Compressor):
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize weight.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
@@ -218,21 +274,21 @@ class Quantizer(Compressor):
     def quantize_output(self, output, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize output.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
         output : Tensor
             output that needs to be quantized
         config : dict
-            the configuration for activation quantization
+            the configuration for output quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_activation()")
+        raise NotImplementedError("Quantizer must overload quantize_output()")
 
     def quantize_input(self, *inputs, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------

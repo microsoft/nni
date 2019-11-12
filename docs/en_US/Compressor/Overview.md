@@ -181,7 +181,7 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def quantize_weight(self, weight, config, **kwargs):
         """
         quantize should overload this method to quantize weight tensors.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
@@ -190,26 +190,32 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         config : dict
             the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
     
     def quantize_output(self, output, config, **kwargs):
         """
         quantize should overload this method to quantize output.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to `:meth:`forward` of the model.
 
         Parameters
         ----------
         output : Tensor
             output that needs to be quantized
         config : dict
-            the configuration for activation quantization
+            the configuration for output quantization
         """
+
+        # Put your code to generate `new_output` here
+
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
         quantize should overload this method to quantize input.
-        This method is effectively hooked to `forward()` method of the model.
+        This method is effectively hooked to :meth:`forward` of the model.
 
         Parameters
         ----------
@@ -218,6 +224,9 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         config : dict
             the configuration for inputs quantization
         """
+
+        # Put your code to generate `new_input` here
+
         return new_input
 
     # note for pytorch version, there is no sess in input arguments
