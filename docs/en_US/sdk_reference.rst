@@ -42,6 +42,9 @@ Tuner
 ..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
     :members:
 
+..  autoclass:: nni.gp_tuner.gp_tuner.GPTuner
+    :members:
+
 Assessor
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
