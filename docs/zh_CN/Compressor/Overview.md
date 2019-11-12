@@ -163,80 +163,79 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 
 ### 量化算法
 
-定制量化算法的接口与剪枝算法类似。 The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+定制量化算法的接口与剪枝算法类似。 唯一的不同是使用 `quantize_weight` 替换了 `calc_mask`。 `quantize_weight` 直接返回量化后的权重，而不是 mask。这是因为对于量化算法，量化后的权重不能通过应用 mask 来获得。
 
 ```python
-# This is writing a Quantizer in tensorflow.
-# For writing a Quantizer in PyTorch, you can simply replace
-# nni.compression.tensorflow.Quantizer with
+# TensorFlow 中定制 Quantizer。
+# PyTorch 的 Quantizer，只需将
+# nni.compression.tensorflow.Quantizer 替换为
 # nni.compression.torch.Quantizer
 class YourQuantizer(nni.compression.tensorflow.Quantizer):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        quantize should overload this method to quantize weight tensors.
-        This method is effectively hooked to :meth:`forward` of the model.
+        quantize 需要重载此方法来为权重提供掩码
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         weight : Tensor
-            weight that needs to be quantized
+            要被量化的权重
         config : dict
-            the configuration for weight quantization
+            权重量化的配置
         """
 
-        # Put your code to generate `new_weight` here
+        # 此处逻辑生成 `new_weight`
 
         return new_weight
 
     def quantize_output(self, output, config, **kwargs):
         """
-        quantize should overload this method to quantize output.
-        This method is effectively hooked to `:meth:`forward` of the model.
+        重载此方法输出量化
+        此方法挂载于模型的 `:meth:`forward`。
 
         Parameters
         ----------
         output : Tensor
-            output that needs to be quantized
+            需要被量化的输出
         config : dict
-            the configuration for output quantization
+            输出量化的配置
         """
 
-        # Put your code to generate `new_output` here
+        # 实现生成 `new_output`
 
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
-        quantize should overload this method to quantize input.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法量化输入
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         inputs : Tensor
-            inputs that needs to be quantized
+            需要量化的输入
         config : dict
-            the configuration for inputs quantization
+            输入量化用的配置
         """
 
-        # Put your code to generate `new_input` here
+        # 实现生成 `new_input`
 
         return new_input
 
-    # note for pytorch version, there is no sess in input arguments
+    # Pytorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    # Pytorch 版本不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+       根据需要可基于 bind_model 方法中的模型或权重进行操作
         """
         pass
 ```
