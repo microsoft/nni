@@ -3,8 +3,9 @@ import torch
 import torch.nn as nn
 
 import nni.nas.pytorch as nas
-from .cnn_ops import PRIMITIVES, OPS, Zero, FactorizedReduce, StdConv, Identity
 from nni.nas.pytorch.modules import RankedModule
+
+from .cnn_ops import OPS, PRIMITIVES, FactorizedReduce, StdConv
 
 
 class CnnCell(RankedModule):
@@ -57,14 +58,12 @@ class CnnCell(RankedModule):
                     m_ops.append(op)
                 op = nas.mutables.LayerChoice(m_ops,
                                               key="r{}_d{}_i{}".format(reduction, depth, i))
-                # self.mutable_ops.append(op)
                 self.mutable_ops[depth].append(op)
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
         tensors = [self.preproc0(s0), self.preproc1(s1)]
         for ops in self.mutable_ops:
-
             assert len(ops) == len(tensors)
             cur_tensor = sum(op(tensor) for op, tensor in zip(ops, tensors))
             tensors.append(cur_tensor)

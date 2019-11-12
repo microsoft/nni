@@ -122,7 +122,7 @@ class DilConv(nn.Module):
         self.net = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(C_in, C_in, kernel_size, stride, padding, dilation=dilation, groups=C_in,
-                    bias=False),
+                      bias=False),
             nn.Conv2d(C_in, C_out, 1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(C_out, affine=affine)
         )

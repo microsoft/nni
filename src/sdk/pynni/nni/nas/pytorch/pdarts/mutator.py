@@ -70,12 +70,10 @@ class PdartsMutator(DartsMutator):
         return F.softmax(self.choices[mutable.key], dim=-1)
 
     def get_min_k(self, input_in, k):
-        input = copy.deepcopy(input_in)
         index = []
-        for i in range(k):
+        for _ in range(k):
             idx = np.argmin(input)
             index.append(idx)
-            input[idx] = 1
 
         return index
 

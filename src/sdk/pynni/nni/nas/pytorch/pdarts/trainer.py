@@ -1,15 +1,7 @@
-# import logging
-
-from nni.nas.pytorch.darts import CnnCell, DartsTrainer
-from nni.nas.pytorch.modules import RankedModule
-from nni.nas.pytorch.mutables import LayerChoice
+from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup
 
 from .mutator import PdartsMutator
-
-# _logger = logging.getLogger()
-# _logger.setLevel(logging.INFO)
 
 
 class PdartsTrainer(Trainer):
