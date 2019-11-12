@@ -95,7 +95,7 @@ pruner.update_epoch(epoch)
 
 另一个是 `step`，可在每个批处理后调用 `pruner.step()`。 注意，并不是所有的算法都需要这两个 API，对于不需要它们的算法，调用它们不会有影响。
 
-You can easily export the compressed model using the following API if you are pruning your model, `state_dict` of the sparse model weights will be stored in `model.pth`, which can be loaded by `torch.load('model.pth')`
+使用下列 API 可轻松将压缩后的模型导出，稀疏模型的 `state_dict` 会保存在 `model.pth` 文件中，可通过 `torch.load('model.pth')` 加载。
 
 ```
 pruner.export_model(model_path='model.pth')
@@ -109,27 +109,27 @@ pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='mod
 
 ## 定制新的压缩算法
 
-To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruner and quantizer respectively.
+为了简化压缩算法的编写，NNI 设计了简单且灵活的接口。 对于 Pruner 和 Quantizer 分别有相应的接口。
 
 ### 剪枝算法
 
-If you want to write a new pruning algorithm, you can write a class that inherits `nni.compression.tensorflow.Pruner` or `nni.compression.torch.Pruner` depending on which framework you use. Then, override the member functions with the logic of your algorithm.
+要实现新的剪枝算法，根据使用的框架，添加继承于 `nni.compression.tensorflow.Pruner` 或 `nni.compression.torch.Pruner` 的类。 然后，根据算法逻辑来重写成员函数。
 
 ```python
-# This is writing a pruner in tensorflow.
-# For writing a pruner in PyTorch, you can simply replace
-# nni.compression.tensorflow.Pruner with
+# TensorFlow 中定制 Pruner。
+# PyTorch 的 Pruner，只需将
+# nni.compression.tensorflow.Pruner 替换为
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def calc_mask(self, layer, config):
         """
-        Pruners should overload this method to provide mask for weight tensors.
+        Pruner 需要重载此方法来为权重提供掩码
         The mask must have the same shape and type comparing to the weight.
         It will be applied with ``mul()`` operation on the weight.
         This method is effectively hooked to ``forward()`` method of the model.
@@ -180,12 +180,54 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
+
+    def quantize_output(self, output, config, **kwargs):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `:meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+
+        # Put your code to generate `new_output` here
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+
+        # Put your code to generate `new_input` here
+
+        return new_input
 
     # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
@@ -199,8 +241,6 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
-
-__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### 使用用户自定义的压缩算法
 
