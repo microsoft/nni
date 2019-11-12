@@ -53,14 +53,14 @@ class Assessor(Recoverable):
     to tell whether this trial can be early stopped or not.
 
     This is the abstract base class for all assessors.
-    Early stopping algorithms should derive this class and override :meth:`assess_trial` method,
+    Early stopping algorithms should inherit this class and override :meth:`assess_trial` method,
     which receives intermediate results from trials and give an assessing result.
 
     If :meth:`assess_trial` returns :obj:`AssessResult.Bad` for a trial,
     it hints NNI framework that the trial is likely to result in a poor final accuracy,
     and therefore should be killed to save resource.
 
-    If an accessor want's to get notified when a trial ends, it can also override :meth:`trial_end`.
+    If an accessor want's to be notified when a trial ends, it can also override :meth:`trial_end`.
 
     To write a new assessor, you can reference :class:`~nni.medianstop_assessor.MedianstopAssessor`'s code as an example.
 
@@ -77,7 +77,7 @@ class Assessor(Recoverable):
 
         The NNI framework has little guarantee on ``trial_history``.
         This method is not guaranteed to be invoked for each time ``trial_history`` get updated.
-        It is also possible that a trial's history keeps updateing after receiving a bad result.
+        It is also possible that a trial's history keeps updating after receiving a bad result.
         And if the trial failed and retried, ``trial_history`` may be inconsistent with its previous value.
 
         The only guarantee is that ``trial_history`` is always growing.
@@ -96,9 +96,9 @@ class Assessor(Recoverable):
 
         Parameters
         ----------
-        trial_job_id: str
+        trial_job_id : str
             Unique identifier of the trial.
-        trial_history: list
+        trial_history : list
             Intermediate results of this trial. The element type is decided by trial code.
 
         Returns
@@ -114,9 +114,9 @@ class Assessor(Recoverable):
 
         Parameters
         ----------
-        trial_job_id: str
+        trial_job_id : str
             Unique identifier of the trial.
-        success: bool
+        success : bool
             True if the trial successfully completed; False if failed or terminated.
         """
 
