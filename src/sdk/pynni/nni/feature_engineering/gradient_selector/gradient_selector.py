@@ -32,8 +32,8 @@ import torch
 
 # sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from nni.feature_engineering.feature_selector import FeatureSelector
-import nni.feature_engineering.gradient_selector.constants
-import nni.feature_engineering.gradient_selector.syssettings
+import nni.feature_engineering.gradient_selector.constants as constants
+import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.fginitialize import PrepareData
 from nni.feature_engineering.gradient_selector.fgtrain import _train, print_results
 

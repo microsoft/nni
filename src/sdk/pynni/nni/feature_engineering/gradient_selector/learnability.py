@@ -29,8 +29,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import nni.feature_engineering.gradient_selector.constants
-import syssettings
+import nni.feature_engineering.gradient_selector.constants as constants
+import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.fginitialize import ChunkDataLoader
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)

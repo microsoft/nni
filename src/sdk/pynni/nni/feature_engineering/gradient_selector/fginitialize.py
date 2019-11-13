@@ -13,8 +13,8 @@ import torch
 from torch.utils.data import BatchSampler, DataLoader, Dataset, Sampler
 from torch.utils.data.dataloader import _DataLoaderIter
 
-import nni.feature_engineering.gradient_selector.constants
-import nni.feature_engineering.gradient_selector.syssettings
+import nni.feature_engineering.gradient_selector.constants as constants
+import nni.feature_engineering.gradient_selector.syssettings as syssettings
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)
 sparsetensor = syssettings.torch.sparse.tensortype

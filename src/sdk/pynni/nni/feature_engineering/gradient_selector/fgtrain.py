@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 
-import nni.feature_engineering.gradient_selector.constants
-import nni.feature_engineering.gradient_selector.syssettings
+import nni.feature_engineering.gradient_selector.constants as constants
+import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.learnability import Solver
 from nni.feature_engineering.gradient_selector.utils import EMA
 
