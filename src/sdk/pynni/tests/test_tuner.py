@@ -118,17 +118,21 @@ class TunerTestCase(TestCase):
             search_space_all = json.load(fp)
         if supported_types is None:
             supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",
-                               "normal", "qnormal", "lognormal", "qlognormal", "mutable"]
+                               "normal", "qnormal", "lognormal", "qlognormal", "mutable_layer"]
+        if ignore_types is None:
+            ignore_types = []
         full_supported_search_space = dict()
-        for single in search_space_all:
-            single_keyword = single.split("_")
-            space = search_space_all[single]
-            expected_fail = not any([t in single_keyword for t in supported_types]) or "fail" in single_keyword
-            if ignore_types is not None and any([t in ignore_types for t in single_keyword]):
+        for single, space in search_space_all.items():
+            single_type = space["_type"]
+            if single_type in ignore_types:
                 continue
-            if "fail" in space:
-                if self._testMethodName.split("_", 1)[1] in space.pop("fail"):
+            expected_fail = single_type not in supported_types
+            if "_fail" in space:
+                if isinstance(space["_fail"], str) and space["_fail"] == "all":
                     expected_fail = True
+                if self._testMethodName.split("_", 1)[1] in space["_fail"]:
+                    expected_fail = True
+                space.pop("_fail")
             single_search_space = {single: space}
             if not expected_fail:
                 # supports this key
@@ -146,7 +150,7 @@ class TunerTestCase(TestCase):
 
     def test_grid_search(self):
         self.search_space_test_all(lambda: GridSearchTuner(),
-                                   supported_types=["choice", "randint", "quniform", "mutable"])
+                                   supported_types=["choice", "randint", "quniform", "mutable_layer"])
 
     def test_tpe(self):
         self.search_space_test_all(lambda: HyperoptTuner("tpe"))
@@ -161,7 +165,7 @@ class TunerTestCase(TestCase):
         if sys.platform == "win32":
             return  # smac doesn't work on windows
         self.search_space_test_all(lambda: SMACTuner(),
-                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform", "mutable"])
+                                   supported_types=["choice", "randint", "uniform", "quniform", "loguniform", "mutable_layer"])
 
     def test_batch(self):
         self.search_space_test_all(lambda: BatchTuner(),
