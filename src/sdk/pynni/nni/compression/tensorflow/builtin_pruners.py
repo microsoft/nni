@@ -122,7 +122,7 @@ class FPGMPruner(Pruner):
         self.epoch_pruned_layers = set()
 
     def calc_mask(self, layer, config):
-        """supports Conv1d, Conv2d, Conv3d
+        """supports Conv1D, Conv2D
         filter dimensions for Conv1D:
         LEN: filter length
         IN: number of input channel
