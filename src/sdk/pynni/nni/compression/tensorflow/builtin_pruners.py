@@ -114,10 +114,10 @@ class FPGMPruner(Pruner):
             the model user wants to compress
         config_list: list
             support key for each list item:
-                - pruning_rate: percentage of convolutional filters to be pruned.
+                - sparsity: percentage of convolutional filters to be pruned.
         """
         super().__init__(model, config_list)
-        self.mask_list = {}
+        self.mask_dict = {}
         self.assign_handler = []
         self.epoch_pruned_layers = set()
 
@@ -146,20 +146,20 @@ class FPGMPruner(Pruner):
         weight = layer.weight
         op_type = layer.type
         op_name = layer.name
-        assert 0 <= config.get('pruning_rate') < 1
+        assert 0 <= config.get('sparsity') < 1
         assert op_type in ['Conv1D', 'Conv2D']
         assert op_type in config['op_types']
 
         if layer.name in self.epoch_pruned_layers:
-            assert layer.name in self.mask_list
-            return self.mask_list.get(layer.name)
+            assert layer.name in self.mask_dict
+            return self.mask_dict.get(layer.name)
 
         try:
             weight = tf.stop_gradient(tf.transpose(weight, [2, 3, 0, 1]))
             masks = np.ones(weight.shape)
 
             num_kernels = weight.shape[0] * weight.shape[1]
-            num_prune = int(num_kernels * config.get('pruning_rate'))
+            num_prune = int(num_kernels * config.get('sparsity'))
             if num_kernels < 2 or num_prune < 1:
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
@@ -168,7 +168,7 @@ class FPGMPruner(Pruner):
         finally:
             masks = np.transpose(masks, [2, 3, 0, 1])
             masks = tf.Variable(masks)
-            self.mask_list.update({op_name: masks})
+            self.mask_dict.update({op_name: masks})
             self.epoch_pruned_layers.add(layer.name)
 
         return masks
@@ -197,5 +197,5 @@ class FPGMPruner(Pruner):
         x = tf.math.sqrt(x)
         return tf.math.reduce_sum(x)
 
-    def update_epoch(self, epoch, sess):
+    def update_epoch(self, epoch):
         self.epoch_pruned_layers = set()

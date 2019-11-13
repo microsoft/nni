@@ -122,10 +122,11 @@ class FPGMPruner(Pruner):
             the model user wants to compress
         config_list: list
             support key for each list item:
-                - pruning_rate: percentage of convolutional filters to be pruned.
+                - sparsity: percentage of convolutional filters to be pruned.
         """
         super().__init__(model, config_list)
-        self.mask_list = {}
+        self.mask_dict = {}
+        self.epoch_pruned_layers = set()
 
     def calc_mask(self, layer, config):
         """
@@ -149,26 +150,26 @@ class FPGMPruner(Pruner):
             the configuration for generating the mask
         """
         weight = layer.module.weight.data
-        assert 0 <= config.get('pruning_rate') < 1
+        assert 0 <= config.get('sparsity') < 1
         assert layer.type in ['Conv1d', 'Conv2d']
         assert layer.type in config['op_types']
 
         if layer.name in self.epoch_pruned_layers:
-            assert layer.name in self.mask_list
-            return self.mask_list.get(layer.name)
+            assert layer.name in self.mask_dict
+            return self.mask_dict.get(layer.name)
 
-        masks = torch.ones(weight.size())
+        masks = torch.ones(weight.size()).type_as(weight)
 
         try:
             num_kernels = weight.size(0) * weight.size(1)
-            num_prune = int(num_kernels * config.get('pruning_rate'))
+            num_prune = int(num_kernels * config.get('sparsity'))
             if num_kernels < 2 or num_prune < 1:
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             for idx in min_gm_idx:
                 masks[idx] = 0.
         finally:
-            self.mask_list.update({layer.name: masks})
+            self.mask_dict.update({layer.name: masks})
             self.epoch_pruned_layers.add(layer.name)
 
         return masks

@@ -32,8 +32,8 @@ def get_model():
         Dense(units=10, activation='softmax'),
     ])
     model.compile(loss="sparse_categorical_crossentropy",
-              optimizer=keras.optimizers.SGD(lr=1e-3),
-              metrics=["accuracy"])
+        optimizer=keras.optimizers.SGD(lr=1e-3),
+        metrics=["accuracy"])
     return model
 
 def main():
@@ -41,13 +41,15 @@ def main():
     model = get_model()
 
     configure_list = [{
-        'pruning_rate': 0.5,
+        'sparsity': 0.5,
         'op_types': ['Conv2D']
     }]
     pruner = FPGMPruner(model, configure_list)
     pruner.compress()
 
-    model.fit(X_train, y_train, epochs=2, validation_data=(X_valid, y_valid))
+    update_epoch_callback = keras.callbacks.LambdaCallback(on_epoch_begin=lambda epoch, logs: pruner.update_epoch(epoch))
+
+    model.fit(X_train, y_train, epochs=10, validation_data=(X_valid, y_valid), callbacks=[update_epoch_callback])
 
 
 if __name__ == '__main__':

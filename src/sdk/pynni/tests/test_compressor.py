@@ -114,12 +114,12 @@ class CompressorTestCase(TestCase):
 
     def test_torch_fpgm_pruner(self):
         model = TorchMnist()
-        configure_list = [{'pruning_rate': 0.5, 'op_types': ['Conv2d']}]
+        configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2d']}]
         torch_compressor.FPGMPruner(model, configure_list).compress()
 
     def test_tf_fpgm_pruner(self):
         model = TfMnist()
-        configure_list = [{'pruning_rate': 0.5, 'op_types': ['Conv2D']}]
+        configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2D']}]
         tf_compressor.FPGMPruner(tf.get_default_graph(), configure_list).compress()
 
     def test_torch_quantizer(self):

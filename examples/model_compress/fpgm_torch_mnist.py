@@ -82,7 +82,7 @@ def main():
     pruner = LevelPruner(configure_list)
     '''
     configure_list = [{
-        'pruning_rate': 0.5,
+        'sparsity': 0.5,
         'op_types': ['Conv2d']
     }]
 

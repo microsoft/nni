@@ -104,17 +104,17 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import FPGMPruner
 config_list = [{
-    'pruning_rate': 0.5,
+    'sparsity': 0.5,
     'op_types': ['Conv2D']
 }]
-pruner = FPGMPruner(tf.get_default_graph(), config_list)
+pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
 PyTorch code
 ```python
 from nni.compression.torch import FPGMPruner
 config_list = [{
-    'pruning_rate': 0.5,
+    'sparsity': 0.5,
     'op_types': ['Conv2d']
 }]
 pruner = FPGMPruner(model, config_list)
@@ -134,6 +134,6 @@ pruner.update_epoch(epoch)
 You can view example for more information
 
 #### User configuration for FPGM Pruner
-* **pruning_rate:** How much percentage of convolutional filters are to be pruned.
+* **sparsity:** How much percentage of convolutional filters are to be pruned.
 
 ***
