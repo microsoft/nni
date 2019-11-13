@@ -5,8 +5,7 @@ import torch
 import torch.nn as nn
 import nni.nas.pytorch as nas
 from nni.nas.pytorch.pdarts import PdartsTrainer
-from nni.nas.pytorch.darts import CnnNetwork
-from nni.nas.pytorch.darts import CnnCell
+from nni.nas.pytorch.darts import CnnNetwork, CnnCell
 
 
 def accuracy(output, target, topk=(1,)):
@@ -41,7 +40,6 @@ if __name__ == "__main__":
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
-
     def model_creator(layers, n_nodes):
         model = CnnNetwork(3, 16, 10, layers, n_nodes=n_nodes, cell_type=CnnCell)
         loss = nn.CrossEntropyLoss()
@@ -49,13 +47,11 @@ if __name__ == "__main__":
         model_optim = torch.optim.SGD(model.parameters(), 0.025,
                                       momentum=0.9, weight_decay=3.0E-4)
         n_epochs = 50
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            model_optim, n_epochs, eta_min=0.001)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(model_optim, n_epochs, eta_min=0.001)
         return model, loss, model_optim, lr_scheduler
 
     trainer = PdartsTrainer(model_creator,
-                            metrics=lambda output, target: accuracy(
-                                output, target, topk=(1,)),
+                            metrics=lambda output, target: accuracy(output, target, topk=(1,)),
                             num_epochs=50,
                             pdarts_num_layers=[0, 6, 12],
                             pdarts_num_to_drop=[3, 2, 2],
@@ -67,6 +63,3 @@ if __name__ == "__main__":
                             log_frequency=args.log_frequency)
     trainer.train()
     trainer.export()
-
-# augment step
-# ...

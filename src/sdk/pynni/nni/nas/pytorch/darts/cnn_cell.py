@@ -38,11 +38,9 @@ class CnnCell(RankedModule):
         # If previous cell is reduction cell, current input size does not match with
         # output size of cell[k-2]. So the output[k-2] should be reduced by preprocessing.
         if reduction_p:
-            self.preproc0 = FactorizedReduce(
-                channels_pp, channels, affine=False)
+            self.preproc0 = FactorizedReduce(channels_pp, channels, affine=False)
         else:
-            self.preproc0 = StdConv(
-                channels_pp, channels, 1, 1, 0, affine=False)
+            self.preproc0 = StdConv(channels_pp, channels, 1, 1, 0, affine=False)
         self.preproc1 = StdConv(channels_p, channels, 1, 1, 0, affine=False)
 
         # generate dag
@@ -56,8 +54,7 @@ class CnnCell(RankedModule):
                 for primitive in PRIMITIVES:
                     op = OPS[primitive](channels, stride, False)
                     m_ops.append(op)
-                op = nas.mutables.LayerChoice(m_ops,
-                                              key="r{}_d{}_i{}".format(reduction, depth, i))
+                op = nas.mutables.LayerChoice(m_ops, key="r{}_d{}_i{}".format(reduction, depth, i))
                 self.mutable_ops[depth].append(op)
 
     def forward(self, s0, s1):

@@ -40,8 +40,7 @@ class EnasMutator(PyTorchMutator):
         self.attn_query = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
-        self.skip_targets = nn.Parameter(torch.Tensor(
-            [1.0 - self.skip_target, self.skip_target]), requires_grad=False)
+        self.skip_targets = nn.Parameter(torch.Tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)
         self.cross_entropy_loss = nn.CrossEntropyLoss()
 
     def after_build(self, model):

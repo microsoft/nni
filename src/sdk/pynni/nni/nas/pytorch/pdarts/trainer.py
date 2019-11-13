@@ -6,12 +6,9 @@ from .mutator import PdartsMutator
 
 class PdartsTrainer(Trainer):
 
-    def __init__(self, model_creator, metrics,
-                 num_epochs, dataset_train, dataset_valid,
-                 layers=5, n_nodes=4,
-                 pdarts_num_layers=[0, 6, 12],
-                 pdarts_num_to_drop=[3, 2, 2], mutator=None,
-                 batch_size=64, workers=4, device=None, log_frequency=None):
+    def __init__(self, model_creator, metrics, num_epochs, dataset_train, dataset_valid,
+                 layers=5, n_nodes=4, pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 2],
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
         self.model_creator = model_creator
         self.layers = layers
         self.n_nodes = n_nodes
@@ -41,16 +38,11 @@ class PdartsTrainer(Trainer):
             mutator = PdartsMutator(
                 model, epoch, self.pdarts_num_to_drop, switches)
 
-            trainer = DartsTrainer(model, loss=loss, model_optim=model_optim,
-                                   lr_scheduler=lr_scheduler, mutator=mutator,
-                                   **self.darts_parameters)
-            print("start training")
+            self.trainer = DartsTrainer(model, loss=loss, model_optim=model_optim,
+                                        lr_scheduler=lr_scheduler, mutator=mutator, **self.darts_parameters)
+            print("start pdrats training %s..." % epoch)
 
-            trainer.train()
-
-            # for key in mutator.choices:
-            #     item = mutator.choices[key]
-            #     print("key: %s, %s" % (key, item.cpu().data))
+            self.trainer.train()
 
             # with open('log/parameters_%d.txt' % epoch, "w") as f:
             #     f.write(str(model.parameters))
@@ -58,4 +50,5 @@ class PdartsTrainer(Trainer):
             switches = mutator.drop_paths()
 
     def export(self):
-        pass
+        if (self.trainer is not None) and hasattr(self.trainer, "export"):
+            self.trainer.export()

@@ -7,9 +7,11 @@ class PyTorchMutable(nn.Module):
     """
     Mutable is designed to function as a normal layer, with all necessary operators' weights.
     States and weights of architectures should be included in mutator, instead of the layer itself.
+
     Mutable has a key, which marks the identity of the mutable. This key can be used by users to share
     decisions among different mutables. In mutator's implementation, mutators should use the key to
     distinguish different mutables. Mutables that share the same key should be "similar" to each other.
+
     Currently the default scope for keys is global.
     """
 

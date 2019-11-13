@@ -32,8 +32,7 @@ class PdartsMutator(DartsMutator):
 
     def drop_paths(self):
         for key in self.switches:
-            prob = F.softmax(
-                self.choices[key], dim=-1).data.cpu().numpy()
+            prob = F.softmax(self.choices[key], dim=-1).data.cpu().numpy()
 
             switches = self.switches[key]
             idxs = []
@@ -42,11 +41,9 @@ class PdartsMutator(DartsMutator):
                     idxs.append(j)
             if self.pdarts_epoch_index == len(self.pdarts_num_to_drop) - 1:
                 # for the last stage, drop all Zero operations
-                drop = self.get_min_k_no_zero(
-                    prob, idxs, self.pdarts_num_to_drop[self.pdarts_epoch_index])
+                drop = self.get_min_k_no_zero(prob, idxs, self.pdarts_num_to_drop[self.pdarts_epoch_index])
             else:
-                drop = self.get_min_k(
-                    prob, self.pdarts_num_to_drop[self.pdarts_epoch_index])
+                drop = self.get_min_k(prob, self.pdarts_num_to_drop[self.pdarts_epoch_index])
 
             for idx in drop:
                 switches[idxs[idx]] = False
@@ -63,8 +60,7 @@ class PdartsMutator(DartsMutator):
 
         self.switches[mutable.key] = switches
 
-        self.choices[mutable.key] = nn.Parameter(
-            1.0E-3 * torch.randn(mutable.length))
+        self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length))
 
     def on_calc_layer_choice_mask(self, mutable: LayerChoice):
         return F.softmax(self.choices[mutable.key], dim=-1)

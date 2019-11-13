@@ -1,13 +1,11 @@
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
 
-from nni.nas.pytorch.darts import CnnNetwork
-from nni.nas.pytorch.darts import DartsTrainer
+import datasets
+from nni.nas.pytorch.darts import CnnNetwork, DartsTrainer
 from utils import accuracy
-
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
@@ -22,16 +20,13 @@ if __name__ == "__main__":
     model = CnnNetwork(3, 16, 10, args.layers, n_nodes=args.nodes)
     criterion = nn.CrossEntropyLoss()
 
-    optim = torch.optim.SGD(model.parameters(), 0.025,
-                            momentum=0.9, weight_decay=3.0E-4)
+    optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
     n_epochs = 50
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optim, n_epochs, eta_min=0.001)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, n_epochs, eta_min=0.001)
 
     trainer = DartsTrainer(model,
                            loss=criterion,
-                           metrics=lambda output, target: accuracy(
-                               output, target, topk=(1,)),
+                           metrics=lambda output, target: accuracy(output, target, topk=(1,)),
                            model_optim=optim,
                            lr_scheduler=lr_scheduler,
                            num_epochs=50,
