@@ -43,9 +43,9 @@
 
 * NNI 遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/) 的 Python 代码命名约定。在提交拉取请求时，请尽量遵循此规范。 可通过`flake8`或`pylint`的提示工具来帮助遵循规范。
 * NNI 还遵循 [NumPy Docstring 风格](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) 的 Python Docstring 命名方案。 Python API 使用了[sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) 来[生成文档](Contributing.md#documentation)。
-* For docstrings, please refer to [numpydoc docstring guide](https://numpydoc.readthedocs.io/en/latest/format.html) and [pandas docstring guide](https://python-sprints.github.io/pandas/guide/pandas_docstring.html) 
-    * For function docstring, **description**, **Parameters**, and **Returns**/**Yields** are mandatory.
-    * For class docstring, **description**, **Attributes** are mandatory.
+* 有关 docstrings，参考 [numpydoc docstring 指南](https://numpydoc.readthedocs.io/en/latest/format.html) 和 [pandas docstring 指南](https://python-sprints.github.io/pandas/guide/pandas_docstring.html) 
+    * 函数的 docstring, **description**, **Parameters**, 以及**Returns**/**Yields** 是必需的。
+    * 类的 docstring, **description**, **Attributes** 是必需的。
 
 ## 文档
 
