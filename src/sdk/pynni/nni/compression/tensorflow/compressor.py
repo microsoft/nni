@@ -64,7 +64,7 @@ class Compressor:
 
         Parameters
         ----------
-        op : LayerInfo
+        layer: LayerInfo
             one layer
 
         Returns
