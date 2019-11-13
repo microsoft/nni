@@ -1,0 +1,251 @@
+import os
+import time
+
+import numpy as np
+import torch
+from tensorboardX import SummaryWriter
+
+import nni.feature_engineering.gradient_selector.constants
+import nni.feature_engineering.gradient_selector.syssettings
+from nni.feature_engineering.gradient_selector.learnability import Solver
+from nni.feature_engineering.gradient_selector.utils import EMA
+
+torch.set_default_tensor_type(syssettings.torch.tensortype)
+
+
+def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
+                     minibatch=True):
+    """
+    Check stopping conditions.
+    """
+
+    discount_factor = 1. / 3
+
+    old_f = [np.nan]
+    total_t = [0.]
+    df_store = [np.nan]
+    it_store = [0]
+    relchange_store = [np.nan]
+    f_ma = EMA(discount_factor=discount_factor)
+    df_ma = EMA(discount_factor=discount_factor)
+
+    def f_stop(f0, v0, it, t):
+
+        flag_stop = False
+
+        itcond = '<'
+        tcond = '<'
+        dfcond = '>'
+        relfcond = '>'
+
+        total_t[-1] += t
+        g = f0.x.grad.clone().cpu().detach()
+        df = g.abs().max().numpy().squeeze()
+        v = v0.clone().cpu().detach()
+        f = v.numpy().squeeze()
+
+        if it >= maxiter:
+            flag_stop = True
+            itcond = '>='
+
+        elif total_t[-1] >= maxtime:
+            flag_stop = True
+            tcond = '>='
+
+        f_ma.update(f)
+        df_ma.update(df)
+        rel_change = f_ma.relchange()
+
+        if ((not minibatch) and (df < dftol_stop)) \
+           or (minibatch and (df_ma() < dftol_stop)):
+            flag_stop = True
+            dfcond = '<'
+
+        if rel_change < freltol_stop:
+            flag_stop = True
+            relfcond = '<'
+
+        if not minibatch:
+            df_store[-1] = df
+        else:
+            df_store[-1] = df_ma()
+        relchange_store[-1] = rel_change
+        it_store[-1] = it
+
+        return flag_stop
+
+    return f_stop, {'t': total_t, 'it': it_store, 'df': df_store,
+                    'relchange': relchange_store}
+
+
+def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
+                         writer=None, path_save=None, rng=None):
+
+    def f_callback(f0, v0, it, t):
+
+        if not (it % callback_period):
+            epoch = it / f0.iters_per_epoch
+            x = f0.x.clone().cpu().detach().numpy()
+            # print('[%6d/%3d/%3.3f s] %0.3f' % (it, int(epoch), t, v0))
+            t_ave = stop_conds['t'][-1] / it
+            t_left = (maxiter - it) * t_ave
+            print('[%6d/%6d/%3d/%6d sec] %0.3f'
+                  % (it, maxiter, int(epoch), t_left, v0))
+
+            if writer is not None:
+                writer.add_scalar('ftrain', v0.clone().cpu().detach().numpy(),
+                                  it)
+                writer.add_scalar('epoch', epoch, it)
+                writer.add_scalar('t', stop_conds['t'][-1], it)
+                if not np.isnan(stop_conds['df'][-1]):
+                    writer.add_scalar('log10(dftrain)',
+                                      np.log10(stop_conds['df'][-1]), it)
+                if not np.isnan(stop_conds['relchange'][-1]):
+                    writer.add_scalar('log10(relchange)',
+                                      np.log10(stop_conds['relchange'][-1]), it)
+                writer.add_scalar('nfeats', len(np.where(x >= 0)[0]), it)
+
+            if path_save is not None and not (it % (callback_period * 10)):
+                torch.save(get_checkpoint(f0, stop_conds, rng), path_save)
+                print('Checkpointed to %s.' % path_save)
+
+            return
+
+    return f_callback
+
+
+def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_score=None):
+    """
+    Initialize the 'x' variable with different settings
+    """
+
+    D = data_train.n_features
+    value_off = constants.Initialization.VALUE_DICT[
+        constants.Initialization.OFF]
+    value_on = constants.Initialization.VALUE_DICT[
+        constants.Initialization.ON]
+
+    if prev_score is not None:
+        x0 = prev_score
+    elif not isinstance(init_type, str):
+        x0 = value_off * np.ones()
+        x0[init_type] = value_on
+    elif init_type.startswith(constants.Initialization.RANDOM):
+        d = int(init_type.replace(constants.Initialization.RANDOM, ''))
+        x0 = value_off * np.ones(D)
+        x0[rng.permutation(D)[:d]] = value_on
+    elif init_type == constants.Initialization.SKLEARN:
+        B = data_train.return_raw
+        X, y = data_train.get_dense_data()
+        data_train.set_return_raw(B)
+        ix = train_sk_dense(init_type, X, y, data_train.classification)
+        x0 = value_off * np.ones(D)
+        x0[ix] = value_on
+    elif init_type in constants.Initialization.VALUE_DICT:
+        x0 = constants.Initialization.VALUE_DICT[init_type] * np.ones(D)
+    else:
+        raise NotImplementedError(
+            'init_type {0} not supported yet'.format(init_type))
+
+    return torch.tensor(x0.reshape((-1, 1)),
+                        dtype=torch.get_default_dtype())
+
+
+def get_checkpoint(S, stop_conds, rng=None, get_state=True):
+    """
+    Save the necessary information into a dictionary
+    """
+
+    m = {}
+    m['ninitfeats'] = S.ninitfeats
+    m['x0'] = S.x0
+    x = S.x.clone().cpu().detach()
+    m['feats'] = np.where(x.numpy() >= 0)[0]
+    m.update({k: v[0] for k, v in stop_conds.items()})
+    if get_state:
+        m.update({constants.Checkpoint.MODEL: S.state_dict(),
+                  constants.Checkpoint.OPT: S.opt_train.state_dict(),
+                  constants.Checkpoint.RNG: torch.get_rng_state(),
+                  })
+    if rng:
+        m.update({'rng_state': rng.get_state()})
+
+    return m
+
+
+def _train(data_train, Nminibatch, order, C, rng, lr_train, debug, maxiter,
+           maxtime, init, dftol_stop, freltol_stop, dn_log, accum_steps,
+           path_save, shuffle, device=constants.Device.CPU,
+           verbose=1,
+           prev_checkpoint=None,
+           groups=None,
+           soft_groups=None):
+    """
+    Main training loop.
+    """
+
+    t_init = time.time()
+
+    x0 = get_init(data_train, init, rng)
+    if isinstance(init, str) and init == constants.Initialization.ZERO:
+        ninitfeats = -1
+    else:
+        ninitfeats = np.where(x0.detach().numpy() > 0)[0].size
+
+    S = Solver(data_train, order,
+               Nminibatch=Nminibatch, x0=x0, C=C,
+               ftransform=lambda x: torch.sigmoid(2 * x),
+               get_train_opt=lambda p: torch.optim.Adam(p, lr_train),
+               rng=rng,
+               accum_steps=accum_steps,
+               shuffle=shuffle,
+               groups=groups,
+               soft_groups=soft_groups,
+               device=device,
+               verbose=verbose)
+    S = S.to(device)
+
+    S.ninitfeats = ninitfeats
+    S.x0 = x0
+
+    if prev_checkpoint:
+        S.load_state_dict(prev_checkpoint[constants.Checkpoint.MODEL])
+        S.opt_train.load_state_dict(prev_checkpoint[constants.Checkpoint.OPT])
+        torch.set_rng_state(prev_checkpoint[constants.Checkpoint.RNG])
+
+    minibatch = S.Ntrain != S.Nminibatch
+
+    f_stop, stop_conds = get_optim_f_stop(maxiter, maxtime, dftol_stop,
+                                          freltol_stop, minibatch=minibatch)
+
+    if debug:
+        writer = SummaryWriter(dn_log, flush_secs=10)
+        f_callback = get_optim_f_callback(maxiter, stop_conds=stop_conds,
+                                          writer=writer,
+                                          callback_period=accum_steps,
+                                          path_save=path_save, rng=rng)
+    else:
+        f_callback = None
+    stop_conds['t'][-1] = time.time() - t_init
+
+    S.train(f_stop=f_stop, f_callback=f_callback)
+
+    return get_checkpoint(S, stop_conds, rng), S
+
+
+def print_results(m):
+    """
+    Print results.
+    """
+
+    r_str = '\n'
+    r_str += 'selected feats = '
+    print(r_str)
+    print(m['feats'])
+
+    r_str = '\n'
+    r_str += 'time: %g, iters: %d, |gradf|: %g, |df|/|f|: %g\n' % tuple(
+        [m[k] for k in ['t', 'it', 'df', 'relchange']])
+    r_str += '|initial feats|: %d, |selected feats|: %g\n' % (
+        m['ninitfeats'], len(m['feats']))
+    print(r_str)
