@@ -1,18 +1,20 @@
 import logging
 import tensorflow as tf
 from . import default_layers
+tf.config.experimental_run_functions_eagerly(True)
 
 _logger = logging.getLogger(__name__)
 
 
 class LayerInfo:
-    def __init__(self, op, weight, weight_op):
-        self.op = op
-        self.name = op.name
-        self.type = op.type
-        self.weight = weight
-        self.weight_op = weight_op
-
+    def __init__(self, keras_layer):
+        self.keras_layer = keras_layer
+        self.name = keras_layer.name
+        self.type = default_layers.get_op_type(type(keras_layer))
+        self.weight_index = default_layers.get_weight_index(self.type)
+        if self.weight_index is not None:
+            self.weight = keras_layer.weights[self.weight_index]
+        self._call = None
 
 class Compressor:
     """
@@ -35,25 +37,13 @@ class Compressor:
         self.modules_to_compress = []
 
     def compress(self):
-        """
-        Compress the model with algorithm implemented by subclass.
-
-        The model will be instrumented and user should never edit it after calling this method.
-        `self.modules_to_compress` records all the to-be-compressed layers
-        """
-        for op in self.bound_model.get_operations():
-            weight_index = _detect_weight_index(op)
-            if weight_index is None:
-                _logger.warning('Failed to detect weight for layer %s', op.name)
-                return
-            weight_op = op.inputs[weight_index].op
-            weight = weight_op.inputs[0]
-
-            layer = LayerInfo(op, weight, weight_op)
+        for keras_layer in self.bound_model.layers:
+            layer = LayerInfo(keras_layer)
             config = self.select_config(layer)
             if config is not None:
                 self._instrument_layer(layer, config)
                 self.modules_to_compress.append((layer, config))
+
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -74,7 +64,7 @@ class Compressor:
 
         Parameters
         ----------
-        layer : LayerInfo
+        op : LayerInfo
             one layer
 
         Returns
@@ -84,11 +74,12 @@ class Compressor:
             not be compressed
         """
         ret = None
+        if layer.type is None:
+            return None
         for config in self.config_list:
-            op_types = config.get('op_types')
-            if op_types == 'default':
-                op_types = default_layers.op_weight_index.keys()
-            if op_types and layer.type not in op_types:
+            config = config.copy()
+            config['op_types'] = self._expand_config_op_types(config)
+            if layer.type not in config['op_types']:
                 continue
             if config.get('op_names') and layer.name not in config['op_names']:
                 continue
@@ -127,6 +118,18 @@ class Compressor:
         """
         raise NotImplementedError()
 
+    def _expand_config_op_types(self, config):
+        if config is None:
+            return []
+        op_types = []
+
+        for op_type in config.get('op_types', []):
+            if op_type == 'default':
+                op_types.extend(default_layers.default_layers)
+            else:
+                op_types.append(op_type)
+        return op_types
+
 
 class Pruner(Compressor):
     """
@@ -160,10 +163,17 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        mask = self.calc_mask(layer, config)
-        new_weight = layer.weight * mask
-        tf.contrib.graph_editor.swap_outputs(layer.weight_op, new_weight.op)
+        layer._call = layer.keras_layer.call
 
+        def new_call(*inputs):
+            weights = [x.numpy() for x in layer.keras_layer.weights]
+            mask = self.calc_mask(layer, config)
+            weights[layer.weight_index] = weights[layer.weight_index] * mask
+            layer.keras_layer.set_weights(weights)
+            ret = layer._call(*inputs)
+            return ret
+
+        layer.keras_layer.call = new_call
 
 class Quantizer(Compressor):
     """
@@ -182,13 +192,3 @@ class Quantizer(Compressor):
         weight = weight_op.inputs[0]
         new_weight = self.quantize_weight(weight, config, op=layer.op, op_type=layer.type, op_name=layer.name)
         tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
-
-
-def _detect_weight_index(layer):
-    index = default_layers.op_weight_index.get(layer.type)
-    if index is not None:
-        return index
-    weight_indices = [i for i, op in enumerate(layer.inputs) if op.name.endswith('Variable/read')]
-    if len(weight_indices) == 1:
-        return weight_indices[0]
-    return None

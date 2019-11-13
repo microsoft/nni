@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import tensorflow as tf
 from .compressor import Pruner
 
@@ -118,6 +119,7 @@ class FPGMPruner(Pruner):
         super().__init__(model, config_list)
         self.mask_list = {}
         self.assign_handler = []
+        self.epoch_pruned_layers = set()
 
     def calc_mask(self, layer, config):
         """supports Conv1d, Conv2d, Conv3d
@@ -146,34 +148,38 @@ class FPGMPruner(Pruner):
         op_name = layer.name
         assert 0 <= config.get('pruning_rate') < 1
         assert op_type in ['Conv1D', 'Conv2D']
+        assert op_type in config['op_types']
 
-        if op_type == config['op_type']:
+        if layer.name in self.epoch_pruned_layers:
+            assert layer.name in self.mask_list
+            return self.mask_list.get(layer.name)
+
+        try:
             weight = tf.stop_gradient(tf.transpose(weight, [2, 3, 0, 1]))
-            masks = tf.Variable(tf.ones_like(weight))
+            masks = np.ones(weight.shape)
 
-            num_kernels = weight.shape[0].value * weight.shape[1].value
+            num_kernels = weight.shape[0] * weight.shape[1]
             num_prune = int(num_kernels * config.get('pruning_rate'))
             if num_kernels < 2 or num_prune < 1:
-                self.mask_list.update({op_name: masks})
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
-            tf.scatter_nd_update(masks, min_gm_idx, tf.zeros((min_gm_idx.shape[0].value, weight.shape[-2].value, weight.shape[-1].value)))
-            masks = tf.transpose(masks, [2, 3, 0, 1])
-            self.assign_handler.append(tf.assign(weight, weight*masks))
+            for idx in min_gm_idx:
+                masks[tuple(idx)] = 0.
+        finally:
+            masks = np.transpose(masks, [2, 3, 0, 1])
+            masks = tf.Variable(masks)
             self.mask_list.update({op_name: masks})
-        else:
-            masks = tf.Variable(tf.ones_like(weight))
-            self.mask_list.update({op_name: masks})
+            self.epoch_pruned_layers.add(layer.name)
 
         return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
         assert len(weight.shape) >= 3
-        assert weight.shape[0].value * weight.shape[1].value > 2
+        assert weight.shape[0] * weight.shape[1] > 2
 
         dist_list, idx_list = [], []
-        for in_i in range(weight.shape[0].value):
-            for out_i in range(weight.shape[1].value):
+        for in_i in range(weight.shape[0]):
+            for out_i in range(weight.shape[1]):
                 dist_sum = self._get_distance_sum(weight, in_i, out_i)
                 dist_list.append(dist_sum)
                 idx_list.append([in_i, out_i])
@@ -184,12 +190,12 @@ class FPGMPruner(Pruner):
         return tf.gather(idx_tensor, idx)
 
     def _get_distance_sum(self, weight, in_idx, out_idx):
-        w = tf.reshape(weight, (-1, weight.shape[-2].value, weight.shape[-1].value))
-        anchor_w = tf.tile(tf.expand_dims(weight[in_idx, out_idx], 0), [w.shape[0].value, 1, 1])
+        w = tf.reshape(weight, (-1, weight.shape[-2], weight.shape[-1]))
+        anchor_w = tf.tile(tf.expand_dims(weight[in_idx, out_idx], 0), [w.shape[0], 1, 1])
         x = w - anchor_w
         x = tf.math.reduce_sum((x*x), (-2, -1))
         x = tf.math.sqrt(x)
         return tf.math.reduce_sum(x)
 
     def update_epoch(self, epoch, sess):
-        sess.run(self.assign_handler)
+        self.epoch_pruned_layers = set()

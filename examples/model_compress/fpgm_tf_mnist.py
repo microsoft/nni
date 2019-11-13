@@ -1,130 +1,53 @@
-from nni.compression.tensorflow import FPGMPruner
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow import keras
+assert tf.__version__ >= "2.0"
+import numpy as np
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from nni.compression.tensorflow import FPGMPruner
 
+def get_data():
+    (X_train_full, y_train_full), _ = keras.datasets.mnist.load_data()
+    X_train, X_valid = X_train_full[:-5000], X_train_full[-5000:]
+    y_train, y_valid = y_train_full[:-5000], y_train_full[-5000:]
 
-def weight_variable(shape):
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.1))
+    X_mean = X_train.mean(axis=0, keepdims=True)
+    X_std = X_train.std(axis=0, keepdims=True) + 1e-7
+    X_train = (X_train - X_mean) / X_std
+    X_valid = (X_valid - X_mean) / X_std
 
+    X_train = X_train[..., np.newaxis]
+    X_valid = X_valid[..., np.newaxis]
 
-def bias_variable(shape):
-    return tf.Variable(tf.constant(0.1, shape=shape))
+    return X_train, X_valid, y_train, y_valid
 
-
-def conv2d(x_input, w_matrix):
-    return tf.nn.conv2d(x_input, w_matrix, strides=[1, 1, 1, 1], padding='SAME')
-
-
-def max_pool(x_input, pool_size):
-    size = [1, pool_size, pool_size, 1]
-    return tf.nn.max_pool(x_input, ksize=size, strides=size, padding='SAME')
-
-
-class Mnist:
-    def __init__(self):
-        images = tf.placeholder(tf.float32, [None, 784], name='input_x')
-        labels = tf.placeholder(tf.float32, [None, 10], name='input_y')
-        keep_prob = tf.placeholder(tf.float32, name='keep_prob')
-
-        self.images = images
-        self.labels = labels
-        self.keep_prob = keep_prob
-
-        self.train_step = None
-        self.accuracy = None
-
-        self.w1 = None
-        self.b1 = None
-        self.fcw1 = None
-        self.cross = None
-        with tf.name_scope('reshape'):
-            x_image = tf.reshape(images, [-1, 28, 28, 1])
-        with tf.name_scope('conv1'):
-            w_conv1 = weight_variable([5, 5, 1, 32])
-            self.w1 = w_conv1
-            b_conv1 = bias_variable([32])
-            self.b1 = b_conv1
-            h_conv1 = tf.nn.relu(conv2d(x_image, w_conv1) + b_conv1)
-        with tf.name_scope('pool1'):
-            h_pool1 = max_pool(h_conv1, 2)
-        with tf.name_scope('conv2'):
-            w_conv2 = weight_variable([5, 5, 32, 64])
-            b_conv2 = bias_variable([64])
-            h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
-        with tf.name_scope('pool2'):
-            h_pool2 = max_pool(h_conv2, 2)
-        with tf.name_scope('fc1'):
-            w_fc1 = weight_variable([7 * 7 * 64, 1024])
-            self.fcw1 = w_fc1
-            b_fc1 = bias_variable([1024])
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
-        h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, w_fc1) + b_fc1)
-        with tf.name_scope('dropout'):
-            h_fc1_drop = tf.nn.dropout(h_fc1, 0.5)
-        with tf.name_scope('fc2'):
-            w_fc2 = weight_variable([1024, 10])
-            b_fc2 = bias_variable([10])
-            y_conv = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
-        with tf.name_scope('loss'):
-            cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=y_conv))
-            self.cross = cross_entropy
-        with tf.name_scope('adam_optimizer'):
-            self.train_step = tf.train.AdamOptimizer(0.0001).minimize(cross_entropy)
-        with tf.name_scope('accuracy'):
-            correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(labels, 1))
-            self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
+def get_model():
+    model = keras.models.Sequential([
+        Conv2D(filters=32, kernel_size=7, input_shape=[28, 28, 1], activation='relu', padding="SAME"),
+        MaxPooling2D(pool_size=2),
+        Conv2D(filters=64, kernel_size=3, activation='relu', padding="SAME"),
+        MaxPooling2D(pool_size=2),
+        Flatten(),
+        Dense(units=128, activation='relu'),
+        Dropout(0.5),
+        Dense(units=10, activation='softmax'),
+    ])
+    model.compile(loss="sparse_categorical_crossentropy",
+              optimizer=keras.optimizers.SGD(lr=1e-3),
+              metrics=["accuracy"])
+    return model
 
 def main():
-    tf.set_random_seed(0)
+    X_train, X_valid, y_train, y_valid = get_data()
+    model = get_model()
 
-    data = input_data.read_data_sets('data', one_hot=True)
-
-    model = Mnist()
-
-    """
-    You can change this to LevelPruner to implement it
-    pruner = LevelPruner(configure_list)
-    """
     configure_list = [{
         'pruning_rate': 0.5,
         'op_types': ['Conv2D']
     }]
-    pruner = FPGMPruner(tf.get_default_graph(), configure_list)
+    pruner = FPGMPruner(model, configure_list)
     pruner.compress()
-    # if you want to load from yaml file
-    # configure_file = nni.compressors.tf_compressor._nnimc_tf._tf_default_load_configure_file('configure_example.yaml','AGPruner')
-    # configure_list = configure_file.get('config',[])
-    # pruner.load_configure(configure_list)
-    # you can also handle it yourself and input an configure list in json
-    # you can also use compress(model) or compress_default_graph() for tensorflow compressor
-    # pruner.compress(tf.get_default_graph())
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for batch_idx in range(2000):
-            if batch_idx % 10 == 0:
-                pruner.update_epoch(batch_idx / 10, sess)
-            batch = data.train.next_batch(2000)
-            model.train_step.run(feed_dict={
-                model.images: batch[0],
-                model.labels: batch[1],
-                model.keep_prob: 0.5
-            })
-            if batch_idx % 10 == 0:
-                test_acc = model.accuracy.eval(feed_dict={
-                    model.images: data.test.images,
-                    model.labels: data.test.labels,
-                    model.keep_prob: 1.0
-                })
-                print('test accuracy', test_acc)
-
-        test_acc = model.accuracy.eval(feed_dict={
-            model.images: data.test.images,
-            model.labels: data.test.labels,
-            model.keep_prob: 1.0
-        })
-        print('final result is', test_acc)
+    model.fit(X_train, y_train, epochs=2, validation_data=(X_valid, y_valid))
 
 
 if __name__ == '__main__':
