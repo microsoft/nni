@@ -102,7 +102,7 @@ class AGP_Pruner(Pruner):
 
 class FPGMPruner(Pruner):
     """A filter pruner via geometric median.
-    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration", 
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
 
