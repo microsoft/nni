@@ -56,7 +56,7 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
 
-    def range_check(self, tensor):
+    def _range_check(self, tensor):
         """
         determine the max value and min value of quantization target.
 
@@ -73,7 +73,7 @@ class QAT_Quantizer(Quantizer):
         # TODO: use EMA to check activation range instead
         return torch.min(tensor), torch.max(tensor)
 
-    def update_quantization_param(self, bits, op, rmin, rmax):
+    def _update_quantization_param(self, bits, op, rmin, rmax):
         """
         update the `zero_point` and `scale` of op.
 
@@ -116,7 +116,7 @@ class QAT_Quantizer(Quantizer):
         op.scale = scale
         op.zero_point = nudged_zero_point
 
-    def quantize(self, bits, op, real_val):
+    def _quantize(self, bits, op, real_val):
         """
         quantize real value.
 
@@ -140,7 +140,7 @@ class QAT_Quantizer(Quantizer):
         quantized_val = torch.round(clamped_val)
         return quantized_val
 
-    def dequantize(self, op, quantized_val):
+    def _dequantize(self, op, quantized_val):
         """
         dequantize quantized value.
         Because we simulate quantization in training process, all the computations still happen as float point computations, which means we
@@ -171,10 +171,10 @@ class QAT_Quantizer(Quantizer):
             return weight
         if quant_start_step > self.steps:
             return weight
-        rmin, rmax = self.range_check(weight)
-        self.update_quantization_param(weight_bits, op, rmin, rmax)
-        out = self.quantize(weight_bits, op, weight)
-        out = self.dequantize(op, out)
+        rmin, rmax = self._range_check(weight)
+        self._update_quantization_param(weight_bits, op, rmin, rmax)
+        out = self._quantize(weight_bits, op, weight)
+        out = self._dequantize(op, out)
         return out
 
     def quantize_output(self, output, config, op, **kwargs):
@@ -190,10 +190,10 @@ class QAT_Quantizer(Quantizer):
         if quant_start_step > self.steps:
             return output
         # TODO output dynamic set a, b
-        rmin, rmax = self.range_check(output)
-        self.update_quantization_param(output_bits, op, rmin, rmax)
-        out = self.quantize(output_bits, op, output)
-        out = self.dequantize(op, out)
+        rmin, rmax = self._range_check(output)
+        self._update_quantization_param(output_bits, op, rmin, rmax)
+        out = self._quantize(output_bits, op, output)
+        out = self._dequantize(op, out)
         return out
 
     def fold_bn(self, config, **kwargs):
