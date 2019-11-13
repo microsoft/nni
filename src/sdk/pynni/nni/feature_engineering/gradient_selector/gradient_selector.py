@@ -37,7 +37,7 @@ import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.fginitialize import PrepareData
 from nni.feature_engineering.gradient_selector.fgtrain import _train, print_results
 
-class FeatureGradientSelector(FeatureSeletor, BaseEstimator, SelectorMixin):
+class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
     def __init__(self,
                  order=4,
                  penalty=1,
