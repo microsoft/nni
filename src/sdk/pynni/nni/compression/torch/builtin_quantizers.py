@@ -41,7 +41,7 @@ class QAT_Quantizer(Quantizer):
                 - quant_types : list of string
                     type of quantization you want to apply, currently support 'weight', 'input', 'output'
                 - quant_bits : int or dict of {str : int}
-                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8,
+                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
                     when the type is int, all quantization types share same bits length
                 - quant_start_step : int
                     disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
