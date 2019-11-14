@@ -6,7 +6,7 @@ import nni.compression.tensorflow as tf_compressor
 import nni.compression.torch as torch_compressor
 
 def get_tf_mnist_model():
-    model = keras.models.Sequential([
+    model = tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(filters=32, kernel_size=7, input_shape=[28, 28, 1], activation='relu', padding="SAME"),
         tf.keras.layers.MaxPooling2D(pool_size=2),
         tf.keras.layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding="SAME"),
