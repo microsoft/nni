@@ -124,7 +124,14 @@ class CompressorTestCase(TestCase):
 
     def test_torch_quantizer(self):
         model = TorchMnist()
-        torch_compressor.NaiveQuantizer(model, [{'op_types': ['default']}]).compress()
+        configure_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': {
+                'weight': 8,
+            },
+            'op_types':['Conv2d', 'Linear']
+        }]
+        torch_compressor.NaiveQuantizer(model, configure_list).compress()
 
 
 if __name__ == '__main__':

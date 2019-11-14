@@ -107,19 +107,22 @@ export class PAIJobConfig {
  */
 export class PAIClusterConfig {
     public readonly userName: string;
-    public readonly passWord: string;
+    public readonly passWord?: string;
     public readonly host: string;
+    public readonly token?: string;
 
     /**
      * Constructor
      * @param userName User name of PAI Cluster
      * @param passWord password of PAI Cluster
      * @param host Host IP of PAI Cluster
+     * @param token PAI token of PAI Cluster
      */
-    constructor(userName: string, passWord : string, host : string) {
+    constructor(userName: string, host : string, passWord?: string, token?: string) {
         this.userName = userName;
         this.passWord = passWord;
         this.host = host;
+        this.token = token;
     }
 }
 
