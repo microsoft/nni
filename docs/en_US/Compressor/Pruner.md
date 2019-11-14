@@ -120,7 +120,7 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-Note: FPGM Pruner is used to prune convolutional layers within deep neural network, therefore the `op_types` field supports only convolutional layers.
+Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
 Second, you should add code below to update epoch number at beginning of each epoch.
 
