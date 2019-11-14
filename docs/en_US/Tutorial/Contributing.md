@@ -40,6 +40,9 @@ A person looking to contribute can take up an issue by claiming it as a comment/
 ## Code Styles & Naming Conventions
 * We follow [PEP8](https://www.python.org/dev/peps/pep-0008/) for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as `flake8` or `pylint`
 * We also follow [NumPy Docstring Style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) for Python Docstring Conventions. During the [documentation building](Contributing.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
+* For docstrings, please refer to [numpydoc docstring guide](https://numpydoc.readthedocs.io/en/latest/format.html) and [pandas docstring guide](https://python-sprints.github.io/pandas/guide/pandas_docstring.html)
+    * For function docstring, **description**, **Parameters**, and **Returns**/**Yields** are mandatory.
+    * For class docstring, **description**, **Attributes** are mandatory.
 
 ## Documentation
 Our documentation is built with [sphinx](http://sphinx-doc.org/), supporting [Markdown](https://guides.github.com/features/mastering-markdown/) and [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format. All our documentations are placed under [docs/en_US](https://github.com/Microsoft/nni/tree/master/docs).
