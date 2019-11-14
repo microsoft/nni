@@ -27,12 +27,12 @@ import torch.nn as nn
 from model import *
 from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
 
-def get_parameters(keys=None, mode='include'):
+def get_parameters(model, keys=None, mode='include'):
     if keys is None:
-        for name, param in self.named_parameters():
+        for name, param in model.named_parameters():
             yield param
     elif mode == 'include':
-        for name, param in self.named_parameters():
+        for name, param in model.named_parameters():
             flag = False
             for key in keys:
                 if key in name:
@@ -41,7 +41,7 @@ def get_parameters(keys=None, mode='include'):
             if flag:
                 yield param
     elif mode == 'exclude':
-        for name, param in self.named_parameters():
+        for name, param in model.named_parameters():
             flag = True
             for key in keys:
                 if key in name:
@@ -64,21 +64,21 @@ if __name__ == "__main__":
     #dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
     model = SearchMobileNet()
+    print('=============================================SearchMobileNet model create done')
     model.init_model()
+    print('=============================================SearchMobileNet model init done')
 
     # move network to GPU if available
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
         #self.net = torch.nn.DataParallel(self.net)
         model.to(device)
-        cudnn.benchmark = True
+        #cudnn.benchmark = True
     else:
         raise ValueError
         # self.device = torch.device('cpu')
 
     # TODO: net info
-
-    criterion = nn.CrossEntropyLoss()
 
     # TODO: removed decay_key
     no_decay_keys = True
@@ -86,30 +86,35 @@ if __name__ == "__main__":
         keys = ['bn']
         momentum, nesterov = 0.9, True
         optimizer = torch.optim.SGD([
-            {'params': get_parameters(keys, mode='exclude'), 'weight_decay': 4e-5},
-            {'params': get_parameters(keys, mode='include'), 'weight_decay': 0},
+            {'params': get_parameters(model, keys, mode='exclude'), 'weight_decay': 4e-5},
+            {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
         ], lr=0.05, momentum=momentum, nesterov=nesterov)
     else:
-        optimizer = torch.optim.SGD(get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
+        optimizer = torch.optim.SGD(model, get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
     #n_epochs = 50
     #lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, n_epochs, eta_min=0.001)
 
+    print('=============================================Start to create data provider')
     # TODO: 
-    data_provider = ImagenetDataProvider(train_batch_size=256,
+    data_provider = datasets.ImagenetDataProvider(save_path='/data/hdd3/yugzh/imagenet/',
+                                         train_batch_size=256,
                                          test_batch_size=500,
                                          valid_size=None,
-                                         n_worker=32,
+                                         n_worker=0, #32,
                                          resize_scale=0.08,
                                          distort_color='normal')
+    print('=============================================Finish to create data provider')
     train_loader = data_provider.train
     valid_loader = data_provider.valid
 
+    print('=============================================Start to create ProxylessNasTrainer')
     trainer = ProxylessNasTrainer(model,
                                   model_optim=optimizer,
                                   train_loader=train_loader,
                                   valid_loader=valid_loader,
                                   device=device)
 
+    print('=============================================Start to train ProxylessNasTrainer')
     trainer.train()
     trainer.export()

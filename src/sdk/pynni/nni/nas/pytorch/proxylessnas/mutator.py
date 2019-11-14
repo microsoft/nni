@@ -51,6 +51,7 @@ class ArchGradientFunction(torch.autograd.Function):
 
 class MixedOp(nn.Module):
     def __init__(self, mutable):
+        super(MixedOp, self).__init__()
         self.mutable = mutable
         self.AP_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
         self.AP_path_wb = nn.Parameter(torch.Tensor(mutable.length))
@@ -59,6 +60,9 @@ class MixedOp(nn.Module):
         self.log_prob = None
         self.current_prob_over_ops = None
     
+    def get_AP_path_alpha(self):
+        return self.AP_path_alpha
+
     def forward(self, x):
         # only full_v2
         def run_function(candidate_ops, active_id):
@@ -111,7 +115,10 @@ class MixedOp(nn.Module):
         # reset binary gates
         self.AP_path_wb.data.zero_()
         probs = self.probs_over_ops
-        sample = torch.multinomial(probs.data, 1)[0].item()
+        print('probs: ', probs.data)
+        print('probs type: ', probs.type())
+        sample = torch.multinomial(probs, 1)[0].item()
+        print('sample: ', sample)
         self.active_index = [sample]
         self.inactive_index = [_i for _i in range(0, sample)] + \
                               [_i for _i in range(sample + 1, len(self.mutable.choices))]
@@ -166,10 +173,11 @@ class ProxylessNasMutator(PyTorchMutator):
         -------
         torch.Tensor
         """
-        return self.mixed_ops[mutable.key].forward(*inputs)
+        return self.mixed_ops[mutable.key].forward(*inputs), None
 
     def reset_binary_gates(self):
         for k in self.mixed_ops.keys():
+            print('+++++++++++++++++++k: ', k)
             self.mixed_ops[k].binarize()
 
     def set_chosen_op_active(self):
@@ -182,3 +190,7 @@ class ProxylessNasMutator(PyTorchMutator):
     def set_arch_param_grad(self):
         for k in self.mixed_ops.keys():
             self.mixed_ops[k].set_arch_param_grad()
+
+    def get_architecture_parameters(self):
+        for k in self.mixed_ops.keys():
+            yield self.mixed_ops[k].get_AP_path_alpha()

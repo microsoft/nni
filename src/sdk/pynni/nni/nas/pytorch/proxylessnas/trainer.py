@@ -20,6 +20,7 @@
 
 import copy
 import math
+import time
 
 import torch
 from torch import nn as nn
@@ -27,6 +28,31 @@ from torch import nn as nn
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.utils import AverageMeterGroup, auto_device
 from .mutator import ProxylessNasMutator
+
+
+class AverageMeter(object):
+    """
+    Computes and stores the average and current value
+    Copied from: https://github.com/pytorch/examples/blob/master/imagenet/main.py
+    """
+
+    def __init__(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
 
 
 def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
@@ -71,20 +97,15 @@ class ProxylessNasTrainer(Trainer):
         self._init_arch_params()
 
         # build architecture optimizer
-        self.arch_optimizer = torch.optim.Adam(self._architecture_parameters(), 1e-3, weight_decay=0)
+        self.arch_optimizer = torch.optim.Adam(self.mutator.get_architecture_parameters(), 1e-3, weight_decay=0)
 
         self.warmup = True
         self.warmup_epoch = 0
 
         self.criterion = nn.CrossEntropyLoss()
 
-    def _architecture_parameters(self):
-        for name, param in self.named_parameters():
-            if 'AP_path_alpha' in name:
-                yield param
-
     def _init_arch_params(self, init_type='normal', init_ratio=1e-3):
-        for param in self._architecture_parameters():
+        for param in self.mutator.get_architecture_parameters():
             if init_type == 'normal':
                 param.data.normal_(0, init_ratio)
             elif init_type == 'uniform':
@@ -145,7 +166,9 @@ class ProxylessNasTrainer(Trainer):
             self.model.train()
 
             end = time.time()
+            print('=====================_warm_up, epoch: ', epoch)
             for i, (images, labels) in enumerate(data_loader):
+                print('=====================_warm_up, minibatch i: ', i)
                 data_time.update(time.time() - end)
                 # lr
                 T_cur = epoch * nBatch + i
