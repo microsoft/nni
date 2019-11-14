@@ -69,18 +69,15 @@ class CompressorTestCase(TestCase):
 
     @tf2
     def test_tf_pruner(self):
-        model = TfMnist()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
         tf_compressor.LevelPruner(get_tf_mnist_model(), configure_list).compress()
 
     @tf2
     def test_tf_quantizer(self):
-        model = TfMnist()
         tf_compressor.NaiveQuantizer(get_tf_mnist_model(), [{'op_types': ['default']}]).compress()
 
     @tf2
     def test_tf_fpgm_pruner(self):
-        model = TfMnist()
         configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2D']}]
         tf_compressor.FPGMPruner(get_tf_mnist_model(), configure_list).compress()
 
