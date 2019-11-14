@@ -20,9 +20,10 @@
 
 import torch
 import torch.nn as nn
+import math
 
 import ops
-import utils
+import putils
 from nni.nas import pytorch as nas
 
 class SearchMobileNet(nn.Module):
@@ -44,15 +45,17 @@ class SearchMobileNet(nn.Module):
         width_mult : int
             the scale factor of width
         """
-        input_channel = utils.make_devisible(32 * width_mult, 8)
-        first_cell_width = utils.make_devisible(16 * width_mult, 8)
+        super(SearchMobileNet, self).__init__()
+
+        input_channel = putils.make_divisible(32 * width_mult, 8)
+        first_cell_width = putils.make_divisible(16 * width_mult, 8)
         for i in range(len(width_stages)):
-            width_stages[i] = utils.make_devisible(width_stages[i] * width_mult, 8)
+            width_stages[i] = putils.make_divisible(width_stages[i] * width_mult, 8)
         # first conv
-        first_conv = ConvLayer(3, input_channel, kernel_size=3, stride=2, use_bn=True, act_func='relu6', ops_order='weight_bn_act')
+        first_conv = ops.ConvLayer(3, input_channel, kernel_size=3, stride=2, use_bn=True, act_func='relu6', ops_order='weight_bn_act')
         # first block
         first_block_conv = ops.OPS['3x3_MBConv1'](input_channel, first_cell_width, 1)
-        first_block = MobileInvertedResidualBlock(first_block_conv, None)
+        first_block = ops.MobileInvertedResidualBlock(first_block_conv, None)
 
         input_channel = first_cell_width
 
@@ -86,18 +89,18 @@ class SearchMobileNet(nn.Module):
                 # shortcut
                 if stride == 1 and input_channel == width:
                     # if not first cell
-                    shortcut = IndentityLayer(input_channel, input_channel)
+                    shortcut = ops.IdentityLayer(input_channel, input_channel)
                 else:
                     shortcut = None
-                inverted_residual_block = MobileInvertedResidualBlock(conv_op, shortcut)
+                inverted_residual_block = ops.MobileInvertedResidualBlock(conv_op, shortcut)
                 blocks.append(inverted_residual_block)
                 input_channel = width
             stage_cnt += 1
 
         # feature mix layer
         last_channel = utils.make_devisible(1280 * width_mult, 8) if width_mult > 1.0 else 1280
-        feature_mix_layer = ConvLayer(input_channel, last_channel, kernel_size=1, use_bn=True, act_func='relu6', ops_order='weight_bn_act', )
-        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
+        feature_mix_layer = ops.ConvLayer(input_channel, last_channel, kernel_size=1, use_bn=True, act_func='relu6', ops_order='weight_bn_act', )
+        classifier = ops.LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 
         self.first_conv = first_conv
         self.blocks = nn.ModuleList(blocks)
@@ -130,14 +133,14 @@ class SearchMobileNet(nn.Module):
             if isinstance(m, nn.Conv2d):
                 if model_init == 'he_fout':
                     n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                    if init_dev_groups:
+                    if init_div_groups:
                         n /= m.groups
-                    m.weight.data.normal_(0, math, sqrt(2. / n))
+                    m.weight.data.normal_(0, math.sqrt(2. / n))
                 elif model_init == 'he_fin':
                     n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-                    if init_dev_groups:
+                    if init_div_groups:
                         n /= m.groups
-                    m.weight.data.normal_(0, math, sqrt(2. / n))
+                    m.weight.data.normal_(0, math.sqrt(2. / n))
                 else:
                     raise NotImplementedError
             elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):

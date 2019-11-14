@@ -25,8 +25,7 @@ import torch
 import torch.nn as nn
 
 from model import *
-from nni.nas.pytorch.darts import ProxylessNasTrainer
-from utils import *
+from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
 
 def get_parameters(keys=None, mode='include'):
     if keys is None:
@@ -104,10 +103,12 @@ if __name__ == "__main__":
                                          resize_scale=0.08,
                                          distort_color='normal')
     train_loader = data_provider.train
+    valid_loader = data_provider.valid
 
     trainer = ProxylessNasTrainer(model,
                                   model_optim=optimizer,
                                   train_loader=train_loader,
+                                  valid_loader=valid_loader,
                                   device=device)
 
     trainer.train()
