@@ -27,7 +27,7 @@ class Compressor:
 
         Parameters
         ----------
-        model : pytorch model
+        model : keras model
             the model user wants to compress
         config_list : list
             the configurations that users specify for compression
@@ -36,14 +36,31 @@ class Compressor:
         self.config_list = config_list
         self.modules_to_compress = []
 
-    def compress(self):
-        for keras_layer in self.bound_model.layers:
-            layer = LayerInfo(keras_layer)
-            config = self.select_config(layer)
-            if config is not None:
-                self._instrument_layer(layer, config)
-                self.modules_to_compress.append((layer, config))
+    def detect_modules_to_compress(self):
+        """
+        detect all modules should be compressed, and save the result in `self.modules_to_compress`.
 
+        The model will be instrumented and user should never edit it after calling this method.
+        """
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for keras_layer in self.bound_model.layers:
+                layer = LayerInfo(keras_layer)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
+
+    def compress(self):
+        """
+        Compress the model with algorithm implemented by subclass.
+
+        The model will be instrumented and user should never edit it after calling this method.
+        `self.modules_to_compress` records all the to-be-compressed layers
+        """
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
+            self._instrument_layer(layer, config)
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -88,7 +105,7 @@ class Compressor:
             return None
         return ret
 
-    def update_epoch(self, epoch, sess):
+    def update_epoch(self, epoch):
         """
         If user want to update model every epoch, user can override this method.
         This method should be called at the beginning of each epoch
@@ -99,7 +116,7 @@ class Compressor:
             the current epoch number
         """
 
-    def step(self, sess):
+    def step(self):
         """
         If user want to update mask every step, user can override this method
         """
@@ -182,13 +199,3 @@ class Quantizer(Compressor):
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
         raise NotImplementedError("Quantizer must overload quantize_weight()")
-
-    def _instrument_layer(self, layer, config):
-        weight_index = _detect_weight_index(layer)
-        if weight_index is None:
-            _logger.warning('Failed to detect weight for layer %s', layer.name)
-            return
-        weight_op = layer.op.inputs[weight_index].op
-        weight = weight_op.inputs[0]
-        new_weight = self.quantize_weight(weight, config, op=layer.op, op_type=layer.type, op_name=layer.name)
-        tf.contrib.graph_editor.swap_outputs(weight_op, new_weight.op)
