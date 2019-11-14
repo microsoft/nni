@@ -53,9 +53,14 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **quant_types:** This is to specify the quantization types that need to be applied, 'weight', 'input' and 'output' are supported
-* **quant_bits:** This is to specify the bits length that operations should be quantized to, default is 8
-* **quant_start_step:** This is to specify the number of steps before quantization is enabled
+* **quant_types:** : list of string
+type of quantization you want to apply, currently support 'weight', 'input', 'output'
+* **quant_bits:** int or dict of {str : int}
+bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8,
+when the type is int, all quantization types share same bits length
+* **quant_start_step:** int
+disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
+state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
 ### note
 batch normalization folding is currently not supported.

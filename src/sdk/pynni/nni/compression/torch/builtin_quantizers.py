@@ -40,8 +40,9 @@ class QAT_Quantizer(Quantizer):
             supported keys for dict:
                 - quant_types : list of string
                     type of quantization you want to apply, currently support 'weight', 'input', 'output'
-                - quant_bits : dict
-                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8
+                - quant_bits : int or dict of {str : int}
+                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, default value is 8,
+                    when the type is int, all quantization types share same bits length
                 - quant_start_step : int
                     disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
                     state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
@@ -160,12 +161,17 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
+    def _get_bits_length(self, config, quant_type):
+        if isinstance(config["quant_bits"], int):
+            return config["quant_bits"]
+        else:
+            return config["quant_bits"].get(quant_type)
+        
     def quantize_weight(self, weight, config, op, **kwargs):
         """
         overwrite default `Quantizer` `quantize_weight` method
         """
-        quant_bits = config.get('quant_bits', {})
-        weight_bits = quant_bits.get('weight', 8)
+        weight_bits = self._get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         if weight_bits <= 1:
             return weight
@@ -181,8 +187,7 @@ class QAT_Quantizer(Quantizer):
         """
         overwrite default `Quantizer` `quantize_output` method
         """
-        quant_bits = config.get('quant_bits', {})
-        output_bits = quant_bits.get('output', 8)
+        output_bits = self._get_bits_length(config, 'output')
         quant_start_step = config.get('quant_start_step', 0)
 
         if output_bits <= 1:
