@@ -101,7 +101,8 @@ class AGP_Pruner(Pruner):
             self.if_init_list[k] = True
 
 class FPGMPruner(Pruner):
-    """A filter pruner via geometric median.
+    """
+    A filter pruner via geometric median.
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
@@ -122,7 +123,8 @@ class FPGMPruner(Pruner):
         self.epoch_pruned_layers = set()
 
     def calc_mask(self, layer, config):
-        """supports Conv1D, Conv2D
+        """
+        Supports Conv1D, Conv2D
         filter dimensions for Conv1D:
         LEN: filter length
         IN: number of input channel
@@ -140,7 +142,6 @@ class FPGMPruner(Pruner):
             calculate mask for `layer`'s weight
         config : dict
             the configuration for generating the mask
-
         """
 
         weight = layer.weight
