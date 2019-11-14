@@ -1,0 +1,21 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 5
+maxExecDuration: 3333h
+maxTrialNum: 500
+#choice: local, remote, pai
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: true
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: minimize
+    parallel_optimize: True
+trial:
+  command: python3 main.py
+  codeDir: .
+  gpuNum: 0
