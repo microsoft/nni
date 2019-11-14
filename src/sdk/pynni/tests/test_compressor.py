@@ -43,7 +43,7 @@ def tf2(func):
     def test_tf2_func(self):
         if tf.__version__ >= '2.0':
             func()
-    return test_tf20_func
+    return test_tf2_func
 
 class CompressorTestCase(TestCase):
     def test_torch_pruner(self):
