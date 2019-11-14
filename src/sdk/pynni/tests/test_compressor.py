@@ -2,8 +2,10 @@ from unittest import TestCase, main
 import tensorflow as tf
 import torch
 import torch.nn.functional as F
-import nni.compression.tensorflow as tf_compressor
 import nni.compression.torch as torch_compressor
+
+if tf.__version__ >= '2.0':
+    import nni.compression.tensorflow as tf_compressor
 
 def get_tf_mnist_model():
     model = tf.keras.models.Sequential([
@@ -17,7 +19,7 @@ def get_tf_mnist_model():
         tf.keras.layers.Dense(units=10, activation='softmax'),
     ])
     model.compile(loss="sparse_categorical_crossentropy",
-        optimizer=keras.optimizers.SGD(lr=1e-3),
+        optimizer=tf.keras.optimizers.SGD(lr=1e-3),
         metrics=["accuracy"])
     return model
 
