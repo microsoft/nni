@@ -18,22 +18,26 @@
  */
 
 'use strict';
+import { PAIClusterConfig } from '../pai/paiConfig';
 
 /**
- * Enum of metadata keys for configuration
+ * PAILite cluster configuration
  */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    LOCAL_CONFIG = 'local_config',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    MULTI_PHASE = 'multiPhase',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config',
-    PAI_LITE_CLUSTER_CONFIG = 'pai_lite_config',
-    KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
-    NNI_MANAGER_IP = 'nni_manager_ip',
-    FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
-    VERSION_CHECK = 'version_check',
-    LOG_COLLECTION = 'log_collection'
+export class PAILiteClusterConfig extends PAIClusterConfig {
+    public readonly nniManagerNFSMountPath: string;
+    public readonly containerNFSMountPath: string;
+
+    /**
+     * Constructor
+     * @param userName User name of PAI Cluster
+     * @param passWord password of PAI Cluster
+     * @param host Host IP of PAI Cluster
+     * @param token PAI token of PAI Cluster
+     */
+    constructor(userName: string, host : string, nniManagerNFSMountPath: string, 
+                containerNFSMountPath: string, passWord?: string, token?: string) {
+        super(userName, host, passWord, token);
+        this.nniManagerNFSMountPath = nniManagerNFSMountPath;
+        this.containerNFSMountPath = containerNFSMountPath;
+    }
 }

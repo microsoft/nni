@@ -111,6 +111,14 @@ export namespace ValidationSchemas {
                 token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
+            pai_lite_config: joi.object({
+                userName: joi.string().min(1).required(),
+                passWord: joi.string().min(1),
+                token: joi.string().min(1),
+                host: joi.string().min(1).required(),
+                nniManagerNFSMountPath: joi.string().min(1).required(),
+                containerNFSMountPath: joi.string().min(1).required()
+            }),
             kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),

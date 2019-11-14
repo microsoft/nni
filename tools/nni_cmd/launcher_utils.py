@@ -22,7 +22,7 @@ import os
 import json
 from schema import SchemaError
 from schema import Schema
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_LITE_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
                            FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
 from .common_utils import print_error, print_warning, print_normal
 
@@ -160,13 +160,14 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller']:
+        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiLite']:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
         'local': LOCAL_CONFIG_SCHEMA,
         'remote': REMOTE_CONFIG_SCHEMA,
         'pai': PAI_CONFIG_SCHEMA,
+        'paiLite': PAI_LITE_CONFIG_SCHEMA,
         'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
         'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
         }
@@ -278,7 +279,7 @@ def validate_machine_list(experiment_config):
 
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
-    if experiment_config.get('trainingServicePlatform') == 'pai':
+    if experiment_config.get('trainingServicePlatform') in ['pai', 'paiLite']:
         if experiment_config.get('trial').get('shmMB') and \
         experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')

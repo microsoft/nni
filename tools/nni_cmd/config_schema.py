@@ -49,7 +49,7 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiLite'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -276,6 +276,22 @@ pai_config_schema = {
     })
 }
 
+pai_lite_config_schema = {
+    'paiLiteConfig': Or({
+        'userName': setType('userName', str),
+        'passWord': setType('passWord', str),
+        'host': setType('host', str),
+        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
+        'containerNFSMountPath': setType('containerNFSMountPath', str)
+    }, {
+        'userName': setType('userName', str),
+        'token': setType('token', str),
+        'host': setType('host', str),
+        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
+        'containerNFSMountPath': setType('containerNFSMountPath', str)
+    })
+}
+
 kubeflow_trial_schema = {
     'trial':{
         'codeDir':  setPathCheck('codeDir'),
@@ -412,6 +428,8 @@ LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schema})
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+
+PAI_LITE_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_lite_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 

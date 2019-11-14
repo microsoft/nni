@@ -55,30 +55,30 @@ import * as WebHDFS from 'webhdfs';
  */
 @component.Singleton
 class PAITrainingService implements TrainingService {
-    private readonly log!: Logger;
-    private readonly metricsEmitter: EventEmitter;
-    private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
-    private readonly expRootDir: string;
-    private paiTrialConfig: NNIPAITrialConfig | undefined;
-    private paiClusterConfig?: PAIClusterConfig;
-    private readonly jobQueue: string[];
-    private stopping: boolean = false;
+    protected readonly log!: Logger;
+    protected readonly metricsEmitter: EventEmitter;
+    protected readonly trialJobsMap: Map<string, PAITrialJobDetail>;
+    protected readonly expRootDir: string;
+    protected paiTrialConfig: NNIPAITrialConfig | undefined;
+    protected paiClusterConfig?: PAIClusterConfig;
+    protected readonly jobQueue: string[];
+    protected stopping: boolean = false;
     // tslint:disable-next-line:no-any
-    private hdfsClient: any;
-    private paiToken? : string;
-    private paiTokenUpdateTime?: number;
-    private readonly paiTokenUpdateInterval: number;
-    private readonly experimentId! : string;
-    private readonly paiJobCollector : PAIJobInfoCollector;
-    private paiRestServerPort?: number;
-    private nniManagerIpConfig?: NNIManagerIpConfig;
-    private copyExpCodeDirPromise?: Promise<void>;
-    private copyAuthFilePromise?: Promise<void>;
-    private versionCheck: boolean = true;
-    private logCollection: string;
-    private isMultiPhase: boolean = false;
-    private authFileHdfsPath: string | undefined = undefined;
-    private portList?: string | undefined;
+    protected hdfsClient: any;
+    protected paiToken? : string;
+    protected paiTokenUpdateTime?: number;
+    protected readonly paiTokenUpdateInterval: number;
+    protected readonly experimentId! : string;
+    protected readonly paiJobCollector : PAIJobInfoCollector;
+    protected paiRestServerPort?: number;
+    protected nniManagerIpConfig?: NNIManagerIpConfig;
+    protected copyExpCodeDirPromise?: Promise<void>;
+    protected copyAuthFilePromise?: Promise<void>;
+    protected versionCheck: boolean = true;
+    protected logCollection: string;
+    protected isMultiPhase: boolean = false;
+    protected authFileHdfsPath: string | undefined = undefined;
+    protected portList?: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -239,7 +239,8 @@ class PAITrainingService implements TrainingService {
     // tslint:disable-next-line:max-func-body-length
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
-
+        console.log('-------------------242--------------')
+        console.log(key)
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
@@ -311,7 +312,7 @@ class PAITrainingService implements TrainingService {
                 break;
             default:
                 //Reject for unknown keys
-                throw new Error(`Uknown key: ${key}`);
+                deferred.reject(new Error(`Uknown key: ${key}`));
         }
 
         return deferred.promise;
@@ -350,7 +351,7 @@ class PAITrainingService implements TrainingService {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
+    protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
@@ -501,7 +502,7 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    private async statusCheckingLoop(): Promise<void> {
+    protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
             if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
                 try {
@@ -523,7 +524,7 @@ class PAITrainingService implements TrainingService {
         }
     }
 
-    private async submitJobLoop(): Promise<void> {
+    protected async submitJobLoop(): Promise<void> {
         while (!this.stopping) {
             while (!this.stopping && this.jobQueue.length > 0) {
                 const trialJobId: string = this.jobQueue[0];
@@ -542,7 +543,7 @@ class PAITrainingService implements TrainingService {
     /**
      * Update pai token by the interval time or initialize the pai token
      */
-    private async updatePaiToken(): Promise<void> {
+    protected async updatePaiToken(): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
 
         const currentTime: number = new Date().getTime();
@@ -594,7 +595,7 @@ class PAITrainingService implements TrainingService {
             .finally(() => { clearTimeout(timeoutId); });
     }
 
-    private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
+    protected async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
         if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
@@ -618,7 +619,7 @@ class PAITrainingService implements TrainingService {
         });
     }
 
-    private postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
+    protected postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         const req: request.Options = {
