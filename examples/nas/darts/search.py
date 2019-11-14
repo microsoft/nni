@@ -1,25 +1,23 @@
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
 
-from model import SearchCNN
-from nni.nas.pytorch.darts import DartsTrainer
+import datasets
+from nni.nas.pytorch.darts import CnnNetwork, DartsTrainer
 from utils import accuracy
-
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
-    parser.add_argument("--layers", default=4, type=int)
-    parser.add_argument("--nodes", default=2, type=int)
+    parser.add_argument("--layers", default=5, type=int)
+    parser.add_argument("--nodes", default=4, type=int)
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=1, type=int)
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
-    model = SearchCNN(3, 16, 10, args.layers, n_nodes=args.nodes)
+    model = CnnNetwork(3, 16, 10, args.layers, n_nodes=args.nodes)
     criterion = nn.CrossEntropyLoss()
 
     optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
