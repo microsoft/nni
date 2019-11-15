@@ -19,15 +19,15 @@
 # ==================================================================================================
 
 
-import os
-import pickle
+# import os
+# import pickle
 import time
 
 import numpy as np
 import scipy.special
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+# from torch.utils.data import DataLoader
 
 import nni.feature_engineering.gradient_selector.constants as constants
 import nni.feature_engineering.gradient_selector.syssettings as syssettings
@@ -54,8 +54,8 @@ def revcumsum(U):
 def triudr(X, r):
 
     Zr = torch.zeros_like(X, requires_grad=False)
-    U = X*r
-    Zr[:-1] = X[:-1]*revcumsum(U)[1:]
+    U = X * r
+    Zr[:-1] = X[:-1] * revcumsum(U)[1:]
 
     return Zr
 
@@ -63,8 +63,8 @@ def triudr(X, r):
 def triudl(X, l):
 
     Zl = torch.zeros_like(X, requires_grad=False)
-    U = X*l
-    Zl[1:] = X[1:]*(U.cumsum(dim=0)[:-1])
+    U = X * l
+    Zl[1:] = X[1:] * (U.cumsum(dim=0)[:-1])
 
     return Zl
 
@@ -78,6 +78,7 @@ class ramp(torch.autograd.Function):
     def forward(ctx, input_data):
         ctx.save_for_backward(input_data)
         return input_data.clamp(min=0, max=1)
+
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -98,9 +99,10 @@ class safesqrt(torch.autograd.Function):
         ctx.save_for_backward(input_data, o)
         return o
 
+
     @staticmethod
     def backward(ctx, grad_output):
-        input_data, o = ctx.saved_tensors
+        _, o = ctx.saved_tensors
         grad_input = grad_output.clone()
         grad_input *= 0.5 / (o + constants.EPSILON)
         return grad_input
@@ -112,17 +114,18 @@ class LearnabilityMB(nn.Module):
     mini-batch version w/ "left" and "right" multiplies
     """
 
+
     def __init__(self, Nminibatch, D, coeff, groups=None, binary=False,
                  device=constants.Device.CPU):
         super(LearnabilityMB, self).__init__()
 
         a = coeff / scipy.special.binom(Nminibatch, np.arange(coeff.size) + 2)
         self.order = a.size
-        self.a = torch.tensor(
-            a, dtype=torch.get_default_dtype(), requires_grad=False)
+        self.a = torch.tensor(a, dtype=torch.get_default_dtype(), requires_grad=False)
         self.binary = binary
 
         self.a = self.a.to(device)
+
 
     def ret_val(self, z):
         """
@@ -134,6 +137,7 @@ class LearnabilityMB(nn.Module):
 
         else:
             return 0.5 * (1 - safesqrt.apply(ramp.apply(z)))
+
 
     def forward(self, s, X, y):
 
@@ -178,30 +182,48 @@ class Solver(nn.Module):
                  device=constants.Device.CPU,
                  verbose=1):
         """
-        :param PreparedData: Dataset of PrepareData class
-        :param order: integer, what order of interactions to include. Higher orders
-                may be more accurate but increase the run time. 12 is the maximum allowed order.
-        :param Nminibatch: Int, number of rows in a mini batch
-        :param groups: optional, array-like, shape = [n_features]
+
+        Parameters
+        ----------
+        PreparedData : Dataset of PrepareData class
+        order : int
+            What order of interactions to include. Higher orders
+            may be more accurate but increase the run time. 12 is the maximum allowed order.
+        Nminibatch : int
+            Number of rows in a mini batch
+        groups : array-like
+            Optional, shape = [n_features]
             Groups of columns that must be selected as a unit
             e.g. [0, 0, 1, 2] specifies the first two columns are part of a group.
-        :param soft_groups: optional, array-like, shape = [n_features]
+        soft_groups : array-like
+            optional, shape = [n_features]
             Groups of columns come from the same source
             Used to encourage sparsity of number of sources selected
             e.g. [0, 0, 1, 2] specifies the first two columns are part of a group.
-        :param x0: optional torch.tensor, initialization of x.
-        :param C: float, penalty parameter.
-        :param get_train_opt: function that returns a pytorch optimizer, Adam is the default
-        :param accum_steps: int, number of steps
-        :param rng: random state
-        :param max_norm_clip: float, maximum allowable size of the gradient
-        :param shuffle: boolean, whether or not to shuffle data within the dataloader
-        :param order: integer, what order of interactions to include. Higher orders
-                may be more accurate but increase the run time. 12 is the maximum allowed order.
-        :param penalty: Constant that multiplies the regularization term.
-        :param ftransform: function to transform the x. sigmoid is the default.
-        :param device: 'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
-                    :param verbose: int, Controls the verbosity when fitting. Set to 0 for no printing
+        x0 : torch.tensor
+            Optional, initialization of x.
+        C : float
+            Penalty parameter.
+        get_train_opt : function
+            Function that returns a pytorch optimizer, Adam is the default
+        accum_steps : int
+            Number of steps
+        rng : random state
+        max_norm_clip : float
+            Maximum allowable size of the gradient
+        shuffle : bool
+            Whether or not to shuffle data within the dataloader
+        order : int
+            What order of interactions to include. Higher orders
+            may be more accurate but increase the run time. 12 is the maximum allowed order.
+        penalty : int
+            Constant that multiplies the regularization term.
+        ftransform : function
+            Function to transform the x. sigmoid is the default.
+        device : str
+            'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
+        verbose : int
+            Controls the verbosity when fitting. Set to 0 for no printing
             1 or higher for printing every verbose number of gradient steps.
         """
         super(Solver, self).__init__()
@@ -266,11 +288,14 @@ class Solver(nn.Module):
         else:
             pin_memory = False
 
-        self.ds_train = ChunkDataLoader(PreparedData, batch_size=self.Nminibatch,
-                                        shuffle=shuffle, drop_last=True,
-                                        num_workers=num_workers,
-                                        pin_memory=pin_memory,
-                                        timeout=60)
+        self.ds_train = ChunkDataLoader(
+            PreparedData,
+            batch_size=self.Nminibatch,
+            shuffle=shuffle,
+            drop_last=True,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            timeout=60)
         self.f_train = LearnabilityMB(self.Nminibatch, self.D,
                                       constants.Coefficients.SLE[order],
                                       self.groups,
@@ -286,13 +311,15 @@ class Solver(nn.Module):
             dtype=torch.get_default_dtype(), requires_grad=False)
         self.w = self.w.to(device)
 
+
     def penalty(self, s):
         """
         Calculate L1 Penalty.
         """
         to_return = torch.sum(s) / self.D
         if self.soft_groups is not None:
-            # if soft_groups, there is an additional penalty for using more groups
+            # if soft_groups, there is an additional penalty for using more
+            # groups
             s_grouped = torch.zeros(self.soft_D, 1,
                                     dtype=torch.get_default_dtype(),
                                     device=self.device)
@@ -304,6 +331,7 @@ class Solver(nn.Module):
             # TODO: could make this a user given parameter
             to_return = (to_return + torch.sum(s_grouped) / self.soft_D) * .5
         return to_return
+
 
     def forward_and_backward(self, s, xsub, ysub, retain_graph=False):
         """
@@ -321,11 +349,17 @@ class Solver(nn.Module):
                                   retain_graph=retain_graph)
         return f_train, pen, g1, g2
 
+
     def combine_gradient(self, g1, g2):
         """
         Combine gradients from learnability and penalty
-        :param g1: gradient from learnability
-        :param g2: gradient from penalty
+
+        Parameters
+        ----------
+        g1 : array-like
+            gradient from learnability
+        g2 : array-like
+            gradient from penalty
         """
         to_return = ((1 - self.w) * g1 + self.w * g2) / self.accum_steps
         if self.groups is not None:
@@ -334,17 +368,19 @@ class Solver(nn.Module):
             # should be the average of the gradients of the columns
             to_return_grouped = torch.zeros_like(self.x)
             for group in torch.unique(self.groups):
-                to_return_grouped[
-                    self.groups == group] = to_return[self.groups == group].mean()
+                to_return_grouped[self.groups ==
+                                  group] = to_return[self.groups == group].mean()
             to_return = to_return_grouped
         return to_return
 
+
     def combine_loss(self, f_train, pen):
-        """ 
+        """
         Combine the learnability and L1 penalty.
         """
         return ((1 - self.w) * f_train.detach() + self.w * pen.detach()) \
             / self.accum_steps
+
 
     def transform_y_into_binary(self, ysub, target_class):
         """
@@ -353,17 +389,19 @@ class Solver(nn.Module):
         with torch.no_grad():
             ysub_binary = torch.zeros_like(ysub)
             if self.ordinal:
-                # turn ordinal problems into n-1 classifications of is this example less than rank k
+                # turn ordinal problems into n-1 classifications of is this
+                # example less than rank k
                 if target_class == 0:
                     return None
-                else:
-                    ysub_binary[ysub >= target_class] = 1
-                    ysub_binary[ysub < target_class] = -1
+
+                ysub_binary[ysub >= target_class] = 1
+                ysub_binary[ysub < target_class] = -1
             else:
                 # turn multiclass problems into n binary classifications
                 ysub_binary[ysub == target_class] = 1
                 ysub_binary[ysub != target_class] = -1
         return ysub_binary
+
 
     def _get_scaling_value(self, ysub, target_class):
         """
@@ -372,8 +410,8 @@ class Solver(nn.Module):
         if self.balanced:
             if self.ordinal:
                 return 1 / (torch.unique(ysub).size()[0] - 1)
-            else:
-                return 1 / torch.unique(ysub).size()[0]
+
+            return 1 / torch.unique(ysub).size()[0]
         else:
             if self.ordinal:
                 this_class_proportion = torch.mean(ysub >= target_class)
@@ -383,6 +421,7 @@ class Solver(nn.Module):
                 return this_class_proportion / normalizing_constant
             else:
                 return torch.mean(ysub == target_class)
+
 
     def _skip_y_forward(self, y):
         """
@@ -395,11 +434,17 @@ class Solver(nn.Module):
         else:
             return False
 
+
     def train(self, f_callback=None, f_stop=None):
         """
         Trains the estimator to determine which features to include.
-        :param f_callback: function that performs a callback
-        :param f_stop: function that tells you when to stop
+
+        Parameters
+        ----------
+        f_callback : function
+            Function that performs a callback
+        f_stop: function
+            Function that tells you when to stop
         """
 
         t = time.time()
@@ -421,7 +466,8 @@ class Solver(nn.Module):
                 s = self.ftransform(self.x)
                 s = s.to(self.device)
                 if self.multiclass:
-                    # accumulate gradients over each class, classes range from 0 to n_classes - 1
+                    # accumulate gradients over each class, classes range from
+                    # 0 to n_classes - 1
                     num_classes_batch = torch.unique(ysub).size()[0]
                     for target_class in range(self.n_classes):
                         ysub_binary = self.transform_y_into_binary(
@@ -464,17 +510,18 @@ class Solver(nn.Module):
                     if f_callback is not None:
                         f_callback(self, h, self.it, t)
                     elif self.verbose and (self.it // self.accum_steps) % self.verbose == 0:
-                        epoch = int(self.it/self.iters_per_epoch)
-                        print('[Minibatch: %6d/ Epoch: %3d/ t: %3.3f s] Loss: %0.3f'
-                              % (self.it, epoch, t, h_complete / self.accum_steps))
+                        epoch = int(self.it / self.iters_per_epoch)
+                        print(
+                            '[Minibatch: %6d/ Epoch: %3d/ t: %3.3f s] Loss: %0.3f' %
+                            (self.it, epoch, t, h_complete / self.accum_steps))
 
                     if flag_stop:
                         break
-                    else:
-                        self.opt_train.zero_grad()
-                        h = 0
-                        h_complete = 0
-                        t = time.time()
+
+                    self.opt_train.zero_grad()
+                    h = 0
+                    h_complete = 0
+                    t = time.time()
             except KeyboardInterrupt:
                 flag_stop = True
                 break
