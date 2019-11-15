@@ -166,7 +166,7 @@ class QAT_Quantizer(Quantizer):
             return config["quant_bits"]
         else:
             return config["quant_bits"].get(quant_type)
-        
+
     def quantize_weight(self, weight, config, op, **kwargs):
         """
         overwrite default `Quantizer` `quantize_weight` method

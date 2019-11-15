@@ -311,11 +311,11 @@ class Quantizer(Compressor):
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
         assert "quant_bits" in config, 'must provide quant_bits in config'
         assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be list type or int type'
-        
+
         if isinstance(config["quant_bits"], dict):
             for quant_type in config["quant_types"]:
                 assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
-                    
+
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
