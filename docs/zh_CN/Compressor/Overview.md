@@ -8,13 +8,14 @@ NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法�
 
 NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括两种剪枝算法以及三种量化算法：
 
-| 名称                                                  | 算法简介                                                                                                                                                                       |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)            | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                         |
-| [AGP Pruner](./Pruner.md#agp-pruner)                | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                        |
-| [Naive Quantizer](./Quantizer.md#naive-quantizer)   | 默认将权重量化为 8 位                                                                                                                                                               |
-| [QAT Quantizer](./Quantizer.md#qat-quantizer)       | 为 Efficient Integer-Arithmetic-Only Inference 量化并训练神经网络。 [参考论文](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
-| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 [参考论文](https://arxiv.org/abs/1606.06160)                                                                                              |
+| 名称                                                  | 算法简介                                                                                                                                                                                                                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)            | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                                         |
+| [AGP Pruner](./Pruner.md#agp-pruner)                | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                                        |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner)              | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)                                                                            |
+| [Naive Quantizer](./Quantizer.md#naive-quantizer)   | Quantize weights to default 8 bits                                                                                                                                                                                         |
+| [QAT Quantizer](./Quantizer.md#qat-quantizer)       | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
+| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)                                                                           |
 
 ## 内置压缩算法的用法
 
