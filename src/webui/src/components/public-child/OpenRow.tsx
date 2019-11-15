@@ -1,4 +1,5 @@
 import * as React from 'react';
+import axios from 'axios';
 import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
@@ -6,8 +7,10 @@ import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
 import { Row, Tabs, Button, message, Modal } from 'antd';
 import { MANAGER_IP } from '../../static/const';
+import { downFile } from '../../static/function';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
+import '../../static/style/openRow.scss';
 import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
@@ -53,6 +56,25 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
             message.error('Failed !', 2);
         }
         this.hideFormatModal();
+    }
+
+    downloadTrialLog = () => {
+        const { trialId } = this.props;
+        // download this trial's log
+        const trialLogPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_LOG`);
+        const stderrPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_STDERR`);
+        trialLogPromise.then(res => {
+            if (res.status === 200) {
+                // start to download
+                downFile(res.data, `${trialId}.log`);
+            }
+        });
+        stderrPromise.then(res => {
+            if (res.status === 200) {
+                // start to download
+                downFile(res.data, `${trialId}.stderr`);
+            }
+        });
     }
 
     render() {
@@ -121,6 +143,16 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 :
                                 <TrialLog logStr={logPathRow} id={trialId} />
                         }
+                        {/* view each trial log in drawer*/}
+                        <Row id="trialog">
+                            <Row className="copy" style={{ marginTop: 15 }}>
+                                <Button
+                                    onClick={this.downloadTrialLog.bind(this, trialId)}
+                                >
+                                    View
+                                </Button>
+                            </Row>
+                        </Row>
                     </TabPane>
                 </Tabs>
                 <Modal
