@@ -136,7 +136,7 @@ class QAT_Quantizer(Quantizer):
         """
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
-        qmax = 1 << bits - 1
+        qmax = ( 1 << bits ) - 1
         clamped_val = torch.clamp(transformed_val, qmin, qmax)
         quantized_val = torch.round(clamped_val)
         return quantized_val
