@@ -1,16 +1,38 @@
-import copy
+# Copyright (c) Microsoft Corporation. All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+# associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# ==================================================================================================
+
+
+# import copy
 import os
 import pickle
 import sys
 import time
-from tempfile import SpooledTemporaryFile
+# from tempfile import SpooledTemporaryFile
 
 import numpy as np
 import scipy.sparse
 from sklearn.datasets import load_svmlight_file
 
 import torch
-from torch.utils.data import BatchSampler, DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader, Dataset
+#,BatchSampler, Sampler
 from torch.utils.data.dataloader import _DataLoaderIter
 
 import nni.feature_engineering.gradient_selector.constants as constants
@@ -45,32 +67,6 @@ class PrepareData(Dataset):
         """
         Dataset class with helpful features and functions for being included in a dataloader
         and managing memory usage.
-
-        :param path_data: path to load data from
-        :param data_format: str, file ending for path data.
-            "numpy" is the default when passing in X and y 
-        :param D: int, number of features. 
-        :param N: int, number of rows.
-        :param classification: boolean, if True, problem is classification, else regression.
-         :param ordinal: boolean, if True, problem is ordinal classification. Requires classification to be True.
-        :param balanced: If true, each class is weighted equally in optimization, otherwise
-            weighted is done via support of each class. Requires classification to be True.
-        :param prerocess: 'zscore' which refers to centering and normalizing data to unit variance or
-                'center' which only centers the data to 0 mean
-        :param n_to_estimate: int, number of rows of data to estimate 
-        :param MAXMEMGB: float, maximum allowable size for a minibatch
-        :param set_params: boolean, whether or not to determine the statistics of the dataset
-        :param path_mappings: Used when streaming from disk
-        :param X: array-like, shape = [n_samples, n_features]
-            The training input samples.
-        :param y:  array-like, shape = [n_samples]
-            The target values (class labels in classification, real numbers in
-            regression).
-        :param verbose: int, Controls the verbosity when fitting. Set to 0 for no printing
-                1 or higher for printing every verbose number of gradient steps.
-        :param device: 'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
-        :n_classes : int, number of classes
-
         can read following formats:
             svm:        svm light format (sklearn.datasets.load_svmlight_file)
             numpy:      Pass X and y as numpy or sparse arrays
@@ -89,6 +85,51 @@ class PrepareData(Dataset):
             at once
             3. disk_size always refer to size of complete data file, even after
             a split().
+
+
+        Parameters
+        ----------
+        path_data : str
+            Path to load data from
+        data_format : str
+            File ending for path data.
+            "numpy" is the default when passing in X and y
+        D : int
+            Number of features.
+        N : int
+            Number of rows.
+        classification : bool
+            If True, problem is classification, else regression.
+        ordinal: bool
+            If True, problem is ordinal classification. Requires classification to be True.
+        balanced : bool
+            If true, each class is weighted equally in optimization, otherwise
+            weighted is done via support of each class. Requires classification to be True.
+        prerocess : str
+            'zscore' which refers to centering and normalizing data to unit variance or
+            'center' which only centers the data to 0 mean
+        n_to_estimate : int
+            Number of rows of data to estimate
+        MAXMEMGB : float
+            Maximum allowable size for a minibatch
+        set_params : bool
+            Whether or not to determine the statistics of the dataset
+        path_mappings : str
+            Used when streaming from disk
+        X : array-like
+            Shape = [n_samples, n_features]
+            The training input samples.
+        y : array-like
+            Shape = [n_samples]
+            The target values (class labels in classification, real numbers in
+            regression).
+        verbose : int
+            Controls the verbosity when fitting. Set to 0 for no printing
+            1 or higher for printing every verbose number of gradient steps.
+        device : str
+            'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
+        n_classes : int
+            number of classes
         """
 
         self.path_data = path_data
@@ -189,8 +230,7 @@ class PrepareData(Dataset):
 
         # this needs to occur after setting preprocessing params
         if (self.storage_level == constants.StorageLevel.DISK and
-            self.format == constants.DataFormat.SVM
-                and self.set_params):
+                self.format == constants.DataFormat.SVM and self.set_params):
             self.loader.batchsize = 1
 
     def get_dense_size(self):
@@ -236,7 +276,8 @@ class PrepareData(Dataset):
         self.set_data_stats(np.asarray(stats['Xmn']), stats['sv1'],
                             stats['Xsd'], stats['ymn'], stats['ysd'])
 
-        if self.storage_level == constants.StorageLevel.DISK and hasattr(self, 'path_mappings'):
+        if self.storage_level == constants.StorageLevel.DISK and hasattr(
+                self, 'path_mappings'):
             if 'ix_statistics' in stats:
                 self.ix_statistics = stats['ix_statistics']
             else:
@@ -289,15 +330,26 @@ class PrepareData(Dataset):
 
         assert hasattr(self, 'Xmn'), 'Run set_preprocess_params() first.'
 
-        first = type(self)(self.path_data, self.format, self.D, N=len(ix),
-                           classification=self.classification, preprocess=self.preprocess,
-                           n_to_estimate=None,
-                           MAXMEMGB=self.MAXMEMGB, set_params=False)
-        second = type(self)(self.path_data, self.format, self.D,
-                            N=self.N-len(ix),
-                            classification=self.classification, preprocess=self.preprocess,
-                            n_to_estimate=None,
-                            MAXMEMGB=self.MAXMEMGB, set_params=False)
+        first = type(self)(
+            self.path_data,
+            self.format,
+            self.D,
+            N=len(ix),
+            classification=self.classification,
+            preprocess=self.preprocess,
+            n_to_estimate=None,
+            MAXMEMGB=self.MAXMEMGB,
+            set_params=False)
+        second = type(self)(
+            self.path_data,
+            self.format,
+            self.D,
+            N=self.N - len(ix),
+            classification=self.classification,
+            preprocess=self.preprocess,
+            n_to_estimate=None,
+            MAXMEMGB=self.MAXMEMGB,
+            set_params=False)
 
         first.storage_level = self.storage_level
         second.storage_level = self.storage_level
@@ -325,8 +377,7 @@ class PrepareData(Dataset):
         if self.storage_level == constants.StorageLevel.DISK:
             if self.format == constants.DataFormat.SVM:
                 raise NotImplementedError
-            else:
-                raise NotImplementedError
+            raise NotImplementedError
         elif self.storage_level in [constants.StorageLevel.SPARSE,
                                     constants.StorageLevel.DENSE]:
             first.X, first.y = self.X[ix], self.y[ix]
@@ -372,18 +423,16 @@ class PrepareData(Dataset):
 
         if preprocess is not None and len(preprocess):
             if preprocess == constants.Preprocess.ZSCORE:
-                Xc = (X - Xmn)/Xsd
+                Xc = (X - Xmn) / Xsd
             else:
                 Xc = X - Xmn
         else:
             Xc = X - Xmn
 
-        sv1 = scipy.sparse.linalg.svds(Xc/(
-            torch.sqrt(
-                torch.prod(torch.as_tensor(y.size(), dtype=torch.get_default_dtype())))
+        sv1 = scipy.sparse.linalg.svds(Xc / (
+            torch.sqrt(torch.prod(torch.as_tensor(y.size(), dtype=torch.get_default_dtype())))
             if not scipy.sparse.issparse(X)
-            else y.numpy().size
-        ),
+            else y.numpy().size),
             k=1,
             which='LM',
             return_singular_vectors=False
@@ -404,6 +453,7 @@ class PrepareData(Dataset):
 
         return Xmn, sv1, Xsd, ymn, ysd
 
+
     def set_data_stats(self, Xmn, sv1, Xsd=1., ymn=0., ysd=1.):
         """
         Saves dataset stats to self to be used for preprocessing.
@@ -420,6 +470,7 @@ class PrepareData(Dataset):
         self.ysd = torch.as_tensor(
             ysd, dtype=torch.get_default_dtype()).to(self.device)
 
+
     def apply_preprocess(self, X, y):
         """
         Faster on gpu device, while dataloading takes up a large portion of the time.
@@ -427,7 +478,7 @@ class PrepareData(Dataset):
 
         with torch.no_grad():
             if not self.classification:
-                y = (y.reshape((-1, 1)) - self.ymn)/self.ysd
+                y = (y.reshape((-1, 1)) - self.ymn) / self.ysd
             else:
                 y = y.reshape((-1, 1))
             X = (X - self.Xmn) / self.sv1
@@ -437,12 +488,14 @@ class PrepareData(Dataset):
 
             return X, y
 
+
     def max_batch_size(self):
         """
         Return the maximum batchsize for the dataset.
         """
 
         return int(np.min([self.max_rows, self.N]))
+
 
     def apply(self, ix_rows=None, ix_cols=None, f_Xy=None):
 
@@ -458,6 +511,7 @@ class PrepareData(Dataset):
         f_Xy((self.X[ix_rows, ix_cols]
               if not self.storage_level == constants.StorageLevel.SPARSE
               else self.X[ix_rows, ix_cols].toarray()), self.y[ix_rows])
+
 
     def get_dense_data(self, ix_cols=None, ix_rows=None):
 
@@ -476,9 +530,11 @@ class PrepareData(Dataset):
 
         return X[-1], y[-1]
 
+
     def __len__(self):
 
         return self.N
+
 
     def getXy(self, idx):
 
@@ -491,6 +547,7 @@ class PrepareData(Dataset):
             raise NotImplementedError
 
         return X, y
+
 
     def __getitem__(self, idx):
 
@@ -506,7 +563,8 @@ class PrepareData(Dataset):
             if not self.return_raw:
                 X, y = self.apply_preprocess(X, y)
 
-            if self.classification and (self.n_classes is None or self.n_classes == 2):
+            if self.classification and (
+                    self.n_classes is None or self.n_classes == 2):
                 y[y == 0] = -1
 
             if self.return_np:
@@ -542,8 +600,9 @@ class _ChunkDataLoaderIter(_DataLoaderIter):
                 batch = self.dataset[np.array(indices)]
             else:
                 batch = self.collate_fn([self.dataset[i] for i in indices])
-            if self.pin_memory:
-                batch = _utils.pin_memory.pin_memory_batch(batch)
+
+            # if self.pin_memory:
+            #     batch = _utils.pin_memory.pin_memory_batch(batch)
             return batch
 
         # check if the next sample has already been generated

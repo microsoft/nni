@@ -18,24 +18,30 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+"""
+gradient_selector.py including:
+    class FeatureGradientSelector
+"""
+
 import time
 
 import numpy as np
 import pandas as pd
 
-from scipy import sparse
+# from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection.base import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
 import torch
 
-# sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from nni.feature_engineering.feature_selector import FeatureSelector
 import nni.feature_engineering.gradient_selector.constants as constants
-import nni.feature_engineering.gradient_selector.syssettings as syssettings
+# import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.fginitialize import PrepareData
-from nni.feature_engineering.gradient_selector.fgtrain import _train, print_results
+from nni.feature_engineering.gradient_selector.fgtrain import _train
+#,print_results
+
 
 class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
     def __init__(self,
@@ -61,36 +67,55 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             FeatureGradientSelector is a class that selects features for a machine
             learning model using a gradient based search.
 
-            :param order: integer, what order of interactions to include. Higher orders
+            Parameters
+            ----------
+            order : int
+                What order of interactions to include. Higher orders
                 may be more accurate but increase the run time. 12 is the maximum allowed order.
-            :param penatly: Constant that multiplies the regularization term.
-            :param n_features: integer, If None, will automatically choose number of features based on search.
+            penatly : int
+                Constant that multiplies the regularization term.
+            n_features: int
+                If None, will automatically choose number of features based on search.
                 Otherwise, number of top features to select.
-            :param max_features: integer, If not None, will use the 'elbow method' to determine the number of features
+            max_features : int
+                If not None, will use the 'elbow method' to determine the number of features
                 with max_features as the upper limit.
-            :param learning_rate: float, learning rate.
-            :param init: how to initialize the vector of scores. 'zero' is the default.
+            learning_rate : float
+            init : str
+                How to initialize the vector of scores. 'zero' is the default.
                 Options: {'zero', 'on', 'off', 'onhigh', 'offhigh', 'sklearn'}
-            :param n_epochs: integer, number of epochs to run
-            :param shuffle: boolean, shuffle "rows" prior to an epoch.
-            :param batch_size: integer, number of "rows" to process at a time
-            :param target_batch_size: integer, number of "rows" to accumulate gradients over.
+            n_epochs : int
+                number of epochs to run
+            shuffle : bool
+                Shuffle "rows" prior to an epoch.
+            batch_size : int
+                Nnumber of "rows" to process at a time
+            target_batch_size : int
+                Number of "rows" to accumulate gradients over.
                 Useful when many rows will not fit into memory but are needed for accurate estimation.
-            :param classification: boolean, if True, problem is classification, else regression.
-            :param ordinal: boolean, if True, problem is ordinal classification. Requires classification to be True.
-            :param balanced: If true, each class is weighted equally in optimization, otherwise
+            classification : bool
+                If True, problem is classification, else regression.
+            ordinal : bool
+                If True, problem is ordinal classification. Requires classification to be True.
+            balanced : bool
+                If true, each class is weighted equally in optimization, otherwise
                 weighted is done via support of each class. Requires classification to be True.
-            :param prerocess: 'zscore' which refers to centering and normalizing data to unit variance or
+            prerocess : str
+                'zscore' which refers to centering and normalizing data to unit variance or
                 'center' which only centers the data to 0 mean
-            :param soft_grouping: if True, groups represent features that come from the same source.
+            soft_grouping : bool
+                if True, groups represent features that come from the same source.
                 Used to encourage sparsity of groups and features within groups.
-            :param verbose: int, Controls the verbosity when fitting. Set to 0 for no printing
+            verbose : int
+                Controls the verbosity when fitting. Set to 0 for no printing
                 1 or higher for printing every verbose number of gradient steps.
-            :param device: 'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
+            device : str
+                'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
         """
         assert order <= 12 and order >= 1, 'order must be an integer between 1 and 12, inclusive'
         assert n_features is None or max_features is None, \
             'only specify one of n_features and max_features at a time'
+
         self.order = order
         self.penalty = penalty
         self.n_features = n_features
@@ -112,6 +137,10 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         self.verbose = verbose
         self.device = device
 
+        self.model_ = None
+        self.scores_ = None
+        self._prev_checkpoint = None
+        self._data_train = None
 
     def partial_fit(self, X, y,
                     n_classes=None,
@@ -120,12 +149,17 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         Select Features via a gradient based search on (X, y) on the given samples.
         Can be called repeatedly with different X and y to handle streaming datasets.
 
-        :param X: array-like, shape = [n_samples, n_features]
+        Parameters
+        ----------
+        X : array-like
+            Shape = [n_samples, n_features]
             The training input samples.
-        :param y:  array-like, shape = [n_samples]
+        y :  array-like
+            Shape = [n_samples]
             The target values (class labels in classification, real numbers in
             regression).
-        n_classes : int, number of classes
+        n_classes : int
+            Number of classes
             Classes across all calls to partial_fit.
             Can be obtained by via `np.unique(y_all).shape[0]`, where y_all is the
             target vector of the entire dataset.
@@ -133,7 +167,8 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             otherwise will assume all classes are present in the batch of y given.
             It will be ignored in the subsequent calls.
             Note that y doesn't need to contain all labels in `classes`.
-        :param groups: optional, array-like, shape = [n_features]
+        groups : array-like
+            Optional, shape = [n_features]
             Groups of columns that must be selected as a unit
             e.g. [0, 0, 1, 2] specifies the first two columns are part of a group.
             This argument is expected for the first call to partial_fit,
@@ -156,7 +191,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
 
         return self
 
-
     def _partial_fit(self, X, y, n_classes=None, groups=None):
         """
         Private function for partial_fit to enable trying floats before doubles.
@@ -165,19 +199,19 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         if hasattr(self, '_data_train'):
             # just overwrite the X and y from the new chunk but make them tensors
             # keep dataset stats from previous
-            self._data_train.X = X.values if type(X) == pd.DataFrame else X
+            self._data_train.X = X.values if isinstance(X, pd.DataFrame) else X
             self._data_train.N, self._data_train.D = self._data_train.X.shape
             self._data_train.dense_size_gb = self._data_train.get_dense_size()
             self._data_train.set_dense_X()
 
-            self._data_train.y = y.values if type(y) == pd.Series else y
+            self._data_train.y = y.values if isinstance(y, pd.Series) else y
             self._data_train.y = torch.as_tensor(
                 y, dtype=torch.get_default_dtype())
         else:
             data_train = self._prepare_data(X, y, n_classes=n_classes)
             self._data_train = data_train
 
-        batch_size, target_batch_size, accum_steps, max_iter = self._set_batch_size(
+        batch_size, _, accum_steps, max_iter = self._set_batch_size(
             self._data_train)
 
         rng = None  # not used
@@ -211,18 +245,22 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         self._process_results(m, solver, X, groups=groups)
         return self
 
-
     def fit(self, X, y,
             groups=None):
         """
         Select Features via a gradient based search on (X, y).
 
-        :param X: array-like, shape = [n_samples, n_features]
+        Parameters
+        ----------
+        X : array-like
+            Shape = [n_samples, n_features]
             The training input samples.
-        :param y: array-like, shape = [n_samples]
+        y : array-like
+            Shape = [n_samples]
             The target values (class labels in classification, real numbers in
             regression).
-        :param groups: optional, array-like, shape = [n_features]
+        groups: array-like
+            Optional, shape = [n_features]
             Groups of columns that must be selected as a unit
             e.g. [0, 0, 1, 2] specifies the first two columns are part of a group.
         """
@@ -235,17 +273,15 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             self._fit(X, y, groups=groups)
         return self
 
-
     def get_selected_features(self):
         return self.selected_features_
-
 
     def _prepare_data(self, X, y, n_classes=None):
         """
         Returns a PrepareData object.
         """
-        return PrepareData(X=X.values if type(X) == pd.DataFrame else X,
-                           y=y.values if type(y) == pd.Series else y,
+        return PrepareData(X=X.values if isinstance(X, pd.DataFrame) else X,
+                           y=y.values if isinstance(y, pd.Series) else y,
                            data_format=constants.DataFormat.NUMPY,
                            classification=int(self.classification),
                            ordinal=self.ordinal,
@@ -254,7 +290,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                            verbose=self.verbose,
                            device=self.device,
                            n_classes=n_classes)
-
 
     def _fit(self, X, y, groups=None):
         """
@@ -293,7 +328,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         self._process_results(m, solver, X, groups=groups)
         return self
 
-
     def _process_torch_scores(self, scores):
         """
         Convert scores into flat numpy arrays.
@@ -301,7 +335,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         if constants.Device.CUDA in scores.device.type:
             scores = scores.cpu()
         return scores.numpy().ravel()
-
 
     def _set_batch_size(self, data_train):
         """
@@ -313,7 +346,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         accum_steps = max(int(np.ceil(target_batch_size / self.batch_size)), 1)
         max_iter = self.n_epochs * (data_train.N // batch_size)
         return batch_size, target_batch_size, accum_steps, max_iter
-
 
     def _process_results(self, m, solver, X, groups=None):
         """
@@ -337,12 +369,14 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
 
         return self
 
-
     def transform(self, X):
         """
         Returns selected features from X.
 
-        :param X: array-like, shape = [n_samples, n_features]
+        Paramters
+        ---------
+        X: array-like
+            Shape = [n_samples, n_features]
             The training input samples.
         """
 
@@ -351,17 +385,23 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             raise ValueError(
                 'No Features selected, consider lowering the penalty or specifying n_features')
         return (X.iloc[:, self.selected_features_]
-                if type(X) == pd.DataFrame
+                if isinstance(X, pd.DataFrame)
                 else X[:, self.selected_features_])
-
 
     def get_support(self, indices=False):
         """
         Get a mask, or integer index, of the features selected.
 
-        :param indices: boolean (default False)
+        Parameters
+        ----------
+        indices : bool
+            Default False
             If True, the return value will be an array of integers, rather than a boolean mask.
-        returns support: An index that selects the retained features from a feature vector.
+
+        Returns
+        -------
+        list :
+            returns support: An index that selects the retained features from a feature vector.
             If indices is False, this is a boolean array of shape [# input features],
             in which an element is True iff its corresponding feature is selected for retention.
             If indices is True, this is an integer array of shape [# output features] whose values
@@ -370,11 +410,10 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         self._get_support_mask()
         if indices:
             return self.selected_features_
-        else:
-            mask = np.zeros_like(self.scores_, dtype=bool)
-            mask[self.selected_features_] = True
-            return mask
 
+        mask = np.zeros_like(self.scores_, dtype=bool)
+        mask[self.selected_features_] = True
+        return mask
 
     def inverse_transform(self, X):
         """
@@ -387,7 +426,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         X_new[self.selected_features_] = X
         return X_new
 
-
     def get_params(self, deep=True):
         """
         Get parameters for this estimator.
@@ -396,7 +434,6 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         params = {key: val for (key, val) in params.items()
                   if not key.endswith('_')}
         return params
-
 
     def set_params(self, **params):
         """
@@ -407,27 +444,28 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                 setattr(self, param, params[param])
         return self
 
-
     def fit_transform(self, X, y):
         """
         Select features and then return X with the selected features.
 
-        :param X: array-like, shape = [n_samples, n_features]
+        Parameters
+        ----------
+        X : array-like
+            Shape = [n_samples, n_features]
             The training input samples.
-        :param y: array-like, shape = [n_samples]
+        y : array-like
+            Shape = [n_samples]
             The target values (class labels in classification, real numbers in
             regression).
         """
         self.fit(X, y)
         return self.transform(X)
 
-
     def _get_support_mask(self):
         """
-        Check if it is fitted. 
+        Check if it is fitted.
         """
         check_is_fitted(self, 'scores_')
-
 
     def _generate_scores(self, solver, xsub, ysub, step_size, feature_order):
         """
@@ -448,11 +486,10 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             scores.append(score)
         return scores
 
-
     def set_n_features(self, n, groups=None):
-        '''
+        """
         Set the number of features to return after fitting.
-        '''
+        """
         self._get_support_mask()
         self.n_features = n
         return self._set_top_features(groups=groups)
@@ -470,7 +507,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             self.scores_, -self.n_features)[-self.n_features:]
         if groups is not None and not self.soft_grouping:
             selected_feature_set = set(self.selected_features_.tolist())
-            for group in np.unique(groups):
+            for _ in np.unique(groups):
                 group_members = np.where(groups == groups)[0].tolist()
                 if len(selected_feature_set.intersection(group_members)) > 0:
                     selected_feature_set.update(group_members)
@@ -479,9 +516,9 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         return self
 
     def set_top_percentile(self, percentile, groups=None):
-        '''
+        """
         Set the percentile of features to return after fitting.
-        '''
+        """
         self._get_support_mask()
         assert percentile <= 1 and percentile >= 0, \
             'percentile must between 0 and 1 inclusive'
@@ -498,7 +535,8 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         MAX_FORWARD_PASS = 200
         MAX_FULL_BATCHES = 3  # the forward passes can take longer than the fitting
         # if we allow a full epoch of data to be included. By only doing 3 full batches at most
-        # we get enough accuracy without increasing the time too much. This constant may not be optimal
+        # we get enough accuracy without increasing the time too much. This
+        # constant may not be optimal
         accum_steps = solver.accum_steps
         step_size = max(self.max_features / MAX_FORWARD_PASS, 1)
         feature_order = np.argsort(-self.scores_)  # note the negative
@@ -506,9 +544,10 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
 
         dataloader_iterator = iter(solver.ds_train)
         full_scores = []
-        keep_going = True
+        # keep_going = True
         with torch.no_grad():
-            # might want to only consider a batch valid if there are at least two classes
+            # might want to only consider a batch valid if there are at least
+            # two classes
             for _ in range(accum_steps * MAX_FULL_BATCHES):
                 scores = []
                 try:
@@ -522,7 +561,8 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                 if max_time and time.time() - t > max_time:
                     if self.verbose:
                         print(
-                            "Stoppinn forward passes because they reached max_time: ", max_time)
+                            "Stoppinn forward passes because they reached max_time: ",
+                            max_time)
                     if len(full_scores) == 0:
                         # no forward passes worked, return half of max_features
                         return self.max_features // 2
@@ -534,25 +574,30 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                         scaling_value = solver._get_scaling_value(
                             ysub, target_class)
                         if not solver._skip_y_forward(ysub_binary):
-                            scores = self._generate_scores(solver,
-                                                           xsub, ysub_binary,
-                                                           step_size, feature_order)
+                            scores = self._generate_scores(
+                                solver, xsub, ysub_binary, step_size, feature_order)
                             # one row will represent one class that is present in the data
                             # all classes are weighted equally
                             full_scores.append(
                                 [score * scaling_value for score in scores])
                 else:
                     if not solver._skip_y_forward(ysub):
-                        scores = self._generate_scores(solver,
-                                                       xsub, ysub,
-                                                       step_size, feature_order)
+                        scores = self._generate_scores(
+                            solver, xsub, ysub, step_size, feature_order)
                         full_scores.append(scores)
         best_index = FeatureGradientSelector._find_best_index_elbow(
             full_scores)
         if self.verbose:
             print("Forward passes took: ", time.time() - t)
-        # account for step size and off by one (n_features is 1 indexed, not 0 )
-        return int(np.ceil(np.arange(1, self.max_features + 1, step_size))[best_index])
+        # account for step size and off by one (n_features is 1 indexed, not 0
+        # )
+        return int(
+            np.ceil(
+                np.arange(
+                    1,
+                    self.max_features +
+                    1,
+                    step_size))[best_index])
 
     @staticmethod
     def _find_best_index_elbow(full_scores):
@@ -575,16 +620,16 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         Calculates the shortest distance from new_point to the line determined by start_point and end_point.
         """
         # for calculating elbow method
-        return np.cross(new_point-start_point,
-                        end_point-start_point) / np.linalg.norm(
-                            end_point-start_point)
+        return np.cross(new_point - start_point,
+                        end_point - start_point) / np.linalg.norm(
+                            end_point - start_point)
 
     def _reset(self):
         """
         Reset the estimator by deleting all private and fit parameters.
         """
         params = self.__dict__
-        for key, val in params.items():
+        for key, _ in params.items():
             if key.endswith('_') or key.startswith('_'):
                 delattr(self, key)
         return self
