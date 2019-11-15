@@ -20,15 +20,15 @@
 
 import logging
 
-import nni
-
 _logger = logging.getLogger(__name__)
 
 
 class FeatureSelector():
 
-    def ___init__(self, **kwargs):
+    def __init__(self, **kwargs):
         self.selected_features_ = None
+        self.X = None
+        self.y = None
 
 
     def fit(self, X, y, **kwargs):
@@ -39,7 +39,7 @@ class FeatureSelector():
         ---------
         X : array-like numpy matrix
             The training input samples, which shape is [n_samples, n_features].
-        y: array-like numpy matrix 
+        y: array-like numpy matrix
             The target values (class labels in classification, real numbers in
             regression). Which shape is [n_samples].
         """
