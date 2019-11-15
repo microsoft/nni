@@ -152,6 +152,8 @@ class PrepareData(Dataset):
         self.n_classes = n_classes
         self.device = device
 
+        self.path_data_stats = None
+
         if D is None:
             assert self.disk_size / BYTESPERGB <= self.MAXMEMGB, \
                 'Cannot load data into memory. Supply D.'
@@ -421,7 +423,7 @@ class PrepareData(Dataset):
         else:
             Xsd = 1.
 
-        if preprocess is not None and len(preprocess):
+        if preprocess is not None and len(preprocess) > 0:
             if preprocess == constants.Preprocess.ZSCORE:
                 Xc = (X - Xmn) / Xsd
             else:
@@ -431,12 +433,10 @@ class PrepareData(Dataset):
 
         sv1 = scipy.sparse.linalg.svds(Xc / (
             torch.sqrt(torch.prod(torch.as_tensor(y.size(), dtype=torch.get_default_dtype())))
-            if not scipy.sparse.issparse(X)
-            else y.numpy().size),
-            k=1,
-            which='LM',
-            return_singular_vectors=False
-        )
+            if not scipy.sparse.issparse(X) else y.numpy().size),
+                                       k=1,
+                                       which='LM',
+                                       return_singular_vectors=False)
         # avoid runaway sv1
         sv1 = np.array([min(np.finfo(np.float32).max,
                             sv1[0])])

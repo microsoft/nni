@@ -297,7 +297,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         """
         data_train = self._prepare_data(X, y)
 
-        batch_size, target_batch_size, accum_steps, max_iter = self._set_batch_size(
+        batch_size, _, accum_steps, max_iter = self._set_batch_size(
             data_train)
 
         rng = None  # not used
@@ -482,7 +482,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                                    ysub)
             if constants.Device.CUDA in score.device.type:
                 score = score.cpu()
-            score.numpy()[0][0]
+            # score.numpy()[0][0]
             scores.append(score)
         return scores
 
