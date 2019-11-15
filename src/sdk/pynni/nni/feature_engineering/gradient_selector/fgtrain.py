@@ -1,4 +1,28 @@
-import os
+# Copyright (c) Microsoft Corporation. All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+# associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# ==================================================================================================
+
+"""
+fgtrain.py
+"""
+
+# import os
 import time
 
 import numpy as np
@@ -21,7 +45,7 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
     discount_factor = 1. / 3
 
-    old_f = [np.nan]
+    # old_f = [np.nan]
     total_t = [0.]
     df_store = [np.nan]
     it_store = [0]
@@ -33,10 +57,10 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
         flag_stop = False
 
-        itcond = '<'
-        tcond = '<'
-        dfcond = '>'
-        relfcond = '>'
+        # itcond = '<'
+        # tcond = '<'
+        # dfcond = '>'
+        # relfcond = '>'
 
         total_t[-1] += t
         g = f0.x.grad.clone().cpu().detach()
@@ -46,11 +70,11 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
         if it >= maxiter:
             flag_stop = True
-            itcond = '>='
+            # itcond = '>='
 
         elif total_t[-1] >= maxtime:
             flag_stop = True
-            tcond = '>='
+            # tcond = '>='
 
         f_ma.update(f)
         df_ma.update(df)
@@ -59,11 +83,11 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
         if ((not minibatch) and (df < dftol_stop)) \
            or (minibatch and (df_ma() < dftol_stop)):
             flag_stop = True
-            dfcond = '<'
+            # dfcond = '<'
 
         if rel_change < freltol_stop:
             flag_stop = True
-            relfcond = '<'
+            # relfcond = '<'
 
         if not minibatch:
             df_store[-1] = df
@@ -83,7 +107,7 @@ def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
 
     def f_callback(f0, v0, it, t):
 
-        if not (it % callback_period):
+        if not it%callback_period:
             epoch = it / f0.iters_per_epoch
             x = f0.x.clone().cpu().detach().numpy()
             # print('[%6d/%3d/%3.3f s] %0.3f' % (it, int(epoch), t, v0))
@@ -105,7 +129,7 @@ def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
                                       np.log10(stop_conds['relchange'][-1]), it)
                 writer.add_scalar('nfeats', len(np.where(x >= 0)[0]), it)
 
-            if path_save is not None and not (it % (callback_period * 10)):
+            if path_save is not None and not it%(callback_period * 10):
                 torch.save(get_checkpoint(f0, stop_conds, rng), path_save)
                 print('Checkpointed to %s.' % path_save)
 
@@ -127,20 +151,20 @@ def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_scor
 
     if prev_score is not None:
         x0 = prev_score
-    elif not isinstance(init_type, str):
-        x0 = value_off * np.ones()
-        x0[init_type] = value_on
+    # elif not isinstance(init_type, str):
+    #     x0 = value_off * np.ones()
+    #     x0[init_type] = value_on
     elif init_type.startswith(constants.Initialization.RANDOM):
         d = int(init_type.replace(constants.Initialization.RANDOM, ''))
         x0 = value_off * np.ones(D)
         x0[rng.permutation(D)[:d]] = value_on
-    elif init_type == constants.Initialization.SKLEARN:
-        B = data_train.return_raw
-        X, y = data_train.get_dense_data()
-        data_train.set_return_raw(B)
-        ix = train_sk_dense(init_type, X, y, data_train.classification)
-        x0 = value_off * np.ones(D)
-        x0[ix] = value_on
+    # elif init_type == constants.Initialization.SKLEARN:
+    #     B = data_train.return_raw
+    #     X, y = data_train.get_dense_data()
+    #     data_train.set_return_raw(B)
+    #     ix = train_sk_dense(init_type, X, y, data_train.classification)
+    #     x0 = value_off * np.ones(D)
+    #     x0[ix] = value_on
     elif init_type in constants.Initialization.VALUE_DICT:
         x0 = constants.Initialization.VALUE_DICT[init_type] * np.ones(D)
     else:
