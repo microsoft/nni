@@ -193,8 +193,8 @@ class MsgDispatcher(MsgDispatcherBase):
             customized = True
         else:
             customized = False
-        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
-                                        trial_job_id=data.get('trial_job_id'))
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
+                                            trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
