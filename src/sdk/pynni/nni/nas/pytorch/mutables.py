@@ -73,7 +73,7 @@ class MutableScope(Mutable):
 
     def __init__(self, key):
         super().__init__(key=key)
-    
+
     def build(self):
         self.mutator.on_init_mutable_scope(self)
 
@@ -92,7 +92,7 @@ class LayerChoice(Mutable):
         self.choices = nn.ModuleList(op_candidates)
         self.reduction = reduction
         self.return_mask = return_mask
-    
+
     def __len__(self):
         return len(self.choices)
 
@@ -114,7 +114,7 @@ class InputChoice(Mutable):
         self.n_selected = n_selected
         self.reduction = reduction
         self.return_mask = return_mask
-    
+
     def build(self):
         self.mutator.on_init_input_choice(self)
 

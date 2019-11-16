@@ -22,7 +22,7 @@ class BaseMutator(nn.Module):
         pass
 
     def _parse_search_space(self):
-        for name, mutable, distinct in self.named_mutables(distinct=False):
+        for name, mutable, _ in self.named_mutables(distinct=False):
             mutable.name = name
             mutable.set_mutator(self)
 

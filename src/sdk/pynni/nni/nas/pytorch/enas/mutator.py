@@ -41,13 +41,13 @@ class EnasMutator(Mutator):
         self.attn_query = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
-        self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)
+        self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)  # pylint: disable=not-callable
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction="none")
         self.bias_dict = nn.ParameterDict()
 
     def after_parse_search_space(self):
         self.max_layer_choice = 0
-        for name, mutable in self.named_mutables():
+        for _, mutable in self.named_mutables():
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
                     self.max_layer_choice = mutable.length
@@ -58,7 +58,7 @@ class EnasMutator(Mutator):
                     def is_conv(choice):
                         return "conv" in str(type(choice)).lower()
                     bias = torch.tensor([self.branch_bias if is_conv(choice) else -self.branch_bias
-                                         for choice in mutable.choices])
+                                         for choice in mutable.choices])  # pylint: disable=not-callable
                     self.bias_dict[mutable.key] = nn.Parameter(bias, requires_grad=False)
 
         self.embedding = nn.Embedding(self.max_layer_choice + 1, self.lstm_size)

@@ -29,9 +29,9 @@ class FixedArchitecture(Mutator):
     def _encode_tensor(self, data):
         if isinstance(data, list):
             if all(map(lambda o: isinstance(o, bool), data)):
-                return torch.tensor(data, dtype=torch.bool)
+                return torch.tensor(data, dtype=torch.bool)  # pylint: disable=not-callable
             else:
-                return torch.tensor(data, dtype=torch.float)
+                return torch.tensor(data, dtype=torch.float)  # pylint: disable=not-callable
         if isinstance(data, dict):
             return {k: self._encode_tensor(v) for k, v in data.items()}
         return data

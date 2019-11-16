@@ -38,8 +38,8 @@ class PdartsTrainer(Trainer):
             mutator = PdartsMutator(
                 model, epoch, self.pdarts_num_to_drop, switches)
 
-            self.trainer = DartsTrainer(model, loss=loss, model_optim=model_optim,
-                                        lr_scheduler=lr_scheduler, mutator=mutator, **self.darts_parameters)
+            self.trainer = DartsTrainer(model, loss=loss, optimizer=model_optim,
+                                        mutator=mutator, **self.darts_parameters)
             print("start pdrats training %s..." % epoch)
 
             self.trainer.train()

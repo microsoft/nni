@@ -1,7 +1,4 @@
-import re
 from collections import OrderedDict
-
-import torch
 
 _counter = 0
 
