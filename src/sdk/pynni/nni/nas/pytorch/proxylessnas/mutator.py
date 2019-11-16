@@ -21,10 +21,18 @@
 import torch
 from torch import nn as nn
 from torch.nn import functional as F
+import numpy as np
 
 from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.mutator import PyTorchMutator
 
+def detach_variable(inputs):
+    if isinstance(inputs, tuple):
+        return tuple([detach_variable(x) for x in inputs])
+    else:
+        x = inputs.detach()
+        x.requires_grad = inputs.requires_grad
+        return x
 
 class ArchGradientFunction(torch.autograd.Function):
     
@@ -32,20 +40,26 @@ class ArchGradientFunction(torch.autograd.Function):
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
         ctx.backward_func = backward_func
+        #ctx.mutable_key = mutable_key
 
         detached_x = detach_variable(x)
         with torch.enable_grad():
             output = run_func(detached_x)
         ctx.save_for_backward(detached_x, output)
+        print('ctx forward: ', ctx.__dict__)
+        #print('mutable key: ', ctx.mutable_key)
         return output.data
 
     @staticmethod
     def backward(ctx, grad_output):
+        print('ctx backward: ', ctx.__dict__)
+        #print('mutable key: ', ctx.mutable_key)
         detached_x, output = ctx.saved_tensors
 
         grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)
         # compute gradients w.r.t. binary_gates
         binary_grads = ctx.backward_func(detached_x.data, output.data, grad_output.data)
+        print('++++++++++++++++++++++++++++: ', binary_grads)
 
         return grad_x[0], binary_grads, None, None
 
@@ -65,13 +79,15 @@ class MixedOp(nn.Module):
 
     def forward(self, x):
         # only full_v2
-        def run_function(candidate_ops, active_id):
+        def run_function(key, candidate_ops, active_id):
             def forward(_x):
+                print('key forward: ', key)
                 return candidate_ops[active_id](_x)
             return forward
 
-        def backward_function(candidate_ops, active_id, binary_gates):
+        def backward_function(key, candidate_ops, active_id, binary_gates):
             def backward(_x, _output, grad_output):
+                print('key backward: ', key)
                 binary_grads = torch.zeros_like(binary_gates.data)
                 with torch.no_grad():
                     for k in range(len(candidate_ops)):
@@ -84,8 +100,8 @@ class MixedOp(nn.Module):
                 return binary_grads
             return backward
         output = ArchGradientFunction.apply(
-            x, self.AP_path_wb, run_function(self.mutable.choices, self.active_index[0]),
-            backward_function(self.mutable.choices, self.active_index[0], self.AP_path_wb))
+            x, self.AP_path_wb, run_function(self.mutable.key, self.mutable.choices, self.active_index[0]),
+            backward_function(self.mutable.key, self.mutable.choices, self.active_index[0], self.AP_path_wb))
         return output
 
     @property
@@ -104,6 +120,10 @@ class MixedOp(nn.Module):
         """ assume only one path is active """
         return self.mutable.choices[self.active_index[0]]
 
+    @property
+    def active_op_index(self):
+        return self.active_index[0]
+
     def set_chosen_op_active(self):
         chosen_idx, _ = self.chosen_index
         self.active_index = [chosen_idx]
@@ -119,6 +139,7 @@ class MixedOp(nn.Module):
         print('probs type: ', probs.type())
         sample = torch.multinomial(probs, 1)[0].item()
         print('sample: ', sample)
+        print('mutable key: ', self.mutable.key)
         self.active_index = [sample]
         self.inactive_index = [_i for _i in range(0, sample)] + \
                               [_i for _i in range(sample + 1, len(self.mutable.choices))]
@@ -129,14 +150,17 @@ class MixedOp(nn.Module):
         for choice in self.mutable.choices:
             for _, param in choice.named_parameters():
                 param.grad = None
+        print('binarize: ', self.AP_path_wb.grad)
 
-    def _delta_ij(i, j):
+    def _delta_ij(self, i, j):
         if i == j:
             return 1
         else:
             return 0
 
     def set_arch_param_grad(self):
+        print('mutable key: ', self.mutable.key)
+        print('set_arch_param_grad: ', self.AP_path_wb.grad)
         binary_grads = self.AP_path_wb.grad.data
         if self.active_op.is_zero_layer():
             self.AP_path_alpha.grad = None
@@ -173,7 +197,8 @@ class ProxylessNasMutator(PyTorchMutator):
         -------
         torch.Tensor
         """
-        return self.mixed_ops[mutable.key].forward(*inputs), None
+        idx = self.mixed_ops[mutable.key].active_op_index
+        return self.mixed_ops[mutable.key].forward(*inputs), idx
 
     def reset_binary_gates(self):
         for k in self.mixed_ops.keys():

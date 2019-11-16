@@ -55,7 +55,8 @@ class SearchMobileNet(nn.Module):
         first_conv = ops.ConvLayer(3, input_channel, kernel_size=3, stride=2, use_bn=True, act_func='relu6', ops_order='weight_bn_act')
         # first block
         first_block_conv = ops.OPS['3x3_MBConv1'](input_channel, first_cell_width, 1)
-        first_block = ops.MobileInvertedResidualBlock(first_block_conv, None)
+        #first_block = ops.MobileInvertedResidualBlock(first_block_conv, None, False)
+        first_block = first_block_conv
 
         input_channel = first_cell_width
 
@@ -77,6 +78,7 @@ class SearchMobileNet(nn.Module):
                                                ops.OPS['7x7_MBConv3'](input_channel, width, stride),
                                                ops.OPS['7x7_MBConv6'](input_channel, width, stride),
                                                ops.OPS['Zero'](input_channel, width, stride)],
+                                               return_mask=True,
                                                key="s{}_c{}".format(stage_cnt, i))
                 else:
                     conv_op = nas.mutables.LayerChoice([ops.OPS['3x3_MBConv3'](input_channel, width, stride),
@@ -85,6 +87,7 @@ class SearchMobileNet(nn.Module):
                                                ops.OPS['5x5_MBConv6'](input_channel, width, stride),
                                                ops.OPS['7x7_MBConv3'](input_channel, width, stride),
                                                ops.OPS['7x7_MBConv6'](input_channel, width, stride)],
+                                               return_mask=True,
                                                key="s{}_c{}".format(stage_cnt, i))
                 # shortcut
                 if stride == 1 and input_channel == width:

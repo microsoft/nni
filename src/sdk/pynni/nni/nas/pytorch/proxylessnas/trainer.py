@@ -88,6 +88,8 @@ class ProxylessNasTrainer(Trainer):
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.device = device
+        self.n_epochs = 150
+        self.init_lr = 0.05
         # init mutator
         self.mutator = ProxylessNasMutator(model)
         self._valid_iter = None
@@ -178,7 +180,8 @@ class ProxylessNasTrainer(Trainer):
                 images, labels = images.to(self.device), labels.to(self.device)
                 # compute output
                 self.mutator.reset_binary_gates() # random sample binary gates
-                output = self.model(images)
+                with self.mutator.forward_pass():
+                    output = self.model(images)
                 label_smoothing = 0.1
                 if label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, label_smoothing)
@@ -226,10 +229,12 @@ class ProxylessNasTrainer(Trainer):
         T_total = self.n_epochs * nBatch
         T_cur = epoch * nBatch + batch
         lr = 0.5 * self.init_lr * (1 + math.cos(math.pi * T_cur / T_total))
+        return lr
 
     def _adjust_learning_rate(self, optimizer, epoch, batch=0, nBatch=None):
         """ adjust learning of a given optimizer and return the new learning rate """
         new_lr = self._calc_learning_rate(epoch, batch, nBatch)
+        print('-----------------------------: ', new_lr)
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
         return new_lr
@@ -267,7 +272,8 @@ class ProxylessNasTrainer(Trainer):
                 # train weight parameters
                 images, labels = images.to(self.device), labels.to(self.device)
                 self.mutator.reset_binary_gates()
-                output = self.model(images)
+                with self.mutator.forward_pass():
+                    output = self.model(images)
                 label_smoothing = 0.1
                 if label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, label_smoothing)
@@ -280,7 +286,8 @@ class ProxylessNasTrainer(Trainer):
                 self.model.zero_grad()
                 loss.backward()
                 self.model_optim.step()
-                if epoch > 0:
+                #if epoch > 0:
+                if epoch >= 0:
                     for j in range(update_schedule.get(i, 0)):
                         start_time = time.time()
                         # GradientArchSearchConfig
@@ -318,7 +325,7 @@ class ProxylessNasTrainer(Trainer):
         return data
 
     def _gradient_step(self):
-        self.valid_loader.batch_sampler.batch_size = 256
+        self.valid_loader.batch_sampler.batch_size = 2 #256
         self.valid_loader.batch_sampler.drop_last = True
         self.model.train()
         time1 = time.time()  # time
@@ -327,7 +334,8 @@ class ProxylessNasTrainer(Trainer):
         images, labels = images.to(self.device), labels.to(self.device)
         time2 = time.time()  # time
         self.mutator.reset_binary_gates()
-        output = self.model(images)
+        with self.mutator.forward_pass():
+            output = self.model(images)
         time3 = time.time()
         ce_loss = self.criterion(output, labels)
         expected_value = None
@@ -338,9 +346,10 @@ class ProxylessNasTrainer(Trainer):
         self.arch_optimizer.step()
         time4 = time.time()
         print('(%.4f, %.4f, %.4f)' % (time2 - time1, time3 - time2, time4 - time3))
+        return loss.data.item(), expected_value.item() if expected_value is not None else None
 
     def train(self):
-        self._warm_up()
+        #self._warm_up()
         self._train()
 
     def export(self):

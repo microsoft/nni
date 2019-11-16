@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from collections import OrderedDict
+import torch
 import torch.nn as nn
 
 
@@ -102,14 +103,17 @@ class MobileInvertedResidualBlock(MyModule):
         self.shortcut = shortcut
 
     def forward(self, x):
-        if self.mobile_inverted_conv.is_zero_layer():
+        out, idx = self.mobile_inverted_conv(x)
+        print('*****************************idx: ', idx)
+        if idx == 6:
             res = x
-        elif self.shortcut is None or self.shortcut.is_zero_layer():
-            res = self.mobile_inverted_conv(x)
+            #res = out
+        elif self.shortcut is None:
+            res = out #self.mobile_inverted_conv(x)
         else:
-            conv_x = self.mobile_inverted_conv(x)
-            skip_x = self.shortcut(x)
-            res = skip_x + conv_x
+           conv_x = out #self.mobile_inverted_conv(x)
+           skip_x = self.shortcut(x)
+           res = skip_x + conv_x
         return res
 
     @property
@@ -694,13 +698,14 @@ class ZeroLayer(MyModule):
         self.stride = stride
 
     def forward(self, x):
-        n, c, h, w = x.size()
+        '''n, c, h, w = x.size()
         h //= self.stride
         w //= self.stride
         device = x.get_device() if x.is_cuda else torch.device('cpu')
         # noinspection PyUnresolvedReferences
         padding = torch.zeros(n, c, h, w, device=device, requires_grad=False)
-        return padding
+        return padding'''
+        return x * 0
 
     @property
     def module_str(self):

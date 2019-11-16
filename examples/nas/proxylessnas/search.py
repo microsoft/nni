@@ -98,8 +98,8 @@ if __name__ == "__main__":
     print('=============================================Start to create data provider')
     # TODO: 
     data_provider = datasets.ImagenetDataProvider(save_path='/data/hdd3/yugzh/imagenet/',
-                                         train_batch_size=256,
-                                         test_batch_size=500,
+                                         train_batch_size=2, #256,
+                                         test_batch_size=2, #500,
                                          valid_size=None,
                                          n_worker=0, #32,
                                          resize_scale=0.08,
