@@ -12,14 +12,6 @@ def global_mutable_counting():
     return _counter
 
 
-def to_snake_case(camel_case):
-    return re.sub('(?!^)([A-Z]+)', r'_\1', camel_case).lower()
-
-
-def auto_device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 class AverageMeterGroup(object):
 
     def __init__(self):

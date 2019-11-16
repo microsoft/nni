@@ -19,12 +19,7 @@ class PoolBranch(nn.Module):
     def __init__(self, pool_type, C_in, C_out, kernel_size, stride, padding, affine=False):
         super().__init__()
         self.preproc = StdConv(C_in, C_out)
-        if pool_type.lower() == 'max':
-            self.pool = nn.MaxPool2d(kernel_size, stride, padding)
-        elif pool_type.lower() == 'avg':
-            self.pool = nn.AvgPool2d(kernel_size, stride, padding, count_include_pad=False)
-        else:
-            raise ValueError()
+        self.pool = Pool(pool_type, kernel_size, stride, padding)
         self.bn = nn.BatchNorm2d(C_out, affine=affine)
 
     def forward(self, x):
@@ -78,3 +73,31 @@ class FactorizedReduce(nn.Module):
         out = torch.cat([self.conv1(x), self.conv2(x[:, :, 1:, 1:])], dim=1)
         out = self.bn(out)
         return out
+
+
+class Pool(nn.Module):
+    def __init__(self, pool_type, kernel_size, stride, padding):
+        super().__init__()
+        if pool_type.lower() == 'max':
+            self.pool = nn.MaxPool2d(kernel_size, stride, padding)
+        elif pool_type.lower() == 'avg':
+            self.pool = nn.AvgPool2d(kernel_size, stride, padding, count_include_pad=False)
+        else:
+            raise ValueError()
+
+    def forward(self, x):
+        return self.pool(x)
+
+
+class SepConvBN(nn.Module):
+    def __init__(self, C_in, C_out, kernel_size, padding):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.conv = SeparableConv(C_in, C_out, kernel_size, 1, padding)
+        self.bn = nn.BatchNorm2d(C_out, affine=True)
+
+    def forward(self, x):
+        x = self.relu(x)
+        x = self.conv(x)
+        x = self.bn(x)
+        return x

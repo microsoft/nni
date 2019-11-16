@@ -4,32 +4,18 @@ import torch
 from torch import nn as nn
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup, auto_device
+from nni.nas.utils import AverageMeterGroup
 from .mutator import DartsMutator
 
 
 class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
-                 model_optim, lr_scheduler, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
-        self.model = model
-        self.loss = loss
-        self.metrics = metrics
-        self.mutator = mutator
-        if self.mutator is None:
-            self.mutator = DartsMutator(model)
-        self.model_optim = model_optim
-        self.lr_scheduler = lr_scheduler
-        self.num_epochs = num_epochs
-        self.dataset_train = dataset_train
-        self.dataset_valid = dataset_valid
-        self.device = auto_device() if device is None else device
-        self.log_frequency = log_frequency
-
-        self.model.to(self.device)
-        self.loss.to(self.device)
-        self.mutator.to(self.device)
-
+                 optimizer, num_epochs, dataset_train, dataset_valid,
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
+                 callbacks=None):
+        super().__init__(model, loss, metrics, optimizer, num_epochs,
+                         dataset_train, dataset_valid, batch_size, workers, device, log_frequency,
+                         mutator if mutator is not None else DartsMutator(model), callbacks)
         self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), 3.0E-4, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         n_train = len(self.dataset_train)
@@ -46,10 +32,10 @@ class DartsTrainer(Trainer):
                                                         sampler=valid_sampler,
                                                         num_workers=workers)
 
-    def train_epoch(self, epoch):
+    def train_one_epoch(self, epoch):
         self.model.train()
         self.mutator.train()
-        lr = self.lr_scheduler.get_lr()[0]
+        lr = self.optimizer.param_groups[0]["lr"]
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
             trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
@@ -60,14 +46,14 @@ class DartsTrainer(Trainer):
             # cannot deepcopy model because it will break the reference
 
             # phase 1. child network step
-            self.model_optim.zero_grad()
+            self.optimizer.zero_grad()
             with self.mutator.forward_pass():
                 logits = self.model(trn_X)
             loss = self.loss(logits, trn_y)
             loss.backward()
             # gradient clipping
             nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
-            self.model_optim.step()
+            self.optimizer.step()
 
             new_model = copy.deepcopy(self.model.state_dict())
 
@@ -83,11 +69,9 @@ class DartsTrainer(Trainer):
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                print("Epoch {} Step [{}/{}]  {}".format(epoch, step, len(self.train_loader), meters))
+                print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.train_loader), meters))
 
-        self.lr_scheduler.step()
-
-    def validate_epoch(self, epoch):
+    def validate_one_epoch(self, epoch):
         self.model.eval()
         self.mutator.eval()
         meters = AverageMeterGroup()
@@ -99,17 +83,7 @@ class DartsTrainer(Trainer):
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("Epoch {} Step [{}/{}]  {}".format(epoch, step, len(self.valid_loader), meters))
-
-    def train(self):
-        for epoch in range(self.num_epochs):
-            # training
-            print("Epoch {} Training".format(epoch))
-            self.train_epoch(epoch)
-
-            # validation
-            print("Epoch {} Validating".format(epoch))
-            self.validate_epoch(epoch)
+                    print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.valid_loader), meters))
 
     def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):
         """
@@ -160,6 +134,3 @@ class DartsTrainer(Trainer):
 
         hessian = [(p - n) / 2. * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian
-
-    def export(self):
-        pass
