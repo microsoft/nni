@@ -74,27 +74,7 @@ def build_activation(act_func, inplace=True):
 
 #========================================
 
-class MyModule(nn.Module):
-    
-    def forward(self, x):
-        raise NotImplementedError
-
-    @property
-    def module_str(self):
-        raise NotImplementedError
-
-    @property
-    def config(self):
-        raise NotImplementedError
-
-    @staticmethod
-    def build_from_config(config):
-        raise NotImplementedError
-
-    def get_flops(self, x):
-        raise NotImplementedError
-
-class MobileInvertedResidualBlock(MyModule):
+class MobileInvertedResidualBlock(nn.Module):
     
     def __init__(self, mobile_inverted_conv, shortcut):
         super(MobileInvertedResidualBlock, self).__init__()
@@ -116,34 +96,6 @@ class MobileInvertedResidualBlock(MyModule):
            res = skip_x + conv_x
         return res
 
-    @property
-    def module_str(self):
-        return '(%s, %s)' % (
-            self.mobile_inverted_conv.module_str, self.shortcut.module_str if self.shortcut is not None else None
-        )
-
-    @property
-    def config(self):
-        return {
-            'name': MobileInvertedResidualBlock.__name__,
-            'mobile_inverted_conv': self.mobile_inverted_conv.config,
-            'shortcut': self.shortcut.config if self.shortcut is not None else None,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        mobile_inverted_conv = set_layer_from_config(config['mobile_inverted_conv'])
-        shortcut = set_layer_from_config(config['shortcut'])
-        return MobileInvertedResidualBlock(mobile_inverted_conv, shortcut)
-
-    def get_flops(self, x):
-        flops1, conv_x = self.mobile_inverted_conv.get_flops(x)
-        if self.shortcut:
-            flops2, _ = self.shortcut.get_flops(x)
-        else:
-            flops2 = 0
-
-        return flops1 + flops2, self.forward(x)
 
 #========================================
 
@@ -170,27 +122,7 @@ class ShuffleLayer(nn.Module):
         x = x.view(batchsize, -1, height, width)
         return x
 
-class MyModule(nn.Module):
-
-    def forward(self, x):
-        raise NotImplementedError
-
-    @property
-    def module_str(self):
-        raise NotImplementedError
-
-    @property
-    def config(self):
-        raise NotImplementedError
-
-    @staticmethod
-    def build_from_config(config):
-        raise NotImplementedError
-
-    def get_flops(self, x):
-        raise NotImplementedError
-
-class My2DLayer(MyModule):
+class My2DLayer(nn.Module):
     
     def __init__(self, in_channels, out_channels,
                  use_bn=True, act_func='relu', dropout_rate=0, ops_order='weight_bn_act'):
@@ -251,34 +183,10 @@ class My2DLayer(MyModule):
     def weight_op(self):
         raise NotImplementedError
 
-    """ Methods defined in MyModule """
-
     def forward(self, x):
         for module in self._modules.values():
             x = module(x)
         return x
-
-    @property
-    def module_str(self):
-        raise NotImplementedError
-
-    @property
-    def config(self):
-        return {
-            'in_channels': self.in_channels,
-            'out_channels': self.out_channels,
-            'use_bn': self.use_bn,
-            'act_func': self.act_func,
-            'dropout_rate': self.dropout_rate,
-            'ops_order': self.ops_order,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        raise NotImplementedError
-
-    def get_flops(self, x):
-        raise NotImplementedError
 
     @staticmethod
     def is_zero_layer():
@@ -317,43 +225,6 @@ class ConvLayer(My2DLayer):
 
         return weight_dict
 
-    @property
-    def module_str(self):
-        if isinstance(self.kernel_size, int):
-            kernel_size = (self.kernel_size, self.kernel_size)
-        else:
-            kernel_size = self.kernel_size
-        if self.groups == 1:
-            if self.dilation > 1:
-                return '%dx%d_DilatedConv' % (kernel_size[0], kernel_size[1])
-            else:
-                return '%dx%d_Conv' % (kernel_size[0], kernel_size[1])
-        else:
-            if self.dilation > 1:
-                return '%dx%d_DilatedGroupConv' % (kernel_size[0], kernel_size[1])
-            else:
-                return '%dx%d_GroupConv' % (kernel_size[0], kernel_size[1])
-
-    @property
-    def config(self):
-        return {
-            'name': ConvLayer.__name__,
-            'kernel_size': self.kernel_size,
-            'stride': self.stride,
-            'dilation': self.dilation,
-            'groups': self.groups,
-            'bias': self.bias,
-            'has_shuffle': self.has_shuffle,
-            **super(ConvLayer, self).config,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return ConvLayer(**config)
-
-    def get_flops(self, x):
-        return count_conv_flop(self.conv, x), self.forward(x)
-
 
 class DepthConvLayer(My2DLayer):
 
@@ -391,41 +262,6 @@ class DepthConvLayer(My2DLayer):
             weight_dict['shuffle'] = ShuffleLayer(self.groups)
         return weight_dict
 
-    @property
-    def module_str(self):
-        if isinstance(self.kernel_size, int):
-            kernel_size = (self.kernel_size, self.kernel_size)
-        else:
-            kernel_size = self.kernel_size
-        if self.dilation > 1:
-            return '%dx%d_DilatedDepthConv' % (kernel_size[0], kernel_size[1])
-        else:
-            return '%dx%d_DepthConv' % (kernel_size[0], kernel_size[1])
-
-    @property
-    def config(self):
-        return {
-            'name': DepthConvLayer.__name__,
-            'kernel_size': self.kernel_size,
-            'stride': self.stride,
-            'dilation': self.dilation,
-            'groups': self.groups,
-            'bias': self.bias,
-            'has_shuffle': self.has_shuffle,
-            **super(DepthConvLayer, self).config,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return DepthConvLayer(**config)
-
-    def get_flops(self, x):
-        depth_flop = count_conv_flop(self.depth_conv, x)
-        x = self.depth_conv(x)
-        point_flop = count_conv_flop(self.point_conv, x)
-        x = self.point_conv(x)
-        return depth_flop + point_flop, self.forward(x)
-
 
 class PoolingLayer(My2DLayer):
 
@@ -456,31 +292,6 @@ class PoolingLayer(My2DLayer):
             raise NotImplementedError
         return weight_dict
 
-    @property
-    def module_str(self):
-        if isinstance(self.kernel_size, int):
-            kernel_size = (self.kernel_size, self.kernel_size)
-        else:
-            kernel_size = self.kernel_size
-        return '%dx%d_%sPool' % (kernel_size[0], kernel_size[1], self.pool_type.upper())
-
-    @property
-    def config(self):
-        return {
-            'name': PoolingLayer.__name__,
-            'pool_type': self.pool_type,
-            'kernel_size': self.kernel_size,
-            'stride': self.stride,
-            **super(PoolingLayer, self).config
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return PoolingLayer(**config)
-
-    def get_flops(self, x):
-        return 0, self.forward(x)
-
 
 class IdentityLayer(My2DLayer):
 
@@ -491,26 +302,8 @@ class IdentityLayer(My2DLayer):
     def weight_op(self):
         return None
 
-    @property
-    def module_str(self):
-        return 'Identity'
 
-    @property
-    def config(self):
-        return {
-            'name': IdentityLayer.__name__,
-            **super(IdentityLayer, self).config,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return IdentityLayer(**config)
-
-    def get_flops(self, x):
-        return 0, self.forward(x)
-
-
-class LinearLayer(MyModule):
+class LinearLayer(nn.Module):
 
     def __init__(self, in_features, out_features, bias=True,
                  use_bn=False, act_func=None, dropout_rate=0, ops_order='weight_bn_act'):
@@ -575,36 +368,12 @@ class LinearLayer(MyModule):
             x = module(x)
         return x
 
-    @property
-    def module_str(self):
-        return '%dx%d_Linear' % (self.in_features, self.out_features)
-
-    @property
-    def config(self):
-        return {
-            'name': LinearLayer.__name__,
-            'in_features': self.in_features,
-            'out_features': self.out_features,
-            'bias': self.bias,
-            'use_bn': self.use_bn,
-            'act_func': self.act_func,
-            'dropout_rate': self.dropout_rate,
-            'ops_order': self.ops_order,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return LinearLayer(**config)
-
-    def get_flops(self, x):
-        return self.linear.weight.numel(), self.forward(x)
-
     @staticmethod
     def is_zero_layer():
         return False
 
 
-class MBInvertedConvLayer(MyModule):
+class MBInvertedConvLayer(nn.Module):
 
     def __init__(self, in_channels, out_channels,
                  kernel_size=3, stride=1, expand_ratio=6, mid_channels=None):
@@ -651,47 +420,12 @@ class MBInvertedConvLayer(MyModule):
         x = self.point_linear(x)
         return x
 
-    @property
-    def module_str(self):
-        return '%dx%d_MBConv%d' % (self.kernel_size, self.kernel_size, self.expand_ratio)
-
-    @property
-    def config(self):
-        return {
-            'name': MBInvertedConvLayer.__name__,
-            'in_channels': self.in_channels,
-            'out_channels': self.out_channels,
-            'kernel_size': self.kernel_size,
-            'stride': self.stride,
-            'expand_ratio': self.expand_ratio,
-            'mid_channels': self.mid_channels,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return MBInvertedConvLayer(**config)
-
-    def get_flops(self, x):
-        if self.inverted_bottleneck:
-            flop1 = count_conv_flop(self.inverted_bottleneck.conv, x)
-            x = self.inverted_bottleneck(x)
-        else:
-            flop1 = 0
-
-        flop2 = count_conv_flop(self.depth_conv.conv, x)
-        x = self.depth_conv(x)
-
-        flop3 = count_conv_flop(self.point_linear.conv, x)
-        x = self.point_linear(x)
-
-        return flop1 + flop2 + flop3, x
-
     @staticmethod
     def is_zero_layer():
         return False
 
 
-class ZeroLayer(MyModule):
+class ZeroLayer(nn.Module):
 
     def __init__(self, stride):
         super(ZeroLayer, self).__init__()
@@ -706,24 +440,6 @@ class ZeroLayer(MyModule):
         padding = torch.zeros(n, c, h, w, device=device, requires_grad=False)
         return padding'''
         return x * 0
-
-    @property
-    def module_str(self):
-        return 'Zero'
-
-    @property
-    def config(self):
-        return {
-            'name': ZeroLayer.__name__,
-            'stride': self.stride,
-        }
-
-    @staticmethod
-    def build_from_config(config):
-        return ZeroLayer(**config)
-
-    def get_flops(self, x):
-        return 0, self.forward(x)
 
     @staticmethod
     def is_zero_layer():
