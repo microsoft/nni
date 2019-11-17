@@ -22,6 +22,8 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 
+from putils import get_same_padding, build_activation
+
 
 OPS = {
     'Identity': lambda in_C, out_C, stride: IdentityLayer(in_C, out_C, ops_order='weight_bn_act'),
@@ -46,33 +48,6 @@ OPS = {
     '7x7_MBConv6': lambda in_C, out_C, stride: MBInvertedConvLayer(in_C, out_C, 7, stride, 6)
 }
 
-#========================================
-
-def get_same_padding(kernel_size):
-    if isinstance(kernel_size, tuple):
-        assert len(kernel_size) == 2, 'invalid kernel size: %s' % kernel_size
-        p1 = get_same_padding(kernel_size[0])
-        p2 = get_same_padding(kernel_size[1])
-        return p1, p2
-    assert isinstance(kernel_size, int), 'kernel size should be either `int` or `tuple`'
-    assert kernel_size % 2 > 0, 'kernel size should be odd number'
-    return kernel_size // 2
-
-def build_activation(act_func, inplace=True):
-    if act_func == 'relu':
-        return nn.ReLU(inplace=inplace)
-    elif act_func == 'relu6':
-        return nn.ReLU6(inplace=inplace)
-    elif act_func == 'tanh':
-        return nn.Tanh()
-    elif act_func == 'sigmoid':
-        return nn.Sigmoid()
-    elif act_func is None:
-        return None
-    else:
-        raise ValueError('do not support: %s' % act_func)
-
-#========================================
 
 class MobileInvertedResidualBlock(nn.Module):
     
@@ -84,27 +59,16 @@ class MobileInvertedResidualBlock(nn.Module):
 
     def forward(self, x):
         out, idx = self.mobile_inverted_conv(x)
-        print('*****************************idx: ', idx)
         if idx == 6:
             res = x
-            #res = out
         elif self.shortcut is None:
-            res = out #self.mobile_inverted_conv(x)
+            res = out
         else:
-           conv_x = out #self.mobile_inverted_conv(x)
+           conv_x = out
            skip_x = self.shortcut(x)
            res = skip_x + conv_x
         return res
 
-
-#========================================
-
-def count_conv_flop(layer, x):
-    out_h = int(x.size()[2] / layer.stride[0])
-    out_w = int(x.size()[3] / layer.stride[1])
-    delta_ops = layer.in_channels * layer.out_channels * layer.kernel_size[0] * layer.kernel_size[1] * \
-                out_h * out_w / layer.groups
-    return delta_ops
 
 class ShuffleLayer(nn.Module):
     def __init__(self, groups):
