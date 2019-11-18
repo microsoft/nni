@@ -56,9 +56,6 @@ class PyTorchMutable(nn.Module):
                 "Mutator not set for {}. Did you initialize a mutable on the fly in forward pass? Move to __init__"
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
 
-    def __repr__(self):
-        return "{} ({})".format(self.name, self.key)
-
 
 class MutableScope(PyTorchMutable):
     """
@@ -84,6 +81,9 @@ class LayerChoice(PyTorchMutable):
         self.choices = nn.ModuleList(op_candidates)
         self.reduction = reduction
         self.return_mask = return_mask
+
+    def __len__(self):
+        return self.length
 
     def forward(self, *inputs):
         out, mask = self.mutator.on_forward(self, *inputs)
@@ -116,4 +116,4 @@ class InputChoice(PyTorchMutable):
 
     def similar(self, other):
         return type(self) == type(other) and \
-               self.n_candidates == other.n_candidates and self.n_selected and other.n_selected
+            self.n_candidates == other.n_candidates and self.n_selected and other.n_selected

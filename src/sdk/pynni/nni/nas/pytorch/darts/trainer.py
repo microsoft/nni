@@ -94,7 +94,8 @@ class DartsTrainer(Trainer):
         with torch.no_grad():
             for step, (X, y) in enumerate(self.valid_loader):
                 X, y = X.to(self.device), y.to(self.device)
-                logits = self.model(X)
+                with self.mutator.forward_pass():
+                    logits = self.model(X)
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:

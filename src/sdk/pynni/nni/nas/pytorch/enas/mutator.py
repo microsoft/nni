@@ -40,7 +40,7 @@ class EnasMutator(PyTorchMutator):
         self.attn_query = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
-        self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)
+        self.skip_targets = nn.Parameter(torch.Tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)
         self.cross_entropy_loss = nn.CrossEntropyLoss()
 
     def after_build(self, model):
@@ -79,7 +79,7 @@ class EnasMutator(PyTorchMutator):
         self._lstm_next_step()
         logit = self.soft(self._h[-1])
         if self.tanh_constant is not None:
-           logit = self.tanh_constant * torch.tanh(logit)
+            logit = self.tanh_constant * torch.tanh(logit)
         branch_id = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
         log_prob = self.cross_entropy_loss(logit, branch_id)
         self.sample_log_prob += log_prob
