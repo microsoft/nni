@@ -28,7 +28,6 @@ import time
 import numpy as np
 import pandas as pd
 
-# from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection.base import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
@@ -37,10 +36,8 @@ import torch
 
 from nni.feature_engineering.feature_selector import FeatureSelector
 import nni.feature_engineering.gradient_selector.constants as constants
-# import nni.feature_engineering.gradient_selector.syssettings as syssettings
 from nni.feature_engineering.gradient_selector.fginitialize import PrepareData
 from nni.feature_engineering.gradient_selector.fgtrain import _train
-#,print_results
 
 
 class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
