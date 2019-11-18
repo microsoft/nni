@@ -99,9 +99,13 @@ def check_experiment_id(args, update=True):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'],\
-                experiment_dict[key]['endTime']))
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                                      experiment_dict[key].get('experimentName', 'N/A'),
+                                                                      experiment_dict[key]['status'],
+                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('platform'),
+                                                                      experiment_dict[key]['startTime'],
+                                                                      experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -155,9 +159,13 @@ def parse_ids(args):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
-                experiment_dict[key]['endTime']))
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                                      experiment_dict[key].get('experimentName', 'N/A'),
+                                                                      experiment_dict[key]['status'],
+                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('platform'),
+                                                                      experiment_dict[key]['startTime'],
+                                                                      experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -573,8 +581,13 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
-        experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
-        experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+        experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                              experiment_dict[key].get('experimentName', 'N/A'),
+                                                              experiment_dict[key]['status'],
+                                                              experiment_dict[key]['port'],
+                                                              experiment_dict[key].get('platform'),
+                                                              experiment_dict[key]['startTime'],
+                                                              experiment_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
 
 def get_time_interval(time1, time2):
