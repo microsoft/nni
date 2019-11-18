@@ -40,20 +40,17 @@ class ArchGradientFunction(torch.autograd.Function):
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
         ctx.backward_func = backward_func
-        #ctx.mutable_key = mutable_key
 
         detached_x = detach_variable(x)
         with torch.enable_grad():
             output = run_func(detached_x)
         ctx.save_for_backward(detached_x, output)
         print('ctx forward: ', ctx.__dict__)
-        #print('mutable key: ', ctx.mutable_key)
         return output.data
 
     @staticmethod
     def backward(ctx, grad_output):
         print('ctx backward: ', ctx.__dict__)
-        #print('mutable key: ', ctx.mutable_key)
         detached_x, output = ctx.saved_tensors
 
         grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)

@@ -82,27 +82,67 @@ def accuracy(output, target, topk=(1,)):
     return res
 
 class ProxylessNasTrainer(Trainer):
-    def __init__(self, model, model_optim, train_loader, valid_loader, device):
+    def __init__(self, model, model_optim, train_loader, valid_loader, device,
+                 n_epochs=150, init_lr=0.05, arch_init_type='normal', arch_init_ratio=1e-3,
+                 arch_optim_lr=1e-3, arch_weight_decay=0, warmup=True, warmup_epochs=25,
+                 arch_valid_frequency=1):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+        model_optim : pytorch optimizer
+        train_loader : pytorch data loader
+        valid_loader : pytorch data loader
+        device : device
+        n_epochs : int
+        init_lr : float
+            init learning rate for training the model
+        arch_init_type : str
+            the way to init architecture parameters
+        arch_init_ratio : float
+            the ratio to init architecture parameters
+        arch_optim_lr : float
+            learning rate of the architecture parameters optimizer
+        arch_weight_decay : float
+            weight decay of the architecture parameters optimizer
+        warmup : bool
+            whether to do warmup
+        warmup_epochs : int
+            the number of epochs to do in warmup
+        """
         self.model = model
         self.model_optim = model_optim
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.device = device
-        self.n_epochs = 150
-        self.init_lr = 0.05
+        self.n_epochs = n_epochs
+        self.init_lr = init_lr
+        self.warmup = warmup
+        self.warmup_epochs = warmup_epochs
+        self.arch_valid_frequency = arch_valid_frequency
+
+        self.train_epochs = 120
+        self.lr_max = 0.05
+        self.label_smoothing = 0.1
+        self.valid_batch_size = 500
+        self.arch_grad_valid_batch_size = 2 # 256
+        # update architecture parameters every this number of minibatches
+        self.grad_update_arch_param_every = 5
+        # the number of steps per architecture parameter update
+        self.grad_update_steps = 1
+
         # init mutator
         self.mutator = ProxylessNasMutator(model)
         self._valid_iter = None
 
         # TODO: arch search configs
 
-        self._init_arch_params()
+        self._init_arch_params(arch_init_type, arch_init_ratio)
 
         # build architecture optimizer
-        self.arch_optimizer = torch.optim.Adam(self.mutator.get_architecture_parameters(), 1e-3, weight_decay=0)
-
-        self.warmup = True
-        self.warmup_epoch = 0
+        self.arch_optimizer = torch.optim.Adam(self.mutator.get_architecture_parameters(),
+                                               arch_optim_lr,
+                                               weight_decay=arch_weight_decay)
 
         self.criterion = nn.CrossEntropyLoss()
 
@@ -116,7 +156,7 @@ class ProxylessNasTrainer(Trainer):
                 raise NotImplementedError
 
     def _validate(self):
-        self.valid_loader.batch_sampler.batch_size = 500
+        self.valid_loader.batch_sampler.batch_size = self.valid_batch_size
         self.valid_loader.batch_sampler.drop_last = False
 
         self.mutator.set_chosen_op_active()
@@ -151,13 +191,12 @@ class ProxylessNasTrainer(Trainer):
                     print(test_log)
         return losses.avg, top1.avg, top5.avg
 
-    def _warm_up(self, warmup_epochs=25):
-        lr_max = 0.05
+    def _warm_up(self):
         data_loader = self.train_loader
         nBatch = len(data_loader)
-        T_total = warmup_epochs * nBatch # total num of batches
+        T_total = self.warmup_epochs * nBatch # total num of batches
 
-        for epoch in range(self.warmup_epoch, warmup_epochs):
+        for epoch in range(self.warmup_epochs):
             print('\n', '-' * 30, 'Warmup epoch: %d' % (epoch + 1), '-' * 30, '\n')
             batch_time = AverageMeter()
             data_time = AverageMeter()
@@ -174,7 +213,7 @@ class ProxylessNasTrainer(Trainer):
                 data_time.update(time.time() - end)
                 # lr
                 T_cur = epoch * nBatch + i
-                warmup_lr = 0.5 * lr_max * (1 + math.cos(math.pi * T_cur / T_total))
+                warmup_lr = 0.5 * self.lr_max * (1 + math.cos(math.pi * T_cur / T_total))
                 for param_group in self.model_optim.param_groups:
                     param_group['lr'] = warmup_lr
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -182,9 +221,8 @@ class ProxylessNasTrainer(Trainer):
                 self.mutator.reset_binary_gates() # random sample binary gates
                 with self.mutator.forward_pass():
                     output = self.model(images)
-                label_smoothing = 0.1
-                if label_smoothing > 0:
-                    loss = cross_entropy_with_label_smoothing(output, labels, label_smoothing)
+                if self.label_smoothing > 0:
+                    loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
                 else:
                     loss = self.criterion(output, labels)
                 # measure accuracy and record loss
@@ -210,19 +248,17 @@ class ProxylessNasTrainer(Trainer):
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
                                losses=losses, top1=top1, top5=top5, lr=warmup_lr)
                     print(batch_log)
-            valid_res, flops, latency = self._validate()
+            val_loss, val_top1, val_top5 = self._validate()
             val_log = 'Warmup Valid [{0}/{1}]\tloss {2:.3f}\ttop-1 acc {3:.3f}\ttop-5 acc {4:.3f}\t' \
-                      'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}\tflops: {5:.1f}M'. \
-                format(epoch + 1, warmup_epochs, *valid_res, flops / 1e6, top1=top1, top5=top5)
+                      'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}M'. \
+                format(epoch + 1, self.warmup_epochs, val_loss, val_top1, val_top5, top1=top1, top5=top5)
             print(val_log)
 
     def _get_update_schedule(self, nBatch):
         schedule = {}
-        grad_update_arch_param_every = 5
-        grad_update_steps = 1
         for i in range(nBatch):
-            if (i + 1) % grad_update_arch_param_every == 0:
-                schedule[i] = grad_update_steps
+            if (i + 1) % self.grad_update_arch_param_every == 0:
+                schedule[i] = self.grad_update_steps
         return schedule
 
     def _calc_learning_rate(self, epoch, batch=0, nBatch=None):
@@ -232,7 +268,9 @@ class ProxylessNasTrainer(Trainer):
         return lr
 
     def _adjust_learning_rate(self, optimizer, epoch, batch=0, nBatch=None):
-        """ adjust learning of a given optimizer and return the new learning rate """
+        """
+        Adjust learning of a given optimizer and return the new learning rate
+        """
         new_lr = self._calc_learning_rate(epoch, batch, nBatch)
         print('-----------------------------: ', new_lr)
         for param_group in optimizer.param_groups:
@@ -251,7 +289,7 @@ class ProxylessNasTrainer(Trainer):
 
         update_schedule = self._get_update_schedule(nBatch)
 
-        for epoch in range(0, 120):
+        for epoch in range(self.train_epochs):
             print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
             batch_time = AverageMeter()
             data_time = AverageMeter()
@@ -274,9 +312,8 @@ class ProxylessNasTrainer(Trainer):
                 self.mutator.reset_binary_gates()
                 with self.mutator.forward_pass():
                     output = self.model(images)
-                label_smoothing = 0.1
-                if label_smoothing > 0:
-                    loss = cross_entropy_with_label_smoothing(output, labels, label_smoothing)
+                if self.label_smoothing > 0:
+                    loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
                 else:
                     loss = self.criterion(output, labels)
                 acc1, acc5 = accuracy(output, labels, topk=(1, 5))
@@ -286,7 +323,7 @@ class ProxylessNasTrainer(Trainer):
                 self.model.zero_grad()
                 loss.backward()
                 self.model_optim.step()
-                #if epoch > 0:
+                # TODO: if epoch > 0:
                 if epoch >= 0:
                     for j in range(update_schedule.get(i, 0)):
                         start_time = time.time()
@@ -310,8 +347,16 @@ class ProxylessNasTrainer(Trainer):
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
                                losses=losses, entropy=entropy, top1=top1, top5=top5, lr=lr)
                     print(batch_log)
-                # TODO: print current network architecture
-                # TODO: validate
+            # TODO: print current network architecture
+            # validate
+            if (epoch + 1) % self.arch_valid_frequency == 0:
+                val_loss, val_top1, val_top5 = self._validate()
+                val_log = 'Valid [{0}]\tloss {2:.3f}\ttop-1 acc {3:.3f} \ttop-5 acc {5:.3f}\t' \
+                          'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}\t' \
+                          'Entropy {entropy.val:.5f}M'. \
+                    format(epoch + 1, val_loss, val_top1,
+                           val_top5, entropy=entropy, top1=top1, top5=top5)
+                print(val_log)
         # convert to normal network according to architecture parameters
 
     def _valid_next_batch(self):
@@ -325,7 +370,7 @@ class ProxylessNasTrainer(Trainer):
         return data
 
     def _gradient_step(self):
-        self.valid_loader.batch_sampler.batch_size = 2 #256
+        self.valid_loader.batch_sampler.batch_size = self.arch_grad_valid_batch_size
         self.valid_loader.batch_sampler.drop_last = True
         self.model.train()
         time1 = time.time()  # time
@@ -349,7 +394,8 @@ class ProxylessNasTrainer(Trainer):
         return loss.data.item(), expected_value.item() if expected_value is not None else None
 
     def train(self):
-        #self._warm_up()
+        if self.warmup:
+            self._warm_up()
         self._train()
 
     def export(self):
