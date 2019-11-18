@@ -28,21 +28,18 @@ from .util import initialize, get_session
 class Model:
     """
     We use this object to :
-    __init__:
-    - Creates the step_model
-    - Creates the train_model
+        __init__:
+            - Creates the step_model
+            - Creates the train_model
 
-    train():
-    - Make the training part (feedforward and retropropagation of gradients)
+        train():
+            - Make the training part (feedforward and retropropagation of gradients)
 
-    save/load():
-    - Save load the model
+        save/load():
+            - Save load the model
     """
     def __init__(self, *, policy, nbatch_act, nbatch_train,
                  nsteps, ent_coef, vf_coef, max_grad_norm, microbatch_size=None, np_mask=None):
-        """
-        init
-        """
         self.sess = sess = get_session()
 
         with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
@@ -137,9 +134,13 @@ class Model:
 
     def train(self, lr, cliprange, obs, returns, masks, actions, values, neglogpacs, states=None):
         """
-        train the model.
+        Train the model.
         Here we calculate advantage A(s,a) = R + yV(s') - V(s)
-        Returns = R + yV(s')
+
+        Returns
+        -------
+        obj
+            = R + yV(s')
         """
         advs = returns - values
 
