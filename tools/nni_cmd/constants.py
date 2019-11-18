@@ -66,7 +66,7 @@ EXPERIMENT_INFORMATION_FORMAT = '-----------------------------------------------
                      '%s\n' \
                      '----------------------------------------------------------------------------------------\n'
 
-EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Status: %s    Port: %s    Platform: %s    StartTime: %s    EndTime: %s    \n'
+EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Name: %s    Status: %s    Port: %s    Platform: %s    StartTime: %s    EndTime: %s\n'
 
 EXPERIMENT_MONITOR_INFO = 'Id: %s    Status: %s    Port: %s    Platform: %s    \n' \
                           'StartTime: %s    Duration: %s'

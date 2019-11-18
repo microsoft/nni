@@ -10,6 +10,7 @@ interface AppState {
     columnList: Array<string>;
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
+    metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
 }
 
 class App extends React.Component<{}, AppState> {
@@ -22,6 +23,7 @@ class App extends React.Component<{}, AppState> {
             columnList: COLUMN,
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
+            metricGraphMode: 'max'
         };
     }
 
@@ -30,6 +32,7 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
+        this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
     }
 
     changeInterval = (interval: number) => {
@@ -46,8 +49,12 @@ class App extends React.Component<{}, AppState> {
         this.setState({ columnList: columnList });
     }
 
+    changeMetricGraphMode = (val: 'max' | 'min') => {
+        this.setState({ metricGraphMode: val });
+    }
+
     render() {
-        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast } = this.state;
+        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
@@ -59,6 +66,7 @@ class App extends React.Component<{}, AppState> {
                     columnList, changeColumn: this.changeColumn,
                     experimentUpdateBroadcast,
                     trialsUpdateBroadcast,
+                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
                 })
         );
         return (

@@ -14,6 +14,7 @@ We have provided two naive compression algorithms and three popular ones for use
 | [AGP Pruner](./Pruner.md#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
 | [Filter Pruner](./Pruner.md#filter-pruner) | Pruning least important filters in convolution layers(PRUNING FILTERS FOR EFFICIENT CONVNETS)[Reference Paper](https://arxiv.org/abs/1608.08710) |
 | [Slim Pruner](./Pruner.md#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming)[Reference Paper](https://arxiv.org/abs/1708.06519) |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner) | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)|
 | [Naive Quantizer](./Quantizer.md#naive-quantizer) |  Quantize weights to default 8 bits |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
@@ -97,7 +98,17 @@ pruner.update_epoch(epoch)
 
 The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
 
-__[TODO]__ The last API is for users to export the compressed model. You will get a compressed model when you finish the training using this API. It also exports another file storing the values of masks.
+You can easily export the compressed model using the following API if you are pruning your model, ```state_dict``` of the sparse model weights will be stored in ```model.pth```, which can be loaded by ```torch.load('model.pth')```
+
+```
+pruner.export_model(model_path='model.pth')
+```
+
+```mask_dict ``` and pruned model in ```onnx``` format(```input_shape``` need to be specified) can also be exported like this:
+
+```python
+pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
+```
 
 ## Customize new compression algorithms
 
@@ -172,12 +183,54 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
+    
+    def quantize_output(self, output, config, **kwargs):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `:meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+
+        # Put your code to generate `new_output` here
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+
+        # Put your code to generate `new_input` here
+
+        return new_input
 
     # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
@@ -191,8 +244,6 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
-
-__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### Usage of user customized compression algorithm
 

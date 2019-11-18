@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'FilterPruner', 'SlimPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner', 'FilterPruner', 'SlimPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -10,7 +10,6 @@ logger = logging.getLogger('torch pruner')
 class LevelPruner(Pruner):
     """
     Prune to an exact pruning level specification
-
     """
 
     def __init__(self, model, config_list):
@@ -21,7 +20,6 @@ class LevelPruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
-
         """
 
         super().__init__(model, config_list)
@@ -30,19 +28,16 @@ class LevelPruner(Pruner):
     def calc_mask(self, layer, config):
         """
         Calculate the mask of given layer
-
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
-
         Returns
         -------
         torch.Tensor
             mask of the layer's weight
-
         """
 
         weight = layer.module.weight.data
@@ -65,12 +60,10 @@ class AGP_Pruner(Pruner):
     """
     An automated gradual pruning algorithm that prunes the smallest magnitude
     weights to achieve a preset level of network sparsity.
-
     Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
     efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
     Learning of Phones and other Consumer Devices,
     https://arxiv.org/pdf/1710.01878.pdf
-
     """
 
     def __init__(self, model, config_list):
@@ -81,7 +74,6 @@ class AGP_Pruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
-
         """
 
         super().__init__(model, config_list)
@@ -91,27 +83,24 @@ class AGP_Pruner(Pruner):
     def calc_mask(self, layer, config):
         """
         Calculate the mask of given layer
-
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
-
         Returns
         -------
         torch.Tensor
             mask of the layer's weight
-
         """
 
         weight = layer.module.weight.data
         op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) and (
-                self.now_epoch - start_epoch) % freq == 0:
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
+                and (self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
@@ -130,17 +119,14 @@ class AGP_Pruner(Pruner):
     def compute_target_sparsity(self, config):
         """
         Calculate the sparsity for pruning
-
         Parameters
         ----------
         config : dict
             Layer's pruning config
-
         Returns
         -------
         float
             Target sparsity to be pruned
-
         """
 
         end_epoch = config.get('end_epoch', 1)
@@ -165,12 +151,10 @@ class AGP_Pruner(Pruner):
     def update_epoch(self, epoch):
         """
         Update epoch
-
         Parameters
         ----------
         epoch : int
             current training epoch
-
         """
 
         if epoch > 0:
@@ -179,15 +163,132 @@ class AGP_Pruner(Pruner):
                 self.if_init_list[k] = True
 
 
+class FPGMPruner(Pruner):
+    """
+    A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
+    https://arxiv.org/pdf/1811.00250.pdf
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        super().__init__(model, config_list)
+        self.mask_dict = {}
+        self.epoch_pruned_layers = set()
+
+    def calc_mask(self, layer, config):
+        """
+        Supports Conv1d, Conv2d
+        filter dimensions for Conv1d:
+        OUT: number of output channel
+        IN: number of input channel
+        LEN: filter length
+        filter dimensions for Conv2d:
+        OUT: number of output channel
+        IN: number of input channel
+        H: filter height
+        W: filter width
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
+        """
+        weight = layer.module.weight.data
+        assert 0 <= config.get('sparsity') < 1
+        assert layer.type in ['Conv1d', 'Conv2d']
+        assert layer.type in config['op_types']
+
+        if layer.name in self.epoch_pruned_layers:
+            assert layer.name in self.mask_dict
+            return self.mask_dict.get(layer.name)
+
+        masks = torch.ones(weight.size()).type_as(weight)
+
+        try:
+            num_kernels = weight.size(0) * weight.size(1)
+            num_prune = int(num_kernels * config.get('sparsity'))
+            if num_kernels < 2 or num_prune < 1:
+                return masks
+            min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+            for idx in min_gm_idx:
+                masks[idx] = 0.
+        finally:
+            self.mask_dict.update({layer.name: masks})
+            self.epoch_pruned_layers.add(layer.name)
+
+        return masks
+
+    def _get_min_gm_kernel_idx(self, weight, n):
+        assert len(weight.size()) in [3, 4]
+
+        dist_list = []
+        for out_i in range(weight.size(0)):
+            for in_i in range(weight.size(1)):
+                dist_sum = self._get_distance_sum(weight, out_i, in_i)
+                dist_list.append((dist_sum, (out_i, in_i)))
+        min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
+        return [x[1] for x in min_gm_kernels]
+
+    def _get_distance_sum(self, weight, out_idx, in_idx):
+        """
+        Calculate the total distance between a specified filter (by out_idex and in_idx) and
+        all other filters.
+        Optimized verision of following naive implementation:
+        def _get_distance_sum(self, weight, in_idx, out_idx):
+            w = weight.view(-1, weight.size(-2), weight.size(-1))
+            dist_sum = 0.
+            for k in w:
+                dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
+            return dist_sum
+        Parameters
+        ----------
+        weight: Tensor
+            convolutional filter weight
+        out_idx: int
+            output channel index of specified filter, this method calculates the total distance
+            between this specified filter and all other filters.
+        in_idx: int
+            input channel index of specified filter
+        Returns
+        -------
+        float32
+            The total distance
+        """
+        logger.debug('weight size: %s', weight.size())
+        if len(weight.size()) == 4:  # Conv2d
+            w = weight.view(-1, weight.size(-2), weight.size(-1))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+        elif len(weight.size()) == 3:  # Conv1d
+            w = weight.view(-1, weight.size(-1))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1))
+        else:
+            raise RuntimeError('unsupported layer type')
+        x = w - anchor_w
+        x = (x * x).sum((-2, -1))
+        x = torch.sqrt(x)
+        return x.sum()
+
+    def update_epoch(self, epoch):
+        self.epoch_pruned_layers = set()
+
+
 class FilterPruner(Pruner):
     """
     A structured pruning algorithm that prunes the filters of smallest magnitude
     weights sum in the convolution layers to achieve a preset level of network sparsity.
-
     Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf,
     "PRUNING FILTERS FOR EFFICIENT CONVNETS", 2017 ICLR
     https://arxiv.org/abs/1608.08710
-
     """
 
     def __init__(self, model, config_list):
@@ -198,7 +299,6 @@ class FilterPruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
-
         """
 
         super().__init__(model, config_list)
@@ -208,19 +308,16 @@ class FilterPruner(Pruner):
         """
         Calculate the mask of given layer.
         Filters with the smallest sum of its absolute kernel weights are masked.
-
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
-
         Returns
         -------
         torch.Tensor
             mask of the layer's weight
-
         """
 
         weight = layer.module.weight.data
@@ -249,7 +346,6 @@ class SlimPruner(Pruner):
     Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang
     "Learning Efficient Convolutional Networks through Network Slimming", 2017 ICCV
     https://arxiv.org/pdf/1708.06519.pdf
-
     """
 
     def __init__(self, model, config_list):
@@ -258,7 +354,6 @@ class SlimPruner(Pruner):
         ----------
         config_list : list
             List of pruning configs
-
         """
 
         super().__init__(model, config_list)
@@ -267,19 +362,9 @@ class SlimPruner(Pruner):
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
         config = config_list[0]
-        op_types = config.get('op_types')
-        op_names = config.get('op_names')
-        if op_types is not None:
-            assert op_types == ['BatchNorm2d'], 'SlimPruner only supports 2d batch normalization layer pruning'
-            for name, m in model.named_modules():
-                if type(m).__name__ == 'BatchNorm2d':
-                    weight_list.append(m.weight.data.clone())
-        else:
-            for name, m in model.named_modules():
-                if name in op_names:
-                    assert type(
-                        m).__name__ == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-                    weight_list.append(m.weight.data.clone())
+        for (layer, config) in self.detect_modules_to_compress():
+            assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+            weight_list.append(layer.module.weight.data.clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
@@ -288,19 +373,16 @@ class SlimPruner(Pruner):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
-
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
-
         Returns
         -------
         torch.Tensor
             mask of the layer's weight
-
         """
 
         weight = layer.module.weight.data
