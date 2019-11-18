@@ -23,24 +23,44 @@ class NaiveQuantizer(Quantizer):
 
 
 def update_ema(biased_ema, value, decay, step):
+    """
+    calculate biased stat and unbiased stat in each step using exponential moving average method
+
+    Parameters
+    ----------
+    biased_ema : float
+        previous stat value
+    value : float
+        current stat value
+    decay : float
+        the weight of previous stat value, larger means smoother curve
+    step : int
+        current step
+
+    Returns
+    -------
+    float, float
+    """
     biased_ema = biased_ema * decay + (1 - decay) * value
     unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
     return biased_ema, unbiased_ema
 
 def update_quantization_param(bits, rmin, rmax):
     """
-    update the `zero_point` and `scale` of op.
+    calculate the `zero_point` and `scale`.
 
     Parameters
     ----------
     bits : int
         quantization bits length
-    op : torch.nn.module
-        target module
     rmin : float
         min value of real value
     rmax : float
         max value of real value
+
+    Returns
+    -------
+    float, float
     """
     # extend the [min, max] interval to ensure that it contains 0.
     # Otherwise, we would not meet the requirement that 0 be an exactly
