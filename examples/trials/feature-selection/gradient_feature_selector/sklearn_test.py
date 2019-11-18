@@ -46,7 +46,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 fgs = FeatureGradientSelector(n_features=10)
 fgs.fit(X_train, y_train)
 
-print("selected features\t", fgs.selected_features_)
+print("selected features\t", fgs.get_selected_features())
 
 pipeline = make_pipeline(FeatureGradientSelector(n_epochs=1, n_features=10), LogisticRegression())
 pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
