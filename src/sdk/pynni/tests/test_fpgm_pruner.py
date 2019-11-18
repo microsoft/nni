@@ -34,8 +34,8 @@ def tf2(func):
 
 '''
 With filters(kernels) defined as below (k1 - k5), it is obvious that k3 is the Geometric Median
-which minimize the total geometric distance by defination of Geometric Median in this paper: 
-Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
+which minimize the total geometric distance by defination of Geometric Median in this paper:
+Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration,
 https://arxiv.org/pdf/1811.00250.pdf
 
 So if sparsity is 0.2, the expected masks should mask out all k3, this can be verified through:
@@ -87,6 +87,7 @@ class FPGMTestCase(TestCase):
         assert all(masks.sum((0, 2, 3)) == np.array([90., 90., 0., 90., 90.]))
 
         pruner.update_epoch(1)
+        model.layers[0].set_weights([weights[0], weights[1].numpy()])
         masks = pruner.calc_mask(layer, config_list[1]).numpy()
         masks = masks.transpose([2, 3, 0, 1]).transpose([1, 0, 2, 3])
 
