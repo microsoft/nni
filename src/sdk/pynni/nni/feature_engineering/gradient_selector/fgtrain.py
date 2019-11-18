@@ -22,12 +22,13 @@
 fgtrain.py
 """
 
-# import os
 import time
 
 import numpy as np
 import torch
 from tensorboardX import SummaryWriter
+from sklearn.feature_selection import SelectKBest, \
+    f_classif, mutual_info_classif, f_regression, mutual_info_regression
 
 import nni.feature_engineering.gradient_selector.constants as constants
 import nni.feature_engineering.gradient_selector.syssettings as syssettings
@@ -57,11 +58,6 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
         flag_stop = False
 
-        # itcond = '<'
-        # tcond = '<'
-        # dfcond = '>'
-        # relfcond = '>'
-
         total_t[-1] += t
         g = f0.x.grad.clone().cpu().detach()
         df = g.abs().max().numpy().squeeze()
@@ -70,11 +66,9 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
         if it >= maxiter:
             flag_stop = True
-            # itcond = '>='
 
         elif total_t[-1] >= maxtime:
             flag_stop = True
-            # tcond = '>='
 
         f_ma.update(f)
         df_ma.update(df)
@@ -83,11 +77,9 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
         if ((not minibatch) and (df < dftol_stop)) \
            or (minibatch and (df_ma() < dftol_stop)):
             flag_stop = True
-            # dfcond = '<'
 
         if rel_change < freltol_stop:
             flag_stop = True
-            # relfcond = '<'
 
         if not minibatch:
             df_store[-1] = df
@@ -110,7 +102,7 @@ def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
         if not it%callback_period:
             epoch = it / f0.iters_per_epoch
             x = f0.x.clone().cpu().detach().numpy()
-            # print('[%6d/%3d/%3.3f s] %0.3f' % (it, int(epoch), t, v0))
+
             t_ave = stop_conds['t'][-1] / it
             t_left = (maxiter - it) * t_ave
             print('[%6d/%6d/%3d/%6d sec] %0.3f'
@@ -151,20 +143,20 @@ def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_scor
 
     if prev_score is not None:
         x0 = prev_score
-    # elif not isinstance(init_type, str):
-    #     x0 = value_off * np.ones()
-    #     x0[init_type] = value_on
+    elif not isinstance(init_type, str):
+        x0 = value_off * np.ones(D)
+        x0[init_type] = value_on
     elif init_type.startswith(constants.Initialization.RANDOM):
         d = int(init_type.replace(constants.Initialization.RANDOM, ''))
         x0 = value_off * np.ones(D)
         x0[rng.permutation(D)[:d]] = value_on
-    # elif init_type == constants.Initialization.SKLEARN:
-    #     B = data_train.return_raw
-    #     X, y = data_train.get_dense_data()
-    #     data_train.set_return_raw(B)
-    #     ix = train_sk_dense(init_type, X, y, data_train.classification)
-    #     x0 = value_off * np.ones(D)
-    #     x0[ix] = value_on
+    elif init_type == constants.Initialization.SKLEARN:
+        B = data_train.return_raw
+        X, y = data_train.get_dense_data()
+        data_train.set_return_raw(B)
+        ix = train_sk_dense(init_type, X, y, data_train.classification)
+        x0 = value_off * np.ones(D)
+        x0[ix] = value_on
     elif init_type in constants.Initialization.VALUE_DICT:
         x0 = constants.Initialization.VALUE_DICT[init_type] * np.ones(D)
     else:
@@ -255,6 +247,30 @@ def _train(data_train, Nminibatch, order, C, rng, lr_train, debug, maxiter,
     S.train(f_stop=f_stop, f_callback=f_callback)
 
     return get_checkpoint(S, stop_conds, rng), S
+
+
+def train_sk_dense(ty, X, y, classification):
+    if classification:
+        if ty.startswith('skf'):
+            d = int(ty.replace('skf', ''))
+            f_sk = f_classif
+        elif ty.startswith('skmi'):
+            d = int(ty.replace('skmi', ''))
+            f_sk = mutual_info_classif
+    else:
+        if ty.startswith('skf'):
+            d = int(ty.replace('skf', ''))
+            f_sk = f_regression
+        elif ty.startswith('skmi'):
+            d = int(ty.replace('skmi', ''))
+            f_sk = mutual_info_regression
+    t = time.time()
+    clf = SelectKBest(f_sk, k=d)
+    clf.fit_transform(X, y.squeeze())
+    ix = np.argsort(-clf.scores_)
+    ix = ix[np.where(np.invert(np.isnan(clf.scores_[ix])))[0]][:d]
+    t = time.time() - t
+    return {'feats': ix, 't': t}
 
 
 def print_results(m):

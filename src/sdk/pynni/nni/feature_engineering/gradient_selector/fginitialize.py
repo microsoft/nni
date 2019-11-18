@@ -24,7 +24,6 @@ import os
 import pickle
 import sys
 import time
-# from tempfile import SpooledTemporaryFile
 
 import numpy as np
 import scipy.sparse
@@ -32,8 +31,7 @@ from sklearn.datasets import load_svmlight_file
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-#,BatchSampler, Sampler
-from torch.utils.data.dataloader import _DataLoaderIter
+from torch.utils.data.dataloader import _DataLoaderIter, _utils
 
 import nni.feature_engineering.gradient_selector.constants as constants
 import nni.feature_engineering.gradient_selector.syssettings as syssettings
@@ -601,8 +599,8 @@ class _ChunkDataLoaderIter(_DataLoaderIter):
             else:
                 batch = self.collate_fn([self.dataset[i] for i in indices])
 
-            # if self.pin_memory:
-            #     batch = _utils.pin_memory.pin_memory_batch(batch)
+            if self.pin_memory:
+                batch = _utils.pin_memory.pin_memory_batch(batch)
             return batch
 
         # check if the next sample has already been generated
