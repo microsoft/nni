@@ -217,7 +217,6 @@ class Pruner(Compressor):
         """
         if self.detect_modules_to_compress() and not self.mask_dict:
             _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
-            print('Warning: You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         for name, m in self.bound_model.named_modules():
             if name == "":
@@ -227,25 +226,20 @@ class Pruner(Compressor):
                 mask_sum = mask.sum().item()
                 mask_num = mask.numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                print('Layer: %s  Sparsity: %.2f' % (name, 1 - mask_sum / mask_num))
                 m.weight.data = m.weight.data.mul(mask)
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
-                print('Layer: %s  NOT compressed' % name)
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
-        print('Model state_dict saved to %s' % model_path)
         if mask_path is not None:
             torch.save(self.mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
-            print('Mask dict saved to %s' % mask_path)
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
             input_data = torch.Tensor(*input_shape)
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
-            print('Model in onnx with input shape %s saved to %s' % (input_data.shape, onnx_path))
 
 
 class Quantizer(Compressor):
