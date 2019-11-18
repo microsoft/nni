@@ -50,14 +50,25 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list)
-        self.steps = 0
+        self.steps = 1
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer("zero_point", None)
                 layer.module.register_buffer("scale", None)
+            if "output" in config.get("quant_types", []):
+                layer.module.register_buffer('ema_decay', torch.Tensor(0.999))
+                layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
+                layer.module.register_buffer('tracked_min', torch.zeros(1))
+                layer.module.register_buffer('tracked_max_biased', torch.zeros(1))
+                layer.module.register_buffer('tracked_max', torch.zeros(1))
 
-    def _range_check(self, tensor):
+    def _update_ema(self, biased_ema, value, decay, step):
+        biased_ema = biased_ema * decay + (1 - decay) * value
+        unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
+        return biased_ema, unbiased_ema
+
+    def _EMA_range_check(self, tensor, op):
         """
         determine the max value and min value of quantization target.
 
@@ -71,8 +82,10 @@ class QAT_Quantizer(Quantizer):
         min : float
         max : float
         """
-        # TODO: use EMA to check activation range instead
-        return torch.min(tensor), torch.max(tensor)
+        current_min, current_max = torch.min(tensor), torch.max(tensor)
+        op.tracked_min_biased, op.tracked_min = self._update_ema(op.tracked_min_biased, current_min, op.ema_decay, self.steps)
+        op.tracked_max_biased, op.tracked_max = self._update_ema(op.tracked_max_biased, current_max, op.ema_decay, self.steps)
+        return op.tracked_min, op.tracked_max
 
     def _update_quantization_param(self, bits, op, rmin, rmax):
         """
@@ -177,7 +190,7 @@ class QAT_Quantizer(Quantizer):
             return weight
         if quant_start_step > self.steps:
             return weight
-        rmin, rmax = self._range_check(weight)
+        rmin, rmax = torch.min(weight), torch.max(weight)
         self._update_quantization_param(weight_bits, op, rmin, rmax)
         out = self._quantize(weight_bits, op, weight)
         out = self._dequantize(op, out)
@@ -194,8 +207,8 @@ class QAT_Quantizer(Quantizer):
             return output
         if quant_start_step > self.steps:
             return output
-        # TODO output dynamic set a, b
-        rmin, rmax = self._range_check(output)
+
+        rmin, rmax = self._EMA_range_check(output, op)
         self._update_quantization_param(output_bits, op, rmin, rmax)
         out = self._quantize(output_bits, op, output)
         out = self._dequantize(op, out)
