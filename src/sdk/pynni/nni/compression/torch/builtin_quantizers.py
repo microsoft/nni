@@ -27,7 +27,7 @@ def update_ema(biased_ema, value, decay, step):
     unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
     return biased_ema, unbiased_ema
 
-def update_quantization_param(bits, op, rmin, rmax):
+def update_quantization_param(bits, rmin, rmax):
     """
     update the `zero_point` and `scale` of op.
 
@@ -67,8 +67,7 @@ def update_quantization_param(bits, op, rmin, rmax):
     else:
         nudged_zero_point = torch.round(initial_zero_point)
 
-    op.scale = scale
-    op.zero_point = nudged_zero_point
+    return scale, nudged_zero_point
 
 
 def get_bits_length(config, quant_type):
@@ -172,7 +171,7 @@ class QAT_Quantizer(Quantizer):
         if quant_start_step > self.steps:
             return weight
         rmin, rmax = torch.min(weight), torch.max(weight)
-        update_quantization_param(weight_bits, op, rmin, rmax)
+        op.scale, op.zero_point = update_quantization_param(weight_bits, rmin, rmax)
         out = self._quantize(weight_bits, op, weight)
         out = self._dequantize(op, out)
         return out
@@ -192,7 +191,7 @@ class QAT_Quantizer(Quantizer):
         current_min, current_max = torch.min(output), torch.max(output)
         op.tracked_min_biased, op.tracked_min = update_ema(op.tracked_min_biased, current_min, op.ema_decay, self.steps)
         op.tracked_max_biased, op.tracked_max = update_ema(op.tracked_max_biased, current_max, op.ema_decay, self.steps)
-        update_quantization_param(output_bits, op, op.tracked_min, op.tracked_max)
+        op.scale, op.zero_point = update_quantization_param(output_bits, op.tracked_min, op.tracked_max)
         out = self._quantize(output_bits, op, output)
         out = self._dequantize(op, out)
         return out
