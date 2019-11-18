@@ -118,19 +118,19 @@ pruner.compress()
 ```
 注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-Second, you should add code below to update epoch number at beginning of each epoch.
+另外，需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for FPGM Pruner
-* **sparsity:** How much percentage of convolutional filters are to be pruned.
+#### FPGM Pruner 的用户配置
+* **sparsity:** 卷积过滤器要修剪的百分比。
 
 ***
