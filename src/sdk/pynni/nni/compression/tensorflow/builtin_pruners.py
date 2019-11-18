@@ -1,8 +1,9 @@
 import logging
+import numpy as np
 import tensorflow as tf
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner']
 
 _logger = logging.getLogger(__name__)
 
@@ -98,3 +99,104 @@ class AGP_Pruner(Pruner):
         sess.run(tf.assign(self.now_epoch, int(epoch)))
         for k in self.if_init_list:
             self.if_init_list[k] = True
+
+class FPGMPruner(Pruner):
+    """
+    A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
+    https://arxiv.org/pdf/1811.00250.pdf
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        super().__init__(model, config_list)
+        self.mask_dict = {}
+        self.assign_handler = []
+        self.epoch_pruned_layers = set()
+
+    def calc_mask(self, layer, config):
+        """
+        Supports Conv1D, Conv2D
+        filter dimensions for Conv1D:
+        LEN: filter length
+        IN: number of input channel
+        OUT: number of output channel
+
+        filter dimensions for Conv2D:
+        H: filter height
+        W: filter width
+        IN: number of input channel
+        OUT: number of output channel
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
+        """
+
+        weight = layer.weight
+        op_type = layer.type
+        op_name = layer.name
+        assert 0 <= config.get('sparsity') < 1
+        assert op_type in ['Conv1D', 'Conv2D']
+        assert op_type in config['op_types']
+
+        if layer.name in self.epoch_pruned_layers:
+            assert layer.name in self.mask_dict
+            return self.mask_dict.get(layer.name)
+
+        try:
+            weight = tf.stop_gradient(tf.transpose(weight, [2, 3, 0, 1]))
+            masks = np.ones(weight.shape)
+
+            num_kernels = weight.shape[0] * weight.shape[1]
+            num_prune = int(num_kernels * config.get('sparsity'))
+            if num_kernels < 2 or num_prune < 1:
+                return masks
+            min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+            for idx in min_gm_idx:
+                masks[tuple(idx)] = 0.
+        finally:
+            masks = np.transpose(masks, [2, 3, 0, 1])
+            masks = tf.Variable(masks)
+            self.mask_dict.update({op_name: masks})
+            self.epoch_pruned_layers.add(layer.name)
+
+        return masks
+
+    def _get_min_gm_kernel_idx(self, weight, n):
+        assert len(weight.shape) >= 3
+        assert weight.shape[0] * weight.shape[1] > 2
+
+        dist_list, idx_list = [], []
+        for in_i in range(weight.shape[0]):
+            for out_i in range(weight.shape[1]):
+                dist_sum = self._get_distance_sum(weight, in_i, out_i)
+                dist_list.append(dist_sum)
+                idx_list.append([in_i, out_i])
+        dist_tensor = tf.convert_to_tensor(dist_list)
+        idx_tensor = tf.constant(idx_list)
+
+        _, idx = tf.math.top_k(dist_tensor, k=n)
+        return tf.gather(idx_tensor, idx)
+
+    def _get_distance_sum(self, weight, in_idx, out_idx):
+        w = tf.reshape(weight, (-1, weight.shape[-2], weight.shape[-1]))
+        anchor_w = tf.tile(tf.expand_dims(weight[in_idx, out_idx], 0), [w.shape[0], 1, 1])
+        x = w - anchor_w
+        x = tf.math.reduce_sum((x*x), (-2, -1))
+        x = tf.math.sqrt(x)
+        return tf.math.reduce_sum(x)
+
+    def update_epoch(self, epoch):
+        self.epoch_pruned_layers = set()
