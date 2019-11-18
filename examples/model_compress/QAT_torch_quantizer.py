@@ -80,7 +80,7 @@ def main():
         'op_types':['Conv2d', 'Linear']
     }, {
         'quant_types': ['output'],
-        'quant_bits': 8, 
+        'quant_bits': 8,
         'quant_start_step': 7000,
         'op_types':['ReLU6']
     }]
