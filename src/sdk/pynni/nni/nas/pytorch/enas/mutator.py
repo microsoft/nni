@@ -57,8 +57,8 @@ class EnasMutator(Mutator):
                 if "reduce" in mutable.key:
                     def is_conv(choice):
                         return "conv" in str(type(choice)).lower()
-                    bias = torch.tensor([self.branch_bias if is_conv(choice) else -self.branch_bias
-                                         for choice in mutable.choices])  # pylint: disable=not-callable
+                    bias = torch.tensor([self.branch_bias if is_conv(choice) else -self.branch_bias  # pylint: disable=not-callable
+                                         for choice in mutable.choices])
                     self.bias_dict[mutable.key] = nn.Parameter(bias, requires_grad=False)
 
         self.embedding = nn.Embedding(self.max_layer_choice + 1, self.lstm_size)

@@ -33,7 +33,7 @@ class PdartsTrainer(Trainer):
         for epoch in range(self.pdarts_epoch):
 
             layers = self.layers+self.pdarts_num_layers[epoch]
-            model, loss, model_optim, lr_scheduler = self.model_creator(
+            model, loss, model_optim, _ = self.model_creator(
                 layers, n_nodes)
             mutator = PdartsMutator(
                 model, epoch, self.pdarts_num_to_drop, switches)
