@@ -70,7 +70,7 @@ def update_quantization_param(bits, rmin, rmax):
 
     # the min and max quantized values, as floating-point values
     qmin = 0
-    qmax = 1 << bits - 1
+    qmax = (1 << bits) - 1
 
     # First determine the scale.
     scale = (rmax - rmin) / (qmax - qmin)
