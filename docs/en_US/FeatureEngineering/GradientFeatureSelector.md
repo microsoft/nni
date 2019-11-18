@@ -6,7 +6,7 @@ GradientFeatureSelector, a gradient-based search algorithm
 for feature selection. 
 
 1) This approach extends a recent result on the estimation of
-learnability in the sublinear data regime by showing that the calculation can beperformed iteratively (i.e., in mini-batches) and in **linear time and space** with respect to both the number of features D and the sample size N. 
+learnability in the sublinear data regime by showing that the calculation can be performed iteratively (i.e., in mini-batches) and in **linear time and space** with respect to both the number of features D and the sample size N. 
 
 2) This, along with a discrete-to-continuous relaxation of the search domain, allows for an **efficient, gradient-based** search algorithm among feature subsets for very **large datasets**.
 
@@ -38,11 +38,11 @@ And you could reference the examples in `/examples/trials/feature-selection/grad
 
 **Requirement of classArgs**
 
-* **order**  (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
+* **order** (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
 
 * **penatly** (int, optional, default = 1) - Constant that multiplies the regularization term.
 
-* **n_features** (int, optional, default = None) - If None, will automatically choose number of features based on search. Otherwise, number of top features to select.
+* **n_features** (int, optional, default = None) - If None, will automatically choose number of features based on search. Otherwise, the number of top features to select.
 
 * **max_features** (int, optional, default = None) - If not None, will use the 'elbow method' to determine the number of features with max_features as the upper limit.
 
@@ -79,9 +79,9 @@ And you could reference the examples in `/examples/trials/feature-selection/grad
 
 * **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples].
 
-* **groups** (array-like, optinal, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].
+* **groups** (array-like, optional, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].
 
 **Requirement of `get_selected_features` FuncArgs**
-    
-    For now, the `get_selected_features` function has no parameters.
+ 
+ For now, the `get_selected_features` function has no parameters.
 
