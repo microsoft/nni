@@ -8,9 +8,6 @@ We could use this method as a strong baseline in Feature Selector, especially wh
 
 For now, we support the `importance_type` is `split` and `gain`. But we will support customized `importance_type` in the future, which means the user could define how to calculate the `feature score` by themselves.
 
-
-
-
 ### Usage
 
 ```python
