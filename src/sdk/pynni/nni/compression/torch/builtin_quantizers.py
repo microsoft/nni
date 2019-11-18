@@ -22,6 +22,61 @@ class NaiveQuantizer(Quantizer):
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
 
+def update_ema(biased_ema, value, decay, step):
+    biased_ema = biased_ema * decay + (1 - decay) * value
+    unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
+    return biased_ema, unbiased_ema
+
+def update_quantization_param(bits, op, rmin, rmax):
+    """
+    update the `zero_point` and `scale` of op.
+
+    Parameters
+    ----------
+    bits : int
+        quantization bits length
+    op : torch.nn.module
+        target module
+    rmin : float
+        min value of real value
+    rmax : float
+        max value of real value
+    """
+    # extend the [min, max] interval to ensure that it contains 0.
+    # Otherwise, we would not meet the requirement that 0 be an exactly
+    # representable value.
+    rmin = min(rmin, 0)
+    rmax = max(rmax, 0)
+
+    # the min and max quantized values, as floating-point values
+    qmin = 0
+    qmax = 1 << bits - 1
+
+    # First determine the scale.
+    scale = (rmax - rmin) / (qmax - qmin)
+
+    # Zero-point computation.
+    initial_zero_point = qmin - rmin / scale
+
+    # Now we need to nudge the zero point to be an integer
+    nudged_zero_point = 0
+    if initial_zero_point < qmin:
+        nudged_zero_point = qmin
+    elif initial_zero_point > qmax:
+        nudged_zero_point = qmax
+    else:
+        nudged_zero_point = torch.round(initial_zero_point)
+
+    op.scale = scale
+    op.zero_point = nudged_zero_point
+
+
+def get_bits_length(config, quant_type):
+    if isinstance(config["quant_bits"], int):
+        return config["quant_bits"]
+    else:
+        return config["quant_bits"].get(quant_type)
+
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
@@ -53,82 +108,14 @@ class QAT_Quantizer(Quantizer):
         self.steps = 1
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            if "weight" in config.get("quant_types", []):
-                layer.module.register_buffer("zero_point", None)
-                layer.module.register_buffer("scale", None)
+            layer.module.register_buffer("zero_point", None)
+            layer.module.register_buffer("scale", None)
             if "output" in config.get("quant_types", []):
-                layer.module.register_buffer('ema_decay', torch.Tensor(0.999))
+                layer.module.register_buffer('ema_decay', torch.Tensor([0.999]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_min', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_max', torch.zeros(1))
-
-    def _update_ema(self, biased_ema, value, decay, step):
-        biased_ema = biased_ema * decay + (1 - decay) * value
-        unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
-        return biased_ema, unbiased_ema
-
-    def _EMA_range_check(self, tensor, op):
-        """
-        determine the max value and min value of quantization target.
-
-        Parameters
-        ----------
-        tensor : Tensor
-            the Tensor to be quantized
-
-        Returns
-        -------
-        min : float
-        max : float
-        """
-        current_min, current_max = torch.min(tensor), torch.max(tensor)
-        op.tracked_min_biased, op.tracked_min = self._update_ema(op.tracked_min_biased, current_min, op.ema_decay, self.steps)
-        op.tracked_max_biased, op.tracked_max = self._update_ema(op.tracked_max_biased, current_max, op.ema_decay, self.steps)
-        return op.tracked_min, op.tracked_max
-
-    def _update_quantization_param(self, bits, op, rmin, rmax):
-        """
-        update the `zero_point` and `scale` of op.
-
-        Parameters
-        ----------
-        bits : int
-            quantization bits length
-        op : torch.nn.module
-            target module
-        rmin : float
-            min value of real value
-        rmax : float
-            max value of real value
-        """
-        # extend the [min, max] interval to ensure that it contains 0.
-        # Otherwise, we would not meet the requirement that 0 be an exactly
-        # representable value.
-        rmin = min(rmin, 0)
-        rmax = max(rmax, 0)
-
-        # the min and max quantized values, as floating-point values
-        qmin = 0
-        qmax = 1 << bits - 1
-
-        # First determine the scale.
-        scale = (rmax - rmin) / (qmax - qmin)
-
-        # Zero-point computation.
-        initial_zero_point = qmin - rmin / scale
-
-        # Now we need to nudge the zero point to be an integer
-        nudged_zero_point = 0
-        if initial_zero_point < qmin:
-            nudged_zero_point = qmin
-        elif initial_zero_point > qmax:
-            nudged_zero_point = qmax
-        else:
-            nudged_zero_point = torch.round(initial_zero_point)
-
-        op.scale = scale
-        op.zero_point = nudged_zero_point
 
     def _quantize(self, bits, op, real_val):
         """
@@ -174,24 +161,18 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
-    def _get_bits_length(self, config, quant_type):
-        if isinstance(config["quant_bits"], int):
-            return config["quant_bits"]
-        else:
-            return config["quant_bits"].get(quant_type)
-
     def quantize_weight(self, weight, config, op, **kwargs):
         """
         overwrite default `Quantizer` `quantize_weight` method
         """
-        weight_bits = self._get_bits_length(config, 'weight')
+        weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         if weight_bits <= 1:
             return weight
         if quant_start_step > self.steps:
             return weight
         rmin, rmax = torch.min(weight), torch.max(weight)
-        self._update_quantization_param(weight_bits, op, rmin, rmax)
+        update_quantization_param(weight_bits, op, rmin, rmax)
         out = self._quantize(weight_bits, op, weight)
         out = self._dequantize(op, out)
         return out
@@ -200,7 +181,7 @@ class QAT_Quantizer(Quantizer):
         """
         overwrite default `Quantizer` `quantize_output` method
         """
-        output_bits = self._get_bits_length(config, 'output')
+        output_bits = get_bits_length(config, 'output')
         quant_start_step = config.get('quant_start_step', 0)
 
         if output_bits <= 1:
@@ -208,8 +189,10 @@ class QAT_Quantizer(Quantizer):
         if quant_start_step > self.steps:
             return output
 
-        rmin, rmax = self._EMA_range_check(output, op)
-        self._update_quantization_param(output_bits, op, rmin, rmax)
+        current_min, current_max = torch.min(output), torch.max(output)
+        op.tracked_min_biased, op.tracked_min = update_ema(op.tracked_min_biased, current_min, op.ema_decay, self.steps)
+        op.tracked_max_biased, op.tracked_max = update_ema(op.tracked_max_biased, current_max, op.ema_decay, self.steps)
+        update_quantization_param(output_bits, op, op.tracked_min, op.tracked_max)
         out = self._quantize(output_bits, op, output)
         out = self._dequantize(op, out)
         return out
