@@ -42,9 +42,9 @@ class TorchMnist(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 def tf2(func):
-    def test_tf2_func(self):
+    def test_tf2_func(*args):
         if tf.__version__ >= '2.0':
-            func()
+            func(*args)
     return test_tf2_func
 
 class CompressorTestCase(TestCase):
@@ -52,11 +52,6 @@ class CompressorTestCase(TestCase):
         model = TorchMnist()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
         torch_compressor.LevelPruner(model, configure_list).compress()
-
-    def test_torch_fpgm_pruner(self):
-        model = TorchMnist()
-        configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2d']}]
-        torch_compressor.FPGMPruner(model, configure_list).compress()
 
     def test_torch_quantizer(self):
         model = TorchMnist()
@@ -77,11 +72,6 @@ class CompressorTestCase(TestCase):
     @tf2
     def test_tf_quantizer(self):
         tf_compressor.NaiveQuantizer(get_tf_mnist_model(), [{'op_types': ['default']}]).compress()
-
-    @tf2
-    def test_tf_fpgm_pruner(self):
-        configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2D']}]
-        tf_compressor.FPGMPruner(get_tf_mnist_model(), configure_list).compress()
 
 
 if __name__ == '__main__':
