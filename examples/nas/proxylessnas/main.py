@@ -97,7 +97,8 @@ if __name__ == "__main__":
                                   model_optim=optimizer,
                                   train_loader=train_loader,
                                   valid_loader=valid_loader,
-                                  device=device)
+                                  device=device,
+                                  warmup=False)
 
     print('=============================================Start to train ProxylessNasTrainer')
     trainer.train()
