@@ -20,6 +20,31 @@
 
 import torch.nn as nn
 
+def get_parameters(model, keys=None, mode='include'):
+    if keys is None:
+        for name, param in model.named_parameters():
+            yield param
+    elif mode == 'include':
+        for name, param in model.named_parameters():
+            flag = False
+            for key in keys:
+                if key in name:
+                    flag = True
+                    break
+            if flag:
+                yield param
+    elif mode == 'exclude':
+        for name, param in model.named_parameters():
+            flag = True
+            for key in keys:
+                if key in name:
+                    flag = False
+                    break
+            if flag:
+                yield param
+    else:
+        raise ValueError('do not support: %s' % mode)
+
 
 def get_same_padding(kernel_size):
     if isinstance(kernel_size, tuple):

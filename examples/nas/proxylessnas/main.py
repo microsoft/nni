@@ -24,40 +24,16 @@ import datasets
 import torch
 import torch.nn as nn
 
-from model import *
+from putils import get_parameters
+from model import SearchMobileNet
 from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
-
-def get_parameters(model, keys=None, mode='include'):
-    if keys is None:
-        for name, param in model.named_parameters():
-            yield param
-    elif mode == 'include':
-        for name, param in model.named_parameters():
-            flag = False
-            for key in keys:
-                if key in name:
-                    flag = True
-                    break
-            if flag:
-                yield param
-    elif mode == 'exclude':
-        for name, param in model.named_parameters():
-            flag = True
-            for key in keys:
-                if key in name:
-                    flag = False
-                    break
-            if flag:
-                yield param
-    else:
-        raise ValueError('do not support: %s' % mode)
 
 
 if __name__ == "__main__":
     parser = ArgumentParser("proxylessnas")
-    parser.add_argument("--layers", default=4, type=int)
-    parser.add_argument("--nodes", default=2, type=int)
-    parser.add_argument("--batch-size", default=128, type=int)
+    parser.add_argument("--n_cell_stages", default='4,4,4,4,4,1', type=str)
+    parser.add_argument("--stride_stages", default='2,2,2,1,2,1', type=str)
+    parser.add_argument("--width_stages", default='24,40,80,96,192,320', type=str)
     parser.add_argument("--log-frequency", default=1, type=int)
     args = parser.parse_args()
 
