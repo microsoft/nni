@@ -85,9 +85,3 @@ And you could reference the examples in `/examples/trials/feature-selection/grad
     
     For now, the `get_selected_features` function has no parameters.
 
-
-
-
- 
-
-
