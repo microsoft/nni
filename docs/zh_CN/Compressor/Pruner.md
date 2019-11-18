@@ -89,3 +89,48 @@ pruner.update_epoch(epoch)
 
 ***
 
+## FPGM Pruner
+FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
+
+### 用法
+首先，导入 Pruner 来为模型添加掩码。
+
+TensorFlow 代码
+```python
+from nni.compression.tensorflow import FPGMPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2D']
+}]
+pruner = FPGMPruner(model, config_list)
+pruner.compress()
+```
+PyTorch 代码
+```python
+from nni.compression.torch import FPGMPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = FPGMPruner(model, config_list)
+pruner.compress()
+```
+注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
+
+另外，需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
+
+TensorFlow 代码
+```python
+pruner.update_epoch(epoch, sess)
+```
+PyTorch 代码
+```python
+pruner.update_epoch(epoch)
+```
+查看示例进一步了解
+
+#### FPGM Pruner 的用户配置
+* **sparsity:** 卷积过滤器要修剪的百分比。
+
+***

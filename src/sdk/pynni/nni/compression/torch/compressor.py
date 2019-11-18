@@ -91,6 +91,7 @@ class Compressor:
         """
         ret = None
         for config in self.config_list:
+            config = config.copy()
             config['op_types'] = self._expand_config_op_types(config)
             if layer.type not in config['op_types']:
                 continue
