@@ -256,7 +256,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             Shape = [n_samples]
             The target values (class labels in classification, real numbers in
             regression).
-        groups: array-like
+        groups : array-like
             Optional, shape = [n_features]
             Groups of columns that must be selected as a unit
             e.g. [0, 0, 1, 2] specifies the first two columns are part of a group.
