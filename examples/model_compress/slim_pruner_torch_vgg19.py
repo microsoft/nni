@@ -133,7 +133,7 @@ def main():
     print('=' * 10 + 'Test the original model' + '=' * 10)
     model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     test(model, device, test_loader)
-    # top1 = 93.93%
+    # top1 = 93.60%
 
     # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
     configure_list = [{
@@ -146,7 +146,7 @@ def main():
     pruner = SlimPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
-    # top1 = 93.91%
+    # top1 = 93.55%
 
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
@@ -169,7 +169,7 @@ def main():
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 93.91%
+    # top1 = 93.61%
 
 
 if __name__ == '__main__':

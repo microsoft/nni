@@ -103,7 +103,7 @@ def main():
                              transforms.ToTensor(),
                              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
                          ])),
-        batch_size=256, shuffle=True)
+        batch_size=64, shuffle=True)
     test_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
@@ -117,8 +117,8 @@ def main():
     # Train the base VGG-16 model
     print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300, 0)
-    for epoch in range(300):
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
+    for epoch in range(160):
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
         lr_scheduler.step(epoch)
@@ -128,7 +128,7 @@ def main():
     print('=' * 10 + 'Test on the original model' + '=' * 10)
     model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
-    # top1 = 93.47%
+    # top1 = 93.51%
 
     # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
     # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
@@ -143,11 +143,11 @@ def main():
     pruner = FilterPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
-    # top1 = 47.22%
+    # top1 = 88.19%
 
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.004, momentum=0.9, weight_decay=1e-4)
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
         pruner.update_epoch(epoch)
@@ -166,7 +166,7 @@ def main():
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 93.18%
+    # top1 = 93.53%
 
 
 if __name__ == '__main__':
