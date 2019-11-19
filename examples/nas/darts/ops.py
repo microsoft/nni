@@ -2,42 +2,6 @@ import torch
 import torch.nn as nn
 
 
-PRIMITIVES = [
-    'max_pool_3x3',
-    'avg_pool_3x3',
-    'skip_connect', # identity
-    'sep_conv_3x3',
-    'sep_conv_5x5',
-    'dil_conv_3x3',
-    'dil_conv_5x5',
-    'none'
-]
-
-OPS = {
-    'none': lambda C, stride, affine: Zero(stride),
-    'avg_pool_3x3': lambda C, stride, affine: PoolBN('avg', C, 3, stride, 1, affine=affine),
-    'max_pool_3x3': lambda C, stride, affine: PoolBN('max', C, 3, stride, 1, affine=affine),
-    'skip_connect': lambda C, stride, affine: \
-        Identity() if stride == 1 else FactorizedReduce(C, C, affine=affine),
-    'sep_conv_3x3': lambda C, stride, affine: SepConv(C, C, 3, stride, 1, affine=affine),
-    'sep_conv_5x5': lambda C, stride, affine: SepConv(C, C, 5, stride, 2, affine=affine),
-    'sep_conv_7x7': lambda C, stride, affine: SepConv(C, C, 7, stride, 3, affine=affine),
-    'dil_conv_3x3': lambda C, stride, affine: DilConv(C, C, 3, stride, 2, 2, affine=affine), # 5x5
-    'dil_conv_5x5': lambda C, stride, affine: DilConv(C, C, 5, stride, 4, 2, affine=affine), # 9x9
-    'conv_7x1_1x7': lambda C, stride, affine: FacConv(C, C, 7, stride, 3, affine=affine)
-}
-
-
-def drop_path_(x, drop_prob, training):
-    if training and drop_prob > 0.:
-        keep_prob = 1. - drop_prob
-        # per data point mask; assuming x in cuda.
-        mask = torch.cuda.FloatTensor(x.size(0), 1, 1, 1).bernoulli_(keep_prob)
-        x.div_(keep_prob).mul_(mask)
-
-    return x
-
-
 class DropPath_(nn.Module):
     def __init__(self, p=0.):
         """ [!] DropPath is inplace module
@@ -51,7 +15,11 @@ class DropPath_(nn.Module):
         return 'p={}, inplace'.format(self.p)
 
     def forward(self, x):
-        drop_path_(x, self.p, self.training)
+        if self.training and self.p > 0.:
+            keep_prob = 1. - self.p
+            # per data point mask
+            mask = torch.zeros((x.size(0), 1, 1, 1), device=x.device).bernoulli_(keep_prob)
+            x.div_(keep_prob).mul_(mask)
 
         return x
 
@@ -147,25 +115,6 @@ class SepConv(nn.Module):
 
     def forward(self, x):
         return self.net(x)
-
-
-class Identity(nn.Module):
-
-    def forward(self, x):
-        return x
-
-
-class Zero(nn.Module):
-    def __init__(self, stride):
-        super().__init__()
-        self.stride = stride
-
-    def forward(self, x):
-        if self.stride == 1:
-            return x * 0.
-
-        # re-sizing by stride
-        return x[:, :, ::self.stride, ::self.stride] * 0.
 
 
 class FactorizedReduce(nn.Module):

@@ -2,33 +2,64 @@ import torch
 import torch.nn as nn
 
 import ops
-from nni.nas import pytorch as nas
+from nni.nas.pytorch import mutables, darts
 
 
-class SearchCell(nn.Module):
-    """
-    Cell for search.
-    """
+class AuxiliaryHead(nn.Module):
+    """ Auxiliary head in 2/3 place of network to let the gradient flow well """
 
-    def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
-        """
-        Initialization a search cell.
+    def __init__(self, input_size, C, n_classes):
+        """ assuming input size 7x7 or 8x8 """
+        assert input_size in [7, 8]
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.ReLU(inplace=True),
+            nn.AvgPool2d(5, stride=input_size - 5, padding=0, count_include_pad=False),  # 2x2 out
+            nn.Conv2d(C, 128, kernel_size=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 768, kernel_size=2, bias=False),  # 1x1 out
+            nn.BatchNorm2d(768),
+            nn.ReLU(inplace=True)
+        )
+        self.linear = nn.Linear(768, n_classes)
 
-        Parameters
-        ----------
-        n_nodes: int
-            Number of nodes in current DAG.
-        channels_pp: int
-            Number of output channels from previous previous cell.
-        channels_p: int
-            Number of output channels from previous cell.
-        channels: int
-            Number of channels that will be used in the current DAG.
-        reduction_p: bool
-            Flag for whether the previous cell is reduction cell or not.
-        reduction: bool
-            Flag for whether the current cell is reduction cell or not.
-        """
+    def forward(self, x):
+        out = self.net(x)
+        out = out.view(out.size(0), -1)  # flatten
+        logits = self.linear(out)
+        return logits
+
+
+class Node(darts.DartsNode):
+    def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect, drop_path_prob=0.):
+        super().__init__(node_id, limitation=2)
+        self.ops = nn.ModuleList()
+        for i in range(num_prev_nodes):
+            stride = 2 if i < num_downsample_connect else 1
+            self.ops.append(
+                mutables.LayerChoice(
+                    [
+                        ops.PoolBN('max', channels, 3, stride, 1, affine=False),
+                        ops.PoolBN('avg', channels, 3, stride, 1, affine=False),
+                        nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False),
+                        ops.SepConv(channels, channels, 3, stride, 1, affine=False),
+                        ops.SepConv(channels, channels, 5, stride, 2, affine=False),
+                        ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False),
+                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False),
+                    ],
+                    key="{}_p{}".format(node_id, i)))
+        self.drop_path = ops.DropPath_(drop_path_prob)
+
+    def forward(self, prev_nodes):
+        assert len(self.ops) == len(prev_nodes)
+        out = [op(node) for op, node in zip(self.ops, prev_nodes)]
+        return sum(self.drop_path(o) for o in out if o is not None)
+
+
+class Cell(nn.Module):
+
+    def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction, drop_path_prob=0.):
         super().__init__()
         self.reduction = reduction
         self.n_nodes = n_nodes
@@ -44,63 +75,31 @@ class SearchCell(nn.Module):
         # generate dag
         self.mutable_ops = nn.ModuleList()
         for depth in range(self.n_nodes):
-            self.mutable_ops.append(nn.ModuleList())
-            for i in range(2 + depth):  # include 2 input nodes
-                # reduction should be used only for input node
-                stride = 2 if reduction and i < 2 else 1
-                op = nas.mutables.LayerChoice([ops.PoolBN('max', channels, 3, stride, 1, affine=False),
-                                               ops.PoolBN('avg', channels, 3, stride, 1, affine=False),
-                                               ops.Identity() if stride == 1 else
-                                               ops.FactorizedReduce(channels, channels, affine=False),
-                                               ops.SepConv(channels, channels, 3, stride, 1, affine=False),
-                                               ops.SepConv(channels, channels, 5, stride, 2, affine=False),
-                                               ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False),
-                                               ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False),
-                                               ops.Zero(stride)],
-                                              key="r{}_d{}_i{}".format(reduction, depth, i))
-                self.mutable_ops[depth].append(op)
+            self.mutable_ops.append(Node("r{:d}_n{}".format(reduction, depth),
+                                         depth + 2, channels, 2 if reduction else 0,
+                                         drop_path_prob=drop_path_prob))
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
         tensors = [self.preproc0(s0), self.preproc1(s1)]
-        for ops in self.mutable_ops:
-            assert len(ops) == len(tensors)
-            cur_tensor = sum(op(tensor) for op, tensor in zip(ops, tensors))
+        for node in self.mutable_ops:
+            cur_tensor = node(tensors)
             tensors.append(cur_tensor)
 
         output = torch.cat(tensors[2:], dim=1)
         return output
 
 
-class SearchCNN(nn.Module):
-    """
-    Search CNN model
-    """
+class CNN(nn.Module):
 
-    def __init__(self, in_channels, channels, n_classes, n_layers, n_nodes=4, stem_multiplier=3):
-        """
-        Initializing a search channelsNN.
-
-        Parameters
-        ----------
-        in_channels: int
-            Number of channels in images.
-        channels: int
-            Number of channels used in the network.
-        n_classes: int
-            Number of classes.
-        n_layers: int
-            Number of cells in the whole network.
-        n_nodes: int
-            Number of nodes in a cell.
-        stem_multiplier: int
-            Multiplier of channels in STEM.
-        """
+    def __init__(self, input_size, in_channels, channels, n_classes, n_layers, n_nodes=4,
+                 stem_multiplier=3, auxiliary=False, drop_path_prob=0.):
         super().__init__()
         self.in_channels = in_channels
         self.channels = channels
         self.n_classes = n_classes
         self.n_layers = n_layers
+        self.aux_pos = 2 * n_layers // 3 if auxiliary else -1
 
         c_cur = stem_multiplier * self.channels
         self.stem = nn.Sequential(
@@ -121,10 +120,13 @@ class SearchCNN(nn.Module):
                 c_cur *= 2
                 reduction = True
 
-            cell = SearchCell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
+            cell = Cell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction, drop_path_prob=drop_path_prob)
             self.cells.append(cell)
             c_cur_out = c_cur * n_nodes
             channels_pp, channels_p = channels_p, c_cur_out
+
+            if i == self.aux_pos:
+                self.aux_head = AuxiliaryHead(input_size // 4, channels_p, n_classes)
 
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.linear = nn.Linear(channels_p, n_classes)
@@ -132,10 +134,16 @@ class SearchCNN(nn.Module):
     def forward(self, x):
         s0 = s1 = self.stem(x)
 
-        for cell in self.cells:
+        aux_logits = None
+        for i, cell in enumerate(self.cells):
             s0, s1 = s1, cell(s0, s1)
+            if i == self.aux_pos and self.training:
+                aux_logits = self.aux_head(s1)
 
         out = self.gap(s1)
         out = out.view(out.size(0), -1)  # flatten
         logits = self.linear(out)
+
+        if aux_logits is not None:
+            return logits, aux_logits
         return logits

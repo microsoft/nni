@@ -24,10 +24,10 @@ Tuner
 ..  autoclass:: nni.evolution_tuner.evolution_tuner.EvolutionTuner
     :members:
 
-..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
+..  autoclass:: nni.smac_tuner.SMACTuner
     :members:
 
-..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
+..  autoclass:: nni.gridsearch_tuner.GridSearchTuner
     :members:
 
 ..  autoclass:: nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
@@ -36,7 +36,13 @@ Tuner
 ..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
     :members:
 
+..  autoclass:: nni.ppo_tuner.PPOTuner
+    :members:
+
 ..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
+    :members:
+
+..  autoclass:: nni.gp_tuner.gp_tuner.GPTuner
     :members:
 
 Assessor

@@ -24,11 +24,14 @@ import numpy as np
 
 
 def get_json_content(file_path):
-    """Load json file content
+    """
+    Load json file content
+
     Parameters
     ----------
     file_path:
         path to the file
+
     Raises
     ------
     TypeError
@@ -43,7 +46,8 @@ def get_json_content(file_path):
 
 
 def generate_pcs(nni_search_space_content):
-    """Generate the Parameter Configuration Space (PCS) which defines the
+    """
+    Generate the Parameter Configuration Space (PCS) which defines the
     legal ranges of the parameters to be optimized and their default values.
     Generally, the format is:
     # parameter_name categorical {value_1, ..., value_N} [default value]
@@ -53,14 +57,17 @@ def generate_pcs(nni_search_space_content):
     # parameter_name real [min_value, max_value] [default value]
     # parameter_name real [min_value, max_value] [default value] log
     Reference: https://automl.github.io/SMAC3/stable/options.html
+
     Parameters
     ----------
     nni_search_space_content: search_space
         The search space in this experiment in nni
+
     Returns
     -------
     Parameter Configuration Space (PCS)
         the legal ranges of the parameters to be optimized and their default values
+
     Raises
     ------
     RuntimeError
@@ -122,7 +129,8 @@ def generate_pcs(nni_search_space_content):
 
 
 def generate_scenario(ss_content):
-    """Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and
+    """
+    Generate the scenario. The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and
     can be constructed either by providing an actual scenario-object, or by specifing the options in a scenario file.
     Reference: https://automl.github.io/SMAC3/stable/options.html
     The format of the scenario file is one option per line:
@@ -191,6 +199,7 @@ def generate_scenario(ss_content):
     wallclock_limit: int
         Maximum amount of wallclock-time used for optimization. Default: inf.
         Use default because this is controlled by nni
+
     Returns
     -------
     Scenario:
