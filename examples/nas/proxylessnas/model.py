@@ -69,33 +69,29 @@ class SearchMobileNet(nn.Module):
                     stride = s
                 else:
                     stride = 1
+                op_candidates = [ops.OPS['3x3_MBConv3'](input_channel, width, stride),
+                                 ops.OPS['3x3_MBConv6'](input_channel, width, stride),
+                                 ops.OPS['5x5_MBConv3'](input_channel, width, stride),
+                                 ops.OPS['5x5_MBConv6'](input_channel, width, stride),
+                                 ops.OPS['7x7_MBConv3'](input_channel, width, stride),
+                                 ops.OPS['7x7_MBConv6'](input_channel, width, stride)]
                 if stride == 1 and input_channel == width:
                     # if it is not the first one
-                    conv_op = nas.mutables.LayerChoice([ops.OPS['3x3_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['3x3_MBConv6'](input_channel, width, stride),
-                                               ops.OPS['5x5_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['5x5_MBConv6'](input_channel, width, stride),
-                                               ops.OPS['7x7_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['7x7_MBConv6'](input_channel, width, stride),
-                                               ops.OPS['Zero'](input_channel, width, stride)],
-                                               return_mask=True,
-                                               key="s{}_c{}".format(stage_cnt, i))
+                    op_candidates += [ops.OPS['Zero'](input_channel, width, stride)]
+                    conv_op = nas.mutables.LayerChoice(op_candidates,
+                                                       return_mask=True,
+                                                       key="s{}_c{}".format(stage_cnt, i))
                 else:
-                    conv_op = nas.mutables.LayerChoice([ops.OPS['3x3_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['3x3_MBConv6'](input_channel, width, stride),
-                                               ops.OPS['5x5_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['5x5_MBConv6'](input_channel, width, stride),
-                                               ops.OPS['7x7_MBConv3'](input_channel, width, stride),
-                                               ops.OPS['7x7_MBConv6'](input_channel, width, stride)],
-                                               return_mask=True,
-                                               key="s{}_c{}".format(stage_cnt, i))
+                    conv_op = nas.mutables.LayerChoice(op_candidates,
+                                                       return_mask=True,
+                                                       key="s{}_c{}".format(stage_cnt, i))
                 # shortcut
                 if stride == 1 and input_channel == width:
                     # if not first cell
                     shortcut = ops.IdentityLayer(input_channel, input_channel)
                 else:
                     shortcut = None
-                inverted_residual_block = ops.MobileInvertedResidualBlock(conv_op, shortcut)
+                inverted_residual_block = ops.MobileInvertedResidualBlock(conv_op, shortcut, op_candidates)
                 blocks.append(inverted_residual_block)
                 input_channel = width
             stage_cnt += 1

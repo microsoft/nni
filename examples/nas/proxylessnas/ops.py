@@ -51,15 +51,17 @@ OPS = {
 
 class MobileInvertedResidualBlock(nn.Module):
     
-    def __init__(self, mobile_inverted_conv, shortcut):
+    def __init__(self, mobile_inverted_conv, shortcut, op_candidates_list):
         super(MobileInvertedResidualBlock, self).__init__()
 
         self.mobile_inverted_conv = mobile_inverted_conv
         self.shortcut = shortcut
+        self.op_candidates_list = op_candidates_list
 
     def forward(self, x):
         out, idx = self.mobile_inverted_conv(x)
-        if idx == 6:
+        #if idx == 6:
+        if self.op_candidates_list[idx].is_zero_layer():
             res = x
         elif self.shortcut is None:
             res = out

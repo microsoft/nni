@@ -18,7 +18,6 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import copy
 import math
 import time
 
@@ -26,33 +25,8 @@ import torch
 from torch import nn as nn
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup, auto_device
+from nni.nas.utils import AverageMeter
 from .mutator import ProxylessNasMutator
-
-
-class AverageMeter(object):
-    """
-    Computes and stores the average and current value
-    Copied from: https://github.com/pytorch/examples/blob/master/imagenet/main.py
-    """
-
-    def __init__(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
 
 
 def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
@@ -162,10 +136,10 @@ class ProxylessNasTrainer(Trainer):
         self.mutator.set_chosen_op_active()
         # test on validation set under train mode
         self.model.train()
-        batch_time = AverageMeter()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+        batch_time = AverageMeter('batch_time')
+        losses = AverageMeter('losses')
+        top1 = AverageMeter('top1')
+        top5 = AverageMeter('top5')
         end = time.time()
         with torch.no_grad():
             for i, (images, labels) in enumerate(self.valid_loader):
@@ -185,9 +159,9 @@ class ProxylessNasTrainer(Trainer):
                                         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'\
                                         'Loss {loss.val:.4f} ({loss.avg:.4f})\t'\
                                         'Top-1 acc {top1.val:.3f} ({top1.avg:.3f})'.\
-                        format(i, len(data_loader) - 1, batch_time=batch_time, loss=losses, top1=top1)
-                    if return_top5:
-                        test_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
+                        format(i, len(self.valid_loader) - 1, batch_time=batch_time, loss=losses, top1=top1)
+                    # return top5:
+                    test_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
                     print(test_log)
         return losses.avg, top1.avg, top5.avg
 
@@ -198,11 +172,11 @@ class ProxylessNasTrainer(Trainer):
 
         for epoch in range(self.warmup_epochs):
             print('\n', '-' * 30, 'Warmup epoch: %d' % (epoch + 1), '-' * 30, '\n')
-            batch_time = AverageMeter()
-            data_time = AverageMeter()
-            losses = AverageMeter()
-            top1 = AverageMeter()
-            top5 = AverageMeter()
+            batch_time = AverageMeter('batch_time')
+            data_time = AverageMeter('data_time')
+            losses = AverageMeter('losses')
+            top1 = AverageMeter('top1')
+            top5 = AverageMeter('top5')
             # switch to train mode
             self.model.train()
 
@@ -291,12 +265,12 @@ class ProxylessNasTrainer(Trainer):
 
         for epoch in range(self.train_epochs):
             print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
-            batch_time = AverageMeter()
-            data_time = AverageMeter()
-            losses = AverageMeter()
-            top1 = AverageMeter()
-            top5 = AverageMeter()
-            entropy = AverageMeter()
+            batch_time = AverageMeter('batch_time')
+            data_time = AverageMeter('data_time')
+            losses = AverageMeter('losses')
+            top1 = AverageMeter('top1')
+            top5 = AverageMeter('top5')
+            entropy = AverageMeter('entropy')
             # switch to train mode
             self.model.train()
 
@@ -325,7 +299,7 @@ class ProxylessNasTrainer(Trainer):
                 self.model_optim.step()
                 # TODO: if epoch > 0:
                 if epoch >= 0:
-                    for j in range(update_schedule.get(i, 0)):
+                    for _ in range(update_schedule.get(i, 0)):
                         start_time = time.time()
                         # GradientArchSearchConfig
                         arch_loss, exp_value = self._gradient_step()

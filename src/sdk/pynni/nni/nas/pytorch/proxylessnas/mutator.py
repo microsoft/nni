@@ -35,7 +35,7 @@ def detach_variable(inputs):
         return x
 
 class ArchGradientFunction(torch.autograd.Function):
-    
+
     @staticmethod
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
@@ -70,7 +70,7 @@ class MixedOp(nn.Module):
         self.inactive_index = None
         self.log_prob = None
         self.current_prob_over_ops = None
-    
+
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
 
