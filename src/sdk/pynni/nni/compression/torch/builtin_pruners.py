@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -106,3 +106,125 @@ class AGP_Pruner(Pruner):
             self.now_epoch = epoch
             for k in self.if_init_list:
                 self.if_init_list[k] = True
+
+class FPGMPruner(Pruner):
+    """
+    A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
+    https://arxiv.org/pdf/1811.00250.pdf
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        super().__init__(model, config_list)
+        self.mask_dict = {}
+        self.epoch_pruned_layers = set()
+
+    def calc_mask(self, layer, config):
+        """
+        Supports Conv1d, Conv2d
+        filter dimensions for Conv1d:
+        OUT: number of output channel
+        IN: number of input channel
+        LEN: filter length
+
+        filter dimensions for Conv2d:
+        OUT: number of output channel
+        IN: number of input channel
+        H: filter height
+        W: filter width
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            calculate mask for `layer`'s weight
+        config : dict
+            the configuration for generating the mask
+        """
+        weight = layer.module.weight.data
+        assert 0 <= config.get('sparsity') < 1
+        assert layer.type in ['Conv1d', 'Conv2d']
+        assert layer.type in config['op_types']
+
+        if layer.name in self.epoch_pruned_layers:
+            assert layer.name in self.mask_dict
+            return self.mask_dict.get(layer.name)
+
+        masks = torch.ones(weight.size()).type_as(weight)
+
+        try:
+            num_kernels = weight.size(0) * weight.size(1)
+            num_prune = int(num_kernels * config.get('sparsity'))
+            if num_kernels < 2 or num_prune < 1:
+                return masks
+            min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+            for idx in min_gm_idx:
+                masks[idx] = 0.
+        finally:
+            self.mask_dict.update({layer.name: masks})
+            self.epoch_pruned_layers.add(layer.name)
+
+        return masks
+
+    def _get_min_gm_kernel_idx(self, weight, n):
+        assert len(weight.size()) in [3, 4]
+
+        dist_list = []
+        for out_i in range(weight.size(0)):
+            for in_i in range(weight.size(1)):
+                dist_sum = self._get_distance_sum(weight, out_i, in_i)
+                dist_list.append((dist_sum, (out_i, in_i)))
+        min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
+        return [x[1] for x in min_gm_kernels]
+
+    def _get_distance_sum(self, weight, out_idx, in_idx):
+        """
+        Calculate the total distance between a specified filter (by out_idex and in_idx) and
+        all other filters.
+        Optimized verision of following naive implementation:
+        def _get_distance_sum(self, weight, in_idx, out_idx):
+            w = weight.view(-1, weight.size(-2), weight.size(-1))
+            dist_sum = 0.
+            for k in w:
+                dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
+            return dist_sum
+
+        Parameters
+        ----------
+        weight: Tensor
+            convolutional filter weight
+        out_idx: int
+            output channel index of specified filter, this method calculates the total distance
+            between this specified filter and all other filters.
+        in_idx: int
+            input channel index of specified filter
+
+        Returns
+        -------
+        float32
+            The total distance
+        """
+        logger.debug('weight size: %s', weight.size())
+        if len(weight.size()) == 4: # Conv2d
+            w = weight.view(-1, weight.size(-2), weight.size(-1))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
+        elif len(weight.size()) == 3: # Conv1d
+            w = weight.view(-1, weight.size(-1))
+            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1))
+        else:
+            raise RuntimeError('unsupported layer type')
+        x = w - anchor_w
+        x = (x*x).sum((-2, -1))
+        x = torch.sqrt(x)
+        return x.sum()
+
+    def update_epoch(self, epoch):
+        self.epoch_pruned_layers = set()
