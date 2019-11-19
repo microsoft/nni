@@ -16,7 +16,7 @@ learnability in the sublinear data regime by showing that the calculation can be
 ### Usage
 
 ```python
-from nni.feature_engineering.gradient_selector.gradient_selector import FeatureGradientSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
 # load data
 ...

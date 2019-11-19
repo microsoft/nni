@@ -11,7 +11,7 @@ For now, we support the `importance_type` is `split` and `gain`. But we will sup
 ### Usage
 
 ```python
-from nni.feature_engineering.gbdt_selector.gbdt_selector import GBDTSelector
+from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # load data
 ...
