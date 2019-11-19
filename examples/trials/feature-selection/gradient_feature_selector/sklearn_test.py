@@ -28,7 +28,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_selection import SelectFromModel
 
-from nni.feature_engineering.gradient_selector.gradient_selector import FeatureGradientSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
 url_zip_train = 'https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2'
 urllib.request.urlretrieve(url_zip_train, filename='train.bz2')
