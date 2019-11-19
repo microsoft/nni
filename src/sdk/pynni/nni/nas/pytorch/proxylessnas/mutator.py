@@ -24,7 +24,7 @@ from torch.nn import functional as F
 import numpy as np
 
 from nni.nas.pytorch.mutables import LayerChoice
-from nni.nas.pytorch.mutator import PyTorchMutator
+from nni.nas.pytorch.base_mutator import BaseMutator
 
 def detach_variable(inputs):
     if isinstance(inputs, tuple):
@@ -170,13 +170,12 @@ class MixedOp(nn.Module):
                 self.AP_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (self._delta_ij(i, j) - probs[i])
 
 
-class ProxylessNasMutator(PyTorchMutator):
-
-    def before_build(self, model):
+class ProxylessNasMutator(BaseMutator):
+    def __init__(self, model):
+        super(ProxylessNasMutator, self).__init__(model)
         self.mixed_ops = {}
-
-    def on_init_layer_choice(self, mutable: LayerChoice):
-        self.mixed_ops[mutable.key] = MixedOp(mutable)
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            self.mixed_ops[mutable.key] = MixedOp(mutable)
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """

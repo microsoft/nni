@@ -24,7 +24,7 @@ import time
 import torch
 from torch import nn as nn
 
-from nni.nas.pytorch.trainer import Trainer
+from nni.nas.pytorch.base_trainer import BaseTrainer
 from nni.nas.utils import AverageMeter
 from .mutator import ProxylessNasMutator
 
@@ -55,7 +55,7 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-class ProxylessNasTrainer(Trainer):
+class ProxylessNasTrainer(BaseTrainer):
     def __init__(self, model, model_optim, train_loader, valid_loader, device,
                  n_epochs=150, init_lr=0.05, arch_init_type='normal', arch_init_ratio=1e-3,
                  arch_optim_lr=1e-3, arch_weight_decay=0, warmup=True, warmup_epochs=25,
@@ -193,8 +193,7 @@ class ProxylessNasTrainer(Trainer):
                 images, labels = images.to(self.device), labels.to(self.device)
                 # compute output
                 self.mutator.reset_binary_gates() # random sample binary gates
-                with self.mutator.forward_pass():
-                    output = self.model(images)
+                output = self.model(images)
                 if self.label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
                 else:
@@ -284,8 +283,7 @@ class ProxylessNasTrainer(Trainer):
                 # train weight parameters
                 images, labels = images.to(self.device), labels.to(self.device)
                 self.mutator.reset_binary_gates()
-                with self.mutator.forward_pass():
-                    output = self.model(images)
+                output = self.model(images)
                 if self.label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
                 else:
@@ -353,8 +351,7 @@ class ProxylessNasTrainer(Trainer):
         images, labels = images.to(self.device), labels.to(self.device)
         time2 = time.time()  # time
         self.mutator.reset_binary_gates()
-        with self.mutator.forward_pass():
-            output = self.model(images)
+        output = self.model(images)
         time3 = time.time()
         ce_loss = self.criterion(output, labels)
         expected_value = None
@@ -374,3 +371,9 @@ class ProxylessNasTrainer(Trainer):
 
     def export(self):
         pass
+
+    def validate(self):
+        raise NotImplementedError
+
+    def train_and_validate(self):
+        raise NotImplementedError
