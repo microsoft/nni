@@ -16,8 +16,6 @@ interface DefaultPointProps {
 
 interface DefaultPointState {
     bestCurveEnabled: boolean;
-    start: number; // for record data zoom
-    end: number;
     startY: number;  // dataZoomY
     endY: number;
 }
@@ -27,8 +25,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         super(props);
         this.state = {
             bestCurveEnabled: false,
-            start: 0, // dataZoomX
-            end: 100,
             startY: 0, // dataZoomY
             endY: 100,
         };
@@ -86,7 +82,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     private generateGraphConfig(maxSequenceId: number) {
-        const { start, end, startY, endY } = this.state;
+        const { startY, endY } = this.state;
         return {
             grid: {
                 left: '8%',
@@ -106,14 +102,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 ),
             },
             dataZoom: [
-                {
-                    id: 'dataZoomX',
-                    type: 'inside',
-                    xAxisIndex: [0],
-                    filterMode: 'empty',
-                    start: start,
-                    end: end
-                },
                 {
                     id: 'dataZoomY',
                     type: 'inside',
@@ -138,18 +126,10 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
     private metricDataZoom = (e: EventMap) => {
         if (e.batch !== undefined) {
-            if (e.batch[0].dataZoomId !== undefined) {
-                if (e.batch[0].dataZoomId === 'dataZoomX') {
-                    this.setState(() => ({ start: e.batch[0].start, end: e.batch[0].end }));
-                }
-            }
-            if (e.batch[1] !== undefined) {
-                if (e.batch[1].dataZoomId !== undefined) {
-                    if (e.batch[1].dataZoomId === 'dataZoomY') {
-                        this.setState(() => ({ startY: e.batch[1].start, endY: e.batch[1].end }));
-                    }
-                }
-            }
+            this.setState(() => ({
+                startY: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endY: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
         }
     }
 }
@@ -165,6 +145,7 @@ const EmptyGraph = {
     yAxis: {
         name: 'Default metric',
         type: 'value',
+        scale: true,
     }
 };
 

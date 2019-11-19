@@ -81,6 +81,7 @@ interface Dimobj {
     axisLabel?: object;
     axisLine?: object;
     nameTextStyle?: object;
+    scale?: boolean;
 }
 
 interface ParaObj {

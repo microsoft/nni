@@ -138,7 +138,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         if (e.batch !== undefined) {
             this.setState(() => ({
                 startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),
-                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 1)
+                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 100)
             }));
         }
     }
