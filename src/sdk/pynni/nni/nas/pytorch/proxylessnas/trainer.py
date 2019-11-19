@@ -30,6 +30,16 @@ from .mutator import ProxylessNasMutator
 
 
 def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
+    """
+    Parameters
+    ----------
+    pred :
+    target :
+    label_smoothing :
+
+    Returns
+    -------
+    """
     logsoftmax = nn.LogSoftmax()
     n_classes = pred.size(1)
     # convert to one-hot
@@ -41,7 +51,18 @@ def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
     return torch.mean(torch.sum(- soft_target * logsoftmax(pred), 1))
 
 def accuracy(output, target, topk=(1,)):
-    """ Computes the precision@k for the specified values of k """
+    """
+    Computes the precision@k for the specified values of k
+
+    Parameters
+    ----------
+    output :
+    target :
+    topk :
+
+    Returns
+    -------
+    """
     maxk = max(topk)
     batch_size = target.size(0)
 
@@ -83,6 +104,8 @@ class ProxylessNasTrainer(BaseTrainer):
             whether to do warmup
         warmup_epochs : int
             the number of epochs to do in warmup
+        arch_valid_frequency : int
+            frequency of printing validation result
         """
         self.model = model
         self.model_optim = model_optim
@@ -245,7 +268,6 @@ class ProxylessNasTrainer(BaseTrainer):
         Adjust learning of a given optimizer and return the new learning rate
         """
         new_lr = self._calc_learning_rate(epoch, batch, nBatch)
-        print('-----------------------------: ', new_lr)
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
         return new_lr

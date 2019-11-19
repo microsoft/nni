@@ -23,7 +23,6 @@ from torch import nn as nn
 from torch.nn import functional as F
 import numpy as np
 
-from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.base_mutator import BaseMutator
 
 def detach_variable(inputs):
@@ -45,23 +44,29 @@ class ArchGradientFunction(torch.autograd.Function):
         with torch.enable_grad():
             output = run_func(detached_x)
         ctx.save_for_backward(detached_x, output)
-        print('ctx forward: ', ctx.__dict__)
         return output.data
 
     @staticmethod
     def backward(ctx, grad_output):
-        print('ctx backward: ', ctx.__dict__)
         detached_x, output = ctx.saved_tensors
 
         grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)
         # compute gradients w.r.t. binary_gates
         binary_grads = ctx.backward_func(detached_x.data, output.data, grad_output.data)
-        print('++++++++++++++++++++++++++++: ', binary_grads)
 
         return grad_x[0], binary_grads, None, None
 
 class MixedOp(nn.Module):
+    """
+    This class is to instantiate and manage info of one LayerChoice
+    """
     def __init__(self, mutable):
+        """
+        Parameters
+        ----------
+        mutable : LayerChoice
+            A LayerChoice in user model
+        """
         super(MixedOp, self).__init__()
         self.mutable = mutable
         self.AP_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
@@ -78,13 +83,11 @@ class MixedOp(nn.Module):
         # only full_v2
         def run_function(key, candidate_ops, active_id):
             def forward(_x):
-                print('key forward: ', key)
                 return candidate_ops[active_id](_x)
             return forward
 
         def backward_function(key, candidate_ops, active_id, binary_gates):
             def backward(_x, _output, grad_output):
-                print('key backward: ', key)
                 binary_grads = torch.zeros_like(binary_gates.data)
                 with torch.no_grad():
                     for k in range(len(candidate_ops)):
@@ -103,11 +106,20 @@ class MixedOp(nn.Module):
 
     @property
     def probs_over_ops(self):
+        """
+        Apply softmax on alpha to generate probability distribution
+
+        Returns
+        -------
+        pytorch tensor
+            probability distribution
+        """
         probs = F.softmax(self.AP_path_alpha, dim=0)  # softmax to probability
         return probs
 
     @property
     def chosen_index(self):
+        """ choose the max one """
         probs = self.probs_over_ops.data.cpu().numpy()
         index = int(np.argmax(probs))
         return index, probs[index]
@@ -119,24 +131,25 @@ class MixedOp(nn.Module):
 
     @property
     def active_op_index(self):
+        """ return active op's index """
         return self.active_index[0]
 
     def set_chosen_op_active(self):
+        """ set chosen index, active and inactive indexes """
         chosen_idx, _ = self.chosen_index
         self.active_index = [chosen_idx]
         self.inactive_index = [_i for _i in range(0, chosen_idx)] + \
                               [_i for _i in range(chosen_idx + 1, self.n_choices)]
 
     def binarize(self):
+        """
+        Sample based on alpha, and set binary weights accordingly
+        """
         self.log_prob = None
         # reset binary gates
         self.AP_path_wb.data.zero_()
         probs = self.probs_over_ops
-        print('probs: ', probs.data)
-        print('probs type: ', probs.type())
         sample = torch.multinomial(probs, 1)[0].item()
-        print('sample: ', sample)
-        print('mutable key: ', self.mutable.key)
         self.active_index = [sample]
         self.inactive_index = [_i for _i in range(0, sample)] + \
                               [_i for _i in range(sample + 1, len(self.mutable.choices))]
@@ -147,7 +160,6 @@ class MixedOp(nn.Module):
         for choice in self.mutable.choices:
             for _, param in choice.named_parameters():
                 param.grad = None
-        print('binarize: ', self.AP_path_wb.grad)
 
     def _delta_ij(self, i, j):
         if i == j:
@@ -156,8 +168,9 @@ class MixedOp(nn.Module):
             return 0
 
     def set_arch_param_grad(self):
-        print('mutable key: ', self.mutable.key)
-        print('set_arch_param_grad: ', self.AP_path_wb.grad)
+        """
+        Calculate alpha gradient for this LayerChoice
+        """
         binary_grads = self.AP_path_wb.grad.data
         if self.active_op.is_zero_layer():
             self.AP_path_alpha.grad = None
@@ -172,6 +185,14 @@ class MixedOp(nn.Module):
 
 class ProxylessNasMutator(BaseMutator):
     def __init__(self, model):
+        """
+        Init a MixedOp instance for each named mutable i.e., LayerChoice
+
+        Parameters
+        ----------
+        model : pytorch model
+            The model that users want to tune, it includes search space defined with nni nas apis
+        """
         super(ProxylessNasMutator, self).__init__(model)
         self.mixed_ops = {}
         for _, mutable, _ in self.named_mutables(distinct=False):
@@ -192,26 +213,45 @@ class ProxylessNasMutator(BaseMutator):
         Returns
         -------
         torch.Tensor
+        index of the chosen op
         """
+        # FIXME: return mask, to be consistent with other algorithms
         idx = self.mixed_ops[mutable.key].active_op_index
         return self.mixed_ops[mutable.key].forward(*inputs), idx
 
     def reset_binary_gates(self):
+        """
+        For each LayerChoice, binarize based on alpha to only activate one op
+        """
         for k in self.mixed_ops.keys():
-            print('+++++++++++++++++++k: ', k)
             self.mixed_ops[k].binarize()
 
     def set_chosen_op_active(self):
+        """
+        For each LayerChoice, set the op with highest alpha as the chosen op
+        Usually used for validation.
+        """
         for k in self.mixed_ops.keys():
             self.mixed_ops[k].set_chosen_op_active()
 
     def num_arch_params(self):
+        """
+        Returns
+        -------
+        The number of LayerChoice in user model
+        """
         return len(self.mixed_ops)
 
     def set_arch_param_grad(self):
+        """
+        For each LayerChoice, calculate gradients for architecture weights, i.e., alpha
+        """
         for k in self.mixed_ops.keys():
             self.mixed_ops[k].set_arch_param_grad()
 
     def get_architecture_parameters(self):
+        """
+        Return architecture weights of each LayerChoice, for arch optimizer
+        """
         for k in self.mixed_ops.keys():
             yield self.mixed_ops[k].get_AP_path_alpha()
