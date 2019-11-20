@@ -99,7 +99,7 @@ class AGP_Pruner(Pruner):
         op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True)\
                 and (self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
