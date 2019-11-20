@@ -17,7 +17,10 @@ class PdartsMutator(DartsMutator):
     def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
-        self.switches = switches
+        if switches is None:
+            self.switches = {}
+        else:
+            self.switches = switches
 
         super(PdartsMutator, self).__init__(model)
 
