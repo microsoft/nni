@@ -36,8 +36,8 @@ python3 search.py
 ### In case NNI code is not cloned.
 git clone https://github.com/Microsoft/nni.git
 
-cd examples/nas
-python3 pdarts/search.py
+cd examples/nas/pdarts
+python3 search.py
 ```
 
 ## Use NNI API
