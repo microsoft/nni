@@ -53,7 +53,7 @@ The programming interface of designing and searching a model is often demanded i
 1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So, it needs an easy way to express the candidate layers or sub-models.
 2. When applying NAS on a neural network, it needs an unified way to express the search space of architectures, so that it doesn't need to update trial code for different searching algorithms.
 
-NNI proposed API is [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/examples/nas/darts) is an example of NAS implementation, which bases on NNI proposed interface.
+NNI proposed API is [here](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts) is an example of NAS implementation, which bases on NNI proposed interface.
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012
