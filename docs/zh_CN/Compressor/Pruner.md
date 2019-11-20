@@ -95,11 +95,11 @@ pruner.update_epoch(epoch)
 本文中，作者使用叫做*迭代*修剪的方法：
 > 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
 > 2. 将网络训练 j 次，得出参数 theta_j。
-> 3. Prune p% of the parameters in theta_j, creating a mask m.
-> 4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
-> 5. Repeat step 2, 3, and 4.
+> 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
+> 4. 将其余参数重置为 theta_0 的值，创建获胜彩票 f(x;m*theta_0)。
+> 5. 重复步骤 2、3 和 4。
 
-If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+如果配置的最终稀疏度为 P (e.g., 0.8) 并且有 n 次修建迭代，每次迭代修剪前一轮中剩余权重的 1-(1-P)^(1/n)。
 
 ### 用法
 
@@ -119,25 +119,25 @@ for _ in pruner.get_prune_iterations():
         ...
 ```
 
-The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round. Simple reproducing results can be found [here](./LotteryTicketHypothesis.md).
+上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 `model` 和 `optimizer` (**注意，如果使用 `lr_scheduler`，也需要添加**) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 `get_prune_iterations` 来获取修建迭代，并在每次迭代开始时调用 `prune_iteration_start`。 为了模型能较好收敛，`epoch_num` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。 [这是](./LotteryTicketHypothesis.md)简单的重现结果。
 
 
-*Tensorflow version will be supported later.*
+*稍后支持 TensorFlow 版本。*
 
-#### User configuration for LotteryTicketPruner
+#### LotteryTicketPruner 的用户配置
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+* **prune_iterations:** 迭代修剪的次数。
+* **sparsity:** 压缩完成后的最终稀疏度。
 
 ***
 ## FPGM Pruner
-FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
-> Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
-### Usage
-First, you should import pruner and add mask to model.
+### 用法
+首先，导入 Pruner 来为模型添加遮盖。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import FPGMPruner
 config_list = [{
@@ -147,7 +147,7 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
 config_list = [{
@@ -157,21 +157,21 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-Second, you should add code below to update epoch number at beginning of each epoch.
+另外，需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for FPGM Pruner
-* **sparsity:** How much percentage of convolutional filters are to be pruned.
+#### FPGM Pruner 的用户配置
+* **sparsity:** 卷积过滤器要修剪的百分比。
 
 ***
