@@ -161,7 +161,7 @@ def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_scor
     else:
         raise NotImplementedError(
             'init_type {0} not supported yet'.format(init_type))
-
+    # pylint: disable=E1102
     return torch.tensor(x0.reshape((-1, 1)),
                         dtype=torch.get_default_dtype())
 

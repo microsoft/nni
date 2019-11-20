@@ -473,6 +473,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         for i in np.arange(1, self.max_features + 1, step_size):
             # optimization possible since xsub is growing?
             i = int(np.ceil(i))
+            # pylint: disable=E1102
             score = solver.f_train(torch.tensor(np.ones(i),
                                                 dtype=torch.get_default_dtype()
                                                 ).unsqueeze(1).to(self.device),
@@ -508,7 +509,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             selected_feature_set = set(self.selected_features_.tolist())
             for _ in np.unique(groups):
                 group_members = np.where(groups == groups)[0].tolist()
-                if len(selected_feature_set.intersection(group_members)) > 0:
+                if selected_feature_set.intersection(group_members):
                     selected_feature_set.update(group_members)
             self.selected_features_ = np.array(list(selected_feature_set))
         self.selected_features_ = np.sort(self.selected_features_)
@@ -538,6 +539,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         # constant may not be optimal
         accum_steps = solver.accum_steps
         step_size = max(self.max_features / MAX_FORWARD_PASS, 1)
+        # pylint: disable=E1130
         feature_order = np.argsort(-self.scores_)  # note the negative
         t = time.time()
 

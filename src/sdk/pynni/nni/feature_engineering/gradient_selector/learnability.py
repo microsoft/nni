@@ -18,16 +18,12 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
-# import os
-# import pickle
 import time
 
 import numpy as np
 import scipy.special
 import torch
 import torch.nn as nn
-# from torch.utils.data import DataLoader
 
 import nni.feature_engineering.gradient_selector.constants as constants
 import nni.feature_engineering.gradient_selector.syssettings as syssettings
@@ -121,6 +117,7 @@ class LearnabilityMB(nn.Module):
 
         a = coeff / scipy.special.binom(Nminibatch, np.arange(coeff.size) + 2)
         self.order = a.size
+        # pylint: disable=E1102
         self.a = torch.tensor(a, dtype=torch.get_default_dtype(), requires_grad=False)
         self.binary = binary
 
@@ -230,11 +227,13 @@ class Solver(nn.Module):
 
         self.Ntrain, self.D = PreparedData.N, PreparedData.n_features
         if groups is not None:
+            # pylint: disable=E1102
             groups = torch.tensor(groups, dtype=torch.long)
             self.groups = groups
         else:
             self.groups = None
         if soft_groups is not None:
+            # pylint: disable=E1102
             soft_groups = torch.tensor(soft_groups, dtype=torch.long)
             self.soft_D = torch.unique(soft_groups).size()[0]
         else:
@@ -306,6 +305,7 @@ class Solver(nn.Module):
         self.iters_per_epoch = int(np.ceil(len(self.ds_train.dataset)
                                            / self.ds_train.batch_size))
         self.f_train = self.f_train.to(device)
+        # pylint: disable=E1102
         self.w = torch.tensor(
             C / (C + 1),
             dtype=torch.get_default_dtype(), requires_grad=False)
@@ -339,10 +339,12 @@ class Solver(nn.Module):
         """
         f_train = self.f_train(s, xsub, ysub)
         pen = self.penalty(s)
+        # pylint: disable=E1102
         grad_outputs = torch.tensor([[1]], dtype=torch.get_default_dtype(),
                                     device=self.device)
         g1, = torch.autograd.grad([f_train], [self.x], grad_outputs,
                                   retain_graph=True)
+        # pylint: disable=E1102
         grad_outputs = torch.tensor([[1]], dtype=torch.get_default_dtype(),
                                     device=self.device)
         g2, = torch.autograd.grad([pen], [self.x], grad_outputs,
