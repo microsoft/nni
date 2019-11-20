@@ -22,7 +22,7 @@
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
+// import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { Client, ConnectConfig } from 'ssh2';
@@ -45,7 +45,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, execRemove, validateCodeDir } from '../common/util';
+import { execMkdir, execRemove, validateCodeDir } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
@@ -54,6 +54,8 @@ import {
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { SSHClientUtility } from './sshClientUtility';
+
+const fs = require('fs-extra');
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -630,7 +632,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         //create tmp trial working folder locally.
-        await execCopydir(path.join(this.trialConfig.codeDir, '*'), trialLocalTempFolder);
+        await fs.copy(this.trialConfig.codeDir, trialLocalTempFolder);
         const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
