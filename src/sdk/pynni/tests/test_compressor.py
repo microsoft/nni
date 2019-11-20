@@ -101,7 +101,7 @@ class CompressorTestCase(TestCase):
         pruner = torch_compressor.FPGMPruner(model, config_list)
 
         model.conv2.weight.data = torch.tensor(w).float()
-        layer = torch_compressor.compressor.LayerInfo('conv1', model.conv2)
+        layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
         masks = pruner.calc_mask(layer, config_list[0])
         assert all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 90., 0., 90., 90.]))
 
