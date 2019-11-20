@@ -44,7 +44,7 @@ class PdartsTrainer(Trainer):
                                         callbacks=[LearningRateScheduler(
                                             lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
                                         **self.darts_parameters)
-            print("start pdrats training %s..." % epoch)
+            print("start pdarts training %s..." % epoch)
 
             self.trainer.train()
 
@@ -52,6 +52,12 @@ class PdartsTrainer(Trainer):
             #     f.write(str(model.parameters))
 
             switches = mutator.drop_paths()
+
+    def train_one_epoch(self, epoch):
+        self.trainer.train_one_epoch(epoch)
+
+    def validate_one_epoch(self, epoch):
+        self.trainer.train_one_epoch(epoch)
 
     def export(self):
         if (self.trainer is not None) and hasattr(self.trainer, "export"):
