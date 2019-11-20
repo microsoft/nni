@@ -1,12 +1,13 @@
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
+
 import nni.nas.pytorch as nas
 from nni.nas.pytorch.pdarts import PdartsTrainer
-# pylint: disable=relative-beyond-top-level
-from ..darts.model import CNN
+
+from darts.model import CNN
+from darts import datasets
 
 
 def accuracy(output, target, topk=(1,)):

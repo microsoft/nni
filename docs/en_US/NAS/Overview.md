@@ -23,7 +23,7 @@ The main contribution of [DARTS: Differentiable Architecture Search][3] on algor
 git clone https://github.com/Microsoft/nni.git
 
 cd examples/nas/darts
-python search.py
+python3 search.py
 ```
 
 ### P-DARTS
@@ -36,8 +36,8 @@ python search.py
 ### In case NNI code is not cloned.
 git clone https://github.com/Microsoft/nni.git
 
-cd examples/nas/pdarts
-python search.py
+cd examples/nas
+python3 pdarts/search.py
 ```
 
 ## Use NNI API
