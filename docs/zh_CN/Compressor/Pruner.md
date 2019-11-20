@@ -89,12 +89,53 @@ pruner.update_epoch(epoch)
 
 ***
 
+## Lottery Ticket 假设
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
+
+本文中，作者使用叫做*迭代*修剪的方法：
+> 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
+> 2. 将网络训练 j 次，得出参数 theta_j。
+> 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
+> 4. 将其余参数重置为 theta_0 的值，创建获胜彩票 f(x;m*theta_0)。
+> 5. 重复步骤 2、3 和 4。
+
+如果配置的最终稀疏度为 P (e.g., 0.8) 并且有 n 次修建迭代，每次迭代修剪前一轮中剩余权重的 1-(1-P)^(1/n)。
+
+### 用法
+
+PyTorch 代码
+```python
+from nni.compression.torch import LotteryTicketPruner
+config_list = [{
+    'prune_iterations': 5,
+    'sparsity': 0.8,
+    'op_types': ['default']
+}]
+pruner = LotteryTicketPruner(model, config_list, optimizer)
+pruner.compress()
+for _ in pruner.get_prune_iterations():
+    pruner.prune_iteration_start()
+    for epoch in range(epoch_num):
+        ...
+```
+
+上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 `model` 和 `optimizer` (**注意，如果使用 `lr_scheduler`，也需要添加**) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 `get_prune_iterations` 来获取修建迭代，并在每次迭代开始时调用 `prune_iteration_start`。 为了模型能较好收敛，`epoch_num` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。 [这是](./LotteryTicketHypothesis.md)简单的重现结果。
+
+
+*稍后支持 TensorFlow 版本。*
+
+#### LotteryTicketPruner 的用户配置
+
+* **prune_iterations:** 迭代修剪的次数。
+* **sparsity:** 压缩完成后的最终稀疏度。
+
+***
 ## FPGM Pruner
 FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 > 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
 ### 用法
-首先，导入 Pruner 来为模型添加掩码。
+首先，导入 Pruner 来为模型添加遮盖。
 
 TensorFlow 代码
 ```python

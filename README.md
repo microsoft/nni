@@ -352,6 +352,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
    * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
    * [Automatic Feature Engineering](examples/trials/auto-feature-engineering/README.md) with NNI 
    * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
+   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
 
 * ### **Relevant Articles** ###
   
@@ -360,6 +361,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
   * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
   * [Automatically tuning SVD with NNI](docs/en_US/CommunitySharings/RecommendersSvd.md)
   * [Automatically tuning SPTAG with NNI](docs/en_US/CommunitySharings/SptagAutoTune.md)
+  * [Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
   * **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) by [@gaocegege](https://github.com/gaocegege) - 总结与分析 section of design and implementation of kubeflow/katib
 
 ## **Feedback**
