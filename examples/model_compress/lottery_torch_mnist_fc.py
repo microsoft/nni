@@ -60,7 +60,7 @@ if __name__ == '__main__':
     test_loader = torch.utils.data.DataLoader(testdataset, batch_size=60, shuffle=False, num_workers=0, drop_last=True)
 
     model = fc1().to("cuda" if torch.cuda.is_available() else "cpu")
-    optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3, weight_decay=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)
     criterion = nn.CrossEntropyLoss()
 
     configure_list = [{
