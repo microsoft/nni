@@ -89,12 +89,12 @@ pruner.update_epoch(epoch)
 
 ***
 
-## Lottery Ticket Hypothesis
-[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+## Lottery Ticket 假设
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
 
-In this paper, the authors use the following process to prune a model, called *iterative prunning*:
-> 1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
-> 2. Train the network for j iterations, arriving at parameters theta_j.
+本文中，作者使用叫做*迭代*修剪的方法：
+> 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
+> 2. 将网络训练 j 次，得出参数 theta_j。
 > 3. Prune p% of the parameters in theta_j, creating a mask m.
 > 4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
 > 5. Repeat step 2, 3, and 4.
