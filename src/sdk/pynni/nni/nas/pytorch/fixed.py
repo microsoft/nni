@@ -47,7 +47,7 @@ class FixedArchitecture(Mutator):
 
         def build(self, mutables):
             mutable_keys = set(
-                [mutable.key for mutable in mutables.traverse() if not isinstance(mutable, MutableScope)])
+                [mutable.key for mutable in mutables if not isinstance(mutable, MutableScope)])
             fixed_arc_keys = set(self._fixed_arc.keys())
             if fixed_arc_keys - mutable_keys:
                 raise RuntimeError("Unexpected keys found in fixed architecture: {}.".format(fixed_arc_keys - mutable_keys))

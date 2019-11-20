@@ -76,6 +76,7 @@ class MutableScope(Mutable):
 
     def __call__(self, *args, **kwargs):
         try:
+            self._check_built()
             self.mutator.enter_mutable_scope(self)
             return super().__call__(*args, **kwargs)
         finally:

@@ -69,6 +69,9 @@ class StructuredMutableTreeNode:
     def type(self):
         return type(self.mutable)
 
+    def __iter__(self):
+        return self.traverse()
+
     def traverse(self, order="pre", deduplicate=True, memo=None):
         """
         Return a generator that generates a list of mutables in this tree.
