@@ -22,7 +22,6 @@
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
-// import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { Client, ConnectConfig } from 'ssh2';
