@@ -150,9 +150,9 @@ mkDirP(getLogDir())
     .then(async () => {
     try {
         await initContainer(mode);
-        const log: Logger = getLogger();
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
+        const log: Logger = getLogger();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         const log: Logger = getLogger();
