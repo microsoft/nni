@@ -26,7 +26,6 @@ import time
 
 import numpy as np
 import torch
-from tensorboardX import SummaryWriter
 from sklearn.feature_selection import SelectKBest, \
     f_classif, mutual_info_classif, f_regression, mutual_info_regression
 
@@ -94,40 +93,40 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
                     'relchange': relchange_store}
 
 
-def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
-                         writer=None, path_save=None, rng=None):
+# def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
+#                          writer=None, path_save=None, rng=None):
 
-    def f_callback(f0, v0, it, t):
+#     def f_callback(f0, v0, it, t):
 
-        if not it%callback_period:
-            epoch = it / f0.iters_per_epoch
-            x = f0.x.clone().cpu().detach().numpy()
+#         if not it%callback_period:
+#             epoch = it / f0.iters_per_epoch
+#             x = f0.x.clone().cpu().detach().numpy()
 
-            t_ave = stop_conds['t'][-1] / it
-            t_left = (maxiter - it) * t_ave
-            print('[%6d/%6d/%3d/%6d sec] %0.3f'
-                  % (it, maxiter, int(epoch), t_left, v0))
+#             t_ave = stop_conds['t'][-1] / it
+#             t_left = (maxiter - it) * t_ave
+#             print('[%6d/%6d/%3d/%6d sec] %0.3f'
+#                   % (it, maxiter, int(epoch), t_left, v0))
 
-            if writer is not None:
-                writer.add_scalar('ftrain', v0.clone().cpu().detach().numpy(),
-                                  it)
-                writer.add_scalar('epoch', epoch, it)
-                writer.add_scalar('t', stop_conds['t'][-1], it)
-                if not np.isnan(stop_conds['df'][-1]):
-                    writer.add_scalar('log10(dftrain)',
-                                      np.log10(stop_conds['df'][-1]), it)
-                if not np.isnan(stop_conds['relchange'][-1]):
-                    writer.add_scalar('log10(relchange)',
-                                      np.log10(stop_conds['relchange'][-1]), it)
-                writer.add_scalar('nfeats', len(np.where(x >= 0)[0]), it)
+#             if writer is not None:
+#                 writer.add_scalar('ftrain', v0.clone().cpu().detach().numpy(),
+#                                   it)
+#                 writer.add_scalar('epoch', epoch, it)
+#                 writer.add_scalar('t', stop_conds['t'][-1], it)
+#                 if not np.isnan(stop_conds['df'][-1]):
+#                     writer.add_scalar('log10(dftrain)',
+#                                       np.log10(stop_conds['df'][-1]), it)
+#                 if not np.isnan(stop_conds['relchange'][-1]):
+#                     writer.add_scalar('log10(relchange)',
+#                                       np.log10(stop_conds['relchange'][-1]), it)
+#                 writer.add_scalar('nfeats', len(np.where(x >= 0)[0]), it)
 
-            if path_save is not None and not it%(callback_period * 10):
-                torch.save(get_checkpoint(f0, stop_conds, rng), path_save)
-                print('Checkpointed to %s.' % path_save)
+#             if path_save is not None and not it%(callback_period * 10):
+#                 torch.save(get_checkpoint(f0, stop_conds, rng), path_save)
+#                 print('Checkpointed to %s.' % path_save)
 
-            return
+#             return
 
-    return f_callback
+#     return f_callback
 
 
 def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_score=None):
@@ -235,11 +234,12 @@ def _train(data_train, Nminibatch, order, C, rng, lr_train, debug, maxiter,
                                           freltol_stop, minibatch=minibatch)
 
     if debug:
-        writer = SummaryWriter(dn_log, flush_secs=10)
-        f_callback = get_optim_f_callback(maxiter, stop_conds=stop_conds,
-                                          writer=writer,
-                                          callback_period=accum_steps,
-                                          path_save=path_save, rng=rng)
+        pass
+        # writer = SummaryWriter(dn_log, flush_secs=10)
+        # f_callback = get_optim_f_callback(maxiter, stop_conds=stop_conds,
+        #                                   writer=writer,
+        #                                   callback_period=accum_steps,
+        #                                   path_save=path_save, rng=rng)
     else:
         f_callback = None
     stop_conds['t'][-1] = time.time() - t_init

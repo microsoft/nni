@@ -409,6 +409,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
             return self.selected_features_
 
         mask = np.zeros_like(self.scores_, dtype=bool)
+        # pylint: disable=E1137
         mask[self.selected_features_] = True
         return mask
 
@@ -500,6 +501,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
         self._get_support_mask()
         assert self.n_features <= self.scores_.shape[0], \
             'n_features must be less than or equal to the number of columns in X'
+        # pylint: disable=E1130
         self.selected_features_ = np.argpartition(
             self.scores_, -self.n_features)[-self.n_features:]
         if groups is not None and not self.soft_grouping:
@@ -560,7 +562,7 @@ class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
                         print(
                             "Stoppinn forward passes because they reached max_time: ",
                             max_time)
-                    if len(full_scores) == 0:
+                    if not full_scores:
                         # no forward passes worked, return half of max_features
                         return self.max_features // 2
                     break

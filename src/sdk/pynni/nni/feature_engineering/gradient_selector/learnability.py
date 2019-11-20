@@ -468,7 +468,7 @@ class Solver(nn.Module):
                 if self.multiclass:
                     # accumulate gradients over each class, classes range from
                     # 0 to n_classes - 1
-                    num_classes_batch = torch.unique(ysub).size()[0]
+                    #num_classes_batch = torch.unique(ysub).size()[0]
                     for target_class in range(self.n_classes):
                         ysub_binary = self.transform_y_into_binary(
                             ysub, target_class)

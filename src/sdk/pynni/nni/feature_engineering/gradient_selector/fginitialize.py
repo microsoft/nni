@@ -31,6 +31,7 @@ from sklearn.datasets import load_svmlight_file
 
 import torch
 from torch.utils.data import DataLoader, Dataset
+# pylint: disable=E0611
 from torch.utils.data.dataloader import _DataLoaderIter, _utils
 
 import nni.feature_engineering.gradient_selector.constants as constants
@@ -421,7 +422,7 @@ class PrepareData(Dataset):
         else:
             Xsd = 1.
 
-        if preprocess is not None and len(preprocess) > 0:
+        if preprocess is not None and preprocess:
             if preprocess == constants.Preprocess.ZSCORE:
                 Xc = (X - Xmn) / Xsd
             else:

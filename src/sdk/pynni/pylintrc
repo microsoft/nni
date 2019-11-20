@@ -32,6 +32,7 @@ disable =
     unused-argument,                # W0613: many functions in this SDK are designed for override
     broad-except,                   # W0703: the SDK commonly catch exceptions to report error
     fixme,                          # W0511
+    not-callable,                   # E1102
 
 ignore-patterns=test.*.py
 
