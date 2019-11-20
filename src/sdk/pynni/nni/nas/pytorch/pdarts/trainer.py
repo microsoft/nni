@@ -7,7 +7,7 @@ from .mutator import PdartsMutator
 
 class PdartsTrainer(Trainer):
 
-    def __init__(self, layers, model_creator, metrics,
+    def __init__(self, model_creator, layers, metrics,
                  num_epochs, dataset_train, dataset_valid,
                  pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 2],
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
