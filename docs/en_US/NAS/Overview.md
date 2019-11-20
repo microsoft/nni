@@ -8,7 +8,7 @@ With this motivation, our ambition is to provide a unified architecture in NNI, 
 
 ## Supported algorithms
 
-NNI supports below NAS algorithms now, and being adding more. User can reproduce an algorithm, or use it on owned dataset. we also encourage user to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
+NNI supports below NAS algorithms now and being adding more. User can reproduce an algorithm or use it on owned dataset. we also encourage user to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
 
 Note, these algorithms run standalone without nnictl, and supports PyTorch only.
 
@@ -28,7 +28,7 @@ python search.py
 
 ### P-DARTS
 
-[Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) bases on DARTS(#DARTS). It main contribution on algorithm is to introduce an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
+[Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) bases on [DARTS](#DARTS). It's contribution on algorithm is to introduce an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
 
 #### Usage
 
@@ -37,7 +37,7 @@ python search.py
 git clone https://github.com/Microsoft/nni.git
 
 cd examples/nas/pdarts
-python main.py
+python search.py
 ```
 
 ## Use NNI API
@@ -50,7 +50,7 @@ NOTE, we are trying to support various NAS algorithms with unified programming i
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
 
-1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So it needs an easy way to express the candidate layers or sub-models.
+1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So, it needs an easy way to express the candidate layers or sub-models.
 2. When applying NAS on a neural network, it needs an unified way to express the search space of architectures, so that it doesn't need to update trial code for different searching algorithms.
 
 NNI proposed API is [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/examples/nas/darts) is an example of NAS implementation, which bases on NNI proposed interface.

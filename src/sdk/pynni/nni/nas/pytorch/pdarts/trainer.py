@@ -1,3 +1,4 @@
+from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint, LearningRateScheduler)
 from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import Trainer
 
@@ -6,12 +7,12 @@ from .mutator import PdartsMutator
 
 class PdartsTrainer(Trainer):
 
-    def __init__(self, model_creator, metrics, num_epochs, dataset_train, dataset_valid,
-                 layers=5, n_nodes=4, pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 2],
+    def __init__(self, layers, model_creator, metrics,
+                 num_epochs, dataset_train, dataset_valid,
+                 pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 2],
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
         self.model_creator = model_creator
         self.layers = layers
-        self.n_nodes = n_nodes
         self.pdarts_num_layers = pdarts_num_layers
         self.pdarts_num_to_drop = pdarts_num_to_drop
         self.pdarts_epoch = len(pdarts_num_to_drop)
@@ -28,18 +29,21 @@ class PdartsTrainer(Trainer):
 
     def train(self):
         layers = self.layers
-        n_nodes = self.n_nodes
         switches = None
         for epoch in range(self.pdarts_epoch):
 
             layers = self.layers+self.pdarts_num_layers[epoch]
-            model, loss, model_optim, _ = self.model_creator(
-                layers, n_nodes)
+            model, criterion, optim, lr_scheduler = self.model_creator(
+                layers)
             mutator = PdartsMutator(
                 model, epoch, self.pdarts_num_to_drop, switches)
 
-            self.trainer = DartsTrainer(model, loss=loss, optimizer=model_optim,
-                                        mutator=mutator, **self.darts_parameters)
+            self.trainer = DartsTrainer(model,
+                                        loss=criterion,
+                                        optimizer=optim,
+                                        callbacks=[LearningRateScheduler(
+                                            lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                                        **self.darts_parameters)
             print("start pdrats training %s..." % epoch)
 
             self.trainer.train()

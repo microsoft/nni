@@ -14,21 +14,35 @@ class PdartsMutator(DartsMutator):
     def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
-        self.switches = switches
+        if switches is None:
+            self.switches = {}
+        else:
+            self.switches = switches
 
         super(PdartsMutator, self).__init__(model)
 
-    def before_build(self, model):
+    def after_parse_search_space(self, mutable: LayerChoice):
         self.choices = nn.ParameterDict()
-        if self.switches is None:
-            self.switches = {}
 
-    def named_mutables(self, model):
-        key2module = dict()
-        for name, module in model.named_modules():
-            if isinstance(module, LayerChoice):
-                key2module[module.key] = module
-                yield name, module, True
+        switches = self.switches.get(
+            mutable.key, [True for j in range(mutable.length)])
+
+        for _, mutable in self.named_mutables():
+            if isinstance(mutable, LayerChoice):
+
+                switches = self.switches.get(
+                    mutable.key, [True for j in range(mutable.length)])
+
+                for index in range(len(switches)-1, -1, -1):
+                    if switches[index] == False:
+                        del(mutable.choices[index])
+                        mutable.length -= 1
+
+                self.switches[mutable.key] = switches
+                self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(len(mutable) + 1))
+
+    def on_calc_layer_choice_mask(self, mutable: LayerChoice):
+        return F.softmax(self.choices[mutable.key], dim=-1)
 
     def drop_paths(self):
         for key in self.switches:
@@ -48,22 +62,6 @@ class PdartsMutator(DartsMutator):
             for idx in drop:
                 switches[idxs[idx]] = False
         return self.switches
-
-    def on_init_layer_choice(self, mutable: LayerChoice):
-        switches = self.switches.get(
-            mutable.key, [True for j in range(mutable.length)])
-
-        for index in range(len(switches)-1, -1, -1):
-            if switches[index] == False:
-                del(mutable.choices[index])
-                mutable.length -= 1
-
-        self.switches[mutable.key] = switches
-
-        self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length))
-
-    def on_calc_layer_choice_mask(self, mutable: LayerChoice):
-        return F.softmax(self.choices[mutable.key], dim=-1)
 
     def get_min_k(self, input_in, k):
         index = []
