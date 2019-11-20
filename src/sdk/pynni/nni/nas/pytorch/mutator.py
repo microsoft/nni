@@ -12,12 +12,38 @@ class Mutator(BaseMutator):
         self._cache = dict()
 
     def reset(self):
+        """
+        Reset the mutator by call the controller to resample (for search).
+
+        Returns
+        -------
+        None
+        """
         self._cache = self.controller.sample_search(self._structured_mutables)
 
     def export(self):
+        """
+        Call the controller to resample (for final) and return the results from the controller.
+
+        Returns
+        -------
+        dict
+        """
         return self.controller.sample_final(self._structured_mutables)
 
     def get_decision(self, mutable):
+        """
+        By default, this method checks whether `mutable.key` is already in the decision cache, and returns the result
+        without double-check.
+
+        Parameters
+        ----------
+        mutable: Mutable
+
+        Returns
+        -------
+        any
+        """
         if mutable.key not in self._cache:
             raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
         return self._cache[mutable.key]
@@ -37,6 +63,7 @@ class Mutator(BaseMutator):
         -------
         tuple of torch.Tensor and torch.Tensor
         """
+
         def _map_fn(op, *inputs):
             return op(*inputs)
 

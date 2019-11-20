@@ -50,6 +50,14 @@ class AverageMeter:
 
 
 class StructuredMutableTreeNode:
+    """
+    A structured representation of a search space.
+    A search space comes with a root (with `None` stored in its `mutable`), and a bunch of children in its `children`.
+    This tree can be seen as a "flattened" version of the module tree. Since nested mutable entity is not supported yet,
+    the following must be true: each subtree corresponds to a ``MutableScope`` and each leaf corresponds to a
+    ``Mutable`` (other than ``MutableScope``).
+    """
+
     def __init__(self, mutable):
         self.mutable = mutable
         self.children = []
@@ -62,6 +70,22 @@ class StructuredMutableTreeNode:
         return type(self.mutable)
 
     def traverse(self, order="pre", deduplicate=True, memo=None):
+        """
+        Return a generator that generates a list of mutables in this tree.
+
+        Parameters
+        ----------
+        order: str
+            pre or post. If pre, current mutable is yield before children. Otherwise after.
+        deduplicate: bool
+            If true, mutables with the same key will not appear after the first appearance.
+        memo: dict
+            An auxiliary variable to make deduplicate happen.
+
+        Returns
+        -------
+        generator of Mutable
+        """
         if memo is None:
             memo = set()
         assert order in ["pre", "post"]

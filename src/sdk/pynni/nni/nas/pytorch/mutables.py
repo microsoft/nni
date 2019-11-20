@@ -66,10 +66,11 @@ class Mutable(nn.Module):
 
 class MutableScope(Mutable):
     """
-    Mutable scope labels a subgraph to help mutators make better decisions. Mutators get notified when a mutable scope
-    is entered and exited. Mutators can override ``enter_mutable_scope`` and ``exit_mutable_scope`` to catch
-    corresponding events, and do status dump or update.
+    Mutable scope labels a subgraph/submodule to help controllers make better decisions.
+    Mutators get notified when a mutable scope is entered and exited. Mutators can override ``enter_mutable_scope``
+    and ``exit_mutable_scope`` to catch corresponding events, and do status dump or update.
     """
+
     def __init__(self, key):
         super().__init__(key=key)
 
@@ -104,8 +105,41 @@ class LayerChoice(Mutable):
 
 
 class InputChoice(Mutable):
+    """
+    Input choice selects `n_chosen` inputs from `choose_from` (contains `n_candidates` keys). For beginners,
+    use `n_candidates` instead of `choose_from` is a safe option. To get the most power out of it, you might want to
+    know about `choose_from`.
+
+    The keys in `choose_from` can be anything, between empty string, keys that appear in past mutables, and magic names
+    out of nowhere. The keys are designed to be the keys of the sources. To help controllers make better decisions,
+    controllers might be interested in how the tensors to choose from come into place. For example, the tensor is the
+    output of some operator, some node, some cell, or some module. If this operator happens to be a mutable (e.g.,
+    ``LayerChoice`` or ``InputChoice``), it has a key naturally that can be used as a source key. If it's a
+    module/submodule, it needs to be annotated with a key: that's where a ``MutableScope`` is needed.
+    """
+
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
                  reduction="mean", return_mask=False, key=None):
+        """
+        Initialization.
+
+        Parameters
+        ----------
+        n_candidates: int
+            Number of inputs to choose from.
+        choose_from: list of str
+            List of source keys to choose from. At least of one of `choose_from` and `n_candidates` must be fulfilled.
+            If `n_candidates` has a value but `choose_from` is None, it will be automatically treated as `n_candidates`
+            number of empty string.
+        n_chosen: int
+            Recommended inputs to choose. If None, controller is instructed to select any.
+        reduction: str
+            `mean`, `concat`, `sum` or `none`.
+        return_mask: bool
+            If `return_mask`, return output tensor and a mask. Otherwise return tensor only.
+        key: str
+            Key of the input choice.
+        """
         super().__init__(key=key)
         # precondition check
         assert n_candidates is not None or choose_from is not None, "At least one of `n_candidates` and `choose_from`" \
@@ -116,8 +150,8 @@ class InputChoice(Mutable):
             choose_from = [""] * n_candidates
         assert n_candidates == len(choose_from), "Number of candidates must be equal to the length of `choose_from`."
         assert n_candidates > 0, "Number of candidates must be greater than 0."
-        assert n_chosen is None or 0 < n_chosen <= n_candidates, "Expected selected number must be None or no more " \
-                                                                     "than number of candidates."
+        assert n_chosen is None or 0 <= n_chosen <= n_candidates, "Expected selected number must be None or no more " \
+                                                                  "than number of candidates."
 
         self.n_candidates = n_candidates
         self.choose_from = choose_from
@@ -126,6 +160,20 @@ class InputChoice(Mutable):
         self.return_mask = return_mask
 
     def forward(self, optional_inputs):
+        """
+        Forward method of LayerChoice.
+
+        Parameters
+        ----------
+        optional_inputs: list or dict
+            Recommended to be a dict. As a dict, inputs will be converted to a list that follows the order of
+            `choose_from` in initialization. As a list, inputs must follow the semantic order that is the same as
+            `choose_from`.
+
+        Returns
+        -------
+        tuple of torch.Tensor and torch.Tensor or torch.Tensor
+        """
         optional_input_list = optional_inputs
         if isinstance(optional_inputs, dict):
             optional_input_list = [optional_inputs[tag] for tag in self.choose_from]
