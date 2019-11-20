@@ -30,7 +30,6 @@ from sklearn.tree import DecisionTreeRegressor
 
 LOG = logging.getLogger('sklearn_regression')
 
-
 def load_data():
     '''Load dataset, use boston dataset'''
     boston = load_boston()
@@ -47,12 +46,10 @@ def load_data():
 
     return X_train, X_test, y_train, y_test
 
-
 def get_default_parameters():
     '''get default parameters'''
     params = {'model_name': 'LinearRegression'}
     return params
-
 
 def get_model(PARAMS):
     '''Get model according to parameters'''
@@ -78,7 +75,6 @@ def get_model(PARAMS):
         raise
     return model
 
-
 def run(X_train, X_test, y_train, y_test, model):
     '''Train model and predict result'''
     model.fit(X_train, y_train)
@@ -86,7 +82,6 @@ def run(X_train, X_test, y_train, y_test, model):
     score = r2_score(y_test, predict_y)
     LOG.debug('r2 score: %s' % score)
     nni.report_final_result(score)
-
 
 if __name__ == '__main__':
     X_train, X_test, y_train, y_test = load_data()
