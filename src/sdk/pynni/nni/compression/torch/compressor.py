@@ -311,7 +311,7 @@ class Quantizer(Compressor):
         assert "quant_types" in config, 'must provide quant_types in config'
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
         assert "quant_bits" in config, 'must provide quant_bits in config'
-        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be list type or int type'
+        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
 
         if isinstance(config["quant_bits"], dict):
             for quant_type in config["quant_types"]:

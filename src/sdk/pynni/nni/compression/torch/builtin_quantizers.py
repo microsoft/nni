@@ -96,6 +96,7 @@ def get_bits_length(config, quant_type):
     else:
         return config["quant_bits"].get(quant_type)
 
+
 class QAT_Quantizer(Quantizer):
     """Quantizer using the DoReFa scheme, as defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
@@ -186,8 +187,8 @@ class QAT_Quantizer(Quantizer):
         """
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
-        if weight_bits <= 1:
-            return weight
+        assert weight_bits >= 1, "quant bits length should be at least 1"
+
         if quant_start_step > self.steps:
             return weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -202,9 +203,8 @@ class QAT_Quantizer(Quantizer):
         """
         output_bits = get_bits_length(config, 'output')
         quant_start_step = config.get('quant_start_step', 0)
+        assert output_bits >= 1, "quant bits length should be at least 1"
 
-        if output_bits <= 1:
-            return output
         if quant_start_step > self.steps:
             return output
 
