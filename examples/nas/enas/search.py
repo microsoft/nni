@@ -13,7 +13,7 @@ from utils import accuracy, reward_accuracy
 if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
-    parser.add_argument("--log-frequency", default=1, type=int)
+    parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     args = parser.parse_args()
 
@@ -21,11 +21,11 @@ if __name__ == "__main__":
     if args.search_for == "macro":
         model = GeneralNetwork()
         num_epochs = 310
-        mutator = None
+        controller = None
     elif args.search_for == "micro":
         model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=True)
         num_epochs = 150
-        mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
+        controller = enas.EnasController(tanh_constant=1.1, cell_exit_extra_step=True)
     else:
         raise AssertionError
 
@@ -43,5 +43,6 @@ if __name__ == "__main__":
                                num_epochs=num_epochs,
                                dataset_train=dataset_train,
                                dataset_valid=dataset_valid,
-                               log_frequency=args.log_frequency)
-    trainer.train_and_validate()
+                               log_frequency=args.log_frequency,
+                               controller=controller)
+    trainer.train()

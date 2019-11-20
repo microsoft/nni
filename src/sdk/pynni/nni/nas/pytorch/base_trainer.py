@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class BaseTrainer(ABC):
 
     @abstractmethod
-    def train(self):
+    def train(self, validate=True):
         raise NotImplementedError
 
     @abstractmethod
@@ -12,5 +12,5 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train_and_validate(self):
+    def export(self, file):
         raise NotImplementedError

@@ -2,28 +2,28 @@ import torch
 import torch.optim as optim
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup
-from .mutator import EnasMutator
+from nni.nas.pytorch.utils import AverageMeterGroup
+from .controller import EnasController
 
 
 class EnasTrainer(Trainer):
     def __init__(self, model, loss, metrics, reward_function,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
+                 controller=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
                  entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
-                 mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4):
-        super().__init__(model, loss, metrics, optimizer, num_epochs,
-                         dataset_train, dataset_valid, batch_size, workers, device, log_frequency,
-                         mutator if mutator is not None else EnasMutator(model), callbacks)
+                 controller_lr=0.00035, controller_steps_aggregate=20, controller_steps=50, aux_weight=0.4):
+        super().__init__(model, controller if controller is not None else EnasController(),
+                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
+                         batch_size, workers, device, log_frequency, callbacks)
         self.reward_function = reward_function
-        self.mutator_optim = optim.Adam(self.mutator.parameters(), lr=mutator_lr)
+        self.controller_optim = optim.Adam(self.controller.parameters(), lr=controller_lr)
 
         self.entropy_weight = entropy_weight
         self.skip_weight = skip_weight
         self.baseline_decay = baseline_decay
         self.baseline = 0.
-        self.mutator_steps_aggregate = mutator_steps_aggregate
-        self.mutator_steps = mutator_steps
+        self.controller_steps_aggregate = controller_steps_aggregate
+        self.controller_steps = controller_steps
         self.aux_weight = aux_weight
 
         n_train = len(self.dataset_train)
@@ -46,14 +46,15 @@ class EnasTrainer(Trainer):
     def train_one_epoch(self, epoch):
         # Sample model and train
         self.model.train()
-        self.mutator.eval()
+        self.controller.eval()
         meters = AverageMeterGroup()
         for step, (x, y) in enumerate(self.train_loader):
             x, y = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad()
 
-            with self.mutator.forward_pass():
-                logits = self.model(x)
+            with torch.no_grad():
+                self.mutator.reset()
+            logits = self.model(x)
 
             if isinstance(logits, tuple):
                 logits, aux_logits = logits
@@ -74,44 +75,45 @@ class EnasTrainer(Trainer):
 
         # Train sampler (mutator)
         self.model.eval()
-        self.mutator.train()
+        self.controller.train()
         meters = AverageMeterGroup()
-        mutator_step, total_mutator_steps = 0, self.mutator_steps * self.mutator_steps_aggregate
-        while mutator_step < total_mutator_steps:
+        controller_step, total_controller_steps = 0, self.controller_steps * self.controller_steps_aggregate
+        while controller_step < total_controller_steps:
             for step, (x, y) in enumerate(self.valid_loader):
                 x, y = x.to(self.device), y.to(self.device)
 
-                with self.mutator.forward_pass():
+                self.mutator.reset()
+                with torch.no_grad():
                     logits = self.model(x)
                 metrics = self.metrics(logits, y)
                 reward = self.reward_function(logits, y)
                 if self.entropy_weight is not None:
-                    reward += self.entropy_weight * self.mutator.sample_entropy
+                    reward += self.entropy_weight * self.controller.sample_entropy
                 self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
                 self.baseline = self.baseline.detach().item()
-                loss = self.mutator.sample_log_prob * (reward - self.baseline)
+                loss = self.controller.sample_log_prob * (reward - self.baseline)
                 if self.skip_weight:
-                    loss += self.skip_weight * self.mutator.sample_skip_penalty
+                    loss += self.skip_weight * self.controller.sample_skip_penalty
                 metrics["reward"] = reward
                 metrics["loss"] = loss.item()
-                metrics["ent"] = self.mutator.sample_entropy.item()
+                metrics["ent"] = self.controller.sample_entropy.item()
                 metrics["baseline"] = self.baseline
-                metrics["skip"] = self.mutator.sample_skip_penalty
+                metrics["skip"] = self.controller.sample_skip_penalty
 
-                loss = loss / self.mutator_steps_aggregate
+                loss = loss / self.controller_steps_aggregate
                 loss.backward()
                 meters.update(metrics)
 
-                if mutator_step % self.mutator_steps_aggregate == 0:
-                    self.mutator_optim.step()
-                    self.mutator_optim.zero_grad()
+                if controller_step % self.controller_steps_aggregate == 0:
+                    self.controller_optim.step()
+                    self.controller_optim.zero_grad()
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("Mutator Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
-                                                                          mutator_step // self.mutator_steps_aggregate,
-                                                                          self.mutator_steps, meters))
-                mutator_step += 1
-                if mutator_step >= total_mutator_steps:
+                    print("RL Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
+                                                                     controller_step // self.controller_steps_aggregate,
+                                                                     self.controller_steps, meters))
+                controller_step += 1
+                if controller_step >= total_controller_steps:
                     break
 
     def validate_one_epoch(self, epoch):

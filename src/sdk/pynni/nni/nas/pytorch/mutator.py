@@ -1,46 +1,29 @@
-from contextlib import contextmanager
-
 import torch
-import torch.nn as nn
 
 from nni.nas.pytorch.base_mutator import BaseMutator
 
 
-class Mutator(BaseMutator, nn.Module):
+class Mutator(BaseMutator):
+
+    def __init__(self, model, controller):
+        super().__init__(model)
+        self.controller = controller
+        self.controller.build(self._structured_mutables)
+        self._cache = dict()
+
+    def reset(self):
+        self._cache = self.controller.sample_search(self._structured_mutables)
 
     def export(self):
-        if self._in_forward_pass:
-            raise RuntimeError("Still in forward pass. Exporting might induce incompleteness.")
-        if not self._cache:
-            raise RuntimeError("No running history found. You need to call your model at least once before exporting. "
-                               "You might also want to check if there are no valid mutables in your model.")
-        return self._cache
+        return self.controller.sample_final(self._structured_mutables)
 
-    @contextmanager
-    def forward_pass(self):
-        self._in_forward_pass = True
-        self._cache = dict()
-        self.before_pass()
-        try:
-            yield self
-        finally:
-            self.after_pass()
-            self._in_forward_pass = False
-
-    def before_pass(self):
-        pass
-
-    def after_pass(self):
-        pass
-
-    def _check_in_forward_pass(self):
-        if not hasattr(self, "_in_forward_pass") or not self._in_forward_pass:
-            raise ValueError("Not in forward pass. Did you forget to call mutator.forward_pass(), or forget to call "
-                             "super().before_pass() and after_pass() in your override method?")
+    def get_decision(self, mutable):
+        if mutable.key not in self._cache:
+            raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
+        return self._cache[mutable.key]
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
-        Callback of layer choice forward. Override if you are an advanced user.
         On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
         (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy specified
         in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
@@ -54,18 +37,16 @@ class Mutator(BaseMutator, nn.Module):
         -------
         tuple of torch.Tensor and torch.Tensor
         """
-        self._check_in_forward_pass()
-
         def _map_fn(op, *inputs):
             return op(*inputs)
 
-        mask = self._cache.setdefault(mutable.key, self.on_calc_layer_choice_mask(mutable))
+        mask = self.get_decision(mutable)
+        assert len(mask) == len(mutable.choices)
         out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
-    def on_forward_input_choice(self, mutable, tensor_list, tags):
+    def on_forward_input_choice(self, mutable, tensor_list):
         """
-        Callback of input choice forward. Override if you are an advanced user.
         On default, this method calls :meth:`on_calc_input_choice_mask` with `tags`
         to get a mask on how to choose between inputs (either by switch or by weights), then it will reduce
         the list of all tensor outputs with the policy specified in `mutable.reduction`. It will also cache the
@@ -81,47 +62,10 @@ class Mutator(BaseMutator, nn.Module):
         -------
         tuple of torch.Tensor and torch.Tensor
         """
-        self._check_in_forward_pass()
-        mask = self._cache.setdefault(mutable.key, self.on_calc_input_choice_mask(mutable, tags))
+        mask = self.get_decision(mutable)
+        assert len(mask) == mutable.n_candidates
         out = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
-
-    def on_calc_layer_choice_mask(self, mutable):
-        """
-        Recommended to override. Calculate a mask tensor for a layer choice.
-
-        Parameters
-        ----------
-        mutable: LayerChoice
-            Corresponding layer choice object.
-
-        Returns
-        -------
-        torch.Tensor
-            Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
-            the numbers are treated as switch.
-        """
-        raise NotImplementedError("Layer choice mask calculation must be implemented")
-
-    def on_calc_input_choice_mask(self, mutable, tags):
-        """
-        Recommended to override. Calculate a mask tensor for a input choice.
-
-        Parameters
-        ----------
-        mutable: InputChoice
-            Corresponding input choice object.
-        tags: list of string
-            The name of labels of input tensors given by user. Usually it's a
-            :class:`~nni.nas.pytorch.mutables.MutableScope` marked by user.
-
-        Returns
-        -------
-        torch.Tensor
-            Should be a 1D tensor, either float or bool. If float, the numbers are treated as weights. If bool,
-            the numbers are treated as switch.
-        """
-        raise NotImplementedError("Input choice mask calculation must be implemented")
 
     def _select_with_mask(self, map_fn, candidates, mask):
         if "BoolTensor" in mask.type():

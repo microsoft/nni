@@ -35,11 +35,10 @@ class PdartsTrainer(Trainer):
             layers = self.layers+self.pdarts_num_layers[epoch]
             model, loss, model_optim, _ = self.model_creator(
                 layers, n_nodes)
-            mutator = PdartsMutator(
-                model, epoch, self.pdarts_num_to_drop, switches)
+            mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)  # pylint: disable=too-many-function-args
 
             self.trainer = DartsTrainer(model, loss=loss, optimizer=model_optim,
-                                        mutator=mutator, **self.darts_parameters)
+                                        controller=mutator, **self.darts_parameters)
             print("start pdrats training %s..." % epoch)
 
             self.trainer.train()

@@ -22,8 +22,8 @@ class FixedArchitecture(Mutator):
         super().__init__(model)
         if isinstance(fixed_arc, str):
             with open(fixed_arc, "r") as f:
-                fixed_arc = json.load(f.read())
-        self._fixed_arc = fixed_arc
+                fixed_arc = json.load(f)
+        self._fixed_arc = self._encode_tensor(fixed_arc)
         self._strict = strict
 
     def _encode_tensor(self, data):
@@ -48,6 +48,8 @@ class FixedArchitecture(Mutator):
     def _check_key(self, key):
         if key not in self._fixed_arc:
             raise ValueError("\"{}\" is demanded by the network, but not found in saved architecture.".format(key))
+        if key in self._unused_key:
+            self._unused_key.remove(key)
 
     def on_calc_layer_choice_mask(self, mutable):
         self._check_key(mutable.key)
