@@ -21,11 +21,8 @@ class PdartsMutator(DartsMutator):
 
         super(PdartsMutator, self).__init__(model)
 
-    def after_parse_search_space(self, mutable: LayerChoice):
+    def after_parse_search_space(self):
         self.choices = nn.ParameterDict()
-
-        switches = self.switches.get(
-            mutable.key, [True for j in range(mutable.length)])
 
         for _, mutable in self.named_mutables():
             if isinstance(mutable, LayerChoice):
