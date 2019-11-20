@@ -104,7 +104,7 @@ class LayerChoice(Mutable):
 
 
 class InputChoice(Mutable):
-    def __init__(self, n_candidates=None, choose_from=None, n_selected=None,
+    def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
                  reduction="mean", return_mask=False, key=None):
         super().__init__(key=key)
         # precondition check
@@ -116,12 +116,12 @@ class InputChoice(Mutable):
             choose_from = [""] * n_candidates
         assert n_candidates == len(choose_from), "Number of candidates must be equal to the length of `choose_from`."
         assert n_candidates > 0, "Number of candidates must be greater than 0."
-        assert n_selected is None or 0 < n_selected <= n_candidates, "Expected selected number must be None or no more " \
+        assert n_chosen is None or 0 < n_chosen <= n_candidates, "Expected selected number must be None or no more " \
                                                                      "than number of candidates."
 
         self.n_candidates = n_candidates
         self.choose_from = choose_from
-        self.n_selected = n_selected
+        self.n_chosen = n_chosen
         self.reduction = reduction
         self.return_mask = return_mask
 
@@ -143,4 +143,4 @@ class InputChoice(Mutable):
 
     def similar(self, other):
         return type(self) == type(other) and \
-               self.n_candidates == other.n_candidates and self.n_selected and other.n_selected
+               self.n_candidates == other.n_candidates and self.n_chosen and other.n_chosen

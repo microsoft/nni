@@ -19,7 +19,7 @@ class ENASLayer(mutables.MutableScope):
             PoolBranch('max', in_filters, out_filters, 3, 1, 1)
         ])
         if len(prev_labels) > 0:
-            self.skipconnect = mutables.InputChoice(choose_from=prev_labels, n_selected=None, reduction="sum")
+            self.skipconnect = mutables.InputChoice(choose_from=prev_labels, n_chosen=None, reduction="sum")
         else:
             self.skipconnect = None
         self.batch_norm = nn.BatchNorm2d(out_filters, affine=False)

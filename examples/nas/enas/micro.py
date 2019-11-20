@@ -34,7 +34,7 @@ class AuxiliaryHead(nn.Module):
 class Cell(nn.Module):
     def __init__(self, cell_name, prev_labels, channels):
         super().__init__()
-        self.input_choice = mutables.InputChoice(choose_from=prev_labels, n_selected=1, return_mask=True,
+        self.input_choice = mutables.InputChoice(choose_from=prev_labels, n_chosen=1, return_mask=True,
                                                  key=cell_name + "_input")
         self.op_choice = mutables.LayerChoice([
             SepConvBN(channels, channels, 3, 1),

@@ -133,7 +133,7 @@ class EnasController(Controller):
         if self.tanh_constant is not None:
             query = self.tanh_constant * torch.tanh(query)
 
-        if mutable.n_selected is None:
+        if mutable.n_chosen is None:
             logit = torch.cat([-query, query], 1)  # pylint: disable=invalid-unary-operand-type
 
             skip = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
@@ -143,7 +143,7 @@ class EnasController(Controller):
             log_prob = self.cross_entropy_loss(logit, skip)
             self._inputs = (torch.matmul(skip.float(), torch.cat(anchors, 0)) / (1. + torch.sum(skip))).unsqueeze(0)
         else:
-            assert mutable.n_selected == 1, "Input choice must select exactly one or any in ENAS."
+            assert mutable.n_chosen == 1, "Input choice must select exactly one or any in ENAS."
             logit = query.view(1, -1)
             index = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
             skip = F.one_hot(index, num_classes=mutable.n_candidates).view(-1)

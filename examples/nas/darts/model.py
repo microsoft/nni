@@ -52,7 +52,7 @@ class Node(nn.Module):
                     ],
                     key=choice_keys[-1]))
         self.drop_path = ops.DropPath_()
-        self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_selected=2, key="{}_switch".format(node_id))
+        self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_chosen=2, key="{}_switch".format(node_id))
 
     def forward(self, prev_nodes):
         assert len(self.ops) == len(prev_nodes)

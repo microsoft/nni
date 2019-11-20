@@ -37,7 +37,7 @@ class DartsController(Controller):
         for mutable in mutables.traverse():
             if isinstance(mutable, InputChoice):
                 weights = torch.tensor([edges_max.get(src_key, 0.) for src_key in mutable.choose_from])  # pylint: disable=not-callable
-                _, topk_edge_indices = torch.topk(weights, mutable.n_selected or mutable.n_candidates)
+                _, topk_edge_indices = torch.topk(weights, mutable.n_chosen or mutable.n_candidates)
                 selected_multihot = []
                 for i, src_key in enumerate(mutable.choose_from):
                     if i not in topk_edge_indices and src_key in result:
