@@ -34,17 +34,12 @@ class PdartsTrainer(BaseTrainer):
         for epoch in range(self.pdarts_epoch):
 
             layers = self.layers+self.pdarts_num_layers[epoch]
-            model, criterion, optim, lr_scheduler = self.model_creator(
-                layers)
-            mutator = PdartsMutator(
-                model, epoch, self.pdarts_num_to_drop, switches)
+            model, criterion, optim, lr_scheduler = self.model_creator(layers)
 
-            self.trainer = DartsTrainer(model,
-                                        loss=criterion,
-                                        optimizer=optim,
-                                        callbacks=[LearningRateScheduler(
-                                            lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
-                                        **self.darts_parameters)
+            mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
+
+            self.trainer = DartsTrainer(model, loss=criterion, optimizer=optim, callbacks=[LearningRateScheduler(
+                lr_scheduler), ArchitectureCheckpoint("./checkpoints")], **self.darts_parameters)
             print("start pdarts training %s..." % epoch)
 
             self.trainer.train()
