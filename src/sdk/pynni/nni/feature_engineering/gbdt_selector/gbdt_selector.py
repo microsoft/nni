@@ -24,10 +24,11 @@ gbdt_selector.py including:
 """
 
 import random
-import lightgbm as lgb
 from sklearn.model_selection import train_test_split
+import lightgbm as lgb
 
 from nni.feature_engineering.feature_selector import FeatureSelector
+
 
 class GBDTSelector(FeatureSelector):
 
