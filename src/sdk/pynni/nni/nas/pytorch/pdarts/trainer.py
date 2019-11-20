@@ -43,6 +43,7 @@ class PdartsTrainer(BaseTrainer):
             print("start pdarts training %s..." % epoch)
 
             self.trainer.train()
+            self.trainer.validate()
 
             # with open('log/parameters_%d.txt' % epoch, "w") as f:
             #     f.write(str(model.parameters))
@@ -50,8 +51,8 @@ class PdartsTrainer(BaseTrainer):
             switches = mutator.drop_paths()
 
     def validate(self):
-        self.trainer.validate()
+        # pdarts validate after train, it doesn't support separated validation progress.
+        pass
 
     def train_and_validate(self):
         self.train()
-        self.validate()
