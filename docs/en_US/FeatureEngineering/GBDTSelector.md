@@ -10,6 +10,14 @@ For now, we support the `importance_type` is `split` and `gain`. But we will sup
 
 ### Usage
 
+First you need to install dependency:
+
+```
+pip install lightgbm
+```
+
+Then
+
 ```python
 from nni.feature_engineering.gbdt_selector import GBDTSelector
 
