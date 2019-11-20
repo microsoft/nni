@@ -21,7 +21,7 @@ def train(config, train_loader, model, archit, optimizer, criterion, epoch):
 
     cur_step = epoch * len(train_loader)
     cur_lr = optimizer.param_groups[0]['lr']
-    logger.info("Epoch {} LR {}".format(epoch, cur_lr))
+    logger.info("Epoch %d LR %.6f", epoch, cur_lr)
 
     model.train()
 
@@ -30,8 +30,7 @@ def train(config, train_loader, model, archit, optimizer, criterion, epoch):
         bs = x.size(0)
 
         optimizer.zero_grad()
-        with archit.forward_pass():
-            logits, aux_logits = model(x)
+        logits, aux_logits = model(x)
         loss = criterion(logits, y)
         if config.aux_weight > 0.:
             loss += config.aux_weight * criterion(aux_logits, y)
@@ -69,8 +68,7 @@ def validate(config, valid_loader, model, archit, criterion, epoch, cur_step):
             X, y = X.cuda(non_blocking=True), y.cuda(non_blocking=True)
             N = X.size(0)
 
-            with archit.forward_pass():
-                logits = model(X)
+            logits = model(X)
             loss = criterion(logits, y)
 
             accuracy = utils.accuracy(logits, y, topk=(1, 5))
@@ -106,11 +104,11 @@ if __name__ == "__main__":
     dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
     model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
-    archit = FixedArchitecture(model, "./checkpoints/epoch_1.json")
+    archit = FixedArchitecture(model, "./checkpoints/epoch_0.json")
     criterion = nn.CrossEntropyLoss()
     model.cuda()
-    archit.cuda()
     criterion.cuda()
+    # TODO: move architecture to cuda
 
     optimizer = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=1E-6)
