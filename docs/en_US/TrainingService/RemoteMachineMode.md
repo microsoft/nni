@@ -28,6 +28,8 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: remote
+# search space file
+searchSpacePath: nni_search_space.json
 #choice: true, false
 useAnnotation: true
 tuner:
