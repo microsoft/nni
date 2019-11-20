@@ -1,13 +1,14 @@
+from nni.nas.pytorch.pdarts import PdartsTrainer
+import nni.nas.pytorch as nas
+import sys
 from argparse import ArgumentParser
 
 import torch
 import torch.nn as nn
 
-import nni.nas.pytorch as nas
-from nni.nas.pytorch.pdarts import PdartsTrainer
-
-from darts.model import CNN
-from darts import datasets
+sys.path.append('../darts')
+import datasets
+from model import CNN
 
 
 def accuracy(output, target, topk=(1,)):

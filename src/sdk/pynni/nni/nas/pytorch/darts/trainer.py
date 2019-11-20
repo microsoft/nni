@@ -38,8 +38,8 @@ class DartsTrainer(Trainer):
         lr = self.optimizer.param_groups[0]["lr"]
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
-            trn_X, trn_y = trn_X.to(self.device, non_blocking=True), trn_y.to(self.device, non_blocking=True)
-            val_X, val_y = val_X.to(self.device, non_blocking=True), val_y.to(self.device, non_blocking=True)
+            trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
+            val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
             # backup model for hessian
             backup_model = copy.deepcopy(self.model.state_dict())
