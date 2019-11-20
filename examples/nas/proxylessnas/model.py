@@ -97,7 +97,7 @@ class SearchMobileNet(nn.Module):
             stage_cnt += 1
 
         # feature mix layer
-        last_channel = utils.make_devisible(1280 * width_mult, 8) if width_mult > 1.0 else 1280
+        last_channel = putils.make_devisible(1280 * width_mult, 8) if width_mult > 1.0 else 1280
         feature_mix_layer = ops.ConvLayer(input_channel, last_channel, kernel_size=1, use_bn=True, act_func='relu6', ops_order='weight_bn_act', )
         classifier = ops.LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 

@@ -24,6 +24,11 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
+def get_split_list(in_dim, child_num):
+    in_dim_list = [in_dim // child_num] * child_num
+    for _i in range(in_dim % child_num):
+        in_dim_list[_i] += 1
+    return in_dim_list
 
 class DataProvider:
     VALID_SEED = 0  # random seed for the validation set
