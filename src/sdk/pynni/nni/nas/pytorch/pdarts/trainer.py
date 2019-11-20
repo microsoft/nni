@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint, LearningRateScheduler)
 from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import BaseTrainer

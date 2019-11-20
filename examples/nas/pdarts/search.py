@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from nni.nas.pytorch.pdarts import PdartsTrainer
 import nni.nas.pytorch as nas
 import sys

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 
 import numpy as np
@@ -11,13 +14,10 @@ from nni.nas.pytorch.mutables import LayerChoice
 
 class PdartsMutator(DartsMutator):
 
-    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
+    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
-        if switches is None:
-            self.switches = {}
-        else:
-            self.switches = switches
+        self.switches = switches
 
         super(PdartsMutator, self).__init__(model)
 
