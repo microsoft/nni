@@ -9,10 +9,10 @@ from argparse import ArgumentParser
 import torch
 import torch.nn as nn
 
-sys.path.append('../darts')
-import datasets
-from model import CNN
-from utils import accuracy
+with sys.path.append('../darts'):
+    from utils import accuracy
+    from model import CNN
+    import datasets
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
@@ -45,5 +45,6 @@ if __name__ == "__main__":
                             dataset_train=dataset_train,
                             dataset_valid=dataset_valid,
                             batch_size=args.batch_size,
-                            log_frequency=args.log_frequency)
+                            log_frequency=args.log_frequency,
+                            callbacks=[ArchitectureCheckpoint("./checkpoints")])
     trainer.train()
