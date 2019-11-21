@@ -330,12 +330,12 @@ class L1FilterPruner(Pruner):
             return self.mask_dict.get(op_name)
         mask = torch.ones(weight.size()).type_as(weight)
         try:
-            kernels = weight.shape[0]
+            filters = weight.shape[0]
             w_abs = weight.abs()
-            k = int(kernels * config['sparsity'])
+            k = int(filters * config['sparsity'])
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
-            w_abs_structured = w_abs.view(kernels, -1).sum(dim=1)
+            w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
             threshold = torch.topk(w_abs_structured.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
         finally:
