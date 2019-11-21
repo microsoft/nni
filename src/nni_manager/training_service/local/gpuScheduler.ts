@@ -43,7 +43,7 @@ class GPUScheduler {
     constructor() {
         this.stopping = false;
         this.log = getLogger();
-        this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/nni/script`;
+        this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/${os.userInfo().username}/nni/script`;
     }
 
     public async run(): Promise<void> {

@@ -449,7 +449,6 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
-        // generate gpu script in local machine first, will copy to remote machine later
         const nniRootDir: string = unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni');
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
 
