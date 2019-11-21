@@ -4,7 +4,6 @@ import tensorflow as tf
 import torch
 import torch.nn.functional as F
 import nni.compression.torch as torch_compressor
-import math
 
 if tf.__version__ >= '2.0':
     import nni.compression.tensorflow as tf_compressor
@@ -58,32 +57,6 @@ k5 = [[5]*3]*3
 w = [[k1, k2, k3, k4, k5]] * 10
 
 class CompressorTestCase(TestCase):
-    def test_torch_quantizer_modules_detection(self):
-        # test if modules can be detected
-        model = TorchModel()
-        config_list = [{
-            'quant_types': ['weight'],
-            'quant_bits': 8,
-            'op_types':['Conv2d', 'Linear']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': 8,
-            'quant_start_step': 0,
-            'op_types':['ReLU']
-        }]
-
-        model.relu = torch.nn.ReLU()
-        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
-        quantizer.compress()
-        modules_to_compress = quantizer.get_modules_to_compress()
-        modules_to_compress_name = [ t[0].name for t in modules_to_compress]
-        assert "conv1" in modules_to_compress_name
-        assert "conv2" in modules_to_compress_name
-        assert "fc1" in modules_to_compress_name
-        assert "fc2" in modules_to_compress_name
-        assert "relu" in modules_to_compress_name
-        assert len(modules_to_compress_name) == 5
-
     def test_torch_level_pruner(self):
         model = TorchModel()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
@@ -104,7 +77,7 @@ class CompressorTestCase(TestCase):
             'op_types':['Conv2d', 'Linear']
         }]
         torch_compressor.NaiveQuantizer(model, configure_list).compress()
-    
+
     @tf2
     def test_tf_naive_quantizer(self):
         tf_compressor.NaiveQuantizer(get_tf_model(), [{'op_types': ['default']}]).compress()
@@ -161,48 +134,5 @@ class CompressorTestCase(TestCase):
         assert all(masks.sum((0, 2, 3)) == np.array([90., 0., 0., 0., 90.]))
 
 
-    def test_torch_QAT_quantizer(self):
-        model = TorchModel()
-        config_list = [{
-            'quant_types': ['weight'],
-            'quant_bits': 8,
-            'op_types':['Conv2d', 'Linear']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': 8,
-            'quant_start_step': 0,
-            'op_types':['ReLU']
-        }]
-
-        model.relu = torch.nn.ReLU()
-        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
-        quantizer.compress()
-
-        # test quantize
-        # range not including 0
-        eps = 1e-7
-        weight = torch.tensor([[1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
-        assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
-        assert model.conv2.zero_point == 0
-
-         # range including 0
-        weight = torch.tensor([[-1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
-        assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
-        assert model.conv2.zero_point == 42
-
-        # test ema
-        x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
-        out = model.relu(x)
-        assert math.isclose(model.relu.tracked_min_biased, 0, abs_tol=eps)
-        assert math.isclose(model.relu.tracked_max_biased, 0.002, abs_tol=eps)
-
-        quantizer.step()
-        x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
-        out = model.relu(x)
-        assert math.isclose(model.relu.tracked_min_biased, 0.002, abs_tol=eps)
-        assert math.isclose(model.relu.tracked_max_biased, 0.00998, abs_tol=eps)
-    
 if __name__ == '__main__':
     main()
