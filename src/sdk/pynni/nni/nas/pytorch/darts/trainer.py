@@ -31,6 +31,9 @@ class DartsTrainer(Trainer):
                                                         batch_size=batch_size,
                                                         sampler=valid_sampler,
                                                         num_workers=workers)
+        self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
+                                                       batch_size=batch_size,
+                                                       num_workers=workers)
 
     def train_one_epoch(self, epoch):
         self.model.train()
@@ -77,7 +80,7 @@ class DartsTrainer(Trainer):
         meters = AverageMeterGroup()
         with torch.no_grad():
             self.mutator.reset()
-            for step, (X, y) in enumerate(self.valid_loader):
+            for step, (X, y) in enumerate(self.test_loader):
                 X, y = X.to(self.device), y.to(self.device)
                 logits = self.model(X)
                 metrics = self.metrics(logits, y)
