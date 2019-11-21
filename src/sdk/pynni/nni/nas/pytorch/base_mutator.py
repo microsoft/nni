@@ -1,7 +1,7 @@
 import logging
 
 import torch.nn as nn
-from nni.nas.pytorch.mutables import Mutable, MutableScope
+from nni.nas.pytorch.mutables import Mutable, MutableScope, InputChoice
 from nni.nas.pytorch.utils import StructuredMutableTreeNode
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,11 @@ class BaseMutator(nn.Module):
                 root = root.add_child(module)
                 if not isinstance(module, MutableScope):
                     nested_detection = module
+                if isinstance(module, InputChoice):
+                    for k in module.choose_from:
+                        if k != InputChoice.NO_KEY and k not in [m.key for m in memo if isinstance(m, Mutable)]:
+                            raise RuntimeError("'{}' required by '{}' not found in keys that appeared before, and is not NO_KEY."
+                                               .format(k, module.key))
             for name, submodule in module._modules.items():
                 if submodule is None:
                     continue

@@ -101,13 +101,15 @@ class InputChoice(Mutable):
     use `n_candidates` instead of `choose_from` is a safe option. To get the most power out of it, you might want to
     know about `choose_from`.
 
-    The keys in `choose_from` can be anything, between empty string, keys that appear in past mutables, and magic names
-    out of nowhere. The keys are designed to be the keys of the sources. To help mutators make better decisions,
+    The keys in `choose_from` can be keys that appear in past mutables, or ``NO_KEY`` if there are no suitable ones.
+    The keys are designed to be the keys of the sources. To help mutators make better decisions,
     mutators might be interested in how the tensors to choose from come into place. For example, the tensor is the
     output of some operator, some node, some cell, or some module. If this operator happens to be a mutable (e.g.,
     ``LayerChoice`` or ``InputChoice``), it has a key naturally that can be used as a source key. If it's a
     module/submodule, it needs to be annotated with a key: that's where a ``MutableScope`` is needed.
     """
+
+    NO_KEY = ""
 
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
                  reduction="mean", return_mask=False, key=None):
@@ -138,7 +140,7 @@ class InputChoice(Mutable):
         if choose_from is not None and n_candidates is None:
             n_candidates = len(choose_from)
         elif choose_from is None and n_candidates is not None:
-            choose_from = [""] * n_candidates
+            choose_from = [self.NO_KEY] * n_candidates
         assert n_candidates == len(choose_from), "Number of candidates must be equal to the length of `choose_from`."
         assert n_candidates > 0, "Number of candidates must be greater than 0."
         assert n_chosen is None or 0 <= n_chosen <= n_candidates, "Expected selected number must be None or no more " \

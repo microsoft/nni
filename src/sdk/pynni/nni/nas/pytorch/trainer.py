@@ -5,7 +5,6 @@ from abc import abstractmethod
 import torch
 
 from .base_trainer import BaseTrainer
-from .mutator import Mutator
 
 _logger = logging.getLogger(__name__)
 

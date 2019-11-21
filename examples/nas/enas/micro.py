@@ -94,7 +94,7 @@ class ENASLayer(nn.Module):
         self.num_nodes = num_nodes
         name_prefix = "reduce" if reduction else "normal"
         self.nodes = nn.ModuleList()
-        node_labels = ["prev1", "prev2"]
+        node_labels = [mutables.InputChoice.NO_KEY, mutables.InputChoice.NO_KEY]
         for i in range(num_nodes):
             node_labels.append("{}_node_{}".format(name_prefix, i))
             self.nodes.append(Node(node_labels[-1], node_labels[:-1], out_channels))
