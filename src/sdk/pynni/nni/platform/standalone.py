@@ -19,7 +19,13 @@
 # ==================================================================================================
 
 
+import logging
 import json_tricks
+
+
+# print INFO log to stdout
+logging.basicConfig()
+logging.getLogger('nni').setLevel(logging.INFO)
 
 
 def get_next_parameter():
