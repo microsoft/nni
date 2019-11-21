@@ -51,9 +51,6 @@ class Mutable(nn.Module):
     def name(self, name):
         self._name = name
 
-    def similar(self, other):
-        return type(self) == type(other)
-
     def _check_built(self):
         if not hasattr(self, "mutator"):
             raise ValueError(
@@ -100,9 +97,6 @@ class LayerChoice(Mutable):
     @property
     def mask(self):
         return self.mutator.get_decision(self)
-
-    def similar(self, other):
-        return type(self) == type(other) and self.length == other.length
 
 
 class InputChoice(Mutable):
@@ -189,7 +183,3 @@ class InputChoice(Mutable):
     @property
     def mask(self):
         return self.mutator.get_decision(self)
-
-    def similar(self, other):
-        return type(self) == type(other) and \
-               self.n_candidates == other.n_candidates and self.n_chosen and other.n_chosen
