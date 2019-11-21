@@ -12,6 +12,8 @@ We have provided two naive compression algorithms and three popular ones for use
 |---|---|
 | [Level Pruner](./Pruner.md#level-pruner) | Pruning the specified ratio on each weight based on absolute values of weights |
 | [AGP Pruner](./Pruner.md#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
+| [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. [Reference Paper](https://arxiv.org/abs/1803.03635)|
+| [FPGM Pruner](./Pruner.md#fpgm-pruner) | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)|
 | [Naive Quantizer](./Quantizer.md#naive-quantizer) |  Quantize weights to default 8 bits |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
@@ -180,12 +182,54 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        weight is the target weight tensor
-        config is the selected dict object in config_list for this layer
-        kwargs contains op, op_types, and op_name
-        design your quantizer and return new weight
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
+
+        # Put your code to generate `new_weight` here
+
         return new_weight
+    
+    def quantize_output(self, output, config, **kwargs):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `:meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+
+        # Put your code to generate `new_output` here
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+
+        # Put your code to generate `new_input` here
+
+        return new_input
 
     # note for pytorch version, there is no sess in input arguments
     def update_epoch(self, epoch_num, sess):
@@ -199,8 +243,6 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
-
-__[TODO]__ Will add another member function `quantize_layer_output`, as some quantization algorithms also quantize layers' output.
 
 ### Usage of user customized compression algorithm
 

@@ -13,7 +13,6 @@ class LayerInfo:
 
         self._forward = None
 
-
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -32,7 +31,21 @@ class Compressor:
         """
         self.bound_model = model
         self.config_list = config_list
-        self.modules_to_compress = []
+        self.modules_to_compress = None
+
+    def detect_modules_to_compress(self):
+        """
+        detect all modules should be compressed, and save the result in `self.modules_to_compress`.
+        The model will be instrumented and user should never edit it after calling this method.
+        """
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for name, module in self.bound_model.named_modules():
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
 
     def compress(self):
         """
@@ -41,12 +54,9 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
-        for name, module in self.bound_model.named_modules():
-            layer = LayerInfo(name, module)
-            config = self.select_config(layer)
-            if config is not None:
-                self._instrument_layer(layer, config)
-                self.modules_to_compress.append((layer, config))
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
+            self._instrument_layer(layer, config)
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -55,7 +65,7 @@ class Compressor:
 
         Returns
         -------
-        self.modules_to_compress : list
+        list
             a list of the layers, each of which is a tuple (`layer`, `config`),
             `layer` is `LayerInfo`, `config` is a `dict`
         """
@@ -72,12 +82,13 @@ class Compressor:
 
         Returns
         -------
-        ret : config or None
+        config or None
             the retrieved configuration for this layer, if None, this layer should
             not be compressed
         """
         ret = None
         for config in self.config_list:
+            config = config.copy()
             config['op_types'] = self._expand_config_op_types(config)
             if layer.type not in config['op_types']:
                 continue
@@ -204,32 +215,31 @@ class Pruner(Compressor):
         input_shape : list or tuple
             input shape to onnx model
         """
+        if self.detect_modules_to_compress() and not self.mask_dict:
+            _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         for name, m in self.bound_model.named_modules():
+            if name == "":
+                continue
             mask = self.mask_dict.get(name)
             if mask is not None:
                 mask_sum = mask.sum().item()
                 mask_num = mask.numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                print('Layer: %s  Sparsity: %.2f' % (name, 1 - mask_sum / mask_num))
                 m.weight.data = m.weight.data.mul(mask)
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
-                print('Layer: %s  NOT compressed' % name)
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
-        print('Model state_dict saved to %s' % model_path)
         if mask_path is not None:
             torch.save(self.mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
-            print('Mask dict saved to %s' % mask_path)
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
             input_data = torch.Tensor(*input_shape)
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
-            print('Model in onnx with input shape %s saved to %s' % (input_data.shape, onnx_path))
 
 
 class Quantizer(Compressor):
@@ -238,26 +248,87 @@ class Quantizer(Compressor):
     """
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
-        """user should know where dequantize goes and implement it in quantize method
-        we now do not provide dequantize method
+        """
+        quantize should overload this method to quantize weight.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
         """
         raise NotImplementedError("Quantizer must overload quantize_weight()")
 
+    def quantize_output(self, output, config, op, op_type, op_name):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+        raise NotImplementedError("Quantizer must overload quantize_output()")
+
+    def quantize_input(self, *inputs, config, op, op_type, op_name):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+        raise NotImplementedError("Quantizer must overload quantize_input()")
+
+
     def _instrument_layer(self, layer, config):
+        """
+        Create a wrapper forward function to replace the original one.
+
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the mask
+        config : dict
+            the configuration for quantization
+        """
         assert layer._forward is None, 'Each model can only be compressed once'
-        if not _check_weight(layer.module):
-            _logger.warning('Module %s does not have parameter "weight"', layer.name)
-            return
+        assert "quant_types" in config, 'must provide quant_types in config'
+        assert isinstance(config["quant_types"], list), 'quant_types must be list type'
+
+        if 'weight' in config["quant_types"]:
+            if not _check_weight(layer.module):
+                _logger.warning('Module %s does not have parameter "weight"', layer.name)
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
-            weight = layer.module.weight.data
-            new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-            layer.module.weight.data = new_weight
-            return layer._forward(*inputs)
+            if 'input' in config["quant_types"]:
+                inputs = self.quantize_input(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+            if 'weight' in config["quant_types"] and _check_weight(layer.module):
+                weight = layer.module.weight.data
+                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                layer.module.weight.data = new_weight
+                result = layer._forward(*inputs)
+                layer.module.weight.data = weight
+            else:
+                result = layer._forward(*inputs)
+
+            if 'output' in config["quant_types"]:
+                result = self.quantize_output(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+            return result
 
         layer.module.forward = new_forward
-
 
 def _check_weight(module):
     try:
