@@ -8,6 +8,7 @@ from .mutator import EnasMutator
 
 
 logger = logging.getLogger("enas/trainer")
+logger.setLevel(logging.INFO)
 
 class EnasTrainer(Trainer):
     def __init__(self, model, loss, metrics, reward_function,

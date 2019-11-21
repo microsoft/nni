@@ -8,6 +8,7 @@ from nni.nas.pytorch.trainer import BaseTrainer
 from .mutator import PdartsMutator
 
 logger = logging.getLogger("pdarts/trainer")
+logger.setLevel(logging.INFO)
 
 
 class PdartsTrainer(BaseTrainer):

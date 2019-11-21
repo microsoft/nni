@@ -11,8 +11,6 @@ from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
-logging.basicConfig(level=logging.INFO)
-
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--layers", default=8, type=int)

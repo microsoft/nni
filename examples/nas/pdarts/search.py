@@ -20,8 +20,6 @@ if True:
     import datasets
 
 
-logging.basicConfig(level=logging.INFO)
-
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
     parser.add_argument('--add_layers', action='append',

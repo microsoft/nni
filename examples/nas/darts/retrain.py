@@ -10,8 +10,9 @@ from model import CNN
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeter
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
