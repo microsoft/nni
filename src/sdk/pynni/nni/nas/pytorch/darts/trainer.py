@@ -1,4 +1,5 @@
 import copy
+import sys
 
 import torch
 from torch import nn as nn
@@ -11,7 +12,7 @@ from .mutator import DartsMutator
 class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
+                 mutator=None, batch_size=64, workers=0, device=None, log_frequency=None,
                  callbacks=None):
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
@@ -45,8 +46,7 @@ class DartsTrainer(Trainer):
             val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
             # backup model for hessian
-            backup_model = copy.deepcopy(self.model.state_dict())
-            # cannot deepcopy model because it will break the reference
+            backup_params = copy.deepcopy(list(self.model.parameters()))
 
             # phase 1. child network step
             self.optimizer.zero_grad()
@@ -58,15 +58,19 @@ class DartsTrainer(Trainer):
             nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
             self.optimizer.step()
 
-            new_model = copy.deepcopy(self.model.state_dict())
+            # save model for future recovery
+            new_params = copy.deepcopy(list(self.model.parameters()))
 
             # phase 2. architect step (alpha)
             self.ctrl_optim.zero_grad()
             # compute unrolled loss
-            self._unrolled_backward(trn_X, trn_y, val_X, val_y, backup_model, lr)
+            self._unrolled_backward(trn_X, trn_y, val_X, val_y, backup_params, lr)
             self.ctrl_optim.step()
 
-            self.model.load_state_dict(new_model)
+            # recover the newest model
+            with torch.no_grad():
+                for param, backup in zip(self.model.parameters(), new_params):
+                    param.copy_(backup)
 
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
@@ -88,13 +92,9 @@ class DartsTrainer(Trainer):
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.valid_loader), meters))
 
-    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):
+    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_params, lr):
         """
         Compute unrolled loss and backward its gradients
-        Parameters
-        ----------
-        v_model: backup model before this step
-        lr: learning rate for virtual gradient step (same as net lr)
         """
         self.mutator.reset()
         loss = self.loss(self.model(val_X), val_y)
@@ -104,12 +104,12 @@ class DartsTrainer(Trainer):
         d_model = w_grads[:len(w_model)]
         d_ctrl = w_grads[len(w_model):]
 
-        hessian = self._compute_hessian(backup_model, d_model, trn_X, trn_y)
+        hessian = self._compute_hessian(backup_params, d_model, trn_X, trn_y)
         with torch.no_grad():
             for param, d, h in zip(w_ctrl, d_ctrl, hessian):
                 param.grad = d - lr * h
 
-    def _compute_hessian(self, model, dw, trn_X, trn_y):
+    def _compute_hessian(self, params, dw, trn_X, trn_y):
         """
         dw = dw` { L_val(w`, alpha) }
         w+ = w + eps * dw
@@ -117,7 +117,10 @@ class DartsTrainer(Trainer):
         hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
         eps = 0.01 / ||dw||
         """
-        self.model.load_state_dict(model)
+        # recover the model before current step
+        with torch.no_grad():
+            for param, backup in zip(self.model.parameters(), params):
+                param.copy_(backup)
 
         norm = torch.cat([w.view(-1) for w in dw]).norm()
         eps = 0.01 / norm
