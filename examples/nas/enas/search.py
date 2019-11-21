@@ -1,3 +1,5 @@
+import logging
+import time
 from argparse import ArgumentParser
 
 import torch
@@ -9,6 +11,17 @@ from micro import MicroNetwork
 from nni.nas.pytorch import enas
 from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
 from utils import accuracy, reward_accuracy
+
+logger = logging.getLogger()
+
+fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+logging.Formatter.converter = time.localtime
+formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
+
+std_out_info = logging.StreamHandler()
+std_out_info.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(std_out_info)
 
 if __name__ == "__main__":
     parser = ArgumentParser("enas")
