@@ -25,7 +25,7 @@ if __name__ == "__main__":
     elif args.search_for == "micro":
         model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=True)
         num_epochs = 150
-        mutator = enas.EnasMutator(tanh_constant=1.1, cell_exit_extra_step=True)
+        mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
     else:
         raise AssertionError
 
