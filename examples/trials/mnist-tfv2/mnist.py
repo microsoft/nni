@@ -22,6 +22,10 @@ import nni
 
 _logger = logging.getLogger('mnist_example')
 
+# Uncomment following lines to print metrics to stdout:
+# logging.basicConfig()
+# _logger.setLevel(logging.INFO)
+
 
 class MnistModel(Model):
     """
@@ -71,13 +75,33 @@ class ReportIntermediates(Callback):
 
     If an assessor is configured in experiment's YAML file,
     it will use these metrics for early stopping.
+
+    Please note that most assessors expect all trials to have same number of intermediate results
+    (if its not early-stopped).
     """
+    def __init__(self, batch_size):
+        """
+        Initializer. Batch_size is used to output fixed number of intermediate results.
+        """
+        self._batch_size = batch_size
+        self._epoch = 0
+        self._steps = 0
 
     def on_batch_end(self, batch, logs=None):
-        """Reports accuracy for every 100 steps"""
-        if logs and logs.get('batch', 1) % 100 == 0:
-            _logger.info('(Step %s) Intermediate accuracy: %s', logs['batch'], logs['accuracy'])
+        """Reports accuracy for every 10000 steps"""
+        self._steps += self._batch_size
+        while self._steps >= 10000:
+            self._steps -= 10000
+            _logger.info(
+                'Epoch: %s  Batch: %s  Intermediate accuracy: %s',
+                self._epoch, batch, logs['accuracy']
+            )
             nni.report_intermediate_result(logs['accuracy'])  # send accuracy to NNI framework
+
+    def on_epoch_end(self, epoch, logs=None):
+        """To log current epoch"""
+        self._epoch += 1
+        self._steps = 0
 
 
 def load_dataset():
@@ -112,18 +136,18 @@ def main(params):
         x_train,
         y_train,
         batch_size=params['batch_size'],
-        epochs=1,
+        epochs=10,
         verbose=0,
-        callbacks=[ReportIntermediates()]
+        callbacks=[ReportIntermediates(params['batch_size'])]
     )
 
-    result = model.evaluate(x_test, y_test)
+    result = model.evaluate(x_test, y_test, verbose=0)
     _logger.info('Final accuracy: %s', result[1])
     nni.report_final_result(result[1])  # send final accuracy to NNI tuner and web UI
 
 
 if __name__ == '__main__':
-    default_params = {
+    params = {
         'dropout_rate': 0.5,
         'conv_size': 5,
         'hidden_size': 1024,
@@ -134,7 +158,7 @@ if __name__ == '__main__':
     # fetch hyper-parameters from HPO tuner
     # comment out following two lines to run the code without NNI framework
     tuned_params = nni.get_next_parameter()
-    params = {**default_params, **tuned_params}
+    params.update(tuned_params)
 
     _logger.info('Hyper-parameters: %s', params)
     main(params)
