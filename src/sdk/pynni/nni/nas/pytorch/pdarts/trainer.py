@@ -20,7 +20,6 @@ class PdartsTrainer(BaseTrainer):
         self.pdarts_num_layers = pdarts_num_layers
         self.pdarts_num_to_drop = pdarts_num_to_drop
         self.pdarts_epoch = len(pdarts_num_to_drop)
-        self.callbacks = callbacks
         self.darts_parameters = {
             "metrics": metrics,
             "num_epochs": num_epochs,

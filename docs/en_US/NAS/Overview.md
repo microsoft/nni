@@ -19,11 +19,15 @@ The main contribution of [DARTS: Differentiable Architecture Search][3] on algor
 #### Usage
 
 ```bash
-### In case NNI code is not cloned.
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
 git clone https://github.com/Microsoft/nni.git
 
+# search the best architecture
 cd examples/nas/darts
 python3 search.py
+
+# train the best architecture
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
 ```
 
 ### P-DARTS
@@ -33,11 +37,16 @@ python3 search.py
 #### Usage
 
 ```bash
-### In case NNI code is not cloned.
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
 git clone https://github.com/Microsoft/nni.git
 
+# search the best architecture
 cd examples/nas/pdarts
 python3 search.py
+
+# train the best architecture, it's the same progress as darts.
+cd examples/nas/darts
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_2.json
 ```
 
 ## Use NNI API
