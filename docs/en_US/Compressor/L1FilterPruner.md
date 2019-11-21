@@ -13,7 +13,7 @@ In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710),
 >
 > The procedure of pruning m filters from the ith convolutional layer is as follows:
 >
-> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j = \sum_{l=1}^{n_i}\sum|K_l|)
+> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
 > 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
 > 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The
 >   kernels in the next convolutional layer corresponding to the pruned feature maps are also
