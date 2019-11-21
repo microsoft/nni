@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup
+from nni.nas.pytorch.utils import AverageMeterGroup
 from .mutator import EnasMutator
 
 
@@ -12,9 +12,9 @@ class EnasTrainer(Trainer):
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
                  entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
                  mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4):
-        super().__init__(model, loss, metrics, optimizer, num_epochs,
-                         dataset_train, dataset_valid, batch_size, workers, device, log_frequency,
-                         mutator if mutator is not None else EnasMutator(model), callbacks)
+        super().__init__(model, mutator if mutator is not None else EnasMutator(model),
+                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
+                         batch_size, workers, device, log_frequency, callbacks)
         self.reward_function = reward_function
         self.mutator_optim = optim.Adam(self.mutator.parameters(), lr=mutator_lr)
 
@@ -52,8 +52,9 @@ class EnasTrainer(Trainer):
             x, y = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad()
 
-            with self.mutator.forward_pass():
-                logits = self.model(x)
+            with torch.no_grad():
+                self.mutator.reset()
+            logits = self.model(x)
 
             if isinstance(logits, tuple):
                 logits, aux_logits = logits
@@ -81,7 +82,8 @@ class EnasTrainer(Trainer):
             for step, (x, y) in enumerate(self.valid_loader):
                 x, y = x.to(self.device), y.to(self.device)
 
-                with self.mutator.forward_pass():
+                self.mutator.reset()
+                with torch.no_grad():
                     logits = self.model(x)
                 metrics = self.metrics(logits, y)
                 reward = self.reward_function(logits, y)
@@ -107,9 +109,9 @@ class EnasTrainer(Trainer):
                     self.mutator_optim.zero_grad()
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("Mutator Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
-                                                                          mutator_step // self.mutator_steps_aggregate,
-                                                                          self.mutator_steps, meters))
+                    print("RL Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
+                                                                     mutator_step // self.mutator_steps_aggregate,
+                                                                     self.mutator_steps, meters))
                 mutator_step += 1
                 if mutator_step >= total_mutator_steps:
                     break

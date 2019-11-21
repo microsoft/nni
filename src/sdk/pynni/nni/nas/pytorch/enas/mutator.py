@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.mutator import Mutator
+from nni.nas.pytorch.mutables import LayerChoice, InputChoice, MutableScope
 
 
 class StackedLSTMCell(nn.Module):
@@ -27,15 +27,14 @@ class StackedLSTMCell(nn.Module):
 class EnasMutator(Mutator):
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
                  skip_target=0.4, branch_bias=0.25):
+        super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
         self.tanh_constant = tanh_constant
         self.cell_exit_extra_step = cell_exit_extra_step
         self.skip_target = skip_target
         self.branch_bias = branch_bias
-        super().__init__(model)
 
-    def before_parse_search_space(self):
         self.lstm = StackedLSTMCell(self.lstm_num_layers, self.lstm_size, False)
         self.attn_anchor = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
         self.attn_query = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
@@ -45,9 +44,8 @@ class EnasMutator(Mutator):
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction="none")
         self.bias_dict = nn.ParameterDict()
 
-    def after_parse_search_space(self):
         self.max_layer_choice = 0
-        for _, mutable in self.named_mutables():
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
                     self.max_layer_choice = mutable.length
@@ -64,8 +62,29 @@ class EnasMutator(Mutator):
         self.embedding = nn.Embedding(self.max_layer_choice + 1, self.lstm_size)
         self.soft = nn.Linear(self.lstm_size, self.max_layer_choice, bias=False)
 
-    def before_pass(self):
-        super().before_pass()
+    def sample_search(self):
+        self._initialize()
+        self._sample(self.mutables)
+        return self._choices
+
+    def sample_final(self):
+        return self.sample_search()
+
+    def _sample(self, tree):
+        mutable = tree.mutable
+        if isinstance(mutable, LayerChoice) and mutable.key not in self._choices:
+            self._choices[mutable.key] = self._sample_layer_choice(mutable)
+        elif isinstance(mutable, InputChoice) and mutable.key not in self._choices:
+            self._choices[mutable.key] = self._sample_input_choice(mutable)
+        for child in tree.children:
+            self._sample(child)
+        if isinstance(mutable, MutableScope) and mutable.key not in self._anchors_hid:
+            if self.cell_exit_extra_step:
+                self._lstm_next_step()
+            self._mark_anchor(mutable.key)
+
+    def _initialize(self):
+        self._choices = dict()
         self._anchors_hid = dict()
         self._inputs = self.g_emb.data
         self._c = [torch.zeros((1, self.lstm_size),
@@ -84,7 +103,7 @@ class EnasMutator(Mutator):
     def _mark_anchor(self, key):
         self._anchors_hid[key] = self._h[-1]
 
-    def on_calc_layer_choice_mask(self, mutable):
+    def _sample_layer_choice(self, mutable):
         self._lstm_next_step()
         logit = self.soft(self._h[-1])
         if self.tanh_constant is not None:
@@ -94,14 +113,14 @@ class EnasMutator(Mutator):
         branch_id = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
         log_prob = self.cross_entropy_loss(logit, branch_id)
         self.sample_log_prob += torch.sum(log_prob)
-        entropy = (log_prob * torch.exp(-log_prob)).detach()
+        entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
         self.sample_entropy += torch.sum(entropy)
         self._inputs = self.embedding(branch_id)
         return F.one_hot(branch_id, num_classes=self.max_layer_choice).bool().view(-1)
 
-    def on_calc_input_choice_mask(self, mutable, tags):
+    def _sample_input_choice(self, mutable):
         query, anchors = [], []
-        for label in tags:
+        for label in mutable.choose_from:
             if label not in self._anchors_hid:
                 self._lstm_next_step()
                 self._mark_anchor(label)  # empty loop, fill not found
@@ -113,8 +132,8 @@ class EnasMutator(Mutator):
         if self.tanh_constant is not None:
             query = self.tanh_constant * torch.tanh(query)
 
-        if mutable.n_selected is None:
-            logit = torch.cat([-query, query], 1)
+        if mutable.n_chosen is None:
+            logit = torch.cat([-query, query], 1)  # pylint: disable=invalid-unary-operand-type
 
             skip = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
             skip_prob = torch.sigmoid(logit)
@@ -123,19 +142,14 @@ class EnasMutator(Mutator):
             log_prob = self.cross_entropy_loss(logit, skip)
             self._inputs = (torch.matmul(skip.float(), torch.cat(anchors, 0)) / (1. + torch.sum(skip))).unsqueeze(0)
         else:
-            assert mutable.n_selected == 1, "Input choice must select exactly one or any in ENAS."
+            assert mutable.n_chosen == 1, "Input choice must select exactly one or any in ENAS."
             logit = query.view(1, -1)
             index = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
-            skip = F.one_hot(index).view(-1)
+            skip = F.one_hot(index, num_classes=mutable.n_candidates).view(-1)
             log_prob = self.cross_entropy_loss(logit, index)
             self._inputs = anchors[index.item()]
 
         self.sample_log_prob += torch.sum(log_prob)
-        entropy = (log_prob * torch.exp(-log_prob)).detach()
+        entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
         self.sample_entropy += torch.sum(entropy)
         return skip.bool()
-
-    def exit_mutable_scope(self, mutable_scope):
-        if self.cell_exit_extra_step:
-            self._lstm_next_step()
-        self._mark_anchor(mutable_scope.key)

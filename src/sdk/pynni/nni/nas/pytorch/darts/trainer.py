@@ -4,7 +4,7 @@ import torch
 from torch import nn as nn
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup
+from nni.nas.pytorch.utils import AverageMeterGroup
 from .mutator import DartsMutator
 
 
@@ -13,9 +13,9 @@ class DartsTrainer(Trainer):
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
-        super().__init__(model, loss, metrics, optimizer, num_epochs,
-                         dataset_train, dataset_valid, batch_size, workers, device, log_frequency,
-                         mutator if mutator is not None else DartsMutator(model), callbacks)
+        super().__init__(model, mutator if mutator is not None else DartsMutator(model),
+                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
+                         batch_size, workers, device, log_frequency, callbacks)
         self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), 3.0E-4, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         n_train = len(self.dataset_train)
@@ -31,6 +31,9 @@ class DartsTrainer(Trainer):
                                                         batch_size=batch_size,
                                                         sampler=valid_sampler,
                                                         num_workers=workers)
+        self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
+                                                       batch_size=batch_size,
+                                                       num_workers=workers)
 
     def train_one_epoch(self, epoch):
         self.model.train()
@@ -47,8 +50,8 @@ class DartsTrainer(Trainer):
 
             # phase 1. child network step
             self.optimizer.zero_grad()
-            with self.mutator.forward_pass():
-                logits = self.model(trn_X)
+            self.mutator.reset()
+            logits = self.model(trn_X)
             loss = self.loss(logits, trn_y)
             loss.backward()
             # gradient clipping
@@ -76,10 +79,10 @@ class DartsTrainer(Trainer):
         self.mutator.eval()
         meters = AverageMeterGroup()
         with torch.no_grad():
-            for step, (X, y) in enumerate(self.valid_loader):
+            self.mutator.reset()
+            for step, (X, y) in enumerate(self.test_loader):
                 X, y = X.to(self.device), y.to(self.device)
-                with self.mutator.forward_pass():
-                    logits = self.model(X)
+                logits = self.model(X)
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
@@ -93,8 +96,8 @@ class DartsTrainer(Trainer):
         v_model: backup model before this step
         lr: learning rate for virtual gradient step (same as net lr)
         """
-        with self.mutator.forward_pass():
-            loss = self.loss(self.model(val_X), val_y)
+        self.mutator.reset()
+        loss = self.loss(self.model(val_X), val_y)
         w_model = tuple(self.model.parameters())
         w_ctrl = tuple(self.mutator.parameters())
         w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
@@ -125,8 +128,8 @@ class DartsTrainer(Trainer):
                 for p, d in zip(self.model.parameters(), dw):
                     p += eps * d
 
-            with self.mutator.forward_pass():
-                loss = self.loss(self.model(trn_X), trn_y)
+            self.mutator.reset()
+            loss = self.loss(self.model(trn_X), trn_y)
             if e > 0:
                 dalpha_pos = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w+) }
             elif e < 0:

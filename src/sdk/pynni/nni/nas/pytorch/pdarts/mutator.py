@@ -11,14 +11,14 @@ from nni.nas.pytorch.mutables import LayerChoice
 
 class PdartsMutator(DartsMutator):
 
-    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
+    def __init__(self, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
         self.switches = switches
 
-        super(PdartsMutator, self).__init__(model)
+        super(PdartsMutator, self).__init__()
 
-    def before_build(self, model):
+    def before_build(self):
         self.choices = nn.ParameterDict()
         if self.switches is None:
             self.switches = {}

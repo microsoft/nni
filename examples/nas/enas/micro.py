@@ -32,9 +32,9 @@ class AuxiliaryHead(nn.Module):
 
 
 class Cell(nn.Module):
-    def __init__(self, cell_name, num_prev_layers, channels):
+    def __init__(self, cell_name, prev_labels, channels):
         super().__init__()
-        self.input_choice = mutables.InputChoice(num_prev_layers, n_selected=1, return_mask=True,
+        self.input_choice = mutables.InputChoice(choose_from=prev_labels, n_chosen=1, return_mask=True,
                                                  key=cell_name + "_input")
         self.op_choice = mutables.LayerChoice([
             SepConvBN(channels, channels, 3, 1),
@@ -44,21 +44,21 @@ class Cell(nn.Module):
             nn.Identity()
         ], key=cell_name + "_op")
 
-    def forward(self, prev_layers, prev_labels):
-        chosen_input, chosen_mask = self.input_choice(prev_layers, tags=prev_labels)
+    def forward(self, prev_layers):
+        chosen_input, chosen_mask = self.input_choice(prev_layers)
         cell_out = self.op_choice(chosen_input)
         return cell_out, chosen_mask
 
 
 class Node(mutables.MutableScope):
-    def __init__(self, node_name, num_prev_layers, channels):
+    def __init__(self, node_name, prev_node_names, channels):
         super().__init__(node_name)
-        self.cell_x = Cell(node_name + "_x", num_prev_layers, channels)
-        self.cell_y = Cell(node_name + "_y", num_prev_layers, channels)
+        self.cell_x = Cell(node_name + "_x", prev_node_names, channels)
+        self.cell_y = Cell(node_name + "_y", prev_node_names, channels)
 
-    def forward(self, prev_layers, prev_labels):
-        out_x, mask_x = self.cell_x(prev_layers, prev_labels)
-        out_y, mask_y = self.cell_y(prev_layers, prev_labels)
+    def forward(self, prev_layers):
+        out_x, mask_x = self.cell_x(prev_layers)
+        out_y, mask_y = self.cell_y(prev_layers)
         return out_x + out_y, mask_x | mask_y
 
 
@@ -93,8 +93,11 @@ class ENASLayer(nn.Module):
 
         self.num_nodes = num_nodes
         name_prefix = "reduce" if reduction else "normal"
-        self.nodes = nn.ModuleList([Node("{}_node_{}".format(name_prefix, i),
-                                         i + 2, out_channels) for i in range(num_nodes)])
+        self.nodes = nn.ModuleList()
+        node_labels = [mutables.InputChoice.NO_KEY, mutables.InputChoice.NO_KEY]
+        for i in range(num_nodes):
+            node_labels.append("{}_node_{}".format(name_prefix, i))
+            self.nodes.append(Node(node_labels[-1], node_labels[:-1], out_channels))
         self.final_conv_w = nn.Parameter(torch.zeros(out_channels, self.num_nodes + 2, out_channels, 1, 1), requires_grad=True)
         self.bn = nn.BatchNorm2d(out_channels, affine=False)
         self.reset_parameters()
@@ -106,14 +109,12 @@ class ENASLayer(nn.Module):
         pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)    
 
         prev_nodes_out = [pprev_, prev_]
-        prev_nodes_labels = ["prev1", "prev2"]
         nodes_used_mask = torch.zeros(self.num_nodes + 2, dtype=torch.bool, device=prev.device)
         for i in range(self.num_nodes):
-            node_out, mask = self.nodes[i](prev_nodes_out, prev_nodes_labels)
+            node_out, mask = self.nodes[i](prev_nodes_out)
             nodes_used_mask[:mask.size(0)] |= mask
             prev_nodes_out.append(node_out)
-            prev_nodes_labels.append(self.nodes[i].key)
-        
+
         unused_nodes = torch.cat([out for used, out in zip(nodes_used_mask, prev_nodes_out) if not used], 1)
         unused_nodes = F.relu(unused_nodes)
         conv_weight = self.final_conv_w[:, ~nodes_used_mask, :, :, :]

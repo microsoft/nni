@@ -12,5 +12,9 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train_and_validate(self):
+    def export(self, file):
+        raise NotImplementedError
+
+    @abstractmethod
+    def checkpoint(self):
         raise NotImplementedError

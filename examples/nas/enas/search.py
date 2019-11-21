@@ -13,7 +13,7 @@ from utils import accuracy, reward_accuracy
 if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
-    parser.add_argument("--log-frequency", default=1, type=int)
+    parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     args = parser.parse_args()
 
@@ -43,5 +43,6 @@ if __name__ == "__main__":
                                num_epochs=num_epochs,
                                dataset_train=dataset_train,
                                dataset_valid=dataset_valid,
-                               log_frequency=args.log_frequency)
-    trainer.train_and_validate()
+                               log_frequency=args.log_frequency,
+                               mutator=mutator)
+    trainer.train()
