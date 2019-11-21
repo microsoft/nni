@@ -79,3 +79,6 @@ class Trainer(BaseTrainer):
         mutator_export = self.mutator.export()
         with open(file, "w") as f:
             json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
+
+    def checkpoint(self):
+        raise NotImplementedError("Not implemented yet")
