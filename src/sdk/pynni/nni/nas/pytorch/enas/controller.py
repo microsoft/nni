@@ -46,7 +46,7 @@ class EnasController(Controller):
 
     def build(self, mutables):
         self.max_layer_choice = 0
-        for mutable in mutables():
+        for mutable in mutables:
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
                     self.max_layer_choice = mutable.length
