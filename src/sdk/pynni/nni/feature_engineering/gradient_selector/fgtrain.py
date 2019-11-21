@@ -45,7 +45,6 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
     discount_factor = 1. / 3
 
-    # old_f = [np.nan]
     total_t = [0.]
     df_store = [np.nan]
     it_store = [0]
@@ -91,42 +90,6 @@ def get_optim_f_stop(maxiter, maxtime, dftol_stop, freltol_stop,
 
     return f_stop, {'t': total_t, 'it': it_store, 'df': df_store,
                     'relchange': relchange_store}
-
-
-# def get_optim_f_callback(maxiter, callback_period=1, stop_conds=None,
-#                          writer=None, path_save=None, rng=None):
-
-#     def f_callback(f0, v0, it, t):
-
-#         if not it%callback_period:
-#             epoch = it / f0.iters_per_epoch
-#             x = f0.x.clone().cpu().detach().numpy()
-
-#             t_ave = stop_conds['t'][-1] / it
-#             t_left = (maxiter - it) * t_ave
-#             print('[%6d/%6d/%3d/%6d sec] %0.3f'
-#                   % (it, maxiter, int(epoch), t_left, v0))
-
-#             if writer is not None:
-#                 writer.add_scalar('ftrain', v0.clone().cpu().detach().numpy(),
-#                                   it)
-#                 writer.add_scalar('epoch', epoch, it)
-#                 writer.add_scalar('t', stop_conds['t'][-1], it)
-#                 if not np.isnan(stop_conds['df'][-1]):
-#                     writer.add_scalar('log10(dftrain)',
-#                                       np.log10(stop_conds['df'][-1]), it)
-#                 if not np.isnan(stop_conds['relchange'][-1]):
-#                     writer.add_scalar('log10(relchange)',
-#                                       np.log10(stop_conds['relchange'][-1]), it)
-#                 writer.add_scalar('nfeats', len(np.where(x >= 0)[0]), it)
-
-#             if path_save is not None and not it%(callback_period * 10):
-#                 torch.save(get_checkpoint(f0, stop_conds, rng), path_save)
-#                 print('Checkpointed to %s.' % path_save)
-
-#             return
-
-#     return f_callback
 
 
 def get_init(data_train, init_type='on', rng=np.random.RandomState(0), prev_score=None):
@@ -235,11 +198,6 @@ def _train(data_train, Nminibatch, order, C, rng, lr_train, debug, maxiter,
 
     if debug:
         pass
-        # writer = SummaryWriter(dn_log, flush_secs=10)
-        # f_callback = get_optim_f_callback(maxiter, stop_conds=stop_conds,
-        #                                   writer=writer,
-        #                                   callback_period=accum_steps,
-        #                                   path_save=path_save, rng=rng)
     else:
         f_callback = None
     stop_conds['t'][-1] = time.time() - t_init
@@ -271,21 +229,3 @@ def train_sk_dense(ty, X, y, classification):
     ix = ix[np.where(np.invert(np.isnan(clf.scores_[ix])))[0]][:d]
     t = time.time() - t
     return {'feats': ix, 't': t}
-
-
-def print_results(m):
-    """
-    Print results.
-    """
-
-    r_str = '\n'
-    r_str += 'selected feats = '
-    print(r_str)
-    print(m['feats'])
-
-    r_str = '\n'
-    r_str += 'time: %g, iters: %d, |gradf|: %g, |df|/|f|: %g\n' % tuple(
-        [m[k] for k in ['t', 'it', 'df', 'relchange']])
-    r_str += '|initial feats|: %d, |selected feats|: %g\n' % (
-        m['ninitfeats'], len(m['feats']))
-    print(r_str)
