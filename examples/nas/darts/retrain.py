@@ -7,14 +7,15 @@ import torch.nn as nn
 import datasets
 import utils
 from model import CNN
-from nni.nas.pytorch.fixed import FixedArchitecture
+from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(config, train_loader, model, archit, optimizer, criterion, epoch):
+def train(config, train_loader, model, optimizer, criterion, epoch):
     top1 = AverageMeter("top1")
     top5 = AverageMeter("top5")
     losses = AverageMeter("losses")
@@ -26,7 +27,7 @@ def train(config, train_loader, model, archit, optimizer, criterion, epoch):
     model.train()
 
     for step, (x, y) in enumerate(train_loader):
-        x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
+        x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
         bs = x.size(0)
 
         optimizer.zero_grad()
@@ -56,7 +57,7 @@ def train(config, train_loader, model, archit, optimizer, criterion, epoch):
     logger.info("Train: [{:3d}/{}] Final Prec@1 {:.4%}".format(epoch + 1, config.epochs, top1.avg))
 
 
-def validate(config, valid_loader, model, archit, criterion, epoch, cur_step):
+def validate(config, valid_loader, model, criterion, epoch, cur_step):
     top1 = AverageMeter("top1")
     top5 = AverageMeter("top5")
     losses = AverageMeter("losses")
@@ -65,7 +66,7 @@ def validate(config, valid_loader, model, archit, criterion, epoch, cur_step):
 
     with torch.no_grad():
         for step, (X, y) in enumerate(valid_loader):
-            X, y = X.cuda(non_blocking=True), y.cuda(non_blocking=True)
+            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
             N = X.size(0)
 
             logits = model(X)
@@ -101,15 +102,14 @@ if __name__ == "__main__":
     parser.add_argument("--arc-checkpoint", default="./checkpoints/epoch_0.json")
 
     args = parser.parse_args()
-    assert torch.cuda.is_available()
     dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
     model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
-    archit = FixedArchitecture(model, args.arc_checkpoint)
+    apply_fixed_architecture(model, args.arc_checkpoint, device=device)
     criterion = nn.CrossEntropyLoss()
-    model.cuda()
-    criterion.cuda()
-    # TODO: move architecture to cuda
+
+    model.to(device)
+    criterion.to(device)
 
     optimizer = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=1E-6)
@@ -131,11 +131,11 @@ if __name__ == "__main__":
         model.drop_path_prob(drop_prob)
 
         # training
-        train(args, train_loader, model, archit, optimizer, criterion, epoch)
+        train(args, train_loader, model, optimizer, criterion, epoch)
 
         # validation
         cur_step = (epoch + 1) * len(train_loader)
-        top1 = validate(args, valid_loader, model, archit, criterion, epoch, cur_step)
+        top1 = validate(args, valid_loader, model, criterion, epoch, cur_step)
         best_top1 = max(best_top1, top1)
 
         lr_scheduler.step()
