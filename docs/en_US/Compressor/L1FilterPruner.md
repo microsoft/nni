@@ -43,8 +43,8 @@ We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNET
 
 | Model           | Error(paper/ours) | Parameters      | Pruned   |
 | --------------- | ----------------- | --------------- | -------- |
-| VGG-16          | $6.75$/$6.49$     | $1.5\times10^7$ |          |
-| VGG-16-pruned-A | $6.60$/$6.47$     | $5.4\times10^6$ | $64.0\%$ |
+| VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
+| VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
 
 The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
