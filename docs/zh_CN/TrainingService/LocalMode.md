@@ -115,7 +115,7 @@ maxTrialNum: 100
 trainingServicePlatform: local
 
 # 搜索空间文件
-searchSpacePath: nni_search_space.json
+searchSpacePath: search_space.json
 
 # 可选值为: true, false
 useAnnotation: true

@@ -20,7 +20,7 @@ maxTrialNum: 100
 # choice: local, remote, pai
 trainingServicePlatform: pai
 # search space file
-searchSpacePath: nni_search_space.json
+searchSpacePath: search_space.json
 # choice: true, false
 useAnnotation: true
 tuner:

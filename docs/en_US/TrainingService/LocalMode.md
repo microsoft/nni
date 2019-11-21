@@ -113,7 +113,7 @@ maxTrialNum: 100
 trainingServicePlatform: local
 
 # search space file
-searchSpacePath: nni_search_space.json
+searchSpacePath: search_space.json
 
 # choice: true, false
 useAnnotation: true
