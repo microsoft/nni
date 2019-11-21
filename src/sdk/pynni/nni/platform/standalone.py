@@ -55,7 +55,7 @@ def get_sequence_id():
 def send_metric(string):
     metric = json_tricks.loads(string)
     if metric['type'] == 'FINAL':
-        _logger.info('Final result:', metric['value'])
+        _logger.info('Final result: %s', metric['value'])
     elif metric['type'] == 'PERIODICAL':
         _logger.info('Intermediate result: %s  (Index %s)', metric['value'], metric['sequence'])
     else:
