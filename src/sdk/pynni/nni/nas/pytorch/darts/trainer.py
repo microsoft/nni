@@ -5,18 +5,18 @@ from torch import nn as nn
 
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
-from .controller import DartsController
+from .mutator import DartsMutator
 
 
 class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 controller=None, batch_size=64, workers=4, device=None, log_frequency=None,
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
-        super().__init__(model, controller if controller is not None else DartsController(),
+        super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
-        self.ctrl_optim = torch.optim.Adam(self.controller.parameters(), 3.0E-4, betas=(0.5, 0.999),
+        self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), 3.0E-4, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         n_train = len(self.dataset_train)
         split = n_train // 2
@@ -34,7 +34,7 @@ class DartsTrainer(Trainer):
 
     def train_one_epoch(self, epoch):
         self.model.train()
-        self.controller.train()
+        self.mutator.train()
         lr = self.optimizer.param_groups[0]["lr"]
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
@@ -73,7 +73,7 @@ class DartsTrainer(Trainer):
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
-        self.controller.eval()
+        self.mutator.eval()
         meters = AverageMeterGroup()
         with torch.no_grad():
             self.mutator.reset()
@@ -96,7 +96,7 @@ class DartsTrainer(Trainer):
         self.mutator.reset()
         loss = self.loss(self.model(val_X), val_y)
         w_model = tuple(self.model.parameters())
-        w_ctrl = tuple(self.controller.parameters())
+        w_ctrl = tuple(self.mutator.parameters())
         w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
         d_model = w_grads[:len(w_model)]
         d_ctrl = w_grads[len(w_model):]
@@ -128,9 +128,9 @@ class DartsTrainer(Trainer):
             self.mutator.reset()
             loss = self.loss(self.model(trn_X), trn_y)
             if e > 0:
-                dalpha_pos = torch.autograd.grad(loss, self.controller.parameters())  # dalpha { L_trn(w+) }
+                dalpha_pos = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w+) }
             elif e < 0:
-                dalpha_neg = torch.autograd.grad(loss, self.controller.parameters())  # dalpha { L_trn(w-) }
+                dalpha_neg = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w-) }
 
         hessian = [(p - n) / 2. * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian

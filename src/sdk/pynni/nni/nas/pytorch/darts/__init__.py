@@ -1,2 +1,2 @@
-from .controller import DartsController
+from .mutator import DartsMutator
 from .trainer import DartsTrainer

@@ -5,11 +5,11 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from nni.nas.pytorch.darts import DartsController
+from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 
 
-class PdartsMutator(DartsController):
+class PdartsMutator(DartsMutator):
 
     def __init__(self, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
         self.pdarts_epoch_index = pdarts_epoch_index

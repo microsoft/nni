@@ -5,31 +5,52 @@ from nni.nas.pytorch.base_mutator import BaseMutator
 
 class Mutator(BaseMutator):
 
-    def __init__(self, model, controller):
+    def __init__(self, model):
         super().__init__(model)
-        self.controller = controller
-        self.controller.build(self._structured_mutables)
         self._cache = dict()
+
+    def sample_search(self):
+        """
+        Override to implement this method to iterate over mutables and make decisions.
+
+        Returns
+        -------
+        dict
+            A mapping from key of mutables to decisions.
+        """
+        raise NotImplementedError
+
+    def sample_final(self):
+        """
+        Override to implement this method to iterate over mutables and make decisions that is final
+        for export and retraining.
+
+        Returns
+        -------
+        dict
+            A mapping from key of mutables to decisions.
+        """
+        raise NotImplementedError
 
     def reset(self):
         """
-        Reset the mutator by call the controller to resample (for search).
+        Reset the mutator by call the `sample_search` to resample (for search).
 
         Returns
         -------
         None
         """
-        self._cache = self.controller.sample_search(self._structured_mutables)
+        self._cache = self.sample_search()
 
     def export(self):
         """
-        Call the controller to resample (for final) and return the results from the controller.
+        Resample (for final) and return results.
 
         Returns
         -------
         dict
         """
-        return self.controller.sample_final(self._structured_mutables)
+        return self.sample_final()
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """

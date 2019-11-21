@@ -1,12 +1,13 @@
 import logging
 
+import torch.nn as nn
 from nni.nas.pytorch.mutables import Mutable, MutableScope
 from nni.nas.pytorch.utils import StructuredMutableTreeNode
 
 logger = logging.getLogger(__name__)
 
 
-class BaseMutator:
+class BaseMutator(nn.Module):
     """
     A mutator is responsible for mutating a graph by obtaining the search space from the network and implementing
     callbacks that are called in ``forward`` in Mutables.
@@ -14,13 +15,14 @@ class BaseMutator:
 
     def __init__(self, model):
         super().__init__()
-        self.model = model
-        self._structured_mutables = StructuredMutableTreeNode(None)
-        self._parse_search_space(self.model, self._structured_mutables)
+        self.__dict__["model"] = model
+        self._structured_mutables = self._parse_search_space(self.model)
 
-    def _parse_search_space(self, module, root, prefix="", memo=None, nested_detection=None):
+    def _parse_search_space(self, module, root=None, prefix="", memo=None, nested_detection=None):
         if memo is None:
             memo = set()
+        if root is None:
+            root = StructuredMutableTreeNode(None)
         if module not in memo:
             memo.add(module)
             if isinstance(module, Mutable):
@@ -38,10 +40,15 @@ class BaseMutator:
                 submodule_prefix = prefix + ("." if prefix else "") + name
                 self._parse_search_space(submodule, root, submodule_prefix, memo=memo,
                                          nested_detection=nested_detection)
+        return root
 
     @property
     def mutables(self):
         return self._structured_mutables
+
+    @property
+    def forward(self, *inputs):
+        raise RuntimeError("Forward is undefined for mutators.")
 
     def enter_mutable_scope(self, mutable_scope):
         """

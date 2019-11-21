@@ -21,11 +21,11 @@ if __name__ == "__main__":
     if args.search_for == "macro":
         model = GeneralNetwork()
         num_epochs = 310
-        controller = None
+        mutator = None
     elif args.search_for == "micro":
         model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=True)
         num_epochs = 150
-        controller = enas.EnasController(tanh_constant=1.1, cell_exit_extra_step=True)
+        mutator = enas.EnasMutator(tanh_constant=1.1, cell_exit_extra_step=True)
     else:
         raise AssertionError
 
@@ -44,5 +44,5 @@ if __name__ == "__main__":
                                dataset_train=dataset_train,
                                dataset_valid=dataset_valid,
                                log_frequency=args.log_frequency,
-                               controller=controller)
+                               mutator=mutator)
     trainer.train()

@@ -63,7 +63,7 @@ class Mutable(nn.Module):
 
 class MutableScope(Mutable):
     """
-    Mutable scope labels a subgraph/submodule to help controllers make better decisions.
+    Mutable scope labels a subgraph/submodule to help mutators make better decisions.
     Mutators get notified when a mutable scope is entered and exited. Mutators can override ``enter_mutable_scope``
     and ``exit_mutable_scope`` to catch corresponding events, and do status dump or update.
     """
@@ -102,8 +102,8 @@ class InputChoice(Mutable):
     know about `choose_from`.
 
     The keys in `choose_from` can be anything, between empty string, keys that appear in past mutables, and magic names
-    out of nowhere. The keys are designed to be the keys of the sources. To help controllers make better decisions,
-    controllers might be interested in how the tensors to choose from come into place. For example, the tensor is the
+    out of nowhere. The keys are designed to be the keys of the sources. To help mutators make better decisions,
+    mutators might be interested in how the tensors to choose from come into place. For example, the tensor is the
     output of some operator, some node, some cell, or some module. If this operator happens to be a mutable (e.g.,
     ``LayerChoice`` or ``InputChoice``), it has a key naturally that can be used as a source key. If it's a
     module/submodule, it needs to be annotated with a key: that's where a ``MutableScope`` is needed.
@@ -123,7 +123,7 @@ class InputChoice(Mutable):
             If `n_candidates` has a value but `choose_from` is None, it will be automatically treated as `n_candidates`
             number of empty string.
         n_chosen: int
-            Recommended inputs to choose. If None, controller is instructed to select any.
+            Recommended inputs to choose. If None, mutator is instructed to select any.
         reduction: str
             `mean`, `concat`, `sum` or `none`.
         return_mask: bool

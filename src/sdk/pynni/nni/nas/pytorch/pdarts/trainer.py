@@ -38,7 +38,7 @@ class PdartsTrainer(Trainer):
             mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)  # pylint: disable=too-many-function-args
 
             self.trainer = DartsTrainer(model, loss=loss, optimizer=model_optim,
-                                        controller=mutator, **self.darts_parameters)
+                                        mutator=mutator, **self.darts_parameters)
             print("start pdrats training %s..." % epoch)
 
             self.trainer.train()

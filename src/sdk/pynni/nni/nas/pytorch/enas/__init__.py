@@ -1,2 +1,2 @@
-from .controller import EnasController
+from .mutator import EnasMutator
 from .trainer import EnasTrainer

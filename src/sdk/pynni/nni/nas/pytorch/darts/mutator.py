@@ -2,14 +2,15 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from nni.nas.pytorch.controller import Controller
+from nni.nas.pytorch.mutator import Mutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
 
-class DartsController(Controller):
-    def build(self, mutables):
+class DartsMutator(Mutator):
+    def __init__(self, model):
+        super().__init__(model)
         self.choices = nn.ParameterDict()
-        for mutable in mutables:
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length + 1))
 
@@ -17,24 +18,24 @@ class DartsController(Controller):
         for v in self.choices.values():
             return v.device
 
-    def sample_search(self, mutables):
+    def sample_search(self):
         result = dict()
-        for mutable in mutables:
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 result[mutable.key] = F.softmax(self.choices[mutable.key], dim=-1)[:-1]
             elif isinstance(mutable, InputChoice):
                 result[mutable.key] = torch.ones(mutable.n_candidates, dtype=torch.bool, device=self.device())
         return result
 
-    def sample_final(self, mutables):
+    def sample_final(self):
         result = dict()
         edges_max = dict()
-        for mutable in mutables:
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 max_val, index = torch.max(F.softmax(self.choices[mutable.key], dim=-1)[:-1], 0)
                 edges_max[mutable.key] = max_val
                 result[mutable.key] = F.one_hot(index, num_classes=mutable.length).view(-1).bool()
-        for mutable in mutables:
+        for mutable in self.mutables:
             if isinstance(mutable, InputChoice):
                 weights = torch.tensor([edges_max.get(src_key, 0.) for src_key in mutable.choose_from])  # pylint: disable=not-callable
                 _, topk_edge_indices = torch.topk(weights, mutable.n_chosen or mutable.n_candidates)

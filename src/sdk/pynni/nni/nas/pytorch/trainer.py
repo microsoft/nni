@@ -22,19 +22,18 @@ class TorchTensorEncoder(json.JSONEncoder):
 
 
 class Trainer(BaseTrainer):
-    def __init__(self, model, controller, loss, metrics, optimizer, num_epochs,
+    def __init__(self, model, mutator, loss, metrics, optimizer, num_epochs,
                  dataset_train, dataset_valid, batch_size, workers, device, log_frequency, callbacks):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if device is None else device
         self.model = model
-        self.controller = controller
+        self.mutator = mutator
         self.loss = loss
 
         self.metrics = metrics
         self.optimizer = optimizer
-        self.mutator = Mutator(self.model, self.controller)
 
         self.model.to(self.device)
-        self.controller.to(self.device)
+        self.mutator.to(self.device)
         self.loss.to(self.device)
 
         self.num_epochs = num_epochs

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.nas.pytorch.controller import Controller
+from nni.nas.pytorch.mutator import Mutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice, MutableScope
 
 
@@ -24,10 +24,10 @@ class StackedLSTMCell(nn.Module):
         return next_c, next_h
 
 
-class EnasController(Controller):
-    def __init__(self, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
+class EnasMutator(Mutator):
+    def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
                  skip_target=0.4, branch_bias=0.25):
-        super().__init__()
+        super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
         self.tanh_constant = tanh_constant
@@ -44,9 +44,8 @@ class EnasController(Controller):
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction="none")
         self.bias_dict = nn.ParameterDict()
 
-    def build(self, mutables):
         self.max_layer_choice = 0
-        for mutable in mutables:
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
                     self.max_layer_choice = mutable.length
@@ -63,13 +62,13 @@ class EnasController(Controller):
         self.embedding = nn.Embedding(self.max_layer_choice + 1, self.lstm_size)
         self.soft = nn.Linear(self.lstm_size, self.max_layer_choice, bias=False)
 
-    def sample_search(self, mutables):
+    def sample_search(self):
         self._initialize()
-        self._sample(mutables)
+        self._sample(self.mutables)
         return self._choices
 
-    def sample_final(self, mutables):
-        return self.sample_search(mutables)
+    def sample_final(self):
+        return self.sample_search()
 
     def _sample(self, tree):
         mutable = tree.mutable
