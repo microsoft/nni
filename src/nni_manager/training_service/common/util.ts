@@ -27,7 +27,7 @@ import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
 import { file } from '../../node_modules/@types/tmp';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
+import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -219,22 +219,16 @@ export function getScriptName(fileNamePrefix: string): string {
     }
 }
 
-/**
- * generate script file
- * @param gpuMetricCollectorScriptFolder
- */
-export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
+export function getGpuMetricsCollectorBashScriptContent(scriptFolder: string): string {
+    return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni_gpu_tool.gpu_metrics_collector`;
+}
+
+export function runGpuMetricsCollector(scriptFolder: string): void {
     if (process.platform === 'win32') {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_WINDOWS,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        const scriptPath = path.join(scriptFolder, 'gpu_metrics_collector.ps1');
+        const content = String.Format(GPU_INFO_COLLECTOR_FORMAT_WINDOWS, scriptFolder, path.join(scriptFolder, 'pid'));
+        fs.writeFile(scriptPath, content, { encoding: 'utf8' }, () => { runScript(scriptPath); });
     } else {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        cp.exec(getGpuMetricsCollectorBashScriptContent(scriptFolder), { shell: '/bin/bash' });
     }
 }
