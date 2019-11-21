@@ -157,13 +157,13 @@ class CompressorTestCase(TestCase):
         weight = torch.tensor([[1, 2], [3, 5]]).float()
         quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
         assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
-        assert math.isclose(model.conv2.zero_point, 0, abs_tol=eps)
+        assert model.conv2.zero_point == 0
 
          # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
         assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
-        assert math.isclose(model.conv2.zero_point, 42, abs_tol=eps)
+        assert model.conv2.zero_point == 42
 
         # test ema
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
