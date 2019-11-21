@@ -12,7 +12,7 @@ from .mutator import DartsMutator
 class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=0, device=None, log_frequency=None,
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
