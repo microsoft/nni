@@ -98,13 +98,14 @@ if __name__ == "__main__":
     parser.add_argument("--drop-path-prob", default=0.2, type=float)
     parser.add_argument("--workers", default=4)
     parser.add_argument("--grad-clip", default=5., type=float)
+    parser.add_argument("--arc-checkpoint", default="./checkpoints/epoch_0.json")
 
     args = parser.parse_args()
     assert torch.cuda.is_available()
     dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
     model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
-    archit = FixedArchitecture(model, "./checkpoints/epoch_0.json")
+    archit = FixedArchitecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
     model.cuda()
     criterion.cuda()
