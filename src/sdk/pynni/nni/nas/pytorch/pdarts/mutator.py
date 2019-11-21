@@ -14,7 +14,7 @@ from nni.nas.pytorch.mutables import LayerChoice
 
 class PdartsMutator(DartsMutator):
 
-    def __init__(self, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
+    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
         if switches is None:
@@ -22,16 +22,12 @@ class PdartsMutator(DartsMutator):
         else:
             self.switches = switches
 
-        super(PdartsMutator, self).__init__()
+        super(PdartsMutator, self).__init__(model)
 
-    def before_build(self):
-        self.choices = nn.ParameterDict()
-
-        for _, mutable in self.named_mutables():
+        for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
 
-                switches = self.switches.get(
-                    mutable.key, [True for j in range(mutable.length)])
+                switches = self.switches.get(mutable.key, [True for j in range(mutable.length)])
 
                 for index in range(len(switches)-1, -1, -1):
                     if switches[index] == False:
@@ -39,10 +35,6 @@ class PdartsMutator(DartsMutator):
                         mutable.length -= 1
 
                 self.switches[mutable.key] = switches
-                self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(len(mutable) + 1))
-
-    def on_calc_layer_choice_mask(self, mutable: LayerChoice):
-        return F.softmax(self.choices[mutable.key], dim=-1)
 
     def drop_paths(self):
         for key in self.switches:

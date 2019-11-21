@@ -39,23 +39,21 @@ class PdartsTrainer(BaseTrainer):
             layers = self.layers+self.pdarts_num_layers[epoch]
             model, criterion, optim, lr_scheduler = self.model_creator(layers)
 
-            mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
+            self.mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
 
-            self.trainer = DartsTrainer(model, loss=criterion, optimizer=optim, callbacks=[LearningRateScheduler(
+            self.trainer = DartsTrainer(model, mutator=self.mutator, loss=criterion, optimizer=optim, callbacks=[LearningRateScheduler(
                 lr_scheduler), ArchitectureCheckpoint("./checkpoints")], **self.darts_parameters)
             print("start pdarts training %s..." % epoch)
 
             self.trainer.train()
-            self.trainer.validate()
 
-            # with open('log/parameters_%d.txt' % epoch, "w") as f:
-            #     f.write(str(model.parameters))
-
-            switches = mutator.drop_paths()
+            switches = self.mutator.drop_paths()
 
     def validate(self):
-        # pdarts validate after train, it doesn't support separated validation progress.
-        pass
+        self.model.validate()
 
-    def train_and_validate(self):
-        self.train()
+    def export(self):
+        self.mutator.export()
+
+    def checkpoint(self):
+        raise NotImplementedError("Not implemented yet")

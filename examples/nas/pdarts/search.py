@@ -12,27 +12,7 @@ import torch.nn as nn
 sys.path.append('../darts')
 import datasets
 from model import CNN
-
-
-def accuracy(output, target, topk=(1,)):
-    """ Computes the precision@k for the specified values of k """
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    # one-hot case
-    if target.ndimension() > 1:
-        target = target.max(1)[1]
-
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = dict()
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res["acc{}".format(k)] = correct_k.mul_(1.0 / batch_size).item()
-    return res
-
+from utils import accuracy
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
@@ -40,7 +20,7 @@ if __name__ == "__main__":
                         default=[0, 6, 12], help='add layers')
     parser.add_argument("--nodes", default=4, type=int)
     parser.add_argument("--layers", default=5, type=int)
-    parser.add_argument("--batch-size", default=128, type=int)
+    parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=1, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     args = parser.parse_args()
@@ -66,4 +46,4 @@ if __name__ == "__main__":
                             dataset_valid=dataset_valid,
                             batch_size=args.batch_size,
                             log_frequency=args.log_frequency)
-    trainer.train_and_validate()
+    trainer.train()
