@@ -23,6 +23,11 @@ import logging
 import json_tricks
 
 
+# print INFO log to stdout
+logging.basicConfig()
+logging.getLogger('nni').setLevel(logging.INFO)
+
+
 def get_next_parameter():
     pass
 
@@ -41,8 +46,3 @@ def send_metric(string):
         print('Final result:', metric['value'])
     elif metric['type'] == 'PERIODICAL':
         print('Intermediate result:', metric['value'])
-
-def _init():
-    # print INFO log to stdout
-    logging.basicConfig()
-    logging.getLogger('nni').setLevel(logging.INFO)
