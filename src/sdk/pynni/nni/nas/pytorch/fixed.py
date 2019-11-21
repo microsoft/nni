@@ -2,10 +2,12 @@ import json
 
 import torch
 
+from nni.nas.pytorch.mutables import MutableScope
 from nni.nas.pytorch.mutator import Mutator
 
 
 class FixedArchitecture(Mutator):
+
     def __init__(self, model, fixed_arc, strict=True):
         """
         Initialize a fixed architecture mutator.
@@ -20,39 +22,57 @@ class FixedArchitecture(Mutator):
             Force everything that appears in `fixed_arc` to be used at least once.
         """
         super().__init__(model)
-        if isinstance(fixed_arc, str):
-            with open(fixed_arc, "r") as f:
-                fixed_arc = json.load(f.read())
         self._fixed_arc = fixed_arc
-        self._strict = strict
 
-    def _encode_tensor(self, data):
-        if isinstance(data, list):
-            if all(map(lambda o: isinstance(o, bool), data)):
-                return torch.tensor(data, dtype=torch.bool)  # pylint: disable=not-callable
-            else:
-                return torch.tensor(data, dtype=torch.float)  # pylint: disable=not-callable
-        if isinstance(data, dict):
-            return {k: self._encode_tensor(v) for k, v in data.items()}
-        return data
+        mutable_keys = set([mutable.key for mutable in self.mutables if not isinstance(mutable, MutableScope)])
+        fixed_arc_keys = set(self._fixed_arc.keys())
+        if fixed_arc_keys - mutable_keys:
+            raise RuntimeError("Unexpected keys found in fixed architecture: {}.".format(fixed_arc_keys - mutable_keys))
+        if mutable_keys - fixed_arc_keys:
+            raise RuntimeError("Missing keys in fixed architecture: {}.".format(mutable_keys - fixed_arc_keys))
 
-    def before_pass(self):
-        self._unused_key = set(self._fixed_arc.keys())
+    def sample_search(self):
+        return self._fixed_arc
 
-    def after_pass(self):
-        if self._strict:
-            if self._unused_key:
-                raise ValueError("{} are never used by the network. "
-                                 "Set strict=False if you want to disable this check.".format(self._unused_key))
+    def sample_final(self):
+        return self._fixed_arc
 
-    def _check_key(self, key):
-        if key not in self._fixed_arc:
-            raise ValueError("\"{}\" is demanded by the network, but not found in saved architecture.".format(key))
 
-    def on_calc_layer_choice_mask(self, mutable):
-        self._check_key(mutable.key)
-        return self._fixed_arc[mutable.key]
+def _encode_tensor(data, device):
+    if isinstance(data, list):
+        if all(map(lambda o: isinstance(o, bool), data)):
+            return torch.tensor(data, dtype=torch.bool, device=device)  # pylint: disable=not-callable
+        else:
+            return torch.tensor(data, dtype=torch.float, device=device)  # pylint: disable=not-callable
+    if isinstance(data, dict):
+        return {k: _encode_tensor(v, device) for k, v in data.items()}
+    return data
 
-    def on_calc_input_choice_mask(self, mutable, tags):
-        self._check_key(mutable.key)
-        return self._fixed_arc[mutable.key]
+
+def apply_fixed_architecture(model, fixed_arc_path, device=None):
+    """
+    Load architecture from `fixed_arc_path` and apply to model.
+
+    Parameters
+    ----------
+    model: torch.nn.Module
+        Model with mutables.
+    fixed_arc_path: str
+        Path to the JSON that stores the architecture.
+    device: torch.device
+        Architecture weights will be transfered to `device`.
+
+    Returns
+    -------
+    FixedArchitecture
+    """
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if isinstance(fixed_arc_path, str):
+        with open(fixed_arc_path, "r") as f:
+            fixed_arc = json.load(f)
+    fixed_arc = _encode_tensor(fixed_arc, device)
+    architecture = FixedArchitecture(model, fixed_arc)
+    architecture.to(device)
+    architecture.reset()

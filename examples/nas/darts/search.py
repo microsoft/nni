@@ -13,7 +13,7 @@ from utils import accuracy
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--layers", default=8, type=int)
-    parser.add_argument("--batch-size", default=96, type=int)
+    parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     args = parser.parse_args()
@@ -36,4 +36,4 @@ if __name__ == "__main__":
                            batch_size=args.batch_size,
                            log_frequency=args.log_frequency,
                            callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
-    trainer.train_and_validate()
+    trainer.train()
