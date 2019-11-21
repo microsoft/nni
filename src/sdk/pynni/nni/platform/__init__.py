@@ -23,6 +23,7 @@ from ..env_vars import trial_env_vars
 
 if trial_env_vars.NNI_PLATFORM is None:
     from .standalone import *
+    _init()
 elif trial_env_vars.NNI_PLATFORM == 'unittest':
     from .test import *
 elif trial_env_vars.NNI_PLATFORM in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'):
