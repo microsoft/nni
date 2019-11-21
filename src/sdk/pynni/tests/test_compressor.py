@@ -82,7 +82,8 @@ class CompressorTestCase(TestCase):
         assert "fc1" in modules_to_compress_name
         assert "fc2" in modules_to_compress_name
         assert "relu" in modules_to_compress_name
-    
+        assert len(modules_to_compress_name) == 5
+
     def test_torch_level_pruner(self):
         model = TorchModel()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
