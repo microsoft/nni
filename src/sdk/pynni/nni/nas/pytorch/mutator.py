@@ -31,23 +31,6 @@ class Mutator(BaseMutator):
         """
         return self.controller.sample_final(self._structured_mutables)
 
-    def get_decision(self, mutable):
-        """
-        By default, this method checks whether `mutable.key` is already in the decision cache, and returns the result
-        without double-check.
-
-        Parameters
-        ----------
-        mutable: Mutable
-
-        Returns
-        -------
-        any
-        """
-        if mutable.key not in self._cache:
-            raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
-        return self._cache[mutable.key]
-
     def on_forward_layer_choice(self, mutable, *inputs):
         """
         On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
@@ -67,7 +50,7 @@ class Mutator(BaseMutator):
         def _map_fn(op, *inputs):
             return op(*inputs)
 
-        mask = self.get_decision(mutable)
+        mask = self._get_decision(mutable)
         assert len(mask) == len(mutable.choices)
         out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
@@ -89,7 +72,7 @@ class Mutator(BaseMutator):
         -------
         tuple of torch.Tensor and torch.Tensor
         """
-        mask = self.get_decision(mutable)
+        mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates
         out = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
@@ -117,3 +100,20 @@ class Mutator(BaseMutator):
         if reduction_type == "concat":
             return torch.cat(tensor_list, dim=1)
         raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+
+    def _get_decision(self, mutable):
+        """
+        By default, this method checks whether `mutable.key` is already in the decision cache,
+        and returns the result without double-check.
+
+        Parameters
+        ----------
+        mutable: Mutable
+
+        Returns
+        -------
+        any
+        """
+        if mutable.key not in self._cache:
+            raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
+        return self._cache[mutable.key]

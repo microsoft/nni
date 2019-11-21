@@ -71,22 +71,6 @@ class BaseMutator:
         """
         pass
 
-    def get_decision(self, mutable):
-        """
-        Retrieve the decision of a mutable. Type of decisions might be expecting different types of mutables.
-        For example, decision for a layer choice or an input choice is a mask. A customized mutable might require a
-        different type of decision, or never ask one.
-
-        Parameters
-        ----------
-        mutable: Mutable
-
-        Returns
-        -------
-        any
-        """
-        raise NotImplementedError
-
     def on_forward_layer_choice(self, mutable, *inputs):
         """
         Callbacks of forward in LayerChoice.

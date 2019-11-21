@@ -94,10 +94,6 @@ class LayerChoice(Mutable):
             return out, mask
         return out
 
-    @property
-    def mask(self):
-        return self.mutator.get_decision(self)
-
 
 class InputChoice(Mutable):
     """
@@ -179,7 +175,3 @@ class InputChoice(Mutable):
         if self.return_mask:
             return out, mask
         return out
-
-    @property
-    def mask(self):
-        return self.mutator.get_decision(self)
