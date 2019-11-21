@@ -71,7 +71,6 @@ def update_quantization_param(bits, rmin, rmax):
     # the min and max quantized values, as floating-point values
     qmin = 0
     qmax = (1 << bits) - 1
-
     # First determine the scale.
     scale = (rmax - rmin) / (qmax - qmin)
 
@@ -131,7 +130,7 @@ class QAT_Quantizer(Quantizer):
             layer.module.register_buffer("zero_point", None)
             layer.module.register_buffer("scale", None)
             if "output" in config.get("quant_types", []):
-                layer.module.register_buffer('ema_decay', torch.Tensor([0.999]))
+                layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_min', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_biased', torch.zeros(1))

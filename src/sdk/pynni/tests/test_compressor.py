@@ -3,6 +3,7 @@ import tensorflow as tf
 import torch
 import torch.nn.functional as F
 import nni.compression.torch as torch_compressor
+import math
 
 if tf.__version__ >= '2.0':
     import nni.compression.tensorflow as tf_compressor
@@ -68,7 +69,7 @@ class CompressorTestCase(TestCase):
             'op_types':['Conv2d', 'Linear']
         }]
         torch_compressor.NaiveQuantizer(model, configure_list).compress()
-
+    
     @tf2
     def test_tf_pruner(self):
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
@@ -82,6 +83,50 @@ class CompressorTestCase(TestCase):
     def test_tf_fpgm_pruner(self):
         configure_list = [{'sparsity': 0.5, 'op_types': ['Conv2D']}]
         tf_compressor.FPGMPruner(get_tf_mnist_model(), configure_list).compress()
+    
+
+    def test_torch_QAT_quantizer(self):
+        model = TorchMnist()
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types':['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 0,
+            'op_types':['ReLU']
+        }]
+
+        model.relu = torch.nn.ReLU()
+        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer.compress()
+
+        # test quantize
+        # range not including 0
+        eps = 1e-7
+        weight = torch.tensor([[1, 2], [3, 5]]).float()
+        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
+        assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
+        assert math.isclose(model.conv2.zero_point, 0, abs_tol=eps)
+
+         # range including 0
+        weight = torch.tensor([[-1, 2], [3, 5]]).float()
+        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
+        assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
+        assert math.isclose(model.conv2.zero_point, 42, abs_tol=eps)
+
+        # test ema
+        x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
+        out = model.relu(x)
+        assert math.isclose(model.relu.tracked_min_biased, 0, abs_tol=eps)
+        assert math.isclose(model.relu.tracked_max_biased, 0.002, abs_tol=eps)
+
+        quantizer.step()
+        x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
+        out = model.relu(x)
+        assert math.isclose(model.relu.tracked_min_biased, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.tracked_max_biased, 0.00998, abs_tol=eps)
 
 
 if __name__ == '__main__':
