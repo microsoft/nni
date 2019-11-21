@@ -32,20 +32,19 @@ class PdartsTrainer(BaseTrainer):
             "log_frequency": log_frequency
         }
         self.callbacks = callbacks if callbacks is not None else []
-        for callback in self.callbacks:
-            callback.build(self.model, self.mutator, self)
 
     def train(self):
         layers = self.layers
         switches = None
         for epoch in range(self.pdarts_epoch):
-            for callback in self.callbacks:
-                callback.on_epoch_begin(epoch)
 
             layers = self.layers+self.pdarts_num_layers[epoch]
             model, criterion, optim, lr_scheduler = self.model_creator(layers)
-
             self.mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
+
+            for callback in self.callbacks:
+                callback.build(self.model, self.mutator, self)
+                callback.on_epoch_begin(epoch)
 
             darts_callbacks = []
             if lr_scheduler is not None:
