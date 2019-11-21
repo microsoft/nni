@@ -81,6 +81,21 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
 }
 
 /**
+ * copy files to the directory
+ * @param source
+ * @param destination
+ */
+export async function execCopydir(source: string, destination: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe Copy-Item ${source} -Destination ${destination} -Recurse`);
+    } else {
+        await cpp.exec(`cp -r ${source} ${destination}`);
+    }
+
+    return Promise.resolve();
+}
+
+/**
  * crete a new file
  * @param filename
  */
