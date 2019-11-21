@@ -42,7 +42,7 @@ class MnistModel(Model):
             Dropout rate between two fully connected (dense) layers, to prevent co-adaptation.
         """
         super().__init__()
-        self.conv1 = Conv2D(32, kernel_size=conv_size, activation='relu')
+        self.conv1 = Conv2D(filters=32, kernel_size=conv_size, activation='relu')
         self.pool1 = MaxPool2D(pool_size=2)
         self.conv2 = Conv2D(filters=64, kernel_size=conv_size, activation='relu')
         self.pool2 = MaxPool2D(pool_size=2)

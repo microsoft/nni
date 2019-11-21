@@ -1,5 +1,5 @@
-authorName: default
-experimentName: example_dist
+authorName: NNI Example
+experimentName: MNIST TF v2.x
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 1
