@@ -190,13 +190,13 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 >
 > The procedure of pruning m filters from the ith convolutional layer is as follows:
 >
-> 1. For each filter $F_{i,j}$ , calculate the sum of its absolute kernel weights $s_j = \sum_{l=1}^{n_i}\sum|K_l|$
-> 2. Sort the filters by $s_j$.
-> 3. Prune $m$ filters with the smallest sum values and their corresponding feature maps. The
-> kernels in the next convolutional layer corresponding to the pruned feature maps are also
-> removed.
-> 4. A new kernel matrix is created for both the $i$th and $i+1$th layers, and the remaining kernel
-> weights are copied to the new model.
+> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j = \sum_{l=1}^{n_i}\sum|K_l|)
+> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
+> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The
+>   kernels in the next convolutional layer corresponding to the pruned feature maps are also
+>   removed.
+> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
+>   weights are copied to the new model.
 
 ```
 from nni.compression.torch import L1FilterPruner
