@@ -58,6 +58,31 @@ k5 = [[5]*3]*3
 w = [[k1, k2, k3, k4, k5]] * 10
 
 class CompressorTestCase(TestCase):
+    def test_torch_quantizer_modules_detection(self):
+        # test if modules can be detected
+        model = TorchModel()
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types':['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 0,
+            'op_types':['ReLU']
+        }]
+
+        model.relu = torch.nn.ReLU()
+        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer.compress()
+        modules_to_compress = quantizer.get_modules_to_compress()
+        modules_to_compress_name = [ t[0].name for t in modules_to_compress]
+        assert "conv1" in modules_to_compress_name
+        assert "conv2" in modules_to_compress_name
+        assert "fc1" in modules_to_compress_name
+        assert "fc2" in modules_to_compress_name
+        assert "relu" in modules_to_compress_name
+    
     def test_torch_level_pruner(self):
         model = TorchModel()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
@@ -134,8 +159,9 @@ class CompressorTestCase(TestCase):
 
         assert all(masks.sum((0, 2, 3)) == np.array([90., 0., 0., 0., 90.]))
 
+
     def test_torch_QAT_quantizer(self):
-        model = TorchMnist()
+        model = TorchModel()
         config_list = [{
             'quant_types': ['weight'],
             'quant_bits': 8,
