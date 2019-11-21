@@ -43,7 +43,7 @@ class PdartsTrainer(BaseTrainer):
             self.mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
 
             for callback in self.callbacks:
-                callback.build(self.model, self.mutator, self)
+                callback.build(model, self.mutator, self)
                 callback.on_epoch_begin(epoch)
 
             darts_callbacks = []
