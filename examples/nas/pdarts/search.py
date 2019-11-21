@@ -11,7 +11,9 @@ import nni.nas.pytorch as nas
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint
 from nni.nas.pytorch.pdarts import PdartsTrainer
 
-with sys.path.append('../darts'):
+# prevent it to be reordered.
+if True:
+    sys.path.append('../darts')
     from utils import accuracy
     from model import CNN
     import datasets
