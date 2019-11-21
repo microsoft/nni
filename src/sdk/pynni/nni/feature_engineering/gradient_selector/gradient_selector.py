@@ -18,11 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-"""
-gradient_selector.py including:
-    class FeatureGradientSelector
-"""
-
 import time
 
 import numpy as np

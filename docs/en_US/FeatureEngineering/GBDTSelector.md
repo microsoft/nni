@@ -39,10 +39,6 @@ print(fgs.get_selected_features(10))
 And you could reference the examples in `/examples/trials/feature-selection/gbdt_selector/`, too.
 
 
-**Requirement of classArgs**
-
-    For now, classArgs has no parameters.
-
 **Requirement of `fit` FuncArgs**
 
 * **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]
@@ -61,5 +57,5 @@ And you could reference the examples in `/examples/trials/feature-selection/gbdt
 
 **Requirement of `get_selected_features` FuncArgs**
     
-    For now, the `get_selected_features` function has no parameters.
+* **topk** (int, require) - the topK impotance features you want to selected.
 

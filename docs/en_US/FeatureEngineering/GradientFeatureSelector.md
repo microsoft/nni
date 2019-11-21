@@ -35,8 +35,7 @@ print(fgs.get_selected_features())
 
 And you could reference the examples in `/examples/trials/feature-selection/gradient_feature_selector/`, too.
 
-
-**Requirement of classArgs**
+**Parameters of class FeatureGradientSelector constructor**
 
 * **order** (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
 
