@@ -1,7 +1,10 @@
+import logging
+
 import torch.nn as nn
 
 from nni.nas.pytorch.utils import global_mutable_counting
 
+logger = logging.getLogger("darts/trainer")
 
 class Mutable(nn.Module):
     """
@@ -20,7 +23,7 @@ class Mutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                print("Warning: key \"{}\" is not string, converted to string.".format(key))
+                logger.warn("Warning: key \"{}\" is not string, converted to string.".format(key))
             self._key = key
         else:
             self._key = self.__class__.__name__ + str(global_mutable_counting())

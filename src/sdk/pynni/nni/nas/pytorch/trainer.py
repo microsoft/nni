@@ -59,12 +59,12 @@ class Trainer(BaseTrainer):
                 callback.on_epoch_begin(epoch)
 
             # training
-            print("Epoch {} Training".format(epoch))
+            _logger.info("Epoch {} Training".format(epoch))
             self.train_one_epoch(epoch)
 
             if validate:
                 # validation
-                print("Epoch {} Validating".format(epoch))
+                _logger.info("Epoch {} Validating".format(epoch))
                 self.validate_one_epoch(epoch)
 
             for callback in self.callbacks:

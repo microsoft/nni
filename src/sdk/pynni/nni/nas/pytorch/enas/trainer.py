@@ -1,3 +1,4 @@
+import logging
 import torch
 import torch.optim as optim
 
@@ -5,6 +6,8 @@ from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
 from .mutator import EnasMutator
 
+
+logger = logging.getLogger("enas/trainer")
 
 class EnasTrainer(Trainer):
     def __init__(self, model, loss, metrics, reward_function,
@@ -70,7 +73,7 @@ class EnasTrainer(Trainer):
             meters.update(metrics)
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                print("Model Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
+                logger.info("Model Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
                                                                     step, len(self.train_loader), meters))
 
         # Train sampler (mutator)
@@ -109,7 +112,7 @@ class EnasTrainer(Trainer):
                     self.mutator_optim.zero_grad()
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("RL Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
+                    logger.info("RL Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
                                                                      mutator_step // self.mutator_steps_aggregate,
                                                                      self.mutator_steps, meters))
                 mutator_step += 1

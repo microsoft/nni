@@ -1,14 +1,17 @@
+import logging
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
 
+import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
+                                       LearningRateScheduler)
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")

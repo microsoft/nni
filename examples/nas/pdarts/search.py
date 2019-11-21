@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 import sys
 from argparse import ArgumentParser
 
@@ -17,6 +18,9 @@ if True:
     from utils import accuracy
     from model import CNN
     import datasets
+
+
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
