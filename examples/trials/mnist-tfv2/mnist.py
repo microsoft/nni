@@ -21,10 +21,7 @@ from tensorflow.keras.optimizers import Adam
 import nni
 
 _logger = logging.getLogger('mnist_example')
-
-# Uncomment following lines to print metrics to stdout:
-# logging.basicConfig()
-# _logger.setLevel(logging.INFO)
+_logger.setLevel(logging.INFO)
 
 
 class MnistModel(Model):
@@ -75,33 +72,14 @@ class ReportIntermediates(Callback):
 
     If an assessor is configured in experiment's YAML file,
     it will use these metrics for early stopping.
-
-    Please note that most assessors expect all trials to have same number of intermediate results
-    (if its not early-stopped).
     """
-    def __init__(self, batch_size):
-        """
-        Initializer. Batch_size is used to output fixed number of intermediate results.
-        """
-        self._batch_size = batch_size
-        self._epoch = 0
-        self._steps = 0
-
-    def on_batch_end(self, batch, logs=None):
-        """Reports accuracy for every 10000 steps"""
-        self._steps += self._batch_size
-        while self._steps >= 10000:
-            self._steps -= 10000
-            _logger.info(
-                'Epoch: %s  Batch: %s  Intermediate accuracy: %s',
-                self._epoch, batch, logs['accuracy']
-            )
-            nni.report_intermediate_result(logs['accuracy'])  # send accuracy to NNI framework
-
     def on_epoch_end(self, epoch, logs=None):
-        """To log current epoch"""
-        self._epoch += 1
-        self._steps = 0
+        """Reports intermediate accuracy to NNI framework"""
+        # TensorFlow 2.0 API reference claims the key is `val_acc`, but in fact it's `val_accuracy`
+        if 'val_acc' in logs:
+            nni.report_intermediate_result(logs['val_acc'])
+        else:
+            nni.report_intermediate_result(logs['val_accuracy'])
 
 
 def load_dataset():
@@ -129,8 +107,10 @@ def main(params):
     )
     optimizer = Adam(learning_rate=params['learning_rate'])
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    _logger.info('Model built')
 
     (x_train, y_train), (x_test, y_test) = load_dataset()
+    _logger.info('Dataset loaded')
 
     model.fit(
         x_train,
@@ -138,12 +118,14 @@ def main(params):
         batch_size=params['batch_size'],
         epochs=10,
         verbose=0,
-        callbacks=[ReportIntermediates(params['batch_size'])]
+        callbacks=[ReportIntermediates()],
+        validation_data=(x_test, y_test)
     )
+    _logger.info('Training completed')
 
     result = model.evaluate(x_test, y_test, verbose=0)
-    _logger.info('Final accuracy: %s', result[1])
     nni.report_final_result(result[1])  # send final accuracy to NNI tuner and web UI
+    _logger.info('Final accuracy reported: %s', result[1])
 
 
 if __name__ == '__main__':
@@ -151,7 +133,7 @@ if __name__ == '__main__':
         'dropout_rate': 0.5,
         'conv_size': 5,
         'hidden_size': 1024,
-        'batch_size': 32,
+        'batch_size': 100,
         'learning_rate': 1e-4,
     }
 
