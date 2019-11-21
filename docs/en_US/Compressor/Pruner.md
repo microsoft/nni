@@ -180,13 +180,13 @@ You can view example for more information
 
 ***
 
-## Filter Pruner
+## L1Filter Pruner
 
 This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
 
-![](../../img/filter_pruner.png)
+![](../../img/l1filter_pruner.png)
 
-> Filter Pruner prunes filters in the **convolution layers**
+> L1Filter Pruner prunes filters in the **convolution layers**
 >
 > The procedure of pruning m filters from the ith convolutional layer is as follows:
 >
@@ -199,16 +199,16 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 > weights are copied to the new model.
 
 ```
-from nni.compression.torch import FilterPruner
+from nni.compression.torch import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-pruner = FilterPruner(model, config_list)
+pruner = L1FilterPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for Filter Pruner
+#### User configuration for L1Filter Pruner
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in Filter Pruner
+- **op_types:** Only Conv2d is supported in L1Filter Pruner
 
 ## Slim Pruner
 

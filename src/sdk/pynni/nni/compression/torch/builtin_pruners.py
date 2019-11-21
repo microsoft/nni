@@ -2,7 +2,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner', 'FilterPruner', 'SlimPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner', 'L1FilterPruner', 'SlimPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -99,7 +99,7 @@ class AGP_Pruner(Pruner):
         op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True)\
+        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
                 and (self.now_epoch - start_epoch) % freq == 0:
             mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
             target_sparsity = self.compute_target_sparsity(config)
@@ -282,7 +282,7 @@ class FPGMPruner(Pruner):
         self.epoch_pruned_layers = set()
 
 
-class FilterPruner(Pruner):
+class L1FilterPruner(Pruner):
     """
     A structured pruning algorithm that prunes the filters of smallest magnitude
     weights sum in the convolution layers to achieve a preset level of network sparsity.
@@ -298,11 +298,12 @@ class FilterPruner(Pruner):
         model : torch.nn.module
             Model to be pruned
         config_list : list
-            List on pruning configs
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
         """
 
         super().__init__(model, config_list)
-        self.if_init_list = {}
+        self.mask_calculated_ops = set()
 
     def calc_mask(self, layer, config):
         """
@@ -323,8 +324,12 @@ class FilterPruner(Pruner):
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
-        assert op_type == 'Conv2d', 'FilterPruner only supports 2d convolution layer pruning'
-        if self.if_init_list.get(op_name, True):
+        assert op_type == 'Conv2d', 'L1FilterPruner only supports 2d convolution layer pruning'
+        if op_name in self.mask_calculated_ops:
+            assert op_name in self.mask_dict
+            return self.mask_dict.get(op_name)
+        mask = torch.ones(weight.size()).type_as(weight)
+        try:
             kernels = weight.shape[0]
             w_abs = weight.abs()
             k = int(kernels * config['sparsity'])
@@ -333,10 +338,10 @@ class FilterPruner(Pruner):
             w_abs_structured = w_abs.view(kernels, -1).sum(dim=1)
             threshold = torch.topk(w_abs_structured.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-            self.mask_dict.update({op_name: mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            mask = self.mask_dict[op_name]
+        finally:
+            self.mask_dict.update({layer.name: mask})
+            self.mask_calculated_ops.add(layer.name)
+
         return mask
 
 
@@ -353,11 +358,12 @@ class SlimPruner(Pruner):
         Parameters
         ----------
         config_list : list
-            List of pruning configs
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
         """
 
         super().__init__(model, config_list)
-        self.if_init_list = {}
+        self.mask_calculated_ops = set()
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
@@ -389,11 +395,15 @@ class SlimPruner(Pruner):
         op_name = layer.name
         op_type = layer.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if self.if_init_list.get(op_name, True):
+        if op_name in self.mask_calculated_ops:
+            assert op_name in self.mask_dict
+            return self.mask_dict.get(op_name)
+        mask = torch.ones(weight.size()).type_as(weight)
+        try:
             w_abs = weight.abs()
             mask = torch.gt(w_abs, self.global_threshold).type_as(weight)
-            self.mask_dict.update({op_name: mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            mask = self.mask_dict[op_name]
+        finally:
+            self.mask_dict.update({layer.name: mask})
+            self.mask_calculated_ops.add(layer.name)
+
         return mask

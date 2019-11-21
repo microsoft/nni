@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import FilterPruner
+from nni.compression.torch import L1FilterPruner
 
 
 class vgg(nn.Module):
@@ -140,7 +140,7 @@ def main():
 
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = FilterPruner(model, configure_list)
+    pruner = L1FilterPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
     # top1 = 88.19%
