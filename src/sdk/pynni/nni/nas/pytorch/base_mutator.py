@@ -39,6 +39,10 @@ class BaseMutator:
                 self._parse_search_space(submodule, root, submodule_prefix, memo=memo,
                                          nested_detection=nested_detection)
 
+    @property
+    def mutables(self):
+        return self._structured_mutables
+
     def enter_mutable_scope(self, mutable_scope):
         """
         Callback when forward of a MutableScope is entered.
