@@ -3,6 +3,7 @@
 
 import logging
 import sys
+import time
 from argparse import ArgumentParser
 
 import torch
@@ -19,6 +20,16 @@ if True:
     from model import CNN
     import datasets
 
+logger = logging.getLogger()
+
+fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+logging.Formatter.converter = time.localtime
+formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
+
+std_out_info = logging.StreamHandler()
+std_out_info.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(std_out_info)
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
@@ -31,6 +42,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", default=50, type=int)
     args = parser.parse_args()
 
+    logger.info("loading data")
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
     def model_creator(layers):
@@ -42,6 +54,7 @@ if __name__ == "__main__":
 
         return model, criterion, optim, lr_scheduler
 
+    logger.info("initializing trainer")
     trainer = PdartsTrainer(model_creator,
                             layers=args.layers,
                             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
@@ -53,4 +66,5 @@ if __name__ == "__main__":
                             batch_size=args.batch_size,
                             log_frequency=args.log_frequency,
                             callbacks=[ArchitectureCheckpoint("./checkpoints")])
+    logger.info("training")
     trainer.train()
