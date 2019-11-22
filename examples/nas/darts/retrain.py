@@ -11,8 +11,17 @@ from model import CNN
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeter
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+
+fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+logging.Formatter.converter = time.localtime
+formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
+
+std_out_info = logging.StreamHandler()
+std_out_info.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(std_out_info)
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
 
@@ -89,7 +98,7 @@ def validate(config, valid_loader, model, criterion, epoch, cur_step):
                     "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
                         epoch + 1, config.epochs, step, len(valid_loader) - 1, losses=losses,
                         top1=top1, top5=top5))
-        
+
     writer.add_scalar("loss/test", losses.avg, global_step=cur_step)
     writer.add_scalar("acc1/test", top1.avg, global_step=cur_step)
     writer.add_scalar("acc5/test", top5.avg, global_step=cur_step)

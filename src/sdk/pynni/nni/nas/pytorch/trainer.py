@@ -7,6 +7,7 @@ import torch
 from .base_trainer import BaseTrainer
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 
 class TorchTensorEncoder(json.JSONEncoder):
@@ -59,12 +60,12 @@ class Trainer(BaseTrainer):
                 callback.on_epoch_begin(epoch)
 
             # training
-            print("Epoch {} Training".format(epoch))
+            _logger.info("Epoch %d Training", epoch)
             self.train_one_epoch(epoch)
 
             if validate:
                 # validation
-                print("Epoch {} Validating".format(epoch))
+                _logger.info("Epoch %d Validating", epoch)
                 self.validate_one_epoch(epoch)
 
             for callback in self.callbacks:
