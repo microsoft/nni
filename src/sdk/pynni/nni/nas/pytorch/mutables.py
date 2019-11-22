@@ -127,19 +127,19 @@ class InputChoice(Mutable):
 
         Parameters
         ----------
-        n_candidates: int
+        n_candidates : int
             Number of inputs to choose from.
-        choose_from: list of str
+        choose_from : list of str
             List of source keys to choose from. At least of one of `choose_from` and `n_candidates` must be fulfilled.
             If `n_candidates` has a value but `choose_from` is None, it will be automatically treated as `n_candidates`
             number of empty string.
-        n_chosen: int
+        n_chosen : int
             Recommended inputs to choose. If None, mutator is instructed to select any.
-        reduction: str
+        reduction : str
             `mean`, `concat`, `sum` or `none`.
-        return_mask: bool
+        return_mask : bool
             If `return_mask`, return output tensor and a mask. Otherwise return tensor only.
-        key: str
+        key : str
             Key of the input choice.
         """
         super().__init__(key=key)
@@ -167,7 +167,7 @@ class InputChoice(Mutable):
 
         Parameters
         ----------
-        optional_inputs: list or dict
+        optional_inputs : list or dict
             Recommended to be a dict. As a dict, inputs will be converted to a list that follows the order of
             `choose_from` in initialization. As a list, inputs must follow the semantic order that is the same as
             `choose_from`.

@@ -147,11 +147,11 @@ class DartsTrainer(Trainer):
 
     def _compute_hessian(self, backup_params, dw, trn_X, trn_y):
         """
-        dw = dw` { L_val(w`, alpha) }
-        w+ = w + eps * dw
-        w- = w - eps * dw
-        hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
-        eps = 0.01 / ||dw||
+            dw = dw` { L_val(w`, alpha) }
+            w+ = w + eps * dw
+            w- = w - eps * dw
+            hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
+            eps = 0.01 / ||dw||
         """
         self._restore_weights(backup_params)
         norm = torch.cat([w.view(-1) for w in dw]).norm()

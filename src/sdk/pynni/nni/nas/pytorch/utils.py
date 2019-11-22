@@ -78,12 +78,12 @@ class StructuredMutableTreeNode:
 
         Parameters
         ----------
-        order: str
+        order : str
             pre or post. If pre, current mutable is yield before children. Otherwise after.
-        deduplicate: bool
+        deduplicate : bool
             If true, mutables with the same key will not appear after the first appearance.
-        memo: dict
-            An auxiliary variable to make deduplicate happen.
+        memo : dict
+            An auxiliary dict that memorize keys seen before, so that deduplication is possible.
 
         Returns
         -------

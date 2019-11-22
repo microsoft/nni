@@ -9,7 +9,7 @@ class DropPath_(nn.Module):
 
         Parameters
         ----------
-        p: float
+        p : float
             Probability of an path to be zeroed.
         """
         super().__init__()

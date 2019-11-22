@@ -66,7 +66,7 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable_scope: MutableScope
+        mutable_scope : MutableScope
         """
         pass
 
@@ -76,7 +76,7 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable_scope: MutableScope
+        mutable_scope : MutableScope
         """
         pass
 
@@ -86,8 +86,8 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable: LayerChoice
-        inputs: list of torch.Tensor
+        mutable : LayerChoice
+        inputs : list of torch.Tensor
 
         Returns
         -------
@@ -102,8 +102,8 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable: InputChoice
-        tensor_list: list of torch.Tensor
+        mutable : InputChoice
+        tensor_list : list of torch.Tensor
 
         Returns
         -------
