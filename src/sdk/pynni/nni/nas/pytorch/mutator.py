@@ -5,7 +5,6 @@ import torch
 from nni.nas.pytorch.base_mutator import BaseMutator
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Mutator(BaseMutator):
