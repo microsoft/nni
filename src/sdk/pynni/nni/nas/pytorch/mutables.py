@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from nni.nas.pytorch.utils import global_mutable_counting
 
-logger = logging.getLogger("darts/trainer")
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 

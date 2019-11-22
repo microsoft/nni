@@ -9,7 +9,7 @@ from nni.nas.pytorch.utils import AverageMeterGroup
 
 from .mutator import DartsMutator
 
-logger = logging.getLogger("darts/trainer")
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
