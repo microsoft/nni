@@ -28,6 +28,16 @@ class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self, name, fmt=':f'):
+        """
+        Initialization of AverageMeter
+
+        Parameters
+        ----------
+        name : str
+            Name to display.
+        fmt : str
+            Format string to print the values.
+        """
         self.name = name
         self.fmt = fmt
         self.reset()
@@ -78,12 +88,12 @@ class StructuredMutableTreeNode:
 
         Parameters
         ----------
-        order: str
+        order : str
             pre or post. If pre, current mutable is yield before children. Otherwise after.
-        deduplicate: bool
+        deduplicate : bool
             If true, mutables with the same key will not appear after the first appearance.
-        memo: dict
-            An auxiliary variable to make deduplicate happen.
+        memo : dict
+            An auxiliary dict that memorize keys seen before, so that deduplication is possible.
 
         Returns
         -------

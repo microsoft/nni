@@ -1,6 +1,6 @@
 import torch
-from torch import nn as nn
-from torch.nn import functional as F
+import torch.nn as nn
+import torch.nn.functional as F
 
 from nni.nas.pytorch.mutator import Mutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice

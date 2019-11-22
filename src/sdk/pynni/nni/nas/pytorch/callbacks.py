@@ -29,7 +29,7 @@ class Callback:
         pass
 
 
-class LearningRateScheduler(Callback):
+class LRSchedulerCallback(Callback):
     def __init__(self, scheduler, mode="epoch"):
         super().__init__()
         assert mode == "epoch"

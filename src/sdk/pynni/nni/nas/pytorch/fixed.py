@@ -14,11 +14,11 @@ class FixedArchitecture(Mutator):
 
         Parameters
         ----------
-        model: nn.Module
+        model : nn.Module
             A mutable network.
-        fixed_arc: str or dict
+        fixed_arc : str or dict
             Path to the architecture checkpoint (a string), or preloaded architecture object (a dict).
-        strict: bool
+        strict : bool
             Force everything that appears in `fixed_arc` to be used at least once.
         """
         super().__init__(model)
@@ -55,11 +55,11 @@ def apply_fixed_architecture(model, fixed_arc_path, device=None):
 
     Parameters
     ----------
-    model: torch.nn.Module
+    model : torch.nn.Module
         Model with mutables.
-    fixed_arc_path: str
+    fixed_arc_path : str
         Path to the JSON that stores the architecture.
-    device: torch.device
+    device : torch.device
         Architecture weights will be transfered to `device`.
 
     Returns
@@ -76,3 +76,4 @@ def apply_fixed_architecture(model, fixed_arc_path, device=None):
     architecture = FixedArchitecture(model, fixed_arc)
     architecture.to(device)
     architecture.reset()
+    return architecture

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import logging
-from nni.nas.pytorch.callbacks import LearningRateScheduler
+from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import BaseTrainer
 
@@ -50,7 +50,7 @@ class PdartsTrainer(BaseTrainer):
 
             darts_callbacks = []
             if lr_scheduler is not None:
-                darts_callbacks.append(LearningRateScheduler(lr_scheduler))
+                darts_callbacks.append(LRSchedulerCallback(lr_scheduler))
 
             self.trainer = DartsTrainer(model, mutator=self.mutator, loss=criterion, optimizer=optim,
                                         callbacks=darts_callbacks, **self.darts_parameters)

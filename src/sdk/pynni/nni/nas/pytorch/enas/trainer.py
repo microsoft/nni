@@ -6,9 +6,7 @@ from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
 from .mutator import EnasMutator
 
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class EnasTrainer(Trainer):
@@ -75,8 +73,8 @@ class EnasTrainer(Trainer):
             meters.update(metrics)
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                logger.info("Model Epoch [%s/%s] Step [%s/%s]  %s", epoch,
-                            self.num_epochs, step, len(self.train_loader), meters)
+                logger.info("Model Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                            self.num_epochs, step + 1, len(self.train_loader), meters)
 
         # Train sampler (mutator)
         self.model.eval()
@@ -114,8 +112,8 @@ class EnasTrainer(Trainer):
                     self.mutator_optim.zero_grad()
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    logger.info("RL Epoch [%s/%s] Step [%s/%s]  %s", epoch, self.num_epochs,
-                                mutator_step // self.mutator_steps_aggregate, self.mutator_steps, meters)
+                    logger.info("RL Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1, self.num_epochs,
+                                mutator_step // self.mutator_steps_aggregate + 1, self.mutator_steps, meters)
                 mutator_step += 1
                 if mutator_step >= total_mutator_steps:
                     break
