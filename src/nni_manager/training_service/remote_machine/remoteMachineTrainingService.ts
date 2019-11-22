@@ -67,7 +67,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly expRootDir: string;
     private readonly remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
-    private readonly gpuScheduler: GPUScheduler;
+    private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
     private stopping: boolean = false;
@@ -87,7 +87,6 @@ class RemoteMachineTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialSSHClientMap = new Map<string, Client>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, SSHClientManager>();
-        this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
@@ -334,6 +333,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
+                this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -397,9 +397,11 @@ class RemoteMachineTrainingService implements TrainingService {
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation(): void {
-        for (const [key, value] of this.trialJobsMap) {
-            if (!['WAITING', 'RUNNING'].includes(value.status)) {
-                this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+        if (this.gpuScheduler) {
+            for (const [key, value] of this.trialJobsMap) {
+                if (!['WAITING', 'RUNNING'].includes(value.status)) {
+                    this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+                }
             }
         }
     }
@@ -482,6 +484,9 @@ class RemoteMachineTrainingService implements TrainingService {
 
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
+        }
+        if (this.gpuScheduler === undefined) {
+            throw new Error('gpuScheduler is not initialized');
         }
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
