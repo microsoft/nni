@@ -89,7 +89,7 @@ export async function execCopydir(source: string, destination: string): Promise<
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe Copy-Item "${source}" -Destination "${destination}" -Recurse`);
     } else {
-        await cpp.exec(`cp -r '${source}' '${destination}'`);
+        await cpp.exec(`cp -r '${source}/.' '${destination}'`);
     }
 
     return Promise.resolve();
