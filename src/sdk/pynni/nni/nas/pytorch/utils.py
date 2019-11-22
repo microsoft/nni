@@ -28,6 +28,16 @@ class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self, name, fmt=':f'):
+        """
+        Initialization of AverageMeter
+
+        Parameters
+        ----------
+        name : str
+            Name to display.
+        fmt : str
+            Format string to print the values.
+        """
         self.name = name
         self.fmt = fmt
         self.reset()
