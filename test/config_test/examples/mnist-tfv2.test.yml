@@ -12,8 +12,8 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist
-  command: python3 mnist.py --batch_num 100
+  codeDir: ../../../examples/trials/mnist-tfv2
+  command: python3 mnist.py
   gpuNum: 0
 
 useAnnotation: false
