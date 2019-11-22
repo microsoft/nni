@@ -66,9 +66,10 @@ class Mutable(nn.Module):
 
 class MutableScope(Mutable):
     """
-    Mutable scope labels a subgraph/submodule to help mutators make better decisions.
+    Mutable scope marks a subgraph/submodule to help mutators make better decisions.
     Mutators get notified when a mutable scope is entered and exited. Mutators can override ``enter_mutable_scope``
     and ``exit_mutable_scope`` to catch corresponding events, and do status dump or update.
+    MutableScope are also mutables that are listed in the mutables (search space).
     """
 
     def __init__(self, key):

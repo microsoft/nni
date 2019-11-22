@@ -4,9 +4,13 @@ import torch.nn as nn
 
 class DropPath_(nn.Module):
     def __init__(self, p=0.):
-        """ [!] DropPath is inplace module
-        Args:
-            p: probability of an path to be zeroed.
+        """
+        DropPath is inplace module.
+
+        Parameters
+        ----------
+        p: float
+            Probability of an path to be zeroed.
         """
         super().__init__()
         self.p = p
@@ -26,13 +30,9 @@ class DropPath_(nn.Module):
 
 class PoolBN(nn.Module):
     """
-    AvgPool or MaxPool - BN
+    AvgPool or MaxPool with BN. `pool_type` must be `max` or `avg`.
     """
     def __init__(self, pool_type, C, kernel_size, stride, padding, affine=True):
-        """
-        Args:
-            pool_type: 'max' or 'avg'
-        """
         super().__init__()
         if pool_type.lower() == 'max':
             self.pool = nn.MaxPool2d(kernel_size, stride, padding)
@@ -50,8 +50,8 @@ class PoolBN(nn.Module):
 
 
 class StdConv(nn.Module):
-    """ Standard conv
-    ReLU - Conv - BN
+    """
+    Standard conv: ReLU - Conv - BN
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__()
@@ -66,8 +66,8 @@ class StdConv(nn.Module):
 
 
 class FacConv(nn.Module):
-    """ Factorized conv
-    ReLU - Conv(Kx1) - Conv(1xK) - BN
+    """
+    Factorized conv: ReLU - Conv(Kx1) - Conv(1xK) - BN
     """
     def __init__(self, C_in, C_out, kernel_length, stride, padding, affine=True):
         super().__init__()
@@ -83,10 +83,10 @@ class FacConv(nn.Module):
 
 
 class DilConv(nn.Module):
-    """ (Dilated) depthwise separable conv
-    ReLU - (Dilated) depthwise separable - Pointwise - BN
-    If dilation == 2, 3x3 conv => 5x5 receptive field
-                      5x5 conv => 9x9 receptive field
+    """
+    (Dilated) depthwise separable conv.
+    ReLU - (Dilated) depthwise separable - Pointwise - BN.
+    If dilation == 2, 3x3 conv => 5x5 receptive field, 5x5 conv => 9x9 receptive field.
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
         super().__init__()
@@ -103,8 +103,9 @@ class DilConv(nn.Module):
 
 
 class SepConv(nn.Module):
-    """ Depthwise separable conv
-    DilConv(dilation=1) * 2
+    """
+    Depthwise separable conv.
+    DilConv(dilation=1) * 2.
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__()
@@ -119,7 +120,7 @@ class SepConv(nn.Module):
 
 class FactorizedReduce(nn.Module):
     """
-    Reduce feature map size by factorized pointwise(stride=2).
+    Reduce feature map size by factorized pointwise (stride=2).
     """
     def __init__(self, C_in, C_out, affine=True):
         super().__init__()

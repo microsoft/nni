@@ -67,10 +67,6 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable_scope: MutableScope
-
-        Returns
-        -------
-        None
         """
         pass
 
@@ -81,10 +77,6 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable_scope: MutableScope
-
-        Returns
-        -------
-        None
         """
         pass
 
