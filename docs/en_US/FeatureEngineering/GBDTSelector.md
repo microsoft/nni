@@ -36,7 +36,7 @@ print(fgs.get_selected_features(10))
 ...
 ```
 
-And you could reference the examples in `/examples/trials/feature-selection/gbdt_selector/`, too.
+And you could reference the examples in `/examples/feature_engineering/gbdt_selector/`, too.
 
 
 **Requirement of `fit` FuncArgs**

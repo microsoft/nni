@@ -33,7 +33,7 @@ print(fgs.get_selected_features())
 ...
 ```
 
-And you could reference the examples in `/examples/trials/feature-selection/gradient_feature_selector/`, too.
+And you could reference the examples in `/examples/feature_engineering/gradient_feature_selector/`, too.
 
 **Parameters of class FeatureGradientSelector constructor**
 
