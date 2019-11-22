@@ -367,74 +367,33 @@ class PPOTuner(Tuner):
         self.send_trial_callback = None
         logger.info('Finished PPOTuner initialization')
 
-    def _process_one_nas_space(self, block_name, block_space):
-        """
-        Process nas space to determine observation space and action space
-
-        Parameters
-        ----------
-        block_name : str
-            The name of the mutable block
-        block_space : dict
-            Search space of this mutable block
-
-        Returns
-        -------
-        actions_spaces : list
-            List of the space of each action
-        actions_to_config : list
-            The mapping from action to generated configuration
-        """
-        actions_spaces = []
-        actions_to_config = []
-
-        block_arch_temp = {}
-        for l_name, layer in block_space.items():
-            chosen_layer_temp = {}
-
-            if len(layer['layer_choice']) > 1:
-                actions_spaces.append(layer['layer_choice'])
-                actions_to_config.append((block_name, l_name, 'chosen_layer'))
-                chosen_layer_temp['chosen_layer'] = None
-            else:
-                assert len(layer['layer_choice']) == 1
-                chosen_layer_temp['chosen_layer'] = layer['layer_choice'][0]
-
-            if layer['optional_input_size'] not in [0, 1, [0, 1]]:
-                raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'
-                                 % (layer['optional_input_size']))
-            if isinstance(layer['optional_input_size'], list):
-                actions_spaces.append(["None", *layer['optional_inputs']])
-                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
-                chosen_layer_temp['chosen_inputs'] = None
-            elif layer['optional_input_size'] == 1:
-                actions_spaces.append(layer['optional_inputs'])
-                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
-                chosen_layer_temp['chosen_inputs'] = None
-            elif layer['optional_input_size'] == 0:
-                chosen_layer_temp['chosen_inputs'] = []
-            else:
-                raise ValueError('invalid type and value of optional_input_size')
-
-            block_arch_temp[l_name] = chosen_layer_temp
-
-        self.chosen_arch_template[block_name] = block_arch_temp
-
-        return actions_spaces, actions_to_config
-
     def _process_nas_space(self, search_space):
-        """
-        Process nas search space to get action/observation space
-        """
         actions_spaces = []
         actions_to_config = []
-        for b_name, block in search_space.items():
-            if block['_type'] != 'mutable_layer':
-                raise ValueError('PPOTuner only accept mutable_layer type in search space, but the current one is %s'%(block['_type']))
-            block = block['_value']
-            act, act_map = self._process_one_nas_space(b_name, block)
-            actions_spaces.extend(act)
-            actions_to_config.extend(act_map)
+        for key, val in search_space.items():
+            if val['_type'] == 'layer_choice':
+                actions_to_config.append((key, 'layer_choice'))
+                actions_spaces.append(val['_value'])
+                self.chosen_arch_template[key] = None
+            elif val['_type'] == 'input_choice':
+                candidates = val['_value']['candidates']
+                n_chosen = val['_value']['n_chosen']
+                if n_chosen not in [0, 1, [0, 1]]:
+                    raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'
+                                     % (layer['optional_input_size']))
+                if isinstance(n_chosen, list):
+                    actions_to_config.append((key, 'input_choice'))
+                    # FIXME: risk, candidates might also have None
+                    actions_spaces.append(["None", *candidates])
+                    self.chosen_arch_template[key] = None
+                elif n_chosen == 1:
+                    actions_to_config.append((key, 'input_choice'))
+                    actions_spaces.append(candidates)
+                    self.chosen_arch_template[key] = None
+                elif n_chosen == 0:
+                    self.chosen_arch_template[key] = []
+            else:
+                raise ValueError('Unsupported search space type: %s' % (val['_type']))
 
         # calculate observation space
         dedup = {}
@@ -444,7 +403,6 @@ class PPOTuner(Tuner):
         full_act_space = [act for act, _ in dedup.items()]
         assert len(full_act_space) == len(dedup)
         observation_space = len(full_act_space)
-
         nsteps = len(actions_spaces)
 
         return actions_spaces, actions_to_config, full_act_space, observation_space, nsteps
@@ -486,7 +444,7 @@ class PPOTuner(Tuner):
             Search space for NAS
             the format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
-        logger.info('=== update search space %s', search_space)
+        logger.info('update search space %s', search_space)
         assert self.search_space is None
         self.search_space = search_space
 
@@ -512,16 +470,16 @@ class PPOTuner(Tuner):
         chosen_arch = copy.deepcopy(self.chosen_arch_template)
         for cnt, act in enumerate(actions):
             act_name = self.full_act_space[act]
-            (block_name, layer_name, key) = self.actions_to_config[cnt]
-            if key == 'chosen_inputs':
+            (_key, _type) = self.actions_to_config[cnt]
+            if _type == 'input_choice':
                 if act_name == 'None':
-                    chosen_arch[block_name][layer_name][key] = []
+                    chosen_arch[_key] = []
                 else:
-                    chosen_arch[block_name][layer_name][key] = [act_name]
-            elif key == 'chosen_layer':
-                chosen_arch[block_name][layer_name][key] = act_name
+                    chosen_arch[_key] = [act_name]
+            elif _type == 'layer_choice':
+                chosen_arch[_key] = act_name
             else:
-                raise ValueError('unrecognized key: {0}'.format(key))
+                raise ValueError('unrecognized key: {0}'.format(_type))
         return chosen_arch
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):

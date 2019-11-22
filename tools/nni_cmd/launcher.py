@@ -439,14 +439,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):
-        if experiment_config['searchSpacePath'] == 'NNI_AUTO_GEN':
-            # Deal with NAS mode which uses NNI tuner
-            # we use NNI_AUTO_GEN to specify this NAS mode
-            real_ss_path = auto_gen_search_space_dry_run(experiment_config['trial']['codeDir'],
-                                                         experiment_config['trial']['command'])
-            search_space = get_json_content(real_ss_path)
-        else:
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
+        search_space = get_json_content(experiment_config.get('searchSpacePath'))
         experiment_config['searchSpace'] = json.dumps(search_space)
     else:
         experiment_config['searchSpace'] = json.dumps('')
@@ -509,6 +502,13 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
+    # TODO: whether need to do it during experiment resume
+    if experiment_config.get('searchSpacePath', '') == 'NNI_AUTO_GEN':
+        # Deal with NAS mode which uses NNI tuner
+        # we use NNI_AUTO_GEN to specify this NAS mode
+        real_ss_path = auto_gen_search_space_dry_run(experiment_config['trial']['codeDir'],
+                                                        experiment_config['trial']['command'])
+        experiment_config['searchSpacePath'] = real_ss_path
     validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
