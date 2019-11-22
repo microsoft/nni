@@ -51,9 +51,14 @@ class BaseMutator(nn.Module):
     def mutables(self):
         return self._structured_mutables
 
-    @property
     def forward(self, *inputs):
         raise RuntimeError("Forward is undefined for mutators.")
+
+    def __setattr__(self, name, value):
+        if name == "model":
+            raise AttributeError("Attribute `model` can be set at most once, and you shouldn't use `self.model = model` to "
+                                 "include you network, as it will include all parameters in model into the mutator.")
+        return super().__setattr__(name, value)
 
     def enter_mutable_scope(self, mutable_scope):
         """
