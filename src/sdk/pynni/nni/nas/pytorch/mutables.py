@@ -84,7 +84,7 @@ class MutableScope(Mutable):
 
 
 class LayerChoice(Mutable):
-    def __init__(self, op_candidates, reduction="mean", return_mask=False, key=None):
+    def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
         self.choices = nn.ModuleList(op_candidates)
@@ -115,7 +115,7 @@ class InputChoice(Mutable):
     NO_KEY = ""
 
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
-                 reduction="mean", return_mask=False, key=None):
+                 reduction="sum", return_mask=False, key=None):
         """
         Initialization.
 

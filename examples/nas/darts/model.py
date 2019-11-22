@@ -48,7 +48,7 @@ class Node(nn.Module):
                         ops.SepConv(channels, channels, 3, stride, 1, affine=False),
                         ops.SepConv(channels, channels, 5, stride, 2, affine=False),
                         ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False),
-                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False),
+                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False)
                     ],
                     key=choice_keys[-1]))
         self.drop_path = ops.DropPath_()
@@ -57,6 +57,7 @@ class Node(nn.Module):
     def forward(self, prev_nodes):
         assert len(self.ops) == len(prev_nodes)
         out = [op(node) for op, node in zip(self.ops, prev_nodes)]
+        out = [self.drop_path(o) if o is not None else None for o in out]
         return self.input_switch(out)
 
 
