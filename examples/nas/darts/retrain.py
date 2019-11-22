@@ -1,15 +1,16 @@
 import logging
+import time
 from argparse import ArgumentParser
 
 import torch
 import torch.nn as nn
+from nni.nas.pytorch.fixed import apply_fixed_architecture
+from nni.nas.pytorch.utils import AverageMeter
 from torch.utils.tensorboard import SummaryWriter
 
 import datasets
 import utils
 from model import CNN
-from nni.nas.pytorch.fixed import apply_fixed_architecture
-from nni.nas.pytorch.utils import AverageMeter
 
 logger = logging.getLogger()
 
