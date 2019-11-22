@@ -9,7 +9,6 @@ from argparse import ArgumentParser
 import torch
 import torch.nn as nn
 
-import nni.nas.pytorch as nas
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint
 from nni.nas.pytorch.pdarts import PdartsTrainer
 

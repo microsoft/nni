@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import logging
-from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint, LearningRateScheduler)
+from nni.nas.pytorch.callbacks import LearningRateScheduler
 from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import BaseTrainer
 
@@ -54,7 +54,7 @@ class PdartsTrainer(BaseTrainer):
 
             self.trainer = DartsTrainer(model, mutator=self.mutator, loss=criterion, optimizer=optim,
                                         callbacks=darts_callbacks, **self.darts_parameters)
-            logger.info("start pdarts training %s..." % epoch)
+            logger.info("start pdarts training %s...", epoch)
 
             self.trainer.train()
 

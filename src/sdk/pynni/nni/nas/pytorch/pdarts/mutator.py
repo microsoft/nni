@@ -4,8 +4,6 @@
 import copy
 
 import numpy as np
-import torch
-from torch import nn as nn
 from torch.nn import functional as F
 
 from nni.nas.pytorch.darts import DartsMutator

@@ -7,6 +7,7 @@ from nni.nas.pytorch.utils import global_mutable_counting
 logger = logging.getLogger("darts/trainer")
 logger.setLevel(logging.INFO)
 
+
 class Mutable(nn.Module):
     """
     Mutable is designed to function as a normal layer, with all necessary operators' weights.
@@ -24,7 +25,7 @@ class Mutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                logger.warn("Warning: key \"{}\" is not string, converted to string.".format(key))
+                logger.warning("Warning: key \"%s\" is not string, converted to string.", key)
             self._key = key
         else:
             self._key = self.__class__.__name__ + str(global_mutable_counting())

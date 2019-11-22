@@ -10,6 +10,7 @@ from .mutator import EnasMutator
 logger = logging.getLogger("enas/trainer")
 logger.setLevel(logging.INFO)
 
+
 class EnasTrainer(Trainer):
     def __init__(self, model, loss, metrics, reward_function,
                  optimizer, num_epochs, dataset_train, dataset_valid,
@@ -74,8 +75,8 @@ class EnasTrainer(Trainer):
             meters.update(metrics)
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                logger.info("Model Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
-                                                                    step, len(self.train_loader), meters))
+                logger.info("Model Epoch [%s/%s] Step [%s/%s]  %s", epoch,
+                            self.num_epochs, step, len(self.train_loader), meters)
 
         # Train sampler (mutator)
         self.model.eval()
@@ -113,9 +114,8 @@ class EnasTrainer(Trainer):
                     self.mutator_optim.zero_grad()
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    logger.info("RL Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs,
-                                                                     mutator_step // self.mutator_steps_aggregate,
-                                                                     self.mutator_steps, meters))
+                    logger.info("RL Epoch [%s/%s] Step [%s/%s]  %s", epoch, self.num_epochs,
+                                mutator_step // self.mutator_steps_aggregate, self.mutator_steps, meters)
                 mutator_step += 1
                 if mutator_step >= total_mutator_steps:
                     break
