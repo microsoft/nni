@@ -9,7 +9,7 @@ import datasets
 from macro import GeneralNetwork
 from micro import MicroNetwork
 from nni.nas.pytorch import enas
-from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import LRSchedulerCallback, ArchitectureCheckpoint
 from utils import accuracy, reward_accuracy
 
 logger = logging.getLogger()
@@ -51,7 +51,7 @@ if __name__ == "__main__":
                                metrics=accuracy,
                                reward_function=reward_accuracy,
                                optimizer=optimizer,
-                               callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                               callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
                                batch_size=args.batch_size,
                                num_epochs=num_epochs,
                                dataset_train=dataset_train,

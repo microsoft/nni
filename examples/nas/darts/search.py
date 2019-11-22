@@ -7,8 +7,7 @@ import torch.nn as nn
 
 import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
-                                       LearningRateScheduler)
+from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
@@ -50,5 +49,5 @@ if __name__ == "__main__":
                            batch_size=args.batch_size,
                            log_frequency=args.log_frequency,
                            unrolled=args.unrolled,
-                           callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+                           callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
     trainer.train()
