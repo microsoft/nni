@@ -78,7 +78,7 @@ class DartsTrainer(Trainer):
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 logger.info("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch,
-                                                                    self.num_epochs, step, len(self.train_loader), meters))
+                                                                    self.num_epochs, step+1, len(self.train_loader), meters))
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
@@ -93,7 +93,7 @@ class DartsTrainer(Trainer):
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     logger.info("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch,
-                                                                        self.num_epochs, step, len(self.valid_loader), meters))
+                                                                        self.num_epochs, step+1, len(self.test_loader), meters))
 
     def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):
         """
