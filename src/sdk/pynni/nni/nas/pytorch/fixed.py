@@ -76,3 +76,4 @@ def apply_fixed_architecture(model, fixed_arc_path, device=None):
     architecture = FixedArchitecture(model, fixed_arc)
     architecture.to(device)
     architecture.reset()
+    return architecture
