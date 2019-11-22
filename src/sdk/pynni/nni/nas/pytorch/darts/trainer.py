@@ -1,12 +1,15 @@
 import copy
-import sys
+import logging
 
 import torch
-from torch import nn as nn
-
+import torch.nn as nn
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
+
 from .mutator import DartsMutator
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class DartsTrainer(Trainer):
@@ -65,7 +68,8 @@ class DartsTrainer(Trainer):
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.train_loader), meters))
+                logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                            self.num_epochs, step + 1, len(self.train_loader), meters)
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
@@ -79,7 +83,8 @@ class DartsTrainer(Trainer):
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.valid_loader), meters))
+                    logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                                self.num_epochs, step + 1, len(self.test_loader), meters)
 
     def _logits_and_loss(self, X, y):
         self.mutator.reset()
@@ -157,7 +162,7 @@ class DartsTrainer(Trainer):
             # w+ = w + eps*dw`, w- = w - eps*dw`
             with torch.no_grad():
                 for p, d in zip(self.model.parameters(), dw):
-                    p += eps * d
+                    p += e * d
 
             _, loss = self._logits_and_loss(trn_X, trn_y)
             dalphas.append(torch.autograd.grad(loss, self.mutator.parameters()))

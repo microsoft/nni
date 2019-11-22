@@ -4,7 +4,7 @@
 import copy
 
 import numpy as np
-from torch.nn import functional as F
+import torch.nn.functional as F
 
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
