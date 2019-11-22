@@ -370,7 +370,7 @@ class SlimPruner(Pruner):
         config = config_list[0]
         for (layer, config) in self.detect_modules_to_compress():
             assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-            weight_list.append(layer.module.weight.data.clone())
+            weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
