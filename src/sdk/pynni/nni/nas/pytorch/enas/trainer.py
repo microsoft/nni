@@ -7,7 +7,6 @@ from nni.nas.pytorch.utils import AverageMeterGroup
 from .mutator import EnasMutator
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class EnasTrainer(Trainer):
