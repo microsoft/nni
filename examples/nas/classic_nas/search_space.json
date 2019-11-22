@@ -1,0 +1,1 @@
+{"first_conv": {"_type": "layer_choice", "_value": ["0##Conv2d(1, 20, kernel_size=(5, 5), stride=(1, 1))", "1##Conv2d(1, 20, kernel_size=(3, 3), stride=(1, 1))"]}}

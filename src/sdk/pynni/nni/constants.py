@@ -72,3 +72,5 @@ AdvisorClassName = {
     'Hyperband': 'Hyperband',
     'BOHB': 'BOHB'
 }
+
+NNI_GEN_SEARCH_SPACE = 'NNI_GEN_SEARCH_SPACE'
