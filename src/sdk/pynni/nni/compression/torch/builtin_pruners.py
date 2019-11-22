@@ -215,9 +215,9 @@ class FPGMPruner(Pruner):
         masks = torch.ones(weight.size()).type_as(weight)
 
         try:
-            num_kernels = weight.size(0)
-            num_prune = int(num_kernels * config.get('sparsity'))
-            if num_kernels < 2 or num_prune < 1:
+            num_filters = weight.size(0)
+            num_prune = int(num_filters * config.get('sparsity'))
+            if num_filters < 2 or num_prune < 1:
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             for idx in min_gm_idx:
@@ -267,7 +267,7 @@ class FPGMPruner(Pruner):
         w = weight.view(weight.size(0), -1)
         anchor_w = w[out_idx].unsqueeze(0).expand(w.size(0), w.size(1))
         x = w - anchor_w
-        x = (x * x).sum((-2, -1))
+        x = (x * x).sum(-1)
         x = torch.sqrt(x)
         return x.sum()
 

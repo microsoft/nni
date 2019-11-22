@@ -157,9 +157,9 @@ class FPGMPruner(Pruner):
         try:
             w = tf.stop_gradient(tf.transpose(tf.reshape(weight, (-1, weight.shape[-1])), [1, 0]))
             masks = np.ones(w.shape)
-            num_kernels = w.shape[0]
-            num_prune = int(num_kernels * config.get('sparsity'))
-            if num_kernels < 2 or num_prune < 1:
+            num_filters = w.shape[0]
+            num_prune = int(num_filters * config.get('sparsity'))
+            if num_filters < 2 or num_prune < 1:
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(w, num_prune)
 
@@ -184,7 +184,7 @@ class FPGMPruner(Pruner):
     def _get_distance_sum(self, weight, out_idx):
         anchor_w = tf.tile(tf.expand_dims(weight[out_idx], 0), [weight.shape[0], 1])
         x = weight - anchor_w
-        x = tf.math.reduce_sum((x*x), (-2, -1))
+        x = tf.math.reduce_sum((x*x), -1)
         x = tf.math.sqrt(x)
         return tf.math.reduce_sum(x)
 
