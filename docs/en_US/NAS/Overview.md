@@ -12,6 +12,12 @@ NNI supports below NAS algorithms now and being adding more. User can reproduce 
 
 Note, these algorithms run standalone without nnictl, and supports PyTorch only.
 
+### Dependencies
+
+* Install latest NNI
+* PyTorch 1.2+
+* git
+
 ### DARTS
 
 The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization.
