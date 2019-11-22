@@ -25,14 +25,27 @@ logger = logging.getLogger('mnist_AutoML')
 class Net(nn.Module):
     def __init__(self, hidden_size):
         super(Net, self).__init__()
-        self.conv1 = LayerChoice([nn.Conv2d(1, 20, 5, 1), nn.Conv2d(1, 20, 3, 1)], key='first_conv')
+        self.conv1 = LayerChoice([nn.Conv2d(1, 20, 5, 1),
+                                  nn.Conv2d(1, 20, 3, 1)],
+                                 key='first_conv')
+        self.mid_conv = LayerChoice([nn.Conv2d(20, 20, 3, 1, padding=1),
+                                     nn.Conv2d(20, 20, 5, 1, padding=2)],
+                                    key='mid_conv')
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.fc1 = nn.Linear(4*4*50, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 10)
+        self.input_switch = InputChoice(choose_from=['', 'mid_conv'],
+                                        n_chosen=1,
+                                        key='skip')
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(x, 2, 2)
+        old_x = x
+        x = F.relu(self.mid_conv(x))
+        zero_x = torch.zeros_like(old_x)
+        skip_x = self.input_switch([zero_x, old_x])
+        x = sum(x, skip_x)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
         x = x.view(-1, 4*4*50)

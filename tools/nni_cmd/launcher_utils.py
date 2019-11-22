@@ -53,7 +53,8 @@ def parse_time(time):
 
 def parse_path(experiment_config, config_path):
     '''Parse path in config file'''
-    expand_path(experiment_config, 'searchSpacePath')
+    if experiment_config.get('searchSpacePath', '') != 'NNI_AUTO_GEN':
+        expand_path(experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         expand_path(experiment_config['trial'], 'codeDir')
         if experiment_config['trial'].get('authFile'):
@@ -83,7 +84,7 @@ def parse_path(experiment_config, config_path):
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
-    if experiment_config.get('searchSpacePath'):
+    if experiment_config.get('searchSpacePath') and experiment_config['searchSpacePath'] != 'NNI_AUTO_GEN':
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
     if experiment_config.get('trial'):
         parse_relative_path(root_path, experiment_config['trial'], 'codeDir')

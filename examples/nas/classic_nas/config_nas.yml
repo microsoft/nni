@@ -5,7 +5,7 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: local
-searchSpacePath: search_space.json
+searchSpacePath: NNI_AUTO_GEN
 useAnnotation: False
 tuner:
   codeDir: ../../tuners/random_nas_tuner
