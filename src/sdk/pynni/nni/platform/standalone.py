@@ -22,14 +22,26 @@
 import logging
 import json_tricks
 
+from ..common import init_standalone_logger
 
-# print INFO log to stdout
-logging.basicConfig()
-logging.getLogger('nni').setLevel(logging.INFO)
+__all__ = [
+    'get_next_parameter',
+    'get_experiment_id',
+    'get_trial_id',
+    'get_sequence_id',
+    'send_metric',
+]
+
+init_standalone_logger()
+_logger = logging.getLogger('nni')
 
 
 def get_next_parameter():
-    pass
+    _logger.warning('Requesting parameter without NNI framework, returning empty dict')
+    return {
+        'parameter_id': None,
+        'parameters': {}
+    }
 
 def get_experiment_id():
     pass
@@ -43,6 +55,8 @@ def get_sequence_id():
 def send_metric(string):
     metric = json_tricks.loads(string)
     if metric['type'] == 'FINAL':
-        print('Final result:', metric['value'])
+        _logger.info('Final result: %s', metric['value'])
     elif metric['type'] == 'PERIODICAL':
-        print('Intermediate result:', metric['value'])
+        _logger.info('Intermediate result: %s  (Index %s)', metric['value'], metric['sequence'])
+    else:
+        _logger.error('Unexpected metric: %s', string)
