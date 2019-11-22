@@ -98,26 +98,27 @@
 *builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](../Tuner/BuiltinTuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
 **准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
+
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
 
-# 并发运行数量
-trialConcurrency: 2
+# how many trials could be concurrently running
+trialConcurrency: 1
 
-# Experiment 运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
 
-# 可为空，即数量不限
+# empty means never stop
 maxTrialNum: 100
 
-# 可选值为: local, remote
+# choice: local, remote
 trainingServicePlatform: local
 
-# 搜索空间文件
+# search space file
 searchSpacePath: search_space.json
 
-# 可选值为: true, false
+# choice: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -125,9 +126,9 @@ tuner:
     optimize_mode: maximize
 trial:
   command: python mnist.py
-  codeDir: ~/nni/examples/trialsmnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 0
- ```   
+```
 
 因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](../Tutorial/AnnotationSpec.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
