@@ -156,6 +156,8 @@ class DartsTrainer(Trainer):
         self._restore_weights(backup_params)
         norm = torch.cat([w.view(-1) for w in dw]).norm()
         eps = 0.01 / norm
+        if norm < 1E-8:
+            logger.warning("In computing hessian, norm is smaller than 1E-8, cause eps to be %.6f.", norm.item())
 
         dalphas = []
         for e in [eps, -2. * eps]:
