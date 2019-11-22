@@ -13,12 +13,14 @@ class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
-                 callbacks=None):
+                 callbacks=None, arc_learning_rate=3.0E-4, unrolled=True):
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
-        self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), 3.0E-4, betas=(0.5, 0.999),
+        self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), arc_learning_rate, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
+        self.unrolled = unrolled
+
         n_train = len(self.dataset_train)
         split = n_train // 2
         indices = list(range(n_train))
@@ -39,38 +41,25 @@ class DartsTrainer(Trainer):
     def train_one_epoch(self, epoch):
         self.model.train()
         self.mutator.train()
-        lr = self.optimizer.param_groups[0]["lr"]
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
             trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
             val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
-            # backup model for hessian
-            backup_params = copy.deepcopy(list(self.model.parameters()))
-
-            # phase 1. child network step
-            self.optimizer.zero_grad()
-            self.mutator.reset()
-            logits = self.model(trn_X)
-            loss = self.loss(logits, trn_y)
-            loss.backward()
-            # gradient clipping
-            nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
-            self.optimizer.step()
-
-            # save model for future recovery
-            new_params = copy.deepcopy(list(self.model.parameters()))
-
-            # phase 2. architect step (alpha)
+            # phase 1. architecture step
             self.ctrl_optim.zero_grad()
-            # compute unrolled loss
-            self._unrolled_backward(trn_X, trn_y, val_X, val_y, backup_params, lr)
+            if self.unrolled:
+                self._unrolled_backward(trn_X, trn_y, val_X, val_y)
+            else:
+                self._backward(val_X, val_y)
             self.ctrl_optim.step()
 
-            # recover the newest model
-            with torch.no_grad():
-                for param, backup in zip(self.model.parameters(), new_params):
-                    param.copy_(backup)
+            # phase 2: child network step
+            self.optimizer.zero_grad()
+            logits, loss = self._logits_and_loss(trn_X, trn_y)
+            loss.backward()
+            nn.utils.clip_grad_norm_(self.model.parameters(), 5.)  # gradient clipping
+            self.optimizer.step()
 
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
@@ -92,24 +81,66 @@ class DartsTrainer(Trainer):
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.valid_loader), meters))
 
-    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_params, lr):
+    def _logits_and_loss(self, X, y):
+        self.mutator.reset()
+        logits = self.model(X)
+        loss = self.loss(logits, y)
+        return logits, loss
+
+    def _backward(self, val_X, val_y):
+        """
+        Simple backward with gradient descent
+        """
+        _, loss = self._logits_and_loss(val_X, val_y)
+        loss.backward()
+
+    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y):
         """
         Compute unrolled loss and backward its gradients
         """
-        self.mutator.reset()
-        loss = self.loss(self.model(val_X), val_y)
-        w_model = tuple(self.model.parameters())
-        w_ctrl = tuple(self.mutator.parameters())
-        w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
-        d_model = w_grads[:len(w_model)]
-        d_ctrl = w_grads[len(w_model):]
+        backup_params = copy.deepcopy(tuple(self.model.parameters()))
 
+        # do virtual step on training data
+        lr = self.optimizer.param_groups[0]["lr"]
+        momentum = self.optimizer.param_groups[0]["momentum"]
+        weight_decay = self.optimizer.param_groups[0]["weight_decay"]
+        self._compute_virtual_model(trn_X, trn_y, lr, momentum, weight_decay)
+
+        # calculate unrolled loss on validation data
+        # keep gradients for model here for compute hessian
+        _, loss = self._logits_and_loss(val_X, val_y)
+        w_model, w_ctrl = tuple(self.model.parameters()), tuple(self.mutator.parameters())
+        w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
+        d_model, d_ctrl = w_grads[:len(w_model)], w_grads[len(w_model):]
+
+        # compute hessian and final gradients
         hessian = self._compute_hessian(backup_params, d_model, trn_X, trn_y)
         with torch.no_grad():
             for param, d, h in zip(w_ctrl, d_ctrl, hessian):
+                # gradient = dalpha - lr * hessian
                 param.grad = d - lr * h
 
-    def _compute_hessian(self, params, dw, trn_X, trn_y):
+        # restore weights
+        self._restore_weights(backup_params)
+
+    def _compute_virtual_model(self, X, y, lr, momentum, weight_decay):
+        """
+        Compute unrolled weights w`
+        """
+        # don't need zero_grad, using autograd to calculate gradients
+        _, loss = self._logits_and_loss(X, y)
+        gradients = torch.autograd.grad(loss, self.model.parameters())
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), gradients):
+                m = self.optimizer.state[w].get("momentum_buffer", 0.)
+                w = w - lr * (momentum * m + g + weight_decay * w)
+
+    def _restore_weights(self, backup_params):
+        with torch.no_grad():
+            for param, backup in zip(self.model.parameters(), backup_params):
+                param.copy_(backup)
+
+    def _compute_hessian(self, backup_params, dw, trn_X, trn_y):
         """
         dw = dw` { L_val(w`, alpha) }
         w+ = w + eps * dw
@@ -117,26 +148,20 @@ class DartsTrainer(Trainer):
         hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
         eps = 0.01 / ||dw||
         """
-        # recover the model before current step
-        with torch.no_grad():
-            for param, backup in zip(self.model.parameters(), params):
-                param.copy_(backup)
-
+        self._restore_weights(backup_params)
         norm = torch.cat([w.view(-1) for w in dw]).norm()
         eps = 0.01 / norm
 
+        dalphas = []
         for e in [eps, -2. * eps]:
             # w+ = w + eps*dw`, w- = w - eps*dw`
             with torch.no_grad():
                 for p, d in zip(self.model.parameters(), dw):
                     p += eps * d
 
-            self.mutator.reset()
-            loss = self.loss(self.model(trn_X), trn_y)
-            if e > 0:
-                dalpha_pos = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w+) }
-            elif e < 0:
-                dalpha_neg = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w-) }
+            _, loss = self._logits_and_loss(trn_X, trn_y)
+            dalphas.append(torch.autograd.grad(loss, self.mutator.parameters()))
 
+        dalpha_pos, dalpha_neg = dalphas  # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         hessian = [(p - n) / 2. * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian

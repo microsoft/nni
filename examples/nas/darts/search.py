@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--epochs", default=50, type=int)
+    parser.add_argument("--unrolled", default=False, action="store_true")
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
@@ -35,5 +36,6 @@ if __name__ == "__main__":
                            dataset_valid=dataset_valid,
                            batch_size=args.batch_size,
                            log_frequency=args.log_frequency,
+                           unrolled=args.unrolled,
                            callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
     trainer.train()
