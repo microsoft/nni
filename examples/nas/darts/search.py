@@ -1,14 +1,27 @@
+import logging
+import time
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
 
+import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
+                                       LearningRateScheduler)
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
+logger = logging.getLogger()
+
+fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+logging.Formatter.converter = time.localtime
+formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
+
+std_out_info = logging.StreamHandler()
+std_out_info.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(std_out_info)
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
