@@ -174,10 +174,12 @@ class CompressorTestCase(TestCase):
         Learning Efficient Convolutional Networks through Network Slimming,
         https://arxiv.org/pdf/1708.06519.pdf
 
-        So if sparsity is 0.2, the expected masks should mask out filter 0, this can be verified through:
+        So if sparsity is 0.2, the expected masks should mask out channel 0, this can be verified through:
         `all(mask1.numpy() == np.array([0., 1., 1., 1., 1.]))`
+        `all(mask2.numpy() == np.array([0., 1., 1., 1., 1.]))`
 
-        If sparsity is 0.6, the expected masks should mask out filter 0,1,2, this can be verified through:
+        If sparsity is 0.6, the expected masks should mask out channel 0,1,2, this can be verified through:
+        `all(mask1.numpy() == np.array([0., 0., 0., 1., 1.]))`
         `all(mask2.numpy() == np.array([0., 0., 0., 1., 1.]))`
         """
         w = np.array([0, 1, 2, 3, 4])
