@@ -6,7 +6,10 @@ import { ColumnProps } from 'antd/lib/table';
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
-import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
+import {
+    convertDuration, formatTimestamp, intermediateGraphOption,
+    killJob, removeString
+} from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
@@ -586,12 +589,11 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     dataIndex: 'accuracy',
     width: 120,
     sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
+        if (a.latestAccuracy === '--' || b.latestAccuracy === '') {
             return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
-            return sortOrder === 'ascend' ? 1 : -1;
         } else {
-            return a.accuracy - b.accuracy;
+            // remove (LATEST/FINAL)
+            return removeString(a.latestAccuracy) - removeString(b.latestAccuracy);
         }
     },
     render: (text, record) => (

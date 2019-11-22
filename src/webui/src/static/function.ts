@@ -183,8 +183,14 @@ function formatAccuracy(accuracy: number): string {
     return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+function removeString(val: string) {
+    if (val.endsWith('(FINAL)') || val.endsWith('(LATEST)')) {
+        return JSON.parse(val.replace(/\(FINAL\)|\(LATEST\)/, ''));
+    }
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy,
+    formatAccuracy, formatTimestamp, metricAccuracy, removeString
 };
