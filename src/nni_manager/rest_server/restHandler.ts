@@ -236,8 +236,8 @@ class NNIRestHandler {
 
     private addTrialJob(router: Router): void {
         router.post('/trial-jobs', async (req: Request, res: Response) => {
-            this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then(() => {
-                res.send();
+            this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then((sequenceId: number) => {
+                res.send({sequenceId});
             }).catch((err: Error) => {
                 this.handle_error(err, res);
             });
