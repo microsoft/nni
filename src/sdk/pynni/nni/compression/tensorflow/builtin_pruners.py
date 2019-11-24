@@ -34,7 +34,6 @@ class LevelPruner(Pruner):
 class AGP_Pruner(Pruner):
     """An automated gradual pruning algorithm that prunes the smallest magnitude
     weights to achieve a preset level of network sparsity.
-
     Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
     efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
     Learning of Phones and other Consumer Devices,
@@ -178,17 +177,13 @@ class FPGMPruner(Pruner):
         assert len(weight.shape) >= 3
         assert weight.shape[0] * weight.shape[1] > 2
 
-        dist_list, idx_list = [], []
+        dist_list = []
         for in_i in range(weight.shape[0]):
             for out_i in range(weight.shape[1]):
                 dist_sum = self._get_distance_sum(weight, in_i, out_i)
-                dist_list.append(dist_sum)
-                idx_list.append([in_i, out_i])
-        dist_tensor = tf.convert_to_tensor(dist_list)
-        idx_tensor = tf.constant(idx_list)
-
-        _, idx = tf.math.top_k(dist_tensor, k=n)
-        return tf.gather(idx_tensor, idx)
+                dist_list.append((dist_sum, (in_i, out_i)))
+        min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
+        return [x[1] for x in min_gm_kernels]
 
     def _get_distance_sum(self, weight, in_idx, out_idx):
         w = tf.reshape(weight, (-1, weight.shape[-2], weight.shape[-1]))
