@@ -384,7 +384,7 @@ class PPOTuner(Tuner):
                 if isinstance(n_chosen, list):
                     actions_to_config.append((key, 'input_choice'))
                     # FIXME: risk, candidates might also have None
-                    actions_spaces.append(["None", *candidates])
+                    actions_spaces.append(['None', *candidates])
                     self.chosen_arch_template[key] = None
                 elif n_chosen == 1:
                     actions_to_config.append((key, 'input_choice'))
@@ -473,11 +473,14 @@ class PPOTuner(Tuner):
             (_key, _type) = self.actions_to_config[cnt]
             if _type == 'input_choice':
                 if act_name == 'None':
-                    chosen_arch[_key] = []
+                    chosen_arch[_key] = {'_value': [], '_idx': []}
                 else:
-                    chosen_arch[_key] = [act_name]
+                    candidates = self.search_space[_key]['_value']['candidates']
+                    idx = candidates.index(act_name)
+                    chosen_arch[_key] = {'_value': [act_name], '_idx': [idx]}
             elif _type == 'layer_choice':
-                chosen_arch[_key] = act_name
+                idx = self.search_space[_key]['_value'].index(act_name)
+                chosen_arch[_key] = {'_value': act_name, '_idx': idx}
             else:
                 raise ValueError('unrecognized key: {0}'.format(_type))
         return chosen_arch
@@ -535,6 +538,7 @@ class PPOTuner(Tuner):
 
         trial_info_idx, actions = self.trials_info.get_next()
         if trial_info_idx is None:
+            logger.debug('Credit added by one in parameters request')
             self.credit += 1
             self.param_ids.append(parameter_id)
             raise nni.NoMoreTrialError('no more parameters now.')
@@ -547,6 +551,7 @@ class PPOTuner(Tuner):
         """
         Run a inference to generate next batch of configurations
         """
+        logger.debug('Start next round inference...')
         self.finished_trials = 0
         self.model.compute_rewards(self.trials_info, self.trials_result)
         self.model.train(self.trials_info, self.inf_batch_size)
@@ -558,6 +563,7 @@ class PPOTuner(Tuner):
                                       mb_values, mb_neglogpacs,
                                       mb_dones, last_values,
                                       self.inf_batch_size)
+        logger.debug('Next round inference complete.')
         # check credit and submit new trials
         for _ in range(self.credit):
             trial_info_idx, actions = self.trials_info.get_next()
@@ -570,6 +576,7 @@ class PPOTuner(Tuner):
             new_config = self._actions_to_config(actions)
             self.send_trial_callback(param_id, new_config)
             self.credit -= 1
+            logger.debug('Send new trial (%d, %s) for reducing credit', param_id, new_config)
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
@@ -595,7 +602,10 @@ class PPOTuner(Tuner):
         self.trials_result[trial_info_idx] = value
         self.finished_trials += 1
 
+        logger.debug('receive_trial_result, parameter_id %d, trial_info_idx %d, finished_trials %d, inf_batch_size %d',
+                     parameter_id, trial_info_idx, self.finished_trials, self.inf_batch_size)
         if self.finished_trials == self.inf_batch_size:
+            logger.debug('Start next round inference in receive_trial_result')
             self._next_round_inference()
 
     def trial_end(self, parameter_id, success, **kwargs):
@@ -624,6 +634,7 @@ class PPOTuner(Tuner):
             self.trials_result[trial_info_idx] = (sum(values) / len(values)) if values else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
+                logger.debug('Start next round inference in trial_end')
                 self._next_round_inference()
 
     def import_data(self, data):

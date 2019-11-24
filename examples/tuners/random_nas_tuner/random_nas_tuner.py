@@ -13,15 +13,17 @@ def random_archi_generator(nas_ss, random_state):
         if val['_type'] == 'layer_choice':
             choices = val['_value']
             index = random_state.randint(len(choices))
-            chosen_arch[key] = choices[index]
+            chosen_arch[key] = {'_value': choices[index], '_idx': index}
         elif val['_type'] == 'input_choice':
             choices = val['_value']['candidates']
             n_chosen = val['_value']['n_chosen']
             chosen = []
+            idxs = []
             for _ in range(n_chosen):
                 index = random_state.randint(len(choices))
                 chosen.append(choices[index])
-            chosen_arch[key] = chosen
+                idxs.append(index)
+            chosen_arch[key] = {'_value': chosen, '_idx': idxs}
         else:
             raise ValueError('Unknown key %s and value %s' % (key, val))
     return chosen_arch

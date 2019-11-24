@@ -16,7 +16,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.classic_nas import ClassicMutator
+from nni.nas.pytorch.classic_nas import get_apply_next_architecture
 
 
 logger = logging.getLogger('mnist_AutoML')
@@ -25,15 +25,18 @@ logger = logging.getLogger('mnist_AutoML')
 class Net(nn.Module):
     def __init__(self, hidden_size):
         super(Net, self).__init__()
+        # two options of conv1
         self.conv1 = LayerChoice([nn.Conv2d(1, 20, 5, 1),
                                   nn.Conv2d(1, 20, 3, 1)],
                                  key='first_conv')
+        # two options of mid_conv
         self.mid_conv = LayerChoice([nn.Conv2d(20, 20, 3, 1, padding=1),
                                      nn.Conv2d(20, 20, 5, 1, padding=2)],
                                     key='mid_conv')
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.fc1 = nn.Linear(4*4*50, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 10)
+        # skip connection over mid_conv
         self.input_switch = InputChoice(choose_from=['', 'mid_conv'],
                                         n_chosen=1,
                                         key='skip')
@@ -43,9 +46,9 @@ class Net(nn.Module):
         x = F.max_pool2d(x, 2, 2)
         old_x = x
         x = F.relu(self.mid_conv(x))
-        zero_x = torch.zeros_like(old_x)
+        zero_x = torch.zeros_like(old_x).float()
         skip_x = self.input_switch([zero_x, old_x])
-        x = sum(x, skip_x)
+        x = torch.add(x, skip_x)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
         x = x.view(-1, 4*4*50)
@@ -103,7 +106,7 @@ def main(args):
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     #data_dir = os.path.join(args['data_dir'], nni.get_trial_id())
-    data_dir = os.path.join(args['data_dir'], 'zql')
+    data_dir = os.path.join(args['data_dir'], 'data')
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(data_dir, train=True, download=True,
@@ -122,11 +125,10 @@ def main(args):
     hidden_size = args['hidden_size']
 
     model = Net(hidden_size=hidden_size).to(device)
-    ClassicMutator(model)
+    get_apply_next_architecture(model)
     optimizer = optim.SGD(model.parameters(), lr=args['lr'],
                           momentum=args['momentum'])
 
-    print('start to train...')
     for epoch in range(1, args['epochs'] + 1):
         train(args, model, device, train_loader, optimizer, epoch)
         test_acc = test(args, model, device, test_loader)
@@ -172,11 +174,7 @@ def get_params():
 
 if __name__ == '__main__':
     try:
-        # get parameters form tuner
-        #tuner_params = nni.get_next_parameter()
-        #logger.debug(tuner_params)
         params = vars(get_params())
-        #params.update(tuner_params)
         main(params)
     except Exception as exception:
         logger.exception(exception)
