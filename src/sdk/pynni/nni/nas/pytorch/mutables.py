@@ -1,6 +1,11 @@
+import logging
+
 import torch.nn as nn
 
 from nni.nas.pytorch.utils import global_mutable_counting
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Mutable(nn.Module):
@@ -20,7 +25,7 @@ class Mutable(nn.Module):
         if key is not None:
             if not isinstance(key, str):
                 key = str(key)
-                print("Warning: key \"{}\" is not string, converted to string.".format(key))
+                logger.warning("Warning: key \"%s\" is not string, converted to string.", key)
             self._key = key
         else:
             self._key = self.__class__.__name__ + str(global_mutable_counting())
@@ -34,6 +39,9 @@ class Mutable(nn.Module):
         return super().__call__(*args, **kwargs)
 
     def set_mutator(self, mutator):
+        if "mutator" in self.__dict__:
+            raise RuntimeError("`set_mutator` is called more than once. Did you parse the search space multiple times? "
+                               "Or did you apply multiple fixed architectures?")
         self.__dict__["mutator"] = mutator
 
     def forward(self, *inputs):
@@ -63,9 +71,10 @@ class Mutable(nn.Module):
 
 class MutableScope(Mutable):
     """
-    Mutable scope labels a subgraph/submodule to help mutators make better decisions.
+    Mutable scope marks a subgraph/submodule to help mutators make better decisions.
     Mutators get notified when a mutable scope is entered and exited. Mutators can override ``enter_mutable_scope``
     and ``exit_mutable_scope`` to catch corresponding events, and do status dump or update.
+    MutableScope are also mutables that are listed in the mutables (search space).
     """
 
     def __init__(self, key):
@@ -81,7 +90,7 @@ class MutableScope(Mutable):
 
 
 class LayerChoice(Mutable):
-    def __init__(self, op_candidates, reduction="mean", return_mask=False, key=None):
+    def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
         self.choices = nn.ModuleList(op_candidates)
@@ -112,25 +121,25 @@ class InputChoice(Mutable):
     NO_KEY = ""
 
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
-                 reduction="mean", return_mask=False, key=None):
+                 reduction="sum", return_mask=False, key=None):
         """
         Initialization.
 
         Parameters
         ----------
-        n_candidates: int
+        n_candidates : int
             Number of inputs to choose from.
-        choose_from: list of str
+        choose_from : list of str
             List of source keys to choose from. At least of one of `choose_from` and `n_candidates` must be fulfilled.
             If `n_candidates` has a value but `choose_from` is None, it will be automatically treated as `n_candidates`
             number of empty string.
-        n_chosen: int
+        n_chosen : int
             Recommended inputs to choose. If None, mutator is instructed to select any.
-        reduction: str
+        reduction : str
             `mean`, `concat`, `sum` or `none`.
-        return_mask: bool
+        return_mask : bool
             If `return_mask`, return output tensor and a mask. Otherwise return tensor only.
-        key: str
+        key : str
             Key of the input choice.
         """
         super().__init__(key=key)
@@ -158,7 +167,7 @@ class InputChoice(Mutable):
 
         Parameters
         ----------
-        optional_inputs: list or dict
+        optional_inputs : list or dict
             Recommended to be a dict. As a dict, inputs will be converted to a list that follows the order of
             `choose_from` in initialization. As a list, inputs must follow the semantic order that is the same as
             `choose_from`.

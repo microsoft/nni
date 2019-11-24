@@ -25,6 +25,7 @@ class StackedLSTMCell(nn.Module):
 
 
 class EnasMutator(Mutator):
+
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
                  skip_target=0.4, branch_bias=0.25):
         super().__init__(model)
@@ -51,7 +52,7 @@ class EnasMutator(Mutator):
                     self.max_layer_choice = mutable.length
                 assert self.max_layer_choice == mutable.length, \
                     "ENAS mutator requires all layer choice have the same number of candidates."
-                # NOTE(yuge): We might implement an interface later. Judging by key now.
+                # We are judging by keys and module types to add biases to layer choices. Needs refactor.
                 if "reduce" in mutable.key:
                     def is_conv(choice):
                         return "conv" in str(type(choice)).lower()

@@ -7,6 +7,7 @@ import torch
 from .base_trainer import BaseTrainer
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 
 class TorchTensorEncoder(json.JSONEncoder):
@@ -23,6 +24,40 @@ class TorchTensorEncoder(json.JSONEncoder):
 class Trainer(BaseTrainer):
     def __init__(self, model, mutator, loss, metrics, optimizer, num_epochs,
                  dataset_train, dataset_valid, batch_size, workers, device, log_frequency, callbacks):
+        """
+        Trainer initialization.
+
+        Parameters
+        ----------
+        model : nn.Module
+            Model with mutables.
+        mutator : BaseMutator
+            A mutator object that has been initialized with the model.
+        loss : callable
+            Called with logits and targets. Returns a loss tensor.
+        metrics : callable
+            Returns a dict that maps metrics keys to metrics data.
+        optimizer : Optimizer
+            Optimizer that optimizes the model.
+        num_epochs : int
+            Number of epochs of training.
+        dataset_train : torch.utils.data.Dataset
+            Dataset of training.
+        dataset_valid : torch.utils.data.Dataset
+            Dataset of validation/testing.
+        batch_size : int
+            Batch size.
+        workers : int
+            Number of workers used in data preprocessing.
+        device : torch.device
+            Device object. Either `torch.device("cuda")` or torch.device("cpu")`. When `None`, trainer will
+            automatic detects GPU and selects GPU first.
+        log_frequency : int
+            Number of mini-batches to log metrics.
+        callbacks : list of Callback
+            Callbacks to plug into the trainer. See Callbacks.
+        """
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if device is None else device
         self.model = model
         self.mutator = mutator
@@ -59,12 +94,12 @@ class Trainer(BaseTrainer):
                 callback.on_epoch_begin(epoch)
 
             # training
-            print("Epoch {} Training".format(epoch))
+            _logger.info("Epoch %d Training", epoch)
             self.train_one_epoch(epoch)
 
             if validate:
                 # validation
-                print("Epoch {} Validating".format(epoch))
+                _logger.info("Epoch %d Validating", epoch)
                 self.validate_one_epoch(epoch)
 
             for callback in self.callbacks:

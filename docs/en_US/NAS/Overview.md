@@ -8,9 +8,15 @@ With this motivation, our ambition is to provide a unified architecture in NNI, 
 
 ## Supported algorithms
 
-NNI supports below NAS algorithms now, and being adding more. User can reproduce an algorithm, or use it on owned dataset. we also encourage user to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
+NNI supports below NAS algorithms now and being adding more. User can reproduce an algorithm or use it on owned dataset. we also encourage user to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
 
 Note, these algorithms run standalone without nnictl, and supports PyTorch only.
+
+### Dependencies
+
+* Install latest NNI
+* PyTorch 1.2+
+* git
 
 ### DARTS
 
@@ -19,25 +25,34 @@ The main contribution of [DARTS: Differentiable Architecture Search][3] on algor
 #### Usage
 
 ```bash
-### In case NNI code is not cloned.
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
 git clone https://github.com/Microsoft/nni.git
 
+# search the best architecture
 cd examples/nas/darts
-python search.py
+python3 search.py
+
+# train the best architecture
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
 ```
 
 ### P-DARTS
 
-[Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) bases on DARTS(#DARTS). It main contribution on algorithm is to introduce an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
+[Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) bases on [DARTS](#DARTS). It's contribution on algorithm is to introduce an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
 
 #### Usage
 
 ```bash
-### In case NNI code is not cloned.
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
 git clone https://github.com/Microsoft/nni.git
 
+# search the best architecture
 cd examples/nas/pdarts
-python main.py
+python3 search.py
+
+# train the best architecture, it's the same progress as darts.
+cd examples/nas/darts
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_2.json
 ```
 
 ## Use NNI API
@@ -50,10 +65,10 @@ NOTE, we are trying to support various NAS algorithms with unified programming i
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
 
-1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So it needs an easy way to express the candidate layers or sub-models.
+1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So, it needs an easy way to express the candidate layers or sub-models.
 2. When applying NAS on a neural network, it needs an unified way to express the search space of architectures, so that it doesn't need to update trial code for different searching algorithms.
 
-NNI proposed API is [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/dev-nas-refactor/examples/nas/darts) is an example of NAS implementation, which bases on NNI proposed interface.
+NNI proposed API is [here](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts) is an example of NAS implementation, which bases on NNI proposed interface.
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012

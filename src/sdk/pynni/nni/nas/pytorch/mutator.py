@@ -1,6 +1,10 @@
+import logging
+
 import torch
 
 from nni.nas.pytorch.base_mutator import BaseMutator
+
+logger = logging.getLogger(__name__)
 
 
 class Mutator(BaseMutator):
@@ -60,8 +64,8 @@ class Mutator(BaseMutator):
 
         Parameters
         ----------
-        mutable: LayerChoice
-        inputs: list of torch.Tensor
+        mutable : LayerChoice
+        inputs : list of torch.Tensor
 
         Returns
         -------
@@ -85,9 +89,9 @@ class Mutator(BaseMutator):
 
         Parameters
         ----------
-        mutable: InputChoice
-        tensor_list: list of torch.Tensor
-        tags: list of string
+        mutable : InputChoice
+        tensor_list : list of torch.Tensor
+        tags : list of string
 
         Returns
         -------
@@ -108,7 +112,7 @@ class Mutator(BaseMutator):
         return out
 
     def _tensor_reduction(self, reduction_type, tensor_list):
-        if tensor_list == "none":
+        if reduction_type == "none":
             return tensor_list
         if not tensor_list:
             return None  # empty. return None for now
@@ -129,12 +133,14 @@ class Mutator(BaseMutator):
 
         Parameters
         ----------
-        mutable: Mutable
+        mutable : Mutable
 
         Returns
         -------
-        any
+        object
         """
         if mutable.key not in self._cache:
             raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
-        return self._cache[mutable.key]
+        result = self._cache[mutable.key]
+        logger.debug("Decision %s: %s", mutable.key, result)
+        return result
