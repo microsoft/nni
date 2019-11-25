@@ -34,6 +34,6 @@ We implemented one of the experiments in ['Learning Efficient Convolutional Netw
 | Model         | Error(paper/ours) | Parameters | Pruned |
 | ------------- | ----------------- | ---------- | ------ |
 | VGGNet        | 6.34/6.40         | 20.04M     |        |
-| Pruned-VGGNet | 6.20/6.39         | 2.03M      | 88.5%  |
+| Pruned-VGGNet | 6.20/6.26         | 2.03M      | 88.5%  |
 
 The experiments code can be found at [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
