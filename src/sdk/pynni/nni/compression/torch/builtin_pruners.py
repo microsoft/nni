@@ -215,9 +215,9 @@ class FPGMPruner(Pruner):
         masks = torch.ones(weight.size()).type_as(weight)
 
         try:
-            num_kernels = weight.size(0) * weight.size(1)
-            num_prune = int(num_kernels * config.get('sparsity'))
-            if num_kernels < 2 or num_prune < 1:
+            num_filters = weight.size(0)
+            num_prune = int(num_filters * config.get('sparsity'))
+            if num_filters < 2 or num_prune < 1:
                 return masks
             min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
             for idx in min_gm_idx:
@@ -233,13 +233,12 @@ class FPGMPruner(Pruner):
 
         dist_list = []
         for out_i in range(weight.size(0)):
-            for in_i in range(weight.size(1)):
-                dist_sum = self._get_distance_sum(weight, out_i, in_i)
-                dist_list.append((dist_sum, (out_i, in_i)))
+            dist_sum = self._get_distance_sum(weight, out_i)
+            dist_list.append((dist_sum, out_i))
         min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
         return [x[1] for x in min_gm_kernels]
 
-    def _get_distance_sum(self, weight, out_idx, in_idx):
+    def _get_distance_sum(self, weight, out_idx):
         """
         Calculate the total distance between a specified filter (by out_idex and in_idx) and
         all other filters.
@@ -257,24 +256,18 @@ class FPGMPruner(Pruner):
         out_idx: int
             output channel index of specified filter, this method calculates the total distance
             between this specified filter and all other filters.
-        in_idx: int
-            input channel index of specified filter
         Returns
         -------
         float32
             The total distance
         """
         logger.debug('weight size: %s', weight.size())
-        if len(weight.size()) == 4:  # Conv2d
-            w = weight.view(-1, weight.size(-2), weight.size(-1))
-            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1), w.size(2))
-        elif len(weight.size()) == 3:  # Conv1d
-            w = weight.view(-1, weight.size(-1))
-            anchor_w = weight[out_idx, in_idx].unsqueeze(0).expand(w.size(0), w.size(1))
-        else:
-            raise RuntimeError('unsupported layer type')
+        assert len(weight.size()) in [3, 4], 'unsupported weight shape'
+
+        w = weight.view(weight.size(0), -1)
+        anchor_w = w[out_idx].unsqueeze(0).expand(w.size(0), w.size(1))
         x = w - anchor_w
-        x = (x * x).sum((-2, -1))
+        x = (x * x).sum(-1)
         x = torch.sqrt(x)
         return x.sum()
 

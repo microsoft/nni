@@ -54,14 +54,8 @@ def tf2(func):
 
     return test_tf2_func
 
-
-k1 = [[1] * 3] * 3
-k2 = [[2] * 3] * 3
-k3 = [[3] * 3] * 3
-k4 = [[4] * 3] * 3
-k5 = [[5] * 3] * 3
-
-w = [[k1, k2, k3, k4, k5]] * 10
+# for fpgm filter pruner test
+w = np.array([[[[i+1]*3]*3]*5 for i in range(10)])
 
 
 class CompressorTestCase(TestCase):
@@ -92,16 +86,16 @@ class CompressorTestCase(TestCase):
 
     def test_torch_fpgm_pruner(self):
         """
-        With filters(kernels) defined as above (k1 - k5), it is obvious that k3 is the Geometric Median
+        With filters(kernels) weights defined as above (w), it is obvious that w[4] and w[5] is the Geometric Median
         which minimize the total geometric distance by defination of Geometric Median in this paper:
         Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration,
         https://arxiv.org/pdf/1811.00250.pdf
 
-        So if sparsity is 0.2, the expected masks should mask out all k3, this can be verified through:
-        `all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 90., 0., 90., 90.]))`
+        So if sparsity is 0.2, the expected masks should mask out w[4] and w[5], this can be verified through:
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))`
 
-        If sparsity is 0.6, the expected masks should mask out all k2, k3, k4, this can be verified through:
-        `all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 0., 0., 0., 90.]))`
+        If sparsity is 0.6, the expected masks should mask out w[2] - w[7], this can be verified through:
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))`
         """
 
         model = TorchModel()
@@ -111,12 +105,12 @@ class CompressorTestCase(TestCase):
         model.conv2.weight.data = torch.tensor(w).float()
         layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
         masks = pruner.calc_mask(layer, config_list[0])
-        assert all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 90., 0., 90., 90.]))
+        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
         pruner.update_epoch(1)
         model.conv2.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(layer, config_list[1])
-        assert all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 0., 0., 0., 90.]))
+        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     @tf2
     def test_tf_fpgm_pruner(self):
@@ -130,16 +124,15 @@ class CompressorTestCase(TestCase):
 
         layer = tf_compressor.compressor.LayerInfo(model.layers[2])
         masks = pruner.calc_mask(layer, config_list[0]).numpy()
-        masks = masks.transpose([2, 3, 0, 1]).transpose([1, 0, 2, 3])
+        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
 
-        assert all(masks.sum((0, 2, 3)) == np.array([90., 90., 0., 90., 90.]))
+        assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
         pruner.update_epoch(1)
         model.layers[2].set_weights([weights[0], weights[1].numpy()])
         masks = pruner.calc_mask(layer, config_list[1]).numpy()
-        masks = masks.transpose([2, 3, 0, 1]).transpose([1, 0, 2, 3])
-
-        assert all(masks.sum((0, 2, 3)) == np.array([90., 0., 0., 0., 90.]))
+        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
+        assert all(masks.sum((1)) == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     def test_torch_l1filter_pruner(self):
         """
@@ -207,7 +200,6 @@ class CompressorTestCase(TestCase):
         mask2 = pruner.calc_mask(layer2, config_list[0])
         assert all(mask1.numpy() == np.array([0., 0., 0., 1., 1.]))
         assert all(mask2.numpy() == np.array([0., 0., 0., 1., 1.]))
-
 
 if __name__ == '__main__':
     main()
