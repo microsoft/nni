@@ -1,8 +1,8 @@
 ## GradientFeatureSelector
 
-The algorithm in GradinetFeatureSelector comes from ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf).
+GradinetFeatureSelector 的算法来源于 ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf)。
 
-GradientFeatureSelector, a gradient-based search algorithm for feature selection.
+GradientFeatureSelector，基于梯度搜索算法的特征选择。
 
 1) This approach extends a recent result on the estimation of learnability in the sublinear data regime by showing that the calculation can be performed iteratively (i.e., in mini-batches) and in **linear time and space** with respect to both the number of features D and the sample size N.
 
