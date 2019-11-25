@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Row, Button, Switch } from 'antd';
-import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface';
+import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
@@ -14,6 +14,8 @@ interface IntermediateState {
     isFilter: boolean;
     length: number;
     clickCounts: number; // user filter intermediate click confirm btn's counts
+    startMediaY: number;
+    endMediaY: number;
 }
 
 interface IntermediateProps {
@@ -38,7 +40,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             isLoadconfirmBtn: false,
             isFilter: false,
             length: 100000,
-            clickCounts: 0
+            clickCounts: 0,
+            startMediaY: 0,
+            endMediaY: 100
         };
     }
 
@@ -48,6 +52,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 length: source.length,
                 detailSource: source
             });
+            const { startMediaY, endMediaY } = this.state;
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -113,6 +118,16 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     type: 'value',
                     name: 'Metric'
                 },
+                dataZoom: [
+                    {
+                        id: 'dataZoomY',
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        filterMode: 'empty',
+                        start: startMediaY,
+                        end: endMediaY
+                    }
+                ],
                 series: trialIntermediate
             };
             this.setState({
@@ -258,6 +273,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     render() {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
+        const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };
         return (
             <div>
                 {/* style in para.scss */}
@@ -265,7 +281,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     {
                         isFilter
                             ?
-                            <span style={{marginRight: 15}}>
+                            <span style={{ marginRight: 15 }}>
                                 <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
@@ -306,11 +322,21 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         option={interSource}
                         style={{ width: '100%', height: 418, margin: '0 auto' }}
                         notMerge={true} // update now
+                        onEvents={IntermediateEvents}
                     />
                     <div className="yAxis"># Intermediate result</div>
                 </Row>
             </div>
         );
+    }
+
+    private intermediateDataZoom = (e: EventMap) => {
+        if (e.batch !== undefined) {
+            this.setState(() => ({
+                startMediaY: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endMediaY: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
+        }
     }
 }
 
