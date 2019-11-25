@@ -24,7 +24,8 @@ interface TableRecord {
     status: string;
     intermediateCount: number;
     accuracy?: number;
-    latestAccuracy: string;  // formatted string
+    latestAccuracy: number | undefined;
+    formattedLatestAccuracy: string; // format (LATEST/FINAL)
 }
 
 interface SearchSpace {

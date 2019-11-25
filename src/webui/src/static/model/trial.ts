@@ -4,7 +4,7 @@ import { getFinal, formatAccuracy, metricAccuracy } from '../function';
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
-    private intermediates: (MetricDataRecord | undefined)[] = [ ];
+    private intermediates: (MetricDataRecord | undefined)[] = [];
     private final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
@@ -27,7 +27,7 @@ class Trial implements TableObj {
     }
 
     get intermediateMetrics(): MetricDataRecord[] {
-        const ret: MetricDataRecord[] = [ ];
+        const ret: MetricDataRecord[] = [];
         for (let i = 0; i < this.intermediates.length; i++) {
             if (this.intermediates[i]) {
                 ret.push(this.intermediates[i]!);
@@ -46,6 +46,22 @@ class Trial implements TableObj {
         return this.metricsInitialized && this.finalAcc !== undefined && !isNaN(this.finalAcc);
     }
 
+    get latestAccuracy(): number | undefined {
+        if (this.accuracy !== undefined) {
+            return this.accuracy;
+        } else if (this.intermediates.length > 0) {
+            // TODO: support intermeidate result is dict
+            const temp = this.intermediates[this.intermediates.length - 1];
+            if (temp !== undefined) {
+                return JSON.parse(temp.data);
+            } else {
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
+    }
+
     /* table obj start */
 
     get tableRecord(): TableRecord {
@@ -62,7 +78,8 @@ class Trial implements TableObj {
             status: this.info.status,
             intermediateCount: this.intermediates.length,
             accuracy: this.finalAcc,
-            latestAccuracy: this.formatLatestAccuracy(),
+            latestAccuracy: this.latestAccuracy,
+            formattedLatestAccuracy: this.formatLatestAccuracy(),
         };
     }
 
@@ -93,8 +110,8 @@ class Trial implements TableObj {
 
     get description(): Parameters {
         let ret: Parameters = {
-            parameters: { },
-            intermediate: [ ],
+            parameters: {},
+            intermediate: [],
             multiProgress: 1
         };
         const tempHyper = this.info.hyperParameters;
@@ -113,7 +130,7 @@ class Trial implements TableObj {
             ret.logPath = this.info.logPath;
         }
 
-        const mediate: number[] = [ ];
+        const mediate: number[] = [];
         for (const items of this.intermediateMetrics) {
             if (typeof JSON.parse(items.data) === 'object') {
                 mediate.push(JSON.parse(items.data).default);
