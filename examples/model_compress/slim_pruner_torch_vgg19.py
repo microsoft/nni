@@ -169,7 +169,7 @@ def main():
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 93.61%
+    # top1 = 93.74%
 
 
 if __name__ == '__main__':
