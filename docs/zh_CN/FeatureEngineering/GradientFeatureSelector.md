@@ -53,7 +53,7 @@ print(fgs.get_selected_features())
 
 * **batch_size** (int, 可选, 默认为 1000) - 一次处理的 "rows" 数量。
 
-* **target_batch_size** (int, optional, default = 1000) - Number of "rows" to accumulate gradients over. Useful when many rows will not fit into memory but are needed for accurate estimation.
+* **target_batch_size** (int, 可选, 默认为 1000) - 累计梯度的 "rows" 数量。 Useful when many rows will not fit into memory but are needed for accurate estimation.
 
 * **classification** (bool, optional, default = True) - If True, problem is classification, else regression.
 
