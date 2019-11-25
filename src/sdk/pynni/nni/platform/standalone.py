@@ -44,13 +44,13 @@ def get_next_parameter():
     }
 
 def get_experiment_id():
-    pass
+    return 'STANDALONE'
 
 def get_trial_id():
-    pass
+    return 'STANDALONE'
 
 def get_sequence_id():
-    pass
+    return 0
 
 def send_metric(string):
     metric = json_tricks.loads(string)
