@@ -51,8 +51,8 @@ cd examples/nas/pdarts
 python3 search.py
 
 # train the best architecture, it's the same progress as darts.
-cd examples/nas/darts
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_2.json
+cd ../darts
+python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ```
 
 ## Use NNI API
