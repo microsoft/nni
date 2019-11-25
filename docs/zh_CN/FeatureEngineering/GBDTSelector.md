@@ -27,7 +27,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 
 # 初始化 Selector
 fgs = GBDTSelector()
-# 你和数据
+# 拟合数据
 fgs.fit(X_train, y_train, ...)
 # 获取重要的特征
 # 此处会返回重要特征的索引。
