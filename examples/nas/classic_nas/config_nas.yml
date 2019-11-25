@@ -5,7 +5,8 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: local
-searchSpacePath: NNI_AUTO_GEN
+#please use `nnictl ss_gen` to generate search space file first
+searchSpacePath: <the_generated_search_space_path>
 useAnnotation: False
 tuner:
   codeDir: ../../tuners/random_nas_tuner
