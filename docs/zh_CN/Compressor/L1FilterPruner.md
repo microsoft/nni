@@ -36,14 +36,14 @@ pruner.compress()
 
 ## 3. 实验
 
-We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+我们实现了 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 $64\%$ 的参数。 我们的实验结果如下：
 
-| Model           | Error(paper/ours) | Parameters | Pruned |
-| --------------- | ----------------- | ---------- | ------ |
-| VGG-16          | 6.75/6.49         | 1.5x10^7   |        |
-| VGG-16-pruned-A | 6.60/6.47         | 5.4x10^6   | 64.0%  |
+| 模型              | 错误率(论文/我们的) | 参数量      | 剪除率   |
+| --------------- | ----------- | -------- | ----- |
+| VGG-16          | 6.75/6.49   | 1.5x10^7 |       |
+| VGG-16-pruned-A | 6.60/6.47   | 5.4x10^6 | 64.0% |
 
-The experiments code can be found at [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+实验代码在 [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
 
 
