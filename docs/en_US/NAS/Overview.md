@@ -30,6 +30,31 @@ Note, these algorithms run **standalone without nnictl**, and supports PyTorch o
 * PyTorch 1.2+
 * git
 
+### ENAS
+
+[Efficient Neural Architecture Search via Parameter Sharing][1]. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
+
+#### Usage
+
+ENAS in NNI is still under development and we only support search phase for macro/micro search space on CIFAR10. Training from scratch and search space on PTB has not been finished yet.
+
+```bash
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+git clone https://github.com/Microsoft/nni.git
+
+# search the best architecture
+cd examples/nas/enas
+
+# search in macro search space
+python3 search.py --search-for macro
+
+# search in micro search space
+python3 search.py --search-for micro
+
+# view more options for search
+python3 search.py -h
+```
+
 ### DARTS
 
 The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization.
