@@ -125,9 +125,11 @@ acc = test(model)
 nni.report_final_result(acc)
 ```
 
-The search space should be automatically generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use `nnictl ss_gen --config config.yml` to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
+The search space should be automatically generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
 
 You could use [NNI tuners](../Tuner/BuiltinTuner.md) to do the search.
+
+We support standalone mode for easy debugging, where you could directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
 
 The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
 
