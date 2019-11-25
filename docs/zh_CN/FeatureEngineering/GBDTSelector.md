@@ -51,11 +51,11 @@ print(fgs.get_selected_features(10))
 
 * **early_stopping_rounds** (int, 必需) - lightgbm 中的提前终止设置。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/Parameters.html)。
 
-* **importance_type** (str, 必需) - 可为 'split' 或 'gain'。 The 'split' means ' result contains numbers of times the feature is used in a model' and the 'gain' means 'result contains total gains of splits which use the feature'. The detail you could reference in [here](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance).
+* **importance_type** (str, 必需) - 可为 'split' 或 'gain'。 'split' 表示 '结果包含特征在模型中使用的次数' 而 'gain' 表示 '结果包含此特征拆分出的总收益'。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance)。
 
-* **num_boost_round** (int, require) - number of boost round. The detail you could reference [here](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train).
+* **num_boost_round** (int, 必需) - 提升的轮数。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train)。
 
-**Requirement of `get_selected_features` FuncArgs**
+**`get_selected_features` 函数参数的要求**
 
-* **topk** (int, require) - the topK impotance features you want to selected.
+* **topk** (int, 必需) - 想要选择的 k 个最好的特征。
 
