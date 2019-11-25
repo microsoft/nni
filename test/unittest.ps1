@@ -1,5 +1,4 @@
 $CWD = $PWD
-$ErrorActionPreference = "Continue"
 
 # -------------For python unittest-------------
 

@@ -20,4 +20,5 @@ jobs:
   - powershell: ./unittest.ps1
     workingDirectory: test
     failOnStderr: false
+    errorActionPreference: silentlyContinue
     displayName: 'unit test only'
