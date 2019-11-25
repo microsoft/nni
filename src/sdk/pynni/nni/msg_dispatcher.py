@@ -184,7 +184,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         id_ = data['parameter_id']
         value = data['value']
-        if not id_ or id_ in _customized_parameter_ids:
+        if id_ is None or id_ in _customized_parameter_ids:
             if not hasattr(self.tuner, '_accept_customized'):
                 self.tuner._accept_customized = False
             if not self.tuner._accept_customized:
