@@ -4,54 +4,54 @@ GradinetFeatureSelector 的算法来源于 ["Feature Gradients: Scalable Feature
 
 GradientFeatureSelector，基于梯度搜索算法的特征选择。
 
-1) This approach extends a recent result on the estimation of learnability in the sublinear data regime by showing that the calculation can be performed iteratively (i.e., in mini-batches) and in **linear time and space** with respect to both the number of features D and the sample size N.
+1) 该方法扩展了一个近期的结果，即在亚线性数据中通过展示计算能迭代的学习（即，在迷你批处理中），在**线性的时间空间中**的特征数量 D 及样本大小 N。
 
-2) This, along with a discrete-to-continuous relaxation of the search domain, allows for an **efficient, gradient-based** search algorithm among feature subsets for very **large datasets**.
+2) 这与在搜索领域的离散到连续的放松一起，可以在非常**大的数据集**上进行**高效、基于梯度**的搜索算法。
 
-3) Crucially, this algorithm is capable of finding **higher-order correlations** between features and targets for both the N > D and N < D regimes, as opposed to approaches that do not consider such interactions and/or only consider one regime.
+3) 最重要的是，此算法能在特征和目标间为 N > D 和 N < D 都找到**高阶相关性**，这与只考虑一种情况和交互式的方法所不同。
 
 
-### Usage
+### 用法
 
 ```python
 from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
-# load data
+# 读取数据
 ...
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-# initlize a selector
-fgs = FeatureGradientSelector(n_features=10)
-# fit data
+# 初始化 Selector
+fgs = FeatureGradientSelector()
+# 拟合数据
 fgs.fit(X_train, y_train)
-# get improtant features
-# will return the index with important feature here.
+# 获取重要的特征
+# 此处会返回重要特征的索引。
 print(fgs.get_selected_features())
 
 ...
 ```
 
-And you could reference the examples in `/examples/feature_engineering/gradient_feature_selector/`, too.
+也可在 `/examples/feature_engineering/gradient_feature_selector/` 目录找到示例。
 
-**Parameters of class FeatureGradientSelector constructor**
+**FeatureGradientSelector 构造函数的参数**
 
-* **order** (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
+* **order** (int, 可选, 默认为 4) - 要包含的交互顺序。 较高的顺序可能会更准确，但会增加运行时间。 12 是允许的顺序的最大值。
 
-* **penatly** (int, optional, default = 1) - Constant that multiplies the regularization term.
+* **penatly** (int, 可选, 默认为 1) - 乘以正则项的常数。
 
-* **n_features** (int, optional, default = None) - If None, will automatically choose number of features based on search. Otherwise, the number of top features to select.
+* **n_features** (int, 可选, 默认为 None) - 如果为 None，会自动根据搜索来选择特征的数量。 否则，表示要选择的最好特征的数量。
 
-* **max_features** (int, optional, default = None) - If not None, will use the 'elbow method' to determine the number of features with max_features as the upper limit.
+* **max_features** (int, 可选, 默认为 None) - 如果不为 None，会使用 'elbow method' 来确定以 max_features 为上限的特征数量。
 
-* **learning_rate** (float, optional, default = 1e-1) - learning rate
+* **learning_rate** (float, 可选, 默认为 1e-1) - 学习率
 
-* **init** (*zero, on, off, onhigh, offhigh, or sklearn, optional, default = zero*) - How to initialize the vector of scores. 'zero' is the default.
+* **init** (*zero, on, off, onhigh, offhigh, 或 sklearn, 可选, 默认为zero*) - 如何初始化向量分数。 默认值为 'zero'。
 
-* **n_epochs** (int, optional, default = 1) - number of epochs to run
+* **n_epochs** (int, 可选, 默认为 1) - 要运行的 Epoch 数量
 
-* **shuffle** (bool, optional, default = True) - Shuffle "rows" prior to an epoch.
+* **shuffle** (bool, 可选, 默认为 True) - 在 Epoch 之前需要随机化 "rows"。
 
-* **batch_size** (int, optional, default = 1000) - Nnumber of "rows" to process at a time.
+* **batch_size** (int, 可选, 默认为 1000) - 一次处理的 "rows" 数量。
 
 * **target_batch_size** (int, optional, default = 1000) - Number of "rows" to accumulate gradients over. Useful when many rows will not fit into memory but are needed for accurate estimation.
 
