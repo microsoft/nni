@@ -1,3 +1,238 @@
 # FeatureEngineering
 
 We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute.
+
+For now, we support the following feature selector:
+- [GradientFeatureSelector](./GradientFeatureSelector.md)
+- [GBDTSelector](./GBDTSelector.md)
+
+
+# How to use?
+
+```python
+from nni.feature_engineering.xxx_selector import XXXSelector
+
+# load data
+...
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+# initlize a selector
+fgs = XXXSelector(...)
+# fit data
+fgs.fit(X_train, y_train)
+# get improtant features
+# will return the index with important feature here.
+print(fgs.get_selected_features(...))
+
+...
+```
+
+When using the built-in Selector, you first need to `import` a feature selector, and `initlize` it. You could call the function `fit` in selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get the important features. The function parameters in different selector might be different, so you need to check the docs before use it. 
+
+# How to customize?
+
+NNI provides _state-of-the-art_ feature selector algorithm in builtin-selector. NNI also supports to build a feature selector by yourself.
+
+If you want to implement a customized feature selector, you need to:
+
+1. Inherit the base FeatureSelector class
+1. Implement _fit_ and _get_selected_features_ function
+1. Integrate with sklearn (Optional)
+
+Here is an example:
+
+**1. Inherit the base Featureselector Class**
+
+```python
+from nni.feature_engineering.feature_selector import FeatureSelector
+
+class CustomizedSelector(FeatureSelector):
+    def __init__(self, ...):
+        ...
+```
+
+**2. Implement _fit_ and _get_selected_features_ Function**
+
+```python
+from nni.tuner import Tuner
+
+from nni.feature_engineering.feature_selector import FeatureSelector
+
+class CustomizedSelector(FeatureSelector):
+    def __init__(self, ...):
+        ...
+
+    def fit(self, X, y, **kwargs):
+        """
+        Fit the training data to FeatureSelector
+
+        Paramters
+        ---------
+        X : array-like numpy matrix
+            The training input samples, which shape is [n_samples, n_features].
+        y: array-like numpy matrix
+            The target values (class labels in classification, real numbers in
+            regression). Which shape is [n_samples].
+        """
+        self.X = X
+        self.y = y
+        ...
+    
+    def get_selected_features(self):
+        """
+        Fit the training data to FeatureSelector
+
+        Returns
+        -------
+        list :
+                Return the index of imprtant feature.
+        """
+        ...
+        return self.selected_features_
+
+    ...
+```
+
+**3. Integrate with Sklearn**
+
+`sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. 
+The fllowing step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of pipeline.
+
+1. Inherit the calss _sklearn.base.BaseEstimator_
+1. Implement _get_params_ and _set_params_ function in _BaseEstimator_
+1. Inherit the class _sklearn.feature_selection.base.SelectorMixin_
+1. Implement _get_support_, _transform_ and _inverse_transform_ Function in _SelectorMixin_
+
+Here is an example:
+
+**1. Inherit the BaseEstimator Class and its Function**
+
+```python
+from sklearn.base import BaseEstimator
+from nni.feature_engineering.feature_selector import FeatureSelector
+
+class CustomizedSelector(FeatureSelector, BaseEstimator):
+    def __init__(self, ...):
+        ...
+    
+    def get_params(self, ...):
+        """
+        Get parameters for this estimator.
+        """
+        params = self.__dict__
+        params = {key: val for (key, val) in params.items()
+                  if not key.endswith('_')}
+        return params
+    
+    def set_params(self, **params):
+        """
+        Set the parameters of this estimator.
+        """
+        for param in params:
+            if hasattr(self, param):
+                setattr(self, param, params[param])
+        return self
+
+```
+
+**1. Inherit the SelectorMixin Class and its Function**
+```python
+from sklearn.base import BaseEstimator
+from sklearn.feature_selection.base import SelectorMixin
+
+from nni.feature_engineering.feature_selector import FeatureSelector
+
+class CustomizedSelector(FeatureSelector, BaseEstimator):
+    def __init__(self, ...):
+        ...
+    
+    def get_params(self, ...):
+        """
+        Get parameters for this estimator.
+        """
+        params = self.__dict__
+        params = {key: val for (key, val) in params.items()
+                  if not key.endswith('_')}
+        return params
+    
+    def set_params(self, **params):
+        """
+        Set the parameters of this estimator.
+        """
+        for param in params:
+            if hasattr(self, param):
+                setattr(self, param, params[param])
+        return self
+
+    def get_support(self, indices=False):
+        """
+        Get a mask, or integer index, of the features selected.
+
+        Parameters
+        ----------
+        indices : bool
+            Default False
+            If True, the return value will be an array of integers, rather than a boolean mask.
+
+        Returns
+        -------
+        list :
+            returns support: An index that selects the retained features from a feature vector.
+            If indices is False, this is a boolean array of shape [# input features],
+            in which an element is True iff its corresponding feature is selected for retention.
+            If indices is True, this is an integer array of shape [# output features] whose values
+            are indices into the input feature vector.
+        """
+        ...
+        return mask
+    
+
+    def transform(self, X):
+        """Reduce X to the selected features.
+        Parameters
+        ----------
+        X : array of shape [n_samples, n_features]
+            The input samples.
+        Returns
+        -------
+        X_r : array of shape [n_samples, n_selected_features]
+            The input samples with only the selected features.
+        """
+        ...
+        return X_r
+
+
+    def inverse_transform(self, X):
+        """
+        Reverse the transformation operation
+        Parameters
+        ----------
+        X : array of shape [n_samples, n_selected_features]
+            The input samples.
+        Returns
+        -------
+        X_r : array of shape [n_samples, n_original_features]
+            `X` with columns of zeros inserted where features would have
+            been
+        """
+        ...
+        return X_r
+```
+
+After integrate with Sklearn, we could use the feature selector as following:
+```python
+from sklearn.linear_model import LogisticRegression
+
+# load data
+...
+X_train, y_train = ...
+
+# build a ppipeline
+pipeline = make_pipeline(XXXSelector(...), LogisticRegression())
+pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
+pipeline.fit(X_train, y_train)
+
+# score
+print("Pipeline Score: ", pipeline.score(X_train, y_train))
+
+```
