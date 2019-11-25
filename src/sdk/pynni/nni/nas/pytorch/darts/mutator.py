@@ -36,9 +36,9 @@ class DartsMutator(Mutator):
                 edges_max[mutable.key] = max_val
                 result[mutable.key] = F.one_hot(index, num_classes=mutable.length).view(-1).bool()
         for mutable in self.mutables:
-            if isinstance(mutable, InputChoice):
+            if isinstance(mutable, InputChoice) and mutable.n_chosen is not None:
                 weights = torch.tensor([edges_max.get(src_key, 0.) for src_key in mutable.choose_from])  # pylint: disable=not-callable
-                _, topk_edge_indices = torch.topk(weights, mutable.n_chosen or mutable.n_candidates)
+                _, topk_edge_indices = torch.topk(weights, mutable.n_chosen)
                 selected_multihot = []
                 for i, src_key in enumerate(mutable.choose_from):
                     if i not in topk_edge_indices and src_key in result:
