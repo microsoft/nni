@@ -1,27 +1,27 @@
 ## GBDTSelector
 
-GBDTSelector is based on [LightGBM](https://github.com/microsoft/LightGBM), which is a gradient boosting framework that uses tree-based learning algorithms.
+GBDTSelector 基于 [LightGBM](https://github.com/microsoft/LightGBM)，这是一个基于树学习算法的梯度提升框架。
 
-When passing the data into the GBDT model, the model will construct the boosting tree. And the feature importance comes from the score in construction, which indicates how useful or valuable each feature was in the construction of the boosted decision trees within the model.
+当将数据传递到 GBDT 模型时，该模型将构建提升树。 特征的重要性来自于构造时的分数，其表达了每个特征在模型构造提升决策树时有多有用。
 
-We could use this method as a strong baseline in Feature Selector, especially when using the GBDT model as a classifier or regressor.
+可使用此方法作为 Feature Selector 中较强的基准，特别是在使用 GBDT 模型进行分类或回归时。
 
-For now, we support the `importance_type` is `split` and `gain`. But we will support customized `importance_type` in the future, which means the user could define how to calculate the `feature score` by themselves.
+当前，支持的 `importance_type` 有 `split` 和 `gain`。 未来会支持定制 `importance_type`，也就是说用户可以定义如何计算`特征分数`。
 
-### Usage
+### 用法
 
-First you need to install dependency:
+首先，安装依赖项：
 
 ```
 pip install lightgbm
 ```
 
-Then
+然后
 
 ```python
 from nni.feature_engineering.gbdt_selector import GBDTSelector
 
-# load data
+# 读取数据
 ...
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
