@@ -47,7 +47,7 @@ class LevelPruner(Pruner):
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
-            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
+            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
             self.mask_dict.update({op_name: mask})
             self.if_init_list.update({op_name: False})
@@ -108,7 +108,7 @@ class AGP_Pruner(Pruner):
                 return mask
             # if we want to generate new mask, we should update weigth first
             w_abs = weight.abs() * mask
-            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
+            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             new_mask = torch.gt(w_abs, threshold).type_as(weight)
             self.mask_dict.update({op_name: new_mask})
             self.if_init_list.update({op_name: False})
@@ -329,7 +329,7 @@ class L1FilterPruner(Pruner):
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
             w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
-            threshold = torch.topk(w_abs_structured.view(-1), k, largest=False).values.max()
+            threshold = torch.topk(w_abs_structured.view(-1), k, largest=False)[0].max()
             mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
         finally:
             self.mask_dict.update({layer.name: mask})
@@ -363,10 +363,10 @@ class SlimPruner(Pruner):
         config = config_list[0]
         for (layer, config) in self.detect_modules_to_compress():
             assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-            weight_list.append(layer.module.weight.data.clone())
+            weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
-        self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False).values.max()
+        self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
 
     def calc_mask(self, layer, config):
         """
