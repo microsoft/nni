@@ -19,10 +19,10 @@ echo "===========================Testing: nni_sdk==========================="
 cd $CWD/../src/sdk/pynni/
 python -m unittest discover -v tests
 
-
-
-# -------------For typescript unittest-------------
-cd $CWD/../src/nni_manager
-echo ""
-echo "===========================Testing: nni_manager==========================="
-npm run test
+#
+#
+# # -------------For typescript unittest-------------
+# cd $CWD/../src/nni_manager
+# echo ""
+# echo "===========================Testing: nni_manager==========================="
+# npm run test
