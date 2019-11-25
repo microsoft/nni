@@ -101,4 +101,4 @@ def get_trial_id():
     return trial_env_vars.NNI_TRIAL_JOB_ID
 
 def get_sequence_id():
-    return trial_env_vars.NNI_TRIAL_SEQ_ID
+    return int(trial_env_vars.NNI_TRIAL_SEQ_ID)
