@@ -205,15 +205,15 @@ pruner.compress()
 
 ## Slim Pruner
 
-This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+这是一次性的 Pruner，在 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
 
 ![](../../img/slim_pruner.png)
 
-> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+> Slim Pruner **会遮盖卷据层通道之后 BN 层对应的缩放因子**，训练时在缩放因子上的 L1 正规化应在批量正规化 (BN) 层之后来做。BN 层的缩放因子在修剪时，是**全局排序的**，因此稀疏模型能自动找到给定的稀疏度。
 
-### Usage
+### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```
 from nni.compression.torch import SlimPruner
@@ -222,7 +222,7 @@ pruner = SlimPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for Slim Pruner
+#### Slim Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
