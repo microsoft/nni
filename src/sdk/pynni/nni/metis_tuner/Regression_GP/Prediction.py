@@ -17,4 +17,3 @@ def predict(parameters_value, regressor_gp):
     mu, sigma = regressor_gp.predict(parameters_value, return_std=True)
 
     return mu[0], sigma[0]
-    
