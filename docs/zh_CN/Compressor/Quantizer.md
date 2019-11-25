@@ -25,33 +25,42 @@ nni.compressors.torch.NaiveQuantizer(model).compress()
 ### 用法
 可在训练代码前将模型量化为 8 位。
 
-TensorFlow 代码
-```python
-from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
-quantizer.compress()
-```
-PyTorch 代码
+PyTorch code
 ```python
 from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
+model = Mnist()
+
+config_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+    'op_types':['Conv2d', 'Linear']
+}, {
+    'quant_types': ['output'],
+    'quant_bits': 8,
+    'quant_start_step': 7000,
+    'op_types':['ReLU6']
+}]
 quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
 
-查看示例进一步了解
+You can view example for more information
 
 #### QAT Quantizer 的用户配置
-* **q_bits:** 指定需要被量化的位数。
+* **quant_types:** : list of string type of quantization you want to apply, currently support 'weight', 'input', 'output'
+* **quant_bits:** int or dict of {str : int} bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, when the type is int, all quantization types share same bits length
+* **quant_start_step:** int disable quantization until model are run by certain number of steps, this allows the network to enter a more stable state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
-
+### note
+batch normalization folding is currently not supported.
 ***
 
 ## DoReFa Quantizer
 在 [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160) 中，作者 Shuchang Zhou 和 Yuxin Wu 提出了 DoReFa 算法在训练时量化权重，激活函数和梯度。
 
-### 用法
+### Usage
 要实现 DoReFa Quantizer，在训练代码前加入以下代码。
 
 TensorFlow 代码
