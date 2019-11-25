@@ -81,6 +81,7 @@ interface Dimobj {
     axisLabel?: object;
     axisLine?: object;
     nameTextStyle?: object;
+    scale?: boolean;
 }
 
 interface ParaObj {
@@ -179,9 +180,13 @@ interface NNIManagerStatus {
     errors: string[];
 }
 
+interface EventMap {
+    [key: string]: () => void;
+}
+
 export {
     TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
     DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
     TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
-    NNIManagerStatus,
+    NNIManagerStatus, EventMap
 };

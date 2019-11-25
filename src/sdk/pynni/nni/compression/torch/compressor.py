@@ -304,6 +304,12 @@ class Quantizer(Compressor):
         assert layer._forward is None, 'Each model can only be compressed once'
         assert "quant_types" in config, 'must provide quant_types in config'
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
+        assert "quant_bits" in config, 'must provide quant_bits in config'
+        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
+
+        if isinstance(config["quant_bits"], dict):
+            for quant_type in config["quant_types"]:
+                assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
@@ -312,7 +318,7 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
-                inputs = self.quantize_input(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                inputs = straight_through_quantize_input.apply(inputs, self, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
@@ -324,11 +330,31 @@ class Quantizer(Compressor):
                 result = layer._forward(*inputs)
 
             if 'output' in config["quant_types"]:
-                result = self.quantize_output(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-
+                result = straight_through_quantize_output.apply(result, self, config, layer)
             return result
 
         layer.module.forward = new_forward
+
+
+class straight_through_quantize_output(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, output, quantizer, config, layer):
+        return quantizer.quantize_output(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Straight-through estimator
+        return grad_output, None, None, None
+
+class straight_through_quantize_input(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inputs, quantizer, config, layer):
+        return quantizer.quantize_input(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Straight-through estimator
+        return grad_output, None, None, None
 
 def _check_weight(module):
     try:
