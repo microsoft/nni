@@ -29,7 +29,7 @@ import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError
 from nni_annotation import expand_annotations, generate_search_space
-from nni.constants import ModuleName, AdvisorModuleName, NNI_GEN_SEARCH_SPACE
+from nni.constants import ModuleName, AdvisorModuleName
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
@@ -507,7 +507,7 @@ def create_experiment(args):
         # Deal with NAS mode which uses NNI tuner
         # we use NNI_AUTO_GEN to specify this NAS mode
         real_ss_path = auto_gen_search_space_dry_run(experiment_config['trial']['codeDir'],
-                                                        experiment_config['trial']['command'])
+                                                     experiment_config['trial']['command'])
         experiment_config['searchSpacePath'] = real_ss_path
     validate_all_content(experiment_config, config_path)
 

@@ -4,7 +4,6 @@ import json
 import logging
 import nni
 from nni.env_vars import trial_env_vars
-from nni.constants import NNI_GEN_SEARCH_SPACE
 from nni.nas.pytorch.base_mutator import BaseMutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
@@ -46,7 +45,7 @@ class ClassicMutator(BaseMutator):
         super(ClassicMutator, self).__init__(model)
         self.chosen_arch = {}
         self.search_space = self._generate_search_space()
-        if os.environ.get(NNI_GEN_SEARCH_SPACE) is not None:
+        if os.environ.get('NNI_GEN_SEARCH_SPACE') is not None:
             # dry run for only generating search space
             self._dump_search_space(self.search_space)
             sys.exit(0)
