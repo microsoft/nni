@@ -50,8 +50,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
-    Optional('searchSpacePath'): Or(setChoice('searchSpacePath', 'NNI_AUTO_GEN'), \
-                                    And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'), error='searchSpacePath error!'),
+    Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
     Optional('nniManagerIp'): setType('nniManagerIp', str),

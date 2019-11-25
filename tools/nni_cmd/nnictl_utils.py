@@ -27,6 +27,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from pyhdfs import HdfsClient
+from subprocess import Popen
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
@@ -692,3 +693,16 @@ def export_trials_data(args):
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def search_space_auto_gen(args):
+    '''dry run trial code to generate search space file'''
+    trial_dir = os.path.expanduser(args.trial_dir)
+    file_path = os.path.expanduser(args.file)
+    if not os.path.isabs(file_path):
+        abs_file_path = os.path.join(os.getcwd(), file_path)
+    assert os.path.exists(trial_dir)
+    if os.path.exists(abs_file_path):
+        print_warning('%s already exits, will be over written' % abs_file_path)
+    print_normal('Dry run to generate search space...')
+    Popen(args.trial_command, cwd=trial_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE=abs_file_path), shell=True).wait()
+    print_normal('Dry run to generate search space, Done')

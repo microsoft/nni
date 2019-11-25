@@ -48,7 +48,7 @@ class ClassicMutator(BaseMutator):
         self.search_space = self._generate_search_space()
         if 'NNI_GEN_SEARCH_SPACE' in os.environ:
             # dry run for only generating search space
-            self._dump_search_space(self.search_space)
+            self._dump_search_space(self.search_space, os.environ.get('NNI_GEN_SEARCH_SPACE'))
             sys.exit(0)
         # get chosen arch from tuner
         self.chosen_arch = nni.get_next_parameter()
@@ -122,8 +122,8 @@ class ClassicMutator(BaseMutator):
                 raise TypeError('Unsupported mutable type: %s.' % type(mutable))
         return search_space
 
-    def _dump_search_space(self, search_space):
-        with open(os.path.join(os.getcwd(), 'auto_gen_search_space.json'), 'w') as ss_file:
+    def _dump_search_space(self, search_space, file_path):
+        with open(file_path, 'w') as ss_file:
             json.dump(search_space, ss_file)
 
     def _tensor_reduction(self, reduction_type, tensor_list):

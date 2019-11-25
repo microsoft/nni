@@ -386,13 +386,6 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
 
-def auto_gen_search_space_dry_run(code_dir, command):
-    '''dry run trial code to generate search space file'''
-    print_normal('Dry run to generate search space...')
-    Popen(command, cwd=code_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE='auto_gen_ss'), shell=True).wait()
-    print_normal('Dry run to generate search space, Done')
-    return os.path.join(code_dir, 'auto_gen_search_space.json')
-
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
@@ -502,13 +495,7 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    # TODO: whether need to do it during experiment resume
-    if experiment_config.get('searchSpacePath', '') == 'NNI_AUTO_GEN':
-        # Deal with NAS mode which uses NNI tuner
-        # we use NNI_AUTO_GEN to specify this NAS mode
-        real_ss_path = auto_gen_search_space_dry_run(experiment_config['trial']['codeDir'],
-                                                     experiment_config['trial']['command'])
-        experiment_config['searchSpacePath'] = real_ss_path
+    
     validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
