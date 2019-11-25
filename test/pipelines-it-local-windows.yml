@@ -15,4 +15,8 @@ jobs:
   - script: |
       cd test
       powershell.exe -file unittest.ps1
+    powershell: test/unittest.ps1
+    workingDirectory: test
+    failOnStderr: false
+    errorActionPreference: stop
     displayName: 'unit test only'
