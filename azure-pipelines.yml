@@ -17,7 +17,7 @@ jobs:
       python -m pip install torchvision --user
       python -m pip install tensorflow-gpu==1.11.0 --user
     displayName: 'Install dependencies for integration tests'
-  - powershell: ./test/unittest.ps1
+  - powershell: ./unittest.ps1
     workingDirectory: test
     failOnStderr: false
     errorActionPreference: stop
