@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import torch
 import nni
 from nni.env_vars import trial_env_vars
 from nni.nas.pytorch.base_mutator import BaseMutator

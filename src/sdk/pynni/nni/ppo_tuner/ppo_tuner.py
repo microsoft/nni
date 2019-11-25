@@ -380,7 +380,7 @@ class PPOTuner(Tuner):
                 n_chosen = val['_value']['n_chosen']
                 if n_chosen not in [0, 1, [0, 1]]:
                     raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'
-                                     % (layer['optional_input_size']))
+                                     % (n_chosen))
                 if isinstance(n_chosen, list):
                     actions_to_config.append((key, 'input_choice'))
                     # FIXME: risk, candidates might also have None
