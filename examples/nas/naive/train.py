@@ -20,8 +20,6 @@ class Net(nn.Module):
         self.skipconnect = InputChoice(n_candidates=1)
         self.bn = nn.BatchNorm2d(16)
 
-        self.unused_input_choice = InputChoice(n_candidates=3, n_chosen=1)
-
         self.gap = nn.AdaptiveAvgPool2d(4)
         self.fc1 = nn.Linear(16 * 4 * 4, 120)
         self.fc2 = nn.Linear(120, 84)
@@ -52,13 +50,11 @@ def accuracy(output, target):
     return {"acc1": (predicted == target).sum().item() / batch_size}
 
 
-
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     dataset_train = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
     dataset_valid = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = Net()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
