@@ -50,6 +50,27 @@ def init_logger(logger_file_path, log_level_name='info'):
 
     sys.stdout = _LoggerFileWrapper(logger_file)
 
+def init_standalone_logger():
+    """
+    Initialize root logger for standalone mode.
+    This will set NNI's log level to INFO and print its log to stdout.
+    """
+    fmt = '[%(asctime)s] %(levelname)s (%(name)s) %(message)s'
+    formatter = logging.Formatter(fmt, _time_format)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    nni_logger = logging.getLogger('nni')
+    nni_logger.addHandler(handler)
+    nni_logger.setLevel(logging.INFO)
+    nni_logger.propagate = False
+
+    # Following line does not affect NNI loggers, but without this user's logger won't be able to
+    # print log even it's level is set to INFO, so we do it for user's convenience.
+    # If this causes any issue in future, remove it and use `logging.info` instead of
+    # `logging.getLogger('xxx')` in all examples.
+    logging.basicConfig()
+
+
 _multi_thread = False
 _multi_phase = False
 

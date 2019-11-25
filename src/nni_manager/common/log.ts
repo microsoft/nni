@@ -139,11 +139,7 @@ class Logger {
     }
 }
 
-function getLogger(fileName?: string): Logger {
-    component.Container.bind(Logger).provider({
-        get: (): Logger => new Logger(fileName)
-    });
-
+function getLogger(): Logger {
     return component.get(Logger);
 }
 

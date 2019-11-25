@@ -33,7 +33,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
-async function initContainer(platformMode: string): Promise<void> {
+async function initContainer(platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
@@ -66,6 +66,9 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    Container.bind(Logger).provider({
+        get: (): Logger => new Logger(logFileName)
+    });
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -129,13 +132,14 @@ initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {
-    const log: Logger = getLogger();
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
+        const log: Logger = getLogger();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
+        const log: Logger = getLogger();
         log.error(`${err.stack}`);
         throw err;
     }

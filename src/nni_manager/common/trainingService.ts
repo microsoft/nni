@@ -42,11 +42,6 @@ interface TrialJobDetail {
     isEarlyStopped?: boolean;
 }
 
-interface HostJobDetail {
-    readonly id: string;
-    readonly status: string;
-}
-
 /**
  * define TrialJobMetric
  */

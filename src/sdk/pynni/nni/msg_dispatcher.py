@@ -119,7 +119,6 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: parameters
         id_ = _create_parameter_id()
         _customized_parameter_ids.add(id_)
-        send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
 
     def handle_report_metric_data(self, data):
         """
@@ -168,7 +167,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         id_ = data['parameter_id']
         value = data['value']
-        if id_ in _customized_parameter_ids:
+        if id_ is None or id_ in _customized_parameter_ids:
             if not hasattr(self.tuner, '_accept_customized'):
                 self.tuner._accept_customized = False
             if not self.tuner._accept_customized:
@@ -177,8 +176,8 @@ class MsgDispatcher(MsgDispatcherBase):
             customized = True
         else:
             customized = False
-        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
-                                        trial_job_id=data.get('trial_job_id'))
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
+                                            trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results

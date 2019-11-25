@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')
 
 
-class TunerTestCase(TestCase):
+class BuiltinTunersTestCase(TestCase):
     """
     Targeted at testing functions of built-in tuners, including
         - [ ] load_checkpoint

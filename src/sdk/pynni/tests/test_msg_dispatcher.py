@@ -62,8 +62,6 @@ class MsgDispatcherTestCase(TestCase):
         send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":10}')
         send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":11}')
         send(CommandType.UpdateSearchSpace, '{"name":"SS0"}')
-        send(CommandType.AddCustomizedTrialJob, '{"param":-1}')
-        send(CommandType.ReportMetricData, '{"parameter_id":2,"type":"FINAL","value":22}')
         send(CommandType.RequestTrialJobs, '1')
         send(CommandType.KillTrialJob, 'null')
         _restore_io()
@@ -81,14 +79,7 @@ class MsgDispatcherTestCase(TestCase):
         self._assert_params(0, 2, [], None)
         self._assert_params(1, 4, [], None)
 
-        command, data = receive()  # this one is customized
-        data = json.loads(data)
-        self.assertIs(command, CommandType.NewTrialJob)
-        self.assertEqual(data['parameter_id'], 2)
-        self.assertEqual(data['parameter_source'], 'customized')
-        self.assertEqual(data['parameters'], {'param': -1})
-
-        self._assert_params(3, 6, [[1, 4, 11, False], [2, -1, 22, True]], {'name': 'SS0'})
+        self._assert_params(2, 6, [[1, 4, 11, False]], {'name': 'SS0'})
 
         self.assertEqual(len(_out_buf.read()), 0)  # no more commands
 

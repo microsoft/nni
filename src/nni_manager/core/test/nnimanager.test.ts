@@ -105,7 +105,7 @@ describe('Unit test for nnimanager', function () {
 
 
     it('test addCustomizedTrialJob', () => {
-        return nniManager.addCustomizedTrialJob('hyperParams').then(() => {
+        return nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
 
         }).catch((error) => {
             assert.fail(error);
@@ -257,7 +257,7 @@ describe('Unit test for nnimanager', function () {
 
     it('test addCustomizedTrialJob reach maxTrialNum', () => {
         // test currSubmittedTrialNum reach maxTrialNum
-        return nniManager.addCustomizedTrialJob('hyperParam').then(() => {
+        return nniManager.addCustomizedTrialJob('"hyperParam"').then(() => {
             nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
                 if (trialJobStatistics[0].trialJobStatus === 'WAITING')
                     expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);

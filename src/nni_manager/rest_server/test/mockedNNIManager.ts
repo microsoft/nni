@@ -49,8 +49,8 @@ export class MockedNNIManager extends Manager {
 
         return deferred.promise;
     }
-    public addCustomizedTrialJob(hyperParams: string): Promise<void> {
-        return Promise.resolve();
+    public addCustomizedTrialJob(hyperParams: string): Promise<number> {
+        return Promise.resolve(99);
     }
 
     public resumeExperiment(): Promise<void> {
