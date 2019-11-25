@@ -42,10 +42,10 @@ import {
     getVersion, uniqueString, unixPathJoin
 } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPUSummary } from '../common/gpuData';
+import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, execRemove, validateCodeDir } from '../common/util';
+import { execCopydir, execMkdir, execRemove, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
@@ -67,7 +67,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly expRootDir: string;
     private readonly remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
-    private readonly gpuScheduler: GPUScheduler;
+    private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
     private stopping: boolean = false;
@@ -87,7 +87,6 @@ class RemoteMachineTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialSSHClientMap = new Map<string, Client>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, SSHClientManager>();
-        this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
@@ -334,8 +333,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
-                //remove local temp files
-                await execRemove(this.getLocalGpuMetricCollectorDir());
+                this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -399,9 +397,11 @@ class RemoteMachineTrainingService implements TrainingService {
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation(): void {
-        for (const [key, value] of this.trialJobsMap) {
-            if (!['WAITING', 'RUNNING'].includes(value.status)) {
-                this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+        if (this.gpuScheduler) {
+            for (const [key, value] of this.trialJobsMap) {
+                if (!['WAITING', 'RUNNING'].includes(value.status)) {
+                    this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+                }
             }
         }
     }
@@ -428,34 +428,6 @@ class RemoteMachineTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    /**
-     * Generate gpu metric collector directory to store temp gpu metric collector script files
-     */
-    private getLocalGpuMetricCollectorDir(): string {
-        const userName: string = path.basename(os.homedir()); //get current user name of os
-
-        return path.join(os.tmpdir(), userName, 'nni', 'scripts');
-    }
-
-    /**
-     * Generate gpu metric collector shell script in local machine,
-     * used to run in remote machine, and will be deleted after uploaded from local.
-     */
-    private async generateGpuMetricsCollectorScript(userName: string): Promise<void> {
-        const gpuMetricCollectorScriptFolder : string = this.getLocalGpuMetricCollectorDir();
-        await execMkdir(path.join(gpuMetricCollectorScriptFolder, userName));
-        //generate gpu_metrics_collector.sh
-        const gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder, userName, 'gpu_metrics_collector.sh');
-        // This directory is used to store gpu_metrics and pid created by script
-        const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(userName);
-        const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX,
-            remoteGPUScriptsDir,
-            unixPathJoin(remoteGPUScriptsDir, 'pid')
-        );
-        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-    }
-
     private async setupConnections(machineList: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
         const deferred: Deferred<void> = new Deferred<void>();
@@ -479,24 +451,18 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
-        // generate gpu script in local machine first, will copy to remote machine later
-        await this.generateGpuMetricsCollectorScript(rmMeta.username);
         const nniRootDir: string = unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni');
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
 
-        // Copy NNI scripts to remote expeirment working directory
-        const localGpuScriptCollectorDir: string = this.getLocalGpuMetricCollectorDir();
         // the directory to store temp scripts in remote machine
         const remoteGpuScriptCollectorDir: string = this.getRemoteScriptsPath(rmMeta.username);
-        await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteGpuScriptCollectorDir}`, conn);
+        await SSHClientUtility.remoteExeCommand(`(umask 0 ; mkdir -p ${remoteGpuScriptCollectorDir})`, conn);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
-        //copy gpu_metrics_collector.sh to remote
-        await SSHClientUtility.copyFileToRemote(path.join(localGpuScriptCollectorDir, rmMeta.username, 'gpu_metrics_collector.sh'),
-                                                unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), conn);
 
         //Begin to execute gpu_metrics_collection scripts
         // tslint:disable-next-line: no-floating-promises
-        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
+        const script = getGpuMetricsCollectorBashScriptContent(remoteGpuScriptCollectorDir);
+        SSHClientUtility.remoteExeCommand(`bash -c '${script}'`, conn);
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
             async (tick: number) => {
@@ -518,6 +484,9 @@ class RemoteMachineTrainingService implements TrainingService {
 
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
+        }
+        if (this.gpuScheduler === undefined) {
+            throw new Error('gpuScheduler is not initialized');
         }
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
@@ -630,7 +599,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         //create tmp trial working folder locally.
-        await execCopydir(path.join(this.trialConfig.codeDir, '*'), trialLocalTempFolder);
+        await execCopydir(this.trialConfig.codeDir, trialLocalTempFolder);
         const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
