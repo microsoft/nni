@@ -25,33 +25,33 @@ from nni.feature_engineering.gbdt_selector import GBDTSelector
 ...
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-# initlize a selector
+# 初始化 Selector
 fgs = GBDTSelector()
-# fit data
+# 你和数据
 fgs.fit(X_train, y_train, ...)
-# get improtant features
-# will return the index with important feature here.
+# 获取重要的特征
+# 此处会返回重要特征的索引。
 print(fgs.get_selected_features(10))
 
 ...
 ```
 
-And you could reference the examples in `/examples/feature_engineering/gbdt_selector/`, too.
+也可在 `/examples/feature_engineering/gbdt_selector/` 目录找到示例。
 
 
-**Requirement of `fit` FuncArgs**
+**`fit` 函数参数要求**
 
-* **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]
+* **X** (数组，必需) - 训练的输入样本，shape = [n_samples, n_features]
 
-* **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples].
+* **y** (数组，必需) - 目标值 (分类中为标签，回归中为实数)，shape = [n_samples].
 
-* **lgb_params** (dict, require) - The parameters for lightgbm model. The detail you could reference [here](https://lightgbm.readthedocs.io/en/latest/Parameters.html)
+* **lgb_params** (dict, 必需) - lightgbm 模型参数。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/Parameters.html)
 
-* **eval_ratio** (float, require) - The ratio of data size. It's used for split the eval data and train data from self.X.
+* **eval_ratio** (float, 必需) - 数据大小的比例 用于从 self.X 中拆分出评估和训练数据。
 
-* **early_stopping_rounds** (int, require) - The early stopping setting in lightgbm. The detail you could reference [here](https://lightgbm.readthedocs.io/en/latest/Parameters.html).
+* **early_stopping_rounds** (int, 必需) - lightgbm 中的提前终止设置。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/Parameters.html)。
 
-* **importance_type** (str, require) - could be 'split' or 'gain'. The 'split' means ' result contains numbers of times the feature is used in a model' and the 'gain' means 'result contains total gains of splits which use the feature'. The detail you could reference in [here](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance).
+* **importance_type** (str, 必需) - 可为 'split' 或 'gain'。 The 'split' means ' result contains numbers of times the feature is used in a model' and the 'gain' means 'result contains total gains of splits which use the feature'. The detail you could reference in [here](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance).
 
 * **num_boost_round** (int, require) - number of boost round. The detail you could reference [here](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train).
 
