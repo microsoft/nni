@@ -50,17 +50,17 @@ quantizer.compress()
 
 #### QAT Quantizer 的用户配置
 * **quant_types:**: 字符串列表 要应用的量化类型，当前支持 'weight', 'input', 'output'
-* **quant_bits:** int or dict of {str : int} bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, when the type is int, all quantization types share same bits length
-* **quant_start_step:** int disable quantization until model are run by certain number of steps, this allows the network to enter a more stable state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
+* **quant_bits:** int 或 {str : int} 的 dict 量化的位长，主键是量化类型，键值为长度，例如。 {'weight', 8}, 当类型为 int 时，所有量化类型都用同样的位长
+* **quant_start_step:** int 在运行到某步骤前，对模型禁用量化。这让网络在进入更稳定的 状态后再激活量化，这样不会配除掉一些分数显著的值，默认为 0
 
-### note
-batch normalization folding is currently not supported.
+### 注意
+当前不支持批处理规范化折叠。
 ***
 
 ## DoReFa Quantizer
 在 [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160) 中，作者 Shuchang Zhou 和 Yuxin Wu 提出了 DoReFa 算法在训练时量化权重，激活函数和梯度。
 
-### Usage
+### 用法
 要实现 DoReFa Quantizer，在训练代码前加入以下代码。
 
 TensorFlow 代码
