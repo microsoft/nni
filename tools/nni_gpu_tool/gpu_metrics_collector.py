@@ -35,7 +35,7 @@ def check_ready_to_run():
         pidList.remove(os.getpid())
         return not pidList
     else:
-        pgrep_output = subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
+        pgrep_output = subprocess.check_output('pgrep -fxu "$(whoami)" \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
         pidList = []
         for pid in pgrep_output.splitlines():
             pidList.append(int(pid))
