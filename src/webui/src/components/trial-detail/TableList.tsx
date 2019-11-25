@@ -587,9 +587,9 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     width: 120,
     sorter: (a, b, sortOrder) => {
         if (a.latestAccuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.latestAccuracy === undefined) {
             return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
         } else {
             return a.latestAccuracy - b.latestAccuracy;
         }
