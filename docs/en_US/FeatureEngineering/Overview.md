@@ -236,3 +236,20 @@ pipeline.fit(X_train, y_train)
 print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
+
+# Benchmark
+
+`Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from train as test data.
+
+|  Dataset      | Baseline | GradientFeatureSelector | GBDTSelector |  #Train |  #Feature | 
+| -----------   | ------  | ------  | -------   |   -------  |  --------  |
+| colon-cancer  | 0.7547  | 0.7368  |  0.7223   |    62      |   2,000    |
+| gisette       | 0.9725  | 0.89416 |  0.9792   |   6,000    |   5,000    |
+| avazu         | 0.8834  | N/A     |  N/A      | 40,428,967 | 1,000,000  |
+| rcv1          | 0.9644  | 0.7333  |  0.9615   |  20,242    |   47,236   |
+| news20.binary | 0.9208  | N/A     |  N/A      |  19,996    | 1,355,191  |
+| real-sim      | 0.9681  | 0.7969  |  0.9591   |  72,309    |   20,958   |
+
+The benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/
+)
+
