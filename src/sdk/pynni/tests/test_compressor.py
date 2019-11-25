@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from unittest import TestCase, main
 import numpy as np
 import tensorflow as tf
