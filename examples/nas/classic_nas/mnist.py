@@ -16,7 +16,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.classic_nas import get_apply_next_architecture
+from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 
 
 logger = logging.getLogger('mnist_AutoML')
@@ -37,7 +37,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(4*4*50, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 10)
         # skip connection over mid_conv
-        self.input_switch = InputChoice(choose_from=['', 'mid_conv'],
+        self.input_switch = InputChoice(n_candidates=2,
                                         n_chosen=1,
                                         key='skip')
 
@@ -46,7 +46,7 @@ class Net(nn.Module):
         x = F.max_pool2d(x, 2, 2)
         old_x = x
         x = F.relu(self.mid_conv(x))
-        zero_x = torch.zeros_like(old_x).float()
+        zero_x = torch.zeros_like(old_x)
         skip_x = self.input_switch([zero_x, old_x])
         x = torch.add(x, skip_x)
         x = F.relu(self.conv2(x))
@@ -125,7 +125,7 @@ def main(args):
     hidden_size = args['hidden_size']
 
     model = Net(hidden_size=hidden_size).to(device)
-    get_apply_next_architecture(model)
+    get_and_apply_next_architecture(model)
     optimizer = optim.SGD(model.parameters(), lr=args['lr'],
                           momentum=args['momentum'])
 

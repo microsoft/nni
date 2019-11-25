@@ -10,7 +10,7 @@ from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
 logger = logging.getLogger(__name__)
 
-def get_apply_next_architecture(model):
+def get_and_apply_next_architecture(model):
     """
     Wrapper of ClassicMutator to make it more meaningful,
     similar to ```get_next_parameter``` for HPO.
@@ -46,7 +46,7 @@ class ClassicMutator(BaseMutator):
         super(ClassicMutator, self).__init__(model)
         self.chosen_arch = {}
         self.search_space = self._generate_search_space()
-        if os.environ.get('NNI_GEN_SEARCH_SPACE') is not None:
+        if 'NNI_GEN_SEARCH_SPACE' in os.environ:
             # dry run for only generating search space
             self._dump_search_space(self.search_space)
             sys.exit(0)
@@ -65,6 +65,12 @@ class ClassicMutator(BaseMutator):
         Generate the chosen architecture for standalone mode,
         i.e., choose the first one(s) for LayerChoice and InputChoice
 
+        { key_name: {'_value': "conv1",
+                     '_idx': 0} }
+
+        { key_name: {'_value': ["in1"],
+                     '_idx': [0]} }
+
         Returns
         -------
         dict
@@ -74,14 +80,11 @@ class ClassicMutator(BaseMutator):
         for key, val in self.search_space.items():
             if val['_type'] == 'layer_choice':
                 choices = val['_value']
-                chosen_arch[key] = choices[0]
+                chosen_arch[key] = {'_value': choices[0], '_idx': 0}
             elif val['_type'] == 'input_choice':
                 choices = val['_value']['candidates']
                 n_chosen = val['_value']['n_chosen']
-                chosen = []
-                for i in range(n_chosen):
-                    chosen.append(choices[i])
-                chosen_arch[key] = chosen
+                chosen_arch[key] = {'_value': choices[:n_chosen], '_idx': list(range(n_chosen))}
             else:
                 raise ValueError('Unknown key %s and value %s' % (key, val))
         return chosen_arch
@@ -92,10 +95,10 @@ class ClassicMutator(BaseMutator):
         Here is the search space format:
 
         { key_name: {'_type': 'layer_choice',
-                     '_value': [conv1, conv2]} }
+                     '_value': ["conv1", "conv2"]} }
 
         { key_name: {'_type': 'input_choice',
-                     '_value': {'candidates': [in1, in2],
+                     '_value': {'candidates': ["in1", "in2"],
                                 'n_chosen': 1}} }
 
         Returns
@@ -108,7 +111,7 @@ class ClassicMutator(BaseMutator):
             # for now we only generate flattened search space
             if isinstance(mutable, LayerChoice):
                 key = mutable.key
-                val = [choice.__repr__() for choice in mutable.choices]
+                val = [repr(choice) for choice in mutable.choices]
                 search_space[key] = {"_type": "layer_choice", "_value": val}
             elif isinstance(mutable, InputChoice):
                 key = mutable.key
@@ -116,7 +119,7 @@ class ClassicMutator(BaseMutator):
                                      "_value": {"candidates": mutable.choose_from,
                                                 "n_chosen": mutable.n_chosen}}
             else:
-                raise TypeError('Unsupported mutable type.')
+                raise TypeError('Unsupported mutable type: %s.' % type(mutable))
         return search_space
 
     def _dump_search_space(self, search_space):
@@ -149,7 +152,8 @@ class ClassicMutator(BaseMutator):
 
         Returns
         -------
-        tuple of torch.Tensor and torch.Tensor
+        tuple
+            return of the chosen op, the index of the chosen op
 
         """
         assert mutable.key in self.chosen_arch
@@ -171,7 +175,8 @@ class ClassicMutator(BaseMutator):
 
         Returns
         -------
-        tuple of torch.Tensor and torch.Tensor
+        tuple of torch.Tensor and list
+            reduced tensor, mask list
 
         """
         assert mutable.key in self.chosen_arch
