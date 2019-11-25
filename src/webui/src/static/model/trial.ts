@@ -4,7 +4,7 @@ import { getFinal, formatAccuracy, metricAccuracy } from '../function';
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
-    private intermediates: (MetricDataRecord | undefined)[] = [];
+    private intermediates: (MetricDataRecord | undefined)[] = [ ];
     private final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
@@ -27,7 +27,7 @@ class Trial implements TableObj {
     }
 
     get intermediateMetrics(): MetricDataRecord[] {
-        const ret: MetricDataRecord[] = [];
+        const ret: MetricDataRecord[] = [ ];
         for (let i = 0; i < this.intermediates.length; i++) {
             if (this.intermediates[i]) {
                 ret.push(this.intermediates[i]!);
@@ -110,8 +110,8 @@ class Trial implements TableObj {
 
     get description(): Parameters {
         let ret: Parameters = {
-            parameters: {},
-            intermediate: [],
+            parameters: { },
+            intermediate: [ ],
             multiProgress: 1
         };
         const tempHyper = this.info.hyperParameters;
@@ -130,7 +130,7 @@ class Trial implements TableObj {
             ret.logPath = this.info.logPath;
         }
 
-        const mediate: number[] = [];
+        const mediate: number[] = [ ];
         for (const items of this.intermediateMetrics) {
             if (typeof JSON.parse(items.data) === 'object') {
                 mediate.push(JSON.parse(items.data).default);
