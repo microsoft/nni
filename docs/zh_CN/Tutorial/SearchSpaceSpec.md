@@ -80,13 +80,6 @@
   * 这表示变量值会类似于 `round(exp(normal(mu, sigma)) / q) * q`
   * 适用于值是“平滑”的离散变量，但某一边有界。
 
-* `{"_type": "mutable_layer", "_value": {mutable_layer_infomation}}`
-  
-  * [神经网络架构搜索空间](../AdvancedFeature/GeneralNasInterfaces.md)的类型。 值是字典类型，键值对表示每个 mutable_layer 的名称和搜索空间。
-  * 当前，只能通过 Annotation 来使用这种类型的搜索空间。因此不需要为搜索空间定义 JSON 文件，它会通过 Trial 中的 Annotation 自动生成。
-  * 下列超参优化 Tuner 可用于此搜索空间：TPE, Random, Anneal, Evolution, Grid Search, Hyperband 以及 BOHB。
-  * 具体用法参考[通用 NAS 接口](../AdvancedFeature/GeneralNasInterfaces.md)。
-
 ## 每种 Tuner 支持的搜索空间类型
 
 |                     |  choice  | randint  | uniform  | quniform | loguniform | qloguniform |  normal  | qnormal  | lognormal | qlognormal |

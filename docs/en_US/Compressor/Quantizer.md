@@ -28,17 +28,23 @@ In [Quantization and Training of Neural Networks for Efficient Integer-Arithmeti
 ### Usage
 You can quantize your model to 8 bits with the code below before your training code.
 
-Tensorflow code
-```python
-from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
-quantizer.compress()
-```
 PyTorch code
 ```python
 from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
+model = Mnist()
+
+config_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+    'op_types':['Conv2d', 'Linear']
+}, {
+    'quant_types': ['output'],
+    'quant_bits': 8,
+    'quant_start_step': 7000,
+    'op_types':['ReLU6']
+}]
 quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
@@ -46,9 +52,17 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **q_bits:** This is to specify the q_bits operations to be quantized to
+* **quant_types:** : list of string
+type of quantization you want to apply, currently support 'weight', 'input', 'output'
+* **quant_bits:** int or dict of {str : int}
+bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
+when the type is int, all quantization types share same bits length
+* **quant_start_step:** int
+disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
+state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
-
+### note
+batch normalization folding is currently not supported.
 ***
 
 ## DoReFa Quantizer
