@@ -1,9 +1,13 @@
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.nas.pytorch.mutator import Mutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
+
+_logger = logging.getLogger(__name__)
 
 
 class DartsMutator(Mutator):
@@ -37,7 +41,12 @@ class DartsMutator(Mutator):
                 result[mutable.key] = F.one_hot(index, num_classes=mutable.length).view(-1).bool()
         for mutable in self.mutables:
             if isinstance(mutable, InputChoice) and mutable.n_chosen is not None:
-                weights = torch.tensor([edges_max.get(src_key, 0.) for src_key in mutable.choose_from])  # pylint: disable=not-callable
+                weights = []
+                for src_key in mutable.choose_from:
+                    if src_key not in edges_max:
+                        _logger.warning("InputChoice.NO_KEY in '%s' is weighted 0 when selecting inputs.", mutable.key)
+                    weights.append(edges_max.get(src_key, 0.))
+                weights = torch.tensor(weights)  # pylint: disable=not-callable
                 _, topk_edge_indices = torch.topk(weights, mutable.n_chosen)
                 selected_multihot = []
                 for i, src_key in enumerate(mutable.choose_from):
