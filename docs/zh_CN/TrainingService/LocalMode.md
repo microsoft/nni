@@ -103,22 +103,22 @@
 authorName: your_name
 experimentName: auto_mnist
 
-# how many trials could be concurrently running
-trialConcurrency: 1
+# 并发运行数量
+trialConcurrency: 2
 
-# maximum experiment running duration
+# Experiment 运行时间
 maxExecDuration: 3h
 
-# empty means never stop
+# 可为空，即数量不限
 maxTrialNum: 100
 
-# choice: local, remote
+# 可选值为: local, remote
 trainingServicePlatform: local
 
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
 
-# choice: true, false
+# 可选值为: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
