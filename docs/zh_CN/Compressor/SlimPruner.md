@@ -29,11 +29,11 @@ pruner.compress()
 
 ## 3. 实验
 
-We implemented one of the experiments in ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+我们实现了 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中的一项实验。根据论文，对 CIFAR-10 上的 **VGGNet** 剪除了 $70\%$ 的通道，即约 $88.5\%$ 的参数。 我们的实验结果如下：
 
-| Model         | Error(paper/ours) | Parameters | Pruned |
-| ------------- | ----------------- | ---------- | ------ |
-| VGGNet        | 6.34/6.40         | 20.04M     |        |
-| Pruned-VGGNet | 6.20/6.26         | 2.03M      | 88.5%  |
+| 模型            | 错误率(论文/我们的) | 参数量    | 剪除率   |
+| ------------- | ----------- | ------ | ----- |
+| VGGNet        | 6.34/6.40   | 20.04M |       |
+| Pruned-VGGNet | 6.20/6.26   | 2.03M  | 88.5% |
 
-The experiments code can be found at [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+实验代码在 [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
