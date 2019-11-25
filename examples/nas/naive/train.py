@@ -6,7 +6,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.random import RandomMutator
+from nni.nas.pytorch.darts import DartsTrainer
 
 
 class Net(nn.Module):
@@ -46,42 +46,31 @@ class Net(nn.Module):
         return x
 
 
-if __name__ == "__main__":
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+def accuracy(output, target):
+    batch_size = target.size(0)
+    _, predicted = torch.max(output.data, 1)
+    return {"acc1": (predicted == target).sum().item() / batch_size}
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                            download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
-                                              shuffle=True, num_workers=2)
+
+
+if __name__ == "__main__":
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    dataset_train = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+    dataset_valid = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = Net()
-    mutator = RandomMutator(net)
-    net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-    for epoch in range(2):
-        running_loss = 0.0
-        for i, (inputs, labels) in enumerate(trainloader):
-            inputs, labels = inputs.to(device), labels.to(device)
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # reset + forward + backward + optimize
-            mutator.reset()  # sample a new subgraph at each mini-batch
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            # print statistics
-            running_loss += loss.item()
-            if i % 100 == 99:    # print every 20 mini-batches
-                print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 100))
-                running_loss = 0.0
-
-    print("Finished training. Final architecture:")
-    print(mutator.export())
+    trainer = DartsTrainer(net,
+                           loss=criterion,
+                           metrics=accuracy,
+                           optimizer=optimizer,
+                           num_epochs=2,
+                           dataset_train=dataset_train,
+                           dataset_valid=dataset_valid,
+                           batch_size=64,
+                           log_frequency=10)
+    trainer.train()
+    trainer.export("checkpoint.json")
