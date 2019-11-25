@@ -25,7 +25,7 @@ nni.compressors.torch.NaiveQuantizer(model).compress()
 ### 用法
 可在训练代码前将模型量化为 8 位。
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compressors.torch import QAT_Quantizer
 model = Mnist()
@@ -34,7 +34,7 @@ config_list = [{
     'quant_types': ['weight'],
     'quant_bits': {
         'weight': 8,
-    }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+    }, # 这里可以仅使用 `int`，因为所有 `quan_types` 使用了一样的位长，参考下方 `ReLu6` 配置。
     'op_types':['Conv2d', 'Linear']
 }, {
     'quant_types': ['output'],
@@ -46,10 +46,10 @@ quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
 #### QAT Quantizer 的用户配置
-* **quant_types:** : list of string type of quantization you want to apply, currently support 'weight', 'input', 'output'
+* **quant_types:**: 字符串列表 要应用的量化类型，当前支持 'weight', 'input', 'output'
 * **quant_bits:** int or dict of {str : int} bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8}, when the type is int, all quantization types share same bits length
 * **quant_start_step:** int disable quantization until model are run by certain number of steps, this allows the network to enter a more stable state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
