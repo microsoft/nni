@@ -103,8 +103,6 @@ class QAT_Quantizer(Quantizer):
     """
     def __init__(self, model, config_list):
         """
-        Create a wrapper forward function to replace the original one.
-
         Parameters
         ----------
         layer : LayerInfo
@@ -181,9 +179,6 @@ class QAT_Quantizer(Quantizer):
         return real_val
 
     def quantize_weight(self, weight, config, op, **kwargs):
-        """
-        overwrite default `Quantizer` `quantize_weight` method
-        """
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
@@ -197,9 +192,6 @@ class QAT_Quantizer(Quantizer):
         return out
 
     def quantize_output(self, output, config, op, **kwargs):
-        """
-        overwrite default `Quantizer` `quantize_output` method
-        """
         output_bits = get_bits_length(config, 'output')
         quant_start_step = config.get('quant_start_step', 0)
         assert output_bits >= 1, "quant bits length should be at least 1"
