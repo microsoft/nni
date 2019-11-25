@@ -53,32 +53,32 @@ print(fgs.get_selected_features())
 
 * **batch_size** (int, 可选, 默认为 1000) - 一次处理的 "rows" 数量。
 
-* **target_batch_size** (int, 可选, 默认为 1000) - 累计梯度的 "rows" 数量。 Useful when many rows will not fit into memory but are needed for accurate estimation.
+* **target_batch_size** (int, 可选, 默认为 1000) - 累计梯度的 "rows" 数量。 当行数过多无法读取到内存中，但估计精度所需。
 
-* **classification** (bool, optional, default = True) - If True, problem is classification, else regression.
+* **classification** (bool, 可选, 默认为 True) - 如果为 True，为分类问题，否则是回归问题。
 
-* **ordinal** (bool, optional, default = True) - If True, problem is ordinal classification. Requires classification to be True.
+* **ordinal** (bool, 可选, 默认为 True) - 如果为 True，是有序的分类。 需要 classification 也为 True。
 
-* **balanced** (bool, optional, default = True) - If true, each class is weighted equally in optimization, otherwise weighted is done via support of each class. Requires classification to be True.
+* **balanced** (bool, 可选, 默认为 True) - 如果为 True，优化中每类的权重都一样，否则需要通过支持来对每类加权。 需要 classification 也为 True。
 
-* **prerocess** (str, optional, default = 'zscore') - 'zscore' which refers to centering and normalizing data to unit variance or 'center' which only centers the data to 0 mean.
+* **prerocess** (str, 可选, 默认为 'zscore') - 'zscore' 是将数据中心化并归一化的党委方差，'center' 表示仅将数据均值调整到 0。
 
-* **soft_grouping** (bool, optional, default = True) - If True, groups represent features that come from the same source. Used to encourage sparsity of groups and features within groups.
+* **soft_grouping** (bool, 可选, 默认为 True) - 如果为 True，将同一来源的特征分组到一起。 用于支持分组或组内特征的稀疏性。
 
-* **verbose** (int, optional, default = 0) - Controls the verbosity when fitting. Set to 0 for no printing 1 or higher for printing every verbose number of gradient steps.
+* **verbose** (int, 可选, 默认为 0) - 控制拟合时的信息详细程度。 设为 0 表示不打印，1 或更大值表示打印详细数量的步骤。
 
-* **device** (str, optional, default = 'cpu') - 'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
+* **device** (str, 可选, 默认为 'cpu') - 'cpu' 表示在 CPU 上运行，'cuda' 表示在 GPU 上运行。 在 GPU 上运行得更快
 
 
-**Requirement of `fit` FuncArgs**
+**`fit` 函数参数要求**
 
-* **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]
+* **X** (数组，必需) - 训练的输入样本，shape = [n_samples, n_features]
 
-* **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples].
+* **y** (数组，必需) - 目标值 (分类中为标签，回归中为实数)，shape = [n_samples].
 
-* **groups** (array-like, optional, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].
+* **groups** (数组, 可选, 默认为 None) - 必需选择为一个单元的列的分组。 例如 [0，0，1，2] 指定前两列是组的一部分。 形状是 [n_features]。
 
-**Requirement of `get_selected_features` FuncArgs**
+**`get_selected_features` 函数参数的要求**
 
- For now, the `get_selected_features` function has no parameters.
+ 目前， `get_selected_features` 函数没有参数。
 
