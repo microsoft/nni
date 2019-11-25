@@ -28,16 +28,16 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: remote
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-#choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
+  # 可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    # 可选项:: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
