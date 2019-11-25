@@ -18,45 +18,42 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
 import logging
-import json_tricks
 
-from ..common import init_standalone_logger
-
-__all__ = [
-    'get_next_parameter',
-    'get_experiment_id',
-    'get_trial_id',
-    'get_sequence_id',
-    'send_metric',
-]
-
-init_standalone_logger()
-_logger = logging.getLogger('nni')
+_logger = logging.getLogger(__name__)
 
 
-def get_next_parameter():
-    _logger.warning('Requesting parameter without NNI framework, returning empty dict')
-    return {
-        'parameter_id': None,
-        'parameters': {}
-    }
+class FeatureSelector():
 
-def get_experiment_id():
-    return 'STANDALONE'
+    def __init__(self, **kwargs):
+        self.selected_features_ = None
+        self.X = None
+        self.y = None
 
-def get_trial_id():
-    return 'STANDALONE'
 
-def get_sequence_id():
-    return 0
+    def fit(self, X, y, **kwargs):
+        """
+        Fit the training data to FeatureSelector
 
-def send_metric(string):
-    metric = json_tricks.loads(string)
-    if metric['type'] == 'FINAL':
-        _logger.info('Final result: %s', metric['value'])
-    elif metric['type'] == 'PERIODICAL':
-        _logger.info('Intermediate result: %s  (Index %s)', metric['value'], metric['sequence'])
-    else:
-        _logger.error('Unexpected metric: %s', string)
+        Paramters
+        ---------
+        X : array-like numpy matrix
+            The training input samples, which shape is [n_samples, n_features].
+        y: array-like numpy matrix
+            The target values (class labels in classification, real numbers in
+            regression). Which shape is [n_samples].
+        """
+        self.X = X
+        self.y = y
+
+
+    def get_selected_features(self):
+        """
+        Fit the training data to FeatureSelector
+
+        Returns
+        -------
+        list :
+                Return the index of imprtant feature.
+        """
+        return self.selected_features_
