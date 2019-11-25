@@ -1,26 +1,26 @@
-L1FilterPruner on NNI Compressor
+NNI Compressor 中的 L1FilterPruner
 ===
 
-## 1. Introduction
+## 1. 介绍
 
-L1FilterPruner is a general structured pruning algorithm for pruning filters in the convolutional layers.
+L1FilterPruner 是在卷积层中用来修剪过滤器的通用剪枝算法。
 
-In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+在 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 以及 Hans Peter Graf。
 
 ![](../../img/l1filter_pruner.png)
 
-> L1Filter Pruner prunes filters in the **convolution layers**
+> L1Filter Pruner 修剪**卷积层**中的过滤器
 > 
-> The procedure of pruning m filters from the ith convolutional layer is as follows:
+> 从第 i 个卷积层修剪 m 个过滤器的过程如下：
 > 
-> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
-> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
-> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The kernels in the next convolutional layer corresponding to the pruned feature maps are also removed.
-> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel weights are copied to the new model.
+> 1. 对于每个过滤器 ![](http://latex.codecogs.com/gif.latex?F_{i,j})，计算其绝对内核权重之和![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
+> 2. 将过滤器按 ![](http://latex.codecogs.com/gif.latex?s_j) 排序。
+> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
+> 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
-## 2. Usage
+## 2. 用法
 
-PyTorch code
+PyTorch 代码
 
 ```
 from nni.compression.torch import L1FilterPruner
@@ -29,12 +29,12 @@ pruner = L1FilterPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for L1Filter Pruner
+#### L1Filter Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
 
-## 3. Experiment
+## 3. 实验
 
 We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
 
