@@ -71,8 +71,8 @@ class CustomizedSelector(FeatureSelector):
         ------------
         X : numpy 矩阵
         训练输入样本，形状为 [n_samples, n_features]。
-        y: array-like numpy matrix
-        The target values (class labels in classification, real numbers in regression). Which shape is [n_samples].
+        y: numpy 矩阵
+        目标值 (分类中的类标签，回归中为实数)。 形状是 [n_samples]。
         """
         self.X = X
         self.y = y
@@ -80,12 +80,12 @@ class CustomizedSelector(FeatureSelector):
 
     def get_selected_features(self):
         """
-        Get important feature
+        获取重要特征
 
-        Returns
+        返回
         -------
         list :
-        Return the index of the important feature.
+        返回重要特征的索引。
         """
         ...
         return self.selected_features_
@@ -93,18 +93,18 @@ class CustomizedSelector(FeatureSelector):
     ...
 ```
 
-**3. Integrate with Sklearn**
+**3. 与 sklearn 集成**
 
-`sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of the pipeline.
+`sklearn.pipeline.Pipeline` 可将模型连接在一起，例如特征选择，规范化，以及分类、回归，来组成一个典型的机器学习问题工作流。 下列步骤可帮助集成 sklearn，将定制的特征 Selector 作为管道的模块。
 
-1. Inherit the calss _sklearn.base.BaseEstimator_
-1. Implement _get_params_ and _set_params_ function in _BaseEstimator_
-1. Inherit the class _sklearn.feature_selection.base.SelectorMixin_
-1. Implement _get_support_, _transform_ and _inverse_transform_ Function in _SelectorMixin_
+1. 继承类 _sklearn.base.BaseEstimator_
+1. 实现 _BaseEstimator_ 中的 _get_params_ 和 _set_params_ 函数
+1. 继承类 _sklearn.feature_selection.base.SelectorMixin_
+1. 实现 _SelectorMixin_ 中的 _get_support_, _transform_ 和 _inverse_transform_ 函数
 
-Here is an example:
+示例如下：
 
-**1. Inherit the BaseEstimator Class and its Function**
+**1. 继承类 BaseEstimator 及其函数**
 
 ```python
 from sklearn.base import BaseEstimator
@@ -116,7 +116,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def get_params(self, ...):
         """
-        Get parameters for this estimator.
+        为此 estimator 获取参数
         """
         params = self.__dict__
         params = {key: val for (key, val) in params.items()
@@ -125,7 +125,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def set_params(self, **params):
         """
-        Set the parameters of this estimator.
+        为此 estimator 设置参数
         """
         for param in params:
         if hasattr(self, param):
@@ -134,7 +134,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
 ```
 
-**2. Inherit the SelectorMixin Class and its Function**
+**2. 继承 SelectorMixin 类及其函数**
 ```python
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection.base import SelectorMixin
@@ -147,7 +147,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def get_params(self, ...):
         """
-        Get parameters for this estimator.
+        获取参数。
         """
         params = self.__dict__
         params = {key: val for (key, val) in params.items()
@@ -156,7 +156,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
         def set_params(self, **params):
         """
-        Set the parameters of this estimator.
+        设置参数
         """
         for param in params:
         if hasattr(self, param):
@@ -165,12 +165,12 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def get_support(self, indices=False):
         """
-        Get a mask, or integer index, of the features selected.
+        获取 mask，整数索引或选择的特征。
 
         Parameters
         ----------
         indices : bool
-        Default False. If True, the return value will be an array of integers, rather than a boolean mask.
+        默认为 False. 如果为 True，返回值为整数数组，否则为布尔的 mask。
 
         Returns
         -------
@@ -238,7 +238,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
-# Benchmark
+# 基准测试
 
 `Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data.
 
