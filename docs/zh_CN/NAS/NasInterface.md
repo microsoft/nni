@@ -98,34 +98,34 @@ trainer.train()
 trainer.export(file='./chosen_arch')
 ```
 
-不同的 Trainer 可能有不同的输入参数，具体取决于其算法。 详细参数可参考具体的 [Trainer 代码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。 No need to start an NNI experiment through `nnictl`.
+不同的 Trainer 可能有不同的输入参数，具体取决于其算法。 详细参数可参考具体的 [Trainer 代码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。 无需通过 `nnictl` 来启动 NNI Experiment。
 
-The supported trainers can be found [here](./Overview.md#supported-one-shot-nas-algorithms). A very simple example using NNI NAS API can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py).
+[这里](./Overview.md#supported-one-shot-nas-algorithms)是所有支持的 Trainer。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py)是使用 NNI NAS API 的简单示例。
 
-The complete example code can be found [here]().
+[这里]()是完整示例的代码。
 
-### Classic distributed search
+### 经典分布式搜索
 
-Neural architecture search is originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits in NNI hyper-parameter tuning framework, where tuner generates child model for next trial and trials run in training service.
+神经网络架构搜索通过在 Trial 任务中独立运行单个子模型来实现。 NNI 同样支持这种搜索方法，其天然适用于 NNI 的超参搜索框架。Tuner 为每个 Trial 生成子模型，并在训练平台上运行。
 
-For using this mode, no need to change the search space expressed with NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
+要使用此模式，不需要修改 NNI NAS API 的搜索空间定义 (即, `LayerChoice`, `InputChoice`, `MutableScope`)。 模型初始化后，在模型上调用 `get_and_apply_next_architecture`。 One-shot NAS Trainer 不能在此模式中使用。 简单示例：
 ```python
 class Net(nn.Module):
-    # defined model with LayerChoice and InputChoice
+    # 使用 LayerChoice 和 InputChoice 的模型
     ...
 
 model = Net()
-# get the chosen architecture from tuner and apply it on model
+# 从 Tuner 中选择架构，并应用到模型上
 get_and_apply_next_architecture(model)
-# your code for training the model
+# 训练模型
 train(model)
-# test the trained model
+# 测试模型
 acc = test(model)
-# report the performance of the chosen architecture
+# 返回此架构的性能
 nni.report_final_result(acc)
 ```
 
-The search space should be automatically generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
+搜索空间应自动生成，并发送给 Tuner。 As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
 
 You could use [NNI tuners](../Tuner/BuiltinTuner.md) to do the search.
 
