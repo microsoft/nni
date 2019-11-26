@@ -76,25 +76,23 @@ class Benchmark():
 
 if __name__ == "__main__":
     LIBSVM_DATA = {
-        # "rcv1" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2",
-        # "a1a" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/a1a",
-        "avazu" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/avazu-app.bz2",
-        # "colon-cancer" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/covtype.libsvm.binary.bz2",
-        # "epsilon" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/epsilon_normalized.bz2",
-        # "gisette" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/gisette_scale.bz2",
+        "rcv1" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2",
+        # "avazu" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/avazu-app.bz2",
+        "colon-cancer" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/covtype.libsvm.binary.bz2",
+        "gisette" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/gisette_scale.bz2",
         # "kdd2010" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/kdda.bz2",
         # "kdd2012" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/kdd12.bz2",
-        # "news20.binary" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/news20.binary.bz2",
-        # "real-sim" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/real-sim.bz2",
-        # "webspam" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/webspam_wc_normalized_trigram.svm.bz2"
+        "news20.binary" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/news20.binary.bz2",
+        "real-sim" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/real-sim.bz2",
+        "webspam" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/webspam_wc_normalized_trigram.svm.bz2"
     }
 
     test_benchmark = Benchmark(LIBSVM_DATA)
 
-    # pipeline1 = make_pipeline(LogisticRegression())
-    # print("Test all data in LogisticRegression.")
-    # print()
-    # test_benchmark.run_all_test(pipeline1)
+    pipeline1 = make_pipeline(LogisticRegression())
+    print("Test all data in LogisticRegression.")
+    print()
+    test_benchmark.run_all_test(pipeline1)
 
     pipeline2 = make_pipeline(FeatureGradientSelector(n_features=20), LogisticRegression())
     print("Test data selected by FeatureGradientSelector in LogisticRegression.")
