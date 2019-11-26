@@ -54,7 +54,7 @@ class Node(nn.Module):
                         ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False)
                     ],
                     key=choice_keys[-1]))
-        self.drop_path = ops.DropPath_()
+        self.drop_path = ops.DropPath()
         self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_chosen=2, key="{}_switch".format(node_id))
 
     def forward(self, prev_nodes):
@@ -156,5 +156,5 @@ class CNN(nn.Module):
 
     def drop_path_prob(self, p):
         for module in self.modules():
-            if isinstance(module, ops.DropPath_):
+            if isinstance(module, ops.DropPath):
                 module.p = p

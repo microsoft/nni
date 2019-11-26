@@ -10,7 +10,6 @@ import torch
 from .base_trainer import BaseTrainer
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.INFO)
 
 
 class TorchTensorEncoder(json.JSONEncoder):

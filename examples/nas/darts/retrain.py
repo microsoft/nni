@@ -7,24 +7,16 @@ from argparse import ArgumentParser
 
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.fixed import apply_fixed_architecture
-from nni.nas.pytorch.utils import AverageMeter
 from torch.utils.tensorboard import SummaryWriter
 
 import datasets
 import utils
 from model import CNN
+from nni.nas.pytorch.fixed import apply_fixed_architecture
+from nni.nas.pytorch.utils import AverageMeter
 
-logger = logging.getLogger()
+logger = logging.getLogger('nni')
 
-fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
-logging.Formatter.converter = time.localtime
-formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
-
-std_out_info = logging.StreamHandler()
-std_out_info.setFormatter(formatter)
-logger.setLevel(logging.INFO)
-logger.addHandler(std_out_info)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
@@ -36,7 +28,7 @@ def train(config, train_loader, model, optimizer, criterion, epoch):
     losses = AverageMeter("losses")
 
     cur_step = epoch * len(train_loader)
-    cur_lr = optimizer.param_groups[0]['lr']
+    cur_lr = optimizer.param_groups[0]["lr"]
     logger.info("Epoch %d LR %.6f", epoch, cur_lr)
     writer.add_scalar("lr", cur_lr, global_step=cur_step)
 

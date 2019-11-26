@@ -8,7 +8,6 @@ import torch.nn as nn
 from nni.nas.pytorch.utils import global_mutable_counting
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class Mutable(nn.Module):
@@ -65,7 +64,8 @@ class Mutable(nn.Module):
     def _check_built(self):
         if not hasattr(self, "mutator"):
             raise ValueError(
-                "Mutator not set for {}. Did you initialize a mutable on the fly in forward pass? Move to __init__"
+                "Mutator not set for {}. You might have forgotten to initialize and apply your mutator. "
+                "Or did you initialize a mutable on the fly in forward pass? Move to `__init__` "
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
 
     def __repr__(self):
@@ -182,7 +182,8 @@ class InputChoice(Mutable):
         optional_input_list = optional_inputs
         if isinstance(optional_inputs, dict):
             optional_input_list = [optional_inputs[tag] for tag in self.choose_from]
-        assert isinstance(optional_input_list, list), "Optional input list must be a list"
+        assert isinstance(optional_input_list, list), \
+            "Optional input list must be a list, not a {}.".format(type(optional_input_list))
         assert len(optional_inputs) == self.n_candidates, \
             "Length of the input list must be equal to number of candidates."
         out, mask = self.mutator.on_forward_input_choice(self, optional_input_list)
