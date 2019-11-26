@@ -33,7 +33,6 @@ class PdartsMutator(DartsMutator):
                         mutable.length -= 1
 
                 self.switches[mutable.key] = switches
-        self.reset()
 
     def drop_paths(self):
         for key in self.switches:

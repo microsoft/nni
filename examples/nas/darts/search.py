@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint, LRSchedulerCallback)
+from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
