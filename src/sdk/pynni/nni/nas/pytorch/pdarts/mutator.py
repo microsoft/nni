@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 class PdartsMutator(DartsMutator):
 
     def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
+        pdarts_epoch_index = 1
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
         if switches is None:
