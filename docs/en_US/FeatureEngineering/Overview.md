@@ -18,7 +18,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # initlize a selector
-fgs = XXXSelector(...)
+fgs = GradientFeatureSelector(...)
 # fit data
 fgs.fit(X_train, y_train)
 # get improtant features
