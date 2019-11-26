@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 
 
-class DropPath_(nn.Module):
+class DropPath(nn.Module):
     def __init__(self, p=0.):
         """
-        DropPath is inplace module.
+        Drop path with probability.
 
         Parameters
         ----------
@@ -15,15 +15,12 @@ class DropPath_(nn.Module):
         super().__init__()
         self.p = p
 
-    def extra_repr(self):
-        return 'p={}, inplace'.format(self.p)
-
     def forward(self, x):
         if self.training and self.p > 0.:
             keep_prob = 1. - self.p
             # per data point mask
             mask = torch.zeros((x.size(0), 1, 1, 1), device=x.device).bernoulli_(keep_prob)
-            x.div_(keep_prob).mul_(mask)
+            return x / keep_prob * mask
 
         return x
 
