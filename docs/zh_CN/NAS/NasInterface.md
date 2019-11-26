@@ -60,7 +60,7 @@ def forward(self, x):
 一些 [NAS Trainer](#one-shot-training-mode) 需要知道输入张量的来源层，因此在 `InputChoice` 中添加了输入参数 `choose_from` 来表示每个候选输入张量的来源层。 `choose_from` 是 str 的 list，每个元素都是 `LayerChoice` 和`InputChoice` 的 `key`，或者 module 的 name (详情参考[代码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py))。
 
 
-Besides `LayerChoice` and `InputChoice`, we also provide `MutableScope` which allows users to label a sub-network, thus, could provide more semantic information (e.g., the structure of the network) to NAS trainers. Here is an example:
+除了 `LayerChoice` 和 `InputChoice`，还提供了 `MutableScope`，可以让用户标记自网络，从而给 NAS Trainer 提供更多的语义信息 (如网络结构)。 示例如下：
 ```python
 class Cell(mutables.MutableScope):
     def __init__(self, scope_name):
@@ -70,21 +70,21 @@ class Cell(mutables.MutableScope):
         self.layer3 = nni.nas.pytorch.LayerChoice(...)
         ...
 ```
-The three `LayerChoice` (`layer1`, `layer2`, `layer3`) are included in the `MutableScope` named `scope_name`. NAS trainer could get this hierarchical structure.
+名为 `scope_name` 的 `MutableScope` 包含了三个 `LayerChoice` 层 (`layer1`, `layer2`, `layer3`)。 NAS Trainer 可获得这样的分层结构。
 
 
-## Two training modes
+## 两种训练模式
 
-After writing your model with search space embedded in the model using the above APIs, the next step is finding the best model from the search space. There are two training modes: [one-shot training mode](#one-shot-training-mode) and [classic distributed search](#classic-distributed-search).
+在使用上述 API 在模型中嵌入 搜索空间后，下一步是从搜索空间中找到最好的模型。 有两种驯良模式：[one-shot 训练模式](#one-shot-training-mode) and [经典的分布式搜索](#classic-distributed-search)。
 
-### One-shot training mode
+### One-shot 训练模式
 
-Similar to optimizers of deep learning models, the procedure of finding the best model from search space can be viewed as a type of optimizing process, we call it `NAS trainer`. There have been several NAS trainers, for example, `DartsTrainer` which uses SGD to train architecture weights and model weights iteratively, `ENASTrainer` which uses a controller to train the model. New and more efficient NAS trainers keep emerging in research community.
+与深度学习模型的优化器相似，从搜索空间中找到最好模型的过程可看作是优化过程，称之为 `NAS Trainer`。 NAS Trainer 包括 `DartsTrainer` 使用了 SGD 来交替训练架构和模型权重，`ENASTrainer` 使用 Controller 来训练模型。 新的、更高效的 NAS Trainer 在研究界不断的涌现出来。
 
-NNI provides some popular NAS trainers, to use a NAS trainer, users could initialize a trainer after the model is defined:
+NNI 提供了一些流行的 NAS Trainer，要使用 NAS Trainer，用户需要在模型定义后初始化 Trainer：
 
 ```python
-# create a DartsTrainer
+# 创建 DartsTrainer
 trainer = DartsTrainer(model,
                        loss=criterion,
                        metrics=lambda output, target: accuracy(output, target, topk=(1,)),
@@ -92,13 +92,13 @@ trainer = DartsTrainer(model,
                        num_epochs=args.epochs,
                        dataset_train=dataset_train,
                        dataset_valid=dataset_valid,)
-# finding the best model from search space
+# 从搜索空间中找到最好的模型
 trainer.train()
-# export the best found model
+# 导出最好的模型
 trainer.export(file='./chosen_arch')
 ```
 
-Different trainers could have different input arguments depending on their algorithms. Please refer to [each trainer's code](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) for detailed arguments. After training, users could export the best one of the found models through `trainer.export()`. No need to start an NNI experiment through `nnictl`.
+不同的 Trainer 可能有不同的输入参数，具体取决于其算法。 详细参数可参考具体的 [Trainer 代码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。 No need to start an NNI experiment through `nnictl`.
 
 The supported trainers can be found [here](./Overview.md#supported-one-shot-nas-algorithms). A very simple example using NNI NAS API can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py).
 
