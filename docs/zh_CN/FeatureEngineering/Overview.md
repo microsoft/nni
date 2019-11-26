@@ -82,7 +82,7 @@ class CustomizedSelector(FeatureSelector):
         """
         获取重要特征
 
-        返回
+        Returns
         -------
         list :
         返回重要特征的索引。
@@ -175,28 +175,28 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         Returns
         -------
         list :
-        returns support: An index that selects the retained features from a feature vector.
-        If indices are False, this is a boolean array of shape [# input features], in which an element is True iff its corresponding feature is selected for retention.
-        If indices are True, this is an integer array of shape [# output features] whose values
-        are indices into the input feature vector.
+        返回 support: 从特征向量中选择保留的特征索引。
+        如果 indices 为 False，布尔数据的形状为 [输入特征的数量]，如果元素为 True，表示保留相对应的特征。
+        如果 indices 为 True，整数数组的形状为 [输出特征的数量]，值表示
+        输入特征向量中的索引。
         """
         ...
         return mask
 
 
     def transform(self, X):
-        """Reduce X to the selected features.
+        """将 X 减少为选择的特征。
 
         Parameters
         ----------
         X : array
-        which shape is [n_samples, n_features]
+        形状为 [n_samples, n_features]
 
         Returns
         -------
         X_r : array
-        which shape is [n_samples, n_selected_features]
-        The input samples with only the selected features.
+        形状为 [n_samples, n_selected_features]
+        仅输入选择的特征。
         """
         ...
         return X_r
@@ -204,45 +204,45 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def inverse_transform(self, X):
         """
-        Reverse the transformation operation
+        反转变换操作
 
         Parameters
         ----------
         X : array
-        shape is [n_samples, n_selected_features]
+        形状为 [n_samples, n_selected_features]
 
         Returns
         -------
         X_r : array
-        shape is [n_samples, n_original_features]
+        形状为 [n_samples, n_original_features]
         """
         ...
         return X_r
 ```
 
-After integrating with Sklearn, we could use the feature selector as follows:
+与 sklearn 继承后，可如下使用特征 Selector：
 ```python
 from sklearn.linear_model import LogisticRegression
 
-# load data
+# 加载数据
 ...
 X_train, y_train = ...
 
-# build a ppipeline
+# 构造 pipeline
 pipeline = make_pipeline(XXXSelector(...), LogisticRegression())
 pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
 pipeline.fit(X_train, y_train)
 
-# score
+# 分数
 print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
 # 基准测试
 
-`Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data.
+`Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。
 
-| Dataset       | Baseline | GradientFeatureSelector | TreeBasedClassifier | #Train     | #Feature  |
+| 数据集           | Baseline | GradientFeatureSelector | TreeBasedClassifier | 训练次数       | 特征数量      |
 | ------------- | -------- | ----------------------- | ------------------- | ---------- | --------- |
 | colon-cancer  | 0.7547   | 0.7368                  | 0.7223              | 62         | 2,000     |
 | gisette       | 0.9725   | 0.89416                 | 0.9792              | 6,000      | 5,000     |
@@ -251,5 +251,5 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 | news20.binary | 0.9208   | 0.6870                  | 0.9070              | 19,996     | 1,355,191 |
 | real-sim      | 0.9681   | 0.7969                  | 0.9591              | 72,309     | 20,958    |
 
-The benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)
+此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
 
