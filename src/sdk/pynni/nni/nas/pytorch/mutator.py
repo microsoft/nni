@@ -76,6 +76,8 @@ class Mutator(BaseMutator):
             return op(*inputs)
 
         mask = self._get_decision(mutable)
+        logger.info("Decision %s: %s", len(mask), len(mutable.choices))
+        logger.info("Decision %s: %s", mask, mutable.choices)
         assert len(mask) == len(mutable.choices)
         out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
@@ -142,5 +144,5 @@ class Mutator(BaseMutator):
         if mutable.key not in self._cache:
             raise ValueError("\"{}\" not found in decision cache.".format(mutable.key))
         result = self._cache[mutable.key]
-        logger.debug("Decision %s: %s", mutable.key, result)
+        logger.info("Decision %s: %s", mutable.key, result)
         return result
