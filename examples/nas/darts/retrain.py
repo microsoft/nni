@@ -33,7 +33,7 @@ def train(config, train_loader, model, optimizer, criterion, epoch):
     losses = AverageMeter("losses")
 
     cur_step = epoch * len(train_loader)
-    cur_lr = optimizer.param_groups[0]['lr']
+    cur_lr = optimizer.param_groups[0]["lr"]
     logger.info("Epoch %d LR %.6f", epoch, cur_lr)
     writer.add_scalar("lr", cur_lr, global_step=cur_step)
 
