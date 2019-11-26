@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import logging
+
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import BaseTrainer
@@ -65,9 +66,6 @@ class PdartsTrainer(BaseTrainer):
 
     def validate(self):
         self.model.validate()
-
-    def export(self):
-        self.mutator.export()
 
     def checkpoint(self):
         raise NotImplementedError("Not implemented yet")

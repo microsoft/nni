@@ -6,36 +6,27 @@ from nni.tuner import Tuner
 def random_archi_generator(nas_ss, random_state):
     '''random
     '''
-    chosen_archi = {}
-    for block_name, block_value in nas_ss.items():
-        assert block_value['_type'] == "mutable_layer", \
-            "Random NAS Tuner only receives NAS search space whose _type is 'mutable_layer'"
-        block = block_value['_value']
-        tmp_block = {}
-        for layer_name, layer in block.items():
-            tmp_layer = {}
-            for key, value in layer.items():
-                if key == 'layer_choice':
-                    index = random_state.randint(len(value))
-                    tmp_layer['chosen_layer'] = value[index]
-                elif key == 'optional_inputs':
-                    tmp_layer['chosen_inputs'] = []
-                    if layer['optional_inputs']:
-                        if isinstance(layer['optional_input_size'], int):
-                            choice_num = layer['optional_input_size']
-                        else:
-                            choice_range = layer['optional_input_size']
-                            choice_num = random_state.randint(choice_range[0], choice_range[1] + 1)
-                        for _ in range(choice_num):
-                            index = random_state.randint(len(layer['optional_inputs']))
-                            tmp_layer['chosen_inputs'].append(layer['optional_inputs'][index])
-                elif key == 'optional_input_size':
-                    pass
-                else:
-                    raise ValueError('Unknown field %s in layer %s of block %s' % (key, layer_name, block_name))
-            tmp_block[layer_name] = tmp_layer
-        chosen_archi[block_name] = tmp_block
-    return chosen_archi
+    chosen_arch = {}
+    for key, val in nas_ss.items():
+        assert val['_type'] in ['layer_choice', 'input_choice'], \
+            "Random NAS Tuner only receives NAS search space whose _type is 'layer_choice' or 'input_choice'"
+        if val['_type'] == 'layer_choice':
+            choices = val['_value']
+            index = random_state.randint(len(choices))
+            chosen_arch[key] = {'_value': choices[index], '_idx': index}
+        elif val['_type'] == 'input_choice':
+            choices = val['_value']['candidates']
+            n_chosen = val['_value']['n_chosen']
+            chosen = []
+            idxs = []
+            for _ in range(n_chosen):
+                index = random_state.randint(len(choices))
+                chosen.append(choices[index])
+                idxs.append(index)
+            chosen_arch[key] = {'_value': chosen, '_idx': idxs}
+        else:
+            raise ValueError('Unknown key %s and value %s' % (key, val))
+    return chosen_arch
 
 
 class RandomNASTuner(Tuner):

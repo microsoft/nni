@@ -76,7 +76,8 @@ class Mutator(BaseMutator):
             return op(*inputs)
 
         mask = self._get_decision(mutable)
-        assert len(mask) == len(mutable.choices)
+        assert len(mask) == len(mutable.choices), \
+            "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable.choices))
         out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
@@ -98,7 +99,8 @@ class Mutator(BaseMutator):
         tuple of torch.Tensor and torch.Tensor
         """
         mask = self._get_decision(mutable)
-        assert len(mask) == mutable.n_candidates
+        assert len(mask) == mutable.n_candidates, \
+            "Invalid mask, expected {} to be of length {}.".format(mask, mutable.n_candidates)
         out = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
