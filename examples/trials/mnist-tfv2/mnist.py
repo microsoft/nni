@@ -123,9 +123,9 @@ def main(params):
     )
     _logger.info('Training completed')
 
-    result = model.evaluate(x_test, y_test, verbose=0)
-    nni.report_final_result(result[1])  # send final accuracy to NNI tuner and web UI
-    _logger.info('Final accuracy reported: %s', result[1])
+    loss, accuracy = model.evaluate(x_test, y_test, verbose=0)
+    nni.report_final_result(accuracy)  # send final accuracy to NNI tuner and web UI
+    _logger.info('Final accuracy reported: %s', accuracy)
 
 
 if __name__ == '__main__':
