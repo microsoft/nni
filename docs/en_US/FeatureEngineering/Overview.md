@@ -48,8 +48,8 @@ Here is an example:
 from nni.feature_engineering.feature_selector import FeatureSelector
 
 class CustomizedSelector(FeatureSelector):
- def __init__(self, ...):
- ...
+    def __init__(self, ...):
+    ...
 ```
 
 **2. Implement _fit_ and _get_selected_features_ Function**
@@ -60,37 +60,37 @@ from nni.tuner import Tuner
 from nni.feature_engineering.feature_selector import FeatureSelector
 
 class CustomizedSelector(FeatureSelector):
- def __init__(self, ...):
- ...
+    def __init__(self, ...):
+    ...
 
- def fit(self, X, y, **kwargs):
- """
- Fit the training data to FeatureSelector
+    def fit(self, X, y, **kwargs):
+        """
+        Fit the training data to FeatureSelector
 
- Parameters
- ------------
- X : array-like numpy matrix
- The training input samples, which shape is [n_samples, n_features].
- y: array-like numpy matrix
- The target values (class labels in classification, real numbers in regression). Which shape is [n_samples].
- """
- self.X = X
- self.y = y
- ...
- 
- def get_selected_features(self):
- """
- Get important feature
+        Parameters
+        ------------
+        X : array-like numpy matrix
+        The training input samples, which shape is [n_samples, n_features].
+        y: array-like numpy matrix
+        The target values (class labels in classification, real numbers in regression). Which shape is [n_samples].
+        """
+        self.X = X
+        self.y = y
+        ...
+    
+    def get_selected_features(self):
+        """
+        Get important feature
 
- Returns
- -------
- list :
- Return the index of the important feature.
- """
- ...
- return self.selected_features_
+        Returns
+        -------
+        list :
+        Return the index of the important feature.
+        """
+        ...
+        return self.selected_features_
 
- ...
+    ...
 ```
 
 **3. Integrate with Sklearn**
@@ -112,26 +112,26 @@ from sklearn.base import BaseEstimator
 from nni.feature_engineering.feature_selector import FeatureSelector
 
 class CustomizedSelector(FeatureSelector, BaseEstimator):
- def __init__(self, ...):
- ...
- 
- def get_params(self, ...):
- """
- Get parameters for this estimator.
- """
- params = self.__dict__
- params = {key: val for (key, val) in params.items()
- if not key.endswith('_')}
- return params
- 
- def set_params(self, **params):
- """
- Set the parameters of this estimator.
- """
- for param in params:
- if hasattr(self, param):
- setattr(self, param, params[param])
- return self
+    def __init__(self, ...):
+    ...
+    
+    def get_params(self, ...):
+        """
+        Get parameters for this estimator.
+        """
+        params = self.__dict__
+        params = {key: val for (key, val) in params.items()
+        if not key.endswith('_')}
+        return params
+    
+    def set_params(self, **params):
+        """
+        Set the parameters of this estimator.
+        """
+        for param in params:
+        if hasattr(self, param):
+        setattr(self, param, params[param])
+        return self
 
 ```
 
@@ -143,80 +143,80 @@ from sklearn.feature_selection.base import SelectorMixin
 from nni.feature_engineering.feature_selector import FeatureSelector
 
 class CustomizedSelector(FeatureSelector, BaseEstimator):
- def __init__(self, ...):
- ...
- 
- def get_params(self, ...):
- """
- Get parameters for this estimator.
- """
- params = self.__dict__
- params = {key: val for (key, val) in params.items()
- if not key.endswith('_')}
- return params
- 
- def set_params(self, **params):
- """
- Set the parameters of this estimator.
- """
- for param in params:
- if hasattr(self, param):
- setattr(self, param, params[param])
- return self
+    def __init__(self, ...):
+        ...
+    
+    def get_params(self, ...):
+        """
+        Get parameters for this estimator.
+        """
+        params = self.__dict__
+        params = {key: val for (key, val) in params.items()
+        if not key.endswith('_')}
+        return params
+        
+        def set_params(self, **params):
+        """
+        Set the parameters of this estimator.
+        """
+        for param in params:
+        if hasattr(self, param):
+        setattr(self, param, params[param])
+        return self
 
- def get_support(self, indices=False):
- """
- Get a mask, or integer index, of the features selected.
+    def get_support(self, indices=False):
+        """
+        Get a mask, or integer index, of the features selected.
 
- Parameters
- ----------
- indices : bool
- Default False
- If True, the return value will be an array of integers, rather than a boolean mask.
+        Parameters
+        ----------
+        indices : bool
+        Default False
+        If True, the return value will be an array of integers, rather than a boolean mask.
 
- Returns
- -------
- list :
- returns support: An index that selects the retained features from a feature vector.
- If indices are False, this is a boolean array of shape [# input features],
- in which an element is True iff its corresponding feature is selected for retention.
- If indices are True, this is an integer array of shape [# output features] whose values
- are indices into the input feature vector.
- """
- ...
- return mask
- 
+        Returns
+        -------
+        list :
+        returns support: An index that selects the retained features from a feature vector.
+        If indices are False, this is a boolean array of shape [# input features],
+        in which an element is True iff its corresponding feature is selected for retention.
+        If indices are True, this is an integer array of shape [# output features] whose values
+        are indices into the input feature vector.
+        """
+        ...
+        return mask
+    
 
- def transform(self, X):
- """Reduce X to the selected features.
- Parameters
- ----------
- X : array of shape [n_samples, n_features]
- The input samples.
- Returns
- -------
- X_r : array of shape [n_samples, n_selected_features]
- The input samples with only the selected features.
- """
- ...
- return X_r
+    def transform(self, X):
+        """Reduce X to the selected features.
+        Parameters
+        ----------
+        X : array of shape [n_samples, n_features]
+        The input samples.
+        Returns
+        -------
+        X_r : array of shape [n_samples, n_selected_features]
+        The input samples with only the selected features.
+        """
+        ...
+        return X_r
 
 
- def inverse_transform(self, X):
- """
- Reverse the transformation operation
- Parameters
- ----------
- X : array of shape [n_samples, n_selected_features]
- The input samples.
- Returns
- -------
- X_r : array of shape [n_samples, n_original_features]
- `X` with columns of zeros inserted where features would have
- been
- """
- ...
- return X_r
+    def inverse_transform(self, X):
+        """
+        Reverse the transformation operation
+        Parameters
+        ----------
+        X : array of shape [n_samples, n_selected_features]
+        The input samples.
+        Returns
+        -------
+        X_r : array of shape [n_samples, n_original_features]
+        `X` with columns of zeros inserted where features would have
+        been
+        """
+        ...
+        return X_r
 ```
 
 After integrating with Sklearn, we could use the feature selector as follows:
