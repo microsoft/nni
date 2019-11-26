@@ -586,17 +586,16 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     dataIndex: 'accuracy',
     width: 120,
     sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
+        if (a.latestAccuracy === undefined) {
             return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
         } else {
-            return a.accuracy - b.accuracy;
+            return a.latestAccuracy - b.latestAccuracy;
         }
     },
     render: (text, record) => (
-        // TODO: is this needed?
-        <div>{record.latestAccuracy}</div>
+        <div>{record.formattedLatestAccuracy}</div>
     )
 };
 
