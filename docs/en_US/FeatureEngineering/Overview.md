@@ -171,15 +171,13 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         Parameters
         ----------
         indices : bool
-        Default False
-        If True, the return value will be an array of integers, rather than a boolean mask.
+        Default False. If True, the return value will be an array of integers, rather than a boolean mask.
 
         Returns
         -------
         list :
         returns support: An index that selects the retained features from a feature vector.
-        If indices are False, this is a boolean array of shape [# input features],
-        in which an element is True iff its corresponding feature is selected for retention.
+        If indices are False, this is a boolean array of shape [# input features], in which an element is True iff its corresponding feature is selected for retention.
         If indices are True, this is an integer array of shape [# output features] whose values
         are indices into the input feature vector.
         """
@@ -189,13 +187,16 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
     def transform(self, X):
         """Reduce X to the selected features.
+
         Parameters
         ----------
-        X : array of shape [n_samples, n_features]
-        The input samples.
+        X : array
+        which shape is [n_samples, n_features]
+
         Returns
         -------
-        X_r : array of shape [n_samples, n_selected_features]
+        X_r : array
+        which shape is [n_samples, n_selected_features]
         The input samples with only the selected features.
         """
         ...
@@ -205,15 +206,16 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
     def inverse_transform(self, X):
         """
         Reverse the transformation operation
+
         Parameters
         ----------
-        X : array of shape [n_samples, n_selected_features]
-        The input samples.
+        X : array
+        shape is [n_samples, n_selected_features]
+
         Returns
         -------
-        X_r : array of shape [n_samples, n_original_features]
-        `X` with columns of zeros inserted where features would have
-        been
+        X_r : array
+        shape is [n_samples, n_original_features]
         """
         ...
         return X_r
