@@ -26,8 +26,8 @@ import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from pyhdfs import HdfsClient
 from subprocess import Popen
+from pyhdfs import HdfsClient
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
