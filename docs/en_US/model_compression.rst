@@ -25,3 +25,4 @@ For details, please refer to the following tutorials:
     Naive Quantizer <Compressor/Quantizer>
     QAT Quantizer <Compressor/Quantizer>
     DoReFa Quantizer <Compressor/Quantizer>
+    Automatic Model Compression <Compressor/AutoCompression>
