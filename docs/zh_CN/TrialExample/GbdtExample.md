@@ -48,7 +48,13 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 
 ## 3. 如何运行 NNI
 
-### 3.1 准备 Trial 代码
+### 3.1 安装所有要求的包
+
+    pip install lightgbm
+    pip install pandas
+    
+
+### 3.2 准备 Trial 代码
 
 基础代码如下：
 
@@ -90,7 +96,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.2 准备搜索空间
+### 3.3 准备搜索空间
 
 如果要调优 `num_leaves`, `learning_rate`, `bagging_fraction` 和 `bagging_freq`, 可创建一个 [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) 文件：
 
@@ -105,7 +111,7 @@ if __name__ == '__main__':
 
 参考[这里](../Tutorial/SearchSpaceSpec.md)，了解更多变量类型。
 
-### 3.3 在代码中使用 NNI SDK
+### 3.4 在代码中使用 NNI SDK
 
 ```diff
 +import nni
@@ -153,7 +159,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.4 实现配置文件并运行
+### 3.5 实现配置文件并运行
 
 在配置文件中，可以设置如下内容：
 
