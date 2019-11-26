@@ -42,7 +42,7 @@ NNI 内置了_最先进的_特征工程算法的 Selector。 NNI 也支持定制
 
 示例如下：
 
-**1. Inherit the base Featureselector Class**
+**1. 继承基类 FeatureSelector**
 
 ```python
 from nni.feature_engineering.feature_selector import FeatureSelector
@@ -52,7 +52,7 @@ class CustomizedSelector(FeatureSelector):
     ...
 ```
 
-**2. Implement _fit_ and _get_selected_features_ Function**
+**2. 实现 _fit_ 和 _get_selected_features_ 函数**
 
 ```python
 from nni.tuner import Tuner
@@ -65,12 +65,12 @@ class CustomizedSelector(FeatureSelector):
 
     def fit(self, X, y, **kwargs):
         """
-        Fit the training data to FeatureSelector
+        将数据拟合到 FeatureSelector
 
-        Parameters
+        参数
         ------------
-        X : array-like numpy matrix
-        The training input samples, which shape is [n_samples, n_features].
+        X : numpy 矩阵
+        训练输入样本，形状为 [n_samples, n_features]。
         y: array-like numpy matrix
         The target values (class labels in classification, real numbers in regression). Which shape is [n_samples].
         """
