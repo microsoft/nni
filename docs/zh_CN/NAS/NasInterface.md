@@ -40,10 +40,10 @@ def forward(self, x):
 ```python
 def __init__(self):
     ...
-    # choose ``n_selected`` from ``n_candidates`` inputs.
-    # n_candidates: the number of candidate inputs
-    # n_chosen: the number of chosen inputs
-    # key: the name of this ``InputChoice`` instance
+    # 从 ``n_candidates`` 个输入中选择 ``n_selected`` 个。
+    # n_candidates: 候选输入数量
+    # n_chosen: 选择的数量
+    # key: ``InputChoice`` 实例的名称
     self.input_switch = nni.nas.pytorch.InputChoice(
         n_candidates=3,
         n_chosen=1,
@@ -55,9 +55,9 @@ def forward(self, x):
     out = self.input_switch([in_tensor1, in_tensor2, in_tensor3])
     ...
 ```
-`InputChoice` is a PyTorch module, in init, it needs meta information, for example, from how many input candidates to choose how many inputs, the name of this initialized `InputChoice`. The real candidate input tensors can only be obtained in `forward` function. In `forward`, `InputChoice` instance is called with real candidate input tensors.
+`InputChoice` 是一个 PyTorch module，初始化时需要元信息，例如，从多少个输入后选中选择多少个输入，初始化的 `InputChoice` 名称。 真正候选的输入张量只能在 `forward` 函数中获得。 在 `InputChoice` 中，`forward` 会在调用时传入实际的候选输入张量。
 
-Some [NAS trainers](#one-shot-training-mode) need to know the source layer the input tensors, thus, we add one input argument `choose_from` in `InputChoice` to indicate the source layer of each candidate input. `choose_from` is a list of string, each element is `key` of `LayerChoice` and `InputChoice` or the name of a module (refer to [the code](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py) for more details).
+一些 [NAS Trainer](#one-shot-training-mode) 需要知道输入张量的来源层，因此在 `InputChoice` 中添加了输入参数 `choose_from` 来表示每个候选输入张量的来源层。 `choose_from` 是 str 的 list，每个元素都是 `LayerChoice` 和`InputChoice` 的 `key`，或者 module 的 name (详情参考[代码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py))。
 
 
 Besides `LayerChoice` and `InputChoice`, we also provide `MutableScope` which allows users to label a sub-network, thus, could provide more semantic information (e.g., the structure of the network) to NAS trainers. Here is an example:
