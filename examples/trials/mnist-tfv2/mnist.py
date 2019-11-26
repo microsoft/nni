@@ -133,7 +133,7 @@ if __name__ == '__main__':
         'dropout_rate': 0.5,
         'conv_size': 5,
         'hidden_size': 1024,
-        'batch_size': 100,
+        'batch_size': 32,
         'learning_rate': 1e-4,
     }
 
