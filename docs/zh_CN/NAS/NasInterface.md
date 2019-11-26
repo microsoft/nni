@@ -35,7 +35,7 @@ def forward(self, x):
     out = self.one_layer(x)
     ...
 ```
-用户可为某层指定多个候选的操作，最后从其中选择一个。 `key` 是层的标识符，可被用来在多个 `LayerChoice` 间共享选项。 For example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice (i.e., if first one chooses the `i`th op, the second one also chooses the `i`th op), give them the same key.
+用户可为某层指定多个候选的操作，最后从其中选择一个。 `key` 是层的标识符，可被用来在多个 `LayerChoice` 间共享选项。 例如，两个 `LayerChoice` 有相同的候选操作，并希望能使用同样的选择，(即，如果第一个选择了第 `i` 个操作，第二个也应该选择第 `i` 个操作)，则可给它们相同的 key。
 
 ```python
 def __init__(self):
@@ -143,9 +143,9 @@ To implement a new NAS trainer, users basically only need to implement two class
 
 In `BaseMutator`, users need to overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the implementation of `LayerChoice` and `InputChoice` respectively. Users could use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. Then users need to implement a new trainer, which instantiates the new mutator and implement the training logic. For details, please read [the code](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) and the supported trainers, for example, [DartsTrainer](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/darts).
 
-### Implement an NNI tuner for NAS
+### 为 NAS 实现 NNI Tuner
 
-NNI tuner for NAS takes the auto generated search space. The search space format of `LayerChoice` and `InputChoice` is shown below:
+NNI 中的 NAS Tuner 需要自动生成搜索空间。 `LayerChoice` 和 `InputChoice` 的搜索空间格式如下：
 ```json
 {
     "key_name": {
@@ -162,7 +162,7 @@ NNI tuner for NAS takes the auto generated search space. The search space format
 }
 ```
 
-Correspondingly, the generate architecture is in the following format:
+相应的，生成的网络架构格式如下：
 ```json
 {
     "key_name": {
