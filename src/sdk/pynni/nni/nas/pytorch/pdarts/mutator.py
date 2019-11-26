@@ -4,6 +4,8 @@
 import copy
 
 import numpy as np
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.nas.pytorch.darts import DartsMutator
@@ -32,7 +34,7 @@ class PdartsMutator(DartsMutator):
                         del(mutable.choices[index])
                         mutable.length -= 1
 
-                self.choices[mutable.key] = mutable.choices
+                self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length + 1))
                 self.switches[mutable.key] = switches
 
     def drop_paths(self):
