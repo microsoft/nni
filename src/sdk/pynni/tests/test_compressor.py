@@ -1,9 +1,13 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from unittest import TestCase, main
 import numpy as np
 import tensorflow as tf
 import torch
 import torch.nn.functional as F
 import nni.compression.torch as torch_compressor
+import math
 
 if tf.__version__ >= '2.0':
     import nni.compression.tensorflow as tf_compressor
@@ -54,17 +58,37 @@ def tf2(func):
 
     return test_tf2_func
 
-
-k1 = [[1] * 3] * 3
-k2 = [[2] * 3] * 3
-k3 = [[3] * 3] * 3
-k4 = [[4] * 3] * 3
-k5 = [[5] * 3] * 3
-
-w = [[k1, k2, k3, k4, k5]] * 10
+# for fpgm filter pruner test
+w = np.array([[[[i+1]*3]*3]*5 for i in range(10)])
 
 
 class CompressorTestCase(TestCase):
+    def test_torch_quantizer_modules_detection(self):
+        # test if modules can be detected
+        model = TorchModel()
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types':['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 0,
+            'op_types':['ReLU']
+        }]
+
+        model.relu = torch.nn.ReLU()
+        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer.compress()
+        modules_to_compress = quantizer.get_modules_to_compress()
+        modules_to_compress_name = [ t[0].name for t in modules_to_compress]
+        assert "conv1" in modules_to_compress_name
+        assert "conv2" in modules_to_compress_name
+        assert "fc1" in modules_to_compress_name
+        assert "fc2" in modules_to_compress_name
+        assert "relu" in modules_to_compress_name
+        assert len(modules_to_compress_name) == 5
+
     def test_torch_level_pruner(self):
         model = TorchModel()
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
@@ -92,16 +116,16 @@ class CompressorTestCase(TestCase):
 
     def test_torch_fpgm_pruner(self):
         """
-        With filters(kernels) defined as above (k1 - k5), it is obvious that k3 is the Geometric Median
+        With filters(kernels) weights defined as above (w), it is obvious that w[4] and w[5] is the Geometric Median
         which minimize the total geometric distance by defination of Geometric Median in this paper:
         Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration,
         https://arxiv.org/pdf/1811.00250.pdf
 
-        So if sparsity is 0.2, the expected masks should mask out all k3, this can be verified through:
-        `all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 90., 0., 90., 90.]))`
+        So if sparsity is 0.2, the expected masks should mask out w[4] and w[5], this can be verified through:
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))`
 
-        If sparsity is 0.6, the expected masks should mask out all k2, k3, k4, this can be verified through:
-        `all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 0., 0., 0., 90.]))`
+        If sparsity is 0.6, the expected masks should mask out w[2] - w[7], this can be verified through:
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))`
         """
 
         model = TorchModel()
@@ -111,12 +135,12 @@ class CompressorTestCase(TestCase):
         model.conv2.weight.data = torch.tensor(w).float()
         layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
         masks = pruner.calc_mask(layer, config_list[0])
-        assert all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 90., 0., 90., 90.]))
+        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
         pruner.update_epoch(1)
         model.conv2.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(layer, config_list[1])
-        assert all(torch.sum(masks, (0, 2, 3)).numpy() == np.array([90., 0., 0., 0., 90.]))
+        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     @tf2
     def test_tf_fpgm_pruner(self):
@@ -130,16 +154,15 @@ class CompressorTestCase(TestCase):
 
         layer = tf_compressor.compressor.LayerInfo(model.layers[2])
         masks = pruner.calc_mask(layer, config_list[0]).numpy()
-        masks = masks.transpose([2, 3, 0, 1]).transpose([1, 0, 2, 3])
+        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
 
-        assert all(masks.sum((0, 2, 3)) == np.array([90., 90., 0., 90., 90.]))
+        assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
         pruner.update_epoch(1)
         model.layers[2].set_weights([weights[0], weights[1].numpy()])
         masks = pruner.calc_mask(layer, config_list[1]).numpy()
-        masks = masks.transpose([2, 3, 0, 1]).transpose([1, 0, 2, 3])
-
-        assert all(masks.sum((0, 2, 3)) == np.array([90., 0., 0., 0., 90.]))
+        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
+        assert all(masks.sum((1)) == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     def test_torch_l1filter_pruner(self):
         """
@@ -208,6 +231,45 @@ class CompressorTestCase(TestCase):
         assert all(mask1.numpy() == np.array([0., 0., 0., 1., 1.]))
         assert all(mask2.numpy() == np.array([0., 0., 0., 1., 1.]))
 
+    def test_torch_QAT_quantizer(self):
+        model = TorchModel()
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types':['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 0,
+            'op_types':['ReLU']
+        }]
+        model.relu = torch.nn.ReLU()
+        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer.compress()
+        # test quantize
+        # range not including 0
+        eps = 1e-7
+        weight = torch.tensor([[1, 2], [3, 5]]).float()
+        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
+        assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
+        assert model.conv2.zero_point == 0
+         # range including 0
+        weight = torch.tensor([[-1, 2], [3, 5]]).float()
+        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
+        assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
+        assert model.conv2.zero_point in (42, 43)
+
+        # test ema
+        x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
+        out = model.relu(x)
+        assert math.isclose(model.relu.tracked_min_biased, 0, abs_tol=eps)
+        assert math.isclose(model.relu.tracked_max_biased, 0.002, abs_tol=eps)
+
+        quantizer.step()
+        x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
+        out = model.relu(x)
+        assert math.isclose(model.relu.tracked_min_biased, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.tracked_max_biased, 0.00998, abs_tol=eps)
 
 if __name__ == '__main__':
     main()

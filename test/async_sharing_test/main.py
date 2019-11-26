@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 Test code for weight sharing
 need NFS setup and mounted as `/mnt/nfs/nni`

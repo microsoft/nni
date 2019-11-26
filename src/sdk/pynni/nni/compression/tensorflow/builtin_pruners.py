@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import numpy as np
 import tensorflow as tf
@@ -155,18 +158,18 @@ class FPGMPruner(Pruner):
             return self.mask_dict.get(layer.name)
 
         try:
-            weight = tf.stop_gradient(tf.transpose(weight, [2, 3, 0, 1]))
-            masks = np.ones(weight.shape)
-
-            num_kernels = weight.shape[0] * weight.shape[1]
-            num_prune = int(num_kernels * config.get('sparsity'))
-            if num_kernels < 2 or num_prune < 1:
+            w = tf.stop_gradient(tf.transpose(tf.reshape(weight, (-1, weight.shape[-1])), [1, 0]))
+            masks = np.ones(w.shape)
+            num_filters = w.shape[0]
+            num_prune = int(num_filters * config.get('sparsity'))
+            if num_filters < 2 or num_prune < 1:
                 return masks
-            min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+            min_gm_idx = self._get_min_gm_kernel_idx(w, num_prune)
+
             for idx in min_gm_idx:
-                masks[tuple(idx)] = 0.
+                masks[idx] = 0.
         finally:
-            masks = np.transpose(masks, [2, 3, 0, 1])
+            masks = tf.reshape(tf.transpose(masks, [1, 0]), weight.shape)
             masks = tf.Variable(masks)
             self.mask_dict.update({op_name: masks})
             self.epoch_pruned_layers.add(layer.name)
@@ -174,22 +177,17 @@ class FPGMPruner(Pruner):
         return masks
 
     def _get_min_gm_kernel_idx(self, weight, n):
-        assert len(weight.shape) >= 3
-        assert weight.shape[0] * weight.shape[1] > 2
-
         dist_list = []
-        for in_i in range(weight.shape[0]):
-            for out_i in range(weight.shape[1]):
-                dist_sum = self._get_distance_sum(weight, in_i, out_i)
-                dist_list.append((dist_sum, (in_i, out_i)))
+        for out_i in range(weight.shape[0]):
+            dist_sum = self._get_distance_sum(weight, out_i)
+            dist_list.append((dist_sum, out_i))
         min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:n]
         return [x[1] for x in min_gm_kernels]
 
-    def _get_distance_sum(self, weight, in_idx, out_idx):
-        w = tf.reshape(weight, (-1, weight.shape[-2], weight.shape[-1]))
-        anchor_w = tf.tile(tf.expand_dims(weight[in_idx, out_idx], 0), [w.shape[0], 1, 1])
-        x = w - anchor_w
-        x = tf.math.reduce_sum((x*x), (-2, -1))
+    def _get_distance_sum(self, weight, out_idx):
+        anchor_w = tf.tile(tf.expand_dims(weight[out_idx], 0), [weight.shape[0], 1])
+        x = weight - anchor_w
+        x = tf.math.reduce_sum((x*x), -1)
         x = tf.math.sqrt(x)
         return tf.math.reduce_sum(x)
 
