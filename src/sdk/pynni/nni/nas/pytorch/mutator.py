@@ -76,8 +76,7 @@ class Mutator(BaseMutator):
             return op(*inputs)
 
         mask = self._get_decision(mutable)
-        logger.info("Decision %s: %s", len(mask), len(mutable.choices))
-        logger.info("Decision %s: %s", mask, mutable.choices)
+        logger.info("mask len %s: choices len %s", len(mask), len(mutable.choices))
         assert len(mask) == len(mutable.choices)
         out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask

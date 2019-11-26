@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
 from nni.nas.pytorch.mutator import Mutator
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
+logger = logging.getLogger(__name__)
 
 class DartsMutator(Mutator):
     def __init__(self, model):
@@ -25,6 +27,7 @@ class DartsMutator(Mutator):
                 result[mutable.key] = F.softmax(self.choices[mutable.key], dim=-1)[:-1]
             elif isinstance(mutable, InputChoice):
                 result[mutable.key] = torch.ones(mutable.n_candidates, dtype=torch.bool, device=self.device())
+        logger.info("get sample_search %s", result)
         return result
 
     def sample_final(self):

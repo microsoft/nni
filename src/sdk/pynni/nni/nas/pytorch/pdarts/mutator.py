@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import copy
+import logging
 
 import numpy as np
 import torch
@@ -11,6 +12,7 @@ import torch.nn.functional as F
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 
+logger = logging.getLogger(__name__)
 
 class PdartsMutator(DartsMutator):
 
@@ -24,6 +26,7 @@ class PdartsMutator(DartsMutator):
 
         super(PdartsMutator, self).__init__(model)
 
+        logger.info("inited choices %s", self.choices)
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
 
@@ -33,9 +36,11 @@ class PdartsMutator(DartsMutator):
                     if switches[index] == False:
                         del(mutable.choices[index])
                         mutable.length -= 1
-
+                logger.info("1. choices %s", self.choices[mutable.key])
                 self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length + 1))
                 self.switches[mutable.key] = switches
+                logger.info("2. choices %s", self.choices[mutable.key])
+
 
     def drop_paths(self):
         for key in self.switches:
