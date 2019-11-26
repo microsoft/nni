@@ -1,0 +1,1 @@
+from .mutator import get_and_apply_next_architecture

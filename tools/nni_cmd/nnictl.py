@@ -10,7 +10,8 @@ from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
-                          monitor_experiment, export_trials_data, trial_codegen, webui_url, get_config, log_stdout, log_stderr
+                          monitor_experiment, export_trials_data, trial_codegen, webui_url, \
+                          get_config, log_stdout, log_stderr, search_space_auto_gen
 from .package_management import package_install, package_show
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -37,6 +38,13 @@ def parse_args():
 
     # create subparsers for args with sub values
     subparsers = parser.add_subparsers()
+
+    # parse the command of auto generating search space
+    parser_start = subparsers.add_parser('ss_gen', help='automatically generate search space file from trial code')
+    parser_start.add_argument('--trial_command', '-t', required=True, dest='trial_command', help='the command for running trial code')
+    parser_start.add_argument('--trial_dir', '-d', default='./', dest='trial_dir', help='the directory for running the command')
+    parser_start.add_argument('--file', '-f', default='nni_auto_gen_search_space.json', dest='file', help='the path of search space file')
+    parser_start.set_defaults(func=search_space_auto_gen)
 
     # parse start command
     parser_start = subparsers.add_parser('create', help='create a new experiment')
