@@ -63,7 +63,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         <li><b>示例</b></li>
          <ul>
            <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
-           <li><a href="examples/trials/mnist">MNIST-tensorflow</li></a>
+           <li><a href="examples/trials/mnist-tfv1">MNIST-tensorflow</li></a>
            <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
@@ -233,7 +233,7 @@ Linux 和 macOS
 * 运行 MNIST 示例。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
 Windows
@@ -241,7 +241,7 @@ Windows
 * 运行 MNIST 示例。
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist\config_windows.yml
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。

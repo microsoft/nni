@@ -2,7 +2,8 @@
 
 在深度学习中，用 CNN 来分类 MNIST 数据，就像介绍编程语言中的 `hello world` 样例。 因此，NNI 将 MNIST 作为样例来介绍功能。 样例如下：
 
-- [MNIST 中使用 NNI API](#mnist)
+- [MNIST 中使用 NNI API (TensorFlow v1.x)](#mnist-tfv1)
+- [MNIST 中使用 NNI API (TensorFlow v2.x)](#mnist-tfv2)
 - [MNIST 中使用 NNI 标记（annotation）](#mnist-annotation)
 - [在 Keras 中使用 MNIST](#mnist-keras)
 - [MNIST -- 用批处理 Tuner 来调优](#mnist-batch)
@@ -11,12 +12,19 @@
 - [用 Kubeflow 运行分布式的 MNIST (tensorflow)](#mnist-kubeflow-tf)
 - [用 Kubeflow 运行分布式的 MNIST (PyTorch)](#mnist-kubeflow-pytorch)
 
-<a name="mnist"></a>
-**MNIST 中使用 NNI API**
+<a name="mnist-tfv1"></a>
+**MNIST 中使用 NNI API (TensorFlow v1.x)**
 
 这是个简单的卷积网络，有两个卷积层，两个池化层和一个全连接层。 调优的超参包括 dropout 比率，卷积层大小，隐藏层（全连接层）大小等等。 它能用 NNI 中大部分内置的 Tuner 来调优，如 TPE，SMAC，Random。 样例的 YAML 文件也启用了评估器来提前终止一些中间结果不好的尝试。
 
-`代码目录: examples/trials/mnist/`
+`代码目录: examples/trials/mnist-tfv1/`
+
+<a name="mnist-tfv2"></a>
+**MNIST 中使用 NNI API (TensorFlow v2.x)**
+
+与上述示例的网络相同，但使用了 TensorFlow v2.x Keras API。
+
+`代码目录: examples/trials/mnist-tfv2/`
 
 <a name="mnist-annotation"></a>
 **MNIST 中使用 NNI 标记（annotation）**
