@@ -80,7 +80,7 @@ jobs:
   - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
-      python3 -m pip install tensorflow=1.13.1 --user
+      python3 -m pip install tensorflow==1.13.1 --user
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
       brew install swig@3
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
@@ -120,7 +120,7 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
       python -m pip install torchvision --user
-      python -m pip install tensorflow=1.13.1 --user
+      python -m pip install tensorflow==1.13.1 --user
     displayName: 'Install dependencies'
   - script: |
       cd test
