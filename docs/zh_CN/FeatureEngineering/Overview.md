@@ -2,45 +2,45 @@
 
 我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
-For now, we support the following feature selector:
+当前支持以下特征选择器：
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
 
-# How to use?
+# 如何使用
 
 ```python
 from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
-# load data
+# 读取数据
 ...
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-# initlize a selector
+# 初始化 Selector
 fgs = GradientFeatureSelector(...)
-# fit data
+# 拟合数据
 fgs.fit(X_train, y_train)
-# get improtant features
-# will return the index with important feature here.
+# 获取重要的特征
+# 此处会返回重要特征的索引。
 print(fgs.get_selected_features(...))
 
 ...
 ```
 
-When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it.
+使用内置 Selector 时，需要 `import` 对应的特征选择器，并 `initialize`。 可在 Selector 中调用 `fit` 函数来传入数据。 之后，可通过 `get_seleteced_features` 来获得重要的特征。 不同 Selector 的函数参数可能不同，在使用前需要先检查文档。
 
-# How to customize?
+# 如何定制
 
-NNI provides _state-of-the-art_ feature selector algorithm in the builtin-selector. NNI also supports to build a feature selector by yourself.
+NNI 内置了_最先进的_特征工程算法的 Selector。 NNI 也支持定制自己的特征 Selector。
 
-If you want to implement a customized feature selector, you need to:
+如果要实现定制的特征 Selector，需要：
 
-1. Inherit the base FeatureSelector class
-1. Implement _fit_ and _get_selected_features_ function
-1. Integrate with sklearn (Optional)
+1. 继承基类 FeatureSelector
+1. 实现 _fit_ 和 _get_selected_features_ 函数
+1. 与 sklearn 集成 (可选)
 
-Here is an example:
+示例如下：
 
 **1. Inherit the base Featureselector Class**
 
