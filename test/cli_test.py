@@ -9,7 +9,7 @@ from utils import GREEN, RED, CLEAR, setup_experiment
 def test_nni_cli():
     import nnicli as nc
 
-    config_file = 'config_test/examples/mnist-tfv2.test.yml'
+    config_file = 'config_test/examples/mnist-tfv1.test.yml'
 
     try:
         # Sleep here to make sure previous stopped exp has enough time to exit to avoid port conflict
