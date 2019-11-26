@@ -22,6 +22,7 @@ nnictl 支持的命令：
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
+* [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
 ### 管理 Experiment
@@ -742,17 +743,49 @@ nnictl 支持的命令：
     nnictl package show
     ```
 
-<a name="version"></a>
+<a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
+![](https://placehold.it/15/1589F0/000000?text=+) `Generate search space`
 
-* **nnictl --version**
+* **nnictl ss_gen**
   
   * 说明
     
-    显示当前安装的 NNI 的版本。
+    Generate search space from user trial code which uses NNI NAS APIs.
   
   * 用法
+    
+    ```bash
+    nnictl ss_gen [OPTIONS]
+    ```
+  
+  * Options
+  
+  | Name, shorthand | Required | Default                            | Description                                 |
+  | --------------- | -------- | ---------------------------------- | ------------------------------------------- |
+  | --trial_command | True     |                                    | The command of the trial code               |
+  | --trial_dir     | False    | ./                                 | The directory of the trial code             |
+  | --file          | False    | nni_auto_gen_search_space.json | The file for storing generated search space |
+  
+  * Example
+    
+    > Generate a search space
+    
+    ```bash
+    nnictl ss_gen --trial_command="python3 mnist.py" --trial_dir=./ --file=ss.json
+    ```
+
+<a name="version"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
+
+* **nnictl --version**
+  
+  * Description
+    
+    Describe the current version of NNI installed.
+  
+  * Usage
     
     ```bash
     nnictl --version
