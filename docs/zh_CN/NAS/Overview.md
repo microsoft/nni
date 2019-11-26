@@ -51,8 +51,8 @@ cd examples/nas/pdarts
 python3 search.py
 
 # 训练最好的架构，过程与 darts 相同。
-cd examples/nas/darts
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_2.json
+cd ../darts
+python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ```
 
 ## 使用 NNI API
