@@ -745,13 +745,13 @@ nnictl 支持的命令：
 
 <a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Generate search space`
+![](https://placehold.it/15/1589F0/000000?text=+) `生成搜索空间`
 
 * **nnictl ss_gen**
   
   * 说明
     
-    Generate search space from user trial code which uses NNI NAS APIs.
+    从使用 NNI NAS API 的用户代码生成搜索空间。
   
   * 用法
     
@@ -759,17 +759,17 @@ nnictl 支持的命令：
     nnictl ss_gen [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default                            | Description                                 |
-  | --------------- | -------- | ---------------------------------- | ------------------------------------------- |
-  | --trial_command | True     |                                    | The command of the trial code               |
-  | --trial_dir     | False    | ./                                 | The directory of the trial code             |
-  | --file          | False    | nni_auto_gen_search_space.json | The file for storing generated search space |
+  | 参数及缩写           | 是否必需  | 默认值                                | 说明          |
+  | --------------- | ----- | ---------------------------------- | ----------- |
+  | --trial_command | True  |                                    | Trial 代码的命令 |
+  | --trial_dir     | False | ./                                 | Trial 代码目录  |
+  | --file          | False | nni_auto_gen_search_space.json | 用来存储生成的搜索空间 |
   
-  * Example
+  * 示例
     
-    > Generate a search space
+    > 生成搜索空间
     
     ```bash
     nnictl ss_gen --trial_command="python3 mnist.py" --trial_dir=./ --file=ss.json
@@ -777,15 +777,15 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
+![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
 
 * **nnictl --version**
   
-  * Description
+  * 说明
     
-    Describe the current version of NNI installed.
+    显示当前安装的 NNI 的版本。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl --version
