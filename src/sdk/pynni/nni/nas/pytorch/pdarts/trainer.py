@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+import json
 import logging
 
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
-from nni.nas.pytorch.trainer import BaseTrainer
+from nni.nas.pytorch.trainer import BaseTrainer, TorchTensorEncoder
 
 from .mutator import PdartsMutator
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class PdartsTrainer(BaseTrainer):
@@ -55,7 +55,7 @@ class PdartsTrainer(BaseTrainer):
 
             self.trainer = DartsTrainer(model, mutator=self.mutator, loss=criterion, optimizer=optim,
                                         callbacks=darts_callbacks, **self.darts_parameters)
-            logger.info("start pdarts training %s...", epoch)
+            logger.info("start pdarts training epoch %s...", epoch)
 
             self.trainer.train()
 
@@ -66,6 +66,11 @@ class PdartsTrainer(BaseTrainer):
 
     def validate(self):
         self.model.validate()
+
+    def export(self, file):
+        mutator_export = self.mutator.export()
+        with open(file, "w") as f:
+            json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
 
     def checkpoint(self):
         raise NotImplementedError("Not implemented yet")
