@@ -27,6 +27,7 @@ Note, these algorithms run **standalone without nnictl**, and supports PyTorch o
 ### Dependencies
 
 * NNI 1.2+
+* tensorboard
 * PyTorch 1.2+
 * git
 
