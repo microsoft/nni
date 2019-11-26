@@ -19,16 +19,9 @@ if True:
     from model import CNN
     import datasets
 
-logger = logging.getLogger()
 
-fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
-logging.Formatter.converter = time.localtime
-formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
+logger = logging.getLogger('nni')
 
-std_out_info = logging.StreamHandler()
-std_out_info.setFormatter(formatter)
-logger.setLevel(logging.INFO)
-logger.addHandler(std_out_info)
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
