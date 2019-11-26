@@ -69,7 +69,7 @@ class DartsTrainer(Trainer):
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                             self.num_epochs, step + 1, len(self.train_loader), meters)
-            if step > 1:
+            if step > 0:
                 break
 
     def validate_one_epoch(self, epoch):
@@ -86,7 +86,7 @@ class DartsTrainer(Trainer):
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                                 self.num_epochs, step + 1, len(self.test_loader), meters)
-                if step > 1:
+                if step > 0:
                     break
 
     def _logits_and_loss(self, X, y):

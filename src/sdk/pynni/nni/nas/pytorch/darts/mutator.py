@@ -1,10 +1,11 @@
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
+from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 from nni.nas.pytorch.mutator import Mutator
-from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
 logger = logging.getLogger(__name__)
 

@@ -14,6 +14,7 @@ from nni.nas.pytorch.mutables import LayerChoice
 
 logger = logging.getLogger(__name__)
 
+
 class PdartsMutator(DartsMutator):
 
     def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
@@ -36,11 +37,22 @@ class PdartsMutator(DartsMutator):
                     if switches[index] == False:
                         del(mutable.choices[index])
                         mutable.length -= 1
-                logger.info("1. choices %s", self.choices[mutable.key])
+                logger.info("1. choices key %s %s", mutable.key, self.choices[mutable.key])
                 self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length + 1))
                 self.switches[mutable.key] = switches
                 logger.info("2. choices %s", self.choices[mutable.key])
 
+        for module in self.model.modules():
+            if isinstance(module, LayerChoice):
+                switches = self.switches.get(module.key)
+                choices = self.choices[module.key]
+                if len(module.choices) > len(choices):
+                    logger.info("1. module choices count key %s %s", module.key, module.choices)
+                    for index in range(len(switches)-1, -1, -1):
+                        if switches[index] == False:
+                            del(module.choices[index])
+                            module.length -= 1
+                    logger.info("2. module choices %s", module.choices)
 
     def drop_paths(self):
         for key in self.switches:
