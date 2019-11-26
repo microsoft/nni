@@ -1,6 +1,6 @@
 # 特征工程
 
-We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. 诚挚邀请您使用、反馈，或更多贡献。
+我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
 For now, we support the following feature selector:
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
