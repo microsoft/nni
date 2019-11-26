@@ -10,8 +10,8 @@
     Tuner<tuners>
     Assessor<assessors>
     NAS (Beta) <nas>
-    Model Compression (Beta) <model_compression>
-    Feature Engineering (Beta) <feature_engineering>
+    模型压缩 (Beta) <model_compression>
+    特征工程 (Beta) <feature_engineering>
     Web 界面<Tutorial/WebUI>
     训练平台<training_services>
     如何使用 Docker<Tutorial/HowToUseDocker>
