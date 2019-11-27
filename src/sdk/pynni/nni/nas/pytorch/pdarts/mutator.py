@@ -28,6 +28,7 @@ class PdartsMutator(DartsMutator):
             if isinstance(mutable, LayerChoice):
 
                 switches = self.switches.get(mutable.key, [True for j in range(mutable.length+1)])
+                switches.requires_grad = False
                 choices = self.choices[mutable.key]
 
                 for index in range(len(switches)-2, -1, -1):
