@@ -101,7 +101,7 @@ NNI 用来帮助超参调优。它的流程如下：
           mnist_network.train(sess, mnist)
           test_acc = mnist_network.evaluate(mnist)
 
-+         nni.report_final_result(acc)
++         nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
 
