@@ -115,6 +115,9 @@ maxTrialNum: 100
 # 可选值为: local, remote
 trainingServicePlatform: local
 
+# 搜索空间文件
+searchSpacePath: search_space.json
+
 # 可选值为: true, false
 useAnnotation: true
 tuner:
