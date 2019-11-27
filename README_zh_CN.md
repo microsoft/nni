@@ -106,7 +106,6 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           </ul>
           </ul>  
       </td>
-      
       <td>
       <ul>
         <li><a href="docs/zh_CN/TrainingService/LocalMode.md">本机</a></li>
