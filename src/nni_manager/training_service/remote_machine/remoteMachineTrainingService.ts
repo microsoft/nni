@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -67,7 +51,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly expRootDir: string;
     private readonly remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
-    private readonly gpuScheduler: GPUScheduler;
+    private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
     private stopping: boolean = false;
@@ -87,7 +71,6 @@ class RemoteMachineTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialSSHClientMap = new Map<string, Client>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, SSHClientManager>();
-        this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
@@ -334,6 +317,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
+                this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -397,9 +381,11 @@ class RemoteMachineTrainingService implements TrainingService {
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation(): void {
-        for (const [key, value] of this.trialJobsMap) {
-            if (!['WAITING', 'RUNNING'].includes(value.status)) {
-                this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+        if (this.gpuScheduler) {
+            for (const [key, value] of this.trialJobsMap) {
+                if (!['WAITING', 'RUNNING'].includes(value.status)) {
+                    this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+                }
             }
         }
     }
@@ -482,6 +468,9 @@ class RemoteMachineTrainingService implements TrainingService {
 
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
+        }
+        if (this.gpuScheduler === undefined) {
+            throw new Error('gpuScheduler is not initialized');
         }
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
@@ -594,7 +583,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         //create tmp trial working folder locally.
-        await execCopydir(path.join(this.trialConfig.codeDir, '*'), trialLocalTempFolder);
+        await execCopydir(this.trialConfig.codeDir, trialLocalTempFolder);
         const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
