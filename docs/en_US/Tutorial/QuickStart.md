@@ -100,7 +100,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       with tf.Session() as sess:
           mnist_network.train(sess, mnist)
           test_acc = mnist_network.evaluate(mnist)
-+         nni.report_final_result(acc)
++         nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
 -     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,

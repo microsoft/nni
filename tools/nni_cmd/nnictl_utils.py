@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import csv
 import os
@@ -26,6 +9,7 @@ import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
@@ -692,3 +676,16 @@ def export_trials_data(args):
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def search_space_auto_gen(args):
+    '''dry run trial code to generate search space file'''
+    trial_dir = os.path.expanduser(args.trial_dir)
+    file_path = os.path.expanduser(args.file)
+    if not os.path.isabs(file_path):
+        abs_file_path = os.path.join(os.getcwd(), file_path)
+    assert os.path.exists(trial_dir)
+    if os.path.exists(abs_file_path):
+        print_warning('%s already exits, will be over written' % abs_file_path)
+    print_normal('Dry run to generate search space...')
+    Popen(args.trial_command, cwd=trial_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE=abs_file_path), shell=True).wait()
+    print_normal('Dry run to generate search space, Done')

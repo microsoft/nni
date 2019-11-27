@@ -186,5 +186,5 @@ function formatAccuracy(accuracy: number): string {
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy,
+    formatAccuracy, formatTimestamp, metricAccuracy
 };
