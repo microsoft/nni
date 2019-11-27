@@ -46,6 +46,22 @@ class Trial implements TableObj {
         return this.metricsInitialized && this.finalAcc !== undefined && !isNaN(this.finalAcc);
     }
 
+    get latestAccuracy(): number | undefined {
+        if (this.accuracy !== undefined) {
+            return this.accuracy;
+        } else if (this.intermediates.length > 0) {
+            // TODO: support intermeidate result is dict
+            const temp = this.intermediates[this.intermediates.length - 1];
+            if (temp !== undefined) {
+                return JSON.parse(temp.data);
+            } else {
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
+    }
+
     /* table obj start */
 
     get tableRecord(): TableRecord {
@@ -62,7 +78,8 @@ class Trial implements TableObj {
             status: this.info.status,
             intermediateCount: this.intermediates.length,
             accuracy: this.finalAcc,
-            latestAccuracy: this.formatLatestAccuracy(),
+            latestAccuracy: this.latestAccuracy,
+            formattedLatestAccuracy: this.formatLatestAccuracy(),
         };
     }
 
