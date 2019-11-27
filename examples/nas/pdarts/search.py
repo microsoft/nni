@@ -27,6 +27,8 @@ if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
     parser.add_argument('--add_layers', action='append',
                         default=[0, 6, 12], help='add layers')
+    parser.add_argument('--dropped_ops', action='append',
+                        default=[3, 2, 1], help='drop ops')
     parser.add_argument("--nodes", default=4, type=int)
     parser.add_argument("--layers", default=5, type=int)
     parser.add_argument("--batch-size", default=64, type=int)
@@ -50,8 +52,8 @@ if __name__ == "__main__":
     trainer = PdartsTrainer(model_creator,
                             layers=args.layers,
                             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
-                            pdarts_num_layers=[0, 6, 12],
-                            pdarts_num_to_drop=[2, 2, 2],
+                            pdarts_num_layers=args.add_layers,
+                            pdarts_num_to_drop=args.dropped_ops,
                             num_epochs=args.epochs,
                             dataset_train=dataset_train,
                             dataset_valid=dataset_valid,
