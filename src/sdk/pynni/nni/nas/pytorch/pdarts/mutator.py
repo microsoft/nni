@@ -28,24 +28,12 @@ class PdartsMutator(DartsMutator):
             if isinstance(mutable, LayerChoice):
 
                 switches = self.switches.get(mutable.key, [True for j in range(mutable.length+1)])
+                choices = self.choices[mutable.key]
 
                 for index in range(len(switches)-2, -1, -1):
                     if switches[index] == False:
-                        del(mutable.choices[index])
-                        mutable.length -= 1
-                self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length + 1))
+                        choices[index] = float('-inf')
                 self.switches[mutable.key] = switches
-
-        # update LayerChoice instances
-        for module in self.model.modules():
-            if isinstance(module, LayerChoice):
-                switches = self.switches.get(module.key)
-                choices = self.choices[module.key]
-                if len(module.choices) > len(choices):
-                    for index in range(len(switches)-2, -1, -1):
-                        if switches[index] == False:
-                            del(module.choices[index])
-                            module.length -= 1
 
     def drop_paths(self):
         for key in self.switches:
