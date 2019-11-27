@@ -27,7 +27,6 @@ class PdartsMutator(DartsMutator):
 
         super(PdartsMutator, self).__init__(model)
 
-        logger.info("inited choices %s", self.choices)
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
 
