@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import copy
-import logging
 
 import numpy as np
 import torch
@@ -11,8 +10,6 @@ import torch.nn.functional as F
 
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
-
-logger = logging.getLogger(__name__)
 
 
 class PdartsMutator(DartsMutator):
@@ -45,7 +42,6 @@ class PdartsMutator(DartsMutator):
                 switches = self.switches.get(module.key)
                 choices = self.choices[module.key]
                 if len(module.choices) > len(choices):
-                    logger.info("1. module choices count key %s %s", module.key, module.choices)
                     for index in range(len(switches)-2, -1, -1):
                         if switches[index] == False:
                             del(module.choices[index])
