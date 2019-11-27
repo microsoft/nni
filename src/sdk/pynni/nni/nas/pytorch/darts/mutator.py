@@ -28,7 +28,6 @@ class DartsMutator(Mutator):
                 result[mutable.key] = F.softmax(self.choices[mutable.key], dim=-1)[:-1]
             elif isinstance(mutable, InputChoice):
                 result[mutable.key] = torch.ones(mutable.n_candidates, dtype=torch.bool, device=self.device())
-        logger.info("get sample_search %s", result)
         return result
 
     def sample_final(self):

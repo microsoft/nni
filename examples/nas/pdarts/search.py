@@ -51,7 +51,7 @@ if __name__ == "__main__":
                             layers=args.layers,
                             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
                             pdarts_num_layers=[0, 6, 12],
-                            pdarts_num_to_drop=[3, 2, 2],
+                            pdarts_num_to_drop=[2, 2, 2],
                             num_epochs=args.epochs,
                             dataset_train=dataset_train,
                             dataset_valid=dataset_valid,
