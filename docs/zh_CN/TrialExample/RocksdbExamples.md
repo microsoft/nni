@@ -30,8 +30,6 @@ db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/Quic
 
 
 
-
-
 ```json
 {
     "write_buffer_size": {
@@ -80,8 +78,6 @@ db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/Quic
 其它 Tuner 算法可以通过相同的方式来使用。 参考[这里](../Tuner/BuiltinTuner.md)了解详情。
 
 最后，进入示例目录，并通过下列命令启动 Experiment：
-
-
 
 
 

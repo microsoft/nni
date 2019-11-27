@@ -137,40 +137,6 @@ for _ in pruner.get_prune_iterations():
 ### 用法
 首先，导入 Pruner 来为模型添加遮盖。
 
-PyTorch 代码
-```python
-from nni.compression.torch import LotteryTicketPruner
-config_list = [{
-    'prune_iterations': 5,
-    'sparsity': 0.8,
-    'op_types': ['default']
-}]
-pruner = LotteryTicketPruner(model, config_list, optimizer)
-pruner.compress()
-for _ in pruner.get_prune_iterations():
-    pruner.prune_iteration_start()
-    for epoch in range(epoch_num):
-        ...
-```
-
-The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round. Simple reproducing results can be found [here](./LotteryTicketHypothesis.md).
-
-
-*稍后支持 TensorFlow 版本。*
-
-#### LotteryTicketPruner 的用户配置
-
-* **prune_iterations:** 迭代修剪的次数。
-* **sparsity:** 压缩完成后的最终稀疏度。
-
-***
-## FPGM Pruner
-FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
-> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
-
-### 用法
-首先，导入 Pruner 来为模型添加遮盖。
-
 TensorFlow 代码
 ```python
 from nni.compression.tensorflow import FPGMPruner

@@ -28,6 +28,8 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: remote
+# 搜索空间文件	
+searchSpacePath: search_space.json
 #可选项: true, false
 useAnnotation: true
 tuner:
