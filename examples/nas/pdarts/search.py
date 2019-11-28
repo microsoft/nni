@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument('--dropped_ops', action='append',
                         default=[3, 2, 1], help='drop ops')
     parser.add_argument("--nodes", default=4, type=int)
-    parser.add_argument("--layers", default=5, type=int)
+    parser.add_argument("--init_layers", default=5, type=int)
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=1, type=int)
     parser.add_argument("--epochs", default=50, type=int)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     logger.info("initializing trainer")
     trainer = PdartsTrainer(model_creator,
-                            init_layers=args.layers,
+                            init_layers=args.init_layers,
                             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
                             pdarts_num_layers=args.add_layers,
                             pdarts_num_to_drop=args.dropped_ops,
