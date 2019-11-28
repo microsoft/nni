@@ -87,7 +87,7 @@ config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
 PRUNERS = {'level':LevelPruner(model, config_list_level), 'agp':AGP_Pruner(model, config_list_agp)}
 pruner = PRUNERS(params['prune_method']['_name'])
 pruner.compress()
-# fine tuning
+... # fine tuning
 acc = evaluate(model) # evaluation
 nni.report_final_results(acc)
 ```

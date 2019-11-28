@@ -1,6 +1,5 @@
-#################
 Feature Engineering
-#################
+====================
 
 We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI,
 it's still in the experiment phase which might evolve based on usage feedback.
