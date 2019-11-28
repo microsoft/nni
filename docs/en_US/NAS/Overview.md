@@ -6,11 +6,11 @@ However, it takes great efforts to implement NAS algorithms, and it is hard to r
 
 With this motivation, our ambition is to provide a unified architecture in NNI, to accelerate innovations on NAS, and apply state-of-art algorithms on real world problems faster.
 
-With [the unified interface](.NasInterface.md), there are two different modes for the architecture search. [The one](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [The other](.ClassicNas.md) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
+With [the unified interface](NasInterface.md), there are two different modes for the architecture search. [The one](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [The other](.ClassicNas.md) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
 
 * [Supported One-shot NAS Algorithms](#supported-one-shot-nas-algorithms)
 * [Classic Distributed NAS with NNI experiment](.NasInterface.md#classic-distributed-search)
-* [NNI NAS Programming Interface](.NasInterface.md)
+* [NNI NAS Programming Interface](NasInterface.md)
 
 ## Supported One-shot NAS Algorithms
 

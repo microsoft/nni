@@ -1,15 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""
-batch_tuner.py including:
-    class BatchTuner
-"""
-
 import logging
 
 import nni
 from nni.tuner import Tuner
+from typing import Dict
 
 TYPE = '_type'
 CHOICE = 'choice'
@@ -20,30 +16,19 @@ LOGGER = logging.getLogger('batch_tuner_AutoML')
 class BatchTuner(Tuner):
     """
     BatchTuner is tuner will running all the configure that user want to run batchly.
-
-    Examples
-    --------
-    The search space only be accepted like:
-    ```
-    {
-        'combine_params': { '_type': 'choice',
-                             '_value': '[{...}, {...}, {...}]',
-                          }
-    }
-    ```
     """
 
     def __init__(self):
         self._count = -1
         self._values = []
 
-    def is_valid(self, search_space):
+    def is_valid(self, search_space: Dict):
         """
         Check the search space is valid: only contains 'choice' type
 
         Parameters
         ----------
-        search_space : dict
+        search_space: A ``dict`` as described in **SearchSpace** doc.
 
         Returns
         -------
@@ -66,12 +51,12 @@ class BatchTuner(Tuner):
                                 value in BatchTuner is not a list.')
         return None
 
-    def update_search_space(self, search_space):
+    def update_search_space(self, search_space: Dict):
         """Update the search space
 
         Parameters
         ----------
-        search_space : dict
+        search_space : A ``dict`` as described in **SearchSpace** doc.
         """
         self._values = self.is_valid(search_space)
 
