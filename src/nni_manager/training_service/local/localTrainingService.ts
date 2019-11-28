@@ -238,6 +238,7 @@ class LocalTrainingService implements TrainingService {
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
         }
+        this.log.debug(trialJob);
         if (trialJob.pid === undefined) {
             this.setTrialJobStatus(trialJob, 'USER_CANCELED');
 
