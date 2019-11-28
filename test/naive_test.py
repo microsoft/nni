@@ -22,7 +22,7 @@ def naive_test():
         config_file = 'local_win32.yml'
     else:
         config_file = 'local.yml'
-    proc = subprocess.run(['nnictl', 'create', '--config', osp.join('naive_test' , config_file)])
+    proc = subprocess.run(['nnictl', 'create', '--config', osp.join('naive_test' , config_file), '--debug'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
