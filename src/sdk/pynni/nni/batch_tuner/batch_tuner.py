@@ -21,7 +21,7 @@ class BatchTuner(Tuner):
         self._count = -1
         self._values = []
 
-    def is_valid(self, search_space: Dict):
+    def is_valid(self, search_space):
         """
         Check the search space is valid: only contains 'choice' type
 
