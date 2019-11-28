@@ -238,13 +238,13 @@ class LocalTrainingService implements TrainingService {
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
         }
-        this.log.debug(trialJob);
         if (trialJob.pid === undefined) {
             this.setTrialJobStatus(trialJob, 'USER_CANCELED');
 
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGKILL');
+        this.log.debug(trialJob);
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
@@ -464,6 +464,7 @@ class LocalTrainingService implements TrainingService {
     }
 
     private setTrialJobStatus(trialJob: LocalTrialJobDetail, newStatus: TrialJobStatus): void {
+        this.log.debug(trialJob);
         if (trialJob.status !== newStatus) {
             const oldStatus: TrialJobStatus = trialJob.status;
             trialJob.status = newStatus;
