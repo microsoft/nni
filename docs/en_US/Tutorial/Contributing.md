@@ -43,6 +43,8 @@ A person looking to contribute can take up an issue by claiming it as a comment/
 * For docstrings, please refer to [numpydoc docstring guide](https://numpydoc.readthedocs.io/en/latest/format.html) and [pandas docstring guide](https://python-sprints.github.io/pandas/guide/pandas_docstring.html)
     * For function docstring, **description**, **Parameters**, and **Returns**/**Yields** are mandatory.
     * For class docstring, **description**, **Attributes** are mandatory.
+    * For docstring to describe `dict`, which is commonly used in our hyper-param format description, please refer to [RiboKit : Doc Standards
+ - Internal Guideline on Writing Standards](https://ribokit.github.io/docs/text/)
 
 ## Documentation
 Our documentation is built with [sphinx](http://sphinx-doc.org/), supporting [Markdown](https://guides.github.com/features/mastering-markdown/) and [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format. All our documentations are placed under [docs/en_US](https://github.com/Microsoft/nni/tree/master/docs).
