@@ -694,10 +694,6 @@ class NNIManager implements Manager {
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
         this.log.info(`NNIManager received command from dispatcher: ${commandType}, ${content}`);
-        this.log.info(`${commandType}, ${KILL_TRIAL_JOB}`);
-        if (commandType === KILL_TRIAL_JOB) {
-            this.log.info('this is a kill signal');
-        }
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters

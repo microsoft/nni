@@ -244,7 +244,6 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGKILL');
-        this.log.debug(trialJob);
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
@@ -464,7 +463,6 @@ class LocalTrainingService implements TrainingService {
     }
 
     private setTrialJobStatus(trialJob: LocalTrialJobDetail, newStatus: TrialJobStatus): void {
-        this.log.debug(trialJob);
         if (trialJob.status !== newStatus) {
             const oldStatus: TrialJobStatus = trialJob.status;
             trialJob.status = newStatus;
