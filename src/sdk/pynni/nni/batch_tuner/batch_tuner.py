@@ -5,7 +5,6 @@ import logging
 
 import nni
 from nni.tuner import Tuner
-from typing import Dict
 
 TYPE = '_type'
 CHOICE = 'choice'
@@ -51,7 +50,7 @@ class BatchTuner(Tuner):
                                 value in BatchTuner is not a list.')
         return None
 
-    def update_search_space(self, search_space: Dict):
+    def update_search_space(self, search_space):
         """Update the search space
 
         Parameters
