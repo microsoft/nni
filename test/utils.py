@@ -3,6 +3,7 @@
 
 import contextlib
 import collections
+from datetime import datetime
 import os
 import socket
 import sys
@@ -83,6 +84,7 @@ def is_experiment_done(nnimanager_log_path):
     
     with open(nnimanager_log_path, 'r') as f:
         log_content = f.read()
+        print(datetime.now(), repr(log_content))
     
     return EXPERIMENT_DONE_SIGNAL in log_content
 
