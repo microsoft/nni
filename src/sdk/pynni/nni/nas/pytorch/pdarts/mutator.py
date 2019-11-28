@@ -13,7 +13,7 @@ from nni.nas.pytorch.mutables import LayerChoice
 
 class PdartsMutator(DartsMutator):
     """
-    It works with PdartsTrainer to calculate ops weights, 
+    It works with PdartsTrainer to calculate ops weights,
     and drop weights in different PDARTS epochs.
     """
 
@@ -63,7 +63,7 @@ class PdartsMutator(DartsMutator):
         results = super().sample_final()
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
-                # As some operations are dropped physically, 
+                # As some operations are dropped physically,
                 # so it needs to fill back false to track dropped operations.
                 trained_result = results[mutable.key]
                 trained_index = 0

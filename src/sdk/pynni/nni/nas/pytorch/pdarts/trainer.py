@@ -19,7 +19,7 @@ class PdartsTrainer(BaseTrainer):
     PDARTS bases on DARTS algorithm, and provides a network growth approach to find deeper and better network.
     This class relies on pdarts_num_layers and pdarts_num_to_drop parameters to control how network grows.
     pdarts_num_layers means how many layers more than first epoch.
-    pdarts_num_to_drop means how many candidate operations should be dropped in each epoch. 
+    pdarts_num_to_drop means how many candidate operations should be dropped in each epoch.
         So that the grew network can in similar size.
     """
 
