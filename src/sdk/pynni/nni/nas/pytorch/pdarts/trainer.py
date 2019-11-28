@@ -21,7 +21,7 @@ class PdartsTrainer(BaseTrainer):
     def __init__(self, model_creator, layers, metrics,
                  num_epochs, dataset_train, dataset_valid,
                  pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 1],
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None):
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None, unrolled=False):
         super(PdartsTrainer, self).__init__()
         self.model_creator = model_creator
         self.layers = layers
@@ -36,7 +36,8 @@ class PdartsTrainer(BaseTrainer):
             "batch_size": batch_size,
             "workers": workers,
             "device": device,
-            "log_frequency": log_frequency
+            "log_frequency": log_frequency,
+            "unrolled": unrolled
         }
         self.callbacks = callbacks if callbacks is not None else []
 
@@ -47,7 +48,6 @@ class PdartsTrainer(BaseTrainer):
 
             layers = self.layers+self.pdarts_num_layers[epoch]
             model, criterion, optim, lr_scheduler = self.model_creator(layers)
-            self.model = model
             self.mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
 
             for callback in self.callbacks:
@@ -70,7 +70,7 @@ class PdartsTrainer(BaseTrainer):
                 callback.on_epoch_end(epoch)
 
     def validate(self):
-        self.model.validate()
+        self.trainer.validate()
 
     def export(self, file):
         mutator_export = self.mutator.export()
