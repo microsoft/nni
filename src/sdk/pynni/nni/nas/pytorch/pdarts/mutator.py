@@ -35,11 +35,7 @@ class PdartsMutator(DartsMutator):
                 switches = self.switches.get(mutable.key, [True for j in range(mutable.length)])
                 choices = self.choices[mutable.key]
 
-                operations_count = 0
-                for switch in switches:
-                    if switch:
-                        operations_count += 1
-
+                operations_count = np.sum(switches)
                 # +1 and -1 are caused by zero operation in darts network
                 # the zero operation is not in choices list in network, but its weight are in,
                 # so it needs one more weights and switch for zero.
