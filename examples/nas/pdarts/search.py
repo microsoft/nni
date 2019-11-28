@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     logger.info("initializing trainer")
     trainer = PdartsTrainer(model_creator,
-                            layers=args.layers,
+                            init_layers=args.layers,
                             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
                             pdarts_num_layers=args.add_layers,
                             pdarts_num_to_drop=args.dropped_ops,
