@@ -154,8 +154,8 @@ def main():
         device = torch.device("cpu")
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                  lambda step: (
-                                                              1.0 - step / args.total_iters) if step <= args.total_iters else 0,
+                                                  lambda step: (1.0 - step / args.total_iters)
+                                                  if step <= args.total_iters else 0,
                                                   last_epoch=-1)
 
     model = model.to(device)

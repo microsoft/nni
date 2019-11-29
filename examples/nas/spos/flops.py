@@ -1,3 +1,6 @@
+import json
+
+
 op_flops_dict = pickle.load(open('./data/op_flops_dict.pkl', 'rb'))
 backbone_info = [  # inp, oup, img_h, img_w, stride
     (3, 16, 224, 224, 2),  # conv1
@@ -45,6 +48,29 @@ def get_cand_flops(cand):
             (inp, oup, mid, img_h, img_w, stride)]
     return total_flops
 
+
+class Flops:
+    def __init__(self, backbones_mutable):
+        """
+        Initialization of flops calculator.
+
+        Parameters
+        ----------
+        backbones_mutable: dict
+            Mapping mutable keys to backbones: `(inp, oup, img_h, img_w, stride)`. As this is needed for calculating
+            the exact flops. For example,
+
+                {
+                    "LayerChoice1": (16, 64, 112, 112, 2),
+                    "LayerChoice2": (64, 64, 56, 56, 1),
+                }
+        """
+        with open("/data/op_flops_dict.pkl", "rb") as fp:
+            self.op_flops_dict = json.load(fp)
+        self.backbones = backbones
+
+    def __call__(self, decision_map):
+        pass
 
 def main():
     for i in range(4):
