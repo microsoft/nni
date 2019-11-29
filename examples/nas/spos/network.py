@@ -1,3 +1,5 @@
+import pickle
+
 import torch
 import torch.nn as nn
 
@@ -7,14 +9,27 @@ from nni.nas.pytorch import mutables
 
 
 class ShuffleNetV2OneShot(nn.Module):
+    block_keys = [
+        'shufflenet_3x3',
+        'shufflenet_5x5',
+        'shufflenet_7x7',
+        'xception_3x3',
+    ]
 
     def __init__(self, input_size=224, first_conv_channels=16, last_conv_channels=1024, n_classes=1000):
         super().__init__()
 
         assert input_size % 32 == 0
+        with open("./data/op_flops_dict.pkl", "rb") as fp:
+            self._op_flops_dict = pickle.load(fp)
 
         self.stage_blocks = [4, 4, 8, 4]
         self.stage_channels = [64, 160, 320, 640]
+        self._parsed_flops = dict()
+        self._input_size = input_size
+        self._feature_map_size = input_size
+        self._first_conv_channels = first_conv_channels
+        self._last_conv_channels = last_conv_channels
 
         # building first layer
         self.first_conv = nn.Sequential(
@@ -35,7 +50,7 @@ class ShuffleNetV2OneShot(nn.Module):
             nn.BatchNorm2d(last_conv_channels, affine=False),
             nn.ReLU(inplace=True),
         )
-        self.globalpool = nn.AvgPool2d(7)
+        self.globalpool = nn.AvgPool2d(self._feature_map_size)
         self.dropout = nn.Dropout(0.1)
         self.classifier = nn.Linear(last_conv_channels, n_classes, bias=False)
 
@@ -45,17 +60,26 @@ class ShuffleNetV2OneShot(nn.Module):
         result = []
         for i in range(blocks):
             stride = 2 if i == 0 else 1
-            inp = in_channels if i == 0 else channels // 2
+            inp = in_channels if i == 0 else channels
             oup = channels
 
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
-            result.append(mutables.LayerChoice([
+            choice_block = mutables.LayerChoice([
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride),
                 ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride)
-            ]))
+            ])
+            result.append(choice_block)
+
+            # find the corresponding flops
+            flop_key = (inp, oup, mid_channels, self._feature_map_size, self._feature_map_size, stride)
+            self._parsed_flops[choice_block.key] = [
+                self._op_flops_dict["{}_stride_{}".format(k, stride)][flop_key] for k in self.block_keys
+            ]
+            if stride == 2:
+                self._feature_map_size //= 2
         return result
 
     def forward(self, x):
@@ -69,6 +93,16 @@ class ShuffleNetV2OneShot(nn.Module):
         x = x.contiguous().view(bs, -1)
         x = self.classifier(x)
         return x
+
+    def get_candidate_flops(self, candidate):
+        conv1_flops = self._op_flops_dict['conv1'][(3, self._first_conv_channels,
+                                                    self._input_size, self._input_size, 2)]
+        rest_flops = self._op_flops_dict['rest_operation'][(self.stage_channels[-1], self._last_conv_channels,
+                                                            self._feature_map_size, self._feature_map_size, 1)]
+        total_flops = conv1_flops + rest_flops
+        for k, m in candidate.items():
+            total_flops += self._parsed_flops[k][torch.max(m)[1]]
+        return total_flops
 
     def _initialize_weights(self):
         for name, m in self.named_modules():
@@ -95,12 +129,12 @@ class ShuffleNetV2OneShot(nn.Module):
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
 
+
 if __name__ == "__main__":
     # architecture = [0, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 3, 2]
     # scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
     # scale_ids = [6, 5, 3, 5, 2, 6, 3, 4, 2, 5, 7, 5, 4, 6, 7, 4, 4, 5, 4, 3]
-    model = ShuffleNetV2_OneShot()
-    # print(model)
+    model = ShuffleNetV2OneShot()
 
     test_data = torch.rand(5, 3, 224, 224)
     test_outputs = model(test_data)

@@ -11,26 +11,27 @@ class ShuffleNetBlock(nn.Module):
         super().__init__()
         assert stride in [1, 2]
         assert ksize in [3, 5, 7]
-        assert oup > inp
-
+        self.channels = inp // 2 if stride == 1 else inp
         self.inp = inp
         self.oup = oup
         self.mid_channels = mid_channels
         self.ksize = ksize
         self.stride = stride
         self.pad = ksize // 2
-        self.oup_main = oup - inp
+        self.oup_main = oup - self.channels
+        assert self.oup_main > 0
 
         self.branch_main = nn.Sequential(*self._decode_point_depth_conv(sequence))
 
         if stride == 2:
             self.branch_proj = nn.Sequential(
                 # dw
-                nn.Conv2d(inp, inp, ksize, stride, self.pad, groups=inp, bias=False),
-                nn.BatchNorm2d(inp, affine=False),
+                nn.Conv2d(self.channels, self.channels, ksize, stride, self.pad,
+                          groups=self.channels, bias=False),
+                nn.BatchNorm2d(self.channels, affine=False),
                 # pw-linear
-                nn.Conv2d(inp, inp, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(inp, affine=False),
+                nn.Conv2d(self.channels, self.channels, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(self.channels, affine=False),
                 nn.ReLU(inplace=True)
             )
 
@@ -44,7 +45,7 @@ class ShuffleNetBlock(nn.Module):
     def _decode_point_depth_conv(self, sequence):
         result = []
         first_depth = first_point = True
-        pc = c = self.inp
+        pc = c = self.channels
         for i, token in enumerate(sequence):
             # compute output channels of this conv
             if i + 1 == len(sequence):
