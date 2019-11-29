@@ -9,7 +9,7 @@
 完成操作后，使用 **config_windows.yml** 配置来开始 Experiment 进行验证。
 
 ```bash
-nnictl create --config nni\examples\trials\mnist\config_windows.yml
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。
