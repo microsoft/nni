@@ -55,19 +55,19 @@ nnictl 支持的命令：
   > 在默认端口 8080 上创建一个新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+  nnictl create --config nni/examples/trials/mnist/config.yml
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
+  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment，并启用调试模式
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
+  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
   ```
 
 注意：
@@ -216,10 +216,10 @@ nnictl 支持的命令：
   
   * 示例
     
-    `使用 'examples/trials/mnist-tfv1/search_space.json' 来更新 Experiment 的搜索空间`
+    `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
-    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
     ```
 
 * **nnictl update concurrency**

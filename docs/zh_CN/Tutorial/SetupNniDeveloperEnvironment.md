@@ -46,7 +46,7 @@
 
 Trial 启动 Experiment 来检查环境。 例如，运行命令
 
-    nnictl create --config ~/nni/examples/trials/mnist-tfv1/config.yml
+    nnictl create --config ~/nni/examples/trials/mnist/config.yml
     
 
 并打开网页界面查看

@@ -16,7 +16,7 @@
 
 这是个简单的卷积网络，有两个卷积层，两个池化层和一个全连接层。 调优的超参包括 dropout 比率，卷积层大小，隐藏层（全连接层）大小等等。 它能用 NNI 中大部分内置的 Tuner 来调优，如 TPE，SMAC，Random。 样例的 YAML 文件也启用了评估器来提前终止一些中间结果不好的尝试。
 
-`代码目录: examples/trials/mnist-tfv1/`
+`代码目录: examples/trials/mnist/`
 
 <a name="mnist-annotation"></a>
 **MNIST 中使用 NNI 标记（annotation）**
