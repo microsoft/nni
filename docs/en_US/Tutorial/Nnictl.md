@@ -55,19 +55,19 @@ nnictl support commands:
   > create a new experiment with the default port: 8080
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
   ```
 
   > create a new experiment with specified port 8088
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
   ```
 
   > create a new experiment with specified port 8088 and debug mode
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
   ```
 
 Note:
@@ -210,10 +210,10 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Example
 
-    `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+    `update experiment's new search space with file dir 'examples/trials/mnist-tfv1/search_space.json'`
 
     ```bash
-    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
     ```
 
 * __nnictl update concurrency__
