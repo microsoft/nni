@@ -83,4 +83,4 @@ class ShuffleNetBlock(nn.Module):
 class ShuffleXceptionBlock(ShuffleNetBlock):
 
     def __init__(self, inp, oup, mid_channels, stride):
-        super().__init__(inp, oup, mid_channels, 3, 1, "dpdpdp")
+        super().__init__(inp, oup, mid_channels, 3, stride, "dpdpdp")

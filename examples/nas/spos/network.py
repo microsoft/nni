@@ -1,4 +1,5 @@
 import pickle
+import re
 
 import torch
 import torch.nn as nn
@@ -6,6 +7,7 @@ import torch.nn as nn
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
 from nni.nas.pytorch import mutables
+from nni.nas.pytorch.random import RandomMutator
 
 
 class ShuffleNetV2OneShot(nn.Module):
@@ -37,6 +39,7 @@ class ShuffleNetV2OneShot(nn.Module):
             nn.BatchNorm2d(first_conv_channels, affine=False),
             nn.ReLU(inplace=True),
         )
+        self._feature_map_size //= 2
 
         p_channels = first_conv_channels
         features = []
@@ -52,7 +55,9 @@ class ShuffleNetV2OneShot(nn.Module):
         )
         self.globalpool = nn.AvgPool2d(self._feature_map_size)
         self.dropout = nn.Dropout(0.1)
-        self.classifier = nn.Linear(last_conv_channels, n_classes, bias=False)
+        self.classifier = nn.Sequential(
+            nn.Linear(last_conv_channels, n_classes, bias=False),
+        )
 
         self._initialize_weights()
 
@@ -75,6 +80,7 @@ class ShuffleNetV2OneShot(nn.Module):
 
             # find the corresponding flops
             flop_key = (inp, oup, mid_channels, self._feature_map_size, self._feature_map_size, stride)
+            print(flop_key)
             self._parsed_flops[choice_block.key] = [
                 self._op_flops_dict["{}_stride_{}".format(k, stride)][flop_key] for k in self.block_keys
             ]
@@ -95,6 +101,8 @@ class ShuffleNetV2OneShot(nn.Module):
         return x
 
     def get_candidate_flops(self, candidate):
+        print((3, self._first_conv_channels, self._input_size, self._input_size, 2))
+        print((self.stage_channels[-1], self._last_conv_channels, self._feature_map_size, self._feature_map_size, 1))
         conv1_flops = self._op_flops_dict['conv1'][(3, self._first_conv_channels,
                                                     self._input_size, self._input_size, 2)]
         rest_flops = self._op_flops_dict['rest_operation'][(self.stage_channels[-1], self._last_conv_channels,
@@ -130,12 +138,27 @@ class ShuffleNetV2OneShot(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
 
+def load_and_parse_state_dict():
+    checkpoint = torch.load("./data/checkpoint-150000.pth.tar")
+    result = dict()
+    for k, v in checkpoint["state_dict"].items():
+        if k.startswith("module."):
+            k = k[len("module."):]
+        k = re.sub(r"^(features.\d+).(\d+)", "\\1.choices.\\2", k)
+        result[k] = v
+    return result
+
+
 if __name__ == "__main__":
     # architecture = [0, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 3, 2]
     # scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
     # scale_ids = [6, 5, 3, 5, 2, 6, 3, 4, 2, 5, 7, 5, 4, 6, 7, 4, 4, 5, 4, 3]
     model = ShuffleNetV2OneShot()
+    mutator = RandomMutator(model)
+    model_state_dict = load_and_parse_state_dict()
+    model.load_state_dict(model_state_dict)
 
     test_data = torch.rand(5, 3, 224, 224)
+    mutator.reset()
     test_outputs = model(test_data)
     print(test_outputs.size())
