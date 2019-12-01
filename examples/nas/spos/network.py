@@ -7,7 +7,7 @@ import torch.nn as nn
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
 from nni.nas.pytorch import mutables
-from nni.nas.pytorch.random import RandomMutator
+from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator
 
 
 class ShuffleNetV2OneShot(nn.Module):
@@ -32,6 +32,7 @@ class ShuffleNetV2OneShot(nn.Module):
         self._feature_map_size = input_size
         self._first_conv_channels = first_conv_channels
         self._last_conv_channels = last_conv_channels
+        self._n_classes = n_classes
 
         # building first layer
         self.first_conv = nn.Sequential(
@@ -80,7 +81,6 @@ class ShuffleNetV2OneShot(nn.Module):
 
             # find the corresponding flops
             flop_key = (inp, oup, mid_channels, self._feature_map_size, self._feature_map_size, stride)
-            print(flop_key)
             self._parsed_flops[choice_block.key] = [
                 self._op_flops_dict["{}_stride_{}".format(k, stride)][flop_key] for k in self.block_keys
             ]
@@ -101,15 +101,15 @@ class ShuffleNetV2OneShot(nn.Module):
         return x
 
     def get_candidate_flops(self, candidate):
-        print((3, self._first_conv_channels, self._input_size, self._input_size, 2))
-        print((self.stage_channels[-1], self._last_conv_channels, self._feature_map_size, self._feature_map_size, 1))
-        conv1_flops = self._op_flops_dict['conv1'][(3, self._first_conv_channels,
+        conv1_flops = self._op_flops_dict["conv1"][(3, self._first_conv_channels,
                                                     self._input_size, self._input_size, 2)]
-        rest_flops = self._op_flops_dict['rest_operation'][(self.stage_channels[-1], self._last_conv_channels,
+        # Should use `last_conv_channels` here, but megvii insists that it's `n_classes`. Keeping it.
+        # https://github.com/megvii-model/SinglePathOneShot/blob/36eed6cf083497ffa9cfe7b8da25bb0b6ba5a452/src/Supernet/flops.py#L313
+        rest_flops = self._op_flops_dict["rest_operation"][(self.stage_channels[-1], self._n_classes,
                                                             self._feature_map_size, self._feature_map_size, 1)]
         total_flops = conv1_flops + rest_flops
         for k, m in candidate.items():
-            total_flops += self._parsed_flops[k][torch.max(m)[1]]
+            total_flops += self._parsed_flops[k][torch.max(m, 0)[1]]
         return total_flops
 
     def _initialize_weights(self):
@@ -154,7 +154,8 @@ if __name__ == "__main__":
     # scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
     # scale_ids = [6, 5, 3, 5, 2, 6, 3, 4, 2, 5, 7, 5, 4, 6, 7, 4, 4, 5, 4, 3]
     model = ShuffleNetV2OneShot()
-    mutator = RandomMutator(model)
+    mutator = SPOSSupernetTrainingMutator(model, flops_func=model.get_candidate_flops,
+                                          flops_lb=290E6, flops_ub=360E6)
     model_state_dict = load_and_parse_state_dict()
     model.load_state_dict(model_state_dict)
 
