@@ -3,30 +3,37 @@
 ## Release 1.2 - 12/02/2019
 
 ### Major Features
-* Feature Engineering
+* [Feature Engineering](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md)
   - New feature engineering interface
-  - Feature selection algorithms: Gradient feature selector & GBDT selector
-* NAS
-  - New NAS interface
-  - NAS algorithms: ENAS, DARTS, P-DARTS (in PyTorch)
+  - Feature selection algorithms: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.md)
+  - [An example to do automatic feature engineering with NNI](https://github.com/microsoft/nni/tree/v1.2/examples/trials/auto-feature-engineering)
+* Neural Architecture Search (NAS) on NNI
+  - [New NAS interface](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
+  - NAS algorithms: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts) (in PyTorch)
   - NAS in classic mode (each trial runs independently)
 * Model compression
-  - New model pruning algorithms: lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
-  - New model quantization algorithms: QAT quantizer, DoReFa quantizer
+  - [New model pruning algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
+  - [New model quantization algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): QAT quantizer, DoReFa quantizer
+  - Support the API for exporting compressed model.
 * Training Service
-Support OpenPAI token authentication
+  - Support OpenPAI token authentication
 * Examples:
-  - A new MNIST trial example supports tensorflow 2.0.
+  - [An example to automatically tune rocksdb configuration with NNI](https://github.com/microsoft/nni/tree/v1.2/examples/trials/systems/rocksdb-fillrandom).
+  - [A new MNIST trial example supports tensorflow 2.0](https://github.com/microsoft/nni/tree/v1.2/examples/trials/mnist-tfv2).
 * Engineering Improvements
   - For remote training service,  trial jobs require no GPU are now scheduled with round-robin policy instead of random.
+  - Pylint rules added to check pull requests, new pull requests need to comply with these [pylint rules](https://github.com/microsoft/nni/blob/v1.2/pylintrc).
 * Web Portal & User Experience
   - Support user to add customized trial.
   - User can zoom out/in in detail graphs, except Hyper-parameter.
+* Documentation
+  - Improved NNI API documentation with more API docstring.
 
 ### Bug fix
   - Fix the table sort issue when failed trials haven't metrics. -Issue #1773
   - Maintain selected status(Maximal/Minimal) when the page switched. -PR#1710
   - Make hyper-parameters graph's default metric yAxis more accurate. -PR#1736
+  - Fix GPU script permission issue. -Issue #1665
 
 ## Release 1.1 - 10/23/2019
 
