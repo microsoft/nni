@@ -37,7 +37,7 @@ Note, these algorithms run **standalone without nnictl**, and supports PyTorch o
 
 #### Usage
 
-ENAS in NNI is still under development and we only support search phase for macro/micro search space on CIFAR10. Training from scratch and search space on PTB has not been finished yet.
+ENAS in NNI is still under development and we only support search phase for macro/micro search space on CIFAR10. Training from scratch and search space on PTB has not been finished yet. [Detailed Description](ENAS.md)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
@@ -58,7 +58,7 @@ python3 search.py -h
 
 ### DARTS
 
-The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization.
+The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization. [Detailed Description](DARTS.md)
 
 #### Usage
 
