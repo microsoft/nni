@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print()
     test_benchmark.run_all_test(pipeline1)
 
-    pipeline2 = make_pipeline(FeatureGradientSelector(n_features=20), LogisticRegression())
+    pipeline2 = make_pipeline(FeatureGradientSelector(), LogisticRegression())
     print("Test data selected by FeatureGradientSelector in LogisticRegression.")
     print()
     test_benchmark.run_all_test(pipeline2)
@@ -103,5 +103,10 @@ if __name__ == "__main__":
     print("Test data selected by TreeClssifier in LogisticRegression.")
     print()
     test_benchmark.run_all_test(pipeline3)
+
+    pipeline4 = make_pipeline(FeatureGradientSelector(n_features=20), LogisticRegression())
+    print("Test data selected by FeatureGradientSelector top 20 in LogisticRegression.")
+    print()
+    test_benchmark.run_all_test(pipeline4)
     
     print("Done.")
