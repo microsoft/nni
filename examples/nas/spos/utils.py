@@ -1,22 +1,65 @@
 import torch
 import torch.nn as nn
 
+from PIL import Image
+import numpy as np
+
 from torchvision import transforms
 from torchvision.datasets import ImageNet
 
 
-def get_imagenet(imagenet_root):
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
+
+
+def spos_to_bgr_tensor(pic):
+    """Modified from `to_tensor`"""
+    if not isinstance(pic, Image.Image):
+        raise TypeError('pic should be PIL Image. Got {}'.format(type(pic)))
+
+    if pic.mode == 'I':
+        img = torch.from_numpy(np.array(pic, np.int32, copy=False))
+    elif pic.mode == 'I;16':
+        img = torch.from_numpy(np.array(pic, np.int16, copy=False))
+    elif pic.mode == 'F':
+        img = torch.from_numpy(np.array(pic, np.float32, copy=False))
+    elif pic.mode == '1':
+        img = 255 * torch.from_numpy(np.array(pic, np.uint8, copy=False))
+    else:
+        img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
+    if pic.mode == 'YCbCr':
+        nchannel = 3
+    elif pic.mode == 'I;16':
+        nchannel = 1
+    else:
+        nchannel = len(pic.mode)
+    img = img.view(pic.size[1], pic.size[0], nchannel)
+    # put it from HWC to CHW format
+    # yikes, this transpose takes 80% of the loading time/CPU
+    img = img[:, :, [2, 1, 0]].transpose(0, 1).transpose(0, 2).contiguous()
+    return img.float() if isinstance(img, torch.ByteTensor) else img
+
+
+def get_imagenet(imagenet_root, spos_pre):
+    if spos_pre:
+        postprocess = [
+            transforms.Lambda(lambda img: spos_to_bgr_tensor(img))
+        ]
+    else:
+        postprocess = [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
+        ]
+
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224),
         transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
         transforms.RandomHorizontalFlip(0.5),
-        transforms.ToTensor(),
-    ])
+    ] + postprocess)
     valid_transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
-        transforms.ToTensor(),
-    ])
+    ] + postprocess)
     train_dataset = ImageNet(imagenet_root, split="train", transform=train_transform)
     valid_dataset = ImageNet(imagenet_root, split="val", transform=valid_transform)
     return train_dataset, valid_dataset

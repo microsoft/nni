@@ -137,8 +137,8 @@ class ShuffleNetV2OneShot(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
 
-def load_and_parse_state_dict():
-    checkpoint = torch.load("./data/checkpoint-150000.pth.tar")
+def load_and_parse_state_dict(normalize_conv=False):
+    checkpoint = torch.load("./data/checkpoint-150000.pth.tar", map_location=torch.device("cpu"))
     result = dict()
     for k, v in checkpoint["state_dict"].items():
         if k.startswith("module."):

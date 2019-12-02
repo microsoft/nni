@@ -27,7 +27,8 @@ class SPOSSupernetTrainer(Trainer):
                                                         shuffle=True)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_valid,
                                                         batch_size=batch_size,
-                                                        num_workers=workers)
+                                                        num_workers=workers,
+                                                        shuffle=True)
 
     def train_one_epoch(self, epoch):
         self.model.train()
@@ -57,7 +58,9 @@ class SPOSSupernetTrainer(Trainer):
                 x, y = x.to(self.device), y.to(self.device)
                 self.mutator.reset()
                 logits = self.model(x)
+                loss = self.loss(logits, y)
                 metrics = self.metrics(logits, y)
+                metrics["loss"] = loss
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     logger.info("Epoch [%s/%s] Validation Step [%s/%s]  %s", epoch + 1,
