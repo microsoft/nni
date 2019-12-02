@@ -1,5 +1,109 @@
 # ChangeLog
 
+## Release 1.2 - 12/02/2019
+
+### Major Features
+* Feature Engineering
+  - New feature engineering interface
+  - Feature selection algorithms: Gradient feature selector & GBDT selector
+* NAS
+  - New NAS interface
+  - NAS algorithms: ENAS, DARTS, P-DARTS (in PyTorch)
+  - NAS in classic mode (each trial runs independently)
+* Model compression
+  - New model pruning algorithms: lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
+  - New model quantization algorithms: QAT quantizer, DoReFa quantizer
+* Training Service
+Support OpenPAI token authentication
+* Examples:
+  - A new MNIST trial example supports tensorflow 2.0.
+* Engineering Improvements
+  - For remote training service,  trial jobs require no GPU are now scheduled with round-robin policy instead of random.
+* Web Portal & User Experience
+  - Support user to add customized trial.
+  - User can zoom out/in in detail graphs, except Hyper-parameter.
+
+### Bug fix
+  - Fix the table sort issue when failed trials haven't metrics. -Issue #1773
+  - Maintain selected status(Maximal/Minimal) when the page switched. -PR#1710
+  - Make hyper-parameters graph's default metric yAxis more accurate. -PR#1736
+
+## Release 1.1 - 10/23/2019
+
+### Major Features
+
+* New tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.md)
+* [View stopped experiments](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
+* Tuners can now use dedicated GPU resource (see `gpuIndices` in [tutorial](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.md) for details)
+* Web UI improvements
+  - Trials detail page can now list hyperparameters of each trial, as well as their start and end time (via "add column")
+  - Viewing huge experiment is now less laggy
+* More examples
+  - [EfficientNet PyTorch example](https://github.com/ultmaster/EfficientNet-PyTorch)
+  - [Cifar10 NAS example](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
+* [Model compression toolkit - Alpha release](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.md): We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute
+
+### Fixed Bugs
+
+* Multiphase job hangs when search space exhuasted (issue #1204)
+* `nnictl` fails when log not available (issue #1548)
+
+## Release 1.0 - 2/9/2019
+
+### Major Features
+
+* Tuners and Assessors
+    - Support Auto-Feature generator & selection    -Issue#877  -PR #1387
+         + Provide auto feature interface
+         + Tuner based on beam search
+         + [Add Pakdd example](./examples/trials/auto-feature-engineering/README.md)
+    - Add a parallel algorithm to improve the performance of TPE with large concurrency.  -PR #1052
+    - Support multiphase for hyperband    -PR #1257
+
+* Training Service
+     - Support private docker registry   -PR #755
+
+ * Engineering Improvements
+    - Python wrapper for rest api, support retrieve the values of the metrics in a programmatic way  PR #1318
+    - New python API : get_experiment_id(), get_trial_id()  -PR #1353   -Issue #1331 & -Issue#1368
+    - Optimized NAS Searchspace  -PR #1393
+         + Unify NAS search space with _type -- "mutable_type"e
+         + Update random search tuner
+    - Set gpuNum as optional      -Issue #1365
+    - Remove outputDir and dataDir configuration in PAI mode   -Issue #1342
+    - When creating a trial in Kubeflow mode, codeDir will no longer be copied to logDir   -Issue #1224
+
+* Web Portal & User Experience
+    - Show the best metric curve during search progress in WebUI  -Issue #1218
+    - Show the current number of parameters list in multiphase experiment   -Issue1210  -PR #1348
+    - Add "Intermediate count" option in AddColumn.      -Issue #1210
+    - Support search parameters value in WebUI     -Issue #1208
+    - Enable automatic scaling of axes for metric value  in default metric graph   -Issue #1360
+    - Add a detailed documentation link to the nnictl command in the command prompt    -Issue #1260
+    - UX improvement for showing Error log   -Issue #1173
+
+* Documentation
+    - Update the docs structure  -Issue #1231
+    - [Multi phase document improvement](./docs/en_US/AdvancedFeature/MultiPhase.md)   -Issue #1233  -PR #1242
+         + Add configuration example
+    - [WebUI description improvement](./docs/en_US/Tutorial/WebUI.md)  -PR #1419
+
+
+### Bug fix
+* (Bug fix)Fix the broken links in 0.9 release  -Issue #1236
+* (Bug fix)Script for auto-complete
+* (Bug fix)Fix pipeline issue that it only check exit code of last command in a script.  -PR #1417
+* (Bug fix)quniform fors tuners    -Issue #1377
+* (Bug fix)'quniform' has different meaning beween GridSearch and other tuner.   -Issue #1335
+* (Bug fix)"nnictl experiment list" give the status of a "RUNNING" experiment as "INITIALIZED" -PR #1388
+* (Bug fix)SMAC cannot be installed if nni is installed in dev mode    -Issue #1376
+* (Bug fix)The filter button of the intermediate result cannot be clicked   -Issue #1263
+* (Bug fix)API "/api/v1/nni/trial-jobs/xxx" doesn't show a trial's all parameters in multiphase experiment    -Issue #1258
+* (Bug fix)Succeeded trial doesn't have final result but webui show ×××(FINAL)  -Issue #1207
+* (Bug fix)IT for nnictl stop -Issue #1298
+* (Bug fix)fix security warning
+* (Bug fix)Hyper-parameter page broken  -Issue #1332
+* (Bug fix)Run flake8 tests to find Python syntax errors and undefined names -PR #1217
 
 ## Release 0.9 - 7/1/2019
 
