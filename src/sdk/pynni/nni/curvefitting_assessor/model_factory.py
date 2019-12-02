@@ -1,19 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import logging
 import numpy as np
@@ -40,7 +26,7 @@ class CurveModel:
 
     Parameters
     ----------
-    target_pos: int
+    target_pos : int
         The point we need to predict
     """
     def __init__(self, target_pos):
@@ -120,14 +106,14 @@ class CurveModel:
 
         Parameters
         ----------
-        model: string
+        model : string
             name of the curve function model
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
 
         Returns
         -------
-        int:
+        int
             The expected matrix at pos
         """
         if model_para_num[model] == 2:
@@ -143,9 +129,9 @@ class CurveModel:
 
         Parameters
         ----------
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -165,7 +151,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -187,7 +173,7 @@ class CurveModel:
 
         Parameters
         ----------
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -206,9 +192,9 @@ class CurveModel:
 
         Parameters
         ----------
-        pos: int
+        pos : int
             the epoch number of the position you want to predict
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -225,7 +211,7 @@ class CurveModel:
 
         Parameters
         ----------
-        sample: list
+        sample : list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
 
         Returns
@@ -244,7 +230,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -267,7 +253,7 @@ class CurveModel:
 
         Parameters
         ----------
-        samples: list
+        samples : list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
 
@@ -322,7 +308,7 @@ class CurveModel:
 
         Parameters
         ----------
-        trial_history: list
+        trial_history : list
             The history performance matrix of each trial.
 
         Returns

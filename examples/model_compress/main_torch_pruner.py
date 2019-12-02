@@ -66,6 +66,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
+    model.to(device)
 
     '''you can change this to LevelPruner to implement it
     pruner = LevelPruner(configure_list)
@@ -80,9 +81,7 @@ def main():
     }]
 
     pruner = AGP_Pruner(model, configure_list)
-    pruner.compress()
-    # you can also use compress(model) method
-    # like that pruner.compress(model)
+    model = pruner.compress()
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
@@ -90,6 +89,7 @@ def main():
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
+    pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28])
 
 
 if __name__ == '__main__':

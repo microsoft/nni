@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 the main model of policy/value network
 """
@@ -28,21 +12,18 @@ from .util import initialize, get_session
 class Model:
     """
     We use this object to :
-    __init__:
-    - Creates the step_model
-    - Creates the train_model
+        __init__:
+            - Creates the step_model
+            - Creates the train_model
 
-    train():
-    - Make the training part (feedforward and retropropagation of gradients)
+        train():
+            - Make the training part (feedforward and retropropagation of gradients)
 
-    save/load():
-    - Save load the model
+        save/load():
+            - Save load the model
     """
     def __init__(self, *, policy, nbatch_act, nbatch_train,
                  nsteps, ent_coef, vf_coef, max_grad_norm, microbatch_size=None, np_mask=None):
-        """
-        init
-        """
         self.sess = sess = get_session()
 
         with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
@@ -137,9 +118,13 @@ class Model:
 
     def train(self, lr, cliprange, obs, returns, masks, actions, values, neglogpacs, states=None):
         """
-        train the model.
+        Train the model.
         Here we calculate advantage A(s,a) = R + yV(s') - V(s)
-        Returns = R + yV(s')
+
+        Returns
+        -------
+        obj
+            = R + yV(s')
         """
         advs = returns - values
 

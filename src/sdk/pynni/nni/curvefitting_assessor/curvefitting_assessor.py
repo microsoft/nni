@@ -1,19 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import logging
 import datetime
@@ -29,13 +15,13 @@ class CurvefittingAssessor(Assessor):
 
     Parameters
     ----------
-    epoch_num: int
+    epoch_num : int
         The total number of epoch
-    optimize_mode: str
+    optimize_mode : str
         optimize mode, 'maximize' or 'minimize'
-    start_step: int
+    start_step : int
         only after receiving start_step number of reported intermediate results
-    threshold: float
+    threshold : float
         The threshold that we decide to early stop the worse performance curve.
     """
     def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95, gap=1):
@@ -70,9 +56,9 @@ class CurvefittingAssessor(Assessor):
 
         Parameters
         ----------
-        trial_job_id: int
+        trial_job_id : int
             trial job id
-        success: bool
+        success : bool
             True if succssfully finish the experiment, False otherwise
         """
         if success:
@@ -90,9 +76,9 @@ class CurvefittingAssessor(Assessor):
 
         Parameters
         ----------
-        trial_job_id: int
+        trial_job_id : int
             trial job id
-        trial_history: list
+        trial_history : list
             The history performance matrix of each trial
 
         Returns
@@ -105,7 +91,6 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
-        trial_job_id = trial_job_id
         self.trial_history = trial_history
         if not self.set_best_performance:
             return AssessResult.Good

@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -208,7 +192,7 @@ class PAITrainingService implements TrainingService {
 
         const stopJobRequest: request.Options = {
             uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
-/jobs/${trialJobDetail.paiJobName}/executionType`,
+/jobs/${trialJobDetail.paiJobName}/executionType`, 
             method: 'PUT',
             json: true,
             body: {value: 'STOP'},
@@ -256,9 +240,15 @@ class PAITrainingService implements TrainingService {
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
                 });
+                if(this.paiClusterConfig.passWord) {
+                    // Get PAI authentication token
+                    await this.updatePaiToken();
+                } else if(this.paiClusterConfig.token) {
+                    this.paiToken = this.paiClusterConfig.token;
+                } else {
+                    deferred.reject(new Error('pai cluster config format error, please set password or token!'));
+                }
 
-                // Get PAI authentication token
-                await this.updatePaiToken();
                 deferred.resolve();
                 break;
 
@@ -483,8 +473,7 @@ class PAITrainingService implements TrainingService {
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage : string = (error !== undefined && error !== null) ? error.message :
-                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
-                this.log.error(errorMessage);
+                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body.message}`;
                 trialJobDetail.status = 'FAILED';
                 deferred.resolve(true);
             } else {
@@ -498,13 +487,15 @@ class PAITrainingService implements TrainingService {
 
     private async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            try {
-                await this.updatePaiToken();
-            } catch (error) {
-                this.log.error(`${error}`);
-                //only throw error when initlize paiToken first time
-                if (this.paiToken === undefined) {
-                    throw new Error(error);
+            if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
+                try {
+                    await this.updatePaiToken();
+                } catch (error) {
+                    this.log.error(`${error}`);
+                    //only throw error when initlize paiToken first time
+                    if (this.paiToken === undefined) {
+                        throw new Error(error);
+                    }
                 }
             }
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);

@@ -47,7 +47,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
+Note: If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
 The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
@@ -84,7 +84,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
+*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
 **Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -100,7 +100,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       with tf.Session() as sess:
           mnist_network.train(sess, mnist)
           test_acc = mnist_network.evaluate(mnist)
-+         nni.report_final_result(acc)
++         nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
 -     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -109,7 +109,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
+*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
 **Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max duration arguments.
 
@@ -134,15 +134,15 @@ trial:
 
 Note, **for Windows, you need to change trial command `python3` to `python`**
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
+*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
+All the codes above are already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
 #### Linux and MacOS   
 Run the **config.yml** file from your command line to start MNIST experiment.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 #### Windows   
 Run the **config_windows.yml** file from your command line to start MNIST experiment.
@@ -150,7 +150,7 @@ Run the **config_windows.yml** file from your command line to start MNIST experi
 **Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist\config_windows.yml
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`

@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 build policy/value network from model
 """
@@ -34,14 +18,20 @@ class PolicyWithValue:
 
     def __init__(self, env, observations, latent, estimate_q=False, vf_latent=None, sess=None, np_mask=None, is_act_model=False, **tensors):
         """
-        Parameters:
+        Parameters
         ----------
-        env:             RL environment
-        observations:    tensorflow placeholder in which the observations will be fed
-        latent:          latent state from which policy distribution parameters should be inferred
-        vf_latent:       latent state from which value function should be inferred (if None, then latent is used)
-        sess:            tensorflow session to run calculations in (if None, default session is used)
-        **tensors:       tensorflow tensors for additional attributes such as state or mask
+        env : obj
+            RL environment
+        observations : tensorflow placeholder
+            Tensorflow placeholder in which the observations will be fed
+        latent : tensor
+            Latent state from which policy distribution parameters should be inferred
+        vf_latent : tensor
+            Latent state from which value function should be inferred (if None, then latent is used)
+        sess : tensorflow session
+            Tensorflow session to run calculations in (if None, default session is used)
+        **tensors
+            Tensorflow tensors for additional attributes such as state or mask
         """
 
         self.X = observations
@@ -138,12 +128,14 @@ class PolicyWithValue:
         """
         Compute next action(s) given the observation(s)
 
-        Parameters:
+        Parameters
         ----------
-        observation:     observation data (either single or a batch)
-        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation : np array
+            Observation data (either single or a batch)
+        **extra_feed
+            Additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
-        Returns:
+        Returns
         -------
         (action, value estimate, next state, negative log likelihood of the action under current policy parameters) tuple
         """
@@ -157,22 +149,40 @@ class PolicyWithValue:
         """
         Compute value estimate(s) given the observation(s)
 
-        Parameters:
+        Parameters
         ----------
-        observation:     observation data (either single or a batch)
-        **extra_feed:    additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
+        observation : np array
+            Observation data (either single or a batch)
+        **extra_feed
+            Additional data such as state or mask (names of the arguments should match the ones in constructor, see __init__)
 
-        Returns:
+        Returns
         -------
-        value estimate
+        Value estimate
         """
         return self._evaluate(self.vf, ob, *args, **kwargs)
 
 
 def build_lstm_policy(model_config, value_network=None, estimate_q=False, **policy_kwargs):
     """
-    build lstm policy and value network, they share the same lstm network.
+    Build lstm policy and value network, they share the same lstm network.
     the parameters all use their default values.
+
+    Parameter
+    ---------
+    model_config : obj
+        Configurations of the model
+    value_network : obj
+        The network for value function
+    estimate_q : bool
+        Whether to estimate ``q``
+    **policy_kwargs
+        The kwargs for policy network, i.e., lstm model
+
+    Returns
+    -------
+    func
+        The policy network
     """
     policy_network = lstm_model(**policy_kwargs)
 

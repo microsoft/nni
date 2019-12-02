@@ -17,7 +17,7 @@ assessor:
       start_step: 6
       threshold: 0.95
 trial:
-  codeDir: ../../../examples/trials/mnist
+  codeDir: ../../../examples/trials/mnist-tfv1
   command: python3 mnist.py --batch_num 100
   gpuNum: 0
 

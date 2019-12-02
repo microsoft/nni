@@ -7,10 +7,11 @@ const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
-import { TRIALS } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
+import Customize from '../Modal/CustomizedTrial';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -45,6 +46,8 @@ interface TableListState {
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
     intermediateId: string;
     intermediateOtherKeys: Array<string>;
+    isShowCustomizedModal: boolean;
+    copyTrialId: string; // user copy trial to submit a new customized trial
 }
 
 interface ColumnIndex {
@@ -71,7 +74,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
             intermediateId: '',
-            intermediateOtherKeys: []
+            intermediateOtherKeys: [],
+            isShowCustomizedModal: false,
+            copyTrialId: ''
         };
     }
 
@@ -236,17 +241,36 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
+    // open customized trial modal
+    setCustomizedTrial = (trialId: string) => {
+        this.setState({
+            isShowCustomizedModal: true,
+            copyTrialId: trialId
+        });
+    }
+
+    closeCustomizedTrial = () => {
+        this.setState({
+            isShowCustomizedModal: false,
+            copyTrialId: ''
+        });
+    }
     render() {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,
-            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
+            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys,
+            isShowCustomizedModal, copyTrialId
+        } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
             onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>) => {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
+        // [supportCustomizedTrial: true]
+        const supportCustomizedTrial = (EXPERIMENT.multiPhase === true) ? false : true;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
         let showTitle = COLUMNPro;
         const showColumn: Array<object> = [];
 
@@ -361,6 +385,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                                 </Button>
                                             </Popconfirm>
                                     }
+                                    {/* Add a new trial-customized trial */}
+                                    {
+                                        supportCustomizedTrial
+                                            ?
+                                            <Button
+                                                type="primary"
+                                                className="common-style"
+                                                disabled={disabledAddCustomizedTrial}
+                                                onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                                title="Customized trial"
+                                            >
+                                                <Icon type="copy" />
+                                            </Button>
+                                            :
+                                            null
+                                    }
                                 </Row>
                             );
                         },
@@ -398,7 +438,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         expandedRowRender={this.openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
-                        scroll={{x: 'max-content'}}
+                        scroll={{ x: 'max-content' }}
                         pagination={pageSize > 0 ? { pageSize } : false}
                     />
                     {/* Intermediate Result Modal */}
@@ -458,7 +498,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
+                {/* compare trials based message */}
                 <Compare compareRows={selectRows} visible={isShowCompareModal} cancelFunc={this.hideCompareModal} />
+                {/* clone trial parameters and could submit a customized trial */}
+                <Customize
+                    visible={isShowCustomizedModal}
+                    copyTrialId={copyTrialId}
+                    closeCustomizeModal={this.closeCustomizedTrial}
+                />
             </Row>
         );
     }
@@ -539,17 +586,16 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     dataIndex: 'accuracy',
     width: 120,
     sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
+        if (a.latestAccuracy === undefined) {
             return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
         } else {
-            return a.accuracy - b.accuracy;
+            return a.latestAccuracy - b.latestAccuracy;
         }
     },
     render: (text, record) => (
-        // TODO: is this needed?
-        <div>{record.latestAccuracy}</div>
+        <div>{record.formattedLatestAccuracy}</div>
     )
 };
 

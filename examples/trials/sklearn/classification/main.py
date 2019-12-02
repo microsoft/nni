@@ -23,13 +23,13 @@ from sklearn.svm import SVC
 import logging
 import numpy as np
 
-
 LOG = logging.getLogger('sklearn_classification')
 
 def load_data():
     '''Load dataset, use 20newsgroups dataset'''
     digits = load_digits()
-    X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, random_state=99, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(
+        digits.data, digits.target, random_state=99, test_size=0.25)
 
     ss = StandardScaler()
     X_train = ss.fit_transform(X_train)
@@ -59,7 +59,7 @@ def get_model(PARAMS):
 
     return model
 
-def run(X_train, X_test, y_train, y_test, PARAMS):
+def run(X_train, X_test, y_train, y_test, model):
     '''Train model and predict result'''
     model.fit(X_train, y_train)
     score = model.score(X_test, y_test)

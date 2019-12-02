@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import json
 from collections.abc import Iterable
@@ -249,7 +232,8 @@ class Graph:
                 self.reverse_adj_list[v_id].remove(edge_tuple)
                 break
         self.reverse_adj_list[new_v_id].append((u_id, layer_id))
-        for index, value in enumerate(self.layer_id_to_output_node_ids[layer_id]):
+        for index, value in enumerate(
+                self.layer_id_to_output_node_ids[layer_id]):
             if value == v_id:
                 self.layer_id_to_output_node_ids[layer_id][index] = new_v_id
                 break
@@ -350,7 +334,8 @@ class Graph:
                 self._replace_layer(layer_id, new_layer)
 
             elif is_layer(layer, "BatchNormalization"):
-                new_layer = wider_bn(layer, start_dim, total_dim, n_add, self.weighted)
+                new_layer = wider_bn(
+                    layer, start_dim, total_dim, n_add, self.weighted)
                 self._replace_layer(layer_id, new_layer)
                 self._search(v, start_dim, total_dim, n_add)
 
@@ -405,7 +390,8 @@ class Graph:
             target_id: A convolutional layer ID. The new block should be inserted after the block.
             new_layer: An instance of StubLayer subclasses.
         """
-        self.operation_history.append(("to_deeper_model", target_id, new_layer))
+        self.operation_history.append(
+            ("to_deeper_model", target_id, new_layer))
         input_id = self.layer_id_to_input_node_ids[target_id][0]
         output_id = self.layer_id_to_output_node_ids[target_id][0]
         if self.weighted:
@@ -478,14 +464,20 @@ class Graph:
         pre_end_node_id = self.layer_id_to_input_node_ids[end_id][0]
         end_node_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        skip_output_id = self._insert_pooling_layer_chain(start_node_id, end_node_id)
+        skip_output_id = self._insert_pooling_layer_chain(
+            start_node_id, end_node_id)
 
         # Add the conv layer
-        new_conv_layer = get_conv_class(self.n_dim)(filters_start, filters_end, 1)
+        new_conv_layer = get_conv_class(
+            self.n_dim)(
+                filters_start,
+                filters_end,
+                1)
         skip_output_id = self.add_layer(new_conv_layer, skip_output_id)
 
         # Add the add layer.
-        add_input_node_id = self._add_node(deepcopy(self.node_list[end_node_id]))
+        add_input_node_id = self._add_node(
+            deepcopy(self.node_list[end_node_id]))
         add_layer = StubAdd()
 
         self._redirect_edge(pre_end_node_id, end_node_id, add_input_node_id)
@@ -504,7 +496,8 @@ class Graph:
             weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights(
-                (add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+                (add_noise(weights, np.array([0, 1])), add_noise(
+                    bias, np.array([0, 1])))
             )
 
     def to_concat_skip_model(self, start_id, end_id):
@@ -513,7 +506,8 @@ class Graph:
             start_id: The convolutional layer ID, after which to start the skip-connection.
             end_id: The convolutional layer ID, after which to end the skip-connection.
         """
-        self.operation_history.append(("to_concat_skip_model", start_id, end_id))
+        self.operation_history.append(
+            ("to_concat_skip_model", start_id, end_id))
         filters_end = self.layer_list[end_id].output.shape[-1]
         filters_start = self.layer_list[start_id].output.shape[-1]
         start_node_id = self.layer_id_to_output_node_ids[start_id][0]
@@ -521,9 +515,11 @@ class Graph:
         pre_end_node_id = self.layer_id_to_input_node_ids[end_id][0]
         end_node_id = self.layer_id_to_output_node_ids[end_id][0]
 
-        skip_output_id = self._insert_pooling_layer_chain(start_node_id, end_node_id)
+        skip_output_id = self._insert_pooling_layer_chain(
+            start_node_id, end_node_id)
 
-        concat_input_node_id = self._add_node(deepcopy(self.node_list[end_node_id]))
+        concat_input_node_id = self._add_node(
+            deepcopy(self.node_list[end_node_id]))
         self._redirect_edge(pre_end_node_id, end_node_id, concat_input_node_id)
 
         concat_layer = StubConcatenate()
@@ -532,7 +528,10 @@ class Graph:
             self.node_list[skip_output_id],
         ]
         concat_output_node_id = self._add_node(Node(concat_layer.output_shape))
-        self._add_edge(concat_layer, concat_input_node_id, concat_output_node_id)
+        self._add_edge(
+            concat_layer,
+            concat_input_node_id,
+            concat_output_node_id)
         self._add_edge(concat_layer, skip_output_id, concat_output_node_id)
         concat_layer.output = self.node_list[concat_output_node_id]
         self.node_list[concat_output_node_id].shape = concat_layer.output_shape
@@ -559,7 +558,8 @@ class Graph:
             )
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights(
-                (add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+                (add_noise(weights, np.array([0, 1])), add_noise(
+                    bias, np.array([0, 1])))
             )
 
     def _insert_pooling_layer_chain(self, start_node_id, end_node_id):
@@ -568,7 +568,8 @@ class Graph:
             new_layer = deepcopy(layer)
             if is_layer(new_layer, "Conv"):
                 filters = self.node_list[start_node_id].shape[-1]
-                new_layer = get_conv_class(self.n_dim)(filters, filters, 1, layer.stride)
+                new_layer = get_conv_class(self.n_dim)(
+                    filters, filters, 1, layer.stride)
                 if self.weighted:
                     init_conv_weight(new_layer)
             else:
@@ -601,8 +602,10 @@ class Graph:
                     temp_v = v
                     temp_layer_id = layer_id
                     skip_type = None
-                    while not (temp_v in index_in_main_chain and temp_u in index_in_main_chain):
-                        if is_layer(self.layer_list[temp_layer_id], "Concatenate"):
+                    while not (
+                            temp_v in index_in_main_chain and temp_u in index_in_main_chain):
+                        if is_layer(
+                                self.layer_list[temp_layer_id], "Concatenate"):
                             skip_type = NetworkDescriptor.CONCAT_CONNECT
                         if is_layer(self.layer_list[temp_layer_id], "Add"):
                             skip_type = NetworkDescriptor.ADD_CONNECT
@@ -711,7 +714,8 @@ class Graph:
 
     def wide_layer_ids(self):
         return (
-            self._conv_layer_ids_in_order()[:-1] + self._dense_layer_ids_in_order()[:-1]
+            self._conv_layer_ids_in_order(
+            )[:-1] + self._dense_layer_ids_in_order()[:-1]
         )
 
     def skip_connection_layer_ids(self):
@@ -810,7 +814,8 @@ class KerasModel:
         topo_node_list = self.graph.topological_order
         output_id = topo_node_list[-1]
         input_id = topo_node_list[0]
-        input_tensor = keras.layers.Input(shape=graph.node_list[input_id].shape)
+        input_tensor = keras.layers.Input(
+            shape=graph.node_list[input_id].shape)
 
         node_list = deepcopy(self.graph.node_list)
         node_list[input_id] = input_tensor
@@ -838,7 +843,8 @@ class KerasModel:
         output_tensor = keras.layers.Activation("softmax", name="activation_add")(
             output_tensor
         )
-        self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
+        self.model = keras.models.Model(
+            inputs=input_tensor, outputs=output_tensor)
 
         if graph.weighted:
             for index, layer in enumerate(self.layers):
@@ -892,7 +898,8 @@ class JSONModel:
 
         for layer_id, item in enumerate(graph.layer_list):
             layer = graph.layer_list[layer_id]
-            layer_information = layer_description_extractor(layer, graph.node_to_id)
+            layer_information = layer_description_extractor(
+                layer, graph.node_to_id)
             layer_list.append((layer_id, layer_information))
 
         data["node_list"] = node_list
@@ -938,7 +945,8 @@ def json_to_graph(json_model: str):
 
     graph.input_shape = input_shape
     vis = json_model["vis"]
-    graph.vis = {tuple(item): True for item in vis} if vis is not None else None
+    graph.vis = {
+        tuple(item): True for item in vis} if vis is not None else None
     graph.weighted = json_model["weighted"]
     layer_id_to_input_node_ids = json_model["layer_id_to_input_node_ids"]
     graph.layer_id_to_input_node_ids = {

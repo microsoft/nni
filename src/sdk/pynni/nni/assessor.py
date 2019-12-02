@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 """
 Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset)
@@ -53,14 +36,14 @@ class Assessor(Recoverable):
     to tell whether this trial can be early stopped or not.
 
     This is the abstract base class for all assessors.
-    Early stopping algorithms should derive this class and override :meth:`assess_trial` method,
+    Early stopping algorithms should inherit this class and override :meth:`assess_trial` method,
     which receives intermediate results from trials and give an assessing result.
 
     If :meth:`assess_trial` returns :obj:`AssessResult.Bad` for a trial,
     it hints NNI framework that the trial is likely to result in a poor final accuracy,
     and therefore should be killed to save resource.
 
-    If an accessor want's to get notified when a trial ends, it can also override :meth:`trial_end`.
+    If an accessor want's to be notified when a trial ends, it can also override :meth:`trial_end`.
 
     To write a new assessor, you can reference :class:`~nni.medianstop_assessor.MedianstopAssessor`'s code as an example.
 
@@ -77,7 +60,7 @@ class Assessor(Recoverable):
 
         The NNI framework has little guarantee on ``trial_history``.
         This method is not guaranteed to be invoked for each time ``trial_history`` get updated.
-        It is also possible that a trial's history keeps updateing after receiving a bad result.
+        It is also possible that a trial's history keeps updating after receiving a bad result.
         And if the trial failed and retried, ``trial_history`` may be inconsistent with its previous value.
 
         The only guarantee is that ``trial_history`` is always growing.
@@ -96,9 +79,9 @@ class Assessor(Recoverable):
 
         Parameters
         ----------
-        trial_job_id: str
+        trial_job_id : str
             Unique identifier of the trial.
-        trial_history: list
+        trial_history : list
             Intermediate results of this trial. The element type is decided by trial code.
 
         Returns
@@ -114,9 +97,9 @@ class Assessor(Recoverable):
 
         Parameters
         ----------
-        trial_job_id: str
+        trial_job_id : str
             Unique identifier of the trial.
-        success: bool
+        success : bool
             True if the trial successfully completed; False if failed or terminated.
         """
 

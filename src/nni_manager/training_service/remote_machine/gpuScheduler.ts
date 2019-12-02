@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -28,6 +12,8 @@ import {
     parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, SSHClientManager
 } from './remoteMachineData';
 
+type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
+
 /**
  * A simple GPU scheduler implementation
  */
@@ -35,13 +21,18 @@ export class GPUScheduler {
 
     private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
     private readonly log: Logger = getLogger();
+    private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
+    private roundRobinIndex: number = 0;
+    private configuredRMs: RemoteMachineMeta[] = [];
 
     /**
      * Constructor
      * @param machineSSHClientMap map from remote machine to sshClient
      */
     constructor(machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>) {
+        assert(machineSSHClientMap.size > 0);
         this.machineSSHClientMap = machineSSHClientMap;
+        this.configuredRMs = Array.from(machineSSHClientMap.keys());
     }
 
     /**
@@ -189,7 +180,21 @@ export class GPUScheduler {
     private selectMachine(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
         assert(rmMetas !== undefined && rmMetas.length > 0);
 
-        return randomSelect(rmMetas);
+        if (this.policyName === 'random') {
+            return randomSelect(rmMetas);
+        } else if (this.policyName === 'round-robin') {
+            return this.roundRobinSelect(rmMetas);
+        } else {
+            throw new Error(`Unsupported schedule policy: ${this.policyName}`);
+        }
+    }
+
+    private roundRobinSelect(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
+        while (!rmMetas.includes(this.configuredRMs[this.roundRobinIndex % this.configuredRMs.length])) {
+            this.roundRobinIndex++;
+        }
+
+        return this.configuredRMs[this.roundRobinIndex++ % this.configuredRMs.length];
     }
 
     private selectGPUsForTrial(gpuInfos: GPUInfo[], requiredGPUNum: number): GPUInfo[] {

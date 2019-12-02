@@ -1,25 +1,9 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
-gp_tuner.py
-'''
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+"""
+utility functions and classes for GPTuner
+"""
 
 import warnings
 import numpy as np
@@ -28,9 +12,21 @@ from scipy.optimize import minimize
 
 
 def _match_val_type(vals, bounds):
-    '''
-    Update values in the array, to match their corresponding type
-    '''
+    """
+    Update values in the array, to match their corresponding type, make sure the value is legal.
+
+    Parameters
+    ----------
+    vals : numpy array
+        values of parameters
+    bounds : numpy array
+        list of dictionary which stores parameters names and legal values.
+
+    Returns
+    -------
+    vals_new : list
+        The closest legal value to the original value
+    """
     vals_new = []
 
     for i, bound in enumerate(bounds):
@@ -52,32 +48,33 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
     A function to find the maximum of the acquisition function
 
     It uses a combination of random sampling (cheap) and the 'L-BFGS-B'
-    optimization method. First by sampling `n_warmup` (1e5) points at random,
-    and then running L-BFGS-B from `n_iter` (250) random starting points.
+    optimization method. First by sampling ``num_warmup`` points at random,
+    and then running L-BFGS-B from ``num_starting_points`` random starting points.
 
     Parameters
     ----------
-    :param f_acq:
+    f_acq : UtilityFunction.utility
         The acquisition function object that return its point-wise value.
 
-    :param gp:
+    gp : GaussianProcessRegressor
         A gaussian process fitted to the relevant data.
 
-    :param y_max:
+    y_max : float
         The current maximum known value of the target function.
 
-    :param bounds:
+    bounds : numpy array
         The variables bounds to limit the search of the acq max.
 
-    :param num_warmup:
+    num_warmup : int
         number of times to randomly sample the aquisition function
 
-    :param num_starting_points:
+    num_starting_points : int
         number of times to run scipy.minimize
 
     Returns
     -------
-    :return: x_max, The arg max of the acquisition function.
+    numpy array
+        The parameter which achieves max of the acquisition function.
     """
 
     # Warm up with random points
@@ -117,36 +114,70 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
 
 class UtilityFunction():
     """
-    An object to compute the acquisition functions.
+    A class to compute different acquisition function values.
+
+    Parameters
+    ----------
+    kind : string
+        specification of utility function to use
+    kappa : float
+        parameter usedd for 'ucb' acquisition function
+    xi : float
+        parameter usedd for 'ei' and 'poi' acquisition function
     """
 
     def __init__(self, kind, kappa, xi):
-        """
-        If UCB is to be used, a constant kappa is needed.
-        """
-        self.kappa = kappa
-
-        self.xi = xi
+        self._kappa = kappa
+        self._xi = xi
 
         if kind not in ['ucb', 'ei', 'poi']:
             err = "The utility function " \
                 "{} has not been implemented, " \
                 "please choose one of ucb, ei, or poi.".format(kind)
             raise NotImplementedError(err)
-        self.kind = kind
+        self._kind = kind
 
     def utility(self, x, gp, y_max):
-        '''return utility function'''
-        if self.kind == 'ucb':
-            return self._ucb(x, gp, self.kappa)
-        if self.kind == 'ei':
-            return self._ei(x, gp, y_max, self.xi)
-        if self.kind == 'poi':
-            return self._poi(x, gp, y_max, self.xi)
+        """
+        return utility function
+
+        Parameters
+        ----------
+        x : numpy array
+            parameters
+        gp : GaussianProcessRegressor
+        y_max : float
+            maximum target value observed so far
+
+        Returns
+        -------
+        function
+            return corresponding function, return None if parameter is illegal
+        """
+        if self._kind == 'ucb':
+            return self._ucb(x, gp, self._kappa)
+        if self._kind == 'ei':
+            return self._ei(x, gp, y_max, self._xi)
+        if self._kind == 'poi':
+            return self._poi(x, gp, y_max, self._xi)
         return None
 
     @staticmethod
     def _ucb(x, gp, kappa):
+        """
+        Upper Confidence Bound (UCB) utility function
+
+        Parameters
+        ----------
+        x : numpy array
+            parameters
+        gp : GaussianProcessRegressor
+        kappa : float
+
+        Returns
+        -------
+        float
+        """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             mean, std = gp.predict(x, return_std=True)
@@ -155,6 +186,22 @@ class UtilityFunction():
 
     @staticmethod
     def _ei(x, gp, y_max, xi):
+        """
+        Expected Improvement (EI) utility function
+
+        Parameters
+        ----------
+        x : numpy array
+            parameters
+        gp : GaussianProcessRegressor
+        y_max : float
+            maximum target value observed so far
+        xi : float
+
+        Returns
+        -------
+        float
+        """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             mean, std = gp.predict(x, return_std=True)
@@ -164,6 +211,22 @@ class UtilityFunction():
 
     @staticmethod
     def _poi(x, gp, y_max, xi):
+        """
+        Possibility Of Improvement (POI) utility function
+
+        Parameters
+        ----------
+        x : numpy array
+            parameters
+        gp : GaussianProcessRegressor
+        y_max : float
+            maximum target value observed so far
+        xi : float
+
+        Returns
+        -------
+        float
+        """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             mean, std = gp.predict(x, return_std=True)

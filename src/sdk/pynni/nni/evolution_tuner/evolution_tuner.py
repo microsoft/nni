@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 evolution_tuner.py
 """
@@ -32,7 +16,9 @@ import nni.parameter_expressions as parameter_expressions
 
 
 def json2space(x, oldy=None, name=NodeType.ROOT):
-    """Change search space from json format to hyperopt format
+    """
+    Change search space from json format to hyperopt format
+
     """
     y = list()
     if isinstance(x, dict):
@@ -59,7 +45,9 @@ def json2space(x, oldy=None, name=NodeType.ROOT):
     return y
 
 def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeType.ROOT):
-    """Json to pramaters.
+    """
+    Json to pramaters.
+
     """
     if isinstance(x, dict):
         if NodeType.TYPE in x.keys():
@@ -117,6 +105,17 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
 class Individual:
     """
     Indicidual class to store the indv info.
+
+    Attributes
+    ----------
+    config : str
+        Search space.
+    info : str
+        The str to save information of individual.
+    result : float
+        The final metric of a individual.
+    store_dir : str
+    save_dir : str
     """
 
     def __init__(self, config=None, info=None, result=None, save_dir=None):
@@ -124,6 +123,7 @@ class Individual:
         Parameters
         ----------
         config : str
+            A config to represent a group of parameters.
         info : str
         result : float
         save_dir : str
@@ -140,6 +140,8 @@ class Individual:
 
     def mutation(self, config=None, info=None, save_dir=None):
         """
+        Mutation by reset state information.
+
         Parameters
         ----------
         config : str
@@ -177,8 +179,11 @@ class EvolutionTuner(Tuner):
         self.population = None
         self.space = None
 
+
     def update_search_space(self, search_space):
-        """Update search space.
+        """
+        Update search space.
+
         Search_space contains the information that user pre-defined.
 
         Parameters
@@ -191,15 +196,19 @@ class EvolutionTuner(Tuner):
         self.random_state = np.random.RandomState()
         self.population = []
         is_rand = dict()
+
         for item in self.space:
             is_rand[item] = True
+
         for _ in range(self.population_size):
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state)
             self.population.append(Individual(config=config))
 
+
     def generate_parameters(self, parameter_id, **kwargs):
-        """Returns a dict of trial (hyper-)parameters, as a serializable object.
+        """
+        This function will returns a dict of trial (hyper-)parameters, as a serializable object.
 
         Parameters
         ----------
@@ -207,15 +216,19 @@ class EvolutionTuner(Tuner):
 
         Returns
         -------
-        config : dict
+        dict
+            A group of candaidte parameters that evolution tuner generated.
         """
         if not self.population:
             raise RuntimeError('The population is empty')
+
         pos = -1
+
         for i in range(len(self.population)):
             if self.population[i].result is None:
                 pos = i
                 break
+
         if pos != -1:
             indiv = copy.deepcopy(self.population[pos])
             self.population.pop(pos)
@@ -230,6 +243,7 @@ class EvolutionTuner(Tuner):
                                self.population[0].config)
             is_rand = dict()
             mutation_pos = space[random.randint(0, len(space)-1)]
+
             for i in range(len(self.space)):
                 is_rand[self.space[i]] = (self.space[i] == mutation_pos)
             config = json2parameter(
@@ -238,21 +252,27 @@ class EvolutionTuner(Tuner):
             # remove "_index" from config and save params-id
 
             total_config = config
+
         self.total_data[parameter_id] = total_config
         config = split_index(total_config)
+
         return config
 
+
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-        '''Record the result from a trial
+        """
+        Record the result from a trial
 
         Parameters
         ----------
-        parameters: dict
+        parameter_id : int
+        parameters : dict
         value : dict/float
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
-        '''
+        """
         reward = extract_scalar_reward(value)
+
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         # restore the paramsters contains "_index"

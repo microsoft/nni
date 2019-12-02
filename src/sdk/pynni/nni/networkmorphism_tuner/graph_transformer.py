@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 from copy import deepcopy
 
@@ -40,7 +23,8 @@ def to_wider_graph(graph):
     '''
     weighted_layer_ids = graph.wide_layer_ids()
     weighted_layer_ids = list(
-        filter(lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids)
+        filter(
+            lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids)
     )
     wider_layers = sample(weighted_layer_ids, 1)
 
@@ -58,12 +42,14 @@ def to_wider_graph(graph):
 def to_skip_connection_graph(graph):
     ''' skip connection graph
     '''
-    # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
+    # The last conv layer cannot be widen since wider operator cannot be done
+    # over the two sides of flatten.
     weighted_layer_ids = graph.skip_connection_layer_ids()
     valid_connection = []
-    for skip_type in sorted([NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]):
+    for skip_type in sorted(
+            [NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]):
         for index_a in range(len(weighted_layer_ids)):
-            for index_b in range(len(weighted_layer_ids))[index_a + 1 :]:
+            for index_b in range(len(weighted_layer_ids))[index_a + 1:]:
                 valid_connection.append((index_a, index_b, skip_type))
 
     if not valid_connection:
@@ -84,9 +70,14 @@ def create_new_layer(layer, n_dim):
 
     input_shape = layer.output.shape
     dense_deeper_classes = [StubDense, get_dropout_class(n_dim), StubReLU]
-    conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim), StubReLU]
+    conv_deeper_classes = [
+        get_conv_class(n_dim),
+        get_batch_norm_class(n_dim),
+        StubReLU]
     if is_layer(layer, "ReLU"):
-        conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim)]
+        conv_deeper_classes = [
+            get_conv_class(n_dim),
+            get_batch_norm_class(n_dim)]
         dense_deeper_classes = [StubDense, get_dropout_class(n_dim)]
     elif is_layer(layer, "Dropout"):
         dense_deeper_classes = [StubDense, StubReLU]
