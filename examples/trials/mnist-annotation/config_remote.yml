@@ -20,14 +20,14 @@ trial:
   gpuNum: 0
 #machineList can be empty if the platform is local
 machineList:
-  - ip: 10.1.1.1
-    username: bob
-    passwd: bob123
-    #port can be skip if using default ssh port 22
-    #port: 22
-  - ip: 10.1.1.2
-    username: bob
-    passwd: bob123
-  - ip: 10.1.1.3
-    username: bob
-    passwd: bob123
+  #  - ip: 10.150.144.123
+  #    username: v-latang
+  #    passwd: v-latang
+  - ip: 10.214.70.153
+    username: FAREAST.v-latang
+    sshKeyPath: /mnt/c/Users/v-latang/.ssh/id_rsa
+  #    sshKeyPath: /home/v-latang/libs/id_rsa
+  - ip: 10.170.68.5
+    username: FAREAST.v-latang
+    sshKeyPath: /mnt/c/Users/v-latang/.ssh/id_rsa
+#    sshKeyPath: /home/v-latang/libs/id_rsa
