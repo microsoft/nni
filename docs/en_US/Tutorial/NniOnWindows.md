@@ -9,7 +9,7 @@ Currently we support local, remote and pai mode on Windows. Windows 10.1809 is w
 When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
 ```bash
-nnictl create --config nni\examples\trials\mnist\config_windows.yml
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 For other examples you need to change trial command `python3` into `python` in each example YAML.

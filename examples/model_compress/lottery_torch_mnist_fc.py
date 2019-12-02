@@ -26,7 +26,7 @@ class fc1(nn.Module):
 def train(model, train_loader, optimizer, criterion):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.train()
-    for batch_idx, (imgs, targets) in enumerate(train_loader):
+    for imgs, targets in train_loader:
         optimizer.zero_grad()
         imgs, targets = imgs.to(device), targets.to(device)
         output = model(imgs)
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     configure_list = [{
-        'prune_iterations': 10,
+        'prune_iterations': 5,
         'sparsity': 0.96,
         'op_types': ['default']
     }]
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         pruner.prune_iteration_start()
         loss = 0
         accuracy = 0
-        for epoch in range(50):
+        for epoch in range(10):
             loss = train(model, train_loader, optimizer, criterion)
             accuracy = test(model, test_loader, criterion)
             print('current epoch: {0}, loss: {1}, accuracy: {2}'.format(epoch, loss, accuracy))
