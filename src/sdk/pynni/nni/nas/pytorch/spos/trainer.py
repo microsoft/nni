@@ -23,7 +23,8 @@ class SPOSSupernetTrainer(Trainer):
 
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
                                                         batch_size=batch_size,
-                                                        num_workers=workers)
+                                                        num_workers=workers,
+                                                        shuffle=True)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_valid,
                                                         batch_size=batch_size,
                                                         num_workers=workers)
@@ -35,8 +36,9 @@ class SPOSSupernetTrainer(Trainer):
             x, y = x.to(self.device), y.to(self.device)
 
             self.optimizer.zero_grad()
+            self.mutator.reset()
             logits = self.model(x)
-            loss = self.loss(x, y)
+            loss = self.loss(logits, y)
             loss.backward()
             self.optimizer.step()
 
@@ -48,11 +50,12 @@ class SPOSSupernetTrainer(Trainer):
                             self.num_epochs, step + 1, len(self.train_loader), meters)
 
     def validate_one_epoch(self, epoch):
-        self.model.validate()
+        self.model.eval()
         meters = AverageMeterGroup()
         with torch.no_grad():
             for step, (x, y) in enumerate(self.valid_loader):
                 x, y = x.to(self.device), y.to(self.device)
+                self.mutator.reset()
                 logits = self.model(x)
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)

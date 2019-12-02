@@ -7,7 +7,6 @@ import torch.nn as nn
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
 from nni.nas.pytorch import mutables
-from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator
 
 
 class ShuffleNetV2OneShot(nn.Module):
@@ -147,19 +146,3 @@ def load_and_parse_state_dict():
         k = re.sub(r"^(features.\d+).(\d+)", "\\1.choices.\\2", k)
         result[k] = v
     return result
-
-
-if __name__ == "__main__":
-    # architecture = [0, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 3, 2]
-    # scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6]
-    # scale_ids = [6, 5, 3, 5, 2, 6, 3, 4, 2, 5, 7, 5, 4, 6, 7, 4, 4, 5, 4, 3]
-    model = ShuffleNetV2OneShot()
-    mutator = SPOSSupernetTrainingMutator(model, flops_func=model.get_candidate_flops,
-                                          flops_lb=290E6, flops_ub=360E6)
-    model_state_dict = load_and_parse_state_dict()
-    model.load_state_dict(model_state_dict)
-
-    test_data = torch.rand(5, 3, 224, 224)
-    mutator.reset()
-    test_outputs = model(test_data)
-    print(test_outputs.size())

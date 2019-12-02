@@ -16,7 +16,7 @@ class SPOSSupernetTrainingMutator(RandomMutator):
         self._flops_func = flops_func
         if self._flops_func is not None:
             self._flops_bin_num = flops_bin_num
-            self._flops_bins = [flops_lb + (flops_ub - flops_lb) / flops_bin_num * i for i in range(flops_bin_num)]
+            self._flops_bins = [flops_lb + (flops_ub - flops_lb) / flops_bin_num * i for i in range(flops_bin_num + 1)]
             self._flops_sample_timeout = flops_sample_timeout
 
     def sample_search(self):
