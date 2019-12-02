@@ -340,7 +340,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Operation',
                         dataIndex: 'operation',
                         key: 'operation',
-                        width: 120,
+                        width: 160,
                         render: (text: string, record: TableRecord) => {
                             let trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
@@ -534,6 +534,7 @@ const StartTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'Start Time',
     dataIndex: 'startTime',
     width: 160,
+    sorter: (a, b) => a.startTime - b.startTime,
     render: (text, record) => (
         <span>{formatTimestamp(record.startTime)}</span>
     )
@@ -543,6 +544,15 @@ const EndTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'End Time',
     dataIndex: 'endTime',
     width: 160,
+    sorter: (a, b, sortOrder) => {
+        if (a.endTime === undefined) {
+            return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.endTime === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
+        } else {
+            return a.endTime - b.endTime;
+        }
+    },
     render: (text, record) => (
         <span>{formatTimestamp(record.endTime, '--')}</span>
     )
@@ -575,6 +585,7 @@ const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
     title: 'Intermediate result',
     dataIndex: 'intermediateCount',
     width: 86,
+    sorter: (a, b) => a.intermediateCount - b.intermediateCount,
     render: (text, record) => (
         <span>{`#${record.intermediateCount}`}</span>
     )
