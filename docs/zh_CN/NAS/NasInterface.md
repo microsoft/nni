@@ -55,7 +55,7 @@ def forward(self, x):
     out = self.input_switch([in_tensor1, in_tensor2, in_tensor3])
     ...
 ```
-`InputChoice` 是一个 PyTorch module，初始化时需要元信息，例如，从多少个输入后选中选择多少个输入，初始化的 `InputChoice` 名称。 真正候选的输入张量只能在 `forward` 函数中获得。 在 `InputChoice` 中，`forward` 会在调用时传入实际的候选输入张量。
+`InputChoice` is a PyTorch module, in init, it needs meta information, for example, from how many input candidates to choose how many inputs, and the name of this initialized `InputChoice`. 真正候选的输入张量只能在 `forward` 函数中获得。 In the `forward` function, the `InputChoice` module you create in `__init__` (e.g., `self.input_switch`) is called with real candidate input tensors.
 
 一些 [NAS Trainer](#one-shot-training-mode) 需要知道输入张量的来源层，因此在 `InputChoice` 中添加了输入参数 `choose_from` 来表示每个候选输入张量的来源层。 `choose_from` 是 str 的 list，每个元素都是 `LayerChoice` 和`InputChoice` 的 `key`，或者 module 的 name (详情参考[代码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py))。
 
@@ -102,13 +102,11 @@ trainer.export(file='./chosen_arch')
 
 [这里](./Overview.md#supported-one-shot-nas-algorithms)是所有支持的 Trainer。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py)是使用 NNI NAS API 的简单示例。
 
-[这里]()是完整示例的代码。
-
 ### 经典分布式搜索
 
-神经网络架构搜索通过在 Trial 任务中独立运行单个子模型来实现。 NNI 同样支持这种搜索方法，其天然适用于 NNI 的超参搜索框架。Tuner 为每个 Trial 生成子模型，并在训练平台上运行。
+Neural architecture search is originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits in NNI hyper-parameter tuning framework, where tuner generates child model for next trial and trials run in training service.
 
-要使用此模式，不需要修改 NNI NAS API 的搜索空间定义 (即, `LayerChoice`, `InputChoice`, `MutableScope`)。 模型初始化后，在模型上调用 `get_and_apply_next_architecture`。 One-shot NAS Trainer 不能在此模式中使用。 简单示例：
+For using this mode, no need to change the search space expressed with NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
 ```python
 class Net(nn.Module):
     # 使用 LayerChoice 和 InputChoice 的模型
@@ -125,27 +123,27 @@ acc = test(model)
 nni.report_final_result(acc)
 ```
 
-搜索空间应自动生成，并发送给 Tuner。 通过 NNI NAS API，搜索空间嵌入在用户代码中，需要通过 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 来生成搜索空间文件。 然后，将生成的搜索空间文件路径填入 `config.yml` 的 `searchSpacePath`。 `config.yml` 中的其它字段参考[教程](../Tutorial/QuickStart.md)。
+The search space should be automatically generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
 
-可使用 [NNI Tuner](../Tuner/BuiltinTuner.md) 来搜索。
+You could use [NNI tuners](../Tuner/BuiltinTuner.md) to do the search.
 
-为了便于调试，其支持独立运行模式，可直接运行 Trial 命令，而不启动 NNI Experiment。 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择最开始的候选项。
+We support standalone mode for easy debugging, where you could directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
 
-[此处](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml)是完整示例。
+The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
 
 ## NAS 算法的编程接口
 
-通过简单的接口，可在 NNI 上实现新的 NAS Trainer。
+We also provide simple interface for users to easily implement a new NAS trainer on NNI.
 
 ### 在 NNI 上实现新的 NAS Trainer
 
-要实现新的 NAS Trainer，基本上只需要继承 `BaseMutator` 和 `BaseTrainer` 这两个类。
+To implement a new NAS trainer, users basically only need to implement two classes by inheriting `BaseMutator` and `BaseTrainer` respectively.
 
-在 `BaseMutator` 中，需要重载 `on_forward_layer_choice` 和 `on_forward_input_choice`，这是 `LayerChoice` 和 `InputChoice` 相应的实现。 可使用属性 `mutables` 来获得模型中所有的 `LayerChoice` 和 `InputChoice`。 然后实现新的 Trainer，来实例化新的 Mutator 并实现训练逻辑。 详细信息，可参考[代码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)，及支持的 Trainer，如 [DartsTrainer](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/darts)。
+In `BaseMutator`, users need to overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the implementation of `LayerChoice` and `InputChoice` respectively. Users could use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. Then users need to implement a new trainer, which instantiates the new mutator and implement the training logic. For details, please read [the code](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) and the supported trainers, for example, [DartsTrainer](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/darts).
 
 ### 为 NAS 实现 NNI Tuner
 
-NNI 中的 NAS Tuner 需要自动生成搜索空间。 `LayerChoice` 和 `InputChoice` 的搜索空间格式如下：
+NNI tuner for NAS takes the auto generated search space. The search space format of `LayerChoice` and `InputChoice` is shown below:
 ```json
 {
     "key_name": {
@@ -162,7 +160,7 @@ NNI 中的 NAS Tuner 需要自动生成搜索空间。 `LayerChoice` 和 `InputC
 }
 ```
 
-相应的，生成的网络架构格式如下：
+Correspondingly, the generate architecture is in the following format:
 ```json
 {
     "key_name": {
