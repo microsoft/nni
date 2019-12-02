@@ -52,7 +52,7 @@ Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
 
 ```
-nnictl create --config ~/nni/examples/trials/mnist/config.yml
+nnictl create --config ~/nni/examples/trials/mnist-tfv1/config.yml
 ```
 
 And open WebUI to check if everything is OK
