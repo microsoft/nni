@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI v1.1 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI v1.2 has been released! &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 <p align="center">
   <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -26,7 +26,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         <img src="docs/img/bar.png"/>
       </td>
       <td>
-        <b>调优算法</b>
+        <b>Algorithms</b>
         <img src="docs/img/bar.png"/>
       </td>
       <td>
@@ -75,36 +75,45 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       <td align="left" >
         <a href="docs/zh_CN/Tuner/BuiltinTuner.md">Tuner（调参器）</a>
         <ul>
-          <li><b>通用 Tuner</b></li>
-          <ul>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
-          </ul>    
-          <li><b><a href="docs/zh_CN/CommunitySharings/HpoComparision.md">超参调优</a> Tuner</b></li>
-          <ul>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
-          </ul>
-          <li><b><a href="docs/zh_CN/AdvancedFeature/GeneralNasInterfaces.md">NAS</a> Tuner</b></li>
-          <ul>
-          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
-          <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
-          </ul>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
         </ul>
           <a href="docs/zh_CN/Assessor/BuiltinAssessor.md">Assessor（评估器）</a>
           <ul>
-          <ul>
-          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>   
           </ul>
-          </ul>  
+          <a href="docs/en_US/NAS/Overview.md">NAS (Beta)</a>
+          <ul>
+          <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
+          <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
+          <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
+          </ul>
+          <a href="docs/en_US/Compressor/Overview.md">Model Compression (Beta)</a>
+          <ul>
+          <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
+          <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
+          <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+          <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
+          <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
+          <li><a href="docs/en_US/Compressor/Overview.md">More...</a></li>
+          </ul>
+          <a href="docs/en_US/FeatureEngineering/Overview.md">Feature Engineering (Beta)</a>
+          <ul>
+          <li><a href="docs/en_US/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
+          <li><a href="docs/en_US/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
+          </ul>
       </td>
       <td>
       <ul>
@@ -199,7 +208,7 @@ Linux 和 macOS
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v1.1 https://github.com/Microsoft/nni.git
+    git clone -b v1.2 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -209,7 +218,7 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v1.1 https://github.com/Microsoft/nni.git
+  git clone -b v1.2 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
@@ -225,7 +234,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)�
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v1.1 https://github.com/Microsoft/nni.git
+    git clone -b v1.2 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 macOS
