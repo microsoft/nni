@@ -42,16 +42,16 @@ experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 10h
 maxTrialNum: 100
-#choice: local, remote, pai, kubeflow, frameworkcontroller
+#可选项: local, remote, pai, kubeflow, frameworkcontroller
 trainingServicePlatform: frameworkcontroller
 searchSpacePath: ~/nni/examples/trials/mnist-tfv1/search_space.json
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
 assessor:
   builtinAssessorName: Medianstop
