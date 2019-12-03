@@ -75,44 +75,44 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       <td align="left" >
         <a href="docs/zh_CN/Tuner/BuiltinTuner.md">Tuner（调参器）</a>
         <ul>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a></li>
+          <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
         </ul>
           <a href="docs/zh_CN/Assessor/BuiltinAssessor.md">Assessor（评估器）</a>
           <ul>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
           </ul>
-          <a href="docs/en_US/NAS/Overview.md">NAS（测试版）</a>
+          <a href="docs/zh_CN/NAS/Overview.md">NAS（测试版）</a>
           <ul>
-          <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
-          <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
-          <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
+          <li><a href="docs/zh_CN/NAS/Overview.md#enas">ENAS</a></li>
+          <li><a href="docs/zh_CN/NAS/Overview.md#darts">DARTS</a></li>
+          <li><a href="docs/zh_CN/NAS/Overview.md#p-darts">P-DARTS</a></li>
           </ul>
-          <a href="docs/en_US/Compressor/Overview.md">模型压缩（测试版）</a>
+          <a href="docs/zh_CN/Compressor/Overview.md">模型压缩（测试版）</a>
           <ul>
-          <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
-          <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
-          <li><a href="docs/en_US/Compressor/Overview.md">更多...</a></li>
+          <li><a href="docs/zh_CN/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
+          <li><a href="docs/zh_CN/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
+          <li><a href="docs/zh_CN/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+          <li><a href="docs/zh_CN/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
+          <li><a href="docs/zh_CN/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
+          <li><a href="docs/zh_CN/Compressor/Overview.md">更多...</a></li>
           </ul>
-          <a href="docs/en_US/FeatureEngineering/Overview.md">特征工程（测试版）</a>
+          <a href="docs/zh_CN/FeatureEngineering/Overview.md">特征工程（测试版）</a>
           <ul>
-          <li><a href="docs/en_US/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
-          <li><a href="docs/en_US/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
+          <li><a href="docs/zh_CN/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
+          <li><a href="docs/zh_CN/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
           </ul>
       </td>
       <td>
