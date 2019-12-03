@@ -56,7 +56,7 @@ class ClassicMutator(Mutator):
         self._search_space = self._generate_search_space()
         if "NNI_GEN_SEARCH_SPACE" in os.environ:
             # dry run for only generating search space
-            self._dump_search_space(self.search_space, os.environ["NNI_GEN_SEARCH_SPACE"])
+            self._dump_search_space(os.environ["NNI_GEN_SEARCH_SPACE"])
             sys.exit(0)
 
         if trial_env_vars.NNI_PLATFORM is None:
@@ -65,7 +65,7 @@ class ClassicMutator(Mutator):
         else:
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
-        self.sample_final()
+        self._cache = self.sample_final()
 
     def sample_search(self):
         return self.sample_final()
@@ -82,7 +82,7 @@ class ClassicMutator(Mutator):
                 "'{}' is not a valid choice.".format(data)
             value = data["_value"]
             idx = data["_idx"]
-            search_space_ref = self.search_space[mutable.key]["_value"]
+            search_space_ref = self._search_space[mutable.key]["_value"]
             if isinstance(mutable, LayerChoice):
                 # doesn't support multihot for layer choice yet
                 onehot_list = [False] * mutable.length
@@ -95,11 +95,12 @@ class ClassicMutator(Mutator):
                 for i in idx:
                     assert 0 <= i < mutable.n_candidates and search_space_ref[i] == value, \
                         "Index '{}' in search space '{}' is not '{}'".format(i, search_space_ref, value)
-                    assert not multihot_list[i], "'{}' is selected twice in '{}', this is not allowed.".format(i, idx)
+                    assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
                     multihot_list[i] = True
                 result[mutable.key] = torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
+        return result
 
     def reset(self):
         pass  # do nothing, only sample once at initialization
@@ -122,7 +123,7 @@ class ClassicMutator(Mutator):
             the chosen architecture
         """
         chosen_arch = {}
-        for key, val in self.search_space.items():
+        for key, val in self._search_space.items():
             if val["_type"] == "layer_choice":
                 choices = val["_value"]
                 chosen_arch[key] = {"_value": choices[0], "_idx": 0}
@@ -168,6 +169,6 @@ class ClassicMutator(Mutator):
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return search_space
 
-    def _dump_search_space(self, search_space, file_path):
+    def _dump_search_space(self, file_path):
         with open(file_path, "w") as ss_file:
-            json.dump(search_space, ss_file)
+            json.dump(self._search_space, ss_file)

@@ -4,6 +4,7 @@ from itertools import cycle
 
 import nni
 import torch
+import torch.nn as nn
 from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 from torch.utils.data import DataLoader
@@ -17,20 +18,21 @@ logger = logging.getLogger("nni")
 def retrain_bn(model, criterion, max_iters, log_freq, loader_train, device):
     logger.info("Clear BN statistics...")
     for m in model.modules():
-        if isinstance(m, torch.nn.BatchNorm2d):
+        if isinstance(m, nn.BatchNorm2d):
             m.running_mean = torch.zeros_like(m.running_mean)
             m.running_var = torch.ones_like(m.running_var)
+
     logger.info("Train BN with training set (BN sanitize)...")
     model.train()
-
     meters = AverageMeterGroup()
     for step in range(max_iters):
         inputs, targets = next(loader_train)
         inputs, targets = inputs.to(device), targets.to(device)
+        model.zero_grad()
         logits = model(inputs)
         loss = criterion(logits, targets)
         metrics = accuracy(logits, targets)
-        metrics["loss"] = loss
+        metrics["loss"] = loss.item()
         meters.update(metrics)
         if step % log_freq == 0 or step + 1 == max_iters:
             logger.info("Train Step [%d/%d] %s", step + 1, max_iters, meters)
@@ -47,7 +49,7 @@ def test_acc(model, criterion, max_iters, log_freq, loader_test, device):
             logits = model(inputs)
             loss = criterion(logits, targets)
             metrics = accuracy(logits, targets)
-            metrics["loss"] = loss
+            metrics["loss"] = loss.item()
             meters.update(metrics)
             if step % log_freq == 0 or step + 1 == max_iters:
                 logger.info("Valid Step [%d/%d] %s", step + 1, max_iters, meters)
@@ -56,7 +58,7 @@ def test_acc(model, criterion, max_iters, log_freq, loader_test, device):
 
 def evaluate_acc(model, criterion, args, loader_train, loader_test, device):
     retrain_bn(model, criterion, args.train_iters, args.log_frequency, loader_train, device)
-    acc = test_acc(model, criterion, args.max_iters, args.log_frequency, loader_test, device)
+    acc = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test, device)
     assert isinstance(acc, float)
     nni.report_final_result(acc)
 
@@ -88,3 +90,4 @@ if __name__ == "__main__":
     model.load_state_dict(load_and_parse_state_dict(filepath=args.checkpoint))
     model.to(device)
     get_and_apply_next_architecture(model)
+    evaluate_acc(model, criterion, args, loader_train, loader_valid, device)

@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 from collections import OrderedDict
 
 _counter = 0
+
+_logger = logging.getLogger(__name__)
 
 
 def global_mutable_counting():
@@ -58,6 +61,8 @@ class AverageMeter:
         self.count = 0
 
     def update(self, val, n=1):
+        if not isinstance(val, float) and not isinstance(val, int):
+            _logger.warning("Values passed to AverageMeter must be number, not %s.", type(val))
         self.val = val
         self.sum += val * n
         self.count += n
