@@ -66,7 +66,7 @@ class ModelCheckpoint(Callback):
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
-    def on_epoch_begin(self, epoch):
+    def on_epoch_end(self, epoch):
         if isinstance(self.model, nn.DataParallel):
             state_dict = self.model.module.state_dict()
         else:
