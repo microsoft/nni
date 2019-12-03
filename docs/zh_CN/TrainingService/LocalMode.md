@@ -1,6 +1,6 @@
 # **教程：使用 NNI API 在本地创建和运行 Experiment**
 
-In this tutorial, we will use the example in [~/examples/trials/mnist-tfv1] to explain how to create and run an experiment on local with NNI API.
+本教程会使用 [~/examples/trials/mnist-tfv1] 样例来解释如何在本地使用 NNI API 来创建并运行 Experiment。
 
 > 在开始前
 
