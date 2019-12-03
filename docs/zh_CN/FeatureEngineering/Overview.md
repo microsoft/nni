@@ -240,16 +240,16 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 # 基准测试
 
-`Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。 For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
+`Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。 对于 GradientFeatureSelector，仅使用了前 20 个特征。 下列指标是在给定测试数据和标签上的平均精度。
 
-| 数据集           | Baseline | GradientFeatureSelector top20 | GradientFeatureSelector auto | TreeBasedClassifier | #Train | #Feature  |
-| ------------- | -------- | ----------------------------- | ---------------------------- | ------------------- | ------ | --------- |
-| colon-cancer  | 0.7547   | 0.7368                        | 0.5389                       | 0.7223              | 62     | 2,000     |
-| gisette       | 0.9725   | 0.9241                        | 0.9658                       | 0.9792              | 6,000  | 5,000     |
-| rcv1          | 0.9644   | 0.7333                        | 0.9548                       | 0.9615              | 20,242 | 47,236    |
-| news20.binary | 0.9208   | 0.8780                        | 0.8875                       | 0.9070              | 19,996 | 1,355,191 |
-| real-sim      | 0.9681   | 0.7969                        | 0.9439                       | 0.9591              | 72,309 | 20,958    |
+| 数据集           | Baseline | GradientFeatureSelector top20 | GradientFeatureSelector 自动 | TreeBasedClassifier | 训练次数   | 特征数量      |
+| ------------- | -------- | ----------------------------- | -------------------------- | ------------------- | ------ | --------- |
+| colon-cancer  | 0.7547   | 0.7368                        | 0.5389                     | 0.7223              | 62     | 2,000     |
+| gisette       | 0.9725   | 0.9241                        | 0.9658                     | 0.9792              | 6,000  | 5,000     |
+| rcv1          | 0.9644   | 0.7333                        | 0.9548                     | 0.9615              | 20,242 | 47,236    |
+| news20.binary | 0.9208   | 0.8780                        | 0.8875                     | 0.9070              | 19,996 | 1,355,191 |
+| real-sim      | 0.9681   | 0.7969                        | 0.9439                     | 0.9591              | 72,309 | 20,958    |
 
-The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)
+此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
 
-The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.
+代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
