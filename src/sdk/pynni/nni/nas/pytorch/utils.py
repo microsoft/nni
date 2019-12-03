@@ -23,6 +23,12 @@ class AverageMeterGroup:
                 self.meters[k] = AverageMeter(k, ":4f")
             self.meters[k].update(v)
 
+    def __getattr__(self, item):
+        return self.meters[item]
+
+    def __getitem__(self, item):
+        return self.meters[item]
+
     def __str__(self):
         return "  ".join(str(v) for _, v in self.meters.items())
 
