@@ -1,12 +1,12 @@
-# DARTS on NNI
+# NNI 中的 DARTS
 
-## Introduction
+## 介绍
 
-The paper [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) addresses the scalability challenge of architecture search by formulating the task in a differentiable manner. Their method is based on the continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent
+论文 [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 通过可微分的方式来解决架构搜索中的伸缩性挑战。 此方法基于架构的连续放松的表示，从而允许在架构搜索时能使用梯度下降。
 
-To implement, authors optimize the network weights and architecture weights alternatively in mini-batches. They further explore the possibility that uses second order optimization (unroll) instead of first order, to improve the performance.
+为了实现，作者在小批量中交替优化网络权重和架构权重。 还进一步探讨了使用二阶优化（unroll）来替代一阶，来提高性能的可能性。
 
-Implementation on NNI is based on the [official implementation](https://github.com/quark0/darts) and a [popular 3rd-party repo](https://github.com/khanrc/pt.darts). So far, first and second order optimization and training from scratch on CIFAR10 have been implemented.
+NNI 的实现基于[官方实现](https://github.com/quark0/darts)以及一个[第三方实现](https://github.com/khanrc/pt.darts)。 So far, first and second order optimization and training from scratch on CIFAR10 have been implemented.
 
 ## Reproduce Results
 
