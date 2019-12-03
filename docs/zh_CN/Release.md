@@ -22,46 +22,46 @@
   - [使用 NNI 自动调优 rocksdb 配置的示例](https://github.com/microsoft/nni/tree/v1.2/examples/trials/systems/rocksdb-fillrandom)。
   - [新的支持 TensorFlow 2.0 的 Trial 示例](https://github.com/microsoft/nni/tree/v1.2/examples/trials/mnist-tfv2)。
 - 改进 
-  - For remote training service, trial jobs require no GPU are now scheduled with round-robin policy instead of random.
-  - Pylint rules added to check pull requests, new pull requests need to comply with these [pylint rules](https://github.com/microsoft/nni/blob/v1.2/pylintrc).
-- Web Portal & User Experience 
-  - Support user to add customized trial.
-  - User can zoom out/in in detail graphs, except Hyper-parameter.
-- Documentation 
-  - Improved NNI API documentation with more API docstring.
+  - 远程训练平台中不需要 GPU 的 Trial 任务改为使用随机调度，不再使用轮询调度。
+  - 添加 pylint 规则来检查拉取请求，新的拉取请求需要符合 [pylint 规则](https://github.com/microsoft/nni/blob/v1.2/pylintrc)。
+- Web 门户和用户体验 
+  - 支持用户添加自定义 Trial。
+  - 除了超参外，用户可放大缩小详细图形。
+- 文档 
+  - 改进了 NNI API 文档，增加了更多的 docstring。
 
-### Bug fix
+### 修复的 Bug
 
-- Fix the table sort issue when failed trials haven't metrics. -Issue #1773
-- Maintain selected status(Maximal/Minimal) when the page switched. -PR#1710
-- Make hyper-parameters graph's default metric yAxis more accurate. -PR#1736
-- Fix GPU script permission issue. -Issue #1665
+- 修复当失败的 Trial 没有指标时，表格的排序问题。 -Issue #1773
+- 页面切换时，保留选择的（最大、最小）状态。 -PR#1710
+- 使超参数图的默认指标 yAxis 更加精确。 -PR#1736
+- 修复 GPU 脚本权限问题。 -Issue #1665
 
-## Release 1.1 - 10/23/2019
-
-### 主要功能
-
-* New tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.md)
-* [View stopped experiments](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
-* Tuners can now use dedicated GPU resource (see `gpuIndices` in [tutorial](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.md) for details)
-* Web UI improvements 
-  - Trials detail page can now list hyperparameters of each trial, as well as their start and end time (via "add column")
-  - Viewing huge experiment is now less laggy
-- More examples 
-  - [EfficientNet PyTorch example](https://github.com/ultmaster/EfficientNet-PyTorch)
-  - [Cifar10 NAS example](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
-- [Model compression toolkit - Alpha release](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.md): We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute
-
-### Fixed Bugs
-
-* Multiphase job hangs when search space exhuasted (issue #1204)
-* `nnictl` fails when log not available (issue #1548)
-
-## Release 1.0 - 9/2/2019
+## 发布 1.1 - 10/23/2019
 
 ### 主要功能
 
-* Tuners and Assessors
+* 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.md)
+* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
+* Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
+* 改进 WEB 界面 
+  - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）
+  - 优化大型 Experiment 的显示性能
+- 更多示例 
+  - [EfficientNet PyTorch 示例](https://github.com/ultmaster/EfficientNet-PyTorch)
+  - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
+- [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或更多贡献
+
+### 修复的 Bug
+
+* 当搜索空间结束后，多阶段任务会死锁 (issue #1204)
+* 没有日志时，`nnictl` 会失败 (issue #1548)
+
+## 发布1.0 - 9/2/2019
+
+### 主要功能
+
+* Tuners 和 Assessors
   
     - Support Auto-Feature generator & selection -Issue#877 -PR #1387 + Provide auto feature interface + Tuner based on beam search + [Add Pakdd example](./examples/trials/auto-feature-engineering/README.md)
     - Add a parallel algorithm to improve the performance of TPE with large concurrency. -PR #1052
@@ -95,7 +95,7 @@
     - [Multi phase document improvement](./docs/en_US/AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + Add configuration example
     - [WebUI description improvement](./docs/en_US/Tutorial/WebUI.md) -PR #1419
 
-### Bug 修复
+### 修复的 Bug
 
 * (Bug fix)Fix the broken links in 0.9 release -Issue #1236
 * (Bug fix)Script for auto-complete
@@ -142,16 +142,16 @@
 * Tuner Installation Improvements: add [sklearn](https://scikit-learn.org/stable/) to nni dependencies.
 * (Bug Fix) Failed to connect to PAI http code - [Issue #1076](https://github.com/microsoft/nni/issues/1076)
 * (Bug Fix) Validate file name for PAI platform - [Issue #1164](https://github.com/microsoft/nni/issues/1164)
-* (Bug Fix) Update GMM evaluation in Metis Tuner
-* (Bug Fix) Negative time number rendering in Web Portal - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
-* (Bug Fix) Hyper-parameter not shown correctly in WebUI when there is only one hyper parameter - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
+* (Bug 修复) 更新 Metis Tunerz 中的 GMM
+* (Bug 修复) Web 界面负数的刷新间隔时间 - [Issue #1182](https://github.com/microsoft/nni/issues/1182), [Issue #1185](https://github.com/microsoft/nni/issues/1185)
+* (Bug 修复) 当只有一个超参时，Web 界面的超参无法正确显示 - [Issue #1192](https://github.com/microsoft/nni/issues/1192)
 
-## Release 0.8 - 6/4/2019
+## 发布 0.8 - 6/4/2019
 
-### Major Features
+### 主要功能
 
-* Support NNI on Windows for OpenPAI/Remote mode 
-  * NNI running on windows for remote mode
+* 在 Windows 上支持 NNI 的 OpenPAI 和远程模式 
+  * NNI 可在 Windows 上使用 OpenPAI 模式
   * NNI running on windows for OpenPAI mode
 * Advanced features for using GPU 
   * Run multiple trial jobs on the same GPU for local and remote mode
