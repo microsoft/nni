@@ -108,7 +108,11 @@ class ShuffleNetV2OneShot(nn.Module):
                                                             self._feature_map_size, self._feature_map_size, 1)]
         total_flops = conv1_flops + rest_flops
         for k, m in candidate.items():
-            total_flops += self._parsed_flops[k][torch.max(m, 0)[1]]
+            parsed_flops_dict = self._parsed_flops[k]
+            if isinstance(m, dict):  # to be compatible with classical nas format
+                total_flops += parsed_flops_dict[m["_idx"]]
+            else:
+                total_flops += [torch.max(m, 0)[1]]
         return total_flops
 
     def _initialize_weights(self):

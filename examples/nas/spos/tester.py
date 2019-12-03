@@ -79,15 +79,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     use_gpu = torch.cuda.is_available()
     device = torch.device("cuda") if use_gpu else torch.device("cpu")
+
+    model = ShuffleNetV2OneShot()
+    criterion = CrossEntropyLabelSmooth(1000, 0.1)
+    get_and_apply_next_architecture(model)
+    model.load_state_dict(load_and_parse_state_dict(filepath=args.checkpoint))
+    model.to(device)
+
     dataset_train, dataset_valid = get_imagenet(args.imagenet_dir, spos_pre=args.spos_preprocessing)
     loader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True,
                               num_workers=args.workers, pin_memory=use_gpu)
     loader_valid = DataLoader(dataset_valid, batch_size=args.batch_size, shuffle=True,
                               num_workers=args.workers, pin_memory=use_gpu)
     loader_train, loader_valid = cycle(loader_train), cycle(loader_valid)
-    model = ShuffleNetV2OneShot()
-    criterion = CrossEntropyLabelSmooth(1000, 0.1)
-    model.load_state_dict(load_and_parse_state_dict(filepath=args.checkpoint))
-    model.to(device)
-    get_and_apply_next_architecture(model)
+
     evaluate_acc(model, criterion, args, loader_train, loader_valid, device)

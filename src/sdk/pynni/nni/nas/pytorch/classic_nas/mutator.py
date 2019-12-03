@@ -92,9 +92,9 @@ class ClassicMutator(Mutator):
                 result[mutable.key] = torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
             elif isinstance(mutable, InputChoice):
                 multihot_list = [False] * mutable.n_candidates
-                for i in idx:
-                    assert 0 <= i < mutable.n_candidates and search_space_ref[i] == value, \
-                        "Index '{}' in search space '{}' is not '{}'".format(i, search_space_ref, value)
+                for i, v in zip(idx, value):
+                    assert 0 <= i < mutable.n_candidates and search_space_ref[i] == v, \
+                        "Index '{}' in search space '{}' is not '{}'".format(i, search_space_ref, v)
                     assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
                     multihot_list[i] = True
                 result[mutable.key] = torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
@@ -171,4 +171,4 @@ class ClassicMutator(Mutator):
 
     def _dump_search_space(self, file_path):
         with open(file_path, "w") as ss_file:
-            json.dump(self._search_space, ss_file)
+            json.dump(self._search_space, ss_file, sort_keys=True, indent=2)
