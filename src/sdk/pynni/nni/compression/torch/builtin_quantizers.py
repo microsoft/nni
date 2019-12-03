@@ -234,9 +234,10 @@ class DoReFaQuantizer(Quantizer):
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
+        weight_bits = get_bits_length(config, 'weight')
         out = weight.tanh()
         out = out / (2 * out.abs().max()) + 0.5
-        out = self.quantize(out, config['q_bits'])
+        out = self.quantize(out, weight_bits)
         out = 2 * out -1
         return out
 
