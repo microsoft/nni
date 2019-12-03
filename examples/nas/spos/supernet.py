@@ -5,6 +5,7 @@ import torch.nn as nn
 from nni.nas.pytorch.callbacks import Callback, LRSchedulerCallback
 
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
+from nni.nas.pytorch.callbacks import ModelCheckpoint
 from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
 from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
 
@@ -25,7 +26,7 @@ if __name__ == "__main__":
                              "(as in original repo).")
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=1024)
-    parser.add_argument("--epochs", type=int, default=15)
+    parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--learning-rate", type=float, default=0.5)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight-decay", type=float, default=4E-5)
@@ -54,6 +55,7 @@ if __name__ == "__main__":
                                   args.epochs, dataset_train, dataset_valid,
                                   mutator=mutator, batch_size=args.batch_size,
                                   log_frequency=args.log_frequency, workers=args.workers,
-                                  callbacks=[LRSchedulerCallback(scheduler), AdjustBNMomentum()])
+                                  callbacks=[LRSchedulerCallback(scheduler), AdjustBNMomentum(),
+                                             ModelCheckpoint("./checkpoints")])
     trainer.train()
     # trainer.validate()
