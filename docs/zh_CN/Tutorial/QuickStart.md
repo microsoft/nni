@@ -48,7 +48,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
+注意：完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
 上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
@@ -84,7 +84,7 @@ NNI 用来帮助超参调优。它的流程如下：
 + }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
 **第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
@@ -111,7 +111,7 @@ NNI 用来帮助超参调优。它的流程如下：
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
 **第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`，以及`其它信息`，如调优算法，最大尝试次数，最大运行时间等等。
 
@@ -136,9 +136,9 @@ trial:
 
 注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
+*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
+上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
 
 #### Linux 和 macOS
 
