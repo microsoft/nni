@@ -216,7 +216,7 @@ nnictl 支持的命令：
   
   * 示例
     
-    `update experiment's new search space with file dir 'examples/trials/mnist-tfv1/search_space.json'`
+    `使用 'examples/trials/mnist-tfv1/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
