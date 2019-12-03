@@ -87,9 +87,9 @@
     - 在 AddColumn 中增加 "Intermediate count" 选项。 -Issue #1210
     - 在 Web 界面中支持搜索参数的值 -Issue #1208
     - 在默认指标图中，启用指标轴的自动缩放 -Issue #1360
-    - Add a detailed documentation link to the nnictl command in the command prompt -Issue #1260
-    - UX improvement for showing Error log -Issue #1173
-- Documentation
+    - 在命令行中为 nnictl 命令增加详细文档的连接 -Issue #1260
+    - 用户体验改进：显示 Error 日志 -Issue #1173
+- 文档
   
     - Update the docs structure -Issue #1231
     - [Multi phase document improvement](./docs/en_US/AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + Add configuration example
