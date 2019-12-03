@@ -57,25 +57,23 @@
     }
 
     td{
-        padding: 0px;
+        padding: 0 15px;
         line-height: 24px;
-    }
-
-    /* + button */
-    .ant-table-row-expand-icon{
-        background: none;
     }
 
     .ant-table-row-expand-icon-cell{
         background: #ccc;
+        width: 50px;
         .ant-table-row-expand-icon{
+            background: none;
             border: none;
-            width: 100%;
-            height: 100%;
         }
     }
     .ant-table-row-expand-icon-cell:hover{
         background: #ccc;
+    }
+    .ant-table-selection-column{
+        width: 50px;
     }
 }
 

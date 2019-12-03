@@ -6,6 +6,7 @@ import nni
 
 if __name__ == '__main__':
     nni.get_next_parameter()
+    time.sleep(1)
     for i in range(10):
         if i % 2 == 0:
             print('report intermediate result without end of line.', end='')

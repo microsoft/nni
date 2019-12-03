@@ -8,11 +8,11 @@ Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试�
 ### 用法
 Tensorflow
 ```python
-nni.compressors.tensorflow.NaiveQuantizer()(model_graph)
+nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
 ```
 PyTorch
 ```python
-nni.compressors.torch.NaiveQuantizer()(model)
+nni.compressors.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -25,27 +25,36 @@ nni.compressors.torch.NaiveQuantizer()(model)
 ### 用法
 可在训练代码前将模型量化为 8 位。
 
-TensorFlow 代码
-```python
-from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(tf.get_default_graph())
-```
 PyTorch 代码
 ```python
 from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(model)
+model = Mnist()
+
+config_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    }, # 这里可以仅使用 `int`，因为所有 `quan_types` 使用了一样的位长，参考下方 `ReLu6` 配置。
+    'op_types':['Conv2d', 'Linear']
+}, {
+    'quant_types': ['output'],
+    'quant_bits': 8,
+    'quant_start_step': 7000,
+    'op_types':['ReLU6']
+}]
+quantizer = QAT_Quantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解
 
 #### QAT Quantizer 的用户配置
-* **q_bits:** 指定需要被量化的位数。
+* **quant_types:**: 字符串列表 要应用的量化类型，当前支持 'weight', 'input', 'output'
+* **quant_bits:** int 或 {str : int} 的 dict 量化的位长，主键是量化类型，键值为长度，例如。 {'weight', 8}, 当类型为 int 时，所有量化类型都用同样的位长
+* **quant_start_step:** int 在运行到某步骤前，对模型禁用量化。这让网络在进入更稳定的 状态后再激活量化，这样不会配除掉一些分数显著的值，默认为 0
 
-
+### 注意
+当前不支持批处理规范化折叠。
 ***
 
 ## DoReFa Quantizer
@@ -58,18 +67,18 @@ TensorFlow 代码
 ```python
 from nni.compressors.tensorflow import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(tf.get_default_graph())
+quantizer = DoReFaQuantizer(tf.get_default_graph(), config_list)
+quantizer.compress()
 ```
 PyTorch 代码
 ```python
 from nni.compressors.torch import DoReFaQuantizer
 config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(model)
+quantizer = DoReFaQuantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解
 
-#### QAT Quantizer 的用户配置
+#### DoReFa Quantizer 的用户配置
 * **q_bits:** 指定需要被量化的位数。

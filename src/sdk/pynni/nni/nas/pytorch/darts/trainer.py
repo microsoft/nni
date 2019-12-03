@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 import logging
 
@@ -15,10 +18,11 @@ class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
-                 callbacks=None, arc_learning_rate=3.0E-4, unrolled=True):
+                 callbacks=None, arc_learning_rate=3.0E-4, unrolled=False):
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
+
         self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), arc_learning_rate, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         self.unrolled = unrolled

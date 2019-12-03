@@ -22,6 +22,7 @@ nnictl 支持的命令：
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
+* [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
 ### 管理 Experiment
@@ -740,6 +741,38 @@ nnictl 支持的命令：
     
     ```bash
     nnictl package show
+    ```
+
+<a name="ss_gen"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `生成搜索空间`
+
+* **nnictl ss_gen**
+  
+  * 说明
+    
+    从使用 NNI NAS API 的用户代码生成搜索空间。
+  
+  * 用法
+    
+    ```bash
+    nnictl ss_gen [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写           | 是否必需  | 默认值                                | 说明          |
+  | --------------- | ----- | ---------------------------------- | ----------- |
+  | --trial_command | True  |                                    | Trial 代码的命令 |
+  | --trial_dir     | False | ./                                 | Trial 代码目录  |
+  | --file          | False | nni_auto_gen_search_space.json | 用来存储生成的搜索空间 |
+  
+  * 示例
+    
+    > 生成搜索空间
+    
+    ```bash
+    nnictl ss_gen --trial_command="python3 mnist.py" --trial_dir=./ --file=ss.json
     ```
 
 <a name="version"></a>
