@@ -10,7 +10,7 @@ from network import ShuffleNetV2OneShot
 _logger = logging.getLogger("nni")
 
 
-class Evolution(Tuner):
+class SPOSEvolution(Tuner):
 
     def __init__(self, max_epochs=20, num_select=10, num_population=50, m_prob=0.1,
                  num_crossover=25, num_mutation=25, flops_limit=330E6):
@@ -63,6 +63,7 @@ class Evolution(Tuner):
         return chosen_arch
 
     def _add_to_evaluate_queue(self, cand):
+        _logger.info("Generate candidate with flops %d.", self.model.get_candidate_flops(cand))
         self._reward_dict[self._hashcode(cand)] = 0.
         self._to_evaluate_queue.append(cand)
 
@@ -90,6 +91,7 @@ class Evolution(Tuner):
                 self._add_to_evaluate_queue(cand)
             if len(result) >= self.num_crossover:
                 break
+        _logger.info("Found %d architectures with crossover.", len(result))
         return result
 
     def _get_mutation(self, best):
@@ -107,6 +109,7 @@ class Evolution(Tuner):
                 self._add_to_evaluate_queue(cand)
             if len(result) >= self.num_mutation:
                 break
+        _logger.info("Found %d architectures with mutation.", len(result))
         return result
 
     def _is_legal(self, cand):
@@ -134,6 +137,7 @@ class Evolution(Tuner):
             self._id2candidate[parameter_id] = parameters
             result.append(parameters)
             self._pending_result_ids.add(parameter_id)
+        _logger.info("Requested %d parameters, %d sent.", len(parameter_id_list), len(result))
         return result
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
@@ -144,16 +148,3 @@ class Evolution(Tuner):
         if not self._pending_result_ids:
             # a new epoch now
             self._next_round()
-
-
-if __name__ == "__main__":
-    tuner = Evolution()
-    tuner.update_search_space(json.load(open("nni_auto_gen_search_space.json", "r")))
-    parameters = tuner.generate_multiple_parameters([_ for _ in range(20)])
-    for i in range(20):
-        tuner.trial_end(i, False)
-
-    for param in parameters:
-        for k, v in param.items():
-            v.pop("_value")
-        print(param)

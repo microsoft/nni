@@ -60,7 +60,7 @@ class ClassicMutator(Mutator):
             sys.exit(0)
 
         if trial_env_vars.NNI_PLATFORM is None:
-            logger.warning("This is in standalone mode, the chosen are the first one(s)")
+            logger.warning("This is in standalone mode, the chosen are the first one(s).")
             self._chosen_arch = self._standalone_generate_chosen()
         else:
             # get chosen arch from tuner

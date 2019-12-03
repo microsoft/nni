@@ -1,0 +1,17 @@
+authorName: unknown
+experimentName: SPOS Search
+trialConcurrency: 4
+maxExecDuration: 7d
+maxTrialNum: 99999
+trainingServicePlatform: local
+searchSpacePath: nni_auto_gen_search_space.json
+useAnnotation: false
+tuner:
+  codeDir: .
+  classFileName: evolution.py
+  className: SPOSEvolution
+trial:
+  # to fit in a GTX 1080
+  command: python tester.py --imagenet-dir /data/hdd3/yugzh/imagenet --spos-prep --batch-size 80 --train-iters 250 --test-iters 100
+  codeDir: .
+  gpuNum: 1

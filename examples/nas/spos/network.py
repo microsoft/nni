@@ -1,3 +1,4 @@
+import os
 import pickle
 import re
 
@@ -21,7 +22,7 @@ class ShuffleNetV2OneShot(nn.Module):
         super().__init__()
 
         assert input_size % 32 == 0
-        with open("./data/op_flops_dict.pkl", "rb") as fp:
+        with open(os.path.join(os.path.dirname(__file__), "./data/op_flops_dict.pkl"), "rb") as fp:
             self._op_flops_dict = pickle.load(fp)
 
         self.stage_blocks = [4, 4, 8, 4]
@@ -112,7 +113,7 @@ class ShuffleNetV2OneShot(nn.Module):
             if isinstance(m, dict):  # to be compatible with classical nas format
                 total_flops += parsed_flops_dict[m["_idx"]]
             else:
-                total_flops += [torch.max(m, 0)[1]]
+                total_flops += parsed_flops_dict[torch.max(m, 0)[1]]
         return total_flops
 
     def _initialize_weights(self):
