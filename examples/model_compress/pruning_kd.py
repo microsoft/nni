@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import L1FilterPruner
+from nni.compression.torch import L1FilterPruner, KnowledgeDistill
 
 
 class vgg(nn.Module):
@@ -59,22 +59,15 @@ class vgg(nn.Module):
                 m.bias.data.zero_()
 
 
-def train(model, model_t, device, train_loader, optimizer, kd=False):
+def train(model, device, train_loader, optimizer, kd=None):
     model.train()
-    ALPHA = 1
-    T = 5
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.cross_entropy(output, target)
-        if kd:
-            with torch.no_grad():
-                output_t = model_t(data)
-            soft_log_out = F.log_softmax(output / T, dim=1)
-            soft_t = F.softmax(output_t / T, dim=1)
-            loss_kd = F.kl_div(soft_log_out, soft_t.detach(), reduction='batchmean')
-            loss += loss_kd * ALPHA
+        if kd is not None:
+            loss += kd.get_kd_loss(data, output)
         loss.backward()
         optimizer.step()
         if batch_idx % 100 == 0:
@@ -122,14 +115,14 @@ def main():
 
     model = vgg()
     model.to(device)
-    model_t = vgg()
-    model_t.to(device)
+
     # Train the base VGG-16 model
     # print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
     # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
     # for epoch in range(160):
-    #     train(model, model_t, device, train_loader, optimizer)
+    # print('# Epoch {} #'.format(epoch))
+    #     train(model, device, train_loader, optimizer)
     #     test(model, device, test_loader)
     #     lr_scheduler.step(epoch)
     # torch.save(model.state_dict(), 'vgg16_cifar10.pth')
@@ -139,9 +132,6 @@ def main():
     model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.51%
-
-    # prepare the teacher model
-    model_t.load_state_dict(torch.load('vgg16_cifar10.pth'))
 
     # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
     # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
@@ -155,16 +145,20 @@ def main():
     pruner = L1FilterPruner(model, configure_list)
     model = pruner.compress()
     test(model, device, test_loader)
-    # top1 = 88.19%
+    # top1 = 10.00%
 
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
+    kd_teacher_model = vgg()
+    kd_teacher_model.to(device)
+    kd_teacher_model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
     for epoch in range(40):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
-        train(model, model_t, device, train_loader, optimizer_finetune, True)
+        train(model, device, train_loader, optimizer_finetune, kd)
         top1 = test(model, device, test_loader)
         if top1 > best_top1:
             best_top1 = top1
@@ -178,7 +172,7 @@ def main():
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 93.53%
+    # top1 = 85.40%
 
 
 if __name__ == '__main__':

@@ -18,4 +18,4 @@ class KnowledgeDistill():
         soft_log_out = F.log_softmax(student_out / self.kd_T, dim=1)
         soft_t = F.softmax(kd_out / self.kd_T, dim=1)
         loss_kd = F.kl_div(soft_log_out, soft_t.detach(), reduction='batchmean')
-        return loss_kd
+        return loss_kd * self.kd_beta
