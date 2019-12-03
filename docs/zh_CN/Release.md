@@ -4,17 +4,17 @@
 
 ### 主要功能
 
-* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md) 
+* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/Overview.md) 
   - 新增特征工程接口
-  - 特征选择算法: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.md)
+  - 特征选择算法: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GBDTSelector.md)
   - [特征工程示例](https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering)
 - 神经网络结构搜索在 NNI 上的应用 
-  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
-  - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts) (PyTorch)
+  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/NasInterface.md)
+  - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#p-darts) (PyTorch)
   - 经典模式下的 NAS（每次 Trial 独立运行）
 - 模型压缩 
-  - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
-  - [新增模型量化算法](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): QAT Quantizer, DoReFa Quantizer
+  - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
+  - [新增模型量化算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): QAT Quantizer, DoReFa Quantizer
   - 支持导出压缩后模型的 API。
 - 训练平台 
   - 支持 OpenPAI 令牌身份验证
@@ -41,16 +41,16 @@
 
 ### 主要功能
 
-* 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.md)
+* 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
 * [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
-* Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
+* Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
 * 改进 WEB 界面 
   - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）
   - 优化大型 Experiment 的显示性能
 - 更多示例 
   - [EfficientNet PyTorch 示例](https://github.com/ultmaster/EfficientNet-PyTorch)
   - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
-- [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或更多贡献
+- [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或更多贡献
 
 ### 修复的 Bug
 
