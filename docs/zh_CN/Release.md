@@ -1,18 +1,18 @@
 # 更改日志
 
-## Release 1.2 - 12/02/2019
+## 发布 1.2 - 12/02/2019
 
 ### 主要功能
 
-* [Feature Engineering](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md) 
-  - New feature engineering interface
-  - Feature selection algorithms: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.md)
-  - [Examples for feature engineering](https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering)
-- Neural Architecture Search (NAS) on NNI 
-  - [New NAS interface](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
-  - NAS algorithms: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts) (in PyTorch)
-  - NAS in classic mode (each trial runs independently)
-- Model compression 
+* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md) 
+  - 新增特征工程接口
+  - 特征选择算法: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.md)
+  - [特征工程示例](https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering)
+- 神经网络结构搜索在 NNI 上的应用 
+  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
+  - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts) (PyTorch)
+  - 经典模式下的 NAS（每次 Trial 独立运行）
+- 模型压缩 
   - [New model pruning algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
   - [New model quantization algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): QAT quantizer, DoReFa quantizer
   - Support the API for exporting compressed model.
