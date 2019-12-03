@@ -10,11 +10,6 @@ from network import ShuffleNetV2OneShot
 _logger = logging.getLogger("nni")
 
 
-class hashabledict(dict):
-    def __hash__(self):
-        return json.dumps(self, sort_keys=True)
-
-
 class Evolution(Tuner):
 
     def __init__(self, max_epochs=20, num_select=10, num_population=50, m_prob=0.1,
@@ -57,7 +52,7 @@ class Evolution(Tuner):
         self.epoch += 1
 
     def _random_candidate(self):
-        chosen_arch = hashabledict()
+        chosen_arch = dict()
         for key, val in self._search_space.items():
             if val["_type"] == "layer_choice":
                 choices = val["_value"]
@@ -68,7 +63,7 @@ class Evolution(Tuner):
         return chosen_arch
 
     def _add_to_evaluate_queue(self, cand):
-        self._reward_dict[cand] = 0.
+        self._reward_dict[self._hashcode(cand)] = 0.
         self._to_evaluate_queue.append(cand)
 
     def _get_random_population(self):
@@ -98,24 +93,36 @@ class Evolution(Tuner):
         return result
 
     def _get_mutation(self, best):
-        cand = best[self.random_state.randint(len(best))]
-        mutation_sample = np.random.random_sample(len(cand))
-        for s, k in zip(mutation_sample, cand):
-            if s < self.m_prob:
-                choices = self._search_space[k]["_value"]
-                index = self.random_state.randint(len(choices))
-                cand[k] = {"_value": choices[index], "_idx": index}
-        return cand
+        result = []
+        for _ in range(10 * self.num_mutation):
+            cand = best[self.random_state.randint(len(best))]
+            mutation_sample = np.random.random_sample(len(cand))
+            for s, k in zip(mutation_sample, cand):
+                if s < self.m_prob:
+                    choices = self._search_space[k]["_value"]
+                    index = self.random_state.randint(len(choices))
+                    cand[k] = {"_value": choices[index], "_idx": index}
+            if self._is_legal(cand):
+                result.append(cand)
+                self._add_to_evaluate_queue(cand)
+            if len(result) >= self.num_mutation:
+                break
+        return result
 
     def _is_legal(self, cand):
-        if cand in self._reward_dict:
+        if self._hashcode(cand) in self._reward_dict:
             return False
         if self.model.get_candidate_flops(cand) > self.flops_limit:
             return False
         return True
 
     def _select_top_candidates(self):
-        return sorted(self.candidates, key=lambda cand: self._reward_dict[cand], reverse=True)[:self.num_select]
+        return sorted(self.candidates, key=lambda cand: self._reward_dict[self._hashcode(cand)],
+                      reverse=True)[:self.num_select]
+
+    @staticmethod
+    def _hashcode(d):
+        return json.dumps(d, sort_keys=True)
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         result = []
@@ -130,7 +137,7 @@ class Evolution(Tuner):
         return result
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-        self._reward_dict[self._id2candidate[parameter_id]] = value
+        self._reward_dict[self._hashcode(self._id2candidate[parameter_id])] = value
 
     def trial_end(self, parameter_id, success, **kwargs):
         self._pending_result_ids.remove(parameter_id)
@@ -142,4 +149,11 @@ class Evolution(Tuner):
 if __name__ == "__main__":
     tuner = Evolution()
     tuner.update_search_space(json.load(open("nni_auto_gen_search_space.json", "r")))
-    print(tuner.generate_multiple_parameters([_ for _ in range(20)]))
+    parameters = tuner.generate_multiple_parameters([_ for _ in range(20)])
+    for i in range(20):
+        tuner.trial_end(i, False)
+
+    for param in parameters:
+        for k, v in param.items():
+            v.pop("_value")
+        print(param)
