@@ -1,7 +1,7 @@
-# ENAS on NNI
+# NNI 中的 ENAS
 
-## Introduction
+## 介绍
 
-The paper [Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268) uses parameter sharing between child models to accelerate the NAS process. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. The controller is trained with policy gradient to select a subgraph that maximizes the expected reward on the validation set. Meanwhile the model corresponding to the selected subgraph is trained to minimize a canonical cross entropy loss.
+论文 [Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268) 通过在子模型之间共享参数来加速 NAS 过程。 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 Controller 通过梯度策略训练，从而选择出能在验证集上有最大期望奖励的子图。 同时对与所选子图对应的模型进行训练，以最小化规范交叉熵损失。
 
-Implementation on NNI is based on the [official implementation in Tensorflow](https://github.com/melodyguan/enas), macro and micro search space on CIFAR10 included. Since code to train from scratch on NNI is not ready yet, reproduction results are currently unavailable.
+NNI 的实现基于 [Tensorflow 的官方实现](https://github.com/melodyguan/enas)，包括了 CIFAR10 上的 Macro/Micro 搜索空间。 NNI 中从头训练的代码还未完成，当前还没有重现结果。
