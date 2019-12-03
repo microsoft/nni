@@ -91,25 +91,25 @@
     - 用户体验改进：显示 Error 日志 -Issue #1173
 - 文档
   
-    - Update the docs structure -Issue #1231
-    - [Multi phase document improvement](./docs/en_US/AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + Add configuration example
-    - [WebUI description improvement](./docs/en_US/Tutorial/WebUI.md) -PR #1419
+    - 更新文档结构 -Issue #1231
+    - [多阶段文档的改进](./docs/zh_CN/AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + 增加配置示例
+    - [Web 界面描述改进](./docs/zh_CN/Tutorial/WebUI.md) -PR #1419
 
 ### 修复的 Bug
 
-* (Bug fix)Fix the broken links in 0.9 release -Issue #1236
-* (Bug fix)Script for auto-complete
-* (Bug fix)Fix pipeline issue that it only check exit code of last command in a script. -PR #1417
-* (Bug fix)quniform fors tuners -Issue #1377
-* (Bug fix)'quniform' has different meaning beween GridSearch and other tuner. -Issue #1335
-* (Bug fix)"nnictl experiment list" give the status of a "RUNNING" experiment as "INITIALIZED" -PR #1388
-* (Bug fix)SMAC cannot be installed if nni is installed in dev mode -Issue #1376
-* (Bug fix)The filter button of the intermediate result cannot be clicked -Issue #1263
-* (Bug fix)API "/api/v1/nni/trial-jobs/xxx" doesn't show a trial's all parameters in multiphase experiment -Issue #1258
-* (Bug fix)Succeeded trial doesn't have final result but webui show ×××(FINAL) -Issue #1207
-* (Bug fix)IT for nnictl stop -Issue #1298
-* (Bug fix)fix security warning
-* (Bug fix)Hyper-parameter page broken -Issue #1332
+* (Bug 修复)修复 0.9 版本中的链接 -Issue #1236
+* (Bug 修复)自动完成脚本
+* (Bug 修复) 修复管道中仅检查脚本中最后一个命令退出代码的问题。 -PR #1417
+* (Bug 修复) Tuner 的 quniform -Issue #1377
+* (Bug fix) 'quniform' 在 GridSearch 和其它 Tuner 之间的含义不同。 -Issue #1335
+* (Bug 修复)"nnictl experiment list" 将 "RUNNING" 状态的 Experiment 显示为了 "INITIALIZED" -PR #1388
+* (Bug 修复) 在 NNI dev 安装模式下无法安装 SMAC。 -Issue #1376
+* (Bug 修复) 无法点击中间结果的过滤按钮 -Issue #1263
+* (Bug 修复) API "/api/v1/nni/trial-jobs/xxx" 在多阶段 Experiment 无法显示 Trial 的所有参数 -Issue #1258
+* (Bug 修复) 成功的 Trial 没有最终结果，但 Web 界面显示成了 ×××(FINAL) -Issue #1207
+* (Bug 修复) nnictl stop -Issue #1298
+* (Bug 修复) 修复安全警告
+* (Bug 修复) 超参页面损坏 -Issue #1332
 * (Bug fix)Run flake8 tests to find Python syntax errors and undefined names -PR #1217
 
 ## Release 0.9 - 7/1/2019
