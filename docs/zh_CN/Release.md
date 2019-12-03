@@ -13,15 +13,15 @@
   - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts) (PyTorch)
   - 经典模式下的 NAS（每次 Trial 独立运行）
 - 模型压缩 
-  - [New model pruning algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
-  - [New model quantization algorithms](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): QAT quantizer, DoReFa quantizer
-  - Support the API for exporting compressed model.
-- Training Service 
-  - Support OpenPAI token authentication
-- Examples: 
-  - [An example to automatically tune rocksdb configuration with NNI](https://github.com/microsoft/nni/tree/v1.2/examples/trials/systems/rocksdb-fillrandom).
-  - [A new MNIST trial example supports tensorflow 2.0](https://github.com/microsoft/nni/tree/v1.2/examples/trials/mnist-tfv2).
-- Engineering Improvements 
+  - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
+  - [新增模型量化算法](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md): QAT Quantizer, DoReFa Quantizer
+  - 支持导出压缩后模型的 API。
+- 训练平台 
+  - 支持 OpenPAI 令牌身份验证
+- 示例： 
+  - [使用 NNI 自动调优 rocksdb 配置的示例](https://github.com/microsoft/nni/tree/v1.2/examples/trials/systems/rocksdb-fillrandom)。
+  - [新的支持 TensorFlow 2.0 的 Trial 示例](https://github.com/microsoft/nni/tree/v1.2/examples/trials/mnist-tfv2)。
+- 改进 
   - For remote training service, trial jobs require no GPU are now scheduled with round-robin policy instead of random.
   - Pylint rules added to check pull requests, new pull requests need to comply with these [pylint rules](https://github.com/microsoft/nni/blob/v1.2/pylintrc).
 - Web Portal & User Experience 
