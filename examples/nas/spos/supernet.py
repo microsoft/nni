@@ -55,5 +55,5 @@ if __name__ == "__main__":
                                   mutator=mutator, batch_size=args.batch_size,
                                   log_frequency=args.log_frequency, workers=args.workers,
                                   callbacks=[LRSchedulerCallback(scheduler), AdjustBNMomentum()])
-    # trainer.train()
-    trainer.validate()
+    trainer.train()
+    # trainer.validate()

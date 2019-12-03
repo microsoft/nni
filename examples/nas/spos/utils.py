@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 
@@ -41,6 +43,9 @@ def spos_to_bgr_tensor(pic):
 
 
 def get_imagenet(imagenet_root, spos_pre):
+    if not os.path.exists(imagenet_root):
+        raise FileNotFoundError("Imagenet root {} not exists. Pointing to the right directory with "
+                                "command-line arguments.".format(imagenet_root))
     if spos_pre:
         postprocess = [
             transforms.Lambda(lambda img: spos_to_bgr_tensor(img))
