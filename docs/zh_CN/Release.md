@@ -63,30 +63,30 @@
 
 * Tuners 和 Assessors
   
-    - Support Auto-Feature generator & selection -Issue#877 -PR #1387 + Provide auto feature interface + Tuner based on beam search + [Add Pakdd example](./examples/trials/auto-feature-engineering/README.md)
-    - Add a parallel algorithm to improve the performance of TPE with large concurrency. -PR #1052
-    - Support multiphase for hyperband -PR #1257
-- Training Service
+    - 支持自动特征生成和选择 -Issue#877 -PR #1387 + 提供自动特征接口 + 基于 Beam 搜索的 Tuner + [添加 Pakdd 示例](./examples/trials/auto-feature-engineering/README_zh_CN.md)
+    - 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
+    - 为 hyperband 支持多阶段 -PR #1257
+- 训练平台
   
-    -      Support private docker registry   -PR #755
+    -      支持私有 Docker Registry -PR #755
         
     
-    * Engineering Improvements
-    * Python wrapper for rest api, support retrieve the values of the metrics in a programmatic way PR #1318
-    * New python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
-    * Optimized NAS Searchspace -PR #1393 
-         + Unify NAS search space with _type -- "mutable_type"e
-         + Update random search tuner
-    + Set gpuNum as optional -Issue #1365
-    + Remove outputDir and dataDir configuration in PAI mode -Issue #1342
-    + When creating a trial in Kubeflow mode, codeDir will no longer be copied to logDir -Issue #1224
-+ Web Portal & User Experience
+    * 改进
+    * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
+    * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
+    * 优化 NAS 搜索空间 -PR #1393 
+         + 使用 _type 统一 NAS 搜索空间 -- "mutable_type"e
+         + 更新随机搜索 Tuner
+    + 将 gpuNum 设为可选 -Issue #1365
+    + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
+    + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
++ Web 门户和用户体验
   
-    - Show the best metric curve during search progress in WebUI -Issue #1218
-    - Show the current number of parameters list in multiphase experiment -Issue1210 -PR #1348
-    - Add "Intermediate count" option in AddColumn. -Issue #1210
-    - Support search parameters value in WebUI -Issue #1208
-    - Enable automatic scaling of axes for metric value in default metric graph -Issue #1360
+    - 在 Web 界面的搜索过程中显示最好指标的曲线 -Issue #1218
+    - 在多阶段 Experiment 中，显示参数列表的当前值 -Issue1210 -PR #1348
+    - 在 AddColumn 中增加 "Intermediate count" 选项。 -Issue #1210
+    - 在 Web 界面中支持搜索参数的值 -Issue #1208
+    - 在默认指标图中，启用指标轴的自动缩放 -Issue #1360
     - Add a detailed documentation link to the nnictl command in the command prompt -Issue #1260
     - UX improvement for showing Error log -Issue #1173
 - Documentation
@@ -116,7 +116,7 @@
 
 ### 主要功能
 
-* General NAS programming interface 
+* 通用 NAS 编程接口 
     * Add `enas-mode` and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md)
 
