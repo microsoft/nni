@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import time
 from argparse import ArgumentParser
@@ -9,19 +12,12 @@ import datasets
 from macro import GeneralNetwork
 from micro import MicroNetwork
 from nni.nas.pytorch import enas
-from nni.nas.pytorch.callbacks import LRSchedulerCallback, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
+                                       LRSchedulerCallback)
 from utils import accuracy, reward_accuracy
 
-logger = logging.getLogger()
+logger = logging.getLogger('nni')
 
-fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
-logging.Formatter.converter = time.localtime
-formatter = logging.Formatter(fmt, '%m/%d/%Y, %I:%M:%S %p')
-
-std_out_info = logging.StreamHandler()
-std_out_info.setFormatter(formatter)
-logger.setLevel(logging.INFO)
-logger.addHandler(std_out_info)
 
 if __name__ == "__main__":
     parser = ArgumentParser("enas")

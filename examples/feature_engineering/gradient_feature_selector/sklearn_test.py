@@ -49,7 +49,7 @@ fgs.fit(X_train, y_train)
 print("selected features\t", fgs.get_selected_features())
 
 pipeline = make_pipeline(FeatureGradientSelector(n_epochs=1, n_features=10), LogisticRegression())
-pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
+# pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
 pipeline.fit(X_train, y_train)
 
 print("Pipeline Score: ", pipeline.score(X_train, y_train))

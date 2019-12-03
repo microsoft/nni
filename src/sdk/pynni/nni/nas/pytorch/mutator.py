@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 
 import torch
@@ -108,7 +111,7 @@ class Mutator(BaseMutator):
         if "BoolTensor" in mask.type():
             out = [map_fn(*cand) for cand, m in zip(candidates, mask) if m]
         elif "FloatTensor" in mask.type():
-            out = [map_fn(*cand) * m for cand, m in zip(candidates, mask)]
+            out = [map_fn(*cand) * m for cand, m in zip(candidates, mask) if m]
         else:
             raise ValueError("Unrecognized mask")
         return out

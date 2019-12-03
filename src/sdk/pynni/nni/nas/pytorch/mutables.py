@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 
 import torch.nn as nn
@@ -5,7 +8,6 @@ import torch.nn as nn
 from nni.nas.pytorch.utils import global_mutable_counting
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class Mutable(nn.Module):

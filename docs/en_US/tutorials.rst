@@ -9,6 +9,9 @@ Tutorials
     Write Trial <TrialExample/Trials>
     Tuners <tuners>
     Assessors <assessors>
+    NAS (Beta) <nas>
+    Model Compression (Beta) <model_compression>
+    Feature Engineering (Beta) <feature_engineering>
     WebUI <Tutorial/WebUI>
     Training Platform <training_services>
     How to use docker <Tutorial/HowToUseDocker>

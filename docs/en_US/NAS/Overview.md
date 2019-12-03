@@ -6,21 +6,59 @@ However, it takes great efforts to implement NAS algorithms, and it is hard to r
 
 With this motivation, our ambition is to provide a unified architecture in NNI, to accelerate innovations on NAS, and apply state-of-art algorithms on real world problems faster.
 
-## Supported algorithms
+With [the unified interface](./NasInterface.md), there are two different modes for the architecture search. [The one](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [The other](./NasInterface.md#classic-distributed-search) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
+
+* [Supported One-shot NAS Algorithms](#supported-one-shot-nas-algorithms)
+* [Classic Distributed NAS with NNI experiment](./NasInterface.md#classic-distributed-search)
+* [NNI NAS Programming Interface](./NasInterface.md)
+
+## Supported One-shot NAS Algorithms
 
 NNI supports below NAS algorithms now and being adding more. User can reproduce an algorithm or use it on owned dataset. we also encourage user to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
 
-Note, these algorithms run standalone without nnictl, and supports PyTorch only.
+|Name|Brief Introduction of Algorithm|
+|---|---|
+| [ENAS](#enas) | Efficient Neural Architecture Search via Parameter Sharing [Reference Paper][1] |
+| [DARTS](#darts) | DARTS: Differentiable Architecture Search [Reference Paper][3] |
+| [P-DARTS](#p-darts) | Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation [Reference Paper](https://arxiv.org/abs/1904.12760)|
+
+Note, these algorithms run **standalone without nnictl**, and supports PyTorch only. Tensorflow 2.0 will be supported in future release.
 
 ### Dependencies
 
-* Install latest NNI
+* NNI 1.2+
+* tensorboard
 * PyTorch 1.2+
 * git
 
+### ENAS
+
+[Efficient Neural Architecture Search via Parameter Sharing][1]. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
+
+#### Usage
+
+ENAS in NNI is still under development and we only support search phase for macro/micro search space on CIFAR10. Training from scratch and search space on PTB has not been finished yet. [Detailed Description](ENAS.md)
+
+```bash
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+git clone https://github.com/Microsoft/nni.git
+
+# search the best architecture
+cd examples/nas/enas
+
+# search in macro search space
+python3 search.py --search-for macro
+
+# search in micro search space
+python3 search.py --search-for micro
+
+# view more options for search
+python3 search.py -h
+```
+
 ### DARTS
 
-The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization.
+The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization. [Detailed Description](DARTS.md)
 
 #### Usage
 
@@ -51,13 +89,13 @@ cd examples/nas/pdarts
 python3 search.py
 
 # train the best architecture, it's the same progress as darts.
-cd examples/nas/darts
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_2.json
+cd ../darts
+python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ```
 
 ## Use NNI API
 
-NOTE, we are trying to support various NAS algorithms with unified programming interface, and it's in very experimental stage. It means the current programing interface may be updated significantly.
+NOTE, we are trying to support various NAS algorithms with unified programming interface, and it's in very experimental stage. It means the current programing interface may be updated in future.
 
 *previous [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) interface will be deprecated soon.*
 

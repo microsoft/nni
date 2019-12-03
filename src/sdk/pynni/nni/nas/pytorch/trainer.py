@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import json
 import logging
 from abc import abstractmethod
@@ -7,7 +10,6 @@ import torch
 from .base_trainer import BaseTrainer
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.INFO)
 
 
 class TorchTensorEncoder(json.JSONEncoder):
