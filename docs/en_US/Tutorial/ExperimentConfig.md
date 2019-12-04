@@ -1,12 +1,12 @@
-# Experiment config reference
+# Experiment Config Reference
 
 A config file is needed when creating an experiment. The path of the config file is provided to `nnictl`.
 The config file is in YAML format.
 This document describes the rules to write the config file, and provides some examples and templates.
 
-- [Experiment config reference](#experiment-config-reference)
+- [Experiment Config Reference](#experiment-config-reference)
   - [Template](#template)
-  - [Configuration spec](#configuration-spec)
+  - [Configuration Spec](#configuration-spec)
   - [Examples](#examples)
 
 ## Template
@@ -130,112 +130,127 @@ machineList:
     passwd:
 ```
 
-## Configuration spec
+## Configuration Spec
 
 ### authorName
 
-**authorName** is the name of the author who create the experiment.
+Required. String.
+
+__authorName__ is the name of the author who create the experiment.
 
 *TBD: add default value.*
 
 ### experimentName
 
-**experimentName** is the name of the experiment created.
+Required. String.
+
+__experimentName__ is the name of the experiment created.
 
 *TBD: add default value.*
 
-* __trialConcurrency__
-  * Description
+### trialConcurrency
 
-    __trialConcurrency__ specifies the max num of trial jobs run simultaneously.
+Required. Integer between 1 and 99999.
 
-    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+__trialConcurrency__ specifies the max num of trial jobs run simultaneously.
 
-* __maxExecDuration__
-  * Description
+If trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach __trialConcurrency__ number, some trial jobs will be put into a queue to wait for gpu allocation.
 
-    __maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.
+### maxExecDuration
 
-    Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+Optional. String. Default: 999d.
 
-* __versionCheck__
-  * Description
+__maxExecDuration__ specifies the max duration time of an experiment. The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.
+
+Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+
+### versionCheck
+
+Optional. Bool. Default: false.
   
-    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
+NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
-* __debug__
-  * Description
+### debug
 
-    Debug mode will set versionCheck be False and set logLevel be 'debug'
+Optional. Bool. Default: false.
 
-* __maxTrialNum__
-  * Description
+Debug mode will set versionCheck to false and set logLevel to be 'debug'.
 
-   __maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+### maxTrialNum
 
-* __trainingServicePlatform__
-  * Description
+Optional. Integer between 1 and 99999. Default: 99999.
 
-    __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.
+__maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
-    * __local__ run an experiment on local ubuntu machine.
+### trainingServicePlatform
 
-    * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
+Required. String.
 
-    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](../TrainingService/PaiMode.md)
+__trainingServicePlatform__ specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__.
 
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). Detail please reference [KubeflowDoc](../TrainingService/KubeflowMode.md)
+* __local__ run an experiment on local ubuntu machine.
 
-* __searchSpacePath__
-  * Description
+* __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
 
-    __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+* __pai__  submit trial jobs to [OpenPAI](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please refer to [Guide to PAI Mode](../TrainingService/PaiMode.md)
 
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+* __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
 
-* __useAnnotation__
-  * Description
+### searchSpacePath
 
-    __useAnnotation__ use annotation to analysis trial code and generate search space.
+Optional. Path to existing file.
 
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+__searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
 
-* __multiPhase__
-  * Description
+The only exception that __searchSpacePath__ can be not fulfilled is when `useAnnotation=True`.
 
-    __multiPhase__ enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
+### useAnnotation
 
-* __multiThread__
-  * Description
+Optional. Bool. Default: false.
 
-    __multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
+__useAnnotation__ use annotation to analysis trial code and generate search space.
 
-* __nniManagerIp__
-  * Description
+Note: if __useAnnotation__ is true, the searchSpacePath field should be removed.
 
-    __nniManagerIp__ set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+### multiPhase
 
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+Optional. Bool. Default: false.
 
-* __logDir__
-  * Description
+__multiPhase__ enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
 
-    __logDir__ configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+### multiThread
 
-* __logLevel__
-  * Description
+Optional. Bool. Default: false.
 
-    __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+__multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
 
-* __logCollection__
-  * Description
+### nniManagerIp
 
-    __logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+Optional. String. Default: eth0 device IP.
 
-* __tuner__
-  * Description
+__nniManagerIp__ set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
-    __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, __nniManagerIp__ is recommended to set explicitly.
+
+### logDir
+
+Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+
+__logDir__ configures the directory to store logs and data of the experiment.
+
+### logLevel
+
+Optional. String. Default: `info`.
+
+__logLevel__ sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+
+### logCollection
+
+__logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+
+### tuner
+
+__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinTunerName__ and __classArgs__
     * __builtinTunerName__
 
