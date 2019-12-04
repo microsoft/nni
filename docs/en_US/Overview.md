@@ -46,6 +46,21 @@ For each experiment, user only needs to define a search space and update a few l
 
 More details about how to run an experiment, please refer to [Get Started](Tutorial/QuickStart.md).
 
+## Core Capacities
+
+Hyperparameter tuning is a core capacity of NNI, it can be used to tune hyperparameters in machine learning and deep learning models, parameters in complex systems, etc. While hyperparameter tuning is only one step in designing a machine learning or deep learning model. Therefore, NNI is evolved to help more on finding a better model with the following (pipelined) components.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/16907603/70137129-3f549700-16c8-11ea-8204-3202b90f24a9.png" alt="drawing" width="700"/>
+</p>
+
+When designing a model, users may need to find the best feature combination by doing automatic feature engineering. Then they need to select a best model architecture and hyperparameters for those features. After that, they might get a model with good performance, but the model size is too large and it is hard to serve online, they may need to compress the model.
+
+### Automatic Feature Engineering
+### General NAS Framework
+### Hyperparameter Tuning
+### Model Compression
+
 ## Learn More
 * [Get started](Tutorial/QuickStart.md)
 * [How to adapt your trial code on NNI?](TrialExample/Trials.md)
@@ -57,3 +72,6 @@ More details about how to run an experiment, please refer to [Get Started](Tutor
 * [How to run an experiment on multiple machines?](TrainingService/RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](TrainingService/PaiMode.md)
 * [Examples](TrialExample/MnistExamples.md)
+* [Neural Architecture Search on NNI]()
+* [Automatic model compression on NNI]()
+* [Automatic feature engineering on NNI]()
