@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import RankFilterPruner
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 criterion = 'GeometricMedian'
 
 
@@ -119,14 +118,14 @@ def main():
     model.to(device)
 
     # Train the base VGG-16 model
-    # print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
-    # for epoch in range(160):
-    #     train(model, device, train_loader, optimizer)
-    #     test(model, device, test_loader)
-    #     lr_scheduler.step(epoch)
-    # torch.save(model.state_dict(), 'vgg16_cifar10.pth')
+    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
+    for epoch in range(160):
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+        lr_scheduler.step(epoch)
+    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
 
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
