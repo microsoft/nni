@@ -11,7 +11,7 @@ This document describes the rules to write the config file, and provides some ex
 
 ## Template
 
-* __light weight(without Annotation and Assessor)__
+* __Light weight (without Annotation and Assessor)__
 
 ```yaml
 authorName:
@@ -132,19 +132,17 @@ machineList:
 
 ## Configuration spec
 
-* __authorName__
-  * Description
+### authorName
 
-    __authorName__ is the name of the author who create the experiment.
+**authorName** is the name of the author who create the experiment.
 
-    TBD: add default value
+*TBD: add default value.*
 
-* __experimentName__
-  * Description
+### experimentName
 
-    __experimentName__ is the name of the experiment created.
+**experimentName** is the name of the experiment created.
 
-    TBD: add default value
+*TBD: add default value.*
 
 * __trialConcurrency__
   * Description
