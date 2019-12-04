@@ -5,7 +5,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner', 'L1FilterPruner', 'SlimPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner', 'L1FilterPruner', 'SlimPruner', 'L2FilterPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -398,6 +398,66 @@ class SlimPruner(Pruner):
         try:
             w_abs = weight.abs()
             mask = torch.gt(w_abs, self.global_threshold).type_as(weight)
+        finally:
+            self.mask_dict.update({layer.name: mask})
+            self.mask_calculated_ops.add(layer.name)
+
+        return mask
+
+
+class L2FilterPruner(Pruner):
+    """
+    A structured pruning algorithm that prunes the filters with smallest L2 norm
+    in the convolution layers to achieve a preset level of network sparsity.
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+
+        super().__init__(model, config_list)
+        self.mask_calculated_ops = set()
+
+    def calc_mask(self, layer, config):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest L2 norm are masked.
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the compression operation
+        config : dict
+            layer's pruning config
+        Returns
+        -------
+        torch.Tensor
+            mask of the layer's weight
+        """
+
+        weight = layer.module.weight.data
+        op_name = layer.name
+        op_type = layer.type
+        assert op_type == 'Conv2d', 'L1FilterPruner only supports 2d convolution layer pruning'
+        if op_name in self.mask_calculated_ops:
+            assert op_name in self.mask_dict
+            return self.mask_dict.get(op_name)
+        mask = torch.ones(weight.size()).type_as(weight)
+        try:
+            filters = weight.shape[0]
+            k = int(filters * config['sparsity'])
+            if k == 0:
+                return torch.ones(weight.shape).type_as(weight)
+            weight = weight.view(filters, -1)
+            w_l2_norm = torch.sqrt((weight ** 2).sum(dim=1))
+            threshold = torch.topk(w_l2_norm.view(-1), k, largest=False)[0].max()
+            mask = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
         finally:
             self.mask_dict.update({layer.name: mask})
             self.mask_calculated_ops.add(layer.name)
