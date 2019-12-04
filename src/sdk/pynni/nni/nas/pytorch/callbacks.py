@@ -4,6 +4,9 @@
 import logging
 import os
 
+import torch
+import torch.nn as nn
+
 _logger = logging.getLogger(__name__)
 
 
@@ -51,4 +54,23 @@ class ArchitectureCheckpoint(Callback):
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
     def on_epoch_end(self, epoch):
-        self.trainer.export(os.path.join(self.checkpoint_dir, "epoch_{}.json".format(epoch)))
+        dest_path = os.path.join(self.checkpoint_dir, "epoch_{}.json".format(epoch))
+        _logger.info("Saving architecture to %s", dest_path)
+        self.trainer.export(dest_path)
+
+
+class ModelCheckpoint(Callback):
+    def __init__(self, checkpoint_dir, every="epoch"):
+        super().__init__()
+        assert every == "epoch"
+        self.checkpoint_dir = checkpoint_dir
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
+
+    def on_epoch_end(self, epoch):
+        if isinstance(self.model, nn.DataParallel):
+            state_dict = self.model.module.state_dict()
+        else:
+            state_dict = self.model.state_dict()
+        dest_path = os.path.join(self.checkpoint_dir, "epoch_{}.pth.tar".format(epoch))
+        _logger.info("Saving model to %s", dest_path)
+        torch.save(state_dict, dest_path)
