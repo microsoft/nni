@@ -48,7 +48,7 @@ if __name__ == "__main__":
                                   args.epochs, dataset_train, dataset_valid,
                                   mutator=mutator, batch_size=args.batch_size,
                                   log_frequency=args.log_frequency, workers=args.workers,
-                                  callbacks=[LRSchedulerCallback(scheduler),
+                                  callbacks=[LRSchedulerCallback(scheduler), AdjustBNMomentum(),
                                              ModelCheckpoint("./checkpoints")])
     trainer.train()
     # trainer.validate()
