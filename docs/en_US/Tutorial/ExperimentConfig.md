@@ -250,15 +250,20 @@ __logCollection__ set the way to collect log in remote, pai, kubeflow, framework
 
 ### tuner
 
-__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
-  * __builtinTunerName__ and __classArgs__
-    * __builtinTunerName__
+__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed.
 
-      __builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+To use built-in tuners:
 
-    * __classArgs__
+#### builtinTunerName
 
-      __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+__builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+
+#### classArgs
+
+__classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+
+
+
   * __codeDir__, __classFileName__, __className__ and __classArgs__
     * __codeDir__
 
