@@ -64,11 +64,16 @@ abstract class KubernetesTrainingService {
 
     // tslint:disable:no-any
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
-        return {
+        const resources: any = {
             memory: `${memory}Mi`,
-            cpu: `${cpuNum}`,
-            'nvidia.com/gpu': `${gpuNum}`
+            cpu: `${cpuNum}`
         };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
     } // tslint:enable:no-any
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -265,7 +270,7 @@ abstract class KubernetesTrainingService {
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
         // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
         if (gpuNum === 0) {
-            nvidiaScript = `export CUDA_VISIBLE_DEVICES='0'`;
+            nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
         // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
