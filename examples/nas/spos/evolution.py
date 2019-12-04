@@ -34,6 +34,7 @@ class SPOSEvolution(Tuner):
         self._pending_result_ids = set()
         self._reward_dict = dict()
         self._id2candidate = dict()
+        self._st_callback = None
 
     def update_search_space(self, search_space):
         self._search_space = search_space
@@ -63,7 +64,7 @@ class SPOSEvolution(Tuner):
         return chosen_arch
 
     def _add_to_evaluate_queue(self, cand):
-        _logger.info("Generate candidate with flops %d.", self.model.get_candidate_flops(cand))
+        _logger.info("Generate candidate with flops %d, adding to eval queue.", self.model.get_candidate_flops(cand))
         self._reward_dict[self._hashcode(cand)] = 0.
         self._to_evaluate_queue.append(cand)
 
@@ -120,31 +121,47 @@ class SPOSEvolution(Tuner):
         return True
 
     def _select_top_candidates(self):
-        return sorted(self.candidates, key=lambda cand: self._reward_dict[self._hashcode(cand)],
-                      reverse=True)[:self.num_select]
+        reward_query = lambda cand: self._reward_dict[self._hashcode(cand)]
+        result = sorted(self.candidates, key=reward_query, reverse=True)[:self.num_select]
+        _logger.info("Best candidate rewards: %s", list(map(reward_query, result)))
+        return result
 
     @staticmethod
     def _hashcode(d):
         return json.dumps(d, sort_keys=True)
 
-    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
+    def _bind_and_send_parameters(self, use_st_callback=False):
         result = []
-        for parameter_id in parameter_id_list:
-            self._sending_parameter_queue.append(parameter_id)
         while self._sending_parameter_queue and self._to_evaluate_queue:
             parameter_id = self._sending_parameter_queue.popleft()
             parameters = self._to_evaluate_queue.popleft()
             self._id2candidate[parameter_id] = parameters
             result.append(parameters)
             self._pending_result_ids.add(parameter_id)
+            if use_st_callback:
+                self._st_callback(parameter_id, parameters)
+                _logger.info("Sending extra parameter with callback.")
+        return result
+
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
+        if "st_callback" in kwargs:
+            self._st_callback = kwargs["st_callback"]
+        for parameter_id in parameter_id_list:
+            self._sending_parameter_queue.append(parameter_id)
+        result = self._bind_and_send_parameters()
         _logger.info("Requested %d parameters, %d sent.", len(parameter_id_list), len(result))
         return result
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
+        _logger.info("Candidate %d, reported reward %f", parameter_id, value)
         self._reward_dict[self._hashcode(self._id2candidate[parameter_id])] = value
 
     def trial_end(self, parameter_id, success, **kwargs):
         self._pending_result_ids.remove(parameter_id)
-        if not self._pending_result_ids:
+        if not self._pending_result_ids and not self._to_evaluate_queue:
             # a new epoch now
             self._next_round()
+            if self._st_callback is not None:
+                self._bind_and_send_parameters(use_st_callback=True)
+            else:
+                _logger.warning("No send callback found.")
