@@ -117,15 +117,15 @@ def main():
     model.to(device)
 
     # Train the base VGG-16 model
-    # print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
-    # for epoch in range(160):
-    # print('# Epoch {} #'.format(epoch))
-    #     train(model, device, train_loader, optimizer)
-    #     test(model, device, test_loader)
-    #     lr_scheduler.step(epoch)
-    # torch.save(model.state_dict(), 'vgg16_cifar10.pth')
+    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
+    for epoch in range(160):
+        print('# Epoch {} #'.format(epoch))
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+        lr_scheduler.step(epoch)
+    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
 
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
@@ -133,8 +133,7 @@ def main():
     test(model, device, test_loader)
     # top1 = 93.51%
 
-    # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
-    # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+    # Pruning Configuration, all convolution layers are pruned out 80% filters according to the L1 norm
     configure_list = [{
         'sparsity': 0.8,
         'op_types': ['Conv2d'],
@@ -172,7 +171,7 @@ def main():
     new_model.to(device)
     new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 85.40%
+    # top1 = 85.43% with kd, top1 = 85.04% without kd,
 
 
 if __name__ == '__main__':
