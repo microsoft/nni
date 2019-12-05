@@ -205,7 +205,7 @@ machineList:
 
 Required. String.
 
-__authorName__ is the name of the author who create the experiment.
+The name of the author who create the experiment.
 
 *TBD: add default value.*
 
@@ -213,7 +213,7 @@ __authorName__ is the name of the author who create the experiment.
 
 Required. String.
 
-__experimentName__ is the name of the experiment created.
+The name of the experiment created.
 
 *TBD: add default value.*
 
@@ -221,7 +221,7 @@ __experimentName__ is the name of the experiment created.
 
 Required. Integer between 1 and 99999.
 
-__trialConcurrency__ specifies the max num of trial jobs run simultaneously.
+Specifies the max num of trial jobs run simultaneously.
 
 If trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach __trialConcurrency__ number, some trial jobs will be put into a queue to wait for gpu allocation.
 
@@ -249,13 +249,13 @@ Debug mode will set versionCheck to false and set logLevel to be 'debug'.
 
 Optional. Integer between 1 and 99999. Default: 99999.
 
-__maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+Specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
 ### trainingServicePlatform
 
 Required. String.
 
-__trainingServicePlatform__ specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__, __frameworkcontroller__.
+Specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__, __frameworkcontroller__.
 
 * __local__ run an experiment on local ubuntu machine.
 
@@ -271,7 +271,7 @@ __trainingServicePlatform__ specifies the platform to run the experiment, includ
 
 Optional. Path to existing file.
 
-__searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+Specifies the path of search space file, which should be a valid path in the local linux machine.
 
 The only exception that __searchSpacePath__ can be not fulfilled is when `useAnnotation=True`.
 
@@ -279,7 +279,7 @@ The only exception that __searchSpacePath__ can be not fulfilled is when `useAnn
 
 Optional. Bool. Default: false.
 
-__useAnnotation__ use annotation to analysis trial code and generate search space.
+Use annotation to analysis trial code and generate search space.
 
 Note: if __useAnnotation__ is true, the searchSpacePath field should be removed.
 
@@ -287,19 +287,19 @@ Note: if __useAnnotation__ is true, the searchSpacePath field should be removed.
 
 Optional. Bool. Default: false.
 
-__multiPhase__ enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
+Enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
 
 ### multiThread
 
 Optional. Bool. Default: false.
 
-__multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
+Enable multi-thread mode for dispatcher. If multiThread is enabled, dispatcher will start a thread to process each command from NNI Manager.
 
 ### nniManagerIp
 
 Optional. String. Default: eth0 device IP.
 
-__nniManagerIp__ set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+Set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
 Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, __nniManagerIp__ is recommended to set explicitly.
 
@@ -307,61 +307,61 @@ Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If
 
 Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
 
-__logDir__ configures the directory to store logs and data of the experiment.
+Configures the directory to store logs and data of the experiment.
 
 ### logLevel
 
 Optional. String. Default: `info`.
 
-__logLevel__ sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+Sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
 
 ### logCollection
 
 Optional. `http` or `none`. Default: `none`.
 
-__logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
 
 ### tuner
 
 Required.
 
-__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed. *Users must choose exactly one way.*
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed. *Users must choose exactly one way.*
 
 #### builtinTunerName
 
 Required if using built-in tuners. String.
 
-__builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+Specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
 
 #### codeDir
 
 Required if using customized tuners. Path relative to the location of config file.
 
-__codeDir__ specifies the directory of tuner code.
+Specifies the directory of tuner code.
 
 #### classFileName
 
 Required if using customized tuners. File path relative to __codeDir__.
 
-__classFileName__ specifies the name of tuner file.
+Specifies the name of tuner file.
 
 #### className
 
 Required if using customized tuners. String.
 
-__className__ specifies the name of tuner class.
+Specifies the name of tuner class.
 
 #### classArgs
 
 Optional. Key-value pairs. Default: empty.
 
-__classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+Specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
 
 #### gpuIndices
 
 Optional. String. Default: empty.
 
-__gpuIndices__ specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+Specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
 #### includeIntermediateResults
 
@@ -371,7 +371,7 @@ If __includeIntermediateResults__ is true, the last intermediate result of the t
 
 ### assessor
 
-__assessor__ specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and users need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__. *Users must choose exactly one way.*
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and users need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__. *Users must choose exactly one way.*
 
 By default, there is no assessor enabled.
 
@@ -379,73 +379,73 @@ By default, there is no assessor enabled.
 
 Required if using built-in assessors. String.
 
-__builtinAssessorName__ specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
+Specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
 
 #### codeDir
 
 Required if using customized assessors. Path relative to the location of config file.
 
-__codeDir__ specifies the directory of assessor code.
+Specifies the directory of assessor code.
 
 #### classFileName
 
 Required if using customized assessors. File path relative to __codeDir__.
 
-__classFileName__ specifies the name of assessor file.
+Specifies the name of assessor file.
 
 #### className
 
 Required if using customized assessors. String.
 
-__className__ specifies the name of assessor class.
+Specifies the name of assessor class.
 
 #### classArgs
 
 Optional. Key-value pairs. Default: empty.
 
-__classArgs__ specifies the arguments of assessor algorithm.
+Specifies the arguments of assessor algorithm.
 
 ### advisor
 
 Optional.
 
-__advisor__ specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
 
 When advisor is enabled, settings of tuners and advisors will be bypassed.
 
 #### builtinAdvisorName
 
-__builtinAdvisorName__ specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
+Specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
 
 #### codeDir
 
 Required if using customized advisors. Path relative to the location of config file.
 
-__codeDir__ specifies the directory of advisor code.
+Specifies the directory of advisor code.
 
 #### classFileName
 
 Required if using customized advisors. File path relative to __codeDir__.
 
-__classFileName__ specifies the name of advisor file.
+Specifies the name of advisor file.
 
 #### className
 
 Required if using customized advisors. String.
 
-__className__ specifies the name of advisor class.
+Specifies the name of advisor class.
 
 #### classArgs
 
 Optional. Key-value pairs. Default: empty.
 
-__classArgs__ specifies the arguments of advisor.
+Specifies the arguments of advisor.
 
 #### gpuIndices
 
 Optional. String. Default: empty.
 
-__gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+Specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
 ### trial
 
