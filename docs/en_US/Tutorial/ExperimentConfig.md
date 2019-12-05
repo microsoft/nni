@@ -376,7 +376,11 @@ Optional. String. Default: empty.
 
 __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
-* __trial(local, remote)__
+### trial
+
+Required. Key-value pairs.
+
+In local and remote mode, the following keys are required.
 
   * __command__
 
@@ -384,13 +388,13 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
 
   * __codeDir__
 
-    __codeDir__ specifies the directory of your own trial file.
+    __codeDir__ specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
 
   * __gpuNum__
 
     __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
 
-* __trial(pai)__
+In PAI mode, the following keys are required.
 
   * __command__
 
@@ -398,7 +402,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
 
   * __codeDir__
 
-    __codeDir__ specifies the directory of the own trial file.
+    __codeDir__ specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
 
   * __gpuNum__
 
@@ -410,21 +414,13 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
 
   * __memoryMB__
 
-    __memoryMB__ set the momory size to be used in pai's container.
+    __memoryMB__ set the memory size to be used in pai container.
 
   * __image__
 
     __image__ set the image to be used in pai.
 
-  * __dataDir__
-
-    __dataDir__ is the data directory in hdfs to be used.
-
-  * __outputDir__
-
-    __outputDir__ is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
-
-* __trial(kubeflow)__
+In Kubeflow mode, the following keys are required.
 
   * __codeDir__
 
@@ -486,127 +482,165 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
 
       __image__ set the image to be used in __worker__.
 
-* __localConfig__
+### localConfig
 
-  __localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
-  * __gpuIndices__
+Optional in local mode. Key-value pairs.
 
-    __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+__localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
 
-  * __maxTrialNumPerGpu__
+#### gpuIndices
+
+Optional. String. Default: none.
+
+__gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
+
+#### maxTrialNumPerGpu
+
+Optional. Integer. Default: 99999.
   
-    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+__maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
     
-  * __useActiveGpu__
-  
-    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
-  
+#### useActiveGpu
 
-* __machineList__
+Optional. Bool. Default: false.
 
-  __machineList__ should be set if __trainingServicePlatform__ is set to remote, or it should be empty.
+__useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
-  * __ip__
+### machineList
 
-    __ip__ is the ip address of remote machine.
+Required in remote mode. A list of key-value pairs with the following keys.
 
-  * __port__
+#### ip
 
-    __port__ is the ssh port to be used to connect machine.
+Required. IP address that is accessible from the current machine.
 
-     Note: if users set port empty, the default value will be 22.
-  * __username__
+__ip__ is the ip address of remote machine.
 
-    __username__ is the account of remote machine.
-  * __passwd__
+#### port
 
-    __passwd__ specifies the password of the account.
+Optional. Integer. Valid port. Default: 22.
 
-  * __sshKeyPath__
+__port__ is the ssh port to be used to connect machine.
 
-    If users use ssh key to login remote machine, could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
+#### username
 
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+Required if authentication with username/password. String.
 
-  * __passphrase__
+__username__ is the account of remote machine.
 
-    __passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
+#### passwd
 
-  * __gpuIndices__
+Required if authentication with username/password. String.
 
-    __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+__passwd__ specifies the password of the account.
 
-  * __maxTrialNumPerGpu__
-  
-    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+#### sshKeyPath
 
-  * __useActiveGpu__
-  
-    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+Required if authentication with ssh key. Path to private key file.
 
-* __kubeflowConfig__:
+If users use ssh key to login remote machine, __sshKeyPath__ should be a valid path to a ssh key file.
 
-  * __operator__
+*Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd first.*
 
-    __operator__ specify the kubeflow's operator to be used, NNI support __tf-operator__ in current version.
+#### passphrase
 
-  * __storage__
+Optional. String.
 
-    __storage__ specify the storage type of kubeflow, including {__nfs__, __azureStorage__}. This field is optional, and the default value is __nfs__. If the config use azureStorage, this field must be completed.
+__passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
 
-  * __nfs__
+#### gpuIndices
 
-    __server__ is the host of nfs server
+Optional. String. Default: none.
 
-    __path__ is the mounted path of nfs
+__gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
 
-  * __keyVault__
+#### maxTrialNumPerGpu
 
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+Optional. Integer. Default: 99999.
 
-    * __vaultName__
+__maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
 
-      __vaultName__ is the value of `--vault-name` used in az command.
+#### useActiveGpu
 
-    * __name__
+Optional. Bool. Default: false.
 
-      __name__ is the value of `--name` used in az command.
+__useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
-  * __azureStorage__
+### kubeflowConfig
 
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+#### operator
 
-    * __accountName__
+Required. String. Has to be `tf-operator` or `pytorch-operator`.
 
-      __accountName__ is the name of azure storage account.
+__operator__ specify the kubeflow's operator to be used, NNI support `tf-operator` in current version.
 
-    * __azureShare__
+#### storage
 
-      __azureShare__ is the share of the azure file storage.
+Optional. String. Default. `nfs`.
 
-  * __uploadRetryCount__
+__storage__ specify the storage type of kubeflow, including `nfs` and `azureStorage`.
 
-    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+#### nfs
 
-* __paiConfig__
+Required if using nfs. Key-value pairs.
 
-  * __userName__
+* __server__ is the host of nfs server.
 
-    __userName__ is the user name of your pai account.
+* __path__ is the mounted path of nfs.
 
-  * __password__
+#### keyVault
 
-    __password__ is the password of the pai account.
+Required if using azure storage. Key-value pairs.
 
-  * __host__
+Set __keyVault__ to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
 
-    __host__ is the host of pai.
+* __vaultName__ is the value of `--vault-name` used in az command.
+
+* __name__ is the value of `--name` used in az command.
+
+#### azureStorage
+
+Required if using azure storage. Key-value pairs.
+
+Set azure storage account to store code files.
+
+* __accountName__ is the name of azure storage account.
+
+* __azureShare__ is the share of the azure file storage.
+
+#### uploadRetryCount
+
+Required if using azure storage. Integer between 1 and 99999.
+
+*TODO: default value?*
+
+If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+
+### paiConfig
+
+#### userName
+
+Required. String.
+
+__userName__ is the user name of your pai account.
+
+#### password
+
+Required. String.
+
+__password__ is the password of the pai account.
+
+#### host
+
+Required. String.
+
+__host__ is the host of pai.
 
 ## Examples
 
-* __local mode__
+### Local mode
 
-  If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 
   ```yaml
   authorName: test
@@ -630,7 +664,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
     gpuNum: 0
   ```
 
-  You can add assessor configuration.
+You can add assessor configuration.
 
   ```yaml
   authorName: test
@@ -661,7 +695,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
     gpuNum: 0
   ```
 
-  Or you could specify your own tuner and assessor file as following,
+Or you could specify your own tuner and assessor file as following,
 
   ```yaml
   authorName: test
@@ -694,9 +728,9 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
     gpuNum: 0
   ```
 
-* __remote mode__
+### Remote mode
 
-  If run trial jobs in remote machine, users could specify the remote machine information as following format:
+If run trial jobs in remote machine, users could specify the remote machine information as following format:
 
   ```yaml
   authorName: test
@@ -736,7 +770,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
       passphrase: qwert
   ```
 
-* __pai mode__
+### PAI mode
 
   ```yaml
   authorName: test
@@ -777,7 +811,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
     host: 10.10.10.10
   ```
 
-* __kubeflow mode__
+### Kubeflow mode
 
   kubeflow with nfs storage.
 
@@ -814,7 +848,7 @@ __gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indic
       path: /var/nfs/general
   ```
 
-  kubeflow with azure storage
+### Kubeflow with azure storage
 
   ```yaml
   authorName: default

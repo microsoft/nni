@@ -58,7 +58,7 @@ machineList:
     passwd: bob123
 ```
 
-You can run NNI on different operating systems (Windows, Linux, MacOS) to spawn experiments on the remote machines:
+Files in `codeDir` will be automatically uploaded to the remote machine. You can run NNI on different operating systems (Windows, Linux, MacOS) to spawn experiments on the remote machines:
 
 ```bash
 nnictl create --config examples/trials/mnist-annotation/config_remote.yml
