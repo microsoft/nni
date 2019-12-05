@@ -5,9 +5,78 @@ The config file is in YAML format.
 This document describes the rules to write the config file, and provides some examples and templates.
 
 - [Experiment Config Reference](#experiment-config-reference)
-  - [Template](#template)
-  - [Configuration Spec](#configuration-spec)
-  - [Examples](#examples)
+  * [Template](#template)
+  * [Configuration Spec](#configuration-spec)
+    + [authorName](#authorname)
+    + [experimentName](#experimentname)
+    + [trialConcurrency](#trialconcurrency)
+    + [maxExecDuration](#maxexecduration)
+    + [versionCheck](#versioncheck)
+    + [debug](#debug)
+    + [maxTrialNum](#maxtrialnum)
+    + [trainingServicePlatform](#trainingserviceplatform)
+    + [searchSpacePath](#searchspacepath)
+    + [useAnnotation](#useannotation)
+    + [multiPhase](#multiphase)
+    + [multiThread](#multithread)
+    + [nniManagerIp](#nnimanagerip)
+    + [logDir](#logdir)
+    + [logLevel](#loglevel)
+    + [logCollection](#logcollection)
+    + [tuner](#tuner)
+      - [builtinTunerName](#builtintunername)
+      - [codeDir](#codedir)
+      - [classFileName](#classfilename)
+      - [className](#classname)
+      - [classArgs](#classargs)
+      - [gpuIndices](#gpuindices)
+      - [includeIntermediateResults](#includeintermediateresults)
+    + [assessor](#assessor)
+      - [builtinAssessorName](#builtinassessorname)
+      - [codeDir](#codedir-1)
+      - [classFileName](#classfilename-1)
+      - [className](#classname-1)
+      - [classArgs](#classargs-1)
+    + [advisor](#advisor)
+      - [builtinAdvisorName](#builtinadvisorname)
+      - [codeDir](#codedir-2)
+      - [classFileName](#classfilename-2)
+      - [className](#classname-2)
+      - [classArgs](#classargs-2)
+      - [gpuIndices](#gpuindices-1)
+    + [trial](#trial)
+    + [localConfig](#localconfig)
+      - [gpuIndices](#gpuindices-2)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu)
+      - [useActiveGpu](#useactivegpu)
+    + [machineList](#machinelist)
+      - [ip](#ip)
+      - [port](#port)
+      - [username](#username)
+      - [passwd](#passwd)
+      - [sshKeyPath](#sshkeypath)
+      - [passphrase](#passphrase)
+      - [gpuIndices](#gpuindices-3)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu-1)
+      - [useActiveGpu](#useactivegpu-1)
+    + [kubeflowConfig](#kubeflowconfig)
+      - [operator](#operator)
+      - [storage](#storage)
+      - [nfs](#nfs)
+      - [keyVault](#keyvault)
+      - [azureStorage](#azurestorage)
+      - [uploadRetryCount](#uploadretrycount)
+    + [paiConfig](#paiconfig)
+      - [userName](#username)
+      - [password](#password)
+      - [token](#token)
+      - [host](#host)
+  * [Examples](#examples)
+    + [Local mode](#local-mode)
+    + [Remote mode](#remote-mode)
+    + [PAI mode](#pai-mode)
+    + [Kubeflow mode](#kubeflow-mode)
+    + [Kubeflow with azure storage](#kubeflow-with-azure-storage)
 
 ## Template
 
@@ -382,129 +451,87 @@ Required. Key-value pairs.
 
 In local and remote mode, the following keys are required.
 
-  * __command__
+* __command__: Required string. Specifies the command to run trial process.
 
-    __command__  specifies the command to run trial process.
+* __codeDir__: Required string. Specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
 
-  * __codeDir__
-
-    __codeDir__ specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
-
-  * __gpuNum__
-
-    __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
+* __gpuNum__: Optional integer. Specifies the num of gpu to run the trial process. Default value is 0.
 
 In PAI mode, the following keys are required.
 
-  * __command__
+* __command__: Required string. Specifies the command to run trial process.
 
-    __command__  specifies the command to run trial process.
+* __codeDir__: Required string. Specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
 
-  * __codeDir__
+* __gpuNum__: Required integer. Specifies the num of gpu to run the trial process. Default value is 0.
 
-    __codeDir__ specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
+* __cpuNum__: Required integer. Specifies the cpu number of cpu to be used in pai container.
 
-  * __gpuNum__
+* __memoryMB__: Required integer. Set the memory size to be used in pai container, in megabytes.
 
-    __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
+* __image__: Required string. Set the image to be used in pai.
 
-  * __cpuNum__
+* __authFile__: *TODO, what is authFile?*
 
-    __cpuNum__ is the cpu number of cpu to be used in pai container.
+* __shmMB__: Optional integer. Shared memory size of container.
 
-  * __memoryMB__
-
-    __memoryMB__ set the memory size to be used in pai container.
-
-  * __image__
-
-    __image__ set the image to be used in pai.
+* __portList__: List of key-values pairs with `label`, `beginAt`, `portNumber`. See [job tutorial of PAI](https://github.com/microsoft/pai/blob/master/docs/job_tutorial.md) for details.
 
 In Kubeflow mode, the following keys are required.
 
-  * __codeDir__
+* __codeDir__: The local directory where the code files are in.
 
-    __codeDir__ is the local directory where the code files in.
+* __ps__: An optional configuration for kubeflow's tensorflow-operator, which includes
 
-  * __ps(optional)__
+    * __replicas__: The replica number of __ps__ role.
 
-    __ps__ is the configuration for kubeflow's tensorflow-operator.
+    * __command__: The run script in __ps__'s container.
 
-    * __replicas__
+    * __gpuNum__: The gpu number to be used in __ps__ container.
 
-      __replicas__ is the replica number of __ps__ role.
+    * __cpuNum__: The cpu number to be used in __ps__ container.
 
-    * __command__
+    * __memoryMB__: The memory size of the container.
 
-      __command__ is the run script in __ps__'s container.
+    * __image__: The image to be used in __ps__.
 
-    * __gpuNum__
+* __worker__: An optional configuration for kubeflow's tensorflow-operator.
 
-      __gpuNum__ set the gpu number to be used in __ps__ container.
+    * __replicas__: The replica number of __worker__ role.
 
-    * __cpuNum__
+    * __command__: The run script in __worker__'s container.
 
-      __cpuNum__ set the cpu number to be used in __ps__ container.
+    * __gpuNum__: The gpu number to be used in __worker__ container.
 
-    * __memoryMB__
+    * __cpuNum__: The cpu number to be used in __worker__ container.
 
-      __memoryMB__ set the memory size of the container.
+    * __memoryMB__: The memory size of the container.
 
-    * __image__
-
-      __image__ set the image to be used in __ps__.
-
-  * __worker__
-
-    __worker__ is the configuration for kubeflow's tensorflow-operator.
-
-    * __replicas__
-
-      __replicas__ is the replica number of __worker__ role.
-
-    * __command__
-
-      __command__ is the run script in __worker__'s container.
-
-    * __gpuNum__
-
-      __gpuNum__ set the gpu number to be used in __worker__ container.
-
-    * __cpuNum__
-
-      __cpuNum__ set the cpu number to be used in __worker__ container.
-
-    * __memoryMB__
-
-      __memoryMB__ set the memory size of the container.
-
-    * __image__
-
-      __image__ set the image to be used in __worker__.
+    * __image__: The image to be used in __worker__.
 
 ### localConfig
 
 Optional in local mode. Key-value pairs.
 
-__localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
+Only applicable if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
 
 #### gpuIndices
 
 Optional. String. Default: none.
 
-__gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
 
 #### maxTrialNumPerGpu
 
 Optional. Integer. Default: 99999.
   
-__maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+Used to specify the max concurrency trial number on a GPU device.
     
 #### useActiveGpu
 
 Optional. Bool. Default: false.
 
-__useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
 ### machineList
 
@@ -514,25 +541,25 @@ Required in remote mode. A list of key-value pairs with the following keys.
 
 Required. IP address that is accessible from the current machine.
 
-__ip__ is the ip address of remote machine.
+The IP address of remote machine.
 
 #### port
 
 Optional. Integer. Valid port. Default: 22.
 
-__port__ is the ssh port to be used to connect machine.
+The ssh port to be used to connect machine.
 
 #### username
 
 Required if authentication with username/password. String.
 
-__username__ is the account of remote machine.
+The account of remote machine.
 
 #### passwd
 
 Required if authentication with username/password. String.
 
-__passwd__ specifies the password of the account.
+Specifies the password of the account.
 
 #### sshKeyPath
 
@@ -546,25 +573,25 @@ If users use ssh key to login remote machine, __sshKeyPath__ should be a valid p
 
 Optional. String.
 
-__passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
+Used to protect ssh key, which could be empty if users don't have passphrase.
 
 #### gpuIndices
 
 Optional. String. Default: none.
 
-__gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
 
 #### maxTrialNumPerGpu
 
 Optional. Integer. Default: 99999.
 
-__maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+Used to specify the max concurrency trial number on a GPU device.
 
 #### useActiveGpu
 
 Optional. Bool. Default: false.
 
-__useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
 ### kubeflowConfig
 
@@ -572,13 +599,13 @@ __useActiveGpu__ is used to specify whether to use a GPU if there is another pro
 
 Required. String. Has to be `tf-operator` or `pytorch-operator`.
 
-__operator__ specify the kubeflow's operator to be used, NNI support `tf-operator` in current version.
+Specifies the kubeflow's operator to be used, NNI support `tf-operator` in current version.
 
 #### storage
 
 Optional. String. Default. `nfs`.
 
-__storage__ specify the storage type of kubeflow, including `nfs` and `azureStorage`.
+Specifies the storage type of kubeflow, including `nfs` and `azureStorage`.
 
 #### nfs
 
@@ -622,19 +649,25 @@ If upload files to azure storage failed, NNI will retry the process of uploading
 
 Required. String.
 
-__userName__ is the user name of your pai account.
+The user name of your pai account.
 
 #### password
 
-Required. String.
+Required if using password authentication. String.
 
-__password__ is the password of the pai account.
+The password of the pai account.
+
+#### token
+
+Required if using token authentication. String.
+
+Personal access token that can be retrieved from PAI portal.
 
 #### host
 
 Required. String.
 
-__host__ is the host of pai.
+The hostname of IP address of PAI.
 
 ## Examples
 

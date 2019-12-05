@@ -64,7 +64,7 @@ Files in `codeDir` will be automatically uploaded to the remote machine. You can
 nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 ```
 
-You can also use public/private key pairs instead of username/password for authentication. For advanced usages, please refer to [Experiment Config Reference](../Tutorial/ExperimentConfig.md).
+You can also use public/private key pairs instead of username/password for authentication. For advanced usages, please refer to [Experiment Config Reference](../Tutorial/ExperimentConfig.md#machinelist).
 
 ## Version check
 
