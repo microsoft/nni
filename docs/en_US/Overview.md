@@ -46,37 +46,32 @@ For each experiment, user only needs to define a search space and update a few l
 
 More details about how to run an experiment, please refer to [Get Started](Tutorial/QuickStart.md).
 
-## Core Capacities
+## Core Features
 
-Hyperparameter tuning is a core capacity of NNI, it can be used to tune hyperparameters in machine learning and deep learning models, parameters in complex systems, etc. While hyperparameter tuning is only one step in designing a machine learning or deep learning model. Thus, NNI is evolved to help more on finding a better model with the following (pipelined) components.
+NNI provides a key capacity to run multiple instances in parallel to find best combinations of parameters. This feature can be used in various domains, like find best hyperparameters for a deep learning model, or find best configuration for database and other complex system with real data.
 
-<p align="center">
-<img src="https://user-images.githubusercontent.com/16907603/70137129-3f549700-16c8-11ea-8204-3202b90f24a9.png" alt="drawing" width="700"/>
-</p>
+NNI is also like to provide algorithm toolkits for machine learning and deep learning, especially neural architecture search (NAS) algorithms, model compression algorithms, and feature engineering algorithms.
 
-When designing a model, users may need to find the best feature combination by doing automatic feature engineering. Then they need to select a best model architecture and hyperparameters for those features. After that, they might get a model with good performance, but the model size is too large and it is hard to serve online, they may need to compress the model.
-
-Below, we briefly introduce the four components. Before reading the following content, we suggest you to go through [Quick Start](Tutorial/QuickStart.md) to get to know the basic usage of NNI.
-
-### Automatic Feature Engineering
-Automatic feature engineering is for users to find the best features for the following tasks. Detailed description and usage can be found [here](FeatureEngineering/Overview.md). It is supported through NNI trial SDK, which means you do not have to create an NNI experiment, but to import a built-in auto-feature-engineering algorithm in your trial code and simply run your trial code. 
-
-The auto-feature-engineering algorithms usually have a bunch of hyperparameters themselves. If you want to automatically tune those hyperparameters, you can choose a tuning algorithm (i.e., tuner) and start an NNI experiment for it.
+### Hyperparameter Tuning
+This is a core and basic feature of NNI, we provide many popular [automatic tuning algorithms](Tuner/BuiltinTuner.md) (i.e., tuner) and [early stop algorithms](Assessor/BuiltinAssessor.md) (i.e., assessor). You could follow [Quick Start](Tutorial/QuickStart.md) to tune your model (or system). Basically, there are the above three steps and then start an NNI experiment.
 
 ### General NAS Framework
-This NAS framework is for users to easily specify candidate neural architectures, for example, could specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed discription and usage can be found [here](NAS/Overview.md)
+This NAS framework is for users to easily specify candidate neural architectures, for example, could specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed description and usage can be found [here](NAS/Overview.md).
 
-NNI has supported many one-shot NAS algorithms, such as ENAS, DARTS, through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, to import an algorithm in your trial code, and simply run your trial code. Similar to auto-feature-engineering, if you want to tune the hyperparameters in the algorithms or want to run multiple instances, you could choose a tuner and start an NNI experiment.
+NNI has supported many one-shot NAS algorithms, such as ENAS, DARTS, through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, to import an algorithm in your trial code, and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you could choose a tuner and start an NNI experiment.
 
 Other than one-shot NAS, NAS can also run in a classic mode where each candidate architecture runs as an independent trial job. In this mode, similar to hyperparameter tuning, users have to start an NNI experiment and choose a tuner for NAS.
 
-### Hyperparameter Tuning
-This is a core and basic capacity of NNI, to tune hyperparameters you need to start an NNI experiment. For hyperparameter tuning we provide many tuning algorithms (i.e., tuner) and early stop algorithms (i.e., assessor). You could refer to [Quick Start](Tutorial/QuickStart.md) for usage.
-
 ### Model Compression
-Model Compression on NNI includes pruning algorithms and quantization algorithms. These algorithms are provided through NNI trial SDK. Users could directly use them in their trial code without starting an NNI experiment. Detailed description and usage can be found [here](Compressor/Overview.md).
+Model Compression on NNI includes pruning algorithms and quantization algorithms. These algorithms are provided through NNI trial SDK. Users could directly use them in their trial code and run the trial code without starting an NNI experiment. Detailed description and usage can be found [here](Compressor/Overview.md).
 
-There are different types of hyperparamters in model compression. One type is the hyperparameters in input configuration, e.g., sparsity, quantization bits, to a compression algorithm. The other type is the hyperparamters in compression algorithms. Here, NNI experiment and tuning algorithms (i.e., tuner) would help a lot in finding the best compressed model automatically. A simple example can be found [here](Compressor/AutoCompression.md).
+There are different types of hyperparamters in model compression. One type is the hyperparameters in input configuration, e.g., sparsity, quantization bits, to a compression algorithm. The other type is the hyperparamters in compression algorithms. Here, Hyperparameter tuning of NNI could help a lot in finding the best compressed model automatically. A simple example can be found [here](Compressor/AutoCompression.md).
+
+### Automatic Feature Engineering
+Automatic feature engineering is for users to find the best features for the following tasks. Detailed description and usage can be found [here](FeatureEngineering/Overview.md). It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code. 
+
+The auto-feature-engineering algorithms usually have a bunch of hyperparameters themselves. If you want to automatically tune those hyperparameters, you can leverage hyperparameter tuning of NNI, that is, choose a tuning algorithm (i.e., tuner) and start an NNI experiment for it.
+
 
 ## Learn More
 * [Get started](Tutorial/QuickStart.md)
