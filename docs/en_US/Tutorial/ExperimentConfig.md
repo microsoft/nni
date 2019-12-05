@@ -186,7 +186,7 @@ __maxTrialNum__ specifies the max number of trial jobs created by NNI, including
 
 Required. String.
 
-__trainingServicePlatform__ specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__.
+__trainingServicePlatform__ specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__, __frameworkcontroller__.
 
 * __local__ run an experiment on local ubuntu machine.
 
@@ -195,6 +195,8 @@ __trainingServicePlatform__ specifies the platform to run the experiment, includ
 * __pai__  submit trial jobs to [OpenPAI](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please refer to [Guide to PAI Mode](../TrainingService/PaiMode.md)
 
 * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
+
+* TODO: explain frameworkcontroller.
 
 ### searchSpacePath
 
@@ -250,49 +252,50 @@ __logCollection__ set the way to collect log in remote, pai, kubeflow, framework
 
 ### tuner
 
-__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed.
-
-To use built-in tuners:
+__tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed. *Users must choose exactly one way.*
 
 #### builtinTunerName
 
+Required if using built-in tuners. String.
+
 __builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+
+#### codeDir
+
+Required if using customized tuners. Path relative to the location of config file.
+
+__codeDir__ specifies the directory of tuner code.
+
+#### classFileName
+
+Required if using customized tuners. File path relative to __codeDir__.
+
+__classFileName__ specifies the name of tuner file.
 
 #### classArgs
 
+Optional. Key-value pairs. Default: empty.
+
+__classArgs__ specifies the arguments of tuner algorithm. 
+
 __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
 
+#### gpuIndices
 
+Optional. String. Default: empty.
 
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
-    * __codeDir__
+__gpuIndices__ specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
-      __codeDir__ specifies the directory of tuner code.
-    * __classFileName__
+#### includeIntermediateResults
 
-      __classFileName__ specifies the name of tuner file.
-    * __className__
+Optional. Bool. Default: false.
 
-      __className__ specifies the name of tuner class.
-    * __classArgs__
+If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
 
-      __classArgs__ specifies the arguments of tuner algorithm.
+### assessor
 
-  * __gpuIndices__
+__assessor__ specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and users need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__. *Users must choose exactly one way.*
 
-      __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
-
-  * __includeIntermediateResults__
-
-      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
-
-  Note: users could only use one way to specify tuner, either specifying `builtinTunerName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
-
-* __assessor__
-
-  * Description
-
-    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
 
@@ -321,7 +324,7 @@ __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this 
 
   Note: users could only use one way to specify assessor, either specifying `builtinAssessorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`. If users do not want to use assessor, assessor fileld should leave to empty.
 
-* __advisor__
+### advisor
   * Description
 
     __advisor__ specifies the advisor algorithm in the experiment, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
