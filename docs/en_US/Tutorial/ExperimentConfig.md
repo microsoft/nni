@@ -252,6 +252,8 @@ __logCollection__ set the way to collect log in remote, pai, kubeflow, framework
 
 ### tuner
 
+Required.
+
 __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed. *Users must choose exactly one way.*
 
 #### builtinTunerName
@@ -272,11 +274,15 @@ Required if using customized tuners. File path relative to __codeDir__.
 
 __classFileName__ specifies the name of tuner file.
 
+#### className
+
+Required if using customized tuners. String.
+
+__className__ specifies the name of tuner class.
+
 #### classArgs
 
 Optional. Key-value pairs. Default: empty.
-
-__classArgs__ specifies the arguments of tuner algorithm. 
 
 __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
 
@@ -296,65 +302,79 @@ If __includeIntermediateResults__ is true, the last intermediate result of the t
 
 __assessor__ specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and users need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__. *Users must choose exactly one way.*
 
-  * __builtinAssessorName__ and __classArgs__
-    * __builtinAssessorName__
+By default, there is no assessor enabled.
 
-      __builtinAssessorName__ specifies the name of built-in assessor, NNI sdk provides different assessors introducted [here](../Assessor/BuiltinAssessor.md).
-    * __classArgs__
+#### builtinAssessorName
 
-      __classArgs__ specifies the arguments of assessor algorithm
+Required if using built-in assessors. String.
 
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
+__builtinAssessorName__ specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
 
-    * __codeDir__
+#### codeDir
 
-      __codeDir__ specifies the directory of assessor code.
+Required if using customized assessors. Path relative to the location of config file.
 
-    * __classFileName__
+__codeDir__ specifies the directory of assessor code.
 
-      __classFileName__ specifies the name of assessor file.
+#### classFileName
 
-    * __className__
+Required if using customized assessors. File path relative to __codeDir__.
 
-      __className__ specifies the name of assessor class.
+__classFileName__ specifies the name of assessor file.
 
-    * __classArgs__
+#### className
 
-      __classArgs__ specifies the arguments of assessor algorithm.
+Required if using customized assessors. String.
 
-  Note: users could only use one way to specify assessor, either specifying `builtinAssessorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`. If users do not want to use assessor, assessor fileld should leave to empty.
+__className__ specifies the name of assessor class.
+
+#### classArgs
+
+Optional. Key-value pairs. Default: empty.
+
+__classArgs__ specifies the arguments of assessor algorithm.
 
 ### advisor
-  * Description
 
-    __advisor__ specifies the advisor algorithm in the experiment, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
-  * __builtinAdvisorName__ and __classArgs__
-    * __builtinAdvisorName__
+Optional.
 
-      __builtinAdvisorName__ specifies the name of a built-in advisor, NNI sdk provides [different advisors](../Tuner/BuiltinTuner.md).
+__advisor__ specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
 
-    * __classArgs__
+When advisor is enabled, settings of tuners and advisors will be bypassed.
 
-      __classArgs__ specifies the arguments of the advisor algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in advisor.
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
-    * __codeDir__
+#### builtinAdvisorName
 
-      __codeDir__ specifies the directory of advisor code.
-    * __classFileName__
+__builtinAdvisorName__ specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
 
-      __classFileName__ specifies the name of advisor file.
-    * __className__
+#### codeDir
 
-      __className__ specifies the name of advisor class.
-    * __classArgs__
+Required if using customized advisors. Path relative to the location of config file.
 
-      __classArgs__ specifies the arguments of advisor algorithm.
+__codeDir__ specifies the directory of advisor code.
 
-  * __gpuIndices__
+#### classFileName
 
-      __gpuIndices__ specifies the gpus that can be used by the advisor process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+Required if using customized advisors. File path relative to __codeDir__.
 
-  Note: users could only use one way to specify advisor, either specifying `builtinAdvisorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+__classFileName__ specifies the name of advisor file.
+
+#### className
+
+Required if using customized advisors. String.
+
+__className__ specifies the name of advisor class.
+
+#### classArgs
+
+Optional. Key-value pairs. Default: empty.
+
+__classArgs__ specifies the arguments of advisor.
+
+#### gpuIndices
+
+Optional. String. Default: empty.
+
+__gpuIndices__ specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
 * __trial(local, remote)__
 
