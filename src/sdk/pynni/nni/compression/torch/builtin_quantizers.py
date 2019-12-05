@@ -245,3 +245,28 @@ class DoReFaQuantizer(Quantizer):
         scale = pow(2, q_bits)-1
         output = torch.round(input_ri*scale)/scale
         return output
+
+class BNNQuantizer(Quantizer):
+    """Quantizer using the DoReFa scheme, as defined in:
+    Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
+    (https://arxiv.org/abs/1606.06160)
+    """
+    def __init__(self, model, config_list):
+        """
+        config_list: supported keys:
+            - q_bits
+        """
+        super().__init__(model, config_list)
+
+    def quantize_weight(self, weight, config, **kwargs):
+        out = torch.sign(weight)
+        # remove zeros
+        out[out == 0] = 1
+        return out
+    
+    def quantize_output(self, output, config, **kwargs):
+        # dont quantize last layer output
+        out = torch.sign(output)
+        # remove zeros
+        out[out == 0] = 1
+        return out

@@ -321,11 +321,11 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
-                inputs = straight_through_quantize_input.apply(inputs, self, config, layer)
+                inputs = straight_through_estimator.apply(inputs, self.quantize_input, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
-                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                new_weight = straight_through_estimator.apply(weight, self.quantize_weight, config, layer)
                 layer.module.weight.data = new_weight
                 result = layer._forward(*inputs)
                 layer.module.weight.data = weight
@@ -333,26 +333,16 @@ class Quantizer(Compressor):
                 result = layer._forward(*inputs)
 
             if 'output' in config["quant_types"]:
-                result = straight_through_quantize_output.apply(result, self, config, layer)
+                result = straight_through_estimator.apply(result, self.quantize_output, config, layer)
             return result
 
         layer.module.forward = new_forward
 
 
-class straight_through_quantize_output(torch.autograd.Function):
+class straight_through_estimator(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, output, quantizer, config, layer):
-        return quantizer.quantize_output(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        # Straight-through estimator
-        return grad_output, None, None, None
-
-class straight_through_quantize_input(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, inputs, quantizer, config, layer):
-        return quantizer.quantize_input(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+    def forward(ctx, output, func, config, layer):
+        return func(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
 
     @staticmethod
     def backward(ctx, grad_output):
