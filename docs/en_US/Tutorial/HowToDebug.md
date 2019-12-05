@@ -86,3 +86,4 @@ A common example of this would be run the mnist example without installing tenso
 
 As it shows, every trial has a log path, where you can find trial'log and stderr.
 
+**You can use [standalone mode](../TrialExample/Trials.md#standalone-mode-for-debug) to debug your trial code.**
