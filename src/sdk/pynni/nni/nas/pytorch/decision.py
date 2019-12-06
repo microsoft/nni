@@ -98,6 +98,9 @@ class EmptyDecision(Decision):
     def serialize(self):
         return None
 
+    def __iter__(self):
+        raise StopIteration
+
 
 class RelaxedDecision(Decision):
     def __init__(self, indices, n_candidates=None):
@@ -131,6 +134,9 @@ class RelaxedDecision(Decision):
             raise ValueError("More than one indices. Index doesn't work.")
         return self.indices[0]
 
+    def __iter__(self):
+        return iter(self.indices)
+
 
 class ContinuousDecision:
     def __init__(self, weights):
@@ -142,3 +148,6 @@ class ContinuousDecision:
         if isinstance(self.weights, np.ndarray):
             return self.weights.tolist()
         return self.weights
+
+    def __iter__(self):
+        return iter(self.weights)
