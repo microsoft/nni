@@ -129,7 +129,7 @@ useAnnotation: true
 
 ## Standalone mode for debug
 
-NNI supports standalone mode for trial code to run without starting an NNI experiment. This is for finding out bugs in trial code more conveniently. NNI annotation natively supports standalone mode, as the added NNI related lines are comments. For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return fake/empty values, and some APIs do not really report values. Details are shown below.
+NNI supports standalone mode for trial code to run without starting an NNI experiment. This is for finding out bugs in trial code more conveniently. NNI annotation natively supports standalone mode, as the added NNI related lines are comments. For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
 ```python
 # NOTE: please assign default values to the hyperparameters in your trial code
 nni.get_next_parameter # return {}
