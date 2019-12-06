@@ -67,7 +67,7 @@ def train(model, device, train_loader, optimizer, kd=None):
         output = model(data)
         loss = F.cross_entropy(output, target)
         if kd is not None:
-            loss += kd.get_kd_loss(data, output)
+            loss = kd.loss(student_loss=loss, data=data, student_out=output)
         loss.backward()
         optimizer.step()
         if batch_idx % 100 == 0:

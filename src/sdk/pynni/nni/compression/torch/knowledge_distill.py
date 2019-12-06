@@ -30,7 +30,7 @@ class KnowledgeDistill():
         self.kd_T = kd_T
         self.kd_beta = kd_beta
 
-    def get_kd_loss(self, data, student_out):
+    def _get_kd_loss(self, data, student_out):
         """
         Parameters
         ----------
@@ -51,3 +51,21 @@ class KnowledgeDistill():
         soft_t = F.softmax(kd_out / self.kd_T, dim=1)
         loss_kd = F.kl_div(soft_log_out, soft_t.detach(), reduction='batchmean')
         return loss_kd * self.kd_beta
+
+    def loss(self, student_loss, data, student_out):
+        """
+        Parameters
+        ----------
+        student_loss : torch.Tensor
+            Loss of student model's output with the label
+        data : torch.Tensor
+            Input of the student model
+        student_out : torch.Tensor
+            Output of the student model
+
+        Returns
+        -------
+        torch.Tensor
+            Weighted loss of student loss and distillation loss
+        """
+        return student_loss + self._get_kd_loss(data, student_out)
