@@ -252,7 +252,7 @@ class RankFilterPruner(Pruner):
         self.mask_calculated_ops = set()
 
     def _get_mask(self, base_mask, weight, num_prune):
-        return None
+        return torch.ones(weight.size()).type_as(weight)
 
     def calc_mask(self, layer, config):
         """
