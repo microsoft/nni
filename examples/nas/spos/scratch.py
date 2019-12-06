@@ -5,23 +5,23 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
-from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
-from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy
 
 logger = logging.getLogger("nni")
 
 
-def train(epoch, model, criterion, optimizer, loader, writer, args):
+def train(epoch, model, criterion, optimizer, loader, writer, args, num_iters):
     model.train()
     meters = AverageMeterGroup()
     cur_lr = optimizer.param_groups[0]["lr"]
 
-    for step, (x, y) in enumerate(loader):
-        cur_step = len(loader) * epoch + step
-        x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
+    for step, data in enumerate(loader):
+        cur_step = num_iters * epoch + step
+        x, y = data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
         optimizer.zero_grad()
         logits = model(x)
         loss = criterion(logits, y)
@@ -37,26 +37,28 @@ def train(epoch, model, criterion, optimizer, loader, writer, args):
         writer.add_scalar("acc1/train", metrics["acc1"], global_step=cur_step)
         writer.add_scalar("acc5/train", metrics["acc5"], global_step=cur_step)
 
-        if step % args.log_frequency == 0 or step + 1 == len(loader):
-            logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
-                        args.epochs, step + 1, len(loader), meters)
+        if step % args.log_frequency == 0 or step + 1 == num_iters:
+            logger.info("Epoch [%d/%d] Step [%d/%d]  %s", epoch + 1,
+                        args.epochs, step + 1, num_iters, meters)
+
+    logger.info("Epoch %d training summary: %s", epoch + 1, meters)
 
 
-def validate(epoch, model, criterion, loader, writer, args):
+def validate(epoch, model, criterion, loader, writer, args, num_iters):
     model.eval()
     meters = AverageMeterGroup()
     with torch.no_grad():
-        for step, (x, y) in enumerate(loader):
-            x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
+        for step, data in enumerate(loader):
+            x, y = data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
             logits = model(x)
             loss = criterion(logits, y)
             metrics = accuracy(logits, y)
             metrics["loss"] = loss.item()
             meters.update(metrics)
 
-            if step % args.log_frequency == 0 or step + 1 == len(loader):
-                logger.info("Epoch [%s/%s] Validation Step [%s/%s]  %s", epoch + 1,
-                            args.epochs, step + 1, len(loader), meters)
+            if step % args.log_frequency == 0 or step + 1 == num_iters:
+                logger.info("Epoch [%d/%d] Validation Step [%d/%d]  %s", epoch + 1,
+                            args.epochs, step + 1, num_iters, meters)
 
     writer.add_scalar("loss/test", meters.loss.avg, global_step=epoch)
     writer.add_scalar("acc1/test", meters.acc1.avg, global_step=epoch)
@@ -80,11 +82,8 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", type=int, default=10)
 
     args = parser.parse_args()
-    dataset_train, dataset_valid = get_imagenet(args.imagenet_dir, False)
-    train_loader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True,
-                              num_workers=args.workers, pin_memory=True)
-    valid_loader = DataLoader(dataset_valid, batch_size=args.batch_size, shuffle=False,
-                              num_workers=args.workers, pin_memory=True)
+    train_loader, train_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
+    valid_loader, valid_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
     model = ShuffleNetV2OneShot()
     model.cuda()
     apply_fixed_architecture(model, args.architecture)
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     writer = SummaryWriter(log_dir=args.tb_dir)
 
     for epoch in range(args.epochs):
-        train(epoch, model, criterion, optimizer, train_loader, writer, args)
-        validate(epoch, model, criterion, valid_loader, writer, args)
+        train(epoch, model, criterion, optimizer, train_loader, writer, args, train_iters)
+        validate(epoch, model, criterion, valid_loader, writer, args, valid_iters)
         scheduler.step()
     writer.close()
