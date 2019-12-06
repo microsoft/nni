@@ -36,7 +36,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export const kubernetesScriptFormat: string =
+export const kubernetesScriptFormat =
 `#!/bin/bash
 export NNI_PLATFORM={0}
 export NNI_SYS_DIR=$PWD/nni/{1}

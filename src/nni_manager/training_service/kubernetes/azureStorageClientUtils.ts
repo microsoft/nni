@@ -63,10 +63,10 @@ export namespace AzureStorageClientUtility {
                                                    azureShare: any): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const directories: string[] = azureDirectory.split('/');
-        let rootDirectory: string = '';
+        let rootDirectory = '';
         for (const directory of directories) {
             rootDirectory += directory;
-            let result:boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
+            const result: boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
             if (!result) {
                 deferred.resolve(false);
                 return deferred.promise;
@@ -141,7 +141,7 @@ export namespace AzureStorageClientUtility {
                                           localDirectory: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
-        let result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
+        const result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
         if (!result) {
             deferred.resolve(false);
             return deferred.promise;
@@ -149,8 +149,8 @@ export namespace AzureStorageClientUtility {
         for (const fileName of fileNameArray) {
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {
-                let resultUploadFile: boolean = true;
-                let resultUploadDir: boolean = true;
+                let resultUploadFile = true;
+                let resultUploadDir = true;
                 if (fs.lstatSync(fullFilePath)
                       .isFile()) {
                     resultUploadFile = await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);

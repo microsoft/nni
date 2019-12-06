@@ -22,7 +22,7 @@ import { TrialJobDetail } from '../common/trainingService';
 
 /* tslint:disable:no-any */
 
-const createTables: string = `
+const createTables = `
 create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text, sequenceId integer);
 create index TrialJobEvent_trialJobId on TrialJobEvent(trialJobId);
 create index TrialJobEvent_event on TrialJobEvent(event);
@@ -120,7 +120,7 @@ class SqlDB implements Database {
     }
 
     public storeExperimentProfile(exp: ExperimentProfile): Promise<void> {
-        const sql: string = 'insert into ExperimentProfile values (?,?,?,?,?,?,?,?)';
+        const sql = 'insert into ExperimentProfile values (?,?,?,?,?,?,?,?)';
         const args: any[] = [
             JSON.stringify(exp.params),
             exp.id,
@@ -139,7 +139,7 @@ class SqlDB implements Database {
     }
 
     public queryExperimentProfile(experimentId: string, revision?: number): Promise<ExperimentProfile[]> {
-        let sql: string = '';
+        let sql = '';
         let args: any[] = [];
         if (revision === undefined) {
             sql = 'select * from ExperimentProfile where id=? order by revision DESC';
@@ -165,7 +165,7 @@ class SqlDB implements Database {
 
     public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
+        const sql = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
         const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
         const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.form.sequenceId;
         const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
@@ -178,7 +178,7 @@ class SqlDB implements Database {
     }
 
     public queryTrialJobEvent(trialJobId?: string, event?: TrialJobEvent): Promise<TrialJobEventRecord[]> {
-        let sql: string = '';
+        let sql = '';
         let args: any[] | undefined;
         if (trialJobId === undefined && event === undefined) {
             sql = 'select * from TrialJobEvent';
@@ -203,7 +203,7 @@ class SqlDB implements Database {
     }
 
     public storeMetricData(trialJobId: string, data: string): Promise<void> {
-        const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
+        const sql = 'insert into MetricData values (?,?,?,?,?,?)';
         const json: MetricDataRecord = JSON.parse(data);
         const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
 
@@ -215,7 +215,7 @@ class SqlDB implements Database {
     }
 
     public queryMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
-        let sql: string = '';
+        let sql = '';
         let args: any[] | undefined;
         if (metricType === undefined && trialJobId === undefined) {
             sql = 'select * from MetricData';

@@ -17,7 +17,7 @@ export class GPUInfo {
     // the index number of this GPU (starting from 0)
     public readonly index: number;
 
-    constructor(activeProcessNum : number, gpuMemUtil : number, gpuUtil : number, index : number) {
+    constructor(activeProcessNum: number, gpuMemUtil: number, gpuUtil: number, index: number) {
         this.activeProcessNum = activeProcessNum;
         this.gpuMemUtil = gpuMemUtil;
         this.gpuUtil = gpuUtil;
@@ -43,7 +43,7 @@ export class GPUSummary {
     }
 }
 
-export const GPU_INFO_COLLECTOR_FORMAT_WINDOWS: string =
+export const GPU_INFO_COLLECTOR_FORMAT_WINDOWS =
 `
 $env:METRIC_OUTPUT_DIR="{0}"
 $app = Start-Process "python" -ArgumentList "-m nni_gpu_tool.gpu_metrics_collector" -passthru -NoNewWindow

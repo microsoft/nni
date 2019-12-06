@@ -20,9 +20,9 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @returns file number under codeDir
  */
 // tslint:disable: no-redundant-jsdoc
-export async function validateCodeDir(codeDir: string) : Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
-    let fileNameValid: boolean = true;
+    let fileNameValid = true;
     try {
         fileCount = await countFilesRecursively(codeDir);
     } catch (error) {
@@ -41,7 +41,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     }
 
     if (!fileNameValid) {
-        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
+        const errMessage = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
         throw new Error(errMessage);
     }
 
@@ -52,7 +52,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
  * crete a new directory
  * @param directory
  */
-export async function execMkdir(directory: string, share: boolean = false): Promise<void> {
+export async function execMkdir(directory: string, share = false): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe New-Item -Path "${directory}" -ItemType "directory" -Force`);
     } else if (share) {

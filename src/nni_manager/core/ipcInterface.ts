@@ -81,7 +81,7 @@ class IpcInterface {
      * @param commandType: a command type defined in 'core/commands'
      * @param content: payload of command
      */
-    public sendCommand(commandType: string, content: string = ''): void {
+    public sendCommand(commandType: string, content = ''): void {
         this.logger.debug(`ipcInterface command type: [${commandType}], content:[${content}]`);
         assert.ok(this.acceptCommandTypes.has(commandType));
 

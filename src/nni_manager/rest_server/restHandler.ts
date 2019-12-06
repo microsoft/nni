@@ -72,7 +72,7 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
+    private handle_error(err: Error, res: Response, isFatal = false, errorCode = 500): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {

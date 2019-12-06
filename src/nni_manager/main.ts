@@ -159,7 +159,7 @@ function getStopSignal(): any {
 
 process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();
-    let hasError: boolean = false;
+    let hasError = false;
     try {
         const nniManager: Manager = component.get(Manager);
         await nniManager.stopExperiment();

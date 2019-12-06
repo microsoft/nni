@@ -54,15 +54,15 @@ class RemoteMachineTrainingService implements TrainingService {
     private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
-    private stopping: boolean = false;
+    private stopping = false;
     private readonly metricsEmitter: EventEmitter;
     private readonly log: Logger;
-    private isMultiPhase: boolean = false;
+    private isMultiPhase = false;
     private trialSequenceId: number;
     private remoteRestServerPort?: number;
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
-    private versionCheck: boolean = true;
+    private versionCheck = true;
     private logCollection: string;
 
     constructor(@component.Inject timer: ObservableTimer) {
@@ -93,7 +93,7 @@ class RemoteMachineTrainingService implements TrainingService {
             while (this.jobQueue.length > 0) {
                 this.updateGpuReservation();
                 const trialJobId: string = this.jobQueue[0];
-                const prepareResult : boolean = await this.prepareTrialJob(trialJobId);
+                const prepareResult: boolean = await this.prepareTrialJob(trialJobId);
                 if (prepareResult) {
                     // Remove trial job with trialJobId from job queue
                     this.jobQueue.shift();
@@ -263,7 +263,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param trialJobId ID of trial job
      */
     // tslint:disable:informative-docs no-unsafe-any
-    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped = false): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJob === undefined) {
@@ -272,7 +272,7 @@ class RemoteMachineTrainingService implements TrainingService {
         }
 
         // Remove the job with trialJobId from job queue
-        const index : number = this.jobQueue.indexOf(trialJobId);
+        const index: number = this.jobQueue.indexOf(trialJobId);
         if (index >= 0) {
             this.jobQueue.splice(index, 1);
         }
@@ -417,7 +417,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-        let connectedRMNum: number = 0;
+        let connectedRMNum = 0;
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
@@ -464,7 +464,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async prepareTrialJob(trialJobId: string): Promise<boolean> {
-        const deferred : Deferred<boolean> = new Deferred<boolean>();
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
 
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
@@ -485,13 +485,13 @@ class RemoteMachineTrainingService implements TrainingService {
         // get an ssh client from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
-            const errorMessage : string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
+            const errorMessage = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
             this.log.error(errorMessage);
             deferred.reject();
             throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
         } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED
             && rmScheduleResult.scheduleInfo !== undefined) {
-            const rmScheduleInfo : RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
+            const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
             const trialWorkingFolder: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId);
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
@@ -584,7 +584,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
         //create tmp trial working folder locally.
         await execCopydir(this.trialConfig.codeDir, trialLocalTempFolder);
-        const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
@@ -662,7 +662,7 @@ class RemoteMachineTrainingService implements TrainingService {
         return unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni', 'experiments', getExperimentId());
     }
 
-    public get MetricsEmitter() : EventEmitter {
+    public get MetricsEmitter(): EventEmitter {
         return this.metricsEmitter;
     }
 

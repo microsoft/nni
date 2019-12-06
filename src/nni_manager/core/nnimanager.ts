@@ -235,10 +235,10 @@ class NNIManager implements Manager {
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
         const importedData: string[] = await this.dataStore.getImportedData();
-        let trialData: Object[] = JSON.parse(finishedTrialData);
+        let trialData: Record<string, any>[] = JSON.parse(finishedTrialData);
         for (const oneImportedData of importedData) {
             // do not deduplicate
-            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
+            trialData = trialData.concat(<Record<string, any>[]>JSON.parse(oneImportedData));
         }
         this.trialDataForTuner = JSON.stringify(trialData);
 
@@ -361,7 +361,7 @@ class NNIManager implements Manager {
             includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
         }
 
-        let nniEnv = {
+        const nniEnv = {
             NNI_MODE: mode,
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
@@ -369,7 +369,7 @@ class NNIManager implements Manager {
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
             CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
         };
-        let newEnv = Object.assign({}, process.env, nniEnv);
+        const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
@@ -429,9 +429,9 @@ class NNIManager implements Manager {
         }
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
         this.dispatcher.sendCommand(TERMINATE);
-        let tunerAlive: boolean = true;
+        let tunerAlive = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
-        for (let i: number = 0; i < 30; i++) {
+        for (let i = 0; i < 30; i++) {
             if (!tunerAlive) { break; }
             tunerAlive = await isAlive(this.dispatcherPid);
             await delay(1000);
@@ -457,7 +457,7 @@ class NNIManager implements Manager {
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
-        let count: number = 1;
+        let count = 1;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'RUNNING') {
@@ -481,7 +481,7 @@ class NNIManager implements Manager {
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
-        let finishedTrialJobNum: number = 0;
+        let finishedTrialJobNum = 0;
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
@@ -684,7 +684,7 @@ class NNIManager implements Manager {
             // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
             // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
             // sequentially.
-            for (let i: number = 0; i < jobNum; i++) {
+            for (let i = 0; i < jobNum; i++) {
                 this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
             }
         } else {

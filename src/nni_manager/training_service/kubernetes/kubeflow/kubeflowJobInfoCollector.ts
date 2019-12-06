@@ -17,7 +17,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
     }
 
     protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+                                               kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
         }
@@ -40,7 +40,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
 
         if (kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
             const latestCondition: any = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
-            const tfJobType : KubeflowJobStatus = <KubeflowJobStatus>latestCondition.type;
+            const tfJobType: KubeflowJobStatus = <KubeflowJobStatus>latestCondition.type;
             switch (tfJobType) {
                 case 'Created':
                     kubernetesTrialJob.status = 'WAITING';

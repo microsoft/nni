@@ -107,7 +107,7 @@ function uniqueString(len: number): string {
     const codes: number[] = [];
     codes.push(charMap(num % 52));
     num = Math.floor(num / 52);
-    for (let i: number = 1; i < len; i++) {
+    for (let i = 1; i < len; i++) {
         codes.push(charMap(num % 62));
         num = Math.floor(num / 62);
     }
@@ -123,7 +123,7 @@ function randomSelect<T>(a: T[]): T {
 }
 function parseArg(names: string[]): string {
     if (process.argv.length >= 4) {
-        for (let i: number = 2; i < process.argv.length - 1; i++) {
+        for (let i = 2; i < process.argv.length - 1; i++) {
             if (names.includes(process.argv[i])) {
                 return process.argv[i + 1];
             }
@@ -176,14 +176,14 @@ function getCmdPy(): string {
  * @param advisor: similar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase = false, multiThread = false): string {
     if ((tuner || assessor) && advisor) {
         throw new Error('Error: specify both tuner/assessor and advisor is not allowed');
     }
     if (!tuner && !advisor) {
         throw new Error('Error: specify neither tuner nor advisor is not allowed');
     }
-    let command: string = `${getCmdPy()} -m nni`;
+    let command = `${getCmdPy()} -m nni`;
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -236,11 +236,11 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
  * Generate parameter file name based on HyperParameters object
  * @param hyperParameters HyperParameters instance
  */
-function generateParamFileName(hyperParameters : HyperParameters): string {
+function generateParamFileName(hyperParameters: HyperParameters): string {
     assert(hyperParameters !== undefined);
     assert(hyperParameters.index >= 0);
 
-    let paramFileName : string;
+    let paramFileName: string;
     if(hyperParameters.index == 0) {
         paramFileName = 'parameter.cfg';
     } else {
@@ -283,7 +283,7 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-let cachedipv4Address : string = '';
+let cachedipv4Address = '';
 /**
  * Get IPv4 address of current machine
  */
@@ -332,15 +332,15 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 
     const deferred: Deferred<number> = new Deferred<number>();
 
-    let timeoutId : NodeJS.Timer
-    const delayTimeout : Promise<number> = new Promise((resolve : Function, reject : Function) : void => {
+    let timeoutId: NodeJS.Timer
+    const delayTimeout: Promise<number> = new Promise((resolve: Function, reject: Function): void => {
         // Set timeout and reject the promise once reach timeout (5 seconds)
         timeoutId = setTimeout(() => {
             reject(new Error(`Timeout: path ${directory} has too many files`));
         }, 5000);
     });
 
-    let fileCount: number = -1;
+    let fileCount = -1;
     let cmd: string;
     if(process.platform === "win32") {
         cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
@@ -359,7 +359,7 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 }
 
 function validateFileName(fileName: string): boolean {
-    let pattern: string = '^[a-z0-9A-Z\._-]+$';
+    const pattern = '^[a-z0-9A-Z\._-]+$';
     const validateResult = fileName.match(pattern);
     if(validateResult) {
         return true;
@@ -374,7 +374,7 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
 
     const fileNameArray: string[] = fs.readdirSync(directory);
     let result = true;
-    for(var name of fileNameArray){
+    for(const name of fileNameArray){
         const fullFilePath: string = path.join(directory, name);
         try {
             // validate file names and directory names
@@ -396,7 +396,7 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
  * get the version of current package
  */
 async function getVersion(): Promise<string> {
-    const deferred : Deferred<string> = new Deferred<string>();
+    const deferred: Deferred<string> = new Deferred<string>();
     import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
         deferred.resolve(pkg.version);
     }).catch((error)=>{
@@ -411,7 +411,7 @@ async function getVersion(): Promise<string> {
 function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess {
     let cmd: string = command;
     let arg: string[] = [];
-    let newShell: boolean = true;
+    let newShell = true;
     if(process.platform === "win32"){
         cmd = command.split(" ", 1)[0];
         arg = command.substr(cmd.length+1).split(" ");
@@ -430,8 +430,8 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
  * judge whether the process is alive
  */
 async function isAlive(pid: any): Promise<boolean> {
-    let deferred : Deferred<boolean> = new Deferred<boolean>();
-    let alive: boolean = false;
+    const deferred: Deferred<boolean> = new Deferred<boolean>();
+    let alive = false;
     if (process.platform === 'win32') {
         try {
             const str = cp.execSync(`powershell.exe Get-Process -Id ${pid} -ErrorAction SilentlyContinue`).toString();
@@ -458,7 +458,7 @@ async function isAlive(pid: any): Promise<boolean> {
  * kill process
  */
 async function killPid(pid: any): Promise<void> {
-    let deferred : Deferred<void> = new Deferred<void>();
+    const deferred: Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
             await cpp.exec(`cmd.exe /c taskkill /PID ${pid} /F`);

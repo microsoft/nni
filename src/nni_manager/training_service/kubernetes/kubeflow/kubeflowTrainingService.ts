@@ -190,7 +190,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw new Error('Kubeflow Trial config is not initialized');
         }
 
-        let trialJobOutputUrl: string = '';
+        let trialJobOutputUrl = '';
 
         assert(this.kubeflowClusterConfig.storage === undefined
             || this.kubeflowClusterConfig.storage === 'azureStorage'
@@ -235,7 +235,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
-        const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        const runScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
@@ -293,14 +293,14 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw Error(`operator ${this.kubeflowClusterConfig.operator} is invalid`);
         }
 
-        const workerPodResources : any = {};
+        const workerPodResources: any = {};
         if (kubeflowTrialConfig.worker !== undefined) {
             workerPodResources.requests = this.generatePodResource(kubeflowTrialConfig.worker.memoryMB, kubeflowTrialConfig.worker.cpuNum,
                                                                    kubeflowTrialConfig.worker.gpuNum);
         }
         workerPodResources.limits = {...workerPodResources.requests};
 
-        const nonWorkerResources : any = {};
+        const nonWorkerResources: any = {};
         if (this.kubeflowClusterConfig.operator === 'tf-operator') {
             const tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
             if (tensorflowTrialConfig.ps !== undefined) {
@@ -330,8 +330,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
      * @param workerPodResources worker pod template
      * @param nonWorkerPodResources non-worker pod template, like ps or master
      */
-    private async generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any,
-                                            nonWorkerPodResources?: any) : Promise<any> {
+    private async generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName: string, workerPodResources: any,
+                                            nonWorkerPodResources?: any): Promise<any> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -348,11 +348,11 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         const replicaSpecsObjMap: Map<string, object> = new Map<string, object>();
         if (this.kubeflowTrialConfig.operatorType === 'tf-operator') {
             const tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
-            let privateRegistrySecretName = await this.createRegistrySecret(tensorflowTrialConfig.worker.privateRegistryAuthPath);
+            const privateRegistrySecretName = await this.createRegistrySecret(tensorflowTrialConfig.worker.privateRegistryAuthPath);
             replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.worker.replicas,
                                                                 tensorflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             if (tensorflowTrialConfig.ps !== undefined) {
-                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(tensorflowTrialConfig.ps.privateRegistryAuthPath);
+                const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(tensorflowTrialConfig.ps.privateRegistryAuthPath);
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas,
                                                                 tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources, privateRegistrySecretName);
             }
@@ -360,11 +360,11 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         } else if (this.kubeflowTrialConfig.operatorType === 'pytorch-operator') {
             const pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             if (pytorchTrialConfig.worker !== undefined) {
-                let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.worker.privateRegistryAuthPath);
+                const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.worker.privateRegistryAuthPath);
                 replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.worker.replicas,
                                                                     pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources, privateRegistrySecretName);
             }
-            let privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.master.privateRegistryAuthPath);
+            const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(pytorchTrialConfig.master.privateRegistryAuthPath);
             replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas,
                                                                 pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources, privateRegistrySecretName);
 
@@ -448,7 +448,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 resources: podResources
             }
         ]);
-        let spec: any = {
+        const spec: any = {
             containers: containersSpecMap.get('containers'),
             restartPolicy: 'ExitCode',
             volumes: volumeSpecMap.get('nniVolumes')

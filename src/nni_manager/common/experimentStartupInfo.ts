@@ -10,13 +10,13 @@ import * as component from '../common/component';
 
 @component.Singleton
 class ExperimentStartupInfo {
-    private experimentId: string = '';
-    private newExperiment: boolean = true;
-    private basePort: number = -1;
-    private initialized: boolean = false;
-    private logDir: string = '';
-    private logLevel: string = '';
-    private readonly: boolean = false;
+    private experimentId = '';
+    private newExperiment = true;
+    private basePort = -1;
+    private initialized = false;
+    private logDir = '';
+    private logLevel = '';
+    private readonly = false;
 
     public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string, readonly?: boolean): void {
         assert(!this.initialized);

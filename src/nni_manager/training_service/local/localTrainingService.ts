@@ -107,7 +107,7 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
-    private readonly experimentId! : string;
+    private readonly experimentId!: string;
     private gpuScheduler!: GPUScheduler;
     private readonly occupiedGpuIndexNumMap: Map<number, number>;
     private designatedGpuIndices!: Set<number>;
@@ -233,7 +233,7 @@ class LocalTrainingService implements TrainingService {
         return true;
     }
 
-    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped = false): Promise<void> {
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');

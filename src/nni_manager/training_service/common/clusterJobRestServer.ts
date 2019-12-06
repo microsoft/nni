@@ -27,7 +27,7 @@ export abstract class ClusterJobRestServer extends RestServer {
 
     private readonly expId: string = getExperimentId();
 
-    private enableVersionCheck: boolean = true; //switch to enable version check
+    private enableVersionCheck = true; //switch to enable version check
     private versionCheckSuccess: boolean | undefined;
     private errorMessage?: string;
 
@@ -72,10 +72,10 @@ export abstract class ClusterJobRestServer extends RestServer {
 
     // Abstract method to handle trial metrics data
     // tslint:disable-next-line:no-any
-    protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
+    protected abstract handleTrialMetrics(jobId: string, trialMetrics: any[]): void;
 
     // tslint:disable: no-unsafe-any no-any
-    protected createRestHandler() : Router {
+    protected createRestHandler(): Router {
         const router: Router = Router();
 
         router.use((req: Request, res: Response, next: any) => {
@@ -134,11 +134,11 @@ export abstract class ClusterJobRestServer extends RestServer {
             mkDirPSync(trialLogDir);
             const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
             try {
-                let skipLogging: boolean = false;
+                let skipLogging = false;
                 if (req.body.tag === 'trial' && req.body.msg !== undefined) {
                     const metricsContent: any = req.body.msg.match(this.NNI_METRICS_PATTERN);
                     if (metricsContent && metricsContent.groups) {
-                        const key: string = 'metrics';
+                        const key = 'metrics';
                         this.handleTrialMetrics(req.params.trialId, [metricsContent.groups[key]]);
                         skipLogging = true;
                     }

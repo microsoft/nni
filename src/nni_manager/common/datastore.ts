@@ -56,13 +56,13 @@ interface TrialJobInfo {
 
 interface HyperParameterFormat {
     parameter_source: string;
-    parameters: Object;
+    parameters: Record<string, any>;
     parameter_id: number;
 }
 
 interface ExportedDataFormat {
-    parameter: Object;
-    value: Object;
+    parameter: Record<string, any>;
+    value: Record<string, any>;
     id: string;
 }
 

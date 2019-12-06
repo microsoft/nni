@@ -13,13 +13,13 @@ import { GPUInfo, GPUSummary } from '../common/gpuData';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip : string = '';
-    public readonly port : number = 22;
-    public readonly username : string = '';
+    public readonly ip: string = '';
+    public readonly port: number = 22;
+    public readonly username: string = '';
     public readonly passwd: string = '';
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
-    public gpuSummary : GPUSummary | undefined;
+    public gpuSummary: GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
     //TODO: initialize varialbe in constructor
@@ -43,11 +43,11 @@ export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
  * The execution result for command executed on remote machine
  */
 export class RemoteCommandResult {
-    public readonly stdout : string;
-    public readonly stderr : string;
-    public readonly exitCode : number;
+    public readonly stdout: string;
+    public readonly stderr: string;
+    public readonly exitCode: number;
 
-    constructor(stdout : string, stderr : string, exitCode : number) {
+    constructor(stdout: string, stderr: string, exitCode: number) {
         this.stdout = stdout;
         this.stderr = stderr;
         this.exitCode = exitCode;
@@ -225,9 +225,9 @@ export class SSHClientManager {
     }
 }
 
-export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
+export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType};
 
-export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
+export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cuda_visible_device: string};
 
 export enum ScheduleResultType {
     // Schedule succeeded
@@ -240,7 +240,7 @@ export enum ScheduleResultType {
     REQUIRE_EXCEED_TOTAL
 }
 
-export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
+export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT =
 `#!/bin/bash
 export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} \
 NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}
@@ -251,7 +251,7 @@ python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8
 --nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
 echo $? \`date +%s%3N\` >{12}`;
 
-export const HOST_JOB_SHELL_FORMAT: string =
+export const HOST_JOB_SHELL_FORMAT =
 `#!/bin/bash
 cd {0}
 echo $$ >{1}

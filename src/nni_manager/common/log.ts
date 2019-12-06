@@ -13,12 +13,12 @@ import * as component from '../common/component';
 import { getExperimentStartupInfo, isReadonly } from './experimentStartupInfo';
 import { getLogDir } from './utils';
 
-const FATAL: number = 1;
-const ERROR: number = 2;
-const WARNING: number = 3;
-const INFO: number = 4;
-const DEBUG: number = 5;
-const TRACE: number = 6;
+const FATAL = 1;
+const ERROR = 2;
+const WARNING = 3;
+const INFO = 4;
+const DEBUG = 5;
+const TRACE = 6;
 
 const logLevelNameMap: Map<string, number> = new Map([['fatal', FATAL],
     ['error', ERROR], ['warning', WARNING], ['info', INFO], ['debug', DEBUG], ['trace', TRACE]]);
@@ -60,7 +60,7 @@ class Logger {
     private level: number = INFO;
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
-    private readonly: boolean = false;
+    private readonly = false;
 
     constructor(fileName?: string) {
         let logFile: string | undefined = fileName;

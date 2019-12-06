@@ -159,7 +159,7 @@ class NNIDataStore implements DataStore {
 
     public async exportTrialHpConfigs(): Promise<string> {
         const jobs: TrialJobInfo[] = await this.listTrialJobs();
-        let exportedData: ExportedDataFormat[] = [];
+        const exportedData: ExportedDataFormat[] = [];
         for (const job of jobs) {
             if (job.hyperParameters && job.finalMetricData) {
                 if (job.hyperParameters.length === 1 && job.finalMetricData.length === 1) {
@@ -172,18 +172,18 @@ class NNIDataStore implements DataStore {
                     };
                     exportedData.push(oneEntry);
                 } else {
-                    let paraMap: Map<number, Object> = new Map();
-                    let metricMap: Map<number, Object> = new Map();
+                    const paraMap: Map<number, Record<string, any>> = new Map();
+                    const metricMap: Map<number, Record<string, any>> = new Map();
                     for (const eachPara of job.hyperParameters) {
                         const parameters: HyperParameterFormat = <HyperParameterFormat>JSON.parse(eachPara);
                         paraMap.set(parameters.parameter_id, parameters.parameters);
                     }
                     for (const eachMetric of job.finalMetricData) {
-                        const value: Object = JSON.parse(eachMetric.data);
+                        const value: Record<string, any> = JSON.parse(eachMetric.data);
                         metricMap.set(Number(eachMetric.parameterId), value);
                     }
-                    paraMap.forEach((value: Object, key: number) => {
-                        const metricValue: Object | undefined = metricMap.get(key);
+                    paraMap.forEach((value: Record<string, any>, key: number) => {
+                        const metricValue: Record<string, any> | undefined = metricMap.get(key);
                         if (metricValue) {
                             const oneEntry: ExportedDataFormat = {
                                 parameter: value,
@@ -201,7 +201,7 @@ class NNIDataStore implements DataStore {
     }
 
     public async getImportedData(): Promise<string[]> {
-        let importedData: string[] = [];
+        const importedData: string[] = [];
         const importDataEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(undefined, 'IMPORT_DATA');
         for (const event of importDataEvents) {
             if (event.data) {

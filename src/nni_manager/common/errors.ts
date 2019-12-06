@@ -4,9 +4,9 @@
 'use strict';
 
 export namespace NNIErrorNames {
-    export const NOT_FOUND: string = 'NOT_FOUND';
-    export const INVALID_JOB_DETAIL: string = 'NO_VALID_JOB_DETAIL_FOUND';
-    export const RESOURCE_NOT_AVAILABLE: string = 'RESOURCE_NOT_AVAILABLE';
+    export const NOT_FOUND = 'NOT_FOUND';
+    export const INVALID_JOB_DETAIL = 'NO_VALID_JOB_DETAIL_FOUND';
+    export const RESOURCE_NOT_AVAILABLE = 'RESOURCE_NOT_AVAILABLE';
 }
 
 export class NNIError extends Error {
