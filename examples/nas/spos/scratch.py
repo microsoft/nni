@@ -58,9 +58,9 @@ def validate(epoch, model, criterion, loader, writer, args):
                 logger.info("Epoch [%s/%s] Validation Step [%s/%s]  %s", epoch + 1,
                             args.epochs, step + 1, len(loader), meters)
 
-    writer.add_scalar("loss/test", meters.loss.avg, global_step=cur_step)
-    writer.add_scalar("acc1/test", meters.acc1.avg, global_step=cur_step)
-    writer.add_scalar("acc5/test", meters.acc5.avg, global_step=cur_step)
+    writer.add_scalar("loss/test", meters.loss.avg, global_step=epoch)
+    writer.add_scalar("acc1/test", meters.acc1.avg, global_step=epoch)
+    writer.add_scalar("acc5/test", meters.acc5.avg, global_step=epoch)
 
     logger.info("Epoch %d validation: %s", epoch + 1, meters)
 
