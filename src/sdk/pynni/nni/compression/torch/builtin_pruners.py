@@ -5,7 +5,8 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'RankFilterPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'RankFilterPruner', 'L1FilterPruner', 'L2FilterPruner',
+           'FPGMPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -232,18 +233,11 @@ class SlimPruner(Pruner):
 
 class RankFilterPruner(Pruner):
     """
-    A structured pruning algorithm that prunes the filters with the smallest
+    A structured pruning base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
-
-    Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf,
-    "PRUNING FILTERS FOR EFFICIENT CONVNETS", 2017 ICLR
-    https://arxiv.org/abs/1608.08710
-    Yang He, Ping Liu1, Ziwei Wang, Zhilan Hu, Yi Yang
-    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration", 2019 CVPR
-    https://arxiv.org/abs/1811.00250
     """
 
-    def __init__(self, model, config_list, criterion='L1_norm'):
+    def __init__(self, model, config_list):
         """
         Parameters
         ----------
@@ -252,28 +246,18 @@ class RankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
-        criterion : str
-            importance criterion, e.g. L1_norm, L2_norm, GeometricMedian
         """
 
         super().__init__(model, config_list)
         self.mask_calculated_ops = set()
-        self.criterion = criterion
+
+    def _get_mask(self, base_mask, weight, num_prune):
+        return None
 
     def calc_mask(self, layer, config):
         """
         Calculate the mask of given layer.
-        Filters with the smallest importance criterion are masked.
-        Supports Conv1d, Conv2d
-        filter dimensions for Conv1d:
-        OUT: number of output channel
-        IN: number of input channel
-        LEN: filter length
-        filter dimensions for Conv2d:
-        OUT: number of output channel
-        IN: number of input channel
-        H: filter height
-        W: filter width
+        Filters with the smallest importance criterion of the kernel weights are masked.
         Parameters
         ----------
         layer : LayerInfo
@@ -291,35 +275,157 @@ class RankFilterPruner(Pruner):
         op_type = layer.type
         assert 0 <= config.get('sparsity') < 1
         assert op_type in ['Conv1d', 'Conv2d']
-        assert op_type in config['op_types']
+        assert op_type in config.get('op_types')
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
         mask = torch.ones(weight.size()).type_as(weight)
         try:
             filters = weight.size(0)
-            num_prune = int(filters * config['sparsity'])
+            num_prune = int(filters * config.get('sparsity'))
             if filters < 2 or num_prune < 1:
                 return mask
-            if self.criterion == 'L1_norm':
-                w_abs = weight.abs()
-                w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
-                threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
-                mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-            elif self.criterion == 'L2_norm':
-                w = weight.view(filters, -1)
-                w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
-                threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
-                mask = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-            elif self.criterion == 'GeometricMedian':
-                min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
-                for idx in min_gm_idx:
-                    mask[idx] = 0.
+            mask = self._get_mask(mask, weight, num_prune)
         finally:
             self.mask_dict.update({op_name: mask})
             self.mask_calculated_ops.add(op_name)
+        return mask.detach()
+
+
+class L1FilterPruner(RankFilterPruner):
+    """
+    A structured pruning algorithm that prunes the filters of smallest magnitude
+    weights sum in the convolution layers to achieve a preset level of network sparsity.
+    Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf,
+    "PRUNING FILTERS FOR EFFICIENT CONVNETS", 2017 ICLR
+    https://arxiv.org/abs/1608.08710
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+
+        super().__init__(model, config_list)
+
+    def _get_mask(self, base_mask, weight, num_prune):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest sum of its absolute kernel weights are masked.
+        Parameters
+        ----------
+        base_mask : torch.Tensor
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        weight : torch.Tensor
+            Layer's weight
+        num_prune : int
+            Num of filters to prune
+        Returns
+        -------
+        torch.Tensor
+            Mask of the layer's weight
+        """
+
+        filters = weight.shape[0]
+        w_abs = weight.abs()
+        w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
+        threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
+        mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
 
         return mask
+
+
+class L2FilterPruner(RankFilterPruner):
+    """
+    A structured pruning algorithm that prunes the filters with the
+    smallest L2 norm of the absolute kernel weights are masked.
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+
+        super().__init__(model, config_list)
+
+    def _get_mask(self, base_mask, weight, num_prune):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest L2 norm of the absolute kernel weights are masked.
+        Parameters
+        ----------
+        base_mask : torch.Tensor
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        weight : torch.Tensor
+            Layer's weight
+        num_prune : int
+            Num of filters to prune
+        Returns
+        -------
+        torch.Tensor
+            Mask of the layer's weight
+        """
+        filters = weight.shape[0]
+        w = weight.view(filters, -1)
+        w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
+        threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
+        mask = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+
+        return mask
+
+
+class FPGMPruner(RankFilterPruner):
+    """
+    A filter pruner via geometric median.
+    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
+    https://arxiv.org/pdf/1811.00250.pdf
+    """
+
+    def __init__(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            the model user wants to compress
+        config_list: list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        super().__init__(model, config_list)
+
+    def _get_mask(self, base_mask, weight, num_prune):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest sum of its absolute kernel weights are masked.
+        Parameters
+        ----------
+        base_mask : torch.Tensor
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        weight : torch.Tensor
+            Layer's weight
+        num_prune : int
+            Num of filters to prune
+        Returns
+        -------
+        torch.Tensor
+            Mask of the layer's weight
+        """
+        min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
+        for idx in min_gm_idx:
+            base_mask[idx] = 0.
+        return base_mask
 
     def _get_min_gm_kernel_idx(self, weight, n):
         assert len(weight.size()) in [3, 4]
@@ -363,3 +469,6 @@ class RankFilterPruner(Pruner):
         x = (x * x).sum(-1)
         x = torch.sqrt(x)
         return x.sum()
+
+    def update_epoch(self, epoch):
+        self.mask_calculated_ops = set()
