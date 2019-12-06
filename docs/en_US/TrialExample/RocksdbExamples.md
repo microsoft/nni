@@ -10,7 +10,7 @@ This example illustrates how to use NNI to search the best configuration of Rock
 
 We also provide a simple script [`db_bench_installation.sh`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) helping to compile and install `db_bench` as well as its dependencies on Ubuntu. Installing RocksDB on other systems can follow the same procedure.
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom`](https://github.com/microsoft/nni/tree/master/../../../examples/trials/systems/rocksdb-fillrandom)*
+*code directory: [`example/trials/systems/rocksdb-fillrandom`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom)*
 
 ## Experiment setup
 
