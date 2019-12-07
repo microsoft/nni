@@ -14,7 +14,9 @@ from utils import CrossEntropyLabelSmooth, accuracy
 logger = logging.getLogger("nni")
 
 
-def train(epoch, model, criterion, optimizer, loader, writer, args, num_iters):
+def train(epoch, model, criterion, optimizer, writer, args):
+    loader, num_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
+
     model.train()
     meters = AverageMeterGroup()
     cur_lr = optimizer.param_groups[0]["lr"]
@@ -44,7 +46,9 @@ def train(epoch, model, criterion, optimizer, loader, writer, args, num_iters):
     logger.info("Epoch %d training summary: %s", epoch + 1, meters)
 
 
-def validate(epoch, model, criterion, loader, writer, args, num_iters):
+def validate(epoch, model, criterion, writer, args):
+    loader, num_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
+
     model.eval()
     meters = AverageMeterGroup()
     with torch.no_grad():
@@ -82,8 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", type=int, default=10)
 
     args = parser.parse_args()
-    train_loader, train_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
-    valid_loader, valid_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
+    
     model = ShuffleNetV2OneShot()
     model.cuda()
     apply_fixed_architecture(model, args.architecture)
@@ -98,7 +101,7 @@ if __name__ == "__main__":
     writer = SummaryWriter(log_dir=args.tb_dir)
 
     for epoch in range(args.epochs):
-        train(epoch, model, criterion, optimizer, train_loader, writer, args, train_iters)
-        validate(epoch, model, criterion, valid_loader, writer, args, valid_iters)
+        train(epoch, model, criterion, optimizer, writer, args)
+        validate(epoch, model, criterion, writer, args)
         scheduler.step()
     writer.close()
