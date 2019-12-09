@@ -2,8 +2,6 @@
 
 We are trying to support various NAS algorithms with unified programming interface, and it's still in experimental stage. It means the current programing interface might be updated in future.
 
-*previous [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) interface will be deprecated soon.*
-
 ## Programming interface for user model
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
