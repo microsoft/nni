@@ -22,7 +22,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public hdfsLogPath: string;
     public isEarlyStopped?: boolean;
 
-    constructor(id: string, status: TrialJobStatus, paiJobName : string,
+    constructor(id: string, status: TrialJobStatus, paiJobName: string,
                 submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
