@@ -30,7 +30,7 @@ class KnowledgeDistill():
         self.kd_T = kd_T
         self.kd_beta = kd_beta
 
-    def _get_kd_loss(self, data, student_out):
+    def _get_kd_loss(self, data, student_out, teacher_out_preprocess=None):
         """
         Parameters
         ----------
@@ -38,6 +38,10 @@ class KnowledgeDistill():
             the input training data
         student_out: torch.Tensor
             output of the student network
+        teacher_out_preprocess: function
+            a function for pre-processing teacher_model's output
+            e.g. when teacher_out_preprocess=lambda x:x[0]
+            extract teacher_model's output (tensor1, tensor2)->tensor1
 
         Returns
         -------
@@ -47,6 +51,11 @@ class KnowledgeDistill():
 
         with torch.no_grad():
             kd_out = self.teacher_model(data)
+        if teacher_out_preprocess is not None:
+            kd_out = teacher_out_preprocess(kd_out)
+        assert type(kd_out) is torch.Tensor
+        assert type(student_out) is torch.Tensor
+        assert kd_out.shape == student_out.shape
         soft_log_out = F.log_softmax(student_out / self.kd_T, dim=1)
         soft_t = F.softmax(kd_out / self.kd_T, dim=1)
         loss_kd = F.kl_div(soft_log_out, soft_t.detach(), reduction='batchmean')
