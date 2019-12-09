@@ -20,6 +20,6 @@ For details, please refer to the following tutorials:
 
     Overview <NAS/Overview>
     NAS Interface <NAS/NasInterface>
-    ENAS <NAS/Overview>
-    DARTS <NAS/Overview>
+    ENAS <NAS/ENAS>
+    DARTS <NAS/DARTS>
     P-DARTS <NAS/Overview>
