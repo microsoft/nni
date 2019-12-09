@@ -1,5 +1,6 @@
 import argparse
 import logging
+import random
 from itertools import cycle
 
 import nni

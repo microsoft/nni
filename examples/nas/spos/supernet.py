@@ -2,13 +2,12 @@ import argparse
 
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.callbacks import Callback, LRSchedulerCallback
-
-from network import ShuffleNetV2OneShot, load_and_parse_state_dict
+from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.callbacks import ModelCheckpoint
 from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
-from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
 
+from network import ShuffleNetV2OneShot, load_and_parse_state_dict
+from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("SPOS Supernet Training")

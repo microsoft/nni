@@ -1,14 +1,11 @@
 import os
 
+import numpy as np
 import torch
 import torch.nn as nn
-
 from PIL import Image
-import numpy as np
-
 from torchvision import transforms
 from torchvision.datasets import ImageNet
-
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -57,14 +54,14 @@ def get_imagenet(imagenet_root, spos_pre):
         ]
 
     train_transform = transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
-        transforms.RandomHorizontalFlip(0.5),
-    ] + postprocess)
+                                             transforms.RandomResizedCrop(224),
+                                             transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+                                             transforms.RandomHorizontalFlip(0.5),
+                                         ] + postprocess)
     valid_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-    ] + postprocess)
+                                             transforms.Resize(256),
+                                             transforms.CenterCrop(224),
+                                         ] + postprocess)
     train_dataset = ImageNet(imagenet_root, split="train", transform=train_transform)
     valid_dataset = ImageNet(imagenet_root, split="val", transform=valid_transform)
     return train_dataset, valid_dataset

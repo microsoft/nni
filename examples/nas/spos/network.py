@@ -4,10 +4,9 @@ import re
 
 import torch
 import torch.nn as nn
+from nni.nas.pytorch import mutables
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
-
-from nni.nas.pytorch import mutables
 
 
 class ShuffleNetV2OneShot(nn.Module):

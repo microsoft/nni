@@ -1,12 +1,10 @@
 import os
-import time
-import torch.utils.data
+
 import nvidia.dali.ops as ops
 import nvidia.dali.types as types
-import torchvision.datasets as datasets
+import torch.utils.data
 from nvidia.dali.pipeline import Pipeline
-import torchvision.transforms as transforms
-from nvidia.dali.plugin.pytorch import DALIClassificationIterator, DALIGenericIterator
+from nvidia.dali.plugin.pytorch import DALIClassificationIterator
 
 
 class HybridTrainPipe(Pipeline):
@@ -78,4 +76,4 @@ def get_imagenet_iter_dali(split, image_dir, batch_size, num_threads,
     pipeline.build()
     num_samples = pipeline.epoch_size("Reader")
     return DALIClassificationIterator(pipeline, size=num_samples, fill_last_batch=split == "train"), \
-        (num_samples + batch_size - 1) // batch_size
+           (num_samples + batch_size - 1) // batch_size

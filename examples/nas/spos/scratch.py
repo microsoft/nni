@@ -3,12 +3,12 @@ import logging
 
 import torch
 import torch.nn as nn
+from dataloader import get_imagenet_iter_dali
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
 
-from dataloader import get_imagenet_iter_dali
-from network import ShuffleNetV2OneShot, load_and_parse_state_dict
+from network import ShuffleNetV2OneShot
 from utils import CrossEntropyLabelSmooth, accuracy
 
 logger = logging.getLogger("nni")
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", type=int, default=10)
 
     args = parser.parse_args()
-    
+
     model = ShuffleNetV2OneShot()
     model.cuda()
     apply_fixed_architecture(model, args.architecture)
