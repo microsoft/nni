@@ -122,7 +122,6 @@ if __name__ == "__main__":
         "avazu" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/avazu-app.bz2"
     }
 
-<<<<<<< HEAD
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--pipeline_name', type=str, help='display pipeline_name.')
@@ -141,28 +140,5 @@ if __name__ == "__main__":
         test_memory(pipeline_name, name, path)
     else:
         print("Not support test object.\t", test_object)
-=======
-    test_benchmark = Benchmark(LIBSVM_DATA)
-
-    pipeline1 = make_pipeline(LogisticRegression())
-    print("Test all data in LogisticRegression.")
-    print()
-    test_benchmark.run_all_test(pipeline1)
-
-    pipeline2 = make_pipeline(FeatureGradientSelector(), LogisticRegression())
-    print("Test data selected by FeatureGradientSelector in LogisticRegression.")
-    print()
-    test_benchmark.run_all_test(pipeline2)
-
-    pipeline3 = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
-    print("Test data selected by TreeClssifier in LogisticRegression.")
-    print()
-    test_benchmark.run_all_test(pipeline3)
-
-    pipeline4 = make_pipeline(FeatureGradientSelector(n_features=20), LogisticRegression())
-    print("Test data selected by FeatureGradientSelector top 20 in LogisticRegression.")
-    print()
-    test_benchmark.run_all_test(pipeline4)
->>>>>>> upstream/master
     
     print("Done.")
