@@ -250,7 +250,7 @@ class DoReFaQuantizer(Quantizer):
 class ClipGrad(QuantGrad):
     @staticmethod
     def quant_backward(tensor, grad_output, quant_type):
-        if quant_type == 2:
+        if quant_type == 2: # quant_type is quant_output
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output
 
@@ -272,7 +272,7 @@ class BNNQuantizer(Quantizer):
         # remove zeros
         out[out == 0] = 1
         return out
-    
+
     def quantize_output(self, output, config, **kwargs):
         out = torch.sign(output)
         # remove zeros

@@ -253,7 +253,7 @@ class Quantizer(Compressor):
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
         self.quant_grad = QuantGrad
-    
+
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize weight.
@@ -321,6 +321,11 @@ class Quantizer(Compressor):
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
+            else:
+                layer.module.register_parameter("old_weight", torch.nn.Parameter(layer.module.weight))
+                delattr(layer.module, "weight")
+                layer.module.register_buffer('weight', layer.module.old_weight)
+
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
@@ -328,11 +333,9 @@ class Quantizer(Compressor):
                 inputs = self.quant_grad.apply(inputs, 0, self.quantize_input, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
-                weight = layer.module.weight.data
-                new_weight = self.quant_grad.apply(weight, 1, self.quantize_weight, config, layer) # quant_grad is not necessary here
-                layer.module.weight.data = new_weight
+                new_weight = self.quant_grad.apply(layer.module.old_weight, 1, self.quantize_weight, config, layer)
+                layer.module.weight = new_weight
                 result = layer._forward(*inputs)
-                layer.module.weight.data = weight
             else:
                 result = layer._forward(*inputs)
 
@@ -350,9 +353,9 @@ class QuantGrad(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, tensor, quant_type, quant_func, config, layer):
-        ctx.save_for_backward(tensor, torch.tensor(quant_type))
+        ctx.save_for_backward(tensor, torch.Tensor([quant_type]))
         return quant_func(tensor, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-    
+
     @classmethod
     def backward(cls, ctx, grad_output):
         tensor, quant_type = ctx.saved_variables
@@ -361,6 +364,7 @@ class QuantGrad(torch.autograd.Function):
 
 def _check_weight(module):
     try:
-        return isinstance(module.weight, torch.nn.Parameter) and isinstance(module.weight.data, torch.Tensor)
+        return isinstance(module.weight.data, torch.Tensor)
+        # return isinstance(module.weight, torch.nn.Parameter) and isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
