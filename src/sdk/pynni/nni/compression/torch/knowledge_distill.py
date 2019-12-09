@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 
 class KnowledgeDistill():
     """
-    Knowledge Distill support while fine-tuning the compressed model
+    Knowledge Distillaion support while fine-tuning the compressed model
     Geoffrey Hinton, Oriol Vinyals, Jeff Dean
     "Distilling the Knowledge in a Neural Network"
     https://arxiv.org/abs/1503.02531
