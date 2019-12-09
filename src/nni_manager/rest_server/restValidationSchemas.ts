@@ -8,7 +8,7 @@ const joi = require('joi');
 export namespace ValidationSchemas {
     export const SETCLUSTERMETADATA = {
         body: {
-            machine_list: joi.array().items(joi.object({
+            machine_list: joi.array().items(joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 username: joi.string().required(),
                 ip: joi.string().ip().required(),
                 port: joi.number().min(1).max(65535).required(),
@@ -19,12 +19,12 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             })),
-            local_config: joi.object({
+            local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             }),
-            trial_config: joi.object({
+            trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
                 dataDir: joi.string(),
@@ -89,13 +89,13 @@ export namespace ValidationSchemas {
                     })
                 })
             }),
-            pai_config: joi.object({
+            pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
-            kubeflow_config: joi.object({
+            kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),
                 apiVersion: joi.string().min(1),
@@ -113,7 +113,7 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
-            frameworkcontroller_config: joi.object({
+            frameworkcontroller_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 storage: joi.string().min(1),
                 serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
@@ -130,7 +130,7 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
-            nni_manager_ip: joi.object({
+            nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             })
         }
@@ -184,6 +184,7 @@ export namespace ValidationSchemas {
     };
     export const UPDATEEXPERIMENT = {
         query: {
+            /* eslint-disable-next-line @typescript-eslint/camelcase */
             update_type: joi.string().required().valid('TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION', 'SEARCH_SPACE', 'MAX_TRIAL_NUM')
         },
         body: {

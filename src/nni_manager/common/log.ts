@@ -84,7 +84,7 @@ class Logger {
         this.readonly = isReadonly();
     }
 
-    public close() {
+    public close(): void {
         this.writable.destroy();
     }
 

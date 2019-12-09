@@ -4,8 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
-import { ChildProcess, spawn, StdioOptions } from 'child_process';
+import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
@@ -21,7 +20,7 @@ import {
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
-    ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
+    INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
@@ -64,7 +63,7 @@ class NNIManager implements Manager {
             status: 'INITIALIZED',
             errors: []
         };
-        this.trialJobMetricListener = (metric: TrialJobMetric) => {
+        this.trialJobMetricListener = (metric: TrialJobMetric): void => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
@@ -123,8 +122,8 @@ class NNIManager implements Manager {
 
         // TODO: NNI manager should not peek tuner's internal protocol, let's refactor this later
         const packedParameter = {
-            parameter_id: null,
-            parameter_source: 'customized',
+            parameter_id: null, // eslint-disable-line @typescript-eslint/camelcase
+            parameter_source: 'customized', // eslint-disable-line @typescript-eslint/camelcase
             parameters: JSON.parse(hyperParams)
         }
 
@@ -502,9 +501,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id,
+                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams
+                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
                     }));
                     break;
                 case 'FAILED':
@@ -515,9 +514,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id,
+                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams
+                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
                     }));
                     break;
                 case 'WAITING':
@@ -695,7 +694,7 @@ class NNIManager implements Manager {
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
         this.log.info(`NNIManager received command from dispatcher: ${commandType}, ${content}`);
         switch (commandType) {
-            case INITIALIZED:
+            case INITIALIZED: {
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters
                 if (this.trialDataForTuner.length > 0) {
                     if (this.dispatcher === undefined) {
@@ -705,7 +704,8 @@ class NNIManager implements Manager {
                 }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
-            case NEW_TRIAL_JOB:
+            }
+            case NEW_TRIAL_JOB: {
                 if (this.status.status === 'TUNER_NO_MORE_TRIAL') {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
@@ -719,7 +719,8 @@ class NNIManager implements Manager {
                 };
                 this.waitingTrials.push(form);
                 break;
-            case SEND_TRIAL_JOB_PARAMETER:
+            }
+            case SEND_TRIAL_JOB_PARAMETER: {
                 const tunerCommand: any = JSON.parse(content);
                 assert(tunerCommand.parameter_index >= 0);
                 assert(tunerCommand.trial_job_id !== undefined);
@@ -739,15 +740,18 @@ class NNIManager implements Manager {
                         'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 }
                 break;
-            case NO_MORE_TRIAL_JOBS:
+            }
+            case NO_MORE_TRIAL_JOBS: {
                 if (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
                     this.setStatus('TUNER_NO_MORE_TRIAL');
                 }
                 break;
-            case KILL_TRIAL_JOB:
+            }
+            case KILL_TRIAL_JOB: {
                 this.log.info(`cancelTrialJob: ${JSON.parse(content)}`);
                 await this.trainingService.cancelTrialJob(JSON.parse(content), true);
                 break;
+            }
             default:
                 throw new Error('Error: unsupported command type from tuner');
         }
