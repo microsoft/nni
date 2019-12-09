@@ -52,7 +52,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
                     }
                     break;
-                case  'Completed':
+                case  'Completed': {
                     const completedJobType: FrameworkControllerJobCompleteStatus =
                       <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
                     switch (completedJobType) {
@@ -66,6 +66,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                     }
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);
                     break;
+                }
                 default:
             }
         }

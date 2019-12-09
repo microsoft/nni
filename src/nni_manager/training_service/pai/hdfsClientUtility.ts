@@ -109,6 +109,29 @@ export namespace HDFSClientUtility {
     }
 
     /**
+     * Check if an HDFS path already exists
+     *
+     * @param hdfsPath target path need to check in HDFS
+     * @param hdfsClient HDFS client
+     */
+    export async function pathExists(hdfsPath: string, hdfsClient: any): Promise<boolean> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
+        hdfsClient.exists(hdfsPath, (exist: boolean) => {
+             deferred.resolve(exist);
+        });
+
+        let timeoutId: NodeJS.Timer;
+
+        const delayTimeout: Promise<boolean> = new Promise<boolean>((resolve: Function, reject: Function): void => {
+            // Set timeout and reject the promise once reach timeout (5 seconds)
+            timeoutId = setTimeout(() => { reject(`Check HDFS path ${hdfsPath} exists timeout`); }, 5000);
+        });
+
+        return Promise.race([deferred.promise, delayTimeout])
+          .finally(() => { clearTimeout(timeoutId); });
+    }
+
+    /**
      * Read content from HDFS file
      *
      * @param hdfsPath HDFS file path
@@ -140,29 +163,6 @@ export namespace HDFSClientUtility {
         });
 
         return deferred.promise;
-    }
-
-    /**
-     * Check if an HDFS path already exists
-     *
-     * @param hdfsPath target path need to check in HDFS
-     * @param hdfsClient HDFS client
-     */
-    export async function pathExists(hdfsPath: string, hdfsClient: any): Promise<boolean> {
-        const deferred: Deferred<boolean> = new Deferred<boolean>();
-        hdfsClient.exists(hdfsPath, (exist: boolean) => {
-             deferred.resolve(exist);
-        });
-
-        let timeoutId: NodeJS.Timer;
-
-        const delayTimeout: Promise<boolean> = new Promise<boolean>((resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(() => { reject(`Check HDFS path ${hdfsPath} exists timeout`); }, 5000);
-        });
-
-        return Promise.race([deferred.promise, delayTimeout])
-          .finally(() => { clearTimeout(timeoutId); });
     }
 
     /**

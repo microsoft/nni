@@ -17,7 +17,6 @@ import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
-import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
@@ -116,7 +115,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
 
-            case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
+            case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG: {
                 const kubeflowClusterJsonObject: object = JSON.parse(value);
                 this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
                 if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
@@ -125,9 +124,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                     this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
                     await this.createAzureStorage(
                         azureKubeflowClusterConfig.keyVault.vaultName,
-                        azureKubeflowClusterConfig.keyVault.name,
-                        azureKubeflowClusterConfig.azureStorage.accountName,
-                        azureKubeflowClusterConfig.azureStorage.azureShare
+                        azureKubeflowClusterConfig.keyVault.name
                     );
                 } else if (this.kubeflowClusterConfig.storageType === 'nfs') {
                     const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
@@ -139,8 +136,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 this.kubernetesCRDClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
                                                                                          this.kubeflowClusterConfig.apiVersion);
                 break;
-
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            }
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 if (this.kubeflowClusterConfig === undefined) {
                     this.log.error('kubeflow cluster config is not initialized');
 
@@ -163,6 +160,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                     return Promise.reject(new Error(error));
                 }
                 break;
+            }
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;

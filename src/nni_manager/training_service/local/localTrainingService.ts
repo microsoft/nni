@@ -299,7 +299,7 @@ class LocalTrainingService implements TrainingService {
 
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 let getResult: Promise<string>;
                 if (this.localTrialConfig === undefined) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
@@ -308,6 +308,7 @@ class LocalTrainingService implements TrainingService {
                 }
 
                 return getResult;
+            }
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }

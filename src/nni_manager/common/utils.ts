@@ -16,11 +16,9 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
-import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
@@ -325,7 +323,7 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
  * Utility method to calculate file numbers under a directory, recursively
  * @param directory directory name
  */
-function countFilesRecursively(directory: string, timeoutMilliSeconds?: number): Promise<number> {
+function countFilesRecursively(directory: string): Promise<number> {
     if(!fs.existsSync(directory)) {
         throw Error(`Direcotory ${directory} doesn't exist`);
     }
@@ -359,7 +357,7 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 }
 
 function validateFileName(fileName: string): boolean {
-    const pattern: string = '^[a-z0-9A-Z\._-]+$';
+    const pattern: string = '^[a-z0-9A-Z._-]+$';
     const validateResult = fileName.match(pattern);
     if(validateResult) {
         return true;
@@ -440,6 +438,7 @@ async function isAlive(pid: any): Promise<boolean> {
             }
         }
         catch (error) {
+            //ignore
         }
     }
     else {

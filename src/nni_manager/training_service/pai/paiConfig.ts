@@ -24,7 +24,7 @@ export class PAITaskRole {
     //Shared memory for one task in the task role
     public readonly shmMB?: number;
     //portList to specify the port used in container
-    public portList?: portListMetaData[];
+    public portList?: PortListMetaData[];
 
     /**
      * Constructor
@@ -36,7 +36,7 @@ export class PAITaskRole {
      * @param command Executable command for tasks in the task role, can not be empty
      */
     constructor(name: string, taskNumber: number, cpuNumber: number, memoryMB: number, gpuNumber: number,
-                command: string, shmMB?: number, portList?: portListMetaData[]) {
+                command: string, shmMB?: number, portList?: PortListMetaData[]) {
         this.name = name;
         this.taskNumber = taskNumber;
         this.cpuNumber = cpuNumber;
@@ -113,7 +113,7 @@ export class PAIClusterConfig {
 /**
  * portList data structure used in PAI taskRole
  */
-export class portListMetaData {
+export class PortListMetaData {
     public readonly label: string = '';
     public readonly beginAt: number = 0;
     public readonly portNumber: number = 0;
@@ -135,10 +135,10 @@ export class NNIPAITrialConfig extends TrialConfig {
     //authentication file used for private Docker registry 
     public authFile?: string;
     //portList to specify the port used in container
-    public portList?: portListMetaData[];
+    public portList?: PortListMetaData[];
 
     constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
-                image: string, virtualCluster?: string, shmMB?: number, authFile?: string, portList?: portListMetaData[]) {
+                image: string, virtualCluster?: string, shmMB?: number, authFile?: string, portList?: PortListMetaData[]) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;

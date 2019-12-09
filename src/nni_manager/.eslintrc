@@ -22,7 +22,8 @@
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,
         "@typescript-eslint/no-inferrable-types": 0,
-        "no-inner-declarations": 0
+        "no-inner-declarations": 0,
+        "@typescript-eslint/no-var-requires": 0
     },
     "ignorePatterns": [
         "node_modules/",

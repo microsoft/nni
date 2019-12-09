@@ -22,7 +22,6 @@ import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
-const yaml = require('js-yaml');
 const fs = require('fs');
 
 /**
@@ -203,7 +202,7 @@ abstract class KubernetesTrainingService {
     }
 
     // tslint:disable: no-unsafe-any no-any
-    protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
+    protected async createAzureStorage(vaultName: string, valutKeyName: string): Promise<void> {
         try {
             const result: any = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
             if (result.stderr) {

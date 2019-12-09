@@ -4,7 +4,6 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
 import * as os from 'os';
 import * as path from 'path';
 import { Client, ClientChannel, SFTPWrapper } from 'ssh2';
@@ -22,31 +21,6 @@ import { RemoteCommandResult } from './remoteMachineData';
  *
  */
 export namespace SSHClientUtility {
-    /**
-     * Copy files and directories in local directory recursively to remote directory
-     * @param localDirectory local diretory
-     * @param remoteDirectory remote directory
-     * @param sshClient SSH client
-     */
-    export async function copyDirectoryToRemote(localDirectory: string, remoteDirectory: string, sshClient: Client, remoteOS: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-        const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
-        const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
-        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), tmpTarName);
-
-        // Compress files in local directory to experiment root directory
-        await tarAdd(localTarPath, localDirectory);
-        // Copy the compressed file to remoteDirectory and delete it
-        await copyFileToRemote(localTarPath, remoteTarPath, sshClient);
-        await execRemove(localTarPath);
-        // Decompress the remote compressed file in and delete it
-        await remoteExeCommand(`tar -oxzf ${remoteTarPath} -C ${remoteDirectory}`, sshClient);
-        await remoteExeCommand(`rm ${remoteTarPath}`, sshClient);
-        deferred.resolve();
-
-        return deferred.promise;
-    }
-
     /**
      * Copy local file to remote path
      * @param localFilePath the path of local file
@@ -117,6 +91,31 @@ export namespace SSHClientUtility {
                 });
             });
         });
+
+        return deferred.promise;
+    }
+
+    /**
+     * Copy files and directories in local directory recursively to remote directory
+     * @param localDirectory local diretory
+     * @param remoteDirectory remote directory
+     * @param sshClient SSH client
+     */
+    export async function copyDirectoryToRemote(localDirectory: string, remoteDirectory: string, sshClient: Client, remoteOS: string): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
+        const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
+        const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
+        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), tmpTarName);
+
+        // Compress files in local directory to experiment root directory
+        await tarAdd(localTarPath, localDirectory);
+        // Copy the compressed file to remoteDirectory and delete it
+        await copyFileToRemote(localTarPath, remoteTarPath, sshClient);
+        await execRemove(localTarPath);
+        // Decompress the remote compressed file in and delete it
+        await remoteExeCommand(`tar -oxzf ${remoteTarPath} -C ${remoteDirectory}`, sshClient);
+        await remoteExeCommand(`rm ${remoteTarPath}`, sshClient);
+        deferred.resolve();
 
         return deferred.promise;
     }

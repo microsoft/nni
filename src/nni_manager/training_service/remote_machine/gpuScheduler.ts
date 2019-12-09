@@ -5,7 +5,6 @@
 
 import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
-import { TrialJobDetail } from '../../common/trainingService';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
 import {
@@ -224,11 +223,11 @@ export class GPUScheduler {
             resultType: ScheduleResultType.SUCCEED,
             scheduleInfo: {
                 rmMeta: rmMeta,
-                cuda_visible_device: allocatedGPUs
-                                       .map((gpuInfo: GPUInfo) => {
-                                            return gpuInfo.index;
-                                        })
-                                       .join(',')
+                cudaVisibleDevice: allocatedGPUs
+                                    .map((gpuInfo: GPUInfo) => {
+                                        return gpuInfo.index;
+                                    })
+                                    .join(',')
             }
         };
     }

@@ -227,7 +227,7 @@ export class SSHClientManager {
 
 export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType};
 
-export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cuda_visible_device: string};
+export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cudaVisibleDevice: string};
 
 export enum ScheduleResultType {
     // Schedule succeeded

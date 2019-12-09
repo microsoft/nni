@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 // tslint:disable-next-line:no-implicit-dependencies
@@ -13,7 +12,6 @@ import * as component from '../../common/component';
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import { MethodNotImplementedError } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
