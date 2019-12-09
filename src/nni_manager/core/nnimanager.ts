@@ -235,10 +235,10 @@ class NNIManager implements Manager {
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
         const importedData: string[] = await this.dataStore.getImportedData();
-        let trialData: Object[] = JSON.parse(finishedTrialData);
+        let trialData: Record<string, any>[] = JSON.parse(finishedTrialData);
         for (const oneImportedData of importedData) {
             // do not deduplicate
-            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
+            trialData = trialData.concat(<Record<string, any>[]>JSON.parse(oneImportedData));
         }
         this.trialDataForTuner = JSON.stringify(trialData);
 
@@ -361,7 +361,7 @@ class NNIManager implements Manager {
             includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
         }
 
-        let nniEnv = {
+        const nniEnv = {
             NNI_MODE: mode,
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
@@ -369,7 +369,7 @@ class NNIManager implements Manager {
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
             CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
         };
-        let newEnv = Object.assign({}, process.env, nniEnv);
+        const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);

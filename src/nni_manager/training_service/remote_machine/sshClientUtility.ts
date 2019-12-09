@@ -28,8 +28,7 @@ export namespace SSHClientUtility {
      * @param remoteDirectory remote directory
      * @param sshClient SSH client
      */
-    export async function copyDirectoryToRemote(localDirectory : string, remoteDirectory : string, sshClient : Client, remoteOS: string)
-     : Promise<void> {
+    export async function copyDirectoryToRemote(localDirectory: string, remoteDirectory: string, sshClient: Client, remoteOS: string): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
         const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
@@ -54,12 +53,12 @@ export namespace SSHClientUtility {
      * @param remoteFilePath the target path in remote machine
      * @param sshClient SSH Client
      */
-    export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<boolean> {
+    export function copyFileToRemote(localFilePath: string, remoteFilePath: string, sshClient: Client): Promise<boolean> {
         const log: Logger = getLogger();
         log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
         assert(sshClient !== undefined);
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        sshClient.sftp((err : Error, sftp : SFTPWrapper) => {
+        sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
                 deferred.reject(err);
@@ -67,7 +66,7 @@ export namespace SSHClientUtility {
                 return;
             }
             assert(sftp !== undefined);
-            sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr : Error) => {
+            sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr: Error) => {
                 sftp.end();
                 if (fastPutErr !== undefined && fastPutErr !== null) {
                     deferred.reject(fastPutErr);
@@ -86,15 +85,15 @@ export namespace SSHClientUtility {
      * @param client SSH Client
      */
     // tslint:disable:no-unsafe-any no-any
-    export function remoteExeCommand(command : string, client : Client): Promise<RemoteCommandResult> {
+    export function remoteExeCommand(command: string, client: Client): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
         log.debug(`remoteExeCommand: command: [${command}]`);
-        const deferred : Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
+        const deferred: Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
         let stderr: string = '';
-        let exitCode : number;
+        let exitCode: number;
 
-        client.exec(command, (err : Error, channel : ClientChannel) => {
+        client.exec(command, (err: Error, channel: ClientChannel) => {
             if (err !== undefined && err !== null) {
                 log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
@@ -102,14 +101,14 @@ export namespace SSHClientUtility {
                 return;
             }
 
-            channel.on('data', (data : any, dataStderr : any) => {
+            channel.on('data', (data: any, dataStderr: any) => {
                 if (dataStderr !== undefined && dataStderr !== null) {
                     stderr += data.toString();
                 } else {
                     stdout += data.toString();
                 }
             })
-              .on('exit', (code : any, signal : any) => {
+              .on('exit', (code: any, signal: any) => {
                 exitCode = <number>code;
                 deferred.resolve({
                     stdout : stdout,
@@ -124,7 +123,7 @@ export namespace SSHClientUtility {
 
     export function getRemoteFileContent(filePath: string, sshClient: Client): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
-        sshClient.sftp((err: Error, sftp : SFTPWrapper) => {
+        sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 getLogger()
                   .error(`getRemoteFileContent: ${err.message}`);
@@ -133,10 +132,10 @@ export namespace SSHClientUtility {
                 return;
             }
             try {
-                const sftpStream : stream.Readable = sftp.createReadStream(filePath);
+                const sftpStream: stream.Readable = sftp.createReadStream(filePath);
 
                 let dataBuffer: string = '';
-                sftpStream.on('data', (data : Buffer | string) => {
+                sftpStream.on('data', (data: Buffer | string) => {
                     dataBuffer += data;
                 })
                   .on('error', (streamErr: Error) => {

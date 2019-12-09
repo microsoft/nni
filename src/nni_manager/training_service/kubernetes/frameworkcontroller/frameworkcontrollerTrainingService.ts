@@ -237,7 +237,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
         
-        const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
         // Create tmp trial working folder locally.
@@ -251,7 +251,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
 
         // Write file content ( parameter.cfg ) to local tmp folders
-        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form);
+        const trialForm: TrialJobApplicationForm = (<TrialJobApplicationForm>form);
         if (form !== undefined) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(form.hyperParameters)),
                                         form.hyperParameters.value, { encoding: 'utf8' });
@@ -266,7 +266,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('frameworkcontroller trial config is not initialized');
         }
 
-        const podResources : any = [];
+        const podResources: any = [];
         for (const taskRole of this.fcTrialConfig.taskRoles) {
             const resource: any = {};
             resource.requests = this.generatePodResource(taskRole.memoryMB, taskRole.cpuNum, taskRole.gpuNum);
@@ -300,7 +300,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
      * @param podResources  pod template
      */
     private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
-                                                 frameworkcontrollerJobName : string, podResources : any) : Promise<any> {
+                                                 frameworkcontrollerJobName: string, podResources: any): Promise<any> {
         if (this.fcClusterConfig === undefined) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -424,7 +424,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 }]
         }];
         
-        let spec: any = {
+        const spec: any = {
             containers: containers,
             initContainers: initContainers,
             restartPolicy: 'OnFailure',

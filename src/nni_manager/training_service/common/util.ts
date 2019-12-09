@@ -20,7 +20,7 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @returns file number under codeDir
  */
 // tslint:disable: no-redundant-jsdoc
-export async function validateCodeDir(codeDir: string) : Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
     let fileNameValid: boolean = true;
     try {

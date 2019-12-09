@@ -14,7 +14,7 @@ import { KubernetesTrialJobDetail } from './kubernetesData';
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
 export class KubernetesJobInfoCollector {
-    protected readonly trialJobsMap : Map<string, KubernetesTrialJobDetail>;
+    protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
     protected readonly log: Logger = getLogger();
     protected readonly statusesNeedToCheck: TrialJobStatus[];
 
@@ -23,9 +23,9 @@ export class KubernetesJobInfoCollector {
         this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
 
-    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined) : Promise<void> {
+    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined): Promise<void> {
         assert(kubernetesCRDClient !== undefined);
-        const updateKubernetesTrialJobs : Promise<void>[] = [];
+        const updateKubernetesTrialJobs: Promise<void>[] = [];
         for (const [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
             if (kubernetesTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
@@ -41,7 +41,7 @@ export class KubernetesJobInfoCollector {
     }
 
     protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+                                               kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
             throw new MethodNotImplementedError();
     }
 }
