@@ -33,8 +33,8 @@ from torch.utils.data import DataLoader, Dataset
 # pylint: disable=E0611
 from torch.utils.data.dataloader import _DataLoaderIter, _utils
 
-import nni.feature_engineering.gradient_selector.constants as constants
-import nni.feature_engineering.gradient_selector.syssettings as syssettings
+from . import constants as constants
+from . import syssettings as syssettings
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)
 sparsetensor = syssettings.torch.sparse.tensortype

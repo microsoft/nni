@@ -30,9 +30,9 @@ from sklearn.utils.validation import check_is_fitted
 import torch
 
 from nni.feature_engineering.feature_selector import FeatureSelector
-import nni.feature_engineering.gradient_selector.constants as constants
-from nni.feature_engineering.gradient_selector.fginitialize import PrepareData
-from nni.feature_engineering.gradient_selector.fgtrain import _train
+from . import constants as constants
+from .fginitialize import PrepareData
+from .fgtrain import _train
 
 
 class FeatureGradientSelector(FeatureSelector, BaseEstimator, SelectorMixin):
