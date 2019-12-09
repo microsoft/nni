@@ -19,6 +19,10 @@ import bz2
 import urllib.request
 import numpy as np
 import datetime
+
+import line_profiler
+profile = line_profiler.LineProfiler()
+
 import os
 
 from sklearn.datasets import load_svmlight_file
