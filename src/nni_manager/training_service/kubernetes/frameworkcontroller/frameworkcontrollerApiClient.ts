@@ -9,12 +9,12 @@ import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 /**
  * FrameworkController Client
  */
-abstract class FrameworkControllerClient extends KubernetesCRDClient {
+class FrameworkControllerClientFactory {
     /**
      * Factory method to generate operator client
      */
     // tslint:disable-next-line:function-name
-    public static generateFrameworkControllerClient(): KubernetesCRDClient {
+    public static createClient(): KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
 }
@@ -22,7 +22,7 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient {
 /**
  * FrameworkController ClientV1
  */
-class FrameworkControllerClientV1 extends FrameworkControllerClient {
+class FrameworkControllerClientV1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize frameworkcontroller CRD definition
      */
@@ -43,4 +43,4 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
     }
 }
 
-export { FrameworkControllerClient, GeneralK8sClient };
+export { FrameworkControllerClientFactory, GeneralK8sClient };
