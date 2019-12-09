@@ -250,6 +250,10 @@ class Quantizer(Compressor):
     Base quantizer for pytorch quantizer
     """
 
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        self.quant_grad = QuantGrad
+    
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize weight.
@@ -321,11 +325,11 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
-                inputs = straight_through_estimator.apply(inputs, self.quantize_input, config, layer)
+                inputs = self.quant_grad.apply(inputs, 0, self.quantize_input, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
-                new_weight = straight_through_estimator.apply(weight, self.quantize_weight, config, layer)
+                new_weight = self.quant_grad.apply(weight, 1, self.quantize_weight, config, layer) # quant_grad is not necessary here
                 layer.module.weight.data = new_weight
                 result = layer._forward(*inputs)
                 layer.module.weight.data = weight
@@ -333,21 +337,27 @@ class Quantizer(Compressor):
                 result = layer._forward(*inputs)
 
             if 'output' in config["quant_types"]:
-                result = straight_through_estimator.apply(result, self.quantize_output, config, layer)
+                result = self.quant_grad.apply(result, 2, self.quantize_output, config, layer)
             return result
 
         layer.module.forward = new_forward
 
 
-class straight_through_estimator(torch.autograd.Function):
+class QuantGrad(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, output, func, config, layer):
-        return func(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+    def quant_backward(tensor, grad_output, quant_type):
+        return grad_output
 
     @staticmethod
-    def backward(ctx, grad_output):
-        # Straight-through estimator
-        return grad_output, None, None, None
+    def forward(ctx, tensor, quant_type, quant_func, config, layer):
+        ctx.save_for_backward(tensor, torch.tensor(quant_type))
+        return quant_func(tensor, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+    
+    @classmethod
+    def backward(cls, ctx, grad_output):
+        tensor, quant_type = ctx.saved_variables
+        output = cls.quant_backward(tensor, grad_output, quant_type)
+        return output, None, None, None, None
 
 def _check_weight(module):
     try:

@@ -3,9 +3,9 @@
 
 import logging
 import torch
-from .compressor import Quantizer
+from .compressor import Quantizer, QuantGrad
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
 logger = logging.getLogger(__name__)
 
@@ -246,10 +246,17 @@ class DoReFaQuantizer(Quantizer):
         output = torch.round(input_ri*scale)/scale
         return output
 
+
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        if quant_type == 2:
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
 class BNNQuantizer(Quantizer):
-    """Quantizer using the DoReFa scheme, as defined in:
-    Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
-    (https://arxiv.org/abs/1606.06160)
+    """BNNQuantizer
     """
     def __init__(self, model, config_list):
         """
@@ -257,15 +264,16 @@ class BNNQuantizer(Quantizer):
             - q_bits
         """
         super().__init__(model, config_list)
+        self.quant_grad = ClipGrad
 
     def quantize_weight(self, weight, config, **kwargs):
+        # module.weight.data = torch.clamp(weight, -1.0, 1.0)
         out = torch.sign(weight)
         # remove zeros
         out[out == 0] = 1
         return out
     
     def quantize_output(self, output, config, **kwargs):
-        # dont quantize last layer output
         out = torch.sign(output)
         # remove zeros
         out[out == 0] = 1
