@@ -245,7 +245,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 | Dataset | All Features + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | #Train | #Feature | 
 | ----------- | ------ | ------ | ------- | ------- | -------- |
-| colon-cancer | 0.7547, 890ms, 348MiB | 0.7368, 363ms, 286MiB | 0.7223, 171ms, N/A | 62 | 2,000 |
+| colon-cancer | 0.7547, 890ms, 348MiB | 0.7368, 363ms, 286MiB | 0.7223, 171ms, 1171 MiB | 62 | 2,000 |
 | gisette | 0.9725, 215ms, 584MiB | 0.89416, 446ms, 397MiB | 0.9792, 911ms, 234MiB | 6,000 | 5,000 |
 | avazu | 0.8834, N/A, N/A | N/A, N/A, N/A | N/A, N/A, N/A | 40,428,967 | 1,000,000 |
 | rcv1 | 0.9644, 557ms, 241MiB | 0.7333, 401ms, 281MiB | 0.9615, 752ms, 284MiB | 20,242 | 47,236 |
