@@ -241,7 +241,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 # Benchmark
 
-`Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data.
+`Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
 | Dataset | All Features + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | #Train | #Feature | 
 | ----------- | ------ | ------ | ------- | ------- | -------- |
@@ -252,6 +252,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 | news20.binary | 0.9208, 707ms, 361MiB | 0.6870, 565ms | 0.9070, 904ms | 19,996 | 1,355,191 |
 | real-sim | 0.9681, 433ms, 274MiB | 0.7969, 251ms, 274MiB | 0.9591, 643ms, 367MiB | 72,309 | 20,958 |
 
-The benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/
+The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/
 )
 
+The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.

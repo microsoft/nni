@@ -83,7 +83,7 @@ def is_experiment_done(nnimanager_log_path):
     
     with open(nnimanager_log_path, 'r') as f:
         log_content = f.read()
-    
+
     return EXPERIMENT_DONE_SIGNAL in log_content
 
 def get_experiment_status(status_url):
