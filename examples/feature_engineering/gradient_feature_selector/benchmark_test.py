@@ -18,7 +18,7 @@
 import bz2
 import urllib.request
 import numpy as np
-
+import datetime
 import os
 
 from sklearn.datasets import load_svmlight_file
@@ -34,7 +34,7 @@ from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
 class Benchmark():
 
-    def __init__(self, files, test_size = 0.2):
+    def __init__(self, files=None, test_size = 0.2):
         self.files =  files
         self.test_size = test_size
 
@@ -73,8 +73,24 @@ class Benchmark():
 
         return update_name
 
+def test_memory(pipeline_name, name, path):
+    if pipeline_name == "LR":
+        pipeline = make_pipeline(LogisticRegression())
 
-if __name__ == "__main__":
+    if pipeline_name == "FGS":
+        pipeline = make_pipeline(FeatureGradientSelector(), LogisticRegression())
+
+    if pipeline_name == "Tree":
+        pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
+    
+    test_benchmark = Benchmark()
+    print("Dataset:\t", name)
+    print("Pipeline:\t", pipeline_name)
+    test_benchmark.run_test(pipeline, name, path)
+    print("")
+
+
+def test_all_time():
     LIBSVM_DATA = {
         "rcv1" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2",
         # "avazu" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/avazu-app.bz2",
@@ -90,18 +106,52 @@ if __name__ == "__main__":
     test_benchmark = Benchmark(LIBSVM_DATA)
 
     pipeline1 = make_pipeline(LogisticRegression())
+    starttime = datetime.datetime.now()
     print("Test all data in LogisticRegression.")
-    print()
     test_benchmark.run_all_test(pipeline1)
-
-    pipeline2 = make_pipeline(FeatureGradientSelector(n_features=20), LogisticRegression())
-    print("Test data selected by FeatureGradientSelector in LogisticRegression.")
+    endtime = datetime.datetime.now()
+    print("Used time: ", (endtime - starttime).seconds)
     print()
+
+    pipeline2 = make_pipeline(FeatureGradientSelector(), LogisticRegression())
+    starttime = datetime.datetime.now()
+    print("Test data selected by FeatureGradientSelector auto in LogisticRegression.")
     test_benchmark.run_all_test(pipeline2)
+    endtime = datetime.datetime.now()
+    print("Used time: ", (endtime - starttime).seconds)
+    print()
 
     pipeline3 = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
+    starttime = datetime.datetime.now() 
     print("Test data selected by TreeClssifier in LogisticRegression.")
-    print()
+    endtime = datetime.datetime.now()
+    print("Used time: ", (endtime - starttime).seconds)
     test_benchmark.run_all_test(pipeline3)
+    print()
     
     print("Done.")
+
+
+if __name__ == "__main__":
+    LIBSVM_DATA = {
+        "rcv1" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2",
+        # "avazu" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/avazu-app.bz2",
+        "colon-cancer" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/covtype.libsvm.binary.bz2",
+        "gisette" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/gisette_scale.bz2",
+        # "kdd2010" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/kdda.bz2",
+        # "kdd2012" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/kdd12.bz2",
+        "news20.binary" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/news20.binary.bz2",
+        "real-sim" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/real-sim.bz2",
+        "webspam" : "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/webspam_wc_normalized_trigram.svm.bz2"
+    }
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pipeline_name', type=str, help='display pipeline_name')
+    parser.add_argument('--name', type=str, help='display name')
+
+    args = parser.parse_args()
+    pipeline_name = args.pipeline_name
+    name = args.name
+    path = LIBSVM_DATA[name]
+    test_memory(pipeline_name, name, path)
