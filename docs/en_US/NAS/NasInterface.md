@@ -53,7 +53,7 @@ def forward(self, x):
     out = self.input_switch([in_tensor1, in_tensor2, in_tensor3])
     ...
 ```
-`InputChoice` is a PyTorch module, in init, it needs meta information, for example, from how many input candidates to choose how many inputs, the name of this initialized `InputChoice`. The real candidate input tensors can only be obtained in `forward` function. In `forward`, `InputChoice` instance is called with real candidate input tensors.
+`InputChoice` is a PyTorch module, in init, it needs meta information, for example, from how many input candidates to choose how many inputs, and the name of this initialized `InputChoice`. The real candidate input tensors can only be obtained in `forward` function. In the `forward` function, the `InputChoice` module you create in `__init__` (e.g., `self.input_switch`) is called with real candidate input tensors.
 
 Some [NAS trainers](#one-shot-training-mode) need to know the source layer the input tensors, thus, we add one input argument `choose_from` in `InputChoice` to indicate the source layer of each candidate input. `choose_from` is a list of string, each element is `key` of `LayerChoice` and `InputChoice` or the name of a module (refer to [the code](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py) for more details).
 
@@ -99,8 +99,6 @@ trainer.export(file='./chosen_arch')
 Different trainers could have different input arguments depending on their algorithms. Please refer to [each trainer's code](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) for detailed arguments. After training, users could export the best one of the found models through `trainer.export()`. No need to start an NNI experiment through `nnictl`.
 
 The supported trainers can be found [here](Overview.md#supported-one-shot-nas-algorithms). A very simple example using NNI NAS API can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py).
-
-The complete example code can be found [here]().
 
 ### Classic distributed search
 
