@@ -80,21 +80,28 @@
         </ul>
       </td>
       <td align="left" >
-        <a href="docs/en_US/Tuner/BuiltinTuner.md">Tuner</a>
+        <a href="docs/en_US/Tuner/BuiltinTuner.md">Hyperparameter Tuning</a>
         <ul>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+          <b>Exhaustive search</b>
+          <ul>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
+            </ul>
+          <b>Use of a surrogate model</b>        
+          <ul>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li> 
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a> </li>
+            </ul>
+          <b>Featured for tuning</b>
+          <ul>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>            
+          </ul>
         </ul>
           <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor</a>
           <ul>
@@ -106,6 +113,8 @@
           <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
           <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
           <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a> </li>
+          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression (Beta)</a>
           <ul>
