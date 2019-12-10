@@ -75,6 +75,7 @@ class MixedOp(nn.Module):
         self.inactive_index = None
         self.log_prob = None
         self.current_prob_over_ops = None
+        self.n_choices = mutable.length
 
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
