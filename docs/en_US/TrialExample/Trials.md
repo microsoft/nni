@@ -127,6 +127,23 @@ In the YAML configure file, you need to set *useAnnotation* to true to enable NN
 useAnnotation: true
 ```
 
+## Standalone mode for debug
+
+NNI supports standalone mode for trial code to run without starting an NNI experiment. This is for finding out bugs in trial code more conveniently. NNI annotation natively supports standalone mode, as the added NNI related lines are comments. For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
+```python
+# NOTE: please assign default values to the hyperparameters in your trial code
+nni.get_next_parameter # return {}
+nni.report_final_result # have log printed on stdout, but does not report
+nni.report_intermediate_result # have log printed on stdout, but does not report
+nni.get_experiment_id # return "STANDALONE"
+nni.get_trial_id # return "STANDALONE"
+nni.get_sequence_id # return 0
+```
+
+You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code successfully runs with default hyperparameter values.
+
+For more debuggability, please refer to [How to Debug](../Tutorial/HowToDebug.md)
+
 ## Where are my trials?
 
 ### Local Mode
