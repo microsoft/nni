@@ -79,4 +79,6 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 ![](../../img/trial_error.jpg)
 
-如图，每个 Trial 都有日志路径，可以从中找到 Trial 的日志和 stderr。
+As it shows, every trial has a log path, where you can find trial's log and stderr.
+
+In addition to experiment level debug, NNI also provides the capability for debugging a single trial without the need to start the entire experiment. Refer to [standalone mode](../TrialExample/Trials.md#standalone-mode-for-debug) for more information about debug single trial code.
