@@ -12,7 +12,7 @@ Knowledge distillation support while fine-tuning the compressed model, in [Disti
 PyTorch code
 
 ```python
-from KnowledgeDistill.knowledge_distill import KnowledgeDistill
+from knowledge_distill.knowledge_distill import KnowledgeDistill
 kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
 
 for batch_idx, (data, target) in enumerate(train_loader):
