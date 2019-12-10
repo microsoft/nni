@@ -24,6 +24,8 @@ from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .convert_ss_to_scenario import generate_scenario
 
+logger = logging.getLogger('smac_AutoML')
+
 class SMACTuner(Tuner):
     """
     This is a wrapper of [SMAC](https://github.com/automl/SMAC3) following NNI tuner interface.
@@ -37,8 +39,7 @@ class SMACTuner(Tuner):
         optimize_mode : str
             Optimize mode, 'maximize' or 'minimize', by default 'maximize'
         """
-        self.logger = logging.getLogger(
-            self.__module__ + "." + self.__class__.__name__)
+        self.logger = logger
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.total_data = {}
         self.optimizer = None
@@ -129,7 +130,7 @@ class SMACTuner(Tuner):
         search_space : dict
             The format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
-
+        self.logger.info('update search space in SMAC.')
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
