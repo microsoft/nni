@@ -22,8 +22,7 @@ import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
-var yaml = require('js-yaml');
-var fs = require('fs');
+const fs = require('fs');
 
 /**
  * Training Service implementation for Kubernetes
@@ -36,7 +35,7 @@ abstract class KubernetesTrainingService {
     //  experiment root dir in NFS
     protected readonly trialLocalNFSTempFolder: string;
     protected stopping: boolean = false;
-    protected experimentId! : string;
+    protected experimentId!: string;
     protected kubernetesRestServerPort?: number;
     protected readonly CONTAINER_MOUNT_PATH: string;
     protected azureStorageClient?: azureStorage.FileService;
@@ -64,11 +63,16 @@ abstract class KubernetesTrainingService {
 
     // tslint:disable:no-any
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
-        return {
+        const resources: any = {
             memory: `${memory}Mi`,
-            cpu: `${cpuNum}`,
-            'nvidia.com/gpu': `${gpuNum}`
+            cpu: `${cpuNum}`
         };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
     } // tslint:enable:no-any
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -108,12 +112,12 @@ abstract class KubernetesTrainingService {
         return Promise.resolve('');
     }
 
-    public get MetricsEmitter() : EventEmitter {
+    public get MetricsEmitter(): EventEmitter {
         return this.metricsEmitter;
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail : KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
@@ -203,7 +207,7 @@ abstract class KubernetesTrainingService {
     }
 
     // tslint:disable: no-unsafe-any no-any
-    protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
+    protected async createAzureStorage(vaultName: string, valutKeyName: string): Promise<void> {
         try {
             const result: any = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
             if (result.stderr) {
@@ -265,7 +269,7 @@ abstract class KubernetesTrainingService {
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
         // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
         if (gpuNum === 0) {
-            nvidiaScript = `export CUDA_VISIBLE_DEVICES='0'`;
+            nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
         // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
@@ -307,8 +311,8 @@ abstract class KubernetesTrainingService {
         if(filePath === undefined || filePath === '') {
             return undefined;
         }
-        let body = fs.readFileSync(filePath).toString('base64');
-        let registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
+        const body = fs.readFileSync(filePath).toString('base64');
+        const registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
                                                                             .toLowerCase());
         await this.genericK8sClient.createSecret(
             {
@@ -331,7 +335,7 @@ abstract class KubernetesTrainingService {
         return registrySecretName;
     }
 
-    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: String, codeDir: String, uploadRetryCount: number | undefined): Promise<string> {
+    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: string, codeDir: string, uploadRetryCount: number | undefined): Promise<string> {
         if (this.azureStorageClient === undefined) {
             throw new Error('azureStorageClient is not initialized');
         }

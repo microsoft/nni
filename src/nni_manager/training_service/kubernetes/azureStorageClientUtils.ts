@@ -66,7 +66,7 @@ export namespace AzureStorageClientUtility {
         let rootDirectory: string = '';
         for (const directory of directories) {
             rootDirectory += directory;
-            let result:boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
+            const result: boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
             if (!result) {
                 deferred.resolve(false);
                 return deferred.promise;
@@ -141,7 +141,7 @@ export namespace AzureStorageClientUtility {
                                           localDirectory: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
-        let result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
+        const result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
         if (!result) {
             deferred.resolve(false);
             return deferred.promise;
