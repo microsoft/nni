@@ -53,10 +53,19 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('Anneal', 'SMAC'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'Anneal', 'SMAC'),
+    'Anneal': {
+        'builtinTunerName': 'Anneal',
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    },
+    'SMAC': {
+        'builtinTunerName': 'SMAC',
+        Optional('classArgs'): {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            'config_dedup': setType('config_dedup', bool)
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),

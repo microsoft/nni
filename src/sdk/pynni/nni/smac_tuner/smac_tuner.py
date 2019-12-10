@@ -18,6 +18,7 @@ from smac.utils.io.cmd_reader import CMDReader
 
 from ConfigSpaceNNI import Configuration
 
+import nni
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -29,7 +30,7 @@ class SMACTuner(Tuner):
     It only supports ``SMAC`` mode, and does not support the multiple instances of SMAC3 (i.e.,
     the same configuration is run multiple times).
     """
-    def __init__(self, optimize_mode="maximize"):
+    def __init__(self, optimize_mode="maximize", config_dedup=False):
         """
         Parameters
         ----------
@@ -47,6 +48,7 @@ class SMACTuner(Tuner):
         self.loguniform_key = set()
         self.categorical_dict = {}
         self.cs = None
+        self.dedup = config_dedup
 
     def _main_cli(self):
         """
@@ -226,8 +228,16 @@ class SMACTuner(Tuner):
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
+                if self.dedup:
+                    match = [v for k, v in self.total_data.items() \
+                             if v.get_dictionary() == challenger.get_dictionary()]
+                    if match:
+                        continue
                 self.total_data[parameter_id] = challenger
                 return self.param_postprocess(challenger.get_dictionary())
+            assert self.dedup is True
+            self.logger.info('In generate_parameters: No more new parameters.')
+            raise nni.NoMoreTrialError('No more new parameters.')
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
@@ -261,9 +271,16 @@ class SMACTuner(Tuner):
             for challenger in challengers:
                 if cnt >= len(parameter_id_list):
                     break
+                if self.dedup:
+                    match = [v for k, v in self.total_data.items() \
+                             if v.get_dictionary() == challenger.get_dictionary()]
+                    if match:
+                        continue
                 self.total_data[parameter_id_list[cnt]] = challenger
                 params.append(self.param_postprocess(challenger.get_dictionary()))
                 cnt += 1
+            if self.dedup and not params:
+                self.logger.info('In generate_multiple_parameters: No more new parameters.')
         return params
 
     def import_data(self, data):
