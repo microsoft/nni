@@ -45,7 +45,37 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 
 更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
-## 了解更多信息
+## Core Features
+
+NNI provides a key capacity to run multiple instances in parallel to find best combinations of parameters. This feature can be used in various domains, like find best hyperparameters for a deep learning model, or find best configuration for database and other complex system with real data.
+
+NNI is also like to provide algorithm toolkits for machine learning and deep learning, especially neural architecture search (NAS) algorithms, model compression algorithms, and feature engineering algorithms.
+
+### Hyperparameter Tuning
+
+This is a core and basic feature of NNI, we provide many popular [automatic tuning algorithms](Tuner/BuiltinTuner.md) (i.e., tuner) and [early stop algorithms](Assessor/BuiltinAssessor.md) (i.e., assessor). You could follow [Quick Start](Tutorial/QuickStart.md) to tune your model (or system). Basically, there are the above three steps and then start an NNI experiment.
+
+### General NAS Framework
+
+This NAS framework is for users to easily specify candidate neural architectures, for example, could specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed description and usage can be found [here](NAS/Overview.md).
+
+NNI has supported many one-shot NAS algorithms, such as ENAS, DARTS, through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, to import an algorithm in your trial code, and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you could choose a tuner and start an NNI experiment.
+
+Other than one-shot NAS, NAS can also run in a classic mode where each candidate architecture runs as an independent trial job. In this mode, similar to hyperparameter tuning, users have to start an NNI experiment and choose a tuner for NAS.
+
+### Model Compression
+
+Model Compression on NNI includes pruning algorithms and quantization algorithms. These algorithms are provided through NNI trial SDK. Users could directly use them in their trial code and run the trial code without starting an NNI experiment. Detailed description and usage can be found [here](Compressor/Overview.md).
+
+There are different types of hyperparamters in model compression. One type is the hyperparameters in input configuration, e.g., sparsity, quantization bits, to a compression algorithm. The other type is the hyperparamters in compression algorithms. Here, Hyperparameter tuning of NNI could help a lot in finding the best compressed model automatically. A simple example can be found [here](Compressor/AutoCompression.md).
+
+### Automatic Feature Engineering
+
+Automatic feature engineering is for users to find the best features for the following tasks. Detailed description and usage can be found [here](FeatureEngineering/Overview.md). It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code.
+
+The auto-feature-engineering algorithms usually have a bunch of hyperparameters themselves. If you want to automatically tune those hyperparameters, you can leverage hyperparameter tuning of NNI, that is, choose a tuning algorithm (i.e., tuner) and start an NNI experiment for it.
+
+## Learn More
 
 * [入门](Tutorial/QuickStart.md)
 * [如何为 NNI 调整代码？](TrialExample/Trials.md)
@@ -57,3 +87,6 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 * [如何在多机上运行 Experiment？](TrainingService/RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
 * [示例](TrialExample/MnistExamples.md)
+* [Neural Architecture Search on NNI](NAS/Overview.md)
+* [Automatic model compression on NNI](Compressor/Overview.md)
+* [Automatic feature engineering on NNI](FeatureEngineering/Overview.md)
