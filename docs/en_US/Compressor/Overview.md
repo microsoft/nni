@@ -6,7 +6,7 @@ NNI provides an easy-to-use toolkit to help user design and use compression algo
 
 ## Supported algorithms
 
-We have provided several compression algorithms, including several pruning, quantization algorithms and knowledge distillation support:
+We have provided several compression algorithms, including several pruning and quantization algorithms:
 
 **Pruning**
 
