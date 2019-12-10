@@ -10,7 +10,6 @@ import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
-import { file } from '../../node_modules/@types/tmp';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
@@ -20,7 +19,7 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @returns file number under codeDir
  */
 // tslint:disable: no-redundant-jsdoc
-export async function validateCodeDir(codeDir: string) : Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
     let fileNameValid: boolean = true;
     try {

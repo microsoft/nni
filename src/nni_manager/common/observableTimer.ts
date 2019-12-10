@@ -18,7 +18,7 @@ class ObservableTimer {
         return this.observableSource.subscribe(onNext, onError, onCompleted);
     }
 
-    public unsubscribe( subscription : Rx.IDisposable) {
+    public unsubscribe( subscription: Rx.IDisposable): void {
         if(typeof subscription !== undefined) {
             subscription.dispose();
         }

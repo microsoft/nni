@@ -17,7 +17,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
     }
 
     protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+                                               kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
         }
@@ -52,8 +52,8 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
                     }
                     break;
-                case  'Completed':
-                    const completedJobType : FrameworkControllerJobCompleteStatus =
+                case  'Completed': {
+                    const completedJobType: FrameworkControllerJobCompleteStatus =
                       <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
                     switch (completedJobType) {
                         case 'Succeeded':
@@ -66,6 +66,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                     }
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);
                     break;
+                }
                 default:
             }
         }
