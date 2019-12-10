@@ -19,7 +19,7 @@ import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
-import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
+import { FrameworkControllerClientFactory } from './frameworkcontrollerApiClient';
 import { FrameworkControllerClusterConfig, FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigFactory,
     FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig} from './frameworkcontrollerConfig';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';
@@ -142,7 +142,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         nfsFrameworkControllerClusterConfig.nfs.path
                     );
                 }
-                this.kubernetesCRDClient = FrameworkControllerClient.generateFrameworkControllerClient();
+                this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const frameworkcontrollerTrialJsonObjsect: any = JSON.parse(value);
