@@ -32,7 +32,7 @@ __nnictl_tensorboard_start_cmds="--trial_id --port"
 __nnictl_top_cmds="--time"
 
 # list of commands that accept an experiment ID as second argument
-__nnictl_2st_expid_cmds=" resume view stop import export "
+__nnictl_2nd_expid_cmds=" resume view stop import export "
 # list of commands that accept an experiment ID as third argument
 __nnictl_3rd_expid_cmds=" update trial experiment webui config log tensorboard "
 
@@ -74,7 +74,7 @@ _nnictl()
         COMPREPLY=($(compgen -W "${!args}" -- "${COMP_WORDS[2]}"))
 
         # add experiment IDs to candidates if desired
-        if [[ " resume stop import export " =~ " ${COMP_WORDS[1]} " ]]; then
+        if [[ $__nnictl_2nd_expid_cmds =~ " ${COMP_WORDS[1]} " ]]; then
             local experiments=$(ls ~/nni/experiments 2>/dev/null)
             COMPREPLY+=($(compgen -W "$experiments" -- $cur))
         fi
