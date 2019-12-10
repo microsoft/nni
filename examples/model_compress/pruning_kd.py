@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import L1FilterPruner, KnowledgeDistill
+from nni.compression.torch import L1FilterPruner
+from knowledge_distill.knowledge_distill import KnowledgeDistill
 
 
 class vgg(nn.Module):

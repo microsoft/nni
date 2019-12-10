@@ -27,12 +27,6 @@ We have provided several compression algorithms, including several pruning, quan
 | [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
 
-**Knowledge Distillation**
-
-|Name|Brief Introduction of Algorithm|
-|---|---|
-| [KnowledgeDistill](./KnowledgeDistill.md#KnowledgeDistill) |  Distilling the Knowledge in a Neural Network. [Reference Paper](https://arxiv.org/abs/1503.02531)|
-
 ## Usage of built-in compression algorithms
 
 We use a simple example to show how to modify your trial code in order to apply the compression algorithms. Let's say you want to prune all weight to 80% sparsity with Level Pruner, you can add the following three lines into your code before training your model ([here](https://github.com/microsoft/nni/tree/master/examples/model_compress) is complete code).
@@ -53,24 +47,6 @@ from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(tf.get_default_graph(), config_list)
 pruner.compress()
-```
-
-You only need to add 1 line in the training code if you want to fine-tune with knowledge distillation:
-
-PyTorch code
-
-```python
-from nni.compression.torch import KnowledgeDistill
-kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
-
-for batch_idx, (data, target) in enumerate(train_loader):
-    data, target = data.to(device), target.to(device)
-    optimizer.zero_grad()
-    output = model(data)
-    loss = F.cross_entropy(output, target)
-    # you only to add this line in the training code with knowledge distillation
-    loss = kd.loss(student_loss=loss, data=data, student_out=output)
-    loss.backward()
 ```
 
 

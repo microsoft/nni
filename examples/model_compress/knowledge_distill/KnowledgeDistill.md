@@ -5,14 +5,14 @@ Knowledge Distillation on NNI Compressor
 
 Knowledge distillation support while fine-tuning the compressed model, in [Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531),  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student.
 
-![](../../img/distill.png)
+![](../../../docs/img/distill.png)
 
 ### Usage
 
 PyTorch code
 
 ```python
-from nni.compression.torch import KnowledgeDistill
+from KnowledgeDistill.knowledge_distill import KnowledgeDistill
 kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
 
 for batch_idx, (data, target) in enumerate(train_loader):
