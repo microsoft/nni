@@ -359,7 +359,7 @@ class NNIDataStore implements DataStore {
                     }
                 default:
             }
-            /* eslint-disable no-fallthrough */
+            /* eslint-enable no-fallthrough */
             jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
             if (record.data !== undefined && record.data.trim().length > 0) {
                 const newHParam: any = this.parseHyperParameter(record.data);
