@@ -412,14 +412,6 @@ machineList:
   - **image**
     
     **image** 指定了 OpenPAI 中使用的 docker 映像。
-  
-  - **dataDir**
-    
-    **dataDir** 是 HDFS 中用到的数据目录变量。
-  
-  - **outputDir**
-    
-    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
 - **trial (kubeflow)**
   
@@ -764,10 +756,6 @@ machineList:
     memoryMB: 10000
     # 在 OpenPAI 上用来运行 Nni 作业的 docker 映像
     image: msranni/nni:latest
-    # 在 OpenPAI 的 hdfs 上存储数据的目录，如：'hdfs://host:port/directory'
-    dataDir: hdfs://10.11.12.13:9000/test
-    # 在 OpenPAI 的 hdfs 上存储输出的目录，如：'hdfs://host:port/directory'
-    outputDir: hdfs://10.11.12.13:9000/test
   paiConfig:
     # OpenPAI 用户名
     userName: test
