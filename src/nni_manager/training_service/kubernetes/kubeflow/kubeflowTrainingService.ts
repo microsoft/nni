@@ -21,7 +21,7 @@ import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
-import { KubeflowOperatorClient } from './kubeflowApiClient';
+import { KubeflowOperatorClientFactory } from './kubeflowApiClient';
 import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfigFactory, KubeflowClusterConfigNFS,
     KubeflowTrialConfig, KubeflowTrialConfigFactory, KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow
 } from './kubeflowConfig';
@@ -136,8 +136,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                         nfsKubeflowClusterConfig.nfs.path
                     );
                 }
-                this.kubernetesCRDClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
-                                                                                         this.kubeflowClusterConfig.apiVersion);
+                this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
+                    this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
