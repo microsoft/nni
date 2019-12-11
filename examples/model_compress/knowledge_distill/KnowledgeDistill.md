@@ -26,7 +26,6 @@ for batch_idx, (data, target) in enumerate(train_loader):
     loss.backward()
 ```
 
-#### User configuration for Level Pruner
+#### User configuration for KnowledgeDistill
 * **kd_teacher_model:** The pre-trained teacher model 
 * **kd_T:** Temperature for smoothing teacher model's output
-* **kd_beta:** Weight of knowledge distillation loss relative to the training loss

@@ -13,7 +13,7 @@ class KnowledgeDistill():
     https://arxiv.org/abs/1503.02531
     """
 
-    def __init__(self, teacher_model, kd_T):
+    def __init__(self, teacher_model, kd_T=1):
         """
         Parameters
         ----------
