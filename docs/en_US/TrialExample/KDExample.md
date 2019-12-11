@@ -3,9 +3,9 @@ Knowledge Distillation on NNI Compressor
 
 ## KnowledgeDistill
 
-Knowledge distillation support while fine-tuning the compressed model, in [Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531),  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student.
+Knowledge distillation support, in [Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531),  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student.
 
-![](../../../docs/img/distill.png)
+![](../../img/distill.png)
 
 ### Usage
 
@@ -29,3 +29,5 @@ for batch_idx, (data, target) in enumerate(train_loader):
 #### User configuration for KnowledgeDistill
 * **kd_teacher_model:** The pre-trained teacher model 
 * **kd_T:** Temperature for smoothing teacher model's output
+
+The complete code can be found here
