@@ -206,7 +206,7 @@ class ProxylessNasTrainer(BaseTrainer):
             end = time.time()
             print('=====================_warm_up, epoch: ', epoch)
             for i, (images, labels) in enumerate(data_loader):
-                print('=====================_warm_up, minibatch i: ', i)
+                #print('=====================_warm_up, minibatch i: ', i)
                 data_time.update(time.time() - end)
                 # lr
                 T_cur = epoch * nBatch + i
