@@ -86,7 +86,6 @@ class GPUScheduler {
         runGpuMetricsCollector(this.gpuMetricCollectorScriptFolder);
     }
 
-    // tslint:disable:non-literal-fs-path
     private async updateGPUSummary(): Promise<void> {
         const gpuMetricPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
         if (fs.existsSync(gpuMetricPath)) {

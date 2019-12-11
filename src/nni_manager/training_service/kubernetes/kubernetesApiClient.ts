@@ -10,7 +10,6 @@ import { getLogger, Logger } from '../../common/log';
 /**
  * Generict Kubernetes client, target version >= 1.9
  */
-// tslint:disable: no-any no-unsafe-any
 class GeneralK8sClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();

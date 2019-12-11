@@ -18,7 +18,6 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
-// tslint:disable: no-redundant-jsdoc
 export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
     let fileNameValid: boolean = true;

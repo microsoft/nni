@@ -3,7 +3,6 @@
 
 'use strict';
 
-// tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
@@ -54,7 +53,6 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            // tslint:disable-next-line:no-http-string
             uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
@@ -64,7 +62,6 @@ export class PAIJobInfoCollector {
             }
         };
 
-        // tslint:disable: no-unsafe-any no-any cyclomatic-complexity
         //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 500) {
@@ -128,5 +125,4 @@ export class PAIJobInfoCollector {
 
         return deferred.promise;
     }
-    // tslint:enable: no-unsafe-any no-any
 }

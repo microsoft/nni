@@ -4,7 +4,6 @@
 'use strict';
 
 import * as assert from 'assert';
-// tslint:disable-next-line:no-implicit-dependencies
 import * as bodyParser from 'body-parser';
 import { Request, Response, Router } from 'express';
 import * as fs from 'fs';
@@ -71,10 +70,8 @@ export abstract class ClusterJobRestServer extends RestServer {
     }
 
     // Abstract method to handle trial metrics data
-    // tslint:disable-next-line:no-any
     protected abstract handleTrialMetrics(jobId: string, trialMetrics: any[]): void;
 
-    // tslint:disable: no-unsafe-any no-any
     protected createRestHandler(): Router {
         const router: Router = Router();
 
@@ -146,7 +143,6 @@ export abstract class ClusterJobRestServer extends RestServer {
 
                 if (!skipLogging) {
                     // Construct write stream to write remote trial's log into local file
-                    // tslint:disable-next-line:non-literal-fs-path
                     const writeStream: Writable = fs.createWriteStream(trialLogPath, {
                         flags: 'a+',
                         encoding: 'utf8',
@@ -166,5 +162,4 @@ export abstract class ClusterJobRestServer extends RestServer {
 
         return router;
     }
-    // tslint:enable: no-unsafe-any no-any
 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 'use strict';
-/* tslint:disable:no-any */
 
 import * as fs from 'fs';
 import * as path from 'path';

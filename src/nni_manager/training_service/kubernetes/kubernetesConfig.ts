@@ -6,7 +6,6 @@
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
 import { MethodNotImplementedError } from '../../common/errors';
 
-// tslint:disable: completed-docs function-name
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
@@ -91,7 +90,6 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable-next-line:no-unnecessary-class
 export class KubernetesClusterConfigFactory {
 
     public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {

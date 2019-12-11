@@ -17,7 +17,6 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     export function hdfsExpRootDir(hdfsUserName: string): string {
-        // tslint:disable-next-line:prefer-template
         return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
@@ -47,10 +46,8 @@ export namespace HDFSClientUtility {
      * @param hdfsFilePath hdfs file path(target)
      * @param hdfsClient hdfs client
      */
-    // tslint:disable: no-unsafe-any non-literal-fs-path no-any
     export async function copyFileToHdfs(localFilePath: string, hdfsFilePath: string, hdfsClient: any): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        // tslint:disable-next-line:non-literal-fs-path
         fs.exists(localFilePath, (exists: boolean) => {
             // Detect if local file exist
             if (exists) {
@@ -90,7 +87,6 @@ export namespace HDFSClientUtility {
         for (const fileName of fileNameArray) {
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {
-                // tslint:disable-next-line:non-literal-fs-path
                 if (fs.lstatSync(fullFilePath)
                     .isFile()) {
                     await copyFileToHdfs(fullFilePath, path.join(hdfsDirectory, fileName), hdfsClient);
@@ -227,5 +223,4 @@ export namespace HDFSClientUtility {
 
         return deferred.promise;
     }
-    // tslint:enable: no-unsafe-any non-literal-fs-path no-any
 }
