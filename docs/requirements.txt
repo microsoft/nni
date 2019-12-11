@@ -9,4 +9,4 @@ json_tricks
 numpy
 scipy
 coverage
-sklearn
+scikit-learn==0.20

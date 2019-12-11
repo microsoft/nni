@@ -26,7 +26,7 @@ export class KubernetesJobRestServer extends ClusterJobRestServer {
     }
 
     // tslint:disable-next-line:no-any
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+    protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         if (this.kubernetesTrainingService === undefined) {
             throw Error('kubernetesTrainingService not initialized!');
         }

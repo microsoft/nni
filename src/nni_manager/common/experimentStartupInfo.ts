@@ -27,9 +27,9 @@ class ExperimentStartupInfo {
         this.initialized = true;
 
         if (logDir !== undefined && logDir.length > 0) {
-            this.logDir = path.join(path.normalize(logDir), getExperimentId());
+            this.logDir = path.join(path.normalize(logDir), this.getExperimentId());
         } else {
-            this.logDir = path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
+            this.logDir = path.join(os.homedir(), 'nni', 'experiments', this.getExperimentId());
         }
 
         if (logLevel !== undefined && logLevel.length > 1) {

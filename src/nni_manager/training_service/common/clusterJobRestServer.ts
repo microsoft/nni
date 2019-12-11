@@ -72,10 +72,10 @@ export abstract class ClusterJobRestServer extends RestServer {
 
     // Abstract method to handle trial metrics data
     // tslint:disable-next-line:no-any
-    protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
+    protected abstract handleTrialMetrics(jobId: string, trialMetrics: any[]): void;
 
     // tslint:disable: no-unsafe-any no-any
-    protected createRestHandler() : Router {
+    protected createRestHandler(): Router {
         const router: Router = Router();
 
         router.use((req: Request, res: Response, next: any) => {

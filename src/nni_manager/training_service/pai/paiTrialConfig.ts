@@ -15,7 +15,7 @@ export class PAITrialConfig extends TrialConfig {
     public readonly dataDir: string;
     public readonly outputDir: string;
 
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
+    constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
                 image: string, dataDir: string, outputDir: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;

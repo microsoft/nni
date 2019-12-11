@@ -16,10 +16,10 @@ import { PAITrialJobDetail } from './paiData';
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
 export class PAIJobInfoCollector {
-    private readonly trialJobsMap : Map<string, PAITrialJobDetail>;
+    private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
     private readonly log: Logger = getLogger();
-    private readonly statusesNeedToCheck : TrialJobStatus[];
-    private readonly finalStatuses : TrialJobStatus[];
+    private readonly statusesNeedToCheck: TrialJobStatus[];
+    private readonly finalStatuses: TrialJobStatus[];
 
     constructor(jobMap: Map<string, PAITrialJobDetail>) {
         this.trialJobsMap = jobMap;
@@ -27,12 +27,12 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
+    public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig): Promise<void> {
         if (paiClusterConfig === undefined || paiToken === undefined) {
             return Promise.resolve();
         }
 
-        const updatePaiTrialJobs : Promise<void>[] = [];
+        const updatePaiTrialJobs: Promise<void>[] = [];
         for (const [trialJobId, paiTrialJob] of this.trialJobsMap) {
             if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
@@ -43,9 +43,8 @@ export class PAIJobInfoCollector {
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiTrialJob : PAITrialJobDetail, paiToken : string, paiClusterConfig: PAIClusterConfig)
-     : Promise<void> {
-        const deferred : Deferred<void> = new Deferred<void>();
+    private getSinglePAITrialJobInfo(paiTrialJob: PAITrialJobDetail, paiToken: string, paiClusterConfig: PAIClusterConfig): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
 
