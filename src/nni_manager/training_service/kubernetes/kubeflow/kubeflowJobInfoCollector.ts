@@ -26,7 +26,6 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
             return Promise.reject('kubernetesCRDClient is undefined');
         }
 
-        // tslint:disable:no-any no-unsafe-any
         let kubernetesJobInfo: any;
         try {
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
@@ -37,7 +36,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
             //This is not treat as a error status
             return Promise.resolve();
         }
-
+        /* eslint-disable require-atomic-updates */
         if (kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
             const latestCondition: any = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
             const tfJobType: KubeflowJobStatus = <KubeflowJobStatus>latestCondition.type;
@@ -63,7 +62,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
                 default:
             }
         }
-        // tslint:enable:no-any no-unsafe-any
+        /* eslint-enable require-atomic-updates */
 
         return Promise.resolve();
     }

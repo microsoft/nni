@@ -47,7 +47,7 @@ function startProcess(): void {
     // create IPC interface
     dispatcher = createDispatcherInterface(proc);
     (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
-        console.log(commandType, content);  // tslint:disable-line:no-console
+        console.log(commandType, content);
     });
 }
 

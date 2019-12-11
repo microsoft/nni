@@ -304,7 +304,6 @@ class NNIDataStore implements DataStore {
         }
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private getTrialJobsByReplayEvents(trialJobEvents: TrialJobEventRecord[]):  Map<string, TrialJobInfo> {
         this.log.debug('getTrialJobsByReplayEvents begin');
 

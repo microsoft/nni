@@ -26,7 +26,6 @@ export class KubeflowClusterConfig extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable:completed-docs
 export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
     constructor(
@@ -43,7 +42,6 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
         return 'nfs';
     }
 
-    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigNFS {
         const kubeflowClusterConfigObjectNFS: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>jsonObject;
         assert (kubeflowClusterConfigObjectNFS !== undefined);
@@ -75,7 +73,6 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
         return 'azureStorage';
     }
 
-    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigAzure {
         const kubeflowClusterConfigObjectAzure: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>jsonObject;
 
@@ -91,7 +88,6 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
 
 export class KubeflowClusterConfigFactory {
 
-    // tslint:disable-next-line:function-name
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
          const storageConfig: StorageConfig = <StorageConfig>jsonObject;
          if (storageConfig === undefined) {
@@ -156,8 +152,6 @@ export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
 }
 
 export class KubeflowTrialConfigFactory {
-
-    // tslint:disable-next-line:function-name
     public static generateKubeflowTrialConfig(jsonObject: object, operator: KubeflowOperator): KubeflowTrialConfig {
         if (operator === 'tf-operator') {
             const kubeflowTrialConfigObject: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>jsonObject;

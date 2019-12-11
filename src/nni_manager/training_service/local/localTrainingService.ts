@@ -31,7 +31,6 @@ import { GPUScheduler } from './gpuScheduler';
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
-// tslint:disable:newline-per-chained-call informative-docs
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
@@ -46,7 +45,6 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
 
     return [true, commandType, content, remain];
 }
-// tslint:enable:newline-per-chained-call informative-docs
 
 /**
  * LocalTrialJobDetail
@@ -252,7 +250,6 @@ class LocalTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
-            // tslint:disable-next-line:non-literal-fs-path
             if (!fs.existsSync(this.rootDir)) {
                 await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
             }
@@ -524,8 +521,8 @@ class LocalTrainingService implements TrainingService {
         await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
         const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
-        trialJobDetail.startTime = Date.now();
-        trialJobDetail.pid = trialJobProcess.pid;
+        trialJobDetail.startTime = Date.now(); // eslint-disable-line require-atomic-updates
+        trialJobDetail.pid = trialJobProcess.pid; // eslint-disable-line require-atomic-updates
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);
