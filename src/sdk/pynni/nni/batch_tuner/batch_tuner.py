@@ -24,10 +24,10 @@ class BatchTuner(Tuner):
     Examples
     --------
     The search space only be accepted like:
-    
+
         ::
 
-            {'combine_params': 
+            {'combine_params':
                 { '_type': 'choice',
                             '_value': '[{...}, {...}, {...}]',
                 }
