@@ -345,7 +345,7 @@ class ProxylessNasTrainer(BaseTrainer):
             # validate
             if (epoch + 1) % self.arch_valid_frequency == 0:
                 val_loss, val_top1, val_top5 = self._validate()
-                val_log = 'Valid [{0}]\tloss {2:.3f}\ttop-1 acc {3:.3f} \ttop-5 acc {5:.3f}\t' \
+                val_log = 'Valid [{0}]\tloss {1:.3f}\ttop-1 acc {2:.3f} \ttop-5 acc {3:.3f}\t' \
                           'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}\t' \
                           'Entropy {entropy.val:.5f}M'. \
                     format(epoch + 1, val_loss, val_top1,
