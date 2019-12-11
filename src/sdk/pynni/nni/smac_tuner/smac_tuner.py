@@ -38,6 +38,9 @@ class SMACTuner(Tuner):
         ----------
         optimize_mode : str
             Optimize mode, 'maximize' or 'minimize', by default 'maximize'
+        config_dedup : bool
+            If True, the tuner will not generate a configuration that has been already generated.
+            If False, a configuration may be generated twice, but it is rare for relatively large search space.
         """
         self.logger = logger
         self.optimize_mode = OptimizeMode(optimize_mode)
