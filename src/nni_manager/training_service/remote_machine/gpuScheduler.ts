@@ -148,7 +148,6 @@ export class GPUScheduler {
                     }
                 }
                 this.log.debug(`designated gpu indices: ${designatedGpuIndices}`);
-                // tslint:disable: strict-boolean-expressions
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
                     // or index not in gpuIndices configuration in machineList,
@@ -174,7 +173,6 @@ export class GPUScheduler {
 
         return totalResourceMap;
     }
-    // tslint:enable: strict-boolean-expressions
 
     private selectMachine(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
         assert(rmMetas !== undefined && rmMetas.length > 0);

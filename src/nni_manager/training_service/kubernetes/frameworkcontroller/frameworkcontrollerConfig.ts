@@ -9,7 +9,6 @@ import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesCluste
     KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig
 } from '../kubernetesConfig';
 
-// tslint:disable:completed-docs
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
     public readonly minSucceededTaskCount: number;
@@ -54,7 +53,6 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable:function-name
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(

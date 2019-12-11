@@ -61,7 +61,6 @@ abstract class KubernetesTrainingService {
         this.logCollection = 'none';
     }
 
-    // tslint:disable:no-any
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
         const resources: any = {
             memory: `${memory}Mi`,
@@ -73,7 +72,7 @@ abstract class KubernetesTrainingService {
         }
 
         return resources;
-    } // tslint:enable:no-any
+    }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
@@ -197,7 +196,6 @@ abstract class KubernetesTrainingService {
             await this.kubernetesJobRestServer.stop();
             this.log.info('Kubernetes Training service rest server stopped successfully.');
         } catch (error) {
-            // tslint:disable-next-line: no-unsafe-any
             this.log.error(`Kubernetes Training service rest server stopped failed, error: ${error.message}`);
 
             return Promise.reject(error);
@@ -206,7 +204,6 @@ abstract class KubernetesTrainingService {
         return Promise.resolve();
     }
 
-    // tslint:disable: no-unsafe-any no-any
     protected async createAzureStorage(vaultName: string, valutKeyName: string): Promise<void> {
         try {
             const result: any = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
@@ -253,7 +250,6 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
-    // tslint:enable: no-unsafe-any no-any
 
     /**
      * Genereate run script for different roles(like worker or ps)
@@ -271,7 +267,6 @@ abstract class KubernetesTrainingService {
         if (gpuNum === 0) {
             nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
-        // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const runScript: string = String.Format(

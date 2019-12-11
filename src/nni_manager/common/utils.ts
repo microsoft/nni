@@ -116,7 +116,6 @@ function uniqueString(len: number): string {
 function randomSelect<T>(a: T[]): T {
     assert(a !== undefined);
 
-    // tslint:disable-next-line:insecure-random
     return a[Math.floor(Math.random() * a.length)];
 }
 function parseArg(names: string[]): string {

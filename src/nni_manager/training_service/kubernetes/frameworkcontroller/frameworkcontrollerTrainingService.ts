@@ -101,7 +101,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         // Create frameworkcontroller job based on generated frameworkcontroller job resource config
-        // tslint:disable-next-line:no-any
         const frameworkcontrollerJobConfig: any = await this.prepareFrameworkControllerConfig(
             trialJobId, trialWorkingFolder, frameworkcontrollerJobName);
         await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
@@ -112,7 +111,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return Promise.resolve(trialJobDetail);
     }
 
-    // tslint:disable:no-redundant-jsdoc no-any no-unsafe-any
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
@@ -171,7 +169,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         return Promise.resolve();
     }
-    // tslint:enable: no-any no-unsafe-any
 
     /**
      * upload code files to nfs or azureStroage
@@ -256,7 +253,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
     }
 
-    // tslint:disable: no-any no-unsafe-any
     private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
      Promise<any> {
 
@@ -447,7 +443,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             }
         };
     }
-    // tslint:enable: no-any no-unsafe-any
 }
 
 export { FrameworkControllerTrainingService };

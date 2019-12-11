@@ -58,7 +58,6 @@ export namespace SSHClientUtility {
      * @param command the command to execute remotely
      * @param client SSH Client
      */
-    // tslint:disable:no-unsafe-any no-any
     export function remoteExeCommand(command: string, client: Client): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
         log.debug(`remoteExeCommand: command: [${command}]`);
@@ -156,5 +155,4 @@ export namespace SSHClientUtility {
 
         return deferred.promise;
     }
-    // tslint:enable:no-unsafe-any no-any
 }

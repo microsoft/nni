@@ -8,7 +8,6 @@ import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubeflowOperator } from './kubeflowConfig';
 
 
-// tslint:disable: no-unsafe-any no-any completed-docs
 class TFOperatorClientV1Alpha2 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
@@ -130,7 +129,6 @@ class KubeflowOperatorClientFactory {
     /**
      * Factory method to generate operator client
      */
-    // tslint:disable-next-line:function-name
     public static createClient(kubeflowOperator: KubeflowOperator, operatorApiVersion: string): KubernetesCRDClient {
         switch (kubeflowOperator) {
             case 'tf-operator': {
@@ -169,5 +167,4 @@ class KubeflowOperatorClientFactory {
     }
 }
 
-// tslint:enable: no-unsafe-any
 export { KubeflowOperatorClientFactory, GeneralK8sClient };

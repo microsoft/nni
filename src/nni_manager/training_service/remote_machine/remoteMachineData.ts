@@ -186,7 +186,6 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();

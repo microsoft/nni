@@ -27,7 +27,6 @@ import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfi
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 
-// tslint:disable: no-unsafe-any no-any
 /**
  * Training Service implementation for Kubeflow
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
@@ -108,7 +107,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobDetail);
     }
 
-    // tslint:disable:no-redundant-jsdoc
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
@@ -461,7 +459,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             replicas: replicaNumber,
             template: {
                 metadata: {
-                    // tslint:disable-next-line:no-null-keyword
                     creationTimestamp: null
                 },
                 spec: spec
@@ -469,5 +466,4 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
     }
 }
-// tslint:enable: no-unsafe-any no-any
 export { KubeflowTrainingService };

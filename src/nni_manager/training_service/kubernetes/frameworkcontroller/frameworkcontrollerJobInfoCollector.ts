@@ -26,7 +26,6 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             return Promise.reject('kubernetesCRDClient is undefined');
         }
 
-        // tslint:disable-next-line:no-any
         let kubernetesJobInfo: any;
         try {
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
@@ -37,9 +36,9 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             return Promise.resolve();
         }
 
-        // tslint:disable: no-unsafe-any
         if (kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
             const frameworkJobType: FrameworkControllerJobStatus = <FrameworkControllerJobStatus>kubernetesJobInfo.status.state;
+            /* eslint-disable require-atomic-updates */
             switch (frameworkJobType) {
                 case 'AttemptCreationPending':
                 case 'AttemptCreationRequested':
@@ -69,9 +68,9 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                 }
                 default:
             }
+            /* eslint-enable require-atomic-updates */
         }
 
         return Promise.resolve();
     }
-    // tslint:enable: no-unsafe-any
 }
