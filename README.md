@@ -82,26 +82,26 @@
       <td align="left" >
         <a href="docs/en_US/Tuner/BuiltinTuner.md">Hyperparameter Tuning</a>
         <ul>
-          <b>Exhaustive search</b>
+          <b>Simple search</b>
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
             </ul>
-          <b>Use of a surrogate model</b>        
+          <b>Optimize from samples</b>
+          <ul>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>   
+          </ul>
+          <b>SMBO</b>        
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li> 
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a> </li>
-            </ul>
-          <b>Featured for tuning</b>
-          <ul>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>            
-          </ul>
+            </ul>   
         </ul>
           <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor</a>
           <ul>
