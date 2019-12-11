@@ -26,8 +26,8 @@ import torch
 from sklearn.feature_selection import SelectKBest, \
     f_classif, mutual_info_classif, f_regression, mutual_info_regression
 
-from . import constants as constants
-from . import syssettings as syssettings
+from . import constants
+from . import syssettings
 from .learnability import Solver
 from .utils import EMA
 

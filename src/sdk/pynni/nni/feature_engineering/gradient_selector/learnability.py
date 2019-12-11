@@ -25,8 +25,8 @@ import scipy.special
 import torch
 import torch.nn as nn
 
-from . import constants as constants
-from . import syssettings as syssettings
+from . import constants
+from . import syssettings
 from .fginitialize import ChunkDataLoader
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)
