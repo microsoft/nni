@@ -9,28 +9,27 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
-from torch.utils.data import DataLoader, SubsetRandomSampler
 
+from dataloader import get_imagenet_iter_dali, convert_data_format_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
-from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy
 
 logger = logging.getLogger("nni")
 
 
-def retrain_bn(model, criterion, max_iters, log_freq, loader_train, device):
+def retrain_bn(model, criterion, max_iters, log_freq, loader):
     with torch.no_grad():
-        logger.info("Clear BN statistics...")
-        for m in model.modules():
-            if isinstance(m, nn.BatchNorm2d):
-                m.running_mean = torch.zeros_like(m.running_mean)
-                m.running_var = torch.ones_like(m.running_var)
+        # logger.info("Clear BN statistics...")
+        # for m in model.modules():
+        #     if isinstance(m, nn.BatchNorm2d):
+        #         m.running_mean = torch.zeros_like(m.running_mean)
+        #         m.running_var = torch.ones_like(m.running_var)
 
         logger.info("Train BN with training set (BN sanitize)...")
         model.train()
         meters = AverageMeterGroup()
         for step in range(max_iters):
-            inputs, targets = next(loader_train)
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs, targets = convert_data_format_dali(next(loader))
             logits = model(inputs)
             loss = criterion(logits, targets)
             metrics = accuracy(logits, targets)
@@ -40,37 +39,32 @@ def retrain_bn(model, criterion, max_iters, log_freq, loader_train, device):
                 logger.info("Train Step [%d/%d] %s", step + 1, max_iters, meters)
 
 
-def test_acc(model, criterion, max_iters, log_freq, loader_test, device):
+def test_acc(model, criterion, max_iters, log_freq, loader):
     logger.info("Start testing...")
     model.eval()
     meters = AverageMeterGroup()
     with torch.no_grad():
-        for step in range(max_iters):
-            inputs, targets = next(loader_test)
-            inputs, targets = inputs.to(device), targets.to(device)
+        for step, data in enumerate(loader):
+            inputs, targets = convert_data_format_dali(data)
             logits = model(inputs)
             loss = criterion(logits, targets)
             metrics = accuracy(logits, targets)
             metrics["loss"] = loss.item()
             meters.update(metrics)
-            if step % log_freq == 0 or step + 1 == max_iters:
+            if step % log_freq == 0:
                 logger.info("Valid Step [%d/%d] %s", step + 1, max_iters, meters)
     return meters.acc1.avg
 
 
-def evaluate_acc(model, criterion, args, loader_train, loader_test, device):
-    acc_before = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test, device)
+def evaluate_acc(model, criterion, args, loader_train, loader_test):
+    acc_before = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test)
     nni.report_intermediate_result(acc_before)
 
-    retrain_bn(model, criterion, args.train_iters, args.log_frequency, loader_train, device)
-    acc = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test, device)
+    retrain_bn(model, criterion, args.train_iters, args.log_frequency, loader_train)
+    acc = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test)
     assert isinstance(acc, float)
+    nni.report_intermediate_result(acc)
     nni.report_final_result(acc)
-
-
-def generate_subset_indices(dataset, batch_size, iters):
-    dataset_length = len(dataset)
-    return np.random.choice(dataset_length, min(batch_size * iters * 2, dataset_length), replace=False)
 
 
 if __name__ == "__main__":
@@ -80,40 +74,37 @@ if __name__ == "__main__":
     parser.add_argument("--spos-preprocessing", action="store_true", default=False,
                         help="When true, image values will range from 0 to 255 and use BGR "
                              "(as in original repo).")
-    parser.add_argument("--deterministic", action="store_true", default=False)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--train-batch-size", type=int, default=128)
     parser.add_argument("--train-iters", type=int, default=200)
-    parser.add_argument("--test-batch-size", type=int, default=1024)
-    parser.add_argument("--test-iters", type=int, default=10)
+    parser.add_argument("--test-batch-size", type=int, default=512)
+    parser.add_argument("--test-iters", type=int, default=40)
     parser.add_argument("--log-frequency", type=int, default=10)
 
     args = parser.parse_args()
 
-    if args.deterministic:
-        # use a fixed set of image will improve the performance
-        torch.manual_seed(0)
-        torch.cuda.manual_seed_all(0)
-        np.random.seed(0)
-        random.seed(0)
-        torch.backends.cudnn.deterministic = True
+    # use a fixed set of image will improve the performance
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
 
-    use_gpu = torch.cuda.is_available()
-    device = torch.device("cuda") if use_gpu else torch.device("cpu")
+    assert torch.cuda.is_available()
 
     model = ShuffleNetV2OneShot()
     criterion = CrossEntropyLabelSmooth(1000, 0.1)
     get_and_apply_next_architecture(model)
     model.load_state_dict(load_and_parse_state_dict(filepath=args.checkpoint))
-    model.to(device)
+    model.cuda()
 
-    dataset_train, dataset_valid = get_imagenet(args.imagenet_dir, spos_pre=args.spos_preprocessing)
-    sampler_train = SubsetRandomSampler(generate_subset_indices(dataset_train, args.train_batch_size, args.train_iters))
-    sampler_valid = SubsetRandomSampler(generate_subset_indices(dataset_valid, args.test_batch_size, args.test_iters))
-    loader_train = DataLoader(dataset_train, batch_size=args.train_batch_size,
-                              sampler=sampler_train, num_workers=args.workers)
-    loader_valid = DataLoader(dataset_valid, batch_size=args.test_batch_size,
-                              sampler=sampler_valid, num_workers=args.workers)
-    loader_train, loader_valid = cycle(loader_train), cycle(loader_valid)
+    train_loader, train_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.train_batch_size, args.workers,
+                                                       auto_reset=True, spos_preprocessing=args.spos_preprocessing,
+                                                       seed=args.seed, device_id=0)
+    val_loader, val_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.test_batch_size, args.workers,
+                                                   spos_preprocessing=args.spos_preprocessing, shuffle=True,
+                                                   seed=args.seed, device_id=0, auto_reset=True)
+    train_loader = cycle(train_loader)
 
-    evaluate_acc(model, criterion, args, loader_train, loader_valid, device)
+    evaluate_acc(model, criterion, args, train_loader, val_loader)

@@ -45,11 +45,11 @@ class SPOSEvolution(Tuner):
             return
         _logger.info("Epoch %d, generating...", self.epoch)
         if self.epoch == 0:
-            self.candidates = self._get_random_population()
+            self._get_random_population()
         else:
             best_candidates = self._select_top_candidates()
-            self.candidates = self._get_mutation(best_candidates) + self._get_crossover(best_candidates) + \
-                              self._get_random_population()
+            self.candidates = self._get_mutation(best_candidates) + self._get_crossover(best_candidates)
+            self._get_random_population()
         self.epoch += 1
 
     def _random_candidate(self):
@@ -69,15 +69,12 @@ class SPOSEvolution(Tuner):
         self._to_evaluate_queue.append(cand)
 
     def _get_random_population(self):
-        result = []
-        for _ in range(self.num_population):
-            while True:
-                cand = self._random_candidate()
-                if self._is_legal(cand):
-                    result.append(cand)
-                    self._add_to_evaluate_queue(cand)
-                    break
-        return result
+        while len(self.candidates) < self.num_population:
+            cand = self._random_candidate()
+            if self._is_legal(cand):
+                _logger.info("Random candidate generated.")
+                self._add_to_evaluate_queue(cand)
+                self.candidates.append(cand)
 
     def _get_crossover(self, best):
         result = []

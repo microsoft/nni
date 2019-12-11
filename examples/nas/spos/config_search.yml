@@ -1,6 +1,6 @@
 authorName: unknown
 experimentName: SPOS Search
-trialConcurrency: 2
+trialConcurrency: 4
 maxExecDuration: 7d
 maxTrialNum: 99999
 trainingServicePlatform: local
@@ -12,6 +12,6 @@ tuner:
   className: SPOSEvolution
 trial:
   # to fit in a GTX 1080
-  command: python tester.py --imagenet-dir /data/ssd1/v-yugzh/imagenet --spos-prep --workers 6
+  command: python tester.py --imagenet-dir /data/ssd1/v-yugzh/imagenet --spos-prep
   codeDir: .
   gpuNum: 1

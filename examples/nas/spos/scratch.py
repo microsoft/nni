@@ -3,7 +3,7 @@ import logging
 
 import torch
 import torch.nn as nn
-from dataloader import get_imagenet_iter_dali
+from dataloader import get_imagenet_iter_dali, convert_data_format_dali
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
@@ -21,7 +21,7 @@ def train(epoch, model, criterion, optimizer, loader, num_iters, writer, args):
 
     for step, data in enumerate(loader):
         cur_step = num_iters * epoch + step
-        x, y = data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
+        x, y = convert_data_format_dali(data)
         optimizer.zero_grad()
         logits = model(x)
         loss = criterion(logits, y)
@@ -49,7 +49,7 @@ def validate(epoch, model, criterion, loader, num_iters, writer, args):
     meters = AverageMeterGroup()
     with torch.no_grad():
         for step, data in enumerate(loader):
-            x, y = data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
+            x, y = convert_data_format_dali(data)
             logits = model(x)
             loss = criterion(logits, y)
             metrics = accuracy(logits, y)
