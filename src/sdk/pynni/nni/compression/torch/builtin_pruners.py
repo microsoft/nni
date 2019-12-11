@@ -5,8 +5,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'RankFilterPruner', 'L1FilterPruner', 'L2FilterPruner',
-           'FPGMPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
 
 logger = logging.getLogger('torch pruner')
 
