@@ -38,7 +38,7 @@ from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
 class Benchmark():
 
-    def __init__(self, files=None, test_size = 0.2):
+    def __init__(self, files=None, test_size=0.2):
         self.files =  files
         self.test_size = test_size
 
