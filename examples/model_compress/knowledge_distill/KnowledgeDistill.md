@@ -13,15 +13,16 @@ PyTorch code
 
 ```python
 from knowledge_distill.knowledge_distill import KnowledgeDistill
-kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
-
+kd = KnowledgeDistill(kd_teacher_model, kd_T=5)
+alpha = 1
+beta = 0.8
 for batch_idx, (data, target) in enumerate(train_loader):
     data, target = data.to(device), target.to(device)
     optimizer.zero_grad()
     output = model(data)
     loss = F.cross_entropy(output, target)
     # you only to add the following line to fine-tune with knowledge distillation
-    loss = kd.loss(student_loss=loss, data=data, student_out=output)
+    loss = alpha * loss + beta * kd.loss(data=data, student_out=output)
     loss.backward()
 ```
 

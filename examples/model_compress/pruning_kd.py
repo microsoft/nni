@@ -61,14 +61,19 @@ class vgg(nn.Module):
 
 
 def train(model, device, train_loader, optimizer, kd=None):
+    alpha = 1
+    beta = 0.8
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.cross_entropy(output, target)
+        student_loss = F.cross_entropy(output, target)
         if kd is not None:
-            loss = kd.loss(student_loss=loss, data=data, student_out=output)
+            kd_loss = kd.loss(data=data, student_out=output)
+            loss = alpha * student_loss + beta * kd_loss
+        else:
+            loss = student_loss
         loss.backward()
         optimizer.step()
         if batch_idx % 100 == 0:
@@ -154,7 +159,7 @@ def main():
     kd_teacher_model = vgg()
     kd_teacher_model.to(device)
     kd_teacher_model.load_state_dict(torch.load('vgg16_cifar10.pth'))
-    kd = KnowledgeDistill(kd_teacher_model, kd_T=5, kd_beta=1)
+    kd = KnowledgeDistill(kd_teacher_model, kd_T=5)
     for epoch in range(40):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
