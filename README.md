@@ -127,7 +127,7 @@
           <li><a href="docs/en_US/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
           <li><a href="docs/en_US/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
           </ul>
-          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Assessor</a>
+          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Early Stop Algorithms</a>
           <ul>
           <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
           <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>   
