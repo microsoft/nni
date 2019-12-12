@@ -218,7 +218,7 @@ class ProxylessNasMutator(BaseMutator):
         """
         # FIXME: return mask, to be consistent with other algorithms
         idx = self.mixed_ops[mutable.key].active_op_index
-        return self.mixed_ops[mutable.key].forward(*inputs), idx
+        return self.mixed_ops[mutable.key](*inputs), idx
 
     def reset_binary_gates(self):
         """
