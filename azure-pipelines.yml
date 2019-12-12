@@ -21,8 +21,9 @@ jobs:
       set -e
       cd src/nni_manager
       yarn eslint
-      cd ../webui
-      yarn eslint
+      # uncomment following 2 lines to enable webui eslint
+      # cd ../webui
+      # yarn eslint
     displayName: 'Run eslint'
   - script: |
       python3 -m pip install torch==0.4.1 --user
