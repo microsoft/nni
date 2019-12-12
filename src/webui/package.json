@@ -64,6 +64,7 @@
     "@typescript-eslint/eslint-plugin": "^2.11.0",
     "@typescript-eslint/parser": "^2.11.0",
     "eslint": "^6.7.2",
+    "eslint-plugin-react": "^7.17.0",
     "npx": "^10.2.0",
     "typescript": "^3.5.3"
   },
