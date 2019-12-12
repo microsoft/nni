@@ -32,7 +32,6 @@ class NNIRestHandler {
     public createRestHandler(): Router {
         const router: Router = Router();
 
-        // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
             this.log.debug(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.header('Access-Control-Allow-Origin', '*');
@@ -179,7 +178,6 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
-                // tslint:disable-next-line:no-any
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
                 try {

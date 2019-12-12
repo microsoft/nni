@@ -206,7 +206,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * Submit trial job
      * @param form trial job description form
      */
-    // tslint:disable-next-line:informative-docs
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
@@ -255,7 +254,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * Cancel trial job
      * @param trialJobId ID of trial job
      */
-    // tslint:disable:informative-docs no-unsafe-any
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -319,7 +317,6 @@ class RemoteMachineTrainingService implements TrainingService {
                     throw new Error('trial config parsed failed');
                 }
                 // codeDir is not a valid directory, throw Error
-                // tslint:disable-next-line:non-literal-fs-path
                 if (!fs.lstatSync(remoteMachineTrailConfig.codeDir)
                   .isDirectory()) {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
@@ -438,7 +435,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
 
         //Begin to execute gpu_metrics_collection scripts
-        // tslint:disable-next-line: no-floating-promises
         const script = getGpuMetricsCollectorBashScriptContent(remoteGpuScriptCollectorDir);
         SSHClientUtility.remoteExeCommand(`bash -c '${script}'`, conn);
 
@@ -549,7 +545,6 @@ class RemoteMachineTrainingService implements TrainingService {
                 command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
             }
         }
-        // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         if (this.remoteRestServerPort === undefined) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
@@ -587,7 +582,6 @@ class RemoteMachineTrainingService implements TrainingService {
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(trialLocalTempFolder, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
-        // tslint:disable-next-line: no-floating-promises
         SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
     }
 
@@ -604,6 +598,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const deferred: Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
         const jobpidPath: string = this.getJobPidPath(trialJob.id);
         const trialReturnCodeFilePath: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJob.id, '.nni', 'code');
+        /* eslint-disable require-atomic-updates */
         try {
             const killResult: number = (await SSHClientUtility.remoteExeCommand(`kill -0 \`cat ${jobpidPath}\``, sshClient)).exitCode;
             // if the process of jobpid is not alive any more
@@ -640,7 +635,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 deferred.resolve(trialJob);
             }
         }
-
+        /* eslint-enable require-atomic-updates */
         return deferred.promise;
     }
 

@@ -5,7 +5,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-// tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
 import * as component from '../../common/component';
 
@@ -45,7 +44,6 @@ class PAITrainingService implements TrainingService {
     private paiClusterConfig?: PAIClusterConfig;
     private readonly jobQueue: string[];
     private stopping: boolean = false;
-    // tslint:disable-next-line:no-any
     private hdfsClient: any;
     private paiToken? : string;
     private paiTokenUpdateTime?: number;
@@ -171,7 +169,6 @@ class PAITrainingService implements TrainingService {
         return true;
     }
 
-    // tslint:disable:no-http-string
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail: PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred: Deferred<void> = new Deferred<void>();
@@ -203,7 +200,6 @@ class PAITrainingService implements TrainingService {
         // Set trialjobDetail's early stopped field, to mark the job's cancellation source
         trialJobDetail.isEarlyStopped = isEarlyStopped;
 
-        // tslint:disable-next-line:no-any
         request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
@@ -217,8 +213,6 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    // tslint:disable: no-unsafe-any no-any
-    // tslint:disable-next-line:max-func-body-length
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
@@ -298,7 +292,6 @@ class PAITrainingService implements TrainingService {
 
         return deferred.promise;
     }
-    // tslint:enable: no-unsafe-any
 
     public getClusterMetadata(key: string): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
@@ -319,7 +312,6 @@ class PAITrainingService implements TrainingService {
             deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
-            // tslint:disable-next-line: no-unsafe-any
             this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
             deferred.reject(error);
         }
@@ -331,7 +323,6 @@ class PAITrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
-    // tslint:disable-next-line:max-func-body-length
     private async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -383,7 +374,6 @@ class PAITrainingService implements TrainingService {
         }
         const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
         const hdfsOutputDir: string = unixPathJoin(hdfsCodeDir, 'nnioutput');
-        // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const nniPaiTrialCommand: string = String.Format(
@@ -407,7 +397,6 @@ class PAITrainingService implements TrainingService {
         )
         .replace(/\r\n|\n|\r/gm, '');
 
-        // tslint:disable-next-line:no-console
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles: PAITaskRole[] = [
             new PAITaskRole(
@@ -449,7 +438,7 @@ class PAITrainingService implements TrainingService {
             await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
         } catch (error) {
             this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
-            trialJobDetail.status = 'FAILED';
+            trialJobDetail.status = 'FAILED'; // eslint-disable-line require-atomic-updates
             deferred.resolve(true);
 
             return deferred.promise;
@@ -467,7 +456,6 @@ class PAITrainingService implements TrainingService {
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
-        // tslint:disable:no-any no-unsafe-any
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
