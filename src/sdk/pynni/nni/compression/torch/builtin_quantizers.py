@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from .compressor import Quantizer, QuantGrad
+from .compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
@@ -250,7 +250,7 @@ class DoReFaQuantizer(Quantizer):
 class ClipGrad(QuantGrad):
     @staticmethod
     def quant_backward(tensor, grad_output, quant_type):
-        if quant_type == 2: # quant_type is quant_output
+        if quant_type == QuantType.QUANT_OUTPUT:
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output
 

@@ -330,25 +330,54 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
-                inputs = self.quant_grad.apply(inputs, 0, self.quantize_input, config, layer)
+                inputs = self.quant_grad.apply(inputs, QuantType.QUANT_INPUT, self.quantize_input, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
-                new_weight = self.quant_grad.apply(layer.module.old_weight, 1, self.quantize_weight, config, layer)
+                new_weight = self.quant_grad.apply(layer.module.old_weight, QuantType.QUANT_WEIGHT, self.quantize_weight, config, layer)
                 layer.module.weight = new_weight
                 result = layer._forward(*inputs)
             else:
                 result = layer._forward(*inputs)
 
             if 'output' in config["quant_types"]:
-                result = self.quant_grad.apply(result, 2, self.quantize_output, config, layer)
+                result = self.quant_grad.apply(result, QuantType.QUANT_OUTPUT, self.quantize_output, config, layer)
             return result
 
         layer.module.forward = new_forward
 
+class QuantType:
+    """
+    Enum class for quantization type.
+    """
+    QUANT_INPUT = 0
+    QUANT_WEIGHT = 1
+    QUANT_OUTPUT = 2
 
 class QuantGrad(torch.autograd.Function):
+    """
+    Base class for overriding backward function of quantization operation.
+    """
     @staticmethod
     def quant_backward(tensor, grad_output, quant_type):
+        """
+        This method should be overrided by subclass to provide customized backward function,
+        default implementation is Straight-Through Estimator
+
+        Parameters
+        ----------
+        tensor : Tensor
+            input of quantization operation
+        grad_output : Tensor
+            gradient of the output of quantization operation
+        quant_type : QuantType
+            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            you can define different behavior for different types.
+
+        Returns
+        -------
+        tensor
+            gradient of the input of quantization operation
+        """
         return grad_output
 
     @staticmethod
@@ -365,6 +394,5 @@ class QuantGrad(torch.autograd.Function):
 def _check_weight(module):
     try:
         return isinstance(module.weight.data, torch.Tensor)
-        # return isinstance(module.weight, torch.nn.Parameter) and isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
