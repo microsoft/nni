@@ -70,19 +70,17 @@ const metrics: MetricDataRecord[] = [
     { timestamp: Date.now(), trialJobId: 'C', parameterId: '2', type: 'FINAL', sequence: 0, data: 2.2 }         // 5
 ];
 
-// tslint:disable-next-line:no-any
 function assertRecordEqual(record: any, value: any): void {
     assert.ok(record.timestamp > new Date(2018, 6, 1).getTime());
     assert.ok(record.timestamp < Date.now());
 
-    for (const key in value) {  // tslint:disable-line:no-for-in
+    for (const key in value) {
         if (key !== 'timestamp') {
             assert.equal(record[key], value[key]);
         }
     }
 }
 
-// tslint:disable-next-line:no-any
 function assertRecordsEqual(records: any[], inputs: any[], indices: number[]): void {
     assert.equal(records.length, indices.length);
     for (let i: number = 0; i < records.length; i++) {

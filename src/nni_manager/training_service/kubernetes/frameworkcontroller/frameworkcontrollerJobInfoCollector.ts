@@ -17,7 +17,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
     }
 
     protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+                                               kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
         }
@@ -26,7 +26,6 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             return Promise.reject('kubernetesCRDClient is undefined');
         }
 
-        // tslint:disable-next-line:no-any
         let kubernetesJobInfo: any;
         try {
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
@@ -37,9 +36,9 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             return Promise.resolve();
         }
 
-        // tslint:disable: no-unsafe-any
         if (kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
             const frameworkJobType: FrameworkControllerJobStatus = <FrameworkControllerJobStatus>kubernetesJobInfo.status.state;
+            /* eslint-disable require-atomic-updates */
             switch (frameworkJobType) {
                 case 'AttemptCreationPending':
                 case 'AttemptCreationRequested':
@@ -52,8 +51,8 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
                     }
                     break;
-                case  'Completed':
-                    const completedJobType : FrameworkControllerJobCompleteStatus =
+                case  'Completed': {
+                    const completedJobType: FrameworkControllerJobCompleteStatus =
                       <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
                     switch (completedJobType) {
                         case 'Succeeded':
@@ -66,11 +65,12 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                     }
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);
                     break;
+                }
                 default:
             }
+            /* eslint-enable require-atomic-updates */
         }
 
         return Promise.resolve();
     }
-    // tslint:enable: no-unsafe-any
 }

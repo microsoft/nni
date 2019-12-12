@@ -16,11 +16,9 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
-import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
@@ -118,7 +116,6 @@ function uniqueString(len: number): string {
 function randomSelect<T>(a: T[]): T {
     assert(a !== undefined);
 
-    // tslint:disable-next-line:insecure-random
     return a[Math.floor(Math.random() * a.length)];
 }
 function parseArg(names: string[]): string {
@@ -236,11 +233,11 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
  * Generate parameter file name based on HyperParameters object
  * @param hyperParameters HyperParameters instance
  */
-function generateParamFileName(hyperParameters : HyperParameters): string {
+function generateParamFileName(hyperParameters: HyperParameters): string {
     assert(hyperParameters !== undefined);
     assert(hyperParameters.index >= 0);
 
-    let paramFileName : string;
+    let paramFileName: string;
     if(hyperParameters.index == 0) {
         paramFileName = 'parameter.cfg';
     } else {
@@ -283,7 +280,7 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-let cachedipv4Address : string = '';
+let cachedipv4Address: string = '';
 /**
  * Get IPv4 address of current machine
  */
@@ -325,15 +322,15 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
  * Utility method to calculate file numbers under a directory, recursively
  * @param directory directory name
  */
-function countFilesRecursively(directory: string, timeoutMilliSeconds?: number): Promise<number> {
+function countFilesRecursively(directory: string): Promise<number> {
     if(!fs.existsSync(directory)) {
         throw Error(`Direcotory ${directory} doesn't exist`);
     }
 
     const deferred: Deferred<number> = new Deferred<number>();
 
-    let timeoutId : NodeJS.Timer
-    const delayTimeout : Promise<number> = new Promise((resolve : Function, reject : Function) : void => {
+    let timeoutId: NodeJS.Timer
+    const delayTimeout: Promise<number> = new Promise((resolve: Function, reject: Function): void => {
         // Set timeout and reject the promise once reach timeout (5 seconds)
         timeoutId = setTimeout(() => {
             reject(new Error(`Timeout: path ${directory} has too many files`));
@@ -359,7 +356,7 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 }
 
 function validateFileName(fileName: string): boolean {
-    let pattern: string = '^[a-z0-9A-Z\._-]+$';
+    const pattern: string = '^[a-z0-9A-Z._-]+$';
     const validateResult = fileName.match(pattern);
     if(validateResult) {
         return true;
@@ -374,7 +371,7 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
 
     const fileNameArray: string[] = fs.readdirSync(directory);
     let result = true;
-    for(var name of fileNameArray){
+    for(const name of fileNameArray){
         const fullFilePath: string = path.join(directory, name);
         try {
             // validate file names and directory names
@@ -396,7 +393,7 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
  * get the version of current package
  */
 async function getVersion(): Promise<string> {
-    const deferred : Deferred<string> = new Deferred<string>();
+    const deferred: Deferred<string> = new Deferred<string>();
     import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
         deferred.resolve(pkg.version);
     }).catch((error)=>{
@@ -430,7 +427,7 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
  * judge whether the process is alive
  */
 async function isAlive(pid: any): Promise<boolean> {
-    let deferred : Deferred<boolean> = new Deferred<boolean>();
+    const deferred: Deferred<boolean> = new Deferred<boolean>();
     let alive: boolean = false;
     if (process.platform === 'win32') {
         try {
@@ -440,6 +437,7 @@ async function isAlive(pid: any): Promise<boolean> {
             }
         }
         catch (error) {
+            //ignore
         }
     }
     else {
@@ -458,7 +456,7 @@ async function isAlive(pid: any): Promise<boolean> {
  * kill process
  */
 async function killPid(pid: any): Promise<void> {
-    let deferred : Deferred<void> = new Deferred<void>();
+    const deferred: Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
             await cpp.exec(`cmd.exe /c taskkill /PID ${pid} /F`);

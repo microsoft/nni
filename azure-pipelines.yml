@@ -18,6 +18,11 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      set -e
+      cd src/nni_manager
+      yarn eslint
+    displayName: 'Run eslint'
+  - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user

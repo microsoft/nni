@@ -15,7 +15,7 @@ export class JobMetrics {
     public readonly jobStatus: TrialJobStatus;
     public readonly endTimestamp: number;
 
-    constructor(jobId : string, metrics : string[], jobStatus : TrialJobStatus, endTimestamp : number) {
+    constructor(jobId: string, metrics: string[], jobStatus: TrialJobStatus, endTimestamp: number) {
         this.jobId = jobId;
         this.metrics = metrics;
         this.jobStatus = jobStatus;

@@ -3,9 +3,7 @@
 
 'use strict';
 
-// tslint:disable-next-line:no-implicit-dependencies
 import { assert, expect } from 'chai';
-// tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
 import { Container } from 'typescript-ioc';
 
@@ -54,7 +52,6 @@ describe('Unit test for rest server', () => {
     });
 
     it('Test GET trial-jobs/:id', (done: Mocha.Done) => {
-        // tslint:disable-next-line:no-any
         request.get(`${ROOT_URL}/trial-jobs/1234`, (err: Error, res: request.Response, body: any) => {
             if (err) {
                 assert.fail(err.message);
@@ -88,7 +85,6 @@ describe('Unit test for rest server', () => {
     });
 
     it('Test change concurrent-trial-jobs', (done: Mocha.Done) => {
-        // tslint:disable-next-line:no-any
         request.get(`${ROOT_URL}/experiment`, (err: Error, res: request.Response, body: any) => {
             if (err) {
                 assert.fail(err.message);

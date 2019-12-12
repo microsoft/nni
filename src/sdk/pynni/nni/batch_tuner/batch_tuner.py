@@ -24,13 +24,15 @@ class BatchTuner(Tuner):
     Examples
     --------
     The search space only be accepted like:
-    ```
-    {
-        'combine_params': { '_type': 'choice',
-                             '_value': '[{...}, {...}, {...}]',
-                          }
-    }
-    ```
+
+        ::
+
+            {'combine_params':
+                { '_type': 'choice',
+                            '_value': '[{...}, {...}, {...}]',
+                }
+            }
+
     """
 
     def __init__(self):
