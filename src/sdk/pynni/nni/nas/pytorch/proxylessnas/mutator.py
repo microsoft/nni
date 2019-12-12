@@ -80,7 +80,7 @@ class MixedOp(nn.Module):
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
 
-    '''def forward(self, mutable, x):
+    def forward(self, mutable, x):
         # only full_v2
         def run_function(key, candidate_ops, active_id):
             def forward(_x):
@@ -103,13 +103,13 @@ class MixedOp(nn.Module):
         output = ArchGradientFunction.apply(
             x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
             backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
-        return output'''
+        return output
 
-    def forward(self, mutable, x):
+    '''def forward(self, mutable, x):
         out = mutable.choices[0](x)
         for choice in mutable.choices[1:]:
             out += choice(x)
-        return out
+        return out'''
 
     @property
     def probs_over_ops(self):
@@ -200,9 +200,13 @@ class ProxylessNasMutator(BaseMutator):
             The model that users want to tune, it includes search space defined with nni nas apis
         """
         super(ProxylessNasMutator, self).__init__(model)
-        self.mixed_ops = {}
+        #self.mixed_ops = {}
+        self.cnt = 0
         for _, mutable, _ in self.named_mutables(distinct=False):
-            self.mixed_ops[mutable.key] = MixedOp(mutable)
+            mo = MixedOp(mutable)
+            mutable.register_module(mo)
+            #self.mixed_ops[mutable.key] = mo
+            self.cnt += 1
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
@@ -222,24 +226,28 @@ class ProxylessNasMutator(BaseMutator):
         index of the chosen op
         """
         # FIXME: return mask, to be consistent with other algorithms
-        idx = self.mixed_ops[mutable.key].active_op_index
-        return self.mixed_ops[mutable.key](mutable, *inputs), idx
+        #idx = self.mixed_ops[mutable.key].active_op_index
+        #return self.mixed_ops[mutable.key](mutable, *inputs), idx
+        return mutable.registered_module.active_op_index
 
     def reset_binary_gates(self):
         """
         For each LayerChoice, binarize based on alpha to only activate one op
         """
         for _, mutable, _ in self.named_mutables(distinct=False):
-            k = mutable.key
-            self.mixed_ops[k].binarize(mutable)
+            #k = mutable.key
+            #self.mixed_ops[k].binarize(mutable)
+            mutable.registered_module.binarize(mutable)
 
     def set_chosen_op_active(self):
         """
         For each LayerChoice, set the op with highest alpha as the chosen op
         Usually used for validation.
         """
-        for k in self.mixed_ops.keys():
-            self.mixed_ops[k].set_chosen_op_active()
+        #for k in self.mixed_ops.keys():
+        #    self.mixed_ops[k].set_chosen_op_active()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            mutable.registered_module.set_chosen_op_active()
 
     def num_arch_params(self):
         """
@@ -247,19 +255,23 @@ class ProxylessNasMutator(BaseMutator):
         -------
         The number of LayerChoice in user model
         """
-        return len(self.mixed_ops)
+        #return len(self.mixed_ops)
+        return self.cnt
 
     def set_arch_param_grad(self):
         """
         For each LayerChoice, calculate gradients for architecture weights, i.e., alpha
         """
         for _, mutable, _ in self.named_mutables(distinct=False):
-            k = mutable.key
-            self.mixed_ops[k].set_arch_param_grad(mutable)
+            #k = mutable.key
+            #self.mixed_ops[k].set_arch_param_grad(mutable)
+            mutable.registered_module.set_arch_param_grad(mutable)
 
     def get_architecture_parameters(self):
         """
         Return architecture weights of each LayerChoice, for arch optimizer
         """
-        for k in self.mixed_ops.keys():
-            yield self.mixed_ops[k].get_AP_path_alpha()
+        #for k in self.mixed_ops.keys():
+        #    yield self.mixed_ops[k].get_AP_path_alpha()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            yield mutable.registered_module.get_AP_path_alpha()

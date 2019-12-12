@@ -92,12 +92,17 @@ class LayerChoice(Mutable):
         self.choices = nn.ModuleList(op_candidates)
         self.reduction = reduction
         self.return_mask = return_mask
+        self.registered_module = None
 
     def __len__(self):
         return len(self.choices)
 
+    def register_module(self, module):
+        self.registered_module = module
+
     def forward(self, *inputs):
-        out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
+        out = self.registered_module(*inputs)
+        mask = self.mutator.on_forward_layer_choice(self, *inputs)
         if self.return_mask:
             return out, mask
         return out
