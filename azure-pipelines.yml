@@ -21,6 +21,8 @@ jobs:
       set -e
       cd src/nni_manager
       yarn eslint
+      cd ../webui
+      yarn eslint
     displayName: 'Run eslint'
   - script: |
       python3 -m pip install torch==0.4.1 --user

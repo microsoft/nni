@@ -43,8 +43,6 @@
     "ts-import-plugin": "^1.4.3",
     "ts-loader": "^6.0.4",
     "tsconfig-paths-webpack-plugin": "^3.2.0",
-    "tslint": "^5.7.0",
-    "tslint-react": "^4.0.0",
     "url-loader": "^2.1.0",
     "webpack": "^4.39.1",
     "webpack-dev-server": "^3.7.2",
@@ -53,7 +51,8 @@
   },
   "scripts": {
     "build": "node scripts/build.js",
-    "start": "node --trace-warnings scripts/start.js"
+    "start": "node --trace-warnings scripts/start.js",
+    "eslint": "npx eslint ./ --ext .ts"
   },
   "devDependencies": {
     "@types/node": "^10.14.14",
@@ -62,6 +61,10 @@
     "@types/react-json-tree": "^0.6.11",
     "@types/react-responsive": "^3.0.3",
     "@types/react-router": "^3.0.20",
+    "@typescript-eslint/eslint-plugin": "^2.11.0",
+    "@typescript-eslint/parser": "^2.11.0",
+    "eslint": "^6.7.2",
+    "npx": "^10.2.0",
     "typescript": "^3.5.3"
   },
   "resolutions": {
