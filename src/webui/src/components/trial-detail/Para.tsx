@@ -275,6 +275,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         parallelAxis.push({
             dim: i,
             name: 'default metric',
+            scale: true,
             nameTextStyle: {
                 fontWeight: 700
             }

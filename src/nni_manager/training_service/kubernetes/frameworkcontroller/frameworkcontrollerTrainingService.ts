@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -35,7 +19,7 @@ import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
-import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
+import { FrameworkControllerClientFactory } from './frameworkcontrollerApiClient';
 import { FrameworkControllerClusterConfig, FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigFactory,
     FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig} from './frameworkcontrollerConfig';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';
@@ -158,7 +142,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         nfsFrameworkControllerClusterConfig.nfs.path
                     );
                 }
-                this.kubernetesCRDClient = FrameworkControllerClient.generateFrameworkControllerClient();
+                this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const frameworkcontrollerTrialJsonObjsect: any = JSON.parse(value);

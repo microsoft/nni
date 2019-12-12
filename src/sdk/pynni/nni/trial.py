@@ -1,23 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import json_tricks
 
@@ -126,9 +108,10 @@ def report_intermediate_result(metric):
         serializable object.
     """
     global _intermediate_seq
-    assert _params is not None, 'nni.get_next_parameter() needs to be called before report_intermediate_result'
+    assert _params or trial_env_vars.NNI_PLATFORM is None, \
+        'nni.get_next_parameter() needs to be called before report_intermediate_result'
     metric = json_tricks.dumps({
-        'parameter_id': _params['parameter_id'],
+        'parameter_id': _params['parameter_id'] if _params else None,
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'PERIODICAL',
         'sequence': _intermediate_seq,
@@ -147,9 +130,10 @@ def report_final_result(metric):
     metric:
         serializable object.
     """
-    assert _params is not None, 'nni.get_next_parameter() needs to be called before report_final_result'
+    assert _params or trial_env_vars.NNI_PLATFORM is None, \
+        'nni.get_next_parameter() needs to be called before report_final_result'
     metric = json_tricks.dumps({
-        'parameter_id': _params['parameter_id'],
+        'parameter_id': _params['parameter_id'] if _params else None,
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'FINAL',
         'sequence': 0,

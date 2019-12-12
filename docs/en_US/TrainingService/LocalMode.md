@@ -1,7 +1,7 @@
 **Tutorial: Create and Run an Experiment on local with NNI API**
 ===
 
-In this tutorial, we will use the example in [~/examples/trials/mnist] to explain how to create and run an experiment on local with NNI API.
+In this tutorial, we will use the example in [~/examples/trials/mnist-tfv1] to explain how to create and run an experiment on local with NNI API.
 
 >Before starts
 
@@ -96,7 +96,7 @@ This command will be filled in the YAML configure file below. Please refer to [h
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
-```
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 
@@ -111,6 +111,9 @@ maxTrialNum: 100
 
 # choice: local, remote
 trainingServicePlatform: local
+
+# search space file
+searchSpacePath: search_space.json
 
 # choice: true, false
 useAnnotation: true

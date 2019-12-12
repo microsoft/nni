@@ -12,7 +12,7 @@
     "copy-to-clipboard": "^3.0.8",
     "css-loader": "0.28.7",
     "dotenv": "^8.0.0",
-    "echarts": "^4.1.0",
+    "echarts": "^4.5.0",
     "echarts-for-react": "^2.0.14",
     "file-loader": "^4.1.0",
     "fork-ts-checker-webpack-plugin": "^1.5.0",
@@ -66,7 +66,8 @@
   },
   "resolutions": {
     "@types/react": "16.4.17",
-    "js-yaml": "^3.13.1"
+    "js-yaml": "^3.13.1",
+    "serialize-javascript": "^2.1.1"
   },
   "babel": {
     "presets": [

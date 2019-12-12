@@ -340,7 +340,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Operation',
                         dataIndex: 'operation',
                         key: 'operation',
-                        width: 120,
                         render: (text: string, record: TableRecord) => {
                             let trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
@@ -413,7 +412,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: realItem,
                         dataIndex: item,
                         key: item,
-                        width: '6%',
                         render: (text: string, record: TableRecord) => {
                             const eachTrial = TRIALS.getTrial(record.id);
                             return (
@@ -514,7 +512,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
 const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
     title: 'Trial No.',
     dataIndex: 'sequenceId',
-    width: 120,
     className: 'tableHead',
     sorter: (a, b) => a.sequenceId - b.sequenceId
 };
@@ -522,7 +519,6 @@ const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
 const IdColumnConfig: ColumnProps<TableRecord> = {
     title: 'ID',
     dataIndex: 'id',
-    width: 60,
     className: 'tableHead leftTitle',
     sorter: (a, b) => a.id.localeCompare(b.id),
     render: (text, record) => (
@@ -533,7 +529,7 @@ const IdColumnConfig: ColumnProps<TableRecord> = {
 const StartTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'Start Time',
     dataIndex: 'startTime',
-    width: 160,
+    sorter: (a, b) => a.startTime - b.startTime,
     render: (text, record) => (
         <span>{formatTimestamp(record.startTime)}</span>
     )
@@ -542,7 +538,15 @@ const StartTimeColumnConfig: ColumnProps<TableRecord> = {
 const EndTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'End Time',
     dataIndex: 'endTime',
-    width: 160,
+    sorter: (a, b, sortOrder) => {
+        if (a.endTime === undefined) {
+            return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.endTime === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
+        } else {
+            return a.endTime - b.endTime;
+        }
+    },
     render: (text, record) => (
         <span>{formatTimestamp(record.endTime, '--')}</span>
     )
@@ -551,17 +555,15 @@ const EndTimeColumnConfig: ColumnProps<TableRecord> = {
 const DurationColumnConfig: ColumnProps<TableRecord> = {
     title: 'Duration',
     dataIndex: 'duration',
-    width: 100,
     sorter: (a, b) => a.duration - b.duration,
     render: (text, record) => (
-        <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
+        <span className="durationsty">{convertDuration(record.duration)}</span>
     )
 };
 
 const StatusColumnConfig: ColumnProps<TableRecord> = {
     title: 'Status',
     dataIndex: 'status',
-    width: 150,
     className: 'tableStatus',
     render: (text, record) => (
         <span className={`${record.status} commonStyle`}>{record.status}</span>
@@ -574,7 +576,7 @@ const StatusColumnConfig: ColumnProps<TableRecord> = {
 const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
     title: 'Intermediate result',
     dataIndex: 'intermediateCount',
-    width: 86,
+    sorter: (a, b) => a.intermediateCount - b.intermediateCount,
     render: (text, record) => (
         <span>{`#${record.intermediateCount}`}</span>
     )
@@ -584,19 +586,17 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     title: 'Default metric',
     className: 'leftTitle',
     dataIndex: 'accuracy',
-    width: 120,
     sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
+        if (a.latestAccuracy === undefined) {
             return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
         } else {
-            return a.accuracy - b.accuracy;
+            return a.latestAccuracy - b.latestAccuracy;
         }
     },
     render: (text, record) => (
-        // TODO: is this needed?
-        <div>{record.latestAccuracy}</div>
+        <div>{record.formattedLatestAccuracy}</div>
     )
 };
 

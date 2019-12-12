@@ -82,8 +82,6 @@ def main():
 
     pruner = AGP_Pruner(model, configure_list)
     model = pruner.compress()
-    # you can also use compress(model) method
-    # like that pruner.compress(model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):

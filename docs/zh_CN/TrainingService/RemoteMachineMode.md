@@ -26,16 +26,18 @@ experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-#可选项: local, remote, pai
+#choice: local, remote, pai
 trainingServicePlatform: remote
-#可选项: true, false
+# 搜索空间文件
+searchSpacePath: search_space.json
+# 可选项: true, false
 useAnnotation: true
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC 需要通过 nnictl 安装)
+  # 可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #可选项: maximize, minimize
+    # 可选项:: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
