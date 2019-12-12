@@ -80,7 +80,7 @@ class MixedOp(nn.Module):
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
 
-    def forward(self, mutable, x):
+    '''def forward(self, mutable, x):
         # only full_v2
         def run_function(key, candidate_ops, active_id):
             def forward(_x):
@@ -92,11 +92,10 @@ class MixedOp(nn.Module):
                 binary_grads = torch.zeros_like(binary_gates.data)
                 with torch.no_grad():
                     for k in range(len(candidate_ops)):
-                        '''if k != active_id:
+                        if k != active_id:
                             out_k = candidate_ops[k](_x.data)
                         else:
-                            out_k = _output.data'''
-                        out_k = _output.data
+                            out_k = _output.data
                         grad_k = torch.sum(out_k * grad_output)
                         binary_grads[k] = grad_k
                 return binary_grads
@@ -104,7 +103,13 @@ class MixedOp(nn.Module):
         output = ArchGradientFunction.apply(
             x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
             backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
-        return output
+        return output'''
+
+    def forward(self, mutable, x):
+        out = mutable.choices[0](x)
+        for choice in mutable.choices[1:]:
+            out += choice(x)
+        return out
 
     @property
     def probs_over_ops(self):
