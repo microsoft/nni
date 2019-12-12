@@ -42,7 +42,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 [TPE 文档](HyperoptTuner.md)。
+注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 For the principle of optimization or turn-on optimization, please refer to [TPE document](./HyperoptTuner.md).
 
 **示例**
 
