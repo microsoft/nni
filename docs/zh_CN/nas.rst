@@ -20,6 +20,6 @@ NAS 算法
 
     概述 <NAS/Overview>
     NAS 接口 <NAS/NasInterface>
-    ENAS <NAS/Overview>
-    DARTS <NAS/Overview>
+    ENAS <NAS/ENAS>
+    DARTS <NAS/DARTS>
     P-DARTS <NAS/Overview>
