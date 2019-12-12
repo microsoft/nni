@@ -1,6 +1,7 @@
 import argparse
 import logging
 import random
+import time
 from itertools import cycle
 
 import nni
@@ -39,10 +40,11 @@ def retrain_bn(model, criterion, max_iters, log_freq, loader):
                 logger.info("Train Step [%d/%d] %s", step + 1, max_iters, meters)
 
 
-def test_acc(model, criterion, max_iters, log_freq, loader):
+def test_acc(model, criterion, log_freq, loader):
     logger.info("Start testing...")
     model.eval()
     meters = AverageMeterGroup()
+    start_time = time.time()
     with torch.no_grad():
         for step, data in enumerate(loader):
             inputs, targets = convert_data_format_dali(data)
@@ -52,16 +54,18 @@ def test_acc(model, criterion, max_iters, log_freq, loader):
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if step % log_freq == 0:
-                logger.info("Valid Step [%d/%d] %s", step + 1, max_iters, meters)
+                logger.info("Valid Step [%d] time %.3fs acc1 %.4f acc5 %.4f loss %.4f",
+                            step + 1, time.time() - start_time,
+                            meters.acc1.avg, meters.acc5.avg, meters.loss.avg)
     return meters.acc1.avg
 
 
 def evaluate_acc(model, criterion, args, loader_train, loader_test):
-    acc_before = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test)
+    acc_before = test_acc(model, criterion, args.log_frequency, loader_test)
     nni.report_intermediate_result(acc_before)
 
     retrain_bn(model, criterion, args.train_iters, args.log_frequency, loader_train)
-    acc = test_acc(model, criterion, args.test_iters, args.log_frequency, loader_test)
+    acc = test_acc(model, criterion, args.log_frequency, loader_test)
     assert isinstance(acc, float)
     nni.report_intermediate_result(acc)
     nni.report_final_result(acc)
@@ -75,11 +79,10 @@ if __name__ == "__main__":
                         help="When true, image values will range from 0 to 255 and use BGR "
                              "(as in original repo).")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--train-batch-size", type=int, default=128)
     parser.add_argument("--train-iters", type=int, default=200)
     parser.add_argument("--test-batch-size", type=int, default=512)
-    parser.add_argument("--test-iters", type=int, default=40)
     parser.add_argument("--log-frequency", type=int, default=10)
 
     args = parser.parse_args()
