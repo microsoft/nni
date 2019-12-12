@@ -349,7 +349,7 @@ You can use these commands to get more information about the experiment
    
    * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
    * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
-   * [NNI 中的自动特征工程](examples/trials/auto-feature-engineering/README_zh_CN.md) 
+   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI 
    * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
 * ### **相关文章**
