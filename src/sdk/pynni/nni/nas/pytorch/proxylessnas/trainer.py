@@ -214,6 +214,7 @@ class ProxylessNasTrainer(BaseTrainer):
                 for param_group in self.model_optim.param_groups:
                     param_group['lr'] = warmup_lr
                 images, labels = images.to(self.device), labels.to(self.device)
+                print(images, labels)
                 # compute output
                 self.mutator.reset_binary_gates() # random sample binary gates
                 output = self.model(images)
