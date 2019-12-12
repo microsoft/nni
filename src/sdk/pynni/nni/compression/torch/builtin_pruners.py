@@ -224,7 +224,7 @@ class SlimPruner(Pruner):
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
-            mask = {'weight': mask_weight, 'bias': mask_bias}
+            mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
         finally:
             self.mask_dict.update({layer.name: mask})
             self.mask_calculated_ops.add(layer.name)
@@ -285,7 +285,7 @@ class RankFilterPruner(Pruner):
             mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias)
         else:
             mask_bias = None
-        mask = {'weight': mask_weight, 'bias': mask_bias}
+        mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
