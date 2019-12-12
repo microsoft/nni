@@ -473,7 +473,7 @@ In PAI mode, the following keys are required.
 
 * __image__: Required string. Set the image to be used in pai.
 
-* __authFile__: *TODO, what is authFile?*
+* __authFile__: Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. [Reference](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job).
 
 * __shmMB__: Optional integer. Shared memory size of container.
 
