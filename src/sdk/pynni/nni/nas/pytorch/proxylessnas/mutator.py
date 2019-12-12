@@ -80,7 +80,7 @@ class MixedOp(nn.Module):
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
 
-    def forward(self, x):
+    def forward(self, mutable, x):
         # only full_v2
         def run_function(key, candidate_ops, active_id):
             def forward(_x):
@@ -101,8 +101,8 @@ class MixedOp(nn.Module):
                 return binary_grads
             return backward
         output = ArchGradientFunction.apply(
-            x, self.AP_path_wb, run_function(self.mutable.key, self.mutable.choices, self.active_index[0]),
-            backward_function(self.mutable.key, self.mutable.choices, self.active_index[0], self.AP_path_wb))
+            x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
+            backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
         return output
 
     @property
@@ -218,7 +218,7 @@ class ProxylessNasMutator(BaseMutator):
         """
         # FIXME: return mask, to be consistent with other algorithms
         idx = self.mixed_ops[mutable.key].active_op_index
-        return self.mixed_ops[mutable.key](*inputs), idx
+        return self.mixed_ops[mutable.key](mutable, *inputs), idx
 
     def reset_binary_gates(self):
         """

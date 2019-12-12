@@ -63,8 +63,8 @@ if __name__ == "__main__":
     # data parallelism not supported yet
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-        #model = torch.nn.DataParallel(model)
-        #model.to(device)
+        model = torch.nn.DataParallel(model)
+        model.to(device)
     else:
         device = torch.device('cpu')
 
