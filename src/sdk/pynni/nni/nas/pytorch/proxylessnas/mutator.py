@@ -68,7 +68,7 @@ class MixedOp(nn.Module):
             A LayerChoice in user model
         """
         super(MixedOp, self).__init__()
-        self.mutable = mutable
+        #self.mutable = mutable
         self.AP_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
         self.AP_path_wb = nn.Parameter(torch.Tensor(mutable.length))
         self.active_index = [0]
@@ -125,10 +125,9 @@ class MixedOp(nn.Module):
         index = int(np.argmax(probs))
         return index, probs[index]
 
-    @property
-    def active_op(self):
+    def active_op(self, mutable):
         """ assume only one path is active """
-        return self.mutable.choices[self.active_index[0]]
+        return mutable.choices[self.active_index[0]]
 
     @property
     def active_op_index(self):
@@ -142,7 +141,7 @@ class MixedOp(nn.Module):
         self.inactive_index = [_i for _i in range(0, chosen_idx)] + \
                               [_i for _i in range(chosen_idx + 1, self.n_choices)]
 
-    def binarize(self):
+    def binarize(self, mutable):
         """
         Sample based on alpha, and set binary weights accordingly
         """
@@ -153,12 +152,12 @@ class MixedOp(nn.Module):
         sample = torch.multinomial(probs, 1)[0].item()
         self.active_index = [sample]
         self.inactive_index = [_i for _i in range(0, sample)] + \
-                              [_i for _i in range(sample + 1, len(self.mutable.choices))]
+                              [_i for _i in range(sample + 1, len(mutable.choices))]
         self.log_prob = torch.log(probs[sample])
         self.current_prob_over_ops = probs
         self.AP_path_wb.data[sample] = 1.0
         # avoid over-regularization
-        for choice in self.mutable.choices:
+        for choice in mutable.choices:
             for _, param in choice.named_parameters():
                 param.grad = None
 
@@ -168,19 +167,19 @@ class MixedOp(nn.Module):
         else:
             return 0
 
-    def set_arch_param_grad(self):
+    def set_arch_param_grad(self, mutable):
         """
         Calculate alpha gradient for this LayerChoice
         """
         binary_grads = self.AP_path_wb.grad.data
-        if self.active_op.is_zero_layer():
+        if self.active_op(mutable).is_zero_layer():
             self.AP_path_alpha.grad = None
             return
         if self.AP_path_alpha.grad is None:
             self.AP_path_alpha.grad = torch.zeros_like(self.AP_path_alpha.data)
         probs = self.probs_over_ops.data
-        for i in range(len(self.mutable.choices)):
-            for j in range(len(self.mutable.choices)):
+        for i in range(len(mutable.choices)):
+            for j in range(len(mutable.choices)):
                 self.AP_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (self._delta_ij(i, j) - probs[i])
 
 
@@ -224,8 +223,9 @@ class ProxylessNasMutator(BaseMutator):
         """
         For each LayerChoice, binarize based on alpha to only activate one op
         """
-        for k in self.mixed_ops.keys():
-            self.mixed_ops[k].binarize()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            k = mutable.key
+            self.mixed_ops[k].binarize(mutable)
 
     def set_chosen_op_active(self):
         """
@@ -247,8 +247,9 @@ class ProxylessNasMutator(BaseMutator):
         """
         For each LayerChoice, calculate gradients for architecture weights, i.e., alpha
         """
-        for k in self.mixed_ops.keys():
-            self.mixed_ops[k].set_arch_param_grad()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            k = mutable.key
+            self.mixed_ops[k].set_arch_param_grad(mutable)
 
     def get_architecture_parameters(self):
         """
