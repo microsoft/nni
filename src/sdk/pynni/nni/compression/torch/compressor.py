@@ -16,6 +16,7 @@ class LayerInfo:
 
         self._forward = None
 
+
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -193,10 +194,16 @@ class Pruner(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
+            mask = self.calc_mask(layer, config)
             # apply mask to weight
             old_weight = layer.module.weight.data
-            mask = self.calc_mask(layer, config)
-            layer.module.weight.data = old_weight.mul(mask)
+            mask_weight = mask['weight']
+            layer.module.weight.data = old_weight.mul(mask_weight)
+            # apply mask to bias
+            if hasattr(layer.module, 'bias') and layer.module.bias is not None:
+                old_bias = layer.module.bias.data
+                mask_bias = mask['bias']
+                layer.module.bias.data = old_bias.mul(mask_bias)
             # calculate forward
             ret = layer._forward(*inputs)
             return ret
@@ -292,7 +299,6 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError("Quantizer must overload quantize_input()")
 
-
     def _instrument_layer(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
@@ -308,11 +314,13 @@ class Quantizer(Compressor):
         assert "quant_types" in config, 'must provide quant_types in config'
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
         assert "quant_bits" in config, 'must provide quant_bits in config'
-        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
+        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"],
+                                                                   dict), 'quant_bits must be dict type or int type'
 
         if isinstance(config["quant_bits"], dict):
             for quant_type in config["quant_types"]:
-                assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
+                assert quant_type in config[
+                    "quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
@@ -325,7 +333,8 @@ class Quantizer(Compressor):
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
-                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type,
+                                                  op_name=layer.name)
                 layer.module.weight.data = new_weight
                 result = layer._forward(*inputs)
                 layer.module.weight.data = weight
@@ -349,6 +358,7 @@ class straight_through_quantize_output(torch.autograd.Function):
         # Straight-through estimator
         return grad_output, None, None, None
 
+
 class straight_through_quantize_input(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inputs, quantizer, config, layer):
@@ -358,6 +368,7 @@ class straight_through_quantize_input(torch.autograd.Function):
     def backward(ctx, grad_output):
         # Straight-through estimator
         return grad_output, None, None, None
+
 
 def _check_weight(module):
     try:

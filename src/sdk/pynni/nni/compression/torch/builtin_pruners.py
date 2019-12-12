@@ -222,7 +222,9 @@ class SlimPruner(Pruner):
         mask = torch.ones(weight.size()).type_as(weight)
         try:
             w_abs = weight.abs()
-            mask = torch.gt(w_abs, self.global_threshold).type_as(weight)
+            mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
+            mask_bias = mask_weight.clone()
+            mask = {'weight': mask_weight, 'bias': mask_bias}
         finally:
             self.mask_dict.update({layer.name: mask})
             self.mask_calculated_ops.add(layer.name)
@@ -251,7 +253,7 @@ class RankFilterPruner(Pruner):
         self.mask_calculated_ops = set()
 
     def _get_mask(self, base_mask, weight, num_prune):
-        return torch.ones(weight.size()).type_as(weight)
+        return {'weight': None, 'bias': None}
 
     def calc_mask(self, layer, config):
         """
@@ -278,7 +280,12 @@ class RankFilterPruner(Pruner):
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
-        mask = torch.ones(weight.size()).type_as(weight)
+        mask_weight = torch.ones(weight.size()).type_as(weight)
+        if hasattr(layer.module, 'bias') and layer.module.bias is not None:
+            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias)
+        else:
+            mask_bias = None
+        mask = {'weight': mask_weight, 'bias': mask_bias}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
@@ -288,7 +295,7 @@ class RankFilterPruner(Pruner):
         finally:
             self.mask_dict.update({op_name: mask})
             self.mask_calculated_ops.add(op_name)
-        return mask.detach()
+        return mask
 
 
 class L1FilterPruner(RankFilterPruner):
@@ -335,9 +342,10 @@ class L1FilterPruner(RankFilterPruner):
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
         threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
-        mask = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight)
 
-        return mask
+        return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
 
 
 class L2FilterPruner(RankFilterPruner):
@@ -380,9 +388,10 @@ class L2FilterPruner(RankFilterPruner):
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
         threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
-        mask = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight)
 
-        return mask
+        return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
 
 
 class FPGMPruner(RankFilterPruner):
@@ -423,7 +432,8 @@ class FPGMPruner(RankFilterPruner):
         """
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
-            base_mask[idx] = 0.
+            base_mask['weight'][idx] = 0.
+            base_mask['bias'][idx] = 0.
         return base_mask
 
     def _get_min_gm_kernel_idx(self, weight, n):
