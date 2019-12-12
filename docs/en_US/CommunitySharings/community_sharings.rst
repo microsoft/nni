@@ -12,3 +12,4 @@ In addtion to the official tutorilas and examples, we encourage community contri
     Neural Architecture Search Comparison <NasComparision>
     Hyper-parameter Tuning Algorithm Comparsion <HpoComparision>
     Parallelizing Optimization for TPE <ParallelizingTpeSearch>
+    Automatically tune systems with NNI <TuningSystems>
