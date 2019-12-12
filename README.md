@@ -92,10 +92,10 @@
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>  
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
           </ul>
           <b>Bayesian optimization</b>
             <ul>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>  
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li> 
