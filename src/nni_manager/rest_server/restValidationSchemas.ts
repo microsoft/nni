@@ -36,6 +36,9 @@ export namespace ValidationSchemas {
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
                 authFile: joi.string(),
+                nniManagerNFSMountPath: joi.string().min(1),
+                containerNFSMountPath: joi.string().min(1),
+                paiStoragePlugin: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
                 portList: joi.array().items(joi.object({
                     label: joi.string().required(),
@@ -100,8 +103,6 @@ export namespace ValidationSchemas {
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
-                nniManagerNFSMountPath: joi.string().min(1).required(),
-                containerNFSMountPath: joi.string().min(1).required()
             }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),

@@ -122,7 +122,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
             from subprocess import CREATE_NEW_PROCESS_GROUP
             process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
         else:
-            process = Popen(cmds, cwd=entry_dir)
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):

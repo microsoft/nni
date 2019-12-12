@@ -36,29 +36,29 @@ import * as WebHDFS from 'webhdfs';
  */
 @component.Singleton
 class PAITrainingService implements TrainingService {
-    private readonly log!: Logger;
-    private readonly metricsEmitter: EventEmitter;
-    private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
-    private readonly expRootDir: string;
-    private paiTrialConfig: NNIPAITrialConfig | undefined;
-    private paiClusterConfig?: PAIClusterConfig;
-    private readonly jobQueue: string[];
-    private stopping: boolean = false;
+    protected readonly log!: Logger;
+    protected readonly metricsEmitter: EventEmitter;
+    protected readonly trialJobsMap: Map<string, PAITrialJobDetail>;
+    protected readonly expRootDir: string;
+    protected paiTrialConfig: NNIPAITrialConfig | undefined;
+    protected paiClusterConfig?: PAIClusterConfig;
+    protected readonly jobQueue: string[];
+    protected stopping: boolean = false;
     private hdfsClient: any;
-    private paiToken? : string;
-    private paiTokenUpdateTime?: number;
-    private readonly paiTokenUpdateInterval: number;
-    private readonly experimentId!: string;
-    private readonly paiJobCollector: PAIJobInfoCollector;
-    private paiRestServerPort?: number;
-    private nniManagerIpConfig?: NNIManagerIpConfig;
+    protected paiToken? : string;
+    protected paiTokenUpdateTime?: number;
+    protected readonly paiTokenUpdateInterval: number;
+    protected readonly experimentId!: string;
+    protected readonly paiJobCollector: PAIJobInfoCollector;
+    protected paiRestServerPort?: number;
+    protected nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private copyAuthFilePromise?: Promise<void>;
-    private versionCheck: boolean = true;
-    private logCollection: string;
-    private isMultiPhase: boolean = false;
-    private authFileHdfsPath: string | undefined = undefined;
-    private portList?: string | undefined;
+    protected versionCheck: boolean = true;
+    protected logCollection: string;
+    protected isMultiPhase: boolean = false;
+    protected authFileHdfsPath: string | undefined = undefined;
+    protected portList?: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -323,7 +323,7 @@ class PAITrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
-    private async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
+    protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
@@ -512,7 +512,7 @@ class PAITrainingService implements TrainingService {
     /**
      * Update pai token by the interval time or initialize the pai token
      */
-    private async updatePaiToken(): Promise<void> {
+    protected async updatePaiToken(): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
         const currentTime: number = new Date().getTime();
@@ -588,7 +588,7 @@ class PAITrainingService implements TrainingService {
         });
     }
 
-    private postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
+    protected postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         const req: request.Options = {

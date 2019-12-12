@@ -18,26 +18,30 @@
  */
 
 'use strict';
-import { PAIClusterConfig } from '../pai/paiConfig';
+import {TrialConfig} from '../common/trialConfig';
 
 /**
- * PAILite cluster configuration
+ * PAILite trial configuration
  */
-export class PAILiteClusterConfig extends PAIClusterConfig {
+export class NNIPAILiteTrialConfig extends TrialConfig {
+    public readonly cpuNum: number;
+    public readonly memoryMB: number;
+    public readonly image: string;
+    public virtualCluster?: string;
     public readonly nniManagerNFSMountPath: string;
     public readonly containerNFSMountPath: string;
+    public readonly paiStoragePlugin: string;
 
-    /**
-     * Constructor
-     * @param userName User name of PAI Cluster
-     * @param passWord password of PAI Cluster
-     * @param host Host IP of PAI Cluster
-     * @param token PAI token of PAI Cluster
-     */
-    constructor(userName: string, host : string, nniManagerNFSMountPath: string, 
-                containerNFSMountPath: string, passWord?: string, token?: string) {
-        super(userName, host, passWord, token);
+    constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
+                image: string, virtualCluster: string, nniManagerNFSMountPath: string, containerNFSMountPath: string,
+                paiStoragePlugin: string) {
+        super(command, codeDir, gpuNum);
+        this.cpuNum = cpuNum;
+        this.memoryMB = memoryMB;
+        this.image = image;
+        this.virtualCluster = virtualCluster;
         this.nniManagerNFSMountPath = nniManagerNFSMountPath;
         this.containerNFSMountPath = containerNFSMountPath;
+        this.paiStoragePlugin = paiStoragePlugin;
     }
 }

@@ -259,19 +259,31 @@ pai_config_schema = {
     })
 }
 
+
+pai_lite_trial_schema = {
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
+        'memoryMB': setType('memoryMB', int),
+        'image': setType('image', str),
+        'virtualCluster': setType('virtualCluster', str),
+        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
+        'containerNFSMountPath': setType('containerNFSMountPath', str),
+        'paiStoragePlugin': setType('paiStoragePlugin', str)
+    }
+}
+
 pai_lite_config_schema = {
     'paiLiteConfig': Or({
         'userName': setType('userName', str),
         'passWord': setType('passWord', str),
-        'host': setType('host', str),
-        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
-        'containerNFSMountPath': setType('containerNFSMountPath', str)
+        'host': setType('host', str)
     }, {
         'userName': setType('userName', str),
         'token': setType('token', str),
-        'host': setType('host', str),
-        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
-        'containerNFSMountPath': setType('containerNFSMountPath', str)
+        'host': setType('host', str)
     })
 }
 
@@ -412,7 +424,7 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
-PAI_LITE_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_lite_config_schema})
+PAI_LITE_CONFIG_SCHEMA = Schema({**common_schema, **pai_lite_trial_schema, **pai_lite_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 

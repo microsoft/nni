@@ -114,8 +114,8 @@ export class PAIJobInfoCollector {
                             paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
                         // Set pai trial job's url to WebHDFS output path
-                        if (paiTrialJob.hdfsLogPath !== undefined) {
-                            paiTrialJob.url += `,${paiTrialJob.hdfsLogPath}`;
+                        if (paiTrialJob.logPath !== undefined) {
+                            paiTrialJob.url += `,${paiTrialJob.logPath}`;
                         }
                     }
                 }
