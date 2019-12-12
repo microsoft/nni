@@ -115,6 +115,10 @@
       memoryMB: 32869
       #在 OpenPAI 上运行 NNI 任务的 Docker 映像
       image: msranni/nni:latest
+      #在 OpenPAI 的 hdfs 目录上存储数据的目录，如：'hdfs://host:port/directory'
+      dataDir: hdfs://10.10.10.10:9000/username/nni
+      #在 OpenPAI 的 hdfs 目录上存储输出的目录，如：'hdfs://host:port/directory'
+      outputDir: hdfs://10.10.10.10:9000/username/nni
     paiConfig:
       #登录 OpenPAI 的用户名
       userName: username
@@ -124,7 +128,7 @@
       host: 10.10.10.10
     
 
-将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `userName`, `passWord` 和 `host`。
+将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `dataDir`, `outputDir`, `userName`, `passWord` 和 `host`。
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
