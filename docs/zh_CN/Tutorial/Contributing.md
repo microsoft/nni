@@ -46,6 +46,8 @@
 * 有关 docstrings，参考 [numpydoc docstring 指南](https://numpydoc.readthedocs.io/en/latest/format.html) 和 [pandas docstring 指南](https://python-sprints.github.io/pandas/guide/pandas_docstring.html) 
     * 函数的 docstring, **description**, **Parameters**, 以及**Returns**/**Yields** 是必需的。
     * 类的 docstring, **description**, **Attributes** 是必需的。
+    * For docstring to describe `dict`, which is commonly used in our hyper-param format description, please refer to [RiboKit : Doc Standards
+    * Internal Guideline on Writing Standards](https://ribokit.github.io/docs/text/)
 
 ## 文档
 
