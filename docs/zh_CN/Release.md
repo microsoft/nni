@@ -63,7 +63,7 @@
 
 * Tuners 和 Assessors
   
-    - 支持自动特征生成和选择 -Issue#877 -PR #1387 + 提供自动特征接口 + 基于 Beam 搜索的 Tuner + [添加 Pakdd 示例](./examples/trials/auto-feature-engineering/README_zh_CN.md)
+    - Support Auto-Feature generator & selection -Issue#877 -PR #1387 + Provide auto feature interface + Tuner based on beam search + [Add Pakdd example](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
     - 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
     - 为 hyperband 支持多阶段 -PR #1257
 - 训练平台
@@ -92,8 +92,8 @@
 - 文档
   
     - 更新文档结构 -Issue #1231
-    - [多阶段文档的改进](./docs/zh_CN/AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + 增加配置示例
-    - [Web 界面描述改进](./docs/zh_CN/Tutorial/WebUI.md) -PR #1419
+    - [Multi phase document improvement](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + Add configuration example
+    - [WebUI description improvement](Tutorial/WebUI.md) -PR #1419
 
 ### 修复的 Bug
 
