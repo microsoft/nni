@@ -132,6 +132,9 @@ class ProxylessNasTrainer(BaseTrainer):
         self.mutator = ProxylessNasMutator(model)
         self._valid_iter = None
 
+        self.model = torch.nn.DataParallel(self.model)
+        self.model.to(self.device)
+
         # TODO: arch search configs
 
         self._init_arch_params(arch_init_type, arch_init_ratio)
