@@ -92,10 +92,11 @@ class MixedOp(nn.Module):
                 binary_grads = torch.zeros_like(binary_gates.data)
                 with torch.no_grad():
                     for k in range(len(candidate_ops)):
-                        if k != active_id:
+                        '''if k != active_id:
                             out_k = candidate_ops[k](_x.data)
                         else:
-                            out_k = _output.data
+                            out_k = _output.data'''
+                        out_k = _output.data
                         grad_k = torch.sum(out_k * grad_output)
                         binary_grads[k] = grad_k
                 return binary_grads
