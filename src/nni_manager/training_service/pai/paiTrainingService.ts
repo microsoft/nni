@@ -287,7 +287,7 @@ class PAITrainingService implements TrainingService {
                 break;
             default:
                 //Reject for unknown keys
-                deferred.reject(new Error(`Uknown key: ${key}`));
+                throw new Error(`Uknown key: ${key}`);
         }
 
         return deferred.promise;

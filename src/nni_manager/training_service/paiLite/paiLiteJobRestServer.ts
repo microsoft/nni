@@ -16,7 +16,7 @@ export interface ParameterFileMeta {
 }
 
 /**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
+ * PAILite Training service Rest server, provides rest API to support pai job metrics update
  *
  */
 @component.Singleton
