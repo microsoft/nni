@@ -22,7 +22,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public hdfsLogPath: string;
     public isEarlyStopped?: boolean;
 
-    constructor(id: string, status: TrialJobStatus, paiJobName : string,
+    constructor(id: string, status: TrialJobStatus, paiJobName: string,
                 submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
@@ -52,6 +52,5 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 --pai_hdfs_output_dir '{9}' --pai_hdfs_host '{10}' --pai_user_name {11} --nni_hdfs_exp_dir '{12}' --webhdfs_path '/webhdfs/api/v1' \
 --nni_manager_version '{13}' --log_collection '{14}'`;
 
-// tslint:disable:no-http-string
 export const PAI_LOG_PATH_FORMAT: string =
 `http://{0}/webhdfs/explorer.html#{1}`;

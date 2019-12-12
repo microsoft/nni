@@ -24,7 +24,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
     private parameterFileMetaList: ParameterFileMeta[] = [];
 
     @Inject
-    private readonly paiTrainingService : PAITrainingService;
+    private readonly paiTrainingService: PAITrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
@@ -34,8 +34,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
         this.paiTrainingService = component.get(PAITrainingService);
     }
 
-    // tslint:disable-next-line:no-any
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+    protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
         for (const singleMetric of metrics) {

@@ -2,8 +2,6 @@
 
 We are trying to support various NAS algorithms with unified programming interface, and it's still in experimental stage. It means the current programing interface might be updated in future.
 
-*previous [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) interface will be deprecated soon.*
-
 ## Programming interface for user model
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
@@ -100,7 +98,7 @@ trainer.export(file='./chosen_arch')
 
 Different trainers could have different input arguments depending on their algorithms. Please refer to [each trainer's code](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) for detailed arguments. After training, users could export the best one of the found models through `trainer.export()`. No need to start an NNI experiment through `nnictl`.
 
-The supported trainers can be found [here](./Overview.md#supported-one-shot-nas-algorithms). A very simple example using NNI NAS API can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py).
+The supported trainers can be found [here](Overview.md#supported-one-shot-nas-algorithms). A very simple example using NNI NAS API can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py).
 
 ### Classic distributed search
 

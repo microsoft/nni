@@ -34,7 +34,6 @@ export abstract class RestServer {
     }
 
     get endPoint(): string {
-        // tslint:disable-next-line:no-http-string
         return `http://${this.hostName}:${this.port}`;
     }
 

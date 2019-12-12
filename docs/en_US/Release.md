@@ -63,7 +63,7 @@
     - Support Auto-Feature generator & selection    -Issue#877  -PR #1387
          + Provide auto feature interface
          + Tuner based on beam search
-         + [Add Pakdd example](./examples/trials/auto-feature-engineering/README.md)
+         + [Add Pakdd example](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
     - Add a parallel algorithm to improve the performance of TPE with large concurrency.  -PR #1052
     - Support multiphase for hyperband    -PR #1257
 
@@ -91,9 +91,9 @@
 
 * Documentation
     - Update the docs structure  -Issue #1231
-    - [Multi phase document improvement](./docs/en_US/AdvancedFeature/MultiPhase.md)   -Issue #1233  -PR #1242
+    - [Multi phase document improvement](AdvancedFeature/MultiPhase.md)   -Issue #1233  -PR #1242
          + Add configuration example
-    - [WebUI description improvement](./docs/en_US/Tutorial/WebUI.md)  -PR #1419
+    - [WebUI description improvement](Tutorial/WebUI.md)  -PR #1419
 
 
 ### Bug fix

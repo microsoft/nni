@@ -60,7 +60,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
             .to(FrameworkControllerTrainingService)
             .scope(Scope.Singleton);
     } else {
-        throw new Error(`Error: unsupported mode: ${mode}`);
+        throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
     Container.bind(Manager)
         .to(NNIManager)

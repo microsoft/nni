@@ -3,13 +3,13 @@
 
 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/camelcase
 import { Client1_10, config } from 'kubernetes-client';
 import { getLogger, Logger } from '../../common/log';
 
 /**
  * Generict Kubernetes client, target version >= 1.9
  */
-// tslint:disable: no-any no-unsafe-any
 class GeneralK8sClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
@@ -21,7 +21,7 @@ class GeneralK8sClient {
 
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response : any = await this.client.api.v1.namespaces('default').secrets
+        const response: any = await this.client.api.v1.namespaces('default').secrets
           .post({body: secretManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
@@ -73,7 +73,7 @@ abstract class KubernetesCRDClient {
 
     public async createKubernetesJob(jobManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response : any = await this.operator.post({body: jobManifest});
+        const response: any = await this.operator.post({body: jobManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -86,7 +86,7 @@ abstract class KubernetesCRDClient {
     //TODO : replace any
     public async getKubernetesJob(kubeflowJobName: string): Promise<any> {
         let result: Promise<any>;
-        const response : any = await this.operator(kubeflowJobName)
+        const response: any = await this.operator(kubeflowJobName)
           .get();
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
@@ -104,7 +104,7 @@ abstract class KubernetesCRDClient {
                                      .map((labelKey: string) => `${labelKey}=${labels.get(labelKey)}`)
                                      .join(',');
         try {
-            const deleteResult : any = await this.operator()
+            const deleteResult: any = await this.operator()
               .delete({
                  qs: {
                       labelSelector: matchQuery,

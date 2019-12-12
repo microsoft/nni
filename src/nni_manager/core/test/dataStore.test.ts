@@ -107,7 +107,6 @@ describe('Unit test for dataStore', () => {
         }
     ];
 
-    // tslint:disable-next-line:no-any
     const metricsData: any = [
         {
             trial_job_id: '111',
