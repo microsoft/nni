@@ -11,6 +11,8 @@ Put `op_flops_dict.pkl` and `checkpoint-150000.pth.tar` (if you don't want to re
 
 Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Link it to `data/imagenet` will be more convenient.
 
+We don't support SPOS on CPU. You need to have at least one GPU to run the experiment.
+
 ## Step 1. Train Supernet
 
 ```
