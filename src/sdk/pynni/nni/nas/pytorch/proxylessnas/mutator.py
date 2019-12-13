@@ -266,11 +266,9 @@ class ProxylessNasMutator(BaseMutator):
         """
         super(ProxylessNasMutator, self).__init__(model)
         self._unused_modules = None
-        self.mixed_ops = {}
         self.mutable_list = []
         for _, mutable, _ in self.named_mutables(distinct=False):
             mo = MixedOp(mutable)
-            self.mixed_ops[mutable.key] = mo
             self.mutable_list.append(mutable)
             mutable.registered_module = mo
 
@@ -292,8 +290,6 @@ class ProxylessNasMutator(BaseMutator):
         index of the chosen op
         """
         # FIXME: return mask, to be consistent with other algorithms
-        #idx = self.mixed_ops[mutable.key].active_op_index
-        #return self.mixed_ops[mutable.key](mutable, *inputs), idx
         idx = mutable.registered_module.active_op_index
         return mutable.registered_module(mutable, *inputs), idx
 
@@ -302,16 +298,15 @@ class ProxylessNasMutator(BaseMutator):
         For each LayerChoice, binarize based on alpha to only activate one op
         """
         for _, mutable, _ in self.named_mutables(distinct=False):
-            k = mutable.key
-            self.mixed_ops[k].binarize(mutable)
+            mutable.registered_module.binarize(mutable)
 
     def set_chosen_op_active(self):
         """
         For each LayerChoice, set the op with highest alpha as the chosen op
         Usually used for validation.
         """
-        for k in self.mixed_ops.keys():
-            self.mixed_ops[k].set_chosen_op_active()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            mutable.registered_module.set_chosen_op_active()
 
     def num_arch_params(self):
         """
@@ -319,22 +314,21 @@ class ProxylessNasMutator(BaseMutator):
         -------
         The number of LayerChoice in user model
         """
-        return len(self.mixed_ops)
+        return len(self.mutable_list)
 
     def set_arch_param_grad(self):
         """
         For each LayerChoice, calculate gradients for architecture weights, i.e., alpha
         """
         for _, mutable, _ in self.named_mutables(distinct=False):
-            k = mutable.key
-            self.mixed_ops[k].set_arch_param_grad(mutable)
+            mutable.registered_module.set_arch_param_grad(mutable)
 
     def get_architecture_parameters(self):
         """
         Return architecture weights of each LayerChoice, for arch optimizer
         """
-        for k in self.mixed_ops.keys():
-            yield self.mixed_ops[k].get_AP_path_alpha()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            yield mutable.registered_module.get_AP_path_alpha()
 
     def change_forward_mode(self, mode):
         MixedOp.forward_mode = mode
@@ -343,14 +337,13 @@ class ProxylessNasMutator(BaseMutator):
         return MixedOp.forward_mode
 
     def rescale_updated_arch_param(self):
-        for k in self.mixed_ops.keys():
-            self.mixed_ops[k].rescale_updated_arch_param()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            mutable.registered_module.rescale_updated_arch_param()
 
     def unused_modules_off(self):
         self._unused_modules = []
         for _, mutable, _ in self.named_mutables(distinct=False):
-            k = mutable.key
-            mixed_op = self.mixed_ops[k]
+            mixed_op = mutable.registered_module
             unused = {}
             if self.get_forward_mode() in ['full', 'two', 'full_v2']:
                 involved_index = mixed_op.active_index + mixed_op.inactive_index
