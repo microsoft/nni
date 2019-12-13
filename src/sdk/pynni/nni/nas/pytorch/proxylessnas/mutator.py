@@ -264,8 +264,10 @@ class ProxylessNasMutator(BaseMutator):
         super(ProxylessNasMutator, self).__init__(model)
         self._unused_modules = None
         self.mixed_ops = {}
+        self.mutable_list = []
         for _, mutable, _ in self.named_mutables(distinct=False):
             self.mixed_ops[mutable.key] = MixedOp(mutable)
+            self.mutable_list.append(mutable)
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
@@ -358,7 +360,7 @@ class ProxylessNasMutator(BaseMutator):
     def unused_modules_back(self):
         if self._unused_modules is None:
             return
-        for m, unused in zip(self.named_mutables(distinct=False), self._unused_modules):
+        for m, unused in zip(self.mutable_list, self._unused_modules):
             for i in unused:
                 m.choices[i] = unused[i]
         self._unused_modules = None
