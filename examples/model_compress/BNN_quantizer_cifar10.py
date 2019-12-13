@@ -1,4 +1,3 @@
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,7 +8,7 @@ from nni.compression.torch import BNNQuantizer
 class VGG_Cifar10(nn.Module):
     def __init__(self, num_classes=1000):
         super(VGG_Cifar10, self).__init__()
-        self.infl_ratio=1 # may be set to large number ?
+        self.infl_ratio = 1 # may be set to large number ?
         self.features = nn.Sequential(
             nn.Conv2d(3, 128*self.infl_ratio, kernel_size=3, stride=1, padding=1,
                       bias=False),
@@ -74,7 +73,7 @@ def train(model, device, train_loader, optimizer):
         optimizer.step()
         for name, param in model.named_parameters():
             if name.endswith('old_weight'):
-                param = param.clamp(-1,1)
+                param = param.clamp(-1, 1)
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
 
@@ -117,7 +116,7 @@ def main():
 
     model = VGG_Cifar10(num_classes=10)
     model.to(device)
- 
+
     # print(model)
 
     configure_list = [{
@@ -125,7 +124,8 @@ def main():
         'quant_bits': 1,
         'op_types': ['Conv2d', 'Linear'],
         'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
-    },{'quant_types': ['output'],
+    }, {
+        'quant_types': ['output'],
         'quant_bits': 1,
         'op_types': ['Hardtanh'],
         'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
