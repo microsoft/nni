@@ -641,8 +641,6 @@ Set azure storage account to store code files.
 
 Required if using azure storage. Integer between 1 and 99999.
 
-*TODO: default value?*
-
 If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
 
 ### paiConfig
