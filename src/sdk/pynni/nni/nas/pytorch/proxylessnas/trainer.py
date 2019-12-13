@@ -122,11 +122,12 @@ class ProxylessNasTrainer(BaseTrainer):
         self.lr_max = 0.05
         self.label_smoothing = 0.1
         self.valid_batch_size = 500
-        self.arch_grad_valid_batch_size = 2 # 256
+        self.arch_grad_train_batch_size = 256
         # update architecture parameters every this number of minibatches
         self.grad_update_arch_param_every = 5
         # the number of steps per architecture parameter update
         self.grad_update_steps = 1
+        self.binary_mode = 'full_v2'
 
         # init mutator
         self.mutator = ProxylessNasMutator(model)
@@ -157,6 +158,8 @@ class ProxylessNasTrainer(BaseTrainer):
         self.valid_loader.batch_sampler.drop_last = False
 
         self.mutator.set_chosen_op_active()
+        # remove unused modules to save memory
+        self.mutator.unused_modules_off()
         # test on validation set under train mode
         self.model.train()
         batch_time = AverageMeter('batch_time')
@@ -186,6 +189,7 @@ class ProxylessNasTrainer(BaseTrainer):
                     # return top5:
                     test_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
                     print(test_log)
+        self.mutator.unused_modules_back()
         return losses.avg, top1.avg, top5.avg
 
     def _warm_up(self):
@@ -216,6 +220,8 @@ class ProxylessNasTrainer(BaseTrainer):
                 images, labels = images.to(self.device), labels.to(self.device)
                 # compute output
                 self.mutator.reset_binary_gates() # random sample binary gates
+                # remove unused module for speedup
+                self.mutator.unused_modules_off()
                 output = self.model(images)
                 if self.label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
@@ -230,6 +236,8 @@ class ProxylessNasTrainer(BaseTrainer):
                 self.model.zero_grad()
                 loss.backward()
                 self.model_optim.step()
+                # unused modules back
+                self.mutator.unused_modules_back()
                 # measure elapsed time
                 batch_time.update(time.time() - end)
                 end = time.time()
@@ -305,6 +313,8 @@ class ProxylessNasTrainer(BaseTrainer):
                 # train weight parameters
                 images, labels = images.to(self.device), labels.to(self.device)
                 self.mutator.reset_binary_gates()
+                # TODO: remove unused module for speedup
+                self.mutator.unused_modules_off()
                 output = self.model(images)
                 if self.label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
@@ -317,8 +327,9 @@ class ProxylessNasTrainer(BaseTrainer):
                 self.model.zero_grad()
                 loss.backward()
                 self.model_optim.step()
+                self.mutator.unused_modules_back()
                 # TODO: if epoch > 0:
-                if epoch >= 0:
+                if epoch > 0:
                     for _ in range(update_schedule.get(i, 0)):
                         start_time = time.time()
                         # GradientArchSearchConfig
@@ -364,15 +375,17 @@ class ProxylessNasTrainer(BaseTrainer):
         return data
 
     def _gradient_step(self):
-        self.valid_loader.batch_sampler.batch_size = self.arch_grad_valid_batch_size
+        self.valid_loader.batch_sampler.batch_size = self.arch_grad_train_batch_size
         self.valid_loader.batch_sampler.drop_last = True
         self.model.train()
+        self.mutator.change_forward_mode(self.binary_mode)
         time1 = time.time()  # time
         # sample a batch of data from validation set
         images, labels = self._valid_next_batch()
         images, labels = images.to(self.device), labels.to(self.device)
         time2 = time.time()  # time
         self.mutator.reset_binary_gates()
+        self.mutator.unused_modules_off()
         output = self.model(images)
         time3 = time.time()
         ce_loss = self.criterion(output, labels)
@@ -382,6 +395,10 @@ class ProxylessNasTrainer(BaseTrainer):
         loss.backward()
         self.mutator.set_arch_param_grad()
         self.arch_optimizer.step()
+        if self.mutator.get_forward_mode() == 'two':
+            self.mutator.rescale_updated_arch_param()
+        self.mutator.unused_modules_back()
+        self.mutator.change_forward_mode(None)
         time4 = time.time()
         print('(%.4f, %.4f, %.4f)' % (time2 - time1, time3 - time2, time4 - time3))
         return loss.data.item(), expected_value.item() if expected_value is not None else None

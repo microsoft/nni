@@ -60,7 +60,7 @@ class MixedOp(nn.Module):
     """
     This class is to instantiate and manage info of one LayerChoice
     """
-    def __init__(self, mutable):
+    def __init__(self, mutable, forward_mode=None):
         """
         Parameters
         ----------
@@ -76,33 +76,51 @@ class MixedOp(nn.Module):
         self.log_prob = None
         self.current_prob_over_ops = None
         self.n_choices = mutable.length
+        self.forward_mode = forward_mode
 
     def get_AP_path_alpha(self):
         return self.AP_path_alpha
 
-    def forward(self, mutable, x):
-        # only full_v2
-        def run_function(key, candidate_ops, active_id):
-            def forward(_x):
-                return candidate_ops[active_id](_x)
-            return forward
+    def set_forward_mode(self, mode):
+        self.forward_mode = mode
 
-        def backward_function(key, candidate_ops, active_id, binary_gates):
-            def backward(_x, _output, grad_output):
-                binary_grads = torch.zeros_like(binary_gates.data)
-                with torch.no_grad():
-                    for k in range(len(candidate_ops)):
-                        if k != active_id:
-                            out_k = candidate_ops[k](_x.data)
-                        else:
-                            out_k = _output.data
-                        grad_k = torch.sum(out_k * grad_output)
-                        binary_grads[k] = grad_k
-                return binary_grads
-            return backward
-        output = ArchGradientFunction.apply(
-            x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
-            backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
+    def get_forward_mode():
+        return self.forward_mode
+
+    def forward(self, mutable, x):
+        if self.forward_mode == 'full' or self.forward_mode == 'two':
+            output = 0
+            for _i in self.active_index:
+                oi = self.candidate_ops[_i](x)
+                output = output + self.AP_path_wb[_i] * oi
+            for _i in self.inactive_index:
+                oi = self.candidate_ops[_i](x)
+                output = output + self.AP_path_wb[_i] * oi.detach()
+        elif self.forward_mode == 'full_v2':
+            # does not work in DataParallel, possible memory leak
+            def run_function(key, candidate_ops, active_id):
+                def forward(_x):
+                    return candidate_ops[active_id](_x)
+                return forward
+
+            def backward_function(key, candidate_ops, active_id, binary_gates):
+                def backward(_x, _output, grad_output):
+                    binary_grads = torch.zeros_like(binary_gates.data)
+                    with torch.no_grad():
+                        for k in range(len(candidate_ops)):
+                            if k != active_id:
+                                out_k = candidate_ops[k](_x.data)
+                            else:
+                                out_k = _output.data
+                            grad_k = torch.sum(out_k * grad_output)
+                            binary_grads[k] = grad_k
+                    return binary_grads
+                return backward
+            output = ArchGradientFunction.apply(
+                x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
+                backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
+        else:
+            output = self.active_op(mutable)(x)
         return output
 
     @property
@@ -149,13 +167,31 @@ class MixedOp(nn.Module):
         # reset binary gates
         self.AP_path_wb.data.zero_()
         probs = self.probs_over_ops
-        sample = torch.multinomial(probs, 1)[0].item()
-        self.active_index = [sample]
-        self.inactive_index = [_i for _i in range(0, sample)] + \
-                              [_i for _i in range(sample + 1, len(mutable.choices))]
-        self.log_prob = torch.log(probs[sample])
-        self.current_prob_over_ops = probs
-        self.AP_path_wb.data[sample] = 1.0
+        if self.forward_mode == 'two':
+            # sample two ops according to probs
+            sample_op = torch.multinomial(probs.data, 2, replacement=False)
+            probs_slice = F.softmax(torch.stack([
+                self.AP_path_alpha[idx] for idx in sample_op
+            ]), dim=0)
+            self.current_prob_over_ops = torch.zeros_like(probs)
+            for i, idx in enumerate(sample_op):
+                self.current_prob_over_ops[idx] = probs_slice[i]
+            # choose one to be active and the other to be inactive according to probs_slice
+            c = torch.multinomial(probs_slice.data, 1)[0] # 0 or 1
+            active_op = sample_op[c].item()
+            inactive_op = sample_op[1-c].item()
+            self.active_index = [active_op]
+            self.inactive_index = [inactive_op]
+            # set binary gate
+            self.AP_path_wb.data[active_op] = 1.0
+        else:
+            sample = torch.multinomial(probs, 1)[0].item()
+            self.active_index = [sample]
+            self.inactive_index = [_i for _i in range(0, sample)] + \
+                                [_i for _i in range(sample + 1, len(mutable.choices))]
+            self.log_prob = torch.log(probs[sample])
+            self.current_prob_over_ops = probs
+            self.AP_path_wb.data[sample] = 1.0
         # avoid over-regularization
         for choice in mutable.choices:
             for _, param in choice.named_parameters():
@@ -177,10 +213,42 @@ class MixedOp(nn.Module):
             return
         if self.AP_path_alpha.grad is None:
             self.AP_path_alpha.grad = torch.zeros_like(self.AP_path_alpha.data)
-        probs = self.probs_over_ops.data
-        for i in range(len(mutable.choices)):
-            for j in range(len(mutable.choices)):
-                self.AP_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (self._delta_ij(i, j) - probs[i])
+        if self.forward_mode == 'two':
+            involved_idx = self.active_index + self.inactive_index
+            probs_slice = F.softmax(torch.stack([
+                self.AP_path_alpha[idx] for idx in involved_idx
+            ]), dim=0).data
+            for i in range(2):
+                for j in range(2):
+                    origin_i = involved_idx[i]
+                    origin_j = involved_idx[j]
+                    self.AP_path_alpha.grad.data[origin_i] += \
+                        binary_grads[origin_j] * probs_slice[j] * (self._delta_ij(i, j) - probs_slice[i])
+            for _i, idx in enumerate(self.active_index):
+                self.active_index[_i] = (idx, self.AP_path_alpha.data[idx].item())
+            for _i, idx in enumerate(self.inactive_index):
+                self.inactive_index[_i] = (idx, self.AP_path_alpha.data[idx].item())
+        else:
+            probs = self.probs_over_ops.data
+            for i in range(self.n_choices):
+                for j in range(self.n_choices):
+                    self.AP_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (self._delta_ij(i, j) - probs[i])
+        return
+
+    def rescale_updated_arch_param(self):
+        if not isinstance(self.active_index[0], tuple):
+            assert self.active_op.is_zero_layer()
+            return
+        involved_idx = [idx for idx, _ in (self.active_index + self.inactive_index)]
+        old_alphas = [alpha for _, alpha in (self.active_index + self.inactive_index)]
+        new_alphas = [self.AP_path_alpha.data[idx] for idx in involved_idx]
+
+        offset = math.log(
+            sum([math.exp(alpha) for alpha in new_alphas]) / sum([math.exp(alpha) for alpha in old_alphas])
+        )
+
+        for idx in involved_idx:
+            self.AP_path_alpha.data[idx] -= offset
 
 
 class ProxylessNasMutator(BaseMutator):
@@ -194,6 +262,7 @@ class ProxylessNasMutator(BaseMutator):
             The model that users want to tune, it includes search space defined with nni nas apis
         """
         super(ProxylessNasMutator, self).__init__(model)
+        self._unused_modules = None
         self.mixed_ops = {}
         for _, mutable, _ in self.named_mutables(distinct=False):
             self.mixed_ops[mutable.key] = MixedOp(mutable)
@@ -257,3 +326,39 @@ class ProxylessNasMutator(BaseMutator):
         """
         for k in self.mixed_ops.keys():
             yield self.mixed_ops[k].get_AP_path_alpha()
+
+    def change_forward_mode(self, mode):
+        for k in self.mixed_ops.keys():
+            self.mixed_ops[k].set_forward_mode(mode)
+
+    def get_forward_mode(self):
+        for k in self.mixed_ops.keys():
+            return self.mixed_ops[k].get_forward_mode()
+
+    def rescale_updated_arch_param(self):
+        for k in self.mixed_ops.keys():
+            self.mixed_ops[k].rescale_updated_arch_param()
+
+    def unused_modules_off(self):
+        self._unused_modules = []
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            k = mutable.key
+            mixed_op = self.mixed_ops[k]
+            unused = {}
+            if self.get_forward_mode() in ['full', 'two', 'full_v2']:
+                involved_index = mixed_op.active_index + mixed_op.inactive_index
+            else:
+                involved_index = mixed_op.active_index
+            for i in range(mixed_op.n_choices):
+                if i not in involved_index:
+                    unused[i] = mutable.choices[i]
+                    mutable.choices[i] = None
+            self._unused_modules.append(unused)
+
+    def unused_modules_back(self):
+        if self._unused_modules is None:
+            return
+        for m, unused in zip(self.named_mutables(distinct=False), self._unused_modules):
+            for i in unused:
+                m.choices[i] = unused[i]
+        self._unused_modules = None

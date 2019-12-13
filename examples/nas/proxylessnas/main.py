@@ -41,9 +41,9 @@ if __name__ == "__main__":
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
     # configurations of imagenet dataset
     parser.add_argument("--data_path", default='/data/hdd3/yugzh/imagenet/', type=str)
-    parser.add_argument("--train_batch_size", default=2, type=int)
-    parser.add_argument("--test_batch_size", default=2, type=int)
-    parser.add_argument("--n_worker", default=0, type=int)
+    parser.add_argument("--train_batch_size", default=256, type=int)
+    parser.add_argument("--test_batch_size", default=500, type=int)
+    parser.add_argument("--n_worker", default=32, type=int)
     parser.add_argument("--resize_scale", default=0.08, type=float)
     parser.add_argument("--distort_color", default='normal', type=str, choices=['normal', 'strong', 'None'])
     #parser.add_argument("--log-frequency", default=1, type=int)
