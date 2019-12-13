@@ -84,7 +84,7 @@ class MixedOp(nn.Module):
     def set_forward_mode(self, mode):
         self.forward_mode = mode
 
-    def get_forward_mode():
+    def get_forward_mode(self):
         return self.forward_mode
 
     def forward(self, mutable, x):
