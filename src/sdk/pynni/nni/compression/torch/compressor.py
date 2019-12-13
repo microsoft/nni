@@ -331,7 +331,7 @@ class Quantizer(Compressor):
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
                 inputs = self.quant_grad.apply(inputs, QuantType.QUANT_INPUT, self.quantize_input, config, layer)
-
+            
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 new_weight = self.quant_grad.apply(layer.module.old_weight, QuantType.QUANT_WEIGHT, self.quantize_weight, config, layer)
                 layer.module.weight = new_weight
