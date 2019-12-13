@@ -108,15 +108,11 @@
           </ul>
         </ul>
           <a href="docs/en_US/NAS/Overview.md">Neural Architecture Search</a>
-          <ul>            
-            <b>One-Shot</b>
+          <ul>                        
             <ul>
               <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
-            </ul>
-            <b>Classic NAS</b>
-            <ul>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
