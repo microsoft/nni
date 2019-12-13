@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from collections import deque
 
 import numpy as np
@@ -26,7 +27,7 @@ class SPOSEvolution(Tuner):
         self.epoch = 0
         self.candidates = []
         self.search_space = None
-        self.random_state = np.random.RandomState()
+        self.random_state = np.random.RandomState(0)
 
         # async status
         self._to_evaluate_queue = deque()
@@ -64,7 +65,8 @@ class SPOSEvolution(Tuner):
         return chosen_arch
 
     def _add_to_evaluate_queue(self, cand):
-        _logger.info("Generate candidate with flops %d, adding to eval queue.", self.model.get_candidate_flops(cand))
+        _logger.info("Generate candidate %s with flops %d, adding to eval queue.",
+                     self._get_architecture_repr(cand), self.model.get_candidate_flops(cand))
         self._reward_dict[self._hashcode(cand)] = 0.
         self._to_evaluate_queue.append(cand)
 
@@ -95,7 +97,7 @@ class SPOSEvolution(Tuner):
     def _get_mutation(self, best):
         result = []
         for _ in range(10 * self.num_mutation):
-            cand = best[self.random_state.randint(len(best))]
+            cand = best[self.random_state.randint(len(best))].copy()
             mutation_sample = np.random.random_sample(len(cand))
             for s, k in zip(mutation_sample, cand):
                 if s < self.m_prob:
@@ -109,6 +111,10 @@ class SPOSEvolution(Tuner):
                 break
         _logger.info("Found %d architectures with mutation.", len(result))
         return result
+
+    def _get_architecture_repr(self, cand):
+        return re.sub(r"\".*?\": \{\"_idx\": (\d+), \"_value\": \".*?\"\}", r"\1",
+                      self._hashcode(cand))
 
     def _is_legal(self, cand):
         if self._hashcode(cand) in self._reward_dict:
@@ -134,11 +140,12 @@ class SPOSEvolution(Tuner):
             parameter_id = self._sending_parameter_queue.popleft()
             parameters = self._to_evaluate_queue.popleft()
             self._id2candidate[parameter_id] = parameters
+            _logger.info("Send parameter [%d] %s.", parameter_id, self._get_architecture_repr(parameters))
             result.append(parameters)
             self._pending_result_ids.add(parameter_id)
             if use_st_callback:
                 self._st_callback(parameter_id, parameters)
-                _logger.info("Sending extra parameter with callback.")
+                _logger.info("Extra parameter with callback.")
         return result
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):

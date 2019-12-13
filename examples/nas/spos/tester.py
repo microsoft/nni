@@ -20,11 +20,11 @@ logger = logging.getLogger("nni")
 
 def retrain_bn(model, criterion, max_iters, log_freq, loader):
     with torch.no_grad():
-        # logger.info("Clear BN statistics...")
-        # for m in model.modules():
-        #     if isinstance(m, nn.BatchNorm2d):
-        #         m.running_mean = torch.zeros_like(m.running_mean)
-        #         m.running_var = torch.ones_like(m.running_var)
+        logger.info("Clear BN statistics...")
+        for m in model.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                m.running_mean = torch.zeros_like(m.running_mean)
+                m.running_var = torch.ones_like(m.running_var)
 
         logger.info("Train BN with training set (BN sanitize)...")
         model.train()
