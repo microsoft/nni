@@ -333,7 +333,9 @@ class ProxylessNasTrainer(BaseTrainer):
                     for _ in range(update_schedule.get(i, 0)):
                         start_time = time.time()
                         # GradientArchSearchConfig
+                        self.mutator.arch_requires_grad()
                         arch_loss, exp_value = self._gradient_step()
+                        self.mutator.arch_disable_grad()
                         used_time = time.time() - start_time
                         log_str = 'Architecture [%d-%d]\t Time %.4f\t Loss %.4f\t null %s' % \
                                     (epoch + 1, i, used_time, arch_loss, exp_value)

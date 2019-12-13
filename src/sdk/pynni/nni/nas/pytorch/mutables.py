@@ -92,6 +92,7 @@ class LayerChoice(Mutable):
         self.choices = nn.ModuleList(op_candidates)
         self.reduction = reduction
         self.return_mask = return_mask
+        self.registered_module = None
 
     def __len__(self):
         return len(self.choices)

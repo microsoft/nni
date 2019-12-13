@@ -71,6 +71,8 @@ class MixedOp(nn.Module):
         #self.mutable = mutable
         self.AP_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
         self.AP_path_wb = nn.Parameter(torch.Tensor(mutable.length))
+        self.AP_path_alpha.requires_grad = False
+        self.AP_path_wb.requires_grad = False
         self.active_index = [0]
         self.inactive_index = None
         self.log_prob = None
@@ -86,6 +88,14 @@ class MixedOp(nn.Module):
 
     def get_forward_mode(self):
         return self.forward_mode
+
+    def to_requires_grad(self):
+        self.AP_path_alpha.requires_grad = True
+        self.AP_path_wb.requires_grad = True
+
+    def disable_grad(self):
+        self.AP_path_alpha.requires_grad = False
+        self.AP_path_wb.requires_grad = False
 
     def forward(self, mutable, x):
         if self.forward_mode == 'full' or self.forward_mode == 'two':
@@ -266,8 +276,10 @@ class ProxylessNasMutator(BaseMutator):
         self.mixed_ops = {}
         self.mutable_list = []
         for _, mutable, _ in self.named_mutables(distinct=False):
-            self.mixed_ops[mutable.key] = MixedOp(mutable)
+            mo = MixedOp(mutable)
+            self.mixed_ops[mutable.key] = mo
             self.mutable_list.append(mutable)
+            mutable.registered_module = mo
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
@@ -287,8 +299,10 @@ class ProxylessNasMutator(BaseMutator):
         index of the chosen op
         """
         # FIXME: return mask, to be consistent with other algorithms
-        idx = self.mixed_ops[mutable.key].active_op_index
-        return self.mixed_ops[mutable.key](mutable, *inputs), idx
+        #idx = self.mixed_ops[mutable.key].active_op_index
+        #return self.mixed_ops[mutable.key](mutable, *inputs), idx
+        idx = mutable.registered_module.active_op_index
+        return mutable.registered_module(mutable, *inputs), idx
 
     def reset_binary_gates(self):
         """
@@ -364,3 +378,18 @@ class ProxylessNasMutator(BaseMutator):
             for i in unused:
                 m.choices[i] = unused[i]
         self._unused_modules = None
+
+    def arch_requires_grad(self):
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            mutable.registered_module.to_requires_grad()
+
+    def arch_disable_grad(self):
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            mutable.registered_module.disable_grad()
+
+    '''def get_arch_parameters(self):
+        params = []
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            par = mutable.registered_module.Parameters()
+            params = params + list(par)
+        return params'''
