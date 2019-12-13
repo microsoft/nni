@@ -14,7 +14,8 @@ class HybridTrainPipe(Pipeline):
         color_space_type = types.BGR if spos_pre else types.RGB
         self.input = ops.FileReader(file_root=data_dir, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
         self.decode = ops.ImageDecoder(device="mixed", output_type=color_space_type)
-        self.res = ops.RandomResizedCrop(device="gpu", size=crop)
+        self.res = ops.RandomResizedCrop(device="gpu", size=crop,
+                                         interp_type=types.INTERP_LINEAR if spos_pre else types.INTERP_TRIANGULAR)
         self.twist = ops.ColorTwist(device="gpu")
         self.jitter_rng = ops.Uniform(range=[0.6, 1.4])
         self.cmnp = ops.CropMirrorNormalize(device="gpu",
@@ -27,13 +28,11 @@ class HybridTrainPipe(Pipeline):
 
     def define_graph(self):
         rng = self.coin()
-        saturation = self.jitter_rng()
-        contrast = self.jitter_rng()
-        brightness = self.jitter_rng()
         self.jpegs, self.labels = self.input(name="Reader")
         images = self.decode(self.jpegs)
         images = self.res(images)
-        images = self.twist(images, saturation=saturation, contrast=contrast, brightness=brightness)
+        images = self.twist(images, saturation=self.jitter_rng(),
+                            contrast=self.jitter_rng(), brightness=self.jitter_rng())
         output = self.cmnp(images, mirror=rng)
         return [output, self.labels]
 
@@ -46,7 +45,8 @@ class HybridValPipe(Pipeline):
         self.input = ops.FileReader(file_root=data_dir, shard_id=local_rank, num_shards=world_size,
                                     random_shuffle=shuffle)
         self.decode = ops.ImageDecoder(device="mixed", output_type=color_space_type)
-        self.res = ops.Resize(device="gpu", resize_shorter=size, interp_type=types.INTERP_TRIANGULAR)
+        self.res = ops.Resize(device="gpu", resize_shorter=size,
+                              interp_type=types.INTERP_LINEAR if spos_pre else types.INTERP_TRIANGULAR)
         self.cmnp = ops.CropMirrorNormalize(device="gpu",
                                             output_dtype=types.FLOAT,
                                             output_layout=types.NCHW,

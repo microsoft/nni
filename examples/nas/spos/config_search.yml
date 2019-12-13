@@ -11,7 +11,7 @@ tuner:
   classFileName: evolution.py
   className: SPOSEvolution
 trial:
-  # to fit in a GTX 1080
+  # TODO: change the imagenet dir before release.
   command: python tester.py --imagenet-dir /data/ssd1/v-yugzh/imagenet --spos-prep
   codeDir: .
   gpuNum: 1

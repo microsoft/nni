@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+# Module under development. Not ready for use.
+
 import logging
 
 import numpy as np
