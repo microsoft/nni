@@ -108,19 +108,31 @@
           </ul>
         </ul>
           <a href="docs/en_US/NAS/Overview.md">Neural Architecture Search</a>
-          <ul>
-          <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
-          <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
-          <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
-          <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+          <ul>            
+            <b>One-Shot</b>
+            <ul>
+              <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
+              <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
+              <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
+            </ul>
+            <b>Classic NAS</b>
+            <ul>
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+            </ul>    
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
           <ul>
-          <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
-          <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
-          <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
+            <b>Pruning</b>
+            <ul>
+              <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+            </ul>
+            <b>Quantization</b>
+            <ul>
+              <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
+              <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
+            </ul>
           </ul>
           <a href="docs/en_US/FeatureEngineering/Overview.md">Feature Engineering (Beta)</a>
           <ul>
