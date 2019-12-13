@@ -100,7 +100,7 @@ if __name__ == "__main__":
                                   train_loader=train_loader,
                                   valid_loader=valid_loader,
                                   device=device,
-                                  warmup=False)
+                                  warmup=True)
 
     print('=============================================Start to train ProxylessNasTrainer')
     trainer.train()
