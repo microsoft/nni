@@ -332,7 +332,7 @@ class ProxylessNasTrainer(BaseTrainer):
                 self.model_optim.step()
                 self.mutator.unused_modules_back()
                 # TODO: if epoch > 0:
-                if epoch > 0:
+                if epoch >= 0:
                     for _ in range(update_schedule.get(i, 0)):
                         start_time = time.time()
                         # GradientArchSearchConfig
