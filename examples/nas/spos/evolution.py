@@ -119,7 +119,7 @@ class SPOSEvolution(Tuner):
 
     def _select_top_candidates(self):
         reward_query = lambda cand: self._reward_dict[self._hashcode(cand)]
-        _logger.info("All candidate rewards: %s", list(map(reward_query, result)))
+        _logger.info("All candidate rewards: %s", list(map(reward_query, self.candidates)))
         result = sorted(self.candidates, key=reward_query, reverse=True)[:self.num_select]
         _logger.info("Best candidate rewards: %s", list(map(reward_query, result)))
         return result
