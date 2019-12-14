@@ -134,28 +134,25 @@ class SPOSEvolution(Tuner):
     def _hashcode(d):
         return json.dumps(d, sort_keys=True)
 
-    def _bind_and_send_parameters(self, use_st_callback=False):
+    def _bind_and_send_parameters(self):
         result = []
         while self._sending_parameter_queue and self._to_evaluate_queue:
             parameter_id = self._sending_parameter_queue.popleft()
             parameters = self._to_evaluate_queue.popleft()
             self._id2candidate[parameter_id] = parameters
-            _logger.info("Send parameter [%d] %s.", parameter_id, self._get_architecture_repr(parameters))
             result.append(parameters)
             self._pending_result_ids.add(parameter_id)
-            if use_st_callback:
-                self._st_callback(parameter_id, parameters)
-                _logger.info("Extra parameter with callback.")
+            self._st_callback(parameter_id, parameters)
+            _logger.info("Send parameter [%d] %s.", parameter_id, self._get_architecture_repr(parameters))
         return result
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
-        if "st_callback" in kwargs:
+        if "st_callback" in kwargs and self._st_callback is None:
             self._st_callback = kwargs["st_callback"]
         for parameter_id in parameter_id_list:
             self._sending_parameter_queue.append(parameter_id)
-        result = self._bind_and_send_parameters()
-        _logger.info("Requested %d parameters, %d sent.", len(parameter_id_list), len(result))
-        return result
+        self._bind_and_send_parameters()
+        return []  # always not use this. might induce problem of over-sending
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         _logger.info("Candidate %d, reported reward %f", parameter_id, value)
@@ -166,7 +163,5 @@ class SPOSEvolution(Tuner):
         if not self._pending_result_ids and not self._to_evaluate_queue:
             # a new epoch now
             self._next_round()
-            if self._st_callback is not None:
-                self._bind_and_send_parameters(use_st_callback=True)
-            else:
-                _logger.warning("No send callback found.")
+            assert self._st_callback is not None
+            self._bind_and_send_parameters()
