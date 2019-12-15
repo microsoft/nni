@@ -268,7 +268,7 @@ pai_trial_schema = {
         'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
         'memoryMB': setType('memoryMB', int),
         'image': setType('image', str),
-        'virtualCluster': setType('virtualCluster', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
         'paiStoragePlugin': setType('paiStoragePlugin', str)

@@ -180,7 +180,7 @@ class PAITrainingService extends PAIBaseTrainingService {
             throw new Error('trial config is not initialized');
         }
         const jobName = `nni_exp_${this.experimentId}_trial_${trialJobId}`
-        const paiJobConfig = {
+        const paiJobConfig: any = {
             protocolVersion: 2, 
             name: jobName,
             type: 'job',
@@ -211,9 +211,6 @@ class PAITrainingService extends PAIBaseTrainingService {
                     ]
                 }
             },
-            defaults: {
-                virtualCluster: this.paiTrialConfig.virtualCluster
-            },
             extras: {
                 'com.microsoft.pai.runtimeplugin': [
                     {
@@ -223,6 +220,12 @@ class PAITrainingService extends PAIBaseTrainingService {
                 submitFrom: 'submit-job-v2'
             }
         }
+        if (this.paiTrialConfig.virtualCluster) {
+            paiJobConfig.defaults=  {
+                virtualCluster: this.paiTrialConfig.virtualCluster
+            }
+        }
+
         return yaml.safeDump(paiJobConfig);
       }
 

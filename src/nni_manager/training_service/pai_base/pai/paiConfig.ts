@@ -33,8 +33,8 @@ export class NNIPAITrialConfig extends TrialConfig {
     public readonly paiStoragePlugin: string;
 
     constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
-                image: string, virtualCluster: string, nniManagerNFSMountPath: string, containerNFSMountPath: string,
-                paiStoragePlugin: string) {
+                image: string, nniManagerNFSMountPath: string, containerNFSMountPath: string,
+                paiStoragePlugin: string, virtualCluster?: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
