@@ -3,7 +3,7 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig';
+import {TrialConfig} from '../../common/trialConfig';
 
 /**
  * Task role for PAI
@@ -83,30 +83,6 @@ export class PAIJobConfig {
         this.taskRoles = taskRoles;
         this.virtualCluster = virtualCluster;
         this.authFile = authFile;
-    }
-}
-
-/**
- * PAI cluster configuration
- */
-export class PAIClusterConfig {
-    public readonly userName: string;
-    public readonly passWord?: string;
-    public readonly host: string;
-    public readonly token?: string;
-
-    /**
-     * Constructor
-     * @param userName User name of PAI Cluster
-     * @param passWord password of PAI Cluster
-     * @param host Host IP of PAI Cluster
-     * @param token PAI token of PAI Cluster
-     */
-    constructor(userName: string, host: string, passWord?: string, token?: string) {
-        this.userName = userName;
-        this.passWord = passWord;
-        this.host = host;
-        this.token = token;
     }
 }
 

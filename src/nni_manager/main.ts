@@ -20,8 +20,8 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService';
-import { PAILiteTrainingService } from './training_service/paiLite/paiLiteTrainingService';
+import { PAITrainingService } from './training_service/pai_base/pai/paiTrainingService';
+import { PAIYarnTrainingService } from './training_service/pai_base/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -47,9 +47,9 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
         Container.bind(TrainingService)
             .to(PAITrainingService)
             .scope(Scope.Singleton);
-    } else if (platformMode === 'paiLite') {
+    } else if (platformMode === 'paiYarn') {
             Container.bind(TrainingService)
-            .to(PAILiteTrainingService)
+            .to(PAIYarnTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService)
@@ -81,7 +81,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiLite> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -93,7 +93,7 @@ if (!strPort || strPort.length === 0) {
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiLite'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

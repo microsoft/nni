@@ -92,13 +92,13 @@ export namespace ValidationSchemas {
                     })
                 })
             }),
-            pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
-            pai_lite_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),

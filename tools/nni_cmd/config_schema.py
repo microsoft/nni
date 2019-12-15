@@ -32,7 +32,7 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiLite'),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -223,7 +223,7 @@ common_trial_schema = {
     }
 }
 
-pai_trial_schema = {
+pai_yarn_trial_schema = {
     'trial':{
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
@@ -247,8 +247,8 @@ pai_trial_schema = {
     }
 }
 
-pai_config_schema = {
-    'paiConfig': Or({
+pai_yarn_config_schema = {
+    'paiYarnConfig': Or({
         'userName': setType('userName', str),
         'passWord': setType('passWord', str),
         'host': setType('host', str)
@@ -260,7 +260,7 @@ pai_config_schema = {
 }
 
 
-pai_lite_trial_schema = {
+pai_trial_schema = {
     'trial':{
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
@@ -275,8 +275,8 @@ pai_lite_trial_schema = {
     }
 }
 
-pai_lite_config_schema = {
-    'paiLiteConfig': Or({
+pai_config_schema = {
+    'paiConfig': Or({
         'userName': setType('userName', str),
         'passWord': setType('passWord', str),
         'host': setType('host', str)
@@ -424,7 +424,7 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
-PAI_LITE_CONFIG_SCHEMA = Schema({**common_schema, **pai_lite_trial_schema, **pai_lite_config_schema})
+PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 

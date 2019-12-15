@@ -7,7 +7,7 @@ import { Request, Response, Router } from 'express';
 import { Inject } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
-import { PAILiteTrainingService } from './paiLiteTrainingService';
+import { PAIBaseTrainingService } from './paiBaseTrainingService';
 
 export interface ParameterFileMeta {
     readonly experimentId: string;
@@ -16,29 +16,29 @@ export interface ParameterFileMeta {
 }
 
 /**
- * PAILite Training service Rest server, provides rest API to support pai job metrics update
+ * PAI Training service Rest server, provides rest API to support pai job metrics update
  *
  */
 @component.Singleton
-export class PAILiteJobRestServer extends ClusterJobRestServer {
-    private parameterFileMetaList: ParameterFileMeta[] = [];
+export class PAIBaseJobRestServer extends ClusterJobRestServer {
+    protected parameterFileMetaList: ParameterFileMeta[] = [];
 
     @Inject
-    private readonly paiLiteTrainingService: PAILiteTrainingService;
+    protected readonly paiBaseTrainingService: PAIBaseTrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor() {
+    constructor(paiBaseTrainingService :PAIBaseTrainingService) {
         super();
-        this.paiLiteTrainingService = component.get(PAILiteTrainingService);
+        this.paiBaseTrainingService = paiBaseTrainingService;
     }
 
     protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
         for (const singleMetric of metrics) {
-            this.paiLiteTrainingService.MetricsEmitter.emit('metric', {
+            this.paiBaseTrainingService.MetricsEmitter.emit('metric', {
                 id : jobId,
                 data : singleMetric
             });

@@ -224,11 +224,11 @@ def set_pai_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_pai_lite_config(experiment_config, port, config_file_name):
-    '''set pai configuration'''
-    pai_lite_config_data = dict()
-    pai_lite_config_data['pai_lite_config'] = experiment_config['paiLiteConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_lite_config_data), REST_TIME_OUT)
+def set_pai_yarn_config(experiment_config, port, config_file_name):
+    '''set paiYarn configuration'''
+    pai_yarn_config_data = dict()
+    pai_yarn_config_data['pai_yarn_config'] = experiment_config['paiYarnConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(pai_yarn_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -339,9 +339,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'paiLite':
+    elif experiment_config['trainingServicePlatform'] == 'paiYarn':
         request_data['clusterMetaData'].append(
-            {'key': 'pai_lite_config', 'value': experiment_config['paiLiteConfig']})
+            {'key': 'pai_yarn_config', 'value': experiment_config['paiYarnConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
@@ -375,8 +375,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)
     elif platform == 'pai':
         config_result, err_msg = set_pai_config(experiment_config, port, config_file_name)
-    elif platform == 'paiLite':
-        config_result, err_msg = set_pai_lite_config(experiment_config, port, config_file_name)
+    elif platform == 'paiYarn':
+        config_result, err_msg = set_pai_yarn_config(experiment_config, port, config_file_name)
     elif platform == 'kubeflow':
         config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
     elif platform == 'frameworkcontroller':

@@ -18,12 +18,12 @@
  */
 
 'use strict';
-import {TrialConfig} from '../common/trialConfig';
+import {TrialConfig} from '../../common/trialConfig';
 
 /**
- * PAILite trial configuration
+ * PAI trial configuration
  */
-export class NNIPAILiteTrialConfig extends TrialConfig {
+export class NNIPAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;

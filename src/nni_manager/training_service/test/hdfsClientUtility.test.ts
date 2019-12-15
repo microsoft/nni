@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import { cleanupUnitTest, prepareUnitTest, uniqueString } from '../../common/utils';
-import { HDFSClientUtility } from '../pai/hdfsClientUtility';
+import { HDFSClientUtility } from '../pai_base/paiYarn/hdfsClientUtility';
 
 var WebHDFS = require('webhdfs');
 var rmdir = require('rmdir');

@@ -24,31 +24,25 @@ import * as fs from 'fs';
 import * as path from 'path';
 // tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
-import * as component from '../../common/component';
+import * as component from '../../../common/component';
 
-import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import { MethodNotImplementedError } from '../../common/errors';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
-} from '../../common/trainingService';
+} from '../../../common/trainingService';
 import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../common/utils';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
-import { PAI_LITE_TRIAL_COMMAND_FORMAT } from './paiLiteData';
-import { PAITrainingService } from '../pai/paiTrainingService';
-import { NNIPAILiteTrialConfig } from './paiLiteConfig';
-import { PAITrialJobDetail } from '../pai/paiData';
-import { PAILiteJobRestServer } from './paiLiteJobRestServer';
+    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../../common/utils';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
+import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { execMkdir, validateCodeDir, execCopydir } from '../../common/util';
+import { PAI_LITE_TRIAL_COMMAND_FORMAT } from './paiData';
+import { NNIPAITrialConfig } from './paiConfig';
+import { PAIJobRestServer } from './paiJobRestServer';
+import { PAIBaseTrainingService } from '../paiBaseTrainingService';
+import { PAIBaseClusterConfig, PAIBaseTrialJobDetail } from '../../pai_base/paiBaseConfig';
 
-import * as WebHDFS from 'webhdfs';
-import { PAIClusterConfig } from 'training_service/pai/paiConfig';
 const yaml = require('js-yaml');
 
 /**
@@ -56,37 +50,37 @@ const yaml = require('js-yaml');
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAILiteTrainingService extends PAITrainingService {
-    protected paiTrialConfig: NNIPAILiteTrialConfig | undefined;
+class PAITrainingService extends PAIBaseTrainingService {
+    protected paiTrialConfig: NNIPAITrialConfig | undefined;
 
     constructor() {
         super();
     }
 
     public async run(): Promise<void> {
-        this.log.info('Run PAILite training service.');
-        const restServer: PAILiteJobRestServer = component.get(PAILiteJobRestServer);
+        this.log.info('Run PAI training service.');
+        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
         restServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`PAILite Training service rest server listening on: ${restServer.endPoint}`);
+        this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         await Promise.all([
             this.statusCheckingLoop(),
             this.submitJobLoop()]);
-        this.log.info('PAILite training service exit.');
+        this.log.info('PAI training service exit.');
     }
 
     public async cleanUp(): Promise<void> {
-        this.log.info('Stopping PAILite training service...');
+        this.log.info('Stopping PAI training service...');
         this.stopping = true;
 
         const deferred: Deferred<void> = new Deferred<void>();
-        const restServer: PAILiteJobRestServer = component.get(PAILiteJobRestServer);
+        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         try {
             await restServer.stop();
             deferred.resolve();
-            this.log.info('PAILite Training service rest server stopped successfully.');
+            this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
-            this.log.error(`PAILite Training service rest server stopped failed, error: ${error.message}`);
+            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
             deferred.reject(error);
         }
 
@@ -102,14 +96,14 @@ class PAILiteTrainingService extends PAITrainingService {
                 deferred.resolve();
                 break;
 
-            case TrialConfigMetadataKey.PAI_LITE_CLUSTER_CONFIG:
-                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
+            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
+                this.paiBaseClusterConfig = <PAIBaseClusterConfig>JSON.parse(value);
 
-                if(this.paiClusterConfig.passWord) {
+                if(this.paiBaseClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
-                } else if(this.paiClusterConfig.token) {
-                    this.paiToken = this.paiClusterConfig.token;
+                } else if(this.paiBaseClusterConfig.token) {
+                    this.paiToken = this.paiBaseClusterConfig.token;
                 } else {
                     deferred.reject(new Error('pai cluster config format error, please set password or token!'));
                 }
@@ -118,12 +112,12 @@ class PAILiteTrainingService extends PAITrainingService {
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (this.paiClusterConfig === undefined) {
+                if (this.paiBaseClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
                     deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
-                this.paiTrialConfig = <NNIPAILiteTrialConfig>JSON.parse(value);
+                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
@@ -153,10 +147,10 @@ class PAILiteTrainingService extends PAITrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        if (this.paiClusterConfig === undefined) {
+        if (this.paiBaseClusterConfig === undefined) {
             throw new Error(`paiClusterConfig not initialized!`);
         }
-        const deferred: Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
+        const deferred: Deferred<PAIBaseTrialJobDetail> = new Deferred<PAIBaseTrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -165,7 +159,7 @@ class PAILiteTrainingService extends PAITrainingService {
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const logPath: string = '';
-        const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
+        const trialJobDetail: PAIBaseTrialJobDetail = new PAIBaseTrialJobDetail(
             trialJobId,
             'WAITING',
             paiJobName,
@@ -234,13 +228,13 @@ class PAILiteTrainingService extends PAITrainingService {
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: PAIBaseTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
         if (trialJobDetail === undefined) {
             throw new Error(`Failed to find PAITrialJobDetail for job ${trialJobId}`);
         }
 
-        if (this.paiClusterConfig === undefined) {
+        if (this.paiBaseClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
         if (this.paiTrialConfig === undefined) {
@@ -251,7 +245,7 @@ class PAILiteTrainingService extends PAITrainingService {
         }
 
         if (this.paiRestServerPort === undefined) {
-            const restServer: PAILiteJobRestServer = component.get(PAILiteJobRestServer);
+            const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
             this.paiRestServerPort = restServer.clusterRestServerPort;
         }
 
@@ -302,7 +296,7 @@ class PAILiteTrainingService extends PAITrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
+            uri: `http://${this.paiBaseClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
             headers: {
@@ -326,4 +320,4 @@ class PAILiteTrainingService extends PAITrainingService {
     }
 }
 
-export { PAILiteTrainingService };
+export { PAITrainingService };

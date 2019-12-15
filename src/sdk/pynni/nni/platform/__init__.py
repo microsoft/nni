@@ -7,7 +7,7 @@ if trial_env_vars.NNI_PLATFORM is None:
     from .standalone import *
 elif trial_env_vars.NNI_PLATFORM == 'unittest':
     from .test import *
-elif trial_env_vars.NNI_PLATFORM in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiLite'):
+elif trial_env_vars.NNI_PLATFORM in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'):
     from .local import *
 else:
     raise RuntimeError('Unknown platform %s' % trial_env_vars.NNI_PLATFORM)

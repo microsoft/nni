@@ -30,7 +30,7 @@ else
 fi`;
 
 export const PAI_LITE_TRIAL_COMMAND_FORMAT: string =
-`export NNI_PLATFORM=paiLite NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} \
+`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} \
 && ls $NNI_SYS_DIR \
 && cd $NNI_SYS_DIR && sh install_nni.sh \
 && python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}' \
