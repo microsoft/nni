@@ -11,7 +11,7 @@ import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile, Manager, TrialJobStatistics, ExperimentStartUpMode } from '../common/manager';
+import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
@@ -32,7 +32,6 @@ class NNIRestHandler {
     public createRestHandler(): Router {
         const router: Router = Router();
 
-        // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
             this.log.debug(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.header('Access-Control-Allow-Origin', '*');
@@ -72,7 +71,7 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
+    private handleError(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
@@ -105,7 +104,7 @@ class NNIRestHandler {
             ds.init().then(() => {
                 res.send(this.nniManager.getStatus());
             }).catch(async (err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
                 this.log.error(err.message);
                 this.log.error(`Datastore initialize failed, stopping rest server...`);
                 await this.restServer.stop();
@@ -118,7 +117,7 @@ class NNIRestHandler {
             this.nniManager.getExperimentProfile().then((profile: ExperimentProfile) => {
                 res.send(profile);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -128,7 +127,7 @@ class NNIRestHandler {
             this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
                 res.send();
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -138,7 +137,7 @@ class NNIRestHandler {
             this.nniManager.importData(JSON.stringify(req.body)).then(() => {
                 res.send();
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -148,18 +147,18 @@ class NNIRestHandler {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
-                        experiment_id: eid
+                        experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
                     });
                 }).catch((err: Error) => {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
-                    this.handle_error(err, res);
+                    this.handleError(err, res);
                 });
             } else {
                 this.nniManager.resumeExperiment(isReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {
                     // Resume experiment is a step of initialization, so any exception thrown is a fatal
-                    this.handle_error(err, res);
+                    this.handleError(err, res);
                 });
             } 
         });
@@ -170,7 +169,7 @@ class NNIRestHandler {
             this.nniManager.getTrialJobStatistics().then((statistics: TrialJobStatistics[]) => {
                 res.send(statistics);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -179,7 +178,6 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
-                // tslint:disable-next-line:no-any
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
                 try {
@@ -189,7 +187,7 @@ class NNIRestHandler {
                     res.send();
                 } catch (err) {
                     // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                    this.handle_error(NNIError.FromError(err), res, true);
+                    this.handleError(NNIError.FromError(err), res, true);
                 }
         });
     }
@@ -202,7 +200,7 @@ class NNIRestHandler {
                 });
                 res.send(jobInfos);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -213,7 +211,7 @@ class NNIRestHandler {
                 const jobInfo: TrialJobInfo = this.setErrorPathForFailedJob(jobDetail);
                 res.send(jobInfo);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -223,7 +221,7 @@ class NNIRestHandler {
             this.nniManager.addCustomizedTrialJob(JSON.stringify(req.body)).then((sequenceId: number) => {
                 res.send({sequenceId});
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -233,7 +231,7 @@ class NNIRestHandler {
             this.nniManager.cancelTrialJobByUser(req.params.id).then(() => {
                 res.send();
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -243,7 +241,7 @@ class NNIRestHandler {
             this.nniManager.getMetricData(req.params.job_id, req.query.type).then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -255,7 +253,7 @@ class NNIRestHandler {
             this.nniManager.getMetricDataByRange(minSeqId, maxSeqId).then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -265,7 +263,7 @@ class NNIRestHandler {
             this.nniManager.getLatestMetricData().then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }
@@ -275,7 +273,7 @@ class NNIRestHandler {
             this.nniManager.exportData().then((exportedData: string) => {
                 res.send(exportedData);
             }).catch((err: Error) => {
-                this.handle_error(err, res);
+                this.handleError(err, res);
             });
         });
     }

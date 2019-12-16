@@ -35,4 +35,4 @@ advisor:
 
 ## Example
 
-Here we provide an [example](../../../examples/tuners/mnist_keras_customized_advisor).
+Here we provide an [example](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor).

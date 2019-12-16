@@ -5,7 +5,6 @@
 
 import * as ioc from 'typescript-ioc';
 
-// tslint:disable-next-line:no-any
 const Inject: (...args: any[]) => any = ioc.Inject;
 const Singleton: (target: Function) => void = ioc.Singleton;
 const Container = ioc.Container;

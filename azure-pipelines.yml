@@ -18,6 +18,11 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      set -e
+      cd src/nni_manager
+      yarn eslint
+    displayName: 'Run eslint'
+  - script: |
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install tensorflow==1.13.1 --user
@@ -38,8 +43,8 @@ jobs:
     displayName: 'Run pylint'
   - script: |
       python3 -m pip install flake8 --user
-      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
-      python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
+      EXCLUDES=./src/nni_manager/,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
+      python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test

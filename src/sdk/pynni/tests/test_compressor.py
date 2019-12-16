@@ -58,8 +58,9 @@ def tf2(func):
 
     return test_tf2_func
 
+
 # for fpgm filter pruner test
-w = np.array([[[[i+1]*3]*3]*5 for i in range(10)])
+w = np.array([[[[i + 1] * 3] * 3] * 5 for i in range(10)])
 
 
 class CompressorTestCase(TestCase):
@@ -69,19 +70,19 @@ class CompressorTestCase(TestCase):
         config_list = [{
             'quant_types': ['weight'],
             'quant_bits': 8,
-            'op_types':['Conv2d', 'Linear']
+            'op_types': ['Conv2d', 'Linear']
         }, {
             'quant_types': ['output'],
             'quant_bits': 8,
             'quant_start_step': 0,
-            'op_types':['ReLU']
+            'op_types': ['ReLU']
         }]
 
         model.relu = torch.nn.ReLU()
         quantizer = torch_compressor.QAT_Quantizer(model, config_list)
         quantizer.compress()
         modules_to_compress = quantizer.get_modules_to_compress()
-        modules_to_compress_name = [ t[0].name for t in modules_to_compress]
+        modules_to_compress_name = [t[0].name for t in modules_to_compress]
         assert "conv1" in modules_to_compress_name
         assert "conv2" in modules_to_compress_name
         assert "fc1" in modules_to_compress_name
@@ -179,7 +180,8 @@ class CompressorTestCase(TestCase):
         w = np.array([np.zeros((3, 3, 3)), np.ones((3, 3, 3)), np.ones((3, 3, 3)) * 2,
                       np.ones((3, 3, 3)) * 3, np.ones((3, 3, 3)) * 4])
         model = TorchModel()
-        config_list = [{'sparsity': 0.2, 'op_names': ['conv1']}, {'sparsity': 0.6, 'op_names': ['conv2']}]
+        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
+                       {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
         pruner = torch_compressor.L1FilterPruner(model, config_list)
 
         model.conv1.weight.data = torch.tensor(w).float()
@@ -236,12 +238,12 @@ class CompressorTestCase(TestCase):
         config_list = [{
             'quant_types': ['weight'],
             'quant_bits': 8,
-            'op_types':['Conv2d', 'Linear']
+            'op_types': ['Conv2d', 'Linear']
         }, {
             'quant_types': ['output'],
             'quant_bits': 8,
             'quant_start_step': 0,
-            'op_types':['ReLU']
+            'op_types': ['ReLU']
         }]
         model.relu = torch.nn.ReLU()
         quantizer = torch_compressor.QAT_Quantizer(model, config_list)
@@ -253,7 +255,7 @@ class CompressorTestCase(TestCase):
         quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
         assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.zero_point == 0
-         # range including 0
+        # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
         assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
@@ -270,6 +272,7 @@ class CompressorTestCase(TestCase):
         out = model.relu(x)
         assert math.isclose(model.relu.tracked_min_biased, 0.002, abs_tol=eps)
         assert math.isclose(model.relu.tracked_max_biased, 0.00998, abs_tol=eps)
+
 
 if __name__ == '__main__':
     main()

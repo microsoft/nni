@@ -6,7 +6,6 @@
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
 import { MethodNotImplementedError } from '../../common/errors';
 
-// tslint:disable: completed-docs function-name
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
@@ -91,7 +90,6 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable-next-line:no-unnecessary-class
 export class KubernetesClusterConfigFactory {
 
     public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
@@ -113,11 +111,11 @@ export class KubernetesClusterConfigFactory {
  */
 export class NFSConfig {
     // IP Adress of NFS server
-    public readonly server : string;
+    public readonly server: string;
     // exported NFS path on NFS server
-    public readonly path : string;
+    public readonly path: string;
 
-    constructor(server : string, path : string) {
+    constructor(server: string, path: string) {
         this.server = server;
         this.path = path;
     }
@@ -129,11 +127,11 @@ export class NFSConfig {
  */
 export class KeyVaultConfig {
     // The vault-name to specify vault
-    public readonly vaultName : string;
+    public readonly vaultName: string;
     // The name to specify private key
-    public readonly name : string;
+    public readonly name: string;
 
-    constructor(vaultName : string, name : string) {
+    constructor(vaultName: string, name: string) {
         this.vaultName = vaultName;
         this.name = name;
     }
@@ -144,11 +142,11 @@ export class KeyVaultConfig {
  */
 export class AzureStorage {
     // The azure share to storage files
-    public readonly azureShare : string;
+    public readonly azureShare: string;
 
     // The account name of sotrage service
     public readonly accountName: string;
-    constructor(azureShare : string, accountName: string) {
+    constructor(azureShare: string, accountName: string) {
         this.azureShare = azureShare;
         this.accountName = accountName;
     }
@@ -171,12 +169,12 @@ export class KubernetesTrialConfigTemplate {
     public readonly privateRegistryAuthPath?: string;
 
     // Trail command
-    public readonly command : string;
+    public readonly command: string;
 
     // Required GPU number for trial job. The number should be in [0,100]
-    public readonly gpuNum : number;
+    public readonly gpuNum: number;
 
-    constructor(command : string, gpuNum : number,
+    constructor(command: string, gpuNum: number,
                 cpuNum: number, memoryMB: number, image: string, privateRegistryAuthPath?: string) {
         this.command = command;
         this.gpuNum = gpuNum;
