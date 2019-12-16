@@ -41,14 +41,21 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 无法打开 Web 界面的链接可能有以下几个原因：
 
-* http://127.0.0.1，http://172.17.0.1 以及 http://10.0.0.15 都是 localhost。如果在服务器或远程计算机上启动 Experiment， 可将此 IP 替换为所连接的 IP 来查看 Web 界面，如 http://[远程连接的地址]:8080
+* `http://127.0.0.1`, `http://172.17.0.1` and `http://10.0.0.15` are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like `http://[your_server_ip]:8080`
 * 如果使用服务器 IP 后还是无法看到 Web 界面，可检查此服务器上是否有防火墙或需要代理。 或使用此运行 NNI Experiment 的服务器上的浏览器来查看 Web 界面。
-* 另一个可能的原因是 Experiment 启动失败了，NNI 无法读取 Experiment 的信息。 可在如下目录中查看 NNIManager 的日志： ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
+* 另一个可能的原因是 Experiment 启动失败了，NNI 无法读取 Experiment 的信息。 You can check the log of NNIManager in the following directory: `~/nni/experiment/[your_experiment_id]` `/log/nnimanager.log`
 
-### NNI 在 Windows 上的问题
+### Restful server start failed
 
-参考 [Windows 上使用 NNI](NniOnWindows.md)。
+Probably it's a problem with your network config. Here is a checklist.
 
-### 帮助改进
+* You might need to link `127.0.0.1` with `localhost`. Add a line `127.0.0.1 localhost` to `/etc/hosts`.
+* It's also possible that you have set some proxy config. Check your environment for variables like `HTTP_PROXY` or `HTTPS_PROXY` and unset if they are set.
 
-在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
+### NNI on Windows problems
+
+Please refer to [NNI on Windows](NniOnWindows.md)
+
+### Help us improve
+
+Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
