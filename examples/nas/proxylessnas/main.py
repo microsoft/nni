@@ -40,8 +40,8 @@ if __name__ == "__main__":
     parser.add_argument("--dropout_rate", default=0, type=float)
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
     # configurations of imagenet dataset
-    #parser.add_argument("--data_path", default='/data/hdd3/yugzh/imagenet/', type=str)
-    parser.add_argument("--data_path", default='/mnt/v-yugzh/imagenet/', type=str)
+    parser.add_argument("--data_path", default='/data/hdd3/yugzh/imagenet/', type=str)
+    #parser.add_argument("--data_path", default='/mnt/v-yugzh/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)
     parser.add_argument("--test_batch_size", default=500, type=int)
     parser.add_argument("--n_worker", default=32, type=int)
@@ -61,11 +61,8 @@ if __name__ == "__main__":
     print('=============================================SearchMobileNet model init done')
 
     # move network to GPU if available
-    # data parallelism not supported yet
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-        #model = torch.nn.DataParallel(model)
-        #model.to(device)
     else:
         device = torch.device('cpu')
 
@@ -82,12 +79,11 @@ if __name__ == "__main__":
         optimizer = torch.optim.SGD(model, get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
     print('=============================================Start to create data provider')
-    # TODO: 
     data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
-                                                  train_batch_size=args.train_batch_size, #256,
-                                                  test_batch_size=args.test_batch_size, #500,
+                                                  train_batch_size=args.train_batch_size,
+                                                  test_batch_size=args.test_batch_size,
                                                   valid_size=None,
-                                                  n_worker=args.n_worker, #32,
+                                                  n_worker=args.n_worker,
                                                   resize_scale=args.resize_scale,
                                                   distort_color=args.distort_color)
     print('=============================================Finish to create data provider')

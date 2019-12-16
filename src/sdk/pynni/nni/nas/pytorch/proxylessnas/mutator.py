@@ -24,14 +24,7 @@ from torch.nn import functional as F
 import numpy as np
 
 from nni.nas.pytorch.base_mutator import BaseMutator
-
-def detach_variable(inputs):
-    if isinstance(inputs, tuple):
-        return tuple([detach_variable(x) for x in inputs])
-    else:
-        x = inputs.detach()
-        x.requires_grad = inputs.requires_grad
-        return x
+from .utils import detach_variable
 
 class ArchGradientFunction(torch.autograd.Function):
 

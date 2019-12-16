@@ -27,60 +27,18 @@ from torch import nn as nn
 from nni.nas.pytorch.base_trainer import BaseTrainer
 from nni.nas.utils import AverageMeter
 from .mutator import ProxylessNasMutator
-
-
-def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
-    """
-    Parameters
-    ----------
-    pred :
-    target :
-    label_smoothing :
-
-    Returns
-    -------
-    """
-    logsoftmax = nn.LogSoftmax()
-    n_classes = pred.size(1)
-    # convert to one-hot
-    target = torch.unsqueeze(target, 1)
-    soft_target = torch.zeros_like(pred)
-    soft_target.scatter_(1, target, 1)
-    # label smoothing
-    soft_target = soft_target * (1 - label_smoothing) + label_smoothing / n_classes
-    return torch.mean(torch.sum(- soft_target * logsoftmax(pred), 1))
-
-def accuracy(output, target, topk=(1,)):
-    """
-    Computes the precision@k for the specified values of k
-
-    Parameters
-    ----------
-    output :
-    target :
-    topk :
-
-    Returns
-    -------
-    """
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
-        res.append(correct_k.mul_(100.0 / batch_size))
-    return res
+from .utils import cross_entropy_with_label_smoothing, accuracy
 
 class ProxylessNasTrainer(BaseTrainer):
-    def __init__(self, model, model_optim, train_loader, valid_loader, device,
-                 n_epochs=120, init_lr=0.025, arch_init_type='normal', arch_init_ratio=1e-3,
-                 arch_optim_lr=1e-3, arch_weight_decay=0, warmup=True, warmup_epochs=25,
-                 arch_valid_frequency=1):
+    def __init__(self, model, model_optim, device,
+                 train_loader, valid_loader, label_smoothing=0.1,
+                 n_epochs=120, init_lr=0.025, binary_mode='full_v2',
+                 arch_init_type='normal', arch_init_ratio=1e-3,
+                 arch_optim_lr=1e-3, arch_weight_decay=0,
+                 grad_update_arch_param_every=5, grad_update_steps=1,
+                 warmup=True, warmup_epochs=25,
+                 arch_valid_frequency=1,
+                 load_ckpt=False, ckpt_path=None):
         """
         Parameters
         ----------
@@ -117,27 +75,30 @@ class ProxylessNasTrainer(BaseTrainer):
         self.warmup = warmup
         self.warmup_epochs = warmup_epochs
         self.arch_valid_frequency = arch_valid_frequency
-        self.label_smoothing = 0.1
+        self.label_smoothing = label_smoothing
 
-        self.valid_batch_size = 500
-        self.arch_grad_train_batch_size = 256
+        self.train_batch_size = train_loader.batch_sampler.batch_size
+        self.valid_batch_size = valid_loader.batch_sampler.batch_size
         # update architecture parameters every this number of minibatches
-        self.grad_update_arch_param_every = 5
+        self.grad_update_arch_param_every = grad_update_arch_param_every
         # the number of steps per architecture parameter update
-        self.grad_update_steps = 1
-        self.binary_mode = 'full_v2'
+        self.grad_update_steps = grad_update_steps
+        self.binary_mode = binary_mode
+
+        self.load_ckpt = load_ckpt
+        self.ckpt_path = ckpt_path
 
         # init mutator
         self.mutator = ProxylessNasMutator(model)
-        self._valid_iter = None
 
+        # DataParallel should be put behind the init of mutator
         self.model = torch.nn.DataParallel(self.model)
         self.model.to(self.device)
 
-        # TODO: arch search configs
-
+        # iter of valid dataset for training architecture weights
+        self._valid_iter = None
+        # init architecture weights
         self._init_arch_params(arch_init_type, arch_init_ratio)
-
         # build architecture optimizer
         self.arch_optimizer = torch.optim.Adam(self.mutator.get_architecture_parameters(),
                                                arch_optim_lr,
@@ -146,6 +107,8 @@ class ProxylessNasTrainer(BaseTrainer):
                                                eps=1e-8)
 
         self.criterion = nn.CrossEntropyLoss()
+        self.warmup_curr_epoch = 0
+        self.train_curr_epoch = 0
 
     def _init_arch_params(self, init_type='normal', init_ratio=1e-3):
         for param in self.mutator.get_architecture_parameters():
@@ -201,7 +164,7 @@ class ProxylessNasTrainer(BaseTrainer):
         nBatch = len(data_loader)
         T_total = self.warmup_epochs * nBatch # total num of batches
 
-        for epoch in range(self.warmup_epochs):
+        for epoch in range(self.warmup_curr_epoch, self.warmup_epochs):
             print('\n', '-' * 30, 'Warmup epoch: %d' % (epoch + 1), '-' * 30, '\n')
             batch_time = AverageMeter('batch_time')
             data_time = AverageMeter('data_time')
@@ -261,6 +224,8 @@ class ProxylessNasTrainer(BaseTrainer):
                       'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}M'. \
                 format(epoch + 1, self.warmup_epochs, val_loss, val_top1, val_top5, top1=top1, top5=top5)
             print(val_log)
+            self.save_checkpoint()
+            self.warmup_curr_epoch += 1
 
     def _get_update_schedule(self, nBatch):
         schedule = {}
@@ -296,7 +261,7 @@ class ProxylessNasTrainer(BaseTrainer):
 
         update_schedule = self._get_update_schedule(nBatch)
 
-        for epoch in range(self.n_epochs):
+        for epoch in range(self.train_curr_epoch, self.n_epochs):
             print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
             batch_time = AverageMeter('batch_time')
             data_time = AverageMeter('data_time')
@@ -317,7 +282,6 @@ class ProxylessNasTrainer(BaseTrainer):
                 # train weight parameters
                 images, labels = images.to(self.device), labels.to(self.device)
                 self.mutator.reset_binary_gates()
-                # TODO: remove unused module for speedup
                 self.mutator.unused_modules_off()
                 output = self.model(images)
                 if self.label_smoothing > 0:
@@ -332,7 +296,6 @@ class ProxylessNasTrainer(BaseTrainer):
                 loss.backward()
                 self.model_optim.step()
                 self.mutator.unused_modules_back()
-                # TODO: if epoch > 0:
                 if epoch > 0:
                     for _ in range(update_schedule.get(i, 0)):
                         start_time = time.time()
@@ -368,6 +331,8 @@ class ProxylessNasTrainer(BaseTrainer):
                     format(epoch + 1, val_loss, val_top1,
                            val_top5, entropy=entropy, top1=top1, top5=top5)
                 print(val_log)
+            self.save_checkpoint()
+            self.train_curr_epoch += 1
         # convert to normal network according to architecture parameters
 
     def _valid_next_batch(self):
@@ -381,7 +346,8 @@ class ProxylessNasTrainer(BaseTrainer):
         return data
 
     def _gradient_step(self):
-        self.valid_loader.batch_sampler.batch_size = self.arch_grad_train_batch_size
+        # use the same batch size as train batch size for architecture weights
+        self.valid_loader.batch_sampler.batch_size = self.train_batch_size
         self.valid_loader.batch_sampler.drop_last = True
         self.model.train()
         self.mutator.change_forward_mode(self.binary_mode)
@@ -409,7 +375,29 @@ class ProxylessNasTrainer(BaseTrainer):
         print('(%.4f, %.4f, %.4f)' % (time2 - time1, time3 - time2, time4 - time3))
         return loss.data.item(), expected_value.item() if expected_value is not None else None
 
+    def save_checkpoint(self):
+        if self.ckpt_path:
+            state = {
+                'warmup_curr_epoch': self.warmup_curr_epoch,
+                'train_curr_epoch': self.train_curr_epoch,
+                'model': self.model.state_dict(),
+                'optim': self.model_optim.state_dict(),
+                'arch_optim': self.arch_optimizer.state_dict()
+            }
+            torch.save(state, self.ckpt_path)
+
+    def load_checkpoint(self):
+        assert self.ckpt_path is not None, "If load_ckpt is not None, ckpt_path should not be None"
+        ckpt = torch.load(self.ckpt_path)
+        self.warmup_curr_epoch = ckpt['warmup_curr_epoch']
+        self.train_curr_epoch = ckpt['train_curr_epoch']
+        self.model.load_state_dict(ckpt['model'])
+        self.model_optim.load_state_dict(ckpt['optim'])
+        self.arch_optimizer.load_state_dict(ckpt['arch_optim'])
+
     def train(self):
+        if self.load_ckpt:
+            load_checkpoint()
         if self.warmup:
             self._warm_up()
         self._train()
