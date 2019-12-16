@@ -1,23 +1,7 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
+import os
 from argparse import ArgumentParser
 
 import datasets
@@ -27,6 +11,7 @@ import torch.nn as nn
 from putils import get_parameters
 from model import SearchMobileNet
 from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
+from .retrain import retrain
 
 
 if __name__ == "__main__":
@@ -47,7 +32,9 @@ if __name__ == "__main__":
     parser.add_argument("--n_worker", default=32, type=int)
     parser.add_argument("--resize_scale", default=0.08, type=float)
     parser.add_argument("--distort_color", default='normal', type=str, choices=['normal', 'strong', 'None'])
-    #parser.add_argument("--log-frequency", default=1, type=int)
+    # configurations for retain
+    parser.add_argument("--retrain", default=False, type=bool)
+    parser.add_argument("--exported_arch_path", default=None, type=str)
     args = parser.parse_args()
 
     model = SearchMobileNet(width_stages=[int(i) for i in args.width_stages.split(',')],
@@ -67,17 +54,6 @@ if __name__ == "__main__":
         device = torch.device('cpu')
 
     # TODO: net info
-
-    if args.no_decay_keys:
-        keys = args.no_decay_keys
-        momentum, nesterov = 0.9, True
-        optimizer = torch.optim.SGD([
-            {'params': get_parameters(model, keys, mode='exclude'), 'weight_decay': 4e-5},
-            {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
-        ], lr=0.05, momentum=momentum, nesterov=nesterov)
-    else:
-        optimizer = torch.optim.SGD(model, get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
-
     print('=============================================Start to create data provider')
     data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
                                                   train_batch_size=args.train_batch_size,
@@ -90,14 +66,33 @@ if __name__ == "__main__":
     train_loader = data_provider.train
     valid_loader = data_provider.valid
 
-    print('=============================================Start to create ProxylessNasTrainer')
-    trainer = ProxylessNasTrainer(model,
-                                  model_optim=optimizer,
-                                  train_loader=train_loader,
-                                  valid_loader=valid_loader,
-                                  device=device,
-                                  warmup=True)
+    if args.no_decay_keys:
+        keys = args.no_decay_keys
+        momentum, nesterov = 0.9, True
+        optimizer = torch.optim.SGD([
+            {'params': get_parameters(model, keys, mode='exclude'), 'weight_decay': 4e-5},
+            {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
+        ], lr=0.05, momentum=momentum, nesterov=nesterov)
+    else:
+        optimizer = torch.optim.SGD(model, get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
-    print('=============================================Start to train ProxylessNasTrainer')
-    trainer.train()
-    trainer.export()
+    if not args.retrain:
+        # this is architecture search
+        print('=============================================Start to create ProxylessNasTrainer')
+        trainer = ProxylessNasTrainer(model,
+                                    model_optim=optimizer,
+                                    train_loader=train_loader,
+                                    valid_loader=valid_loader,
+                                    device=device,
+                                    warmup=True)
+
+        print('=============================================Start to train ProxylessNasTrainer')
+        trainer.train()
+        trainer.export()
+    else:
+        # this is retrain
+        from nni.nas.pytorch.fixed import apply_fixed_architecture
+        assert os.path.isfile(args.exported_arch_path), \
+            "exported_arch_path {} should be a file.".format(args.exported_arch_path)
+        apply_fixed_architecture(model, args.exported_arch_path, device=device)
+        retrain(model, optimizer, device, data_provider, n_epochs=300)
