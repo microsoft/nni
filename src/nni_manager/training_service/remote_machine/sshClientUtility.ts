@@ -101,8 +101,8 @@ export namespace SSHClientUtility {
      * @param sshClient SSH client
      */
     export async function copyDirectoryToRemote(localDirectory: string, remoteDirectory: string, sshClient: Client, remoteOS: string): Promise<void> {
-        const localTarPath: string = path.join(os.tmpdir(), `${uniqueString(10)}.tar.gz`);
-        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), `${uniqueString(10)}.tar.gz`);
+        const localTarPath: string = path.join(os.tmpdir(), `L${uniqueString(10)}.tar.gz`);
+        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), `R${uniqueString(10)}.tar.gz`);
 
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);
