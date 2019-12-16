@@ -11,7 +11,7 @@ import torch.nn as nn
 from putils import get_parameters
 from model import SearchMobileNet
 from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
-from .retrain import retrain
+from retrain import retrain
 
 
 if __name__ == "__main__":
@@ -84,7 +84,9 @@ if __name__ == "__main__":
                                     train_loader=train_loader,
                                     valid_loader=valid_loader,
                                     device=device,
-                                    warmup=True)
+                                    warmup=True,
+                                    ckpt_path='./search_mobile_net.pt',
+                                    arch_path='./arch_path.pt')
 
         print('=============================================Start to train ProxylessNasTrainer')
         trainer.train()

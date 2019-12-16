@@ -142,7 +142,7 @@ def train(model, optimizer, device, train_loader, valid_loader, test_loader, n_e
     for epoch in range(n_epochs):
         print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
         end = time.time()
-        train_top1, train_top5 = train_one_epoch(model, train_loader, device, optimizer
+        train_top1, train_top5 = train_one_epoch(model, train_loader, device, optimizer,
             lambda i: adjust_learning_rate(n_epochs, optimizer, epoch, i, nBatch),
             lambda i, batch_time, data_time, losses, top1, top5, new_lr:
             train_log_func(epoch, i, batch_time, data_time, losses, top1, top5, new_lr),

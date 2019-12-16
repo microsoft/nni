@@ -3,14 +3,26 @@
 
 import math
 import time
+import json
 
 import torch
 from torch import nn as nn
 
 from nni.nas.pytorch.base_trainer import BaseTrainer
+#from nni.nas.pytorch.trainer import TorchTensorEncoder
 from nni.nas.utils import AverageMeter
 from .mutator import ProxylessNasMutator
 from .utils import cross_entropy_with_label_smoothing, accuracy
+
+class TorchTensorEncoder(json.JSONEncoder):
+    def default(self, o):  # pylint: disable=method-hidden
+        if isinstance(o, torch.Tensor):
+            olist = o.tolist()
+            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
+                print("Every element in %s is either 0 or 1. "
+                                "You might consider convert it into bool.", olist)
+            return olist
+        return super().default(o)
 
 class ProxylessNasTrainer(BaseTrainer):
     def __init__(self, model, model_optim, device,
@@ -21,7 +33,7 @@ class ProxylessNasTrainer(BaseTrainer):
                  grad_update_arch_param_every=5, grad_update_steps=1,
                  warmup=True, warmup_epochs=25,
                  arch_valid_frequency=1,
-                 load_ckpt=False, ckpt_path=None):
+                 load_ckpt=False, ckpt_path=None, arch_path=None):
         """
         Parameters
         ----------
@@ -70,6 +82,7 @@ class ProxylessNasTrainer(BaseTrainer):
 
         self.load_ckpt = load_ckpt
         self.ckpt_path = ckpt_path
+        self.arch_path = arch_path
 
         # init mutator
         self.mutator = ProxylessNasMutator(model)
@@ -202,12 +215,13 @@ class ProxylessNasTrainer(BaseTrainer):
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
                                losses=losses, top1=top1, top5=top5, lr=warmup_lr)
                     print(batch_log)
+                self.save_checkpoint()
             val_loss, val_top1, val_top5 = self._validate()
             val_log = 'Warmup Valid [{0}/{1}]\tloss {2:.3f}\ttop-1 acc {3:.3f}\ttop-5 acc {4:.3f}\t' \
                       'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}M'. \
                 format(epoch + 1, self.warmup_epochs, val_loss, val_top1, val_top5, top1=top1, top5=top5)
             print(val_log)
-            self.save_checkpoint()
+            #self.save_checkpoint()
             self.warmup_curr_epoch += 1
 
     def _get_update_schedule(self, nBatch):
@@ -368,6 +382,8 @@ class ProxylessNasTrainer(BaseTrainer):
                 'arch_optim': self.arch_optimizer.state_dict()
             }
             torch.save(state, self.ckpt_path)
+        if self.arch_path:
+            self.export(self.arch_path)
 
     def load_checkpoint(self):
         assert self.ckpt_path is not None, "If load_ckpt is not None, ckpt_path should not be None"
@@ -385,8 +401,10 @@ class ProxylessNasTrainer(BaseTrainer):
             self._warm_up()
         self._train()
 
-    def export(self):
-        pass
+    def export(self, file_name):
+        exported_arch = self.mutator.sample_final()
+        with open(file_name, 'w') as f:
+            json.dump(exported_arch, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
 
     def validate(self):
         raise NotImplementedError

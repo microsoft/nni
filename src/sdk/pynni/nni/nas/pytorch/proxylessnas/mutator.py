@@ -6,8 +6,9 @@ from torch import nn as nn
 from torch.nn import functional as F
 import numpy as np
 
-from nni.nas.pytorch.base_mutator import BaseMutator
 from .utils import detach_variable
+from nni.nas.pytorch.base_mutator import BaseMutator
+from nni.nas.pytorch.mutables import LayerChoice
 
 class ArchGradientFunction(torch.autograd.Function):
 
@@ -346,3 +347,11 @@ class ProxylessNasMutator(BaseMutator):
     def arch_disable_grad(self):
         for _, mutable, _ in self.named_mutables(distinct=False):
             mutable.registered_module.disable_grad()
+
+    def sample_final(self):
+        result = dict()
+        for _, mutable, _ in self.named_mutables(distinct=False):
+            assert isinstance(mutable, LayerChoice)
+            index, _ = mutable.registered_module.chosen_index
+            result[mutable.key] = F.one_hot(torch.tensor(index), num_classes=mutable.length).view(-1)#.bool()
+        return result
