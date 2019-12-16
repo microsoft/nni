@@ -10,7 +10,7 @@ from torch import nn as nn
 
 from nni.nas.pytorch.base_trainer import BaseTrainer
 #from nni.nas.pytorch.trainer import TorchTensorEncoder
-from nni.nas.utils import AverageMeter
+from nni.nas.pytorch.utils import AverageMeter
 from .mutator import ProxylessNasMutator
 from .utils import cross_entropy_with_label_smoothing, accuracy
 

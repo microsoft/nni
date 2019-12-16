@@ -60,7 +60,9 @@ class MobileInvertedResidualBlock(nn.Module):
 
     def forward(self, x):
         out, idx = self.mobile_inverted_conv(x)
-        #if idx == 6:
+        # TODO: unify idx format
+        if not isinstance(idx, int):
+            idx = (idx == 1).nonzero()
         if self.op_candidates_list[idx].is_zero_layer():
             res = x
         elif self.shortcut is None:

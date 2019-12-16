@@ -2,10 +2,11 @@
 # Licensed under the MIT license.
 
 import time
+import math
 from datetime import timedelta
 import torch
 from torch import nn as nn
-from nni.nas.utils import AverageMeter
+from nni.nas.pytorch.utils import AverageMeter
 
 criterion = nn.CrossEntropyLoss()
 
@@ -40,10 +41,10 @@ def validate(model, device, valid_loader, test_loader, is_test=True):
     else:
         data_loader = valid_loader
     model.eval()
-    batch_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
+    batch_time = AverageMeter('batch_time')
+    losses = AverageMeter('losses')
+    top1 = AverageMeter('top1')
+    top5 = AverageMeter('top5')
 
     end = time.time()
     with torch.no_grad():
@@ -76,11 +77,11 @@ def validate(model, device, valid_loader, test_loader, is_test=True):
     return losses.avg, top1.avg, top5.avg
 
 def train_one_epoch(model, train_loader, device, optimizer, adjust_lr_func, train_log_func, label_smoothing=0.1):
-        batch_time = AverageMeter()
-        data_time = AverageMeter()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+        batch_time = AverageMeter('batch_time')
+        data_time = AverageMeter('data_time')
+        losses = AverageMeter('losses')
+        top1 = AverageMeter('top1')
+        top5 = AverageMeter('top5')
         model.train()
         end = time.time()
         for i, (images, labels) in enumerate(train_loader):
@@ -169,6 +170,8 @@ def retrain(model, optimizer, device, data_provider, n_epochs):
     train_loader = data_provider.train
     valid_loader = data_provider.valid
     test_loader = data_provider.test
+    model = torch.nn.DataParallel(model)
+    model.to(device)
     # train
     train(model, optimizer, device, train_loader, valid_loader, test_loader, n_epochs)
     # validate
