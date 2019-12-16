@@ -8,35 +8,34 @@ from nni.compression.torch import BNNQuantizer
 class VGG_Cifar10(nn.Module):
     def __init__(self, num_classes=1000):
         super(VGG_Cifar10, self).__init__()
-        self.infl_ratio = 1 # may be set to large number ?
         self.features = nn.Sequential(
-            nn.Conv2d(3, 128*self.infl_ratio, kernel_size=3, stride=1, padding=1,
+            nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1,
                       bias=False),
-            nn.BatchNorm2d(128*self.infl_ratio),
+            nn.BatchNorm2d(128),
             nn.Hardtanh(inplace=True),
 
-            nn.Conv2d(128*self.infl_ratio, 128*self.infl_ratio, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.BatchNorm2d(128*self.infl_ratio),
+            nn.BatchNorm2d(128),
             nn.Hardtanh(inplace=True),
 
-            nn.Conv2d(128*self.infl_ratio, 256*self.infl_ratio, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(256*self.infl_ratio),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(256),
             nn.Hardtanh(inplace=True),
 
 
-            nn.Conv2d(256*self.infl_ratio, 256*self.infl_ratio, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.BatchNorm2d(256*self.infl_ratio),
+            nn.BatchNorm2d(256),
             nn.Hardtanh(inplace=True),
 
 
-            nn.Conv2d(256*self.infl_ratio, 512*self.infl_ratio, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(512*self.infl_ratio),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(512),
             nn.Hardtanh(inplace=True),
 
 
-            nn.Conv2d(512*self.infl_ratio, 512, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.BatchNorm2d(512),
             nn.Hardtanh(inplace=True)
@@ -117,8 +116,6 @@ def main():
     model = VGG_Cifar10(num_classes=10)
     model.to(device)
 
-    # print(model)
-
     configure_list = [{
         'quant_types': ['weight'],
         'quant_bits': 1,
@@ -133,9 +130,6 @@ def main():
 
     quantizer = BNNQuantizer(model, configure_list)
     model = quantizer.compress()
-    print(model)
-    # for name, p in model.named_parameters():
-    #     print(name)
 
     print('=' * 10 + 'train' + '=' * 10)
     optimizer_finetune = torch.optim.Adam(model.parameters(), lr=1e-3)
