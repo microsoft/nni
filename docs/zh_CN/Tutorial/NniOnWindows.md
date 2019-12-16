@@ -1,6 +1,6 @@
 # Windows 上的 NNI（实验阶段的功能）
 
-当前 Windows 上支持本机、远程和 OpenPAI 模式。 推荐 Windows 10 的 1809 版，其经过了测试。
+Running NNI on Windows is an experimental feature. 推荐 Windows 10 的 1809 版，其经过了测试。
 
 ## **在 Windows 上安装**
 
@@ -45,6 +45,10 @@ nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 
 当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
-注意：
+### Use a Windows server as a remote worker
+
+Currently you can't.
+
+Note:
 
 * 如果遇到如 `Segmentation fault` 这样的任何错误，参考[常见问题](FAQ.md)。
