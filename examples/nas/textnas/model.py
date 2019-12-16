@@ -3,7 +3,34 @@ import torch
 import torch.nn.functional as Func
 from torch import nn
 
-from ops import ConvBN, LinearCombine
+from ops import ConvBN, LinearCombine, AvgPool, MaxPool, RNN, Attention, BatchNorm
+from nni.nas.pytorch import mutables
+
+
+class Layer(mutables.MutableScope):
+    def __init__(self, key, hidden_units, lstm_keep_prob, att_keep_prob, att_is_mask):
+        super().__init__(key)
+        conv_shortcut = lambda kernel_size: ConvBN(kernel_size, hidden_units, hidden_units,
+                                                   self.cnn_keep_prob, False, True)
+        self.op = mutables.LayerChoice([
+            conv_shortcut(1),
+            conv_shortcut(3),
+            conv_shortcut(5),
+            conv_shortcut(7),
+            AvgPool(3, False, True),
+            MaxPool(3, False, True),
+            RNN(hidden_units, lstm_keep_prob),
+            Attention(hidden_units, 4, att_keep_prob, att_is_mask)
+        ])
+        self.bn = BatchNorm(self.out_filters, False, True)
+
+    def forward(self, prev_layers):
+        out = self.mutable(prev_layers[-1])
+        if self.skipconnect is not None:
+            connection = self.skipconnect(prev_layers[:-1])
+            if connection is not None:
+                out += connection
+        return self.batch_norm(out)
 
 
 class Model(nn.Module):
@@ -28,16 +55,11 @@ class Model(nn.Module):
         self.embed_dropout = nn.Dropout(p=1 - embed_keep_prob)
         self.output_dropout = nn.Dropout(p=1 - final_output_keep_prob)
 
-    def get_sample_arc(self, sample_arc):
-        self.sample_arc = sample_arc
-
-    def forward(self, sent_ids, mask, pos_ids, is_training):
-        """ is_training maybe unuseful and can delete  """
+    def forward(self, sent_ids, mask, pos_ids):
         seq = Func.embedding(sent_ids.long(), self.embedding)
         seq = self.embed_dropout(seq)
 
         seq = torch.transpose(seq, 1, 2)  # from (N, L, C) -> (N, C, L)
-        inp_c, inp_l = seq.shape[1:]
 
         x = self.init_conv(seq, mask)
 
