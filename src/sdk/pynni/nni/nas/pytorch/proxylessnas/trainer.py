@@ -78,7 +78,7 @@ def accuracy(output, target, topk=(1,)):
 
 class ProxylessNasTrainer(BaseTrainer):
     def __init__(self, model, model_optim, train_loader, valid_loader, device,
-                 n_epochs=150, init_lr=0.05, arch_init_type='normal', arch_init_ratio=1e-3,
+                 n_epochs=120, init_lr=0.025, arch_init_type='normal', arch_init_ratio=1e-3,
                  arch_optim_lr=1e-3, arch_weight_decay=0, warmup=True, warmup_epochs=25,
                  arch_valid_frequency=1):
         """
@@ -117,10 +117,8 @@ class ProxylessNasTrainer(BaseTrainer):
         self.warmup = warmup
         self.warmup_epochs = warmup_epochs
         self.arch_valid_frequency = arch_valid_frequency
-
-        self.train_epochs = 120
-        self.lr_max = 0.05
         self.label_smoothing = 0.1
+
         self.valid_batch_size = 500
         self.arch_grad_train_batch_size = 256
         # update architecture parameters every this number of minibatches
@@ -143,7 +141,9 @@ class ProxylessNasTrainer(BaseTrainer):
         # build architecture optimizer
         self.arch_optimizer = torch.optim.Adam(self.mutator.get_architecture_parameters(),
                                                arch_optim_lr,
-                                               weight_decay=arch_weight_decay)
+                                               weight_decay=arch_weight_decay,
+                                               betas=(0, 0.999),
+                                               eps=1e-8)
 
         self.criterion = nn.CrossEntropyLoss()
 
@@ -196,6 +196,7 @@ class ProxylessNasTrainer(BaseTrainer):
         return losses.avg, top1.avg, top5.avg
 
     def _warm_up(self):
+        lr_max = 0.05
         data_loader = self.train_loader
         nBatch = len(data_loader)
         T_total = self.warmup_epochs * nBatch # total num of batches
@@ -217,7 +218,7 @@ class ProxylessNasTrainer(BaseTrainer):
                 data_time.update(time.time() - end)
                 # lr
                 T_cur = epoch * nBatch + i
-                warmup_lr = 0.5 * self.lr_max * (1 + math.cos(math.pi * T_cur / T_total))
+                warmup_lr = 0.5 * lr_max * (1 + math.cos(math.pi * T_cur / T_total))
                 for param_group in self.model_optim.param_groups:
                     param_group['lr'] = warmup_lr
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -295,7 +296,7 @@ class ProxylessNasTrainer(BaseTrainer):
 
         update_schedule = self._get_update_schedule(nBatch)
 
-        for epoch in range(self.train_epochs):
+        for epoch in range(self.n_epochs):
             print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
             batch_time = AverageMeter('batch_time')
             data_time = AverageMeter('data_time')
