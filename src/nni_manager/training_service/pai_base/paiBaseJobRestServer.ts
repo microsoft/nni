@@ -29,7 +29,7 @@ export class PAIBaseJobRestServer extends ClusterJobRestServer {
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor(paiBaseTrainingService :PAIBaseTrainingService) {
+    constructor (paiBaseTrainingService: PAIBaseTrainingService) {
         super();
         this.paiBaseTrainingService = paiBaseTrainingService;
     }
