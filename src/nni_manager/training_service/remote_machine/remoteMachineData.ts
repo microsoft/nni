@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -29,13 +13,13 @@ import { GPUInfo, GPUSummary } from '../common/gpuData';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip : string = '';
-    public readonly port : number = 22;
-    public readonly username : string = '';
+    public readonly ip: string = '';
+    public readonly port: number = 22;
+    public readonly username: string = '';
     public readonly passwd: string = '';
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
-    public gpuSummary : GPUSummary | undefined;
+    public gpuSummary: GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
     //TODO: initialize varialbe in constructor
@@ -59,11 +43,11 @@ export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
  * The execution result for command executed on remote machine
  */
 export class RemoteCommandResult {
-    public readonly stdout : string;
-    public readonly stderr : string;
-    public readonly exitCode : number;
+    public readonly stdout: string;
+    public readonly stderr: string;
+    public readonly exitCode: number;
 
-    constructor(stdout : string, stderr : string, exitCode : number) {
+    constructor(stdout: string, stderr: string, exitCode: number) {
         this.stdout = stdout;
         this.stderr = stderr;
         this.exitCode = exitCode;
@@ -202,7 +186,6 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
@@ -241,9 +224,9 @@ export class SSHClientManager {
     }
 }
 
-export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
+export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType};
 
-export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
+export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cudaVisibleDevice: string};
 
 export enum ScheduleResultType {
     // Schedule succeeded

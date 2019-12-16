@@ -1,27 +1,10 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
 import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
-import { TrialJobDetail } from '../../common/trainingService';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
 import {
@@ -35,7 +18,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
  */
 export class GPUScheduler {
 
-    private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
+    private readonly machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>;
     private readonly log: Logger = getLogger();
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
@@ -45,7 +28,7 @@ export class GPUScheduler {
      * Constructor
      * @param machineSSHClientMap map from remote machine to sshClient
      */
-    constructor(machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>) {
+    constructor(machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>) {
         assert(machineSSHClientMap.size > 0);
         this.machineSSHClientMap = machineSSHClientMap;
         this.configuredRMs = Array.from(machineSSHClientMap.keys());
@@ -55,7 +38,7 @@ export class GPUScheduler {
      * Schedule a machine according to the constraints (requiredGPUNum)
      * @param requiredGPUNum required GPU number
      */
-    public scheduleMachine(requiredGPUNum: number | undefined, trialJobDetail : RemoteMachineTrialJobDetail) : RemoteMachineScheduleResult {
+    public scheduleMachine(requiredGPUNum: number | undefined, trialJobDetail: RemoteMachineTrialJobDetail): RemoteMachineScheduleResult {
         if(requiredGPUNum === undefined) {
             requiredGPUNum = 0;
         }
@@ -64,7 +47,7 @@ export class GPUScheduler {
         assert(allRMs.length > 0);
 
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
-        const eligibleRM: RemoteMachineMeta[] = allRMs.filter((rmMeta : RemoteMachineMeta) =>
+        const eligibleRM: RemoteMachineMeta[] = allRMs.filter((rmMeta: RemoteMachineMeta) =>
                  rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && rmMeta.gpuSummary.gpuCount >= requiredGPUNum));
         if (eligibleRM.length === 0) {
             // If the required gpu number exceeds the upper limit of all machine's GPU number
@@ -150,8 +133,8 @@ export class GPUScheduler {
      * @param availableGPUMap available GPU resource filled by this detection
      * @returns Available GPU number on this remote machine
      */
-    private gpuResourceDetection() : Map<RemoteMachineMeta, GPUInfo[]> {
-        const totalResourceMap : Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
+    private gpuResourceDetection(): Map<RemoteMachineMeta, GPUInfo[]> {
+        const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
         this.machineSSHClientMap.forEach((sshClientManager: SSHClientManager, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
@@ -165,7 +148,6 @@ export class GPUScheduler {
                     }
                 }
                 this.log.debug(`designated gpu indices: ${designatedGpuIndices}`);
-                // tslint:disable: strict-boolean-expressions
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
                     // or index not in gpuIndices configuration in machineList,
@@ -191,7 +173,6 @@ export class GPUScheduler {
 
         return totalResourceMap;
     }
-    // tslint:enable: strict-boolean-expressions
 
     private selectMachine(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
         assert(rmMetas !== undefined && rmMetas.length > 0);
@@ -240,11 +221,11 @@ export class GPUScheduler {
             resultType: ScheduleResultType.SUCCEED,
             scheduleInfo: {
                 rmMeta: rmMeta,
-                cuda_visible_device: allocatedGPUs
-                                       .map((gpuInfo: GPUInfo) => {
-                                            return gpuInfo.index;
-                                        })
-                                       .join(',')
+                cudaVisibleDevice: allocatedGPUs
+                                    .map((gpuInfo: GPUInfo) => {
+                                        return gpuInfo.index;
+                                    })
+                                    .join(',')
             }
         };
     }

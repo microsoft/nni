@@ -99,32 +99,36 @@
 
 **准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
-    authorName: your_name
-    experimentName: auto_mnist
-    
-    # 并发运行数量
-    trialConcurrency: 2
-    
-    # Experiment 运行时间
-    maxExecDuration: 3h
-    
-    # 可为空，即数量不限
-    maxTrialNum: 100
-    
-    # 可选值为: local, remote
-    trainingServicePlatform: local
-    
-    # 可选值为: true, false
-    useAnnotation: true
-    tuner:
-      builtinTunerName: TPE
-      classArgs:
-        optimize_mode: maximize
-    trial:
-      command: python mnist.py
-      codeDir: ~/nni/examples/trials/mnist-annotation
-      gpuNum: 0
-    
+```yaml
+authorName: your_name
+experimentName: auto_mnist
+
+# 并发运行数量
+trialConcurrency: 2
+
+# Experiment 运行时间
+maxExecDuration: 3h
+
+# 可为空，即数量不限
+maxTrialNum: 100
+
+# 可选值为: local, remote
+trainingServicePlatform: local
+
+# 搜索空间文件
+searchSpacePath: search_space.json
+
+# 可选值为: true, false
+useAnnotation: true
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python mnist.py
+  codeDir: ~/nni/examples/trials/mnist-annotation
+  gpuNum: 0
+```
 
 因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](../Tutorial/AnnotationSpec.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 

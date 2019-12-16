@@ -1,21 +1,28 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import logging
+import time
 from argparse import ArgumentParser
 
-import datasets
 import torch
 import torch.nn as nn
 
+import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
+logger = logging.getLogger('nni')
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--layers", default=8, type=int)
-    parser.add_argument("--batch-size", default=96, type=int)
+    parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--epochs", default=50, type=int)
+    parser.add_argument("--unrolled", default=False, action="store_true")
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
@@ -35,5 +42,6 @@ if __name__ == "__main__":
                            dataset_valid=dataset_valid,
                            batch_size=args.batch_size,
                            log_frequency=args.log_frequency,
-                           callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
-    trainer.train_and_validate()
+                           unrolled=args.unrolled,
+                           callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+    trainer.train()

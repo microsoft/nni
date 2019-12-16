@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import torch
 from . import default_layers
@@ -12,7 +15,6 @@ class LayerInfo:
         self.type = type(module).__name__
 
         self._forward = None
-
 
 class Compressor:
     """
@@ -37,7 +39,6 @@ class Compressor:
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
-
         The model will be instrumented and user should never edit it after calling this method.
         """
         if self.modules_to_compress is None:
@@ -48,7 +49,6 @@ class Compressor:
                 if config is not None:
                     self.modules_to_compress.append((layer, config))
         return self.modules_to_compress
-
 
     def compress(self):
         """
@@ -218,6 +218,8 @@ class Pruner(Compressor):
         input_shape : list or tuple
             input shape to onnx model
         """
+        if self.detect_modules_to_compress() and not self.mask_dict:
+            _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         for name, m in self.bound_model.named_modules():
             if name == "":
@@ -227,25 +229,20 @@ class Pruner(Compressor):
                 mask_sum = mask.sum().item()
                 mask_num = mask.numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                print('Layer: %s  Sparsity: %.2f' % (name, 1 - mask_sum / mask_num))
                 m.weight.data = m.weight.data.mul(mask)
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
-                print('Layer: %s  NOT compressed' % name)
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
-        print('Model state_dict saved to %s' % model_path)
         if mask_path is not None:
             torch.save(self.mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
-            print('Mask dict saved to %s' % mask_path)
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
             input_data = torch.Tensor(*input_shape)
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
-            print('Model in onnx with input shape %s saved to %s' % (input_data.shape, onnx_path))
 
 
 class Quantizer(Compressor):
@@ -310,6 +307,12 @@ class Quantizer(Compressor):
         assert layer._forward is None, 'Each model can only be compressed once'
         assert "quant_types" in config, 'must provide quant_types in config'
         assert isinstance(config["quant_types"], list), 'quant_types must be list type'
+        assert "quant_bits" in config, 'must provide quant_bits in config'
+        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
+
+        if isinstance(config["quant_bits"], dict):
+            for quant_type in config["quant_types"]:
+                assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         if 'weight' in config["quant_types"]:
             if not _check_weight(layer.module):
@@ -318,7 +321,7 @@ class Quantizer(Compressor):
 
         def new_forward(*inputs):
             if 'input' in config["quant_types"]:
-                inputs = self.quantize_input(inputs, config=config, op=layer.module, op_type=layer.type, op_name=layer.name)
+                inputs = straight_through_quantize_input.apply(inputs, self, config, layer)
 
             if 'weight' in config["quant_types"] and _check_weight(layer.module):
                 weight = layer.module.weight.data
@@ -330,11 +333,31 @@ class Quantizer(Compressor):
                 result = layer._forward(*inputs)
 
             if 'output' in config["quant_types"]:
-                result = self.quantize_output(result, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-
+                result = straight_through_quantize_output.apply(result, self, config, layer)
             return result
 
         layer.module.forward = new_forward
+
+
+class straight_through_quantize_output(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, output, quantizer, config, layer):
+        return quantizer.quantize_output(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Straight-through estimator
+        return grad_output, None, None, None
+
+class straight_through_quantize_input(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inputs, quantizer, config, layer):
+        return quantizer.quantize_input(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Straight-through estimator
+        return grad_output, None, None, None
 
 def _check_weight(module):
     try:

@@ -7,10 +7,11 @@ const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
-import { TRIALS } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import Compare from '../Modal/Compare';
+import Customize from '../Modal/CustomizedTrial';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -45,6 +46,8 @@ interface TableListState {
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
     intermediateId: string;
     intermediateOtherKeys: Array<string>;
+    isShowCustomizedModal: boolean;
+    copyTrialId: string; // user copy trial to submit a new customized trial
 }
 
 interface ColumnIndex {
@@ -71,7 +74,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
             intermediateId: '',
-            intermediateOtherKeys: []
+            intermediateOtherKeys: [],
+            isShowCustomizedModal: false,
+            copyTrialId: ''
         };
     }
 
@@ -236,17 +241,36 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
+    // open customized trial modal
+    setCustomizedTrial = (trialId: string) => {
+        this.setState({
+            isShowCustomizedModal: true,
+            copyTrialId: trialId
+        });
+    }
+
+    closeCustomizedTrial = () => {
+        this.setState({
+            isShowCustomizedModal: false,
+            copyTrialId: ''
+        });
+    }
     render() {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,
-            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
+            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys,
+            isShowCustomizedModal, copyTrialId
+        } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
             onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>) => {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
+        // [supportCustomizedTrial: true]
+        const supportCustomizedTrial = (EXPERIMENT.multiPhase === true) ? false : true;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
         let showTitle = COLUMNPro;
         const showColumn: Array<object> = [];
 
@@ -316,7 +340,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Operation',
                         dataIndex: 'operation',
                         key: 'operation',
-                        width: 120,
                         render: (text: string, record: TableRecord) => {
                             let trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
@@ -361,6 +384,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                                 </Button>
                                             </Popconfirm>
                                     }
+                                    {/* Add a new trial-customized trial */}
+                                    {
+                                        supportCustomizedTrial
+                                            ?
+                                            <Button
+                                                type="primary"
+                                                className="common-style"
+                                                disabled={disabledAddCustomizedTrial}
+                                                onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                                title="Customized trial"
+                                            >
+                                                <Icon type="copy" />
+                                            </Button>
+                                            :
+                                            null
+                                    }
                                 </Row>
                             );
                         },
@@ -373,7 +412,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: realItem,
                         dataIndex: item,
                         key: item,
-                        width: '6%',
                         render: (text: string, record: TableRecord) => {
                             const eachTrial = TRIALS.getTrial(record.id);
                             return (
@@ -398,7 +436,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         expandedRowRender={this.openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
-                        scroll={{x: 'max-content'}}
+                        scroll={{ x: 'max-content' }}
                         pagination={pageSize > 0 ? { pageSize } : false}
                     />
                     {/* Intermediate Result Modal */}
@@ -458,7 +496,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
+                {/* compare trials based message */}
                 <Compare compareRows={selectRows} visible={isShowCompareModal} cancelFunc={this.hideCompareModal} />
+                {/* clone trial parameters and could submit a customized trial */}
+                <Customize
+                    visible={isShowCustomizedModal}
+                    copyTrialId={copyTrialId}
+                    closeCustomizeModal={this.closeCustomizedTrial}
+                />
             </Row>
         );
     }
@@ -467,7 +512,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
 const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
     title: 'Trial No.',
     dataIndex: 'sequenceId',
-    width: 120,
     className: 'tableHead',
     sorter: (a, b) => a.sequenceId - b.sequenceId
 };
@@ -475,7 +519,6 @@ const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
 const IdColumnConfig: ColumnProps<TableRecord> = {
     title: 'ID',
     dataIndex: 'id',
-    width: 60,
     className: 'tableHead leftTitle',
     sorter: (a, b) => a.id.localeCompare(b.id),
     render: (text, record) => (
@@ -486,7 +529,7 @@ const IdColumnConfig: ColumnProps<TableRecord> = {
 const StartTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'Start Time',
     dataIndex: 'startTime',
-    width: 160,
+    sorter: (a, b) => a.startTime - b.startTime,
     render: (text, record) => (
         <span>{formatTimestamp(record.startTime)}</span>
     )
@@ -495,7 +538,15 @@ const StartTimeColumnConfig: ColumnProps<TableRecord> = {
 const EndTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'End Time',
     dataIndex: 'endTime',
-    width: 160,
+    sorter: (a, b, sortOrder) => {
+        if (a.endTime === undefined) {
+            return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.endTime === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
+        } else {
+            return a.endTime - b.endTime;
+        }
+    },
     render: (text, record) => (
         <span>{formatTimestamp(record.endTime, '--')}</span>
     )
@@ -504,17 +555,15 @@ const EndTimeColumnConfig: ColumnProps<TableRecord> = {
 const DurationColumnConfig: ColumnProps<TableRecord> = {
     title: 'Duration',
     dataIndex: 'duration',
-    width: 100,
     sorter: (a, b) => a.duration - b.duration,
     render: (text, record) => (
-        <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
+        <span className="durationsty">{convertDuration(record.duration)}</span>
     )
 };
 
 const StatusColumnConfig: ColumnProps<TableRecord> = {
     title: 'Status',
     dataIndex: 'status',
-    width: 150,
     className: 'tableStatus',
     render: (text, record) => (
         <span className={`${record.status} commonStyle`}>{record.status}</span>
@@ -527,7 +576,7 @@ const StatusColumnConfig: ColumnProps<TableRecord> = {
 const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
     title: 'Intermediate result',
     dataIndex: 'intermediateCount',
-    width: 86,
+    sorter: (a, b) => a.intermediateCount - b.intermediateCount,
     render: (text, record) => (
         <span>{`#${record.intermediateCount}`}</span>
     )
@@ -537,19 +586,17 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
     title: 'Default metric',
     className: 'leftTitle',
     dataIndex: 'accuracy',
-    width: 120,
     sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
+        if (a.latestAccuracy === undefined) {
             return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
         } else {
-            return a.accuracy - b.accuracy;
+            return a.latestAccuracy - b.latestAccuracy;
         }
     },
     render: (text, record) => (
-        // TODO: is this needed?
-        <div>{record.latestAccuracy}</div>
+        <div>{record.formattedLatestAccuracy}</div>
     )
 };
 

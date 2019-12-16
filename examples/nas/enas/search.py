@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import logging
+import time
 from argparse import ArgumentParser
 
 import torch
@@ -7,13 +12,17 @@ import datasets
 from macro import GeneralNetwork
 from micro import MicroNetwork
 from nni.nas.pytorch import enas
-from nni.nas.pytorch.callbacks import LearningRateScheduler, ArchitectureCheckpoint
+from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
+                                       LRSchedulerCallback)
 from utils import accuracy, reward_accuracy
+
+logger = logging.getLogger('nni')
+
 
 if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
-    parser.add_argument("--log-frequency", default=1, type=int)
+    parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     args = parser.parse_args()
 
@@ -38,10 +47,11 @@ if __name__ == "__main__":
                                metrics=accuracy,
                                reward_function=reward_accuracy,
                                optimizer=optimizer,
-                               callbacks=[LearningRateScheduler(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                               callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
                                batch_size=args.batch_size,
                                num_epochs=num_epochs,
                                dataset_train=dataset_train,
                                dataset_valid=dataset_valid,
-                               log_frequency=args.log_frequency)
-    trainer.train_and_validate()
+                               log_frequency=args.log_frequency,
+                               mutator=mutator)
+    trainer.train()

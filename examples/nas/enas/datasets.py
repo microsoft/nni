@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 

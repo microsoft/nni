@@ -1,22 +1,5 @@
-
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -24,26 +7,12 @@ import * as fs from 'fs';
 import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
 /**
- * FrameworkController Client
- */
-abstract class FrameworkControllerClient extends KubernetesCRDClient {
-    /**
-     * Factory method to generate operator client
-     */
-    // tslint:disable-next-line:function-name
-    public static generateFrameworkControllerClient(): KubernetesCRDClient {
-        return new FrameworkControllerClientV1();
-    }
-}
-
-/**
  * FrameworkController ClientV1
  */
-class FrameworkControllerClientV1 extends FrameworkControllerClient {
+class FrameworkControllerClientV1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize frameworkcontroller CRD definition
      */
-    // tslint:disable: no-unsafe-any no-any
     public constructor() {
         super();
         this.crdSchema = JSON.parse(fs.readFileSync('./config/frameworkcontroller/frameworkcontrollerjob-crd-v1.json', 'utf8'));
@@ -53,11 +22,22 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
     protected get operator(): any {
         return this.client.apis['frameworkcontroller.microsoft.com'].v1.namespaces('default').frameworks;
     }
-    // tslint:enable: no-unsafe-any no-any
 
     public get containerName(): string {
         return 'framework';
     }
 }
 
-export { FrameworkControllerClient, GeneralK8sClient };
+/**
+ * FrameworkController Client
+ */
+class FrameworkControllerClientFactory {
+    /**
+     * Factory method to generate operator client
+     */
+    public static createClient(): KubernetesCRDClient {
+        return new FrameworkControllerClientV1();
+    }
+}
+
+export { FrameworkControllerClientFactory, GeneralK8sClient };

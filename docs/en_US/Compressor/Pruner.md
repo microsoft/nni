@@ -3,7 +3,7 @@ Pruner on NNI Compressor
 
 ## Level Pruner
 
-This is one basic pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%). 
+This is one basic one-shot pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%). 
 
 We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
 
@@ -31,7 +31,7 @@ pruner.compress()
 ***
 
 ## AGP Pruner
-In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
+This is an iterative pruner, In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
 >We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
 ![](../../img/agp_pruner.png)
@@ -65,7 +65,7 @@ config_list = [{
     'start_epoch': 0,
     'end_epoch': 10,
     'frequency': 1,
-    'op_types': 'default'
+    'op_types': ['default']
 }]
 pruner = AGP_Pruner(model, config_list)
 pruner.compress()
@@ -92,8 +92,49 @@ You can view example for more information
 
 ***
 
+## Lottery Ticket Hypothesis
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+
+In this paper, the authors use the following process to prune a model, called *iterative prunning*:
+>1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
+>2. Train the network for j iterations, arriving at parameters theta_j.
+>3. Prune p% of the parameters in theta_j, creating a mask m.
+>4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
+>5. Repeat step 2, 3, and 4.
+
+If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+
+### Usage
+
+PyTorch code
+```python
+from nni.compression.torch import LotteryTicketPruner
+config_list = [{
+    'prune_iterations': 5,
+    'sparsity': 0.8,
+    'op_types': ['default']
+}]
+pruner = LotteryTicketPruner(model, config_list, optimizer)
+pruner.compress()
+for _ in pruner.get_prune_iterations():
+    pruner.prune_iteration_start()
+    for epoch in range(epoch_num):
+        ...
+```
+
+The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round. Simple reproducing results can be found [here](./LotteryTicketHypothesis.md).
+
+
+*Tensorflow version will be supported later.*
+
+#### User configuration for LotteryTicketPruner
+
+* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
+* **sparsity:** The final sparsity when the compression is done.
+
+***
 ## FPGM Pruner
-FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
 
 >Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
 
@@ -138,3 +179,57 @@ You can view example for more information
 * **sparsity:** How much percentage of convolutional filters are to be pruned.
 
 ***
+
+## L1Filter Pruner
+
+This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+
+![](../../img/l1filter_pruner.png)
+
+> L1Filter Pruner prunes filters in the **convolution layers**
+>
+> The procedure of pruning m filters from the ith convolutional layer is as follows:
+>
+> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
+> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
+> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The
+>   kernels in the next convolutional layer corresponding to the pruned feature maps are also
+>   removed.
+> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
+>   weights are copied to the new model.
+
+```
+from nni.compression.torch import L1FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = L1FilterPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for L1Filter Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only Conv2d is supported in L1Filter Pruner
+
+## Slim Pruner
+
+This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+
+![](../../img/slim_pruner.png)
+
+> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+
+### Usage
+
+PyTorch code
+
+```
+from nni.compression.torch import SlimPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+pruner = SlimPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for Slim Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only BatchNorm2d is supported in Slim Pruner

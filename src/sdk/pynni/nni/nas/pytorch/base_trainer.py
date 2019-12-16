@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from abc import ABC, abstractmethod
 
 
@@ -12,5 +15,9 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train_and_validate(self):
+    def export(self, file):
+        raise NotImplementedError
+
+    @abstractmethod
+    def checkpoint(self):
         raise NotImplementedError

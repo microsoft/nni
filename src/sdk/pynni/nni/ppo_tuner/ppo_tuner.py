@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 ppo_tuner.py including:
     class PPOTuner
@@ -367,74 +351,33 @@ class PPOTuner(Tuner):
         self.send_trial_callback = None
         logger.info('Finished PPOTuner initialization')
 
-    def _process_one_nas_space(self, block_name, block_space):
-        """
-        Process nas space to determine observation space and action space
-
-        Parameters
-        ----------
-        block_name : str
-            The name of the mutable block
-        block_space : dict
-            Search space of this mutable block
-
-        Returns
-        -------
-        actions_spaces : list
-            List of the space of each action
-        actions_to_config : list
-            The mapping from action to generated configuration
-        """
-        actions_spaces = []
-        actions_to_config = []
-
-        block_arch_temp = {}
-        for l_name, layer in block_space.items():
-            chosen_layer_temp = {}
-
-            if len(layer['layer_choice']) > 1:
-                actions_spaces.append(layer['layer_choice'])
-                actions_to_config.append((block_name, l_name, 'chosen_layer'))
-                chosen_layer_temp['chosen_layer'] = None
-            else:
-                assert len(layer['layer_choice']) == 1
-                chosen_layer_temp['chosen_layer'] = layer['layer_choice'][0]
-
-            if layer['optional_input_size'] not in [0, 1, [0, 1]]:
-                raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'
-                                 % (layer['optional_input_size']))
-            if isinstance(layer['optional_input_size'], list):
-                actions_spaces.append(["None", *layer['optional_inputs']])
-                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
-                chosen_layer_temp['chosen_inputs'] = None
-            elif layer['optional_input_size'] == 1:
-                actions_spaces.append(layer['optional_inputs'])
-                actions_to_config.append((block_name, l_name, 'chosen_inputs'))
-                chosen_layer_temp['chosen_inputs'] = None
-            elif layer['optional_input_size'] == 0:
-                chosen_layer_temp['chosen_inputs'] = []
-            else:
-                raise ValueError('invalid type and value of optional_input_size')
-
-            block_arch_temp[l_name] = chosen_layer_temp
-
-        self.chosen_arch_template[block_name] = block_arch_temp
-
-        return actions_spaces, actions_to_config
-
     def _process_nas_space(self, search_space):
-        """
-        Process nas search space to get action/observation space
-        """
         actions_spaces = []
         actions_to_config = []
-        for b_name, block in search_space.items():
-            if block['_type'] != 'mutable_layer':
-                raise ValueError('PPOTuner only accept mutable_layer type in search space, but the current one is %s'%(block['_type']))
-            block = block['_value']
-            act, act_map = self._process_one_nas_space(b_name, block)
-            actions_spaces.extend(act)
-            actions_to_config.extend(act_map)
+        for key, val in search_space.items():
+            if val['_type'] == 'layer_choice':
+                actions_to_config.append((key, 'layer_choice'))
+                actions_spaces.append(val['_value'])
+                self.chosen_arch_template[key] = None
+            elif val['_type'] == 'input_choice':
+                candidates = val['_value']['candidates']
+                n_chosen = val['_value']['n_chosen']
+                if n_chosen not in [0, 1, [0, 1]]:
+                    raise ValueError('Optional_input_size can only be 0, 1, or [0, 1], but the pecified one is %s'
+                                     % (n_chosen))
+                if isinstance(n_chosen, list):
+                    actions_to_config.append((key, 'input_choice'))
+                    # FIXME: risk, candidates might also have None
+                    actions_spaces.append(['None', *candidates])
+                    self.chosen_arch_template[key] = None
+                elif n_chosen == 1:
+                    actions_to_config.append((key, 'input_choice'))
+                    actions_spaces.append(candidates)
+                    self.chosen_arch_template[key] = None
+                elif n_chosen == 0:
+                    self.chosen_arch_template[key] = []
+            else:
+                raise ValueError('Unsupported search space type: %s' % (val['_type']))
 
         # calculate observation space
         dedup = {}
@@ -444,7 +387,6 @@ class PPOTuner(Tuner):
         full_act_space = [act for act, _ in dedup.items()]
         assert len(full_act_space) == len(dedup)
         observation_space = len(full_act_space)
-
         nsteps = len(actions_spaces)
 
         return actions_spaces, actions_to_config, full_act_space, observation_space, nsteps
@@ -486,7 +428,7 @@ class PPOTuner(Tuner):
             Search space for NAS
             the format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
-        logger.info('=== update search space %s', search_space)
+        logger.info('update search space %s', search_space)
         assert self.search_space is None
         self.search_space = search_space
 
@@ -512,16 +454,19 @@ class PPOTuner(Tuner):
         chosen_arch = copy.deepcopy(self.chosen_arch_template)
         for cnt, act in enumerate(actions):
             act_name = self.full_act_space[act]
-            (block_name, layer_name, key) = self.actions_to_config[cnt]
-            if key == 'chosen_inputs':
+            (_key, _type) = self.actions_to_config[cnt]
+            if _type == 'input_choice':
                 if act_name == 'None':
-                    chosen_arch[block_name][layer_name][key] = []
+                    chosen_arch[_key] = {'_value': [], '_idx': []}
                 else:
-                    chosen_arch[block_name][layer_name][key] = [act_name]
-            elif key == 'chosen_layer':
-                chosen_arch[block_name][layer_name][key] = act_name
+                    candidates = self.search_space[_key]['_value']['candidates']
+                    idx = candidates.index(act_name)
+                    chosen_arch[_key] = {'_value': [act_name], '_idx': [idx]}
+            elif _type == 'layer_choice':
+                idx = self.search_space[_key]['_value'].index(act_name)
+                chosen_arch[_key] = {'_value': act_name, '_idx': idx}
             else:
-                raise ValueError('unrecognized key: {0}'.format(key))
+                raise ValueError('unrecognized key: {0}'.format(_type))
         return chosen_arch
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
@@ -577,6 +522,7 @@ class PPOTuner(Tuner):
 
         trial_info_idx, actions = self.trials_info.get_next()
         if trial_info_idx is None:
+            logger.debug('Credit added by one in parameters request')
             self.credit += 1
             self.param_ids.append(parameter_id)
             raise nni.NoMoreTrialError('no more parameters now.')
@@ -589,6 +535,7 @@ class PPOTuner(Tuner):
         """
         Run a inference to generate next batch of configurations
         """
+        logger.debug('Start next round inference...')
         self.finished_trials = 0
         self.model.compute_rewards(self.trials_info, self.trials_result)
         self.model.train(self.trials_info, self.inf_batch_size)
@@ -600,6 +547,7 @@ class PPOTuner(Tuner):
                                       mb_values, mb_neglogpacs,
                                       mb_dones, last_values,
                                       self.inf_batch_size)
+        logger.debug('Next round inference complete.')
         # check credit and submit new trials
         for _ in range(self.credit):
             trial_info_idx, actions = self.trials_info.get_next()
@@ -612,6 +560,7 @@ class PPOTuner(Tuner):
             new_config = self._actions_to_config(actions)
             self.send_trial_callback(param_id, new_config)
             self.credit -= 1
+            logger.debug('Send new trial (%d, %s) for reducing credit', param_id, new_config)
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
@@ -637,7 +586,10 @@ class PPOTuner(Tuner):
         self.trials_result[trial_info_idx] = value
         self.finished_trials += 1
 
+        logger.debug('receive_trial_result, parameter_id %d, trial_info_idx %d, finished_trials %d, inf_batch_size %d',
+                     parameter_id, trial_info_idx, self.finished_trials, self.inf_batch_size)
         if self.finished_trials == self.inf_batch_size:
+            logger.debug('Start next round inference in receive_trial_result')
             self._next_round_inference()
 
     def trial_end(self, parameter_id, success, **kwargs):
@@ -666,6 +618,7 @@ class PPOTuner(Tuner):
             self.trials_result[trial_info_idx] = (sum(values) / len(values)) if values else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
+                logger.debug('Start next round inference in trial_end')
                 self._next_round_inference()
 
     def import_data(self, data):

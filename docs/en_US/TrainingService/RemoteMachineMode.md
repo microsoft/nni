@@ -16,9 +16,9 @@ Install NNI on each of your machines following the install guide [here](../Tutor
 
 ## Run an experiment
 
-Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
+Install NNI on another machine which has network accessibility to those three machines above, or you can just run `nnictl` on any one of the three to launch the experiment.
 
-We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
+We use `examples/trials/mnist-annotation` as an example here. Shown here is `examples/trials/mnist-annotation/config_remote.yml`:
 
 ```yaml
 authorName: default
@@ -28,6 +28,8 @@ maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: remote
+# search space file
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: true
 tuner:
@@ -55,24 +57,15 @@ machineList:
     username: bob
     passwd: bob123
 ```
-You can use different systems to run experiments on the remote machine.
-#### Linux and MacOS
-Simply filling the `machineList` section and then run:
+
+Files in `codeDir` will be automatically uploaded to the remote machine. You can run NNI on different operating systems (Windows, Linux, MacOS) to spawn experiments on the remote machines (only Linux allowed):
 
 ```bash
-nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 ```
 
-to start the experiment.
+You can also use public/private key pairs instead of username/password for authentication. For advanced usages, please refer to [Experiment Config Reference](../Tutorial/ExperimentConfig.md).
 
-#### Windows
-Simply filling the `machineList` section and then run:
+## Version check
 
-```bash
-nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
-```
-
-to start the experiment.
-
-## version check
-NNI support version check feature in since version 0.6, [refer](PaiMode.md)
+NNI support version check feature in since version 0.6, [reference](PaiMode.md).

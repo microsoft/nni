@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -38,7 +22,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public hdfsLogPath: string;
     public isEarlyStopped?: boolean;
 
-    constructor(id: string, status: TrialJobStatus, paiJobName : string,
+    constructor(id: string, status: TrialJobStatus, paiJobName: string,
                 submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
@@ -68,6 +52,5 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 --pai_hdfs_output_dir '{9}' --pai_hdfs_host '{10}' --pai_user_name {11} --nni_hdfs_exp_dir '{12}' --webhdfs_path '/webhdfs/api/v1' \
 --nni_manager_version '{13}' --log_collection '{14}'`;
 
-// tslint:disable:no-http-string
 export const PAI_LOG_PATH_FORMAT: string =
 `http://{0}/webhdfs/explorer.html#{1}`;

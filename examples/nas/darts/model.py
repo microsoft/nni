@@ -1,8 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import torch
 import torch.nn as nn
 
 import ops
-from nni.nas.pytorch import mutables, darts
+from nni.nas.pytorch import mutables
 
 
 class AuxiliaryHead(nn.Module):
@@ -31,12 +34,14 @@ class AuxiliaryHead(nn.Module):
         return logits
 
 
-class Node(darts.DartsNode):
-    def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect, drop_path_prob=0.):
-        super().__init__(node_id, limitation=2)
+class Node(nn.Module):
+    def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect):
+        super().__init__()
         self.ops = nn.ModuleList()
+        choice_keys = []
         for i in range(num_prev_nodes):
             stride = 2 if i < num_downsample_connect else 1
+            choice_keys.append("{}_p{}".format(node_id, i))
             self.ops.append(
                 mutables.LayerChoice(
                     [
@@ -46,20 +51,22 @@ class Node(darts.DartsNode):
                         ops.SepConv(channels, channels, 3, stride, 1, affine=False),
                         ops.SepConv(channels, channels, 5, stride, 2, affine=False),
                         ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False),
-                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False),
+                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False)
                     ],
-                    key="{}_p{}".format(node_id, i)))
-        self.drop_path = ops.DropPath_(drop_path_prob)
+                    key=choice_keys[-1]))
+        self.drop_path = ops.DropPath()
+        self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_chosen=2, key="{}_switch".format(node_id))
 
     def forward(self, prev_nodes):
         assert len(self.ops) == len(prev_nodes)
         out = [op(node) for op, node in zip(self.ops, prev_nodes)]
-        return sum(self.drop_path(o) for o in out if o is not None)
+        out = [self.drop_path(o) if o is not None else None for o in out]
+        return self.input_switch(out)
 
 
 class Cell(nn.Module):
 
-    def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction, drop_path_prob=0.):
+    def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
         super().__init__()
         self.reduction = reduction
         self.n_nodes = n_nodes
@@ -74,10 +81,9 @@ class Cell(nn.Module):
 
         # generate dag
         self.mutable_ops = nn.ModuleList()
-        for depth in range(self.n_nodes):
-            self.mutable_ops.append(Node("r{:d}_n{}".format(reduction, depth),
-                                         depth + 2, channels, 2 if reduction else 0,
-                                         drop_path_prob=drop_path_prob))
+        for depth in range(2, self.n_nodes + 2):
+            self.mutable_ops.append(Node("{}_n{}".format("reduce" if reduction else "normal", depth),
+                                         depth, channels, 2 if reduction else 0))
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
@@ -93,7 +99,7 @@ class Cell(nn.Module):
 class CNN(nn.Module):
 
     def __init__(self, input_size, in_channels, channels, n_classes, n_layers, n_nodes=4,
-                 stem_multiplier=3, auxiliary=False, drop_path_prob=0.):
+                 stem_multiplier=3, auxiliary=False):
         super().__init__()
         self.in_channels = in_channels
         self.channels = channels
@@ -120,7 +126,7 @@ class CNN(nn.Module):
                 c_cur *= 2
                 reduction = True
 
-            cell = Cell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction, drop_path_prob=drop_path_prob)
+            cell = Cell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
             self.cells.append(cell)
             c_cur_out = c_cur * n_nodes
             channels_pp, channels_p = channels_p, c_cur_out
@@ -147,3 +153,8 @@ class CNN(nn.Module):
         if aux_logits is not None:
             return logits, aux_logits
         return logits
+
+    def drop_path_prob(self, p):
+        for module in self.modules():
+            if isinstance(module, ops.DropPath):
+                module.p = p

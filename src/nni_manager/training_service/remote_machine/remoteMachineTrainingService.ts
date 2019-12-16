@@ -1,31 +1,13 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
 import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
-import { Client, ConnectConfig } from 'ssh2';
+import { Client } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
@@ -42,15 +24,15 @@ import {
     getVersion, uniqueString, unixPathJoin
 } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPUSummary } from '../common/gpuData';
+import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, execRemove, validateCodeDir } from '../common/util';
+import { execCopydir, execMkdir, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
-    HOST_JOB_SHELL_FORMAT, RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
+    RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
-    ScheduleResultType, SSHClient, SSHClientManager
+    ScheduleResultType, SSHClientManager
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { SSHClientUtility } from './sshClientUtility';
@@ -67,7 +49,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly expRootDir: string;
     private readonly remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
-    private readonly gpuScheduler: GPUScheduler;
+    private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
     private stopping: boolean = false;
@@ -87,7 +69,6 @@ class RemoteMachineTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialSSHClientMap = new Map<string, Client>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, SSHClientManager>();
-        this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
@@ -110,7 +91,7 @@ class RemoteMachineTrainingService implements TrainingService {
             while (this.jobQueue.length > 0) {
                 this.updateGpuReservation();
                 const trialJobId: string = this.jobQueue[0];
-                const prepareResult : boolean = await this.prepareTrialJob(trialJobId);
+                const prepareResult: boolean = await this.prepareTrialJob(trialJobId);
                 if (prepareResult) {
                     // Remove trial job with trialJobId from job queue
                     this.jobQueue.shift();
@@ -225,7 +206,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * Submit trial job
      * @param form trial job description form
      */
-    // tslint:disable-next-line:informative-docs
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
@@ -258,12 +238,7 @@ class RemoteMachineTrainingService implements TrainingService {
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
-        const rmMeta: RemoteMachineMeta | undefined = (<RemoteMachineTrialJobDetail>trialJobDetail).rmMeta;
-        if (rmMeta !== undefined) {
-            await this.writeParameterFile(trialJobId, form.hyperParameters, rmMeta);
-        } else {
-            throw new Error(`updateTrialJob failed: ${trialJobId} rmMeta not found`);
-        }
+        await this.writeParameterFile(trialJobId, form.hyperParameters);
 
         return trialJobDetail;
     }
@@ -279,7 +254,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * Cancel trial job
      * @param trialJobId ID of trial job
      */
-    // tslint:disable:informative-docs no-unsafe-any
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -289,7 +263,7 @@ class RemoteMachineTrainingService implements TrainingService {
         }
 
         // Remove the job with trialJobId from job queue
-        const index : number = this.jobQueue.indexOf(trialJobId);
+        const index: number = this.jobQueue.indexOf(trialJobId);
         if (index >= 0) {
             this.jobQueue.splice(index, 1);
         }
@@ -334,17 +308,15 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
-                //remove local temp files
-                await execRemove(this.getLocalGpuMetricCollectorDir());
+                this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
                 break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
                 // Parse trial config failed, throw Error
                 if (remoteMachineTrailConfig === undefined) {
                     throw new Error('trial config parsed failed');
                 }
                 // codeDir is not a valid directory, throw Error
-                // tslint:disable-next-line:non-literal-fs-path
                 if (!fs.lstatSync(remoteMachineTrailConfig.codeDir)
                   .isDirectory()) {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
@@ -361,6 +333,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
                 this.trialConfig = remoteMachineTrailConfig;
                 break;
+            }
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
@@ -399,9 +372,11 @@ class RemoteMachineTrainingService implements TrainingService {
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation(): void {
-        for (const [key, value] of this.trialJobsMap) {
-            if (!['WAITING', 'RUNNING'].includes(value.status)) {
-                this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+        if (this.gpuScheduler) {
+            for (const [key, value] of this.trialJobsMap) {
+                if (!['WAITING', 'RUNNING'].includes(value.status)) {
+                    this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
+                }
             }
         }
     }
@@ -428,34 +403,6 @@ class RemoteMachineTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    /**
-     * Generate gpu metric collector directory to store temp gpu metric collector script files
-     */
-    private getLocalGpuMetricCollectorDir(): string {
-        const userName: string = path.basename(os.homedir()); //get current user name of os
-
-        return path.join(os.tmpdir(), userName, 'nni', 'scripts');
-    }
-
-    /**
-     * Generate gpu metric collector shell script in local machine,
-     * used to run in remote machine, and will be deleted after uploaded from local.
-     */
-    private async generateGpuMetricsCollectorScript(userName: string): Promise<void> {
-        const gpuMetricCollectorScriptFolder : string = this.getLocalGpuMetricCollectorDir();
-        await execMkdir(path.join(gpuMetricCollectorScriptFolder, userName));
-        //generate gpu_metrics_collector.sh
-        const gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder, userName, 'gpu_metrics_collector.sh');
-        // This directory is used to store gpu_metrics and pid created by script
-        const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(userName);
-        const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX,
-            remoteGPUScriptsDir,
-            unixPathJoin(remoteGPUScriptsDir, 'pid')
-        );
-        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-    }
-
     private async setupConnections(machineList: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
         const deferred: Deferred<void> = new Deferred<void>();
@@ -479,24 +426,17 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
-        // generate gpu script in local machine first, will copy to remote machine later
-        await this.generateGpuMetricsCollectorScript(rmMeta.username);
         const nniRootDir: string = unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni');
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
 
-        // Copy NNI scripts to remote expeirment working directory
-        const localGpuScriptCollectorDir: string = this.getLocalGpuMetricCollectorDir();
         // the directory to store temp scripts in remote machine
         const remoteGpuScriptCollectorDir: string = this.getRemoteScriptsPath(rmMeta.username);
-        await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteGpuScriptCollectorDir}`, conn);
+        await SSHClientUtility.remoteExeCommand(`(umask 0 ; mkdir -p ${remoteGpuScriptCollectorDir})`, conn);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
-        //copy gpu_metrics_collector.sh to remote
-        await SSHClientUtility.copyFileToRemote(path.join(localGpuScriptCollectorDir, rmMeta.username, 'gpu_metrics_collector.sh'),
-                                                unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), conn);
 
         //Begin to execute gpu_metrics_collection scripts
-        // tslint:disable-next-line: no-floating-promises
-        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
+        const script = getGpuMetricsCollectorBashScriptContent(remoteGpuScriptCollectorDir);
+        SSHClientUtility.remoteExeCommand(`bash -c '${script}'`, conn);
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
             async (tick: number) => {
@@ -514,10 +454,13 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async prepareTrialJob(trialJobId: string): Promise<boolean> {
-        const deferred : Deferred<boolean> = new Deferred<boolean>();
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
 
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
+        }
+        if (this.gpuScheduler === undefined) {
+            throw new Error('gpuScheduler is not initialized');
         }
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
@@ -532,13 +475,13 @@ class RemoteMachineTrainingService implements TrainingService {
         // get an ssh client from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
-            const errorMessage : string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
+            const errorMessage: string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
             this.log.error(errorMessage);
             deferred.reject();
             throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
         } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED
             && rmScheduleResult.scheduleInfo !== undefined) {
-            const rmScheduleInfo : RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
+            const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
             const trialWorkingFolder: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId);
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
@@ -568,7 +511,7 @@ class RemoteMachineTrainingService implements TrainingService {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const cuda_visible_device: string = rmScheduleInfo.cuda_visible_device;
+        const cudaVisibleDevice: string = rmScheduleInfo.cudaVisibleDevice;
         const sshClient: Client | undefined = this.trialSSHClientMap.get(trialJobId);
         if (sshClient === undefined) {
             assert(false, 'sshClient is undefined.');
@@ -590,19 +533,18 @@ class RemoteMachineTrainingService implements TrainingService {
         // See definition in remoteMachineData.ts
 
         let command: string;
-        // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
-        // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
+        // Set CUDA_VISIBLE_DEVICES environment variable based on cudaVisibleDevice
+        // If no valid cudaVisibleDevice is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
         // If gpuNum is undefined, will not set CUDA_VISIBLE_DEVICES in script
         if (this.trialConfig.gpuNum === undefined) {
             command = this.trialConfig.command;
         } else {
-            if (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
-                command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
+            if (typeof cudaVisibleDevice === 'string' && cudaVisibleDevice.length > 0) {
+                command = `CUDA_VISIBLE_DEVICES=${cudaVisibleDevice} ${this.trialConfig.command}`;
             } else {
                 command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
             }
         }
-        // tslint:disable-next-line: strict-boolean-expressions
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         if (this.remoteRestServerPort === undefined) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
@@ -630,17 +572,16 @@ class RemoteMachineTrainingService implements TrainingService {
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         //create tmp trial working folder locally.
-        await execCopydir(path.join(this.trialConfig.codeDir, '*'), trialLocalTempFolder);
-        const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        await execCopydir(this.trialConfig.codeDir, trialLocalTempFolder);
+        const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptTrialContent, { encoding: 'utf8' });
-        await this.writeParameterFile(trialJobId, form.hyperParameters, rmScheduleInfo.rmMeta);
+        await this.writeParameterFile(trialJobId, form.hyperParameters);
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(trialLocalTempFolder, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
-        // tslint:disable-next-line: no-floating-promises
         SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
     }
 
@@ -657,6 +598,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const deferred: Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
         const jobpidPath: string = this.getJobPidPath(trialJob.id);
         const trialReturnCodeFilePath: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJob.id, '.nni', 'code');
+        /* eslint-disable require-atomic-updates */
         try {
             const killResult: number = (await SSHClientUtility.remoteExeCommand(`kill -0 \`cat ${jobpidPath}\``, sshClient)).exitCode;
             // if the process of jobpid is not alive any more
@@ -693,7 +635,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 deferred.resolve(trialJob);
             }
         }
-
+        /* eslint-enable require-atomic-updates */
         return deferred.promise;
     }
 
@@ -709,7 +651,7 @@ class RemoteMachineTrainingService implements TrainingService {
         return unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni', 'experiments', getExperimentId());
     }
 
-    public get MetricsEmitter() : EventEmitter {
+    public get MetricsEmitter(): EventEmitter {
         return this.metricsEmitter;
     }
 
@@ -719,13 +661,10 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, `Invalid job detail information for trial job ${jobId}`);
         }
 
-        let jobpidPath: string;
-        jobpidPath = unixPathJoin(trialJobDetail.workingDirectory, '.nni', 'jobpid');
-
-        return jobpidPath;
+        return unixPathJoin(trialJobDetail.workingDirectory, '.nni', 'jobpid');
     }
 
-    private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters, rmMeta: RemoteMachineMeta): Promise<void> {
+    private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
         const sshClient: Client | undefined = this.trialSSHClientMap.get(trialJobId);
         if (sshClient === undefined) {
             throw new Error('sshClient is undefined.');

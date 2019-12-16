@@ -1,17 +1,35 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import json
+import logging
+
+from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
-from nni.nas.pytorch.trainer import Trainer
+from nni.nas.pytorch.trainer import BaseTrainer, TorchTensorEncoder
 
 from .mutator import PdartsMutator
 
+logger = logging.getLogger(__name__)
 
-class PdartsTrainer(Trainer):
 
-    def __init__(self, model_creator, metrics, num_epochs, dataset_train, dataset_valid,
-                 layers=5, n_nodes=4, pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 2],
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
+class PdartsTrainer(BaseTrainer):
+    """
+    This trainer implements the PDARTS algorithm.
+    PDARTS bases on DARTS algorithm, and provides a network growth approach to find deeper and better network.
+    This class relies on pdarts_num_layers and pdarts_num_to_drop parameters to control how network grows.
+    pdarts_num_layers means how many layers more than first epoch.
+    pdarts_num_to_drop means how many candidate operations should be dropped in each epoch.
+        So that the grew network can in similar size.
+    """
+
+    def __init__(self, model_creator, init_layers, metrics,
+                 num_epochs, dataset_train, dataset_valid,
+                 pdarts_num_layers=[0, 6, 12], pdarts_num_to_drop=[3, 2, 1],
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None, unrolled=False):
+        super(PdartsTrainer, self).__init__()
         self.model_creator = model_creator
-        self.layers = layers
-        self.n_nodes = n_nodes
+        self.init_layers = init_layers
         self.pdarts_num_layers = pdarts_num_layers
         self.pdarts_num_to_drop = pdarts_num_to_drop
         self.pdarts_epoch = len(pdarts_num_to_drop)
@@ -23,32 +41,46 @@ class PdartsTrainer(Trainer):
             "batch_size": batch_size,
             "workers": workers,
             "device": device,
-            "log_frequency": log_frequency
+            "log_frequency": log_frequency,
+            "unrolled": unrolled
         }
+        self.callbacks = callbacks if callbacks is not None else []
 
     def train(self):
-        layers = self.layers
-        n_nodes = self.n_nodes
+
         switches = None
         for epoch in range(self.pdarts_epoch):
 
-            layers = self.layers+self.pdarts_num_layers[epoch]
-            model, loss, model_optim, _ = self.model_creator(
-                layers, n_nodes)
-            mutator = PdartsMutator(
-                model, epoch, self.pdarts_num_to_drop, switches)
+            layers = self.init_layers+self.pdarts_num_layers[epoch]
+            model, criterion, optim, lr_scheduler = self.model_creator(layers)
+            self.mutator = PdartsMutator(model, epoch, self.pdarts_num_to_drop, switches)
 
-            self.trainer = DartsTrainer(model, loss=loss, optimizer=model_optim,
-                                        mutator=mutator, **self.darts_parameters)
-            print("start pdrats training %s..." % epoch)
+            for callback in self.callbacks:
+                callback.build(model, self.mutator, self)
+                callback.on_epoch_begin(epoch)
+
+            darts_callbacks = []
+            if lr_scheduler is not None:
+                darts_callbacks.append(LRSchedulerCallback(lr_scheduler))
+
+            self.trainer = DartsTrainer(model, mutator=self.mutator, loss=criterion, optimizer=optim,
+                                        callbacks=darts_callbacks, **self.darts_parameters)
+            logger.info("start pdarts training epoch %s...", epoch)
 
             self.trainer.train()
 
-            # with open('log/parameters_%d.txt' % epoch, "w") as f:
-            #     f.write(str(model.parameters))
+            switches = self.mutator.drop_paths()
 
-            switches = mutator.drop_paths()
+            for callback in self.callbacks:
+                callback.on_epoch_end(epoch)
 
-    def export(self):
-        if (self.trainer is not None) and hasattr(self.trainer, "export"):
-            self.trainer.export()
+    def validate(self):
+        self.trainer.validate()
+
+    def export(self, file):
+        mutator_export = self.mutator.export()
+        with open(file, "w") as f:
+            json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
+
+    def checkpoint(self):
+        raise NotImplementedError("Not implemented yet")

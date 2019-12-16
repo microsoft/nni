@@ -1,93 +1,92 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 
 import numpy as np
 import torch
-from torch import nn as nn
-from torch.nn import functional as F
+from torch import nn
 
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 
 
 class PdartsMutator(DartsMutator):
+    """
+    It works with PdartsTrainer to calculate ops weights,
+    and drop weights in different PDARTS epochs.
+    """
 
-    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches=None):
+    def __init__(self, model, pdarts_epoch_index, pdarts_num_to_drop, switches={}):
         self.pdarts_epoch_index = pdarts_epoch_index
         self.pdarts_num_to_drop = pdarts_num_to_drop
-        self.switches = switches
+        if switches is None:
+            self.switches = {}
+        else:
+            self.switches = switches
 
         super(PdartsMutator, self).__init__(model)
 
-    def before_build(self, model):
-        self.choices = nn.ParameterDict()
-        if self.switches is None:
-            self.switches = {}
+        # this loop go through mutables with different keys,
+        # it's mainly to update length of choices.
+        for mutable in self.mutables:
+            if isinstance(mutable, LayerChoice):
 
-    def named_mutables(self, model):
-        key2module = dict()
-        for name, module in model.named_modules():
+                switches = self.switches.get(mutable.key, [True for j in range(mutable.length)])
+                choices = self.choices[mutable.key]
+
+                operations_count = np.sum(switches)
+                # +1 and -1 are caused by zero operation in darts network
+                # the zero operation is not in choices list in network, but its weight are in,
+                # so it needs one more weights and switch for zero.
+                self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(operations_count + 1))
+                self.switches[mutable.key] = switches
+
+        # update LayerChoice instances in model,
+        # it's physically remove dropped choices operations.
+        for module in self.model.modules():
             if isinstance(module, LayerChoice):
-                key2module[module.key] = module
-                yield name, module, True
+                switches = self.switches.get(module.key)
+                choices = self.choices[module.key]
+                if len(module.choices) > len(choices):
+                    # from last to first, so that it won't effect previous indexes after removed one.
+                    for index in range(len(switches)-1, -1, -1):
+                        if switches[index] == False:
+                            del(module.choices[index])
+                            module.length -= 1
+
+    def sample_final(self):
+        results = super().sample_final()
+        for mutable in self.mutables:
+            if isinstance(mutable, LayerChoice):
+                # As some operations are dropped physically,
+                # so it needs to fill back false to track dropped operations.
+                trained_result = results[mutable.key]
+                trained_index = 0
+                switches = self.switches[mutable.key]
+                result = torch.Tensor(switches).bool()
+                for index in range(len(result)):
+                    if result[index]:
+                        result[index] = trained_result[trained_index]
+                        trained_index += 1
+                results[mutable.key] = result
+        return results
 
     def drop_paths(self):
-        for key in self.switches:
-            prob = F.softmax(self.choices[key], dim=-1).data.cpu().numpy()
-
-            switches = self.switches[key]
+        """
+        This method is called when a PDARTS epoch is finished.
+        It prepares switches for next epoch.
+        candidate operations with False switch will be doppped in next epoch.
+        """
+        all_switches = copy.deepcopy(self.switches)
+        for key in all_switches:
+            switches = all_switches[key]
             idxs = []
             for j in range(len(switches)):
                 if switches[j]:
                     idxs.append(j)
-            if self.pdarts_epoch_index == len(self.pdarts_num_to_drop) - 1:
-                # for the last stage, drop all Zero operations
-                drop = self.get_min_k_no_zero(prob, idxs, self.pdarts_num_to_drop[self.pdarts_epoch_index])
-            else:
-                drop = self.get_min_k(prob, self.pdarts_num_to_drop[self.pdarts_epoch_index])
-
+            sorted_weights = self.choices[key].data.cpu().numpy()[:-1]
+            drop = np.argsort(sorted_weights)[:self.pdarts_num_to_drop[self.pdarts_epoch_index]]
             for idx in drop:
                 switches[idxs[idx]] = False
-        return self.switches
-
-    def on_init_layer_choice(self, mutable: LayerChoice):
-        switches = self.switches.get(
-            mutable.key, [True for j in range(mutable.length)])
-
-        for index in range(len(switches)-1, -1, -1):
-            if switches[index] == False:
-                del(mutable.choices[index])
-                mutable.length -= 1
-
-        self.switches[mutable.key] = switches
-
-        self.choices[mutable.key] = nn.Parameter(1.0E-3 * torch.randn(mutable.length))
-
-    def on_calc_layer_choice_mask(self, mutable: LayerChoice):
-        return F.softmax(self.choices[mutable.key], dim=-1)
-
-    def get_min_k(self, input_in, k):
-        index = []
-        for _ in range(k):
-            idx = np.argmin(input)
-            index.append(idx)
-
-        return index
-
-    def get_min_k_no_zero(self, w_in, idxs, k):
-        w = copy.deepcopy(w_in)
-        index = []
-        if 0 in idxs:
-            zf = True
-        else:
-            zf = False
-        if zf:
-            w = w[1:]
-            index.append(0)
-            k = k - 1
-        for _ in range(k):
-            idx = np.argmin(w)
-            w[idx] = 1
-            if zf:
-                idx = idx + 1
-            index.append(idx)
-        return index
+        return all_switches

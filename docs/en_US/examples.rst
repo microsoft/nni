@@ -10,3 +10,4 @@ Examples
     Scikit-learn<./TrialExample/SklearnExamples>
     EvolutionSQuAD<./TrialExample/SquadEvolutionExamples>
     GBDT<./TrialExample/GbdtExample>
+    RocksDB <./TrialExample/RocksdbExamples>

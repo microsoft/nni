@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -175,7 +159,7 @@ class NNIDataStore implements DataStore {
 
     public async exportTrialHpConfigs(): Promise<string> {
         const jobs: TrialJobInfo[] = await this.listTrialJobs();
-        let exportedData: ExportedDataFormat[] = [];
+        const exportedData: ExportedDataFormat[] = [];
         for (const job of jobs) {
             if (job.hyperParameters && job.finalMetricData) {
                 if (job.hyperParameters.length === 1 && job.finalMetricData.length === 1) {
@@ -188,18 +172,18 @@ class NNIDataStore implements DataStore {
                     };
                     exportedData.push(oneEntry);
                 } else {
-                    let paraMap: Map<number, Object> = new Map();
-                    let metricMap: Map<number, Object> = new Map();
+                    const paraMap: Map<number, Record<string, any>> = new Map();
+                    const metricMap: Map<number, Record<string, any>> = new Map();
                     for (const eachPara of job.hyperParameters) {
                         const parameters: HyperParameterFormat = <HyperParameterFormat>JSON.parse(eachPara);
                         paraMap.set(parameters.parameter_id, parameters.parameters);
                     }
                     for (const eachMetric of job.finalMetricData) {
-                        const value: Object = JSON.parse(eachMetric.data);
+                        const value: Record<string, any> = JSON.parse(eachMetric.data);
                         metricMap.set(Number(eachMetric.parameterId), value);
                     }
-                    paraMap.forEach((value: Object, key: number) => {
-                        const metricValue: Object | undefined = metricMap.get(key);
+                    paraMap.forEach((value: Record<string, any>, key: number) => {
+                        const metricValue: Record<string, any> | undefined = metricMap.get(key);
                         if (metricValue) {
                             const oneEntry: ExportedDataFormat = {
                                 parameter: value,
@@ -217,7 +201,7 @@ class NNIDataStore implements DataStore {
     }
 
     public async getImportedData(): Promise<string[]> {
-        let importedData: string[] = [];
+        const importedData: string[] = [];
         const importDataEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(undefined, 'IMPORT_DATA');
         for (const event of importDataEvents) {
             if (event.data) {
@@ -320,7 +304,6 @@ class NNIDataStore implements DataStore {
         }
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     private getTrialJobsByReplayEvents(trialJobEvents: TrialJobEventRecord[]):  Map<string, TrialJobInfo> {
         this.log.debug('getTrialJobsByReplayEvents begin');
 
@@ -345,6 +328,7 @@ class NNIDataStore implements DataStore {
             if (!jobInfo) {
                 throw new Error('Empty JobInfo');
             }
+            /* eslint-disable no-fallthrough */
             switch (record.event) {
                 case 'RUNNING':
                     if (record.timestamp !== undefined) {
@@ -374,6 +358,7 @@ class NNIDataStore implements DataStore {
                     }
                 default:
             }
+            /* eslint-enable no-fallthrough */
             jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
             if (record.data !== undefined && record.data.trim().length > 0) {
                 const newHParam: any = this.parseHyperParameter(record.data);

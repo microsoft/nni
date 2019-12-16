@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import logging
 from collections import defaultdict
@@ -136,7 +119,6 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: parameters
         id_ = _create_parameter_id()
         _customized_parameter_ids.add(id_)
-        send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
 
     def handle_report_metric_data(self, data):
         """
@@ -185,7 +167,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         id_ = data['parameter_id']
         value = data['value']
-        if id_ in _customized_parameter_ids:
+        if id_ is None or id_ in _customized_parameter_ids:
             if not hasattr(self.tuner, '_accept_customized'):
                 self.tuner._accept_customized = False
             if not self.tuner._accept_customized:
@@ -194,8 +176,8 @@ class MsgDispatcher(MsgDispatcherBase):
             customized = True
         else:
             customized = False
-        self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
-                                        trial_job_id=data.get('trial_job_id'))
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
+                                            trial_job_id=data.get('trial_job_id'))
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results

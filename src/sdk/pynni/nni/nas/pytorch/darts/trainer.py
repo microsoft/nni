@@ -1,23 +1,32 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
+import logging
 
 import torch
-from torch import nn as nn
-
+import torch.nn as nn
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.utils import AverageMeterGroup
+from nni.nas.pytorch.utils import AverageMeterGroup
+
 from .mutator import DartsMutator
+
+logger = logging.getLogger(__name__)
 
 
 class DartsTrainer(Trainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
-                 callbacks=None):
-        super().__init__(model, loss, metrics, optimizer, num_epochs,
-                         dataset_train, dataset_valid, batch_size, workers, device, log_frequency,
-                         mutator if mutator is not None else DartsMutator(model), callbacks)
-        self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), 3.0E-4, betas=(0.5, 0.999),
+                 callbacks=None, arc_learning_rate=3.0E-4, unrolled=False):
+        super().__init__(model, mutator if mutator is not None else DartsMutator(model),
+                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
+                         batch_size, workers, device, log_frequency, callbacks)
+
+        self.ctrl_optim = torch.optim.Adam(self.mutator.parameters(), arc_learning_rate, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
+        self.unrolled = unrolled
+
         n_train = len(self.dataset_train)
         split = n_train // 2
         indices = list(range(n_train))
@@ -31,106 +40,138 @@ class DartsTrainer(Trainer):
                                                         batch_size=batch_size,
                                                         sampler=valid_sampler,
                                                         num_workers=workers)
+        self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
+                                                       batch_size=batch_size,
+                                                       num_workers=workers)
 
     def train_one_epoch(self, epoch):
         self.model.train()
         self.mutator.train()
-        lr = self.optimizer.param_groups[0]["lr"]
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
             trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
             val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
-            # backup model for hessian
-            backup_model = copy.deepcopy(self.model.state_dict())
-            # cannot deepcopy model because it will break the reference
-
-            # phase 1. child network step
-            self.optimizer.zero_grad()
-            with self.mutator.forward_pass():
-                logits = self.model(trn_X)
-            loss = self.loss(logits, trn_y)
-            loss.backward()
-            # gradient clipping
-            nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
-            self.optimizer.step()
-
-            new_model = copy.deepcopy(self.model.state_dict())
-
-            # phase 2. architect step (alpha)
+            # phase 1. architecture step
             self.ctrl_optim.zero_grad()
-            # compute unrolled loss
-            self._unrolled_backward(trn_X, trn_y, val_X, val_y, backup_model, lr)
+            if self.unrolled:
+                self._unrolled_backward(trn_X, trn_y, val_X, val_y)
+            else:
+                self._backward(val_X, val_y)
             self.ctrl_optim.step()
 
-            self.model.load_state_dict(new_model)
+            # phase 2: child network step
+            self.optimizer.zero_grad()
+            logits, loss = self._logits_and_loss(trn_X, trn_y)
+            loss.backward()
+            nn.utils.clip_grad_norm_(self.model.parameters(), 5.)  # gradient clipping
+            self.optimizer.step()
 
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.train_loader), meters))
+                logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                            self.num_epochs, step + 1, len(self.train_loader), meters)
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
         self.mutator.eval()
         meters = AverageMeterGroup()
         with torch.no_grad():
-            for step, (X, y) in enumerate(self.valid_loader):
+            self.mutator.reset()
+            for step, (X, y) in enumerate(self.test_loader):
                 X, y = X.to(self.device), y.to(self.device)
-                with self.mutator.forward_pass():
-                    logits = self.model(X)
+                logits = self.model(X)
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    print("Epoch [{}/{}] Step [{}/{}]  {}".format(epoch, self.num_epochs, step, len(self.valid_loader), meters))
+                    logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                                self.num_epochs, step + 1, len(self.test_loader), meters)
 
-    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y, backup_model, lr):
+    def _logits_and_loss(self, X, y):
+        self.mutator.reset()
+        logits = self.model(X)
+        loss = self.loss(logits, y)
+        return logits, loss
+
+    def _backward(self, val_X, val_y):
+        """
+        Simple backward with gradient descent
+        """
+        _, loss = self._logits_and_loss(val_X, val_y)
+        loss.backward()
+
+    def _unrolled_backward(self, trn_X, trn_y, val_X, val_y):
         """
         Compute unrolled loss and backward its gradients
-        Parameters
-        ----------
-        v_model: backup model before this step
-        lr: learning rate for virtual gradient step (same as net lr)
         """
-        with self.mutator.forward_pass():
-            loss = self.loss(self.model(val_X), val_y)
-        w_model = tuple(self.model.parameters())
-        w_ctrl = tuple(self.mutator.parameters())
-        w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
-        d_model = w_grads[:len(w_model)]
-        d_ctrl = w_grads[len(w_model):]
+        backup_params = copy.deepcopy(tuple(self.model.parameters()))
 
-        hessian = self._compute_hessian(backup_model, d_model, trn_X, trn_y)
+        # do virtual step on training data
+        lr = self.optimizer.param_groups[0]["lr"]
+        momentum = self.optimizer.param_groups[0]["momentum"]
+        weight_decay = self.optimizer.param_groups[0]["weight_decay"]
+        self._compute_virtual_model(trn_X, trn_y, lr, momentum, weight_decay)
+
+        # calculate unrolled loss on validation data
+        # keep gradients for model here for compute hessian
+        _, loss = self._logits_and_loss(val_X, val_y)
+        w_model, w_ctrl = tuple(self.model.parameters()), tuple(self.mutator.parameters())
+        w_grads = torch.autograd.grad(loss, w_model + w_ctrl)
+        d_model, d_ctrl = w_grads[:len(w_model)], w_grads[len(w_model):]
+
+        # compute hessian and final gradients
+        hessian = self._compute_hessian(backup_params, d_model, trn_X, trn_y)
         with torch.no_grad():
             for param, d, h in zip(w_ctrl, d_ctrl, hessian):
+                # gradient = dalpha - lr * hessian
                 param.grad = d - lr * h
 
-    def _compute_hessian(self, model, dw, trn_X, trn_y):
-        """
-        dw = dw` { L_val(w`, alpha) }
-        w+ = w + eps * dw
-        w- = w - eps * dw
-        hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
-        eps = 0.01 / ||dw||
-        """
-        self.model.load_state_dict(model)
+        # restore weights
+        self._restore_weights(backup_params)
 
+    def _compute_virtual_model(self, X, y, lr, momentum, weight_decay):
+        """
+        Compute unrolled weights w`
+        """
+        # don't need zero_grad, using autograd to calculate gradients
+        _, loss = self._logits_and_loss(X, y)
+        gradients = torch.autograd.grad(loss, self.model.parameters())
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), gradients):
+                m = self.optimizer.state[w].get("momentum_buffer", 0.)
+                w = w - lr * (momentum * m + g + weight_decay * w)
+
+    def _restore_weights(self, backup_params):
+        with torch.no_grad():
+            for param, backup in zip(self.model.parameters(), backup_params):
+                param.copy_(backup)
+
+    def _compute_hessian(self, backup_params, dw, trn_X, trn_y):
+        """
+            dw = dw` { L_val(w`, alpha) }
+            w+ = w + eps * dw
+            w- = w - eps * dw
+            hessian = (dalpha { L_trn(w+, alpha) } - dalpha { L_trn(w-, alpha) }) / (2*eps)
+            eps = 0.01 / ||dw||
+        """
+        self._restore_weights(backup_params)
         norm = torch.cat([w.view(-1) for w in dw]).norm()
         eps = 0.01 / norm
+        if norm < 1E-8:
+            logger.warning("In computing hessian, norm is smaller than 1E-8, cause eps to be %.6f.", norm.item())
 
+        dalphas = []
         for e in [eps, -2. * eps]:
             # w+ = w + eps*dw`, w- = w - eps*dw`
             with torch.no_grad():
                 for p, d in zip(self.model.parameters(), dw):
-                    p += eps * d
+                    p += e * d
 
-            with self.mutator.forward_pass():
-                loss = self.loss(self.model(trn_X), trn_y)
-            if e > 0:
-                dalpha_pos = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w+) }
-            elif e < 0:
-                dalpha_neg = torch.autograd.grad(loss, self.mutator.parameters())  # dalpha { L_trn(w-) }
+            _, loss = self._logits_and_loss(trn_X, trn_y)
+            dalphas.append(torch.autograd.grad(loss, self.mutator.parameters()))
 
+        dalpha_pos, dalpha_neg = dalphas  # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         hessian = [(p - n) / 2. * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian

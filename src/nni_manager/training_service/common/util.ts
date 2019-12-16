@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -26,8 +10,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
-import { file } from '../../node_modules/@types/tmp';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
+import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -35,8 +18,7 @@ import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } fr
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
-// tslint:disable: no-redundant-jsdoc
-export async function validateCodeDir(codeDir: string) : Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
     let fileNameValid: boolean = true;
     try {
@@ -89,7 +71,7 @@ export async function execCopydir(source: string, destination: string): Promise<
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe Copy-Item "${source}" -Destination "${destination}" -Recurse`);
     } else {
-        await cpp.exec(`cp -r '${source}' '${destination}'`);
+        await cpp.exec(`cp -r '${source}/.' '${destination}'`);
     }
 
     return Promise.resolve();
@@ -219,22 +201,16 @@ export function getScriptName(fileNamePrefix: string): string {
     }
 }
 
-/**
- * generate script file
- * @param gpuMetricCollectorScriptFolder
- */
-export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
+export function getGpuMetricsCollectorBashScriptContent(scriptFolder: string): string {
+    return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni_gpu_tool.gpu_metrics_collector`;
+}
+
+export function runGpuMetricsCollector(scriptFolder: string): void {
     if (process.platform === 'win32') {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_WINDOWS,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        const scriptPath = path.join(scriptFolder, 'gpu_metrics_collector.ps1');
+        const content = String.Format(GPU_INFO_COLLECTOR_FORMAT_WINDOWS, scriptFolder, path.join(scriptFolder, 'pid'));
+        fs.writeFile(scriptPath, content, { encoding: 'utf8' }, () => { runScript(scriptPath); });
     } else {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        cp.exec(getGpuMetricsCollectorBashScriptContent(scriptFolder), { shell: '/bin/bash' });
     }
 }

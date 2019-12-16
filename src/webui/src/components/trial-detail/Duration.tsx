@@ -1,6 +1,6 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj } from 'src/static/interface';
+import { TableObj, EventMap } from 'src/static/interface';
 import { filterDuration } from 'src/static/function';
 require('echarts/lib/chart/bar');
 require('echarts/lib/component/tooltip');
@@ -17,7 +17,8 @@ interface DurationProps {
 }
 
 interface DurationState {
-    durationSource: {};
+    startDuration: number; // for record data zoom
+    endDuration: number;
 }
 
 class Duration extends React.Component<DurationProps, DurationState> {
@@ -26,63 +27,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
         super(props);
         this.state = {
-            durationSource: this.initDuration(this.props.source),
-        };
-
-    }
-
-    initDuration = (source: Array<TableObj>) => {
-        const trialId: Array<string> = [];
-        const trialTime: Array<number> = [];
-        const trialJobs = source.filter(filterDuration);
-        Object.keys(trialJobs).map(item => {
-            const temp = trialJobs[item];
-            trialId.push(temp.sequenceId);
-            trialTime.push(temp.duration);
-        });
-        return {
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: {
-                    type: 'shadow'
-                }
-            },
-            grid: {
-                bottom: '3%',
-                containLabel: true,
-                left: '1%',
-                right: '4%'
-            },
-
-            dataZoom: [{
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                yAxisIndex: 0,
-                orient: 'vertical'
-            }, {
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                xAxisIndex: 0
-            }],
-            xAxis: {
-                name: 'Time',
-                type: 'value',
-            },
-            yAxis: {
-                name: 'Trial',
-                type: 'category',
-                data: trialId
-            },
-            series: [{
-                type: 'bar',
-                data: trialTime
-            }]
+            startDuration: 0, // for record data zoom
+            endDuration: 100,
         };
     }
 
     getOption = (dataObj: Runtrial) => {
+        const { startDuration, endDuration } = this.state;
         return {
             tooltip: {
                 trigger: 'axis',
@@ -96,19 +47,16 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 left: '1%',
                 right: '4%'
             },
-
-            dataZoom: [{
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                yAxisIndex: 0,
-                orient: 'vertical'
-            }, {
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                xAxisIndex: 0
-            }],
+            dataZoom: [
+                {
+                    id: 'dataZoomY',
+                    type: 'inside',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    start: startDuration,
+                    end: endDuration
+                },
+            ],
             xAxis: {
                 name: 'Time',
                 type: 'value',
@@ -140,21 +88,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
             trialId: trialId,
             trialTime: trialTime
         });
-        this.setState({
-            durationSource: this.getOption(trialRun[0])
-        });
-    }
-
-    componentDidMount() {
-        const { source } = this.props;
-        this.drawDurationGraph(source);
-    }
-
-    componentWillReceiveProps(nextProps: DurationProps) {
-        const { whichGraph, source } = nextProps;
-        if (whichGraph === '3') {
-            this.drawDurationGraph(source);
-        }
+        return this.getOption(trialRun[0]);
     }
 
     shouldComponentUpdate(nextProps: DurationProps, nextState: DurationState) {
@@ -183,17 +117,30 @@ class Duration extends React.Component<DurationProps, DurationState> {
     }
 
     render() {
-        const { durationSource } = this.state;
+
+        const { source } = this.props;
+        const graph = this.drawDurationGraph(source);
+        const onEvents = { 'dataZoom': this.durationDataZoom };
         return (
             <div>
                 <ReactEcharts
-                    option={durationSource}
+                    option={graph}
                     style={{ width: '95%', height: 412, margin: '0 auto' }}
                     theme="my_theme"
                     notMerge={true} // update now
+                    onEvents={onEvents}
                 />
             </div>
         );
+    }
+
+    private durationDataZoom = (e: EventMap) => {
+        if (e.batch !== undefined) {
+            this.setState(() => ({
+                startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
+        }
     }
 }
 

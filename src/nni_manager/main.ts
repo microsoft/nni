@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -49,7 +33,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
-async function initContainer(platformMode: string): Promise<void> {
+async function initContainer(platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
@@ -71,7 +55,7 @@ async function initContainer(platformMode: string): Promise<void> {
             .to(FrameworkControllerTrainingService)
             .scope(Scope.Singleton);
     } else {
-        throw new Error(`Error: unsupported mode: ${mode}`);
+        throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
     Container.bind(Manager)
         .to(NNIManager)
@@ -82,6 +66,9 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    Container.bind(Logger).provider({
+        get: (): Logger => new Logger(logFileName)
+    });
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -145,13 +132,14 @@ initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {
-    const log: Logger = getLogger();
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
+        const log: Logger = getLogger();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
+        const log: Logger = getLogger();
         log.error(`${err.stack}`);
         throw err;
     }
