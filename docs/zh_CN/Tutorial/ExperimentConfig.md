@@ -1,15 +1,84 @@
-# Experiment（实验）配置参考
+# Experiment Config Reference
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 `nnictl` 命令。 配置文件的格式为 YAML。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-- [Experiment（实验）配置参考](#experiment-config-reference) 
+- [Experiment Config Reference](#experiment-config-reference) 
   - [模板](#template)
-  - [说明](#configuration-spec)
-  - [样例](#examples)
+  - [Configuration Spec](#configuration-spec) 
+    - [authorName](#authorname)
+    - [experimentName](#experimentname)
+    - [trialConcurrency](#trialconcurrency)
+    - [maxExecDuration](#maxexecduration)
+    - [versionCheck](#versioncheck)
+    - [debug](#debug)
+    - [maxTrialNum](#maxtrialnum)
+    - [trainingServicePlatform](#trainingserviceplatform)
+    - [searchSpacePath](#searchspacepath)
+    - [useAnnotation](#useannotation)
+    - [multiPhase](#multiphase)
+    - [multiThread](#multithread)
+    - [nniManagerIp](#nnimanagerip)
+    - [logDir](#logdir)
+    - [logLevel](#loglevel)
+    - [logCollection](#logcollection)
+    - [tuner](#tuner) 
+      - [builtinTunerName](#builtintunername)
+      - [codeDir](#codedir)
+      - [classFileName](#classfilename)
+      - [className](#classname)
+      - [classArgs](#classargs)
+      - [gpuIndices](#gpuindices)
+      - [includeIntermediateResults](#includeintermediateresults)
+    - [assessor](#assessor) 
+      - [builtinAssessorName](#builtinassessorname)
+      - [codeDir](#codedir-1)
+      - [classFileName](#classfilename-1)
+      - [className](#classname-1)
+      - [classArgs](#classargs-1)
+    - [advisor](#advisor) 
+      - [builtinAdvisorName](#builtinadvisorname)
+      - [codeDir](#codedir-2)
+      - [classFileName](#classfilename-2)
+      - [className](#classname-2)
+      - [classArgs](#classargs-2)
+      - [gpuIndices](#gpuindices-1)
+    - [trial](#trial)
+    - [localConfig](#localconfig) 
+      - [gpuIndices](#gpuindices-2)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu)
+      - [useActiveGpu](#useactivegpu)
+    - [machineList](#machinelist) 
+      - [ip](#ip)
+      - [port](#port)
+      - [username](#username)
+      - [passwd](#passwd)
+      - [sshKeyPath](#sshkeypath)
+      - [passphrase](#passphrase)
+      - [gpuIndices](#gpuindices-3)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu-1)
+      - [useActiveGpu](#useactivegpu-1)
+    - [kubeflowConfig](#kubeflowconfig) 
+      - [operator](#operator)
+      - [storage](#storage)
+      - [nfs](#nfs)
+      - [keyVault](#keyvault)
+      - [azureStorage](#azurestorage)
+      - [uploadRetryCount](#uploadretrycount)
+    - [paiConfig](#paiconfig) 
+      - [userName](#username)
+      - [password](#password)
+      - [token](#token)
+      - [host](#host)
+  - [样例](#examples) 
+    - [Local mode](#local-mode)
+    - [Remote mode](#remote-mode)
+    - [PAI mode](#pai-mode)
+    - [Kubeflow mode](#kubeflow-mode)
+    - [Kubeflow with azure storage](#kubeflow-with-azure-storage)
 
 ## 模板
 
-- **简化版（不包含 Annotation（标记）和 Assessor）**
+- **Light weight (without Annotation and Assessor)**
 
 ```yaml
 authorName:
@@ -130,717 +199,731 @@ machineList:
     passwd:
 ```
 
-## 说明
+## Configuration Spec
 
-- **authorName**
-  
-  - 说明
-    
-    **authorName** 是创建 Experiment 的作者。
-    
-    待定: 增加默认值
+### authorName
 
-- **experimentName**
-  
-  - 说明
-    
-    **experimentName** 是创建的 Experiment 的名称。
-    
-    待定: 增加默认值
+Required. String.
 
-- **trialConcurrency**
-  
-  - 说明
-    
-    **trialConcurrency** 定义了并发尝试任务的最大数量。
-    
-    注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 trialConcurrency，Trial 任务会被放入队列，等待分配 GPU 资源。
+The name of the author who create the experiment.
 
-- **maxExecDuration**
-  
-  - 说明
-    
-    **maxExecDuration** 定义 Experiment 执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
-    
-    注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
+*TBD: add default value.*
 
-- **versionCheck**
-  
-  - 说明
-    
-    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
+### experimentName
 
-- **debug**
-  
-  - 说明
-    
-    调试模式会将 versionCheck 设置为 False，并将 logLevel 设置为 'debug'。
+Required. String.
 
-- **maxTrialNum**
-  
-  - 说明
-    
-    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
+The name of the experiment created.
 
-- **trainingServicePlatform**
-  
-  - 说明
-    
-    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
-    
-    - **local** 在本机的 Ubuntu 上运行 Experiment。
-    
-    - **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
-    
-    - **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [pai 模式](../TrainingService/PaiMode.md)。
-    
-    - **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。 详情参考 [Kubeflow 文档](../TrainingService/KubeflowMode.md)
+*TBD: add default value.*
 
-- **searchSpacePath**
-  
-  - 说明
-    
-    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
-    
-    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
+### trialConcurrency
 
-- **useAnnotation**
-  
-  - 说明
-    
-    **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
-    
-    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
+Required. Integer between 1 and 99999.
 
-- **multiPhase**
-  
-  - 说明
-    
-    **multiPhase** 启用[多阶段 Experiment](../AdvancedFeature/MultiPhase.md)。
+Specifies the max num of trial jobs run simultaneously.
 
-- **multiThread**
-  
-  - 说明
-    
-    **multiThread** 如果 multiThread 设为 `true`，可启动 Dispatcher 的多线程模式。Dispatcher 会为来自 NNI 管理器的每个命令启动一个线程。
+If trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach **trialConcurrency** number, some trial jobs will be put into a queue to wait for gpu allocation.
 
-- **nniManagerIp**
-  
-  - 说明
-    
-    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
-    
-    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
+### maxExecDuration
 
-- **logDir**
-  
-  - 说明
-    
-    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
+Optional. String. Default: 999d.
 
-- **logLevel**
-  
-  - 说明
-    
-    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
+**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
 
-- **logCollection**
-  
-  - 说明
-    
-    **logCollection** 设置在 remote, pai, kubeflow, frameworkcontroller 平台下收集日志的方法。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
+Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 
-- **Tuner**
-  
-  - 说明
-    
-    **tuner** 指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
-  
-  - **builtinTunerName** 和 **classArgs**
-    
-    - **builtinTunerName**
-      
-      **builtinTunerName** 指定系统 Tuner 的名称，NNI SDK 提供了多个内置 Tuner，详情参考[这里](../Tuner/BuiltinTuner.md)。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Tuner 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Tuner 的配置参数。
-  
-  - **codeDir**, **classFileName**, **className** 和 **classArgs**
-    
-    - **codeDir**
-      
-      **codeDir** 指定 Tuner 代码的目录。
-    
-    - **classFileName**
-      
-      **classFileName** 指定 Tuner 文件名。
-    
-    - **className**
-      
-      **className** 指定 Tuner 类名。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Tuner 算法的参数。
-  
-  - **gpuIndices**
-    
-        __gpuIndices__ 指定了 Tuner 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
-        
-  
-  - **includeIntermediateResults**
-    
-        如果 __includeIntermediateResults__ 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 __includeIntermediateResults__ 的默认值为 false。
-        
-  
-  注意：用户只能用一种方法来指定 Tuner，指定 `builtinTunerName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
+### versionCheck
 
-- **Assessor**
-  
-  - 说明
-    
-    **assessor** 指定了 Experiment 的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
-  
-  - **builtinAssessorName** 和 **classArgs**
-    
-    - **builtinAssessorName**
-      
-      **builtinAssessorName** 指定了内置 Assessor 的名称，NNI SDK 提供了多个内置的 Assessor，详情参考[这里](../Assessor/BuiltinAssessor.md)。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Assessor 算法的参数。
-  
-  - **codeDir**, **classFileName**, **className** 和 **classArgs**
-    
-    - **codeDir**
-      
-      **codeDir** 指定 Assessor 代码的目录。
-    
-    - **classFileName**
-      
-      **classFileName** 指定 Assessor 文件名。
-    
-    - **className**
-      
-      **className** 指定 Assessor 类名。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Assessor 算法的参数。
-  
-  注意：用户只能用一种方法来指定 Assessor，指定 `builtinAssessorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。 如果不需要使用 Assessor，此字段可为空。
+Optional. Bool. Default: false.
 
-- **Advisor**
-  
-  - 说明
-    
-    **Advisor** 指定了 Experiment 的 Advisor 算法。有两种方法可设置 Advisor。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
-  
-  - **builtinAdvisorName** 和 **classArgs**
-    
-    - **builtinAdvisorName**
-      
-      **builtinAdvisorName** 指定了内置 Advisor 的名称，NNI SDK 提供了多个[内置的 Advisor](../Tuner/BuiltinTuner.md)。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Advisor 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Advisor 的配置参数。
-  
-  - **codeDir**, **classFileName**, **className** 和 **classArgs**
-    
-    - **codeDir**
-      
-      **codeDir** 指定 Advisor 代码的目录。
-    
-    - **classFileName**
-      
-      **classFileName** 指定 Advisor 文件名。
-    
-    - **className**
-      
-      **className** 指定 Advisor 类名。
-    
-    - **classArgs**
-      
-      **classArgs** 指定了 Advisor 算法的参数。
-  
-  - **gpuIndices**
-    
-        __gpuIndices__ 指定了 Advisor 进程可使用的 GPU。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如：`1` 或 `0,1,3`。 如果没设置此字段，脚本中的 `CUDA_VISIBLE_DEVICES` 会为空 ''，即 Tuner 中找不到 GPU。
-        
-  
-  注意：用户只能用一种方法来指定 Advisor ，指定 `builtinAdvisorName` 和 `classArgs`，或指定 `codeDir`，`classFileName`，`className` 以及 `classArgs`。
+NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
-- **trial (local, remote)**
-  
-  - **command**
-    
-    **command** 指定了运行 Trial 进程的命令行。
-  
-  - **codeDir**
-    
-    **codeDir** 指定了 Trial 代码文件的目录。
-  
-  - **gpuNum**
-    
-    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
+### debug
 
-- **trial (pai)**
-  
-  - **command**
-    
-    **command** 指定了运行 Trial 进程的命令行。
-  
-  - **codeDir**
-    
-    **codeDir** 指定了 Trial 代码文件的目录。
-  
-  - **gpuNum**
-    
-    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
-  
-  - **cpuNum**
-    
-    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
-  
-  - **memoryMB**
-    
-    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
-  
-  - **image**
-    
-    **image** 指定了 OpenPAI 中使用的 docker 映像。
+Optional. Bool. Default: false.
 
-- **trial (kubeflow)**
-  
-  - **codeDir**
-    
-    **codeDir** 指定了代码文件的本机路径。
-  
-  - **ps (可选)**
-    
-    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
-    
-    - **replicas**
-      
-      **replicas** 是 **ps** 角色的副本数量。
-    
-    - **command**
-      
-      **command** 是在 **ps** 的容器中运行的脚本命令。
-    
-    - **gpuNum**
-      
-      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
-    
-    - **cpuNum**
-      
-      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
-    
-    - **memoryMB**
-      
-      **memoryMB** 指定了容器中使用的内存数量。
-    
-    - **image**
-      
-      **image** 设置了 **ps** 使用的 docker 映像。
-  
-  - **worker**
-    
-    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
-    
-    - **replicas**
-      
-      **replicas** 是 **worker** 角色的副本数量。
-    
-    - **command**
-      
-      **command** 是在 **worker** 的容器中运行的脚本命令。
-    
-    - **gpuNum**
-      
-      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
-    
-    - **cpuNum**
-      
-      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
-    
-    - **memoryMB**
-      
-      **memoryMB** 指定了容器中使用的内存数量。
-    
-    - **image**
-      
-      **image** 设置了 **worker** 使用的 docker 映像。
+Debug mode will set versionCheck to false and set logLevel to be 'debug'.
 
-- **localConfig**
-  
-  **localConfig** 仅在 **trainingServicePlatform** 设为 `local` 时有效，否则，配置文件中不应该有 **localConfig** 部分。
-  
-  - **gpuIndices**
-    
-    **gpuIndices** 用于指定 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
-  
-  - **maxTrialNumPerGpu**
-    
-    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
-  
-  - **useActiveGpu**
-    
-    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
+### maxTrialNum
 
-- **machineList**
-  
-  如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
-  
-  - **ip**
-    
-    **ip** 是远程计算机的 ip 地址。
-  
-  - **port**
-    
-    **端口** 是用于连接远程计算机的 ssh 端口。
-    
-    注意：如果 port 设为空，则为默认值 22。
-  
-  - **username**
-    
-    **username** 是远程计算机的用户名。
-  
-  - **passwd**
-    
-    **passwd** 指定了账户的密码。
-  
-  - **sshKeyPath**
-    
-    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
-    
-    注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
-  
-  - **passphrase**
-    
-    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
-  
-  - **gpuIndices**
-    
-    **gpuIndices** 用于指定 GPU。设置此值后，远程计算机上只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
-  
-  - **maxTrialNumPerGpu**
-    
-    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
-  
-  - **useActiveGpu**
-    
-    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
+Optional. Integer between 1 and 99999. Default: 99999.
 
-- **kubeflowConfig**:
-  
-  - **operator**
-    
-    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
-  
-  - **storage**
-    
-    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
-  
-  - **nfs**
-    
-    **server** 是 NFS 服务器的地址
-    
-    **path** 是 NFS 挂载的路径
-  
-  - **keyVault**
-    
-    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2
-    
-    - **vaultName**
-      
-      **vaultName** 是 az 命令中 `--vault-name` 的值。
-    
-    - **name**
-      
-      **name** 是 az 命令中 `--name` 的值。
-  
-  - **azureStorage**
-    
-    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
-    
-    - **accountName**
-      
-      **accountName** 是 Azure 存储账户的名称。
-    
-    - **azureShare**
-      
-      **azureShare** 是 Azure 文件存储的共享参数。
-  
-  - **uploadRetryCount**
-    
-    如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
+Specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
-- **paiConfig**
+### trainingServicePlatform
+
+Required. String.
+
+Specifies the platform to run the experiment, including **local**, **remote**, **pai**, **kubeflow**, **frameworkcontroller**.
+
+- **local** run an experiment on local ubuntu machine.
+
+- **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
+
+- **pai** submit trial jobs to [OpenPAI](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please refer to [Guide to PAI Mode](../TrainingService/PaiMode.md)
+
+- **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
+
+- TODO: explain frameworkcontroller.
+
+### searchSpacePath
+
+Optional. Path to existing file.
+
+Specifies the path of search space file, which should be a valid path in the local linux machine.
+
+The only exception that **searchSpacePath** can be not fulfilled is when `useAnnotation=True`.
+
+### useAnnotation
+
+Optional. Bool. Default: false.
+
+Use annotation to analysis trial code and generate search space.
+
+Note: if **useAnnotation** is true, the searchSpacePath field should be removed.
+
+### multiPhase
+
+Optional. Bool. Default: false.
+
+Enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
+
+### multiThread
+
+Optional. Bool. Default: false.
+
+Enable multi-thread mode for dispatcher. If multiThread is enabled, dispatcher will start a thread to process each command from NNI Manager.
+
+### nniManagerIp
+
+Optional. String. Default: eth0 device IP.
+
+Set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+
+Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, **nniManagerIp** is recommended to set explicitly.
+
+### logDir
+
+Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+
+Configures the directory to store logs and data of the experiment.
+
+### logLevel
+
+Optional. String. Default: `info`.
+
+Sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+
+### logCollection
+
+Optional. `http` or `none`. Default: `none`.
+
+Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+
+### tuner
+
+Required.
+
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**, **classFileName**, **className** and **classArgs** are needed. *Users must choose exactly one way.*
+
+#### builtinTunerName
+
+Required if using built-in tuners. String.
+
+Specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+
+#### codeDir
+
+Required if using customized tuners. Path relative to the location of config file.
+
+Specifies the directory of tuner code.
+
+#### classFileName
+
+Required if using customized tuners. File path relative to **codeDir**.
+
+Specifies the name of tuner file.
+
+#### className
+
+Required if using customized tuners. String.
+
+Specifies the name of tuner class.
+
+#### classArgs
+
+Optional. Key-value pairs. Default: empty.
+
+Specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+
+#### gpuIndices
+
+Optional. String. Default: empty.
+
+Specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+
+#### includeIntermediateResults
+
+Optional. Bool. Default: false.
+
+If **includeIntermediateResults** is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
+
+### assessor
+
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**, **classFileName**, **className** and **classArgs**. *Users must choose exactly one way.*
+
+By default, there is no assessor enabled.
+
+#### builtinAssessorName
+
+Required if using built-in assessors. String.
+
+Specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
+
+#### codeDir
+
+Required if using customized assessors. Path relative to the location of config file.
+
+Specifies the directory of assessor code.
+
+#### classFileName
+
+Required if using customized assessors. File path relative to **codeDir**.
+
+Specifies the name of assessor file.
+
+#### className
+
+Required if using customized assessors. String.
+
+Specifies the name of assessor class.
+
+#### classArgs
+
+Optional. Key-value pairs. Default: empty.
+
+Specifies the arguments of assessor algorithm.
+
+### advisor
+
+Optional.
+
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+
+When advisor is enabled, settings of tuners and advisors will be bypassed.
+
+#### builtinAdvisorName
+
+Specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
+
+#### codeDir
+
+Required if using customized advisors. Path relative to the location of config file.
+
+Specifies the directory of advisor code.
+
+#### classFileName
+
+Required if using customized advisors. File path relative to **codeDir**.
+
+Specifies the name of advisor file.
+
+#### className
+
+Required if using customized advisors. String.
+
+Specifies the name of advisor class.
+
+#### classArgs
+
+Optional. Key-value pairs. Default: empty.
+
+Specifies the arguments of advisor.
+
+#### gpuIndices
+
+Optional. String. Default: empty.
+
+Specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+
+### trial
+
+Required. Key-value pairs.
+
+In local and remote mode, the following keys are required.
+
+- **command**: Required string. Specifies the command to run trial process.
+
+- **codeDir**: Required string. Specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
+
+- **gpuNum**: Optional integer. Specifies the num of gpu to run the trial process. Default value is 0.
+
+In PAI mode, the following keys are required.
+
+- **command**: Required string. Specifies the command to run trial process.
+
+- **codeDir**: Required string. Specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
+
+- **gpuNum**: Required integer. Specifies the num of gpu to run the trial process. Default value is 0.
+
+- **cpuNum**: Required integer. Specifies the cpu number of cpu to be used in pai container.
+
+- **memoryMB**: Required integer. Set the memory size to be used in pai container, in megabytes.
+
+- **image**: Required string. Set the image to be used in pai.
+
+- **authFile**: Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. [Reference](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job).
+
+- **shmMB**: Optional integer. Shared memory size of container.
+
+- **portList**: List of key-values pairs with `label`, `beginAt`, `portNumber`. See [job tutorial of PAI](https://github.com/microsoft/pai/blob/master/docs/job_tutorial.md) for details.
+
+In Kubeflow mode, the following keys are required.
+
+- **codeDir**: The local directory where the code files are in.
+
+- **ps**: An optional configuration for kubeflow's tensorflow-operator, which includes
   
-  - **userName**
-    
-    **userName** 是 OpenPAI 的用户名。
+      * __replicas__: The replica number of __ps__ role.
+      
+      * __command__: The run script in __ps__'s container.
+      
+      * __gpuNum__: The gpu number to be used in __ps__ container.
+      
+      * __cpuNum__: The cpu number to be used in __ps__ container.
+      
+      * __memoryMB__: The memory size of the container.
+      
+      * __image__: The image to be used in __ps__.
+      
+
+- **worker**: An optional configuration for kubeflow's tensorflow-operator.
   
-  - **password**
-    
-    **password** 是 OpenPAI 用户的密码。
-  
-  - **host**
-    
-    **host** 是 OpenPAI 的主机地址。
+      * __replicas__: The replica number of __worker__ role.
+      
+      * __command__: The run script in __worker__'s container.
+      
+      * __gpuNum__: The gpu number to be used in __worker__ container.
+      
+      * __cpuNum__: The cpu number to be used in __worker__ container.
+      
+      * __memoryMB__: The memory size of the container.
+      
+      * __image__: The image to be used in __worker__.
+      
+
+### localConfig
+
+Optional in local mode. Key-value pairs.
+
+Only applicable if **trainingServicePlatform** is set to `local`, otherwise there should not be **localConfig** section in configuration file.
+
+#### gpuIndices
+
+Optional. String. Default: none.
+
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+
+#### maxTrialNumPerGpu
+
+Optional. Integer. Default: 99999.
+
+Used to specify the max concurrency trial number on a GPU device.
+
+#### useActiveGpu
+
+Optional. Bool. Default: false.
+
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+
+### machineList
+
+Required in remote mode. A list of key-value pairs with the following keys.
+
+#### ip
+
+Required. IP address that is accessible from the current machine.
+
+The IP address of remote machine.
+
+#### port
+
+Optional. Integer. Valid port. Default: 22.
+
+The ssh port to be used to connect machine.
+
+#### username
+
+Required if authentication with username/password. String.
+
+The account of remote machine.
+
+#### passwd
+
+Required if authentication with username/password. String.
+
+Specifies the password of the account.
+
+#### sshKeyPath
+
+Required if authentication with ssh key. Path to private key file.
+
+If users use ssh key to login remote machine, **sshKeyPath** should be a valid path to a ssh key file.
+
+*Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd first.*
+
+#### passphrase
+
+Optional. String.
+
+Used to protect ssh key, which could be empty if users don't have passphrase.
+
+#### gpuIndices
+
+Optional. String. Default: none.
+
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+
+#### maxTrialNumPerGpu
+
+Optional. Integer. Default: 99999.
+
+Used to specify the max concurrency trial number on a GPU device.
+
+#### useActiveGpu
+
+Optional. Bool. Default: false.
+
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+
+### kubeflowConfig
+
+#### operator
+
+Required. String. Has to be `tf-operator` or `pytorch-operator`.
+
+Specifies the kubeflow's operator to be used, NNI support `tf-operator` in current version.
+
+#### storage
+
+Optional. String. Default. `nfs`.
+
+Specifies the storage type of kubeflow, including `nfs` and `azureStorage`.
+
+#### nfs
+
+Required if using nfs. Key-value pairs.
+
+- **server** is the host of nfs server.
+
+- **path** is the mounted path of nfs.
+
+#### keyVault
+
+Required if using azure storage. Key-value pairs.
+
+Set **keyVault** to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
+
+- **vaultName** is the value of `--vault-name` used in az command.
+
+- **name** is the value of `--name` used in az command.
+
+#### azureStorage
+
+Required if using azure storage. Key-value pairs.
+
+Set azure storage account to store code files.
+
+- **accountName** is the name of azure storage account.
+
+- **azureShare** is the share of the azure file storage.
+
+#### uploadRetryCount
+
+Required if using azure storage. Integer between 1 and 99999.
+
+If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+
+### paiConfig
+
+#### userName
+
+Required. String.
+
+The user name of your pai account.
+
+#### password
+
+Required if using password authentication. String.
+
+The password of the pai account.
+
+#### token
+
+Required if using token authentication. String.
+
+Personal access token that can be retrieved from PAI portal.
+
+#### host
+
+Required. String.
+
+The hostname of IP address of PAI.
 
 ## 样例
 
-- **本机模式**
-  
-  如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
-  
-  ```yaml
-  authorName: test
-  experimentName: test_experiment
-  trialConcurrency: 3
-  maxExecDuration: 1h
-  maxTrialNum: 10
-  #可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: local
-  #可选项: true, false
-  useAnnotation: true
-  tuner:
-    #可选项: TPE, Random, Anneal, Evolution
-    builtinTunerName: TPE
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    command: python3 mnist.py
-    codeDir: /nni/mnist
-    gpuNum: 0
-  ```
-  
-  增加 Assessor 配置
-  
-  ```yaml
-  authorName: test
-  experimentName: test_experiment
-  trialConcurrency: 3
-  maxExecDuration: 1h
-  maxTrialNum: 10
-  #可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: local
-  searchSpacePath: /nni/search_space.json
-  #可选项: true, false
-  useAnnotation: false
-  tuner:
-    #可选项: TPE, Random, Anneal, Evolution
-    builtinTunerName: TPE
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  assessor:
-    #可选项: Medianstop
-    builtinAssessorName: Medianstop
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    command: python3 mnist.py
-    codeDir: /nni/mnist
-    gpuNum: 0
-  ```
-  
-  或者可以指定自定义的 Tuner 和 Assessor：
-  
-  ```yaml
-  authorName: test
-  experimentName: test_experiment
-  trialConcurrency: 3
-  maxExecDuration: 1h
-  maxTrialNum: 10
-  #可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: local
-  searchSpacePath: /nni/search_space.json
-  #可选项: true, false
-  useAnnotation: false
-  tuner:
-    codeDir: /nni/tuner
-    classFileName: mytuner.py
-    className: MyTuner
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  assessor:
-    codeDir: /nni/assessor
-    classFileName: myassessor.py
-    className: MyAssessor
-    classArgs:
-      #choice: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    command: python3 mnist.py
-    codeDir: /nni/mnist
-    gpuNum: 0
-  ```
+### Local mode
 
-- **远程模式**
-  
-  如果要在远程服务器上运行 Trial 任务，需要增加服务器信息：
-  
-  ```yaml
-  authorName: test
-  experimentName: test_experiment
-  trialConcurrency: 3
-  maxExecDuration: 1h
-  maxTrialNum: 10
-  #可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: remote
-  searchSpacePath: /nni/search_space.json
-  #可选项: true, false
-  useAnnotation: false
-  tuner:
-    #可选项: TPE, Random, Anneal, Evolution
-    builtinTunerName: TPE
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    command: python3 mnist.py
-    codeDir: /nni/mnist
-    gpuNum: 0
-  # 如果是本地 Experiment，machineList 可为空。
-  machineList:
-  
-    - ip: 10.10.10.10
-      port: 22
-      username: test
-      passwd: test
-    - ip: 10.10.10.11
-      port: 22
-      username: test
-      passwd: test
-    - ip: 10.10.10.12
-      port: 22
-      username: test
-      sshKeyPath: /nni/sshkey
-      passphrase: qwert
-  ```
+If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 
-- **pai 模式**
-  
-  ```yaml
-  authorName: test
-  experimentName: nni_test1
-  trialConcurrency: 1
-  maxExecDuration:500h
-  maxTrialNum: 1
-  #可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: pai
-  searchSpacePath: search_space.json
-  #可选项: true, false
-  useAnnotation: false
-  tuner:
-    #可选项: TPE, Random, Anneal, Evolution, BatchTuner
-    #SMAC (SMAC 需要使用 nnictl package 单独安装)
-    builtinTunerName: TPE
-    classArgs:
-      #可选项: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    command: python3 main.py
-    codeDir: .
-    gpuNum: 4
-    cpuNum: 2
-    memoryMB: 10000
-    #The docker image to run NNI job on pai
-    image: msranni/nni:latest
-  paiConfig:
-    #The username to login pai
-    userName: test
-    #The password to login pai
-    passWord: test
-    #The host of restful server of pai
-    host: 10.10.10.10
-  ```
-
-- **Kubeflow 模式**
-  
-  使用 NFS 存储。
-  
-  ```yaml
-  authorName: default
-  experimentName: example_mni
-  trialConcurrency: 1
-  maxExecDuration: 1h
-  maxTrialNum: 1
-  # 可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: kubeflow
-  searchSpacePath: search_space.json
-  # 可选项: true, false
-  useAnnotation: false
-  tuner:
-    # 可选项: TPE, Random, Anneal, Evolution
-    builtinTunerName: TPE
-    classArgs:
-      # 可选项: maximize, minimize
-      optimize_mode: maximize
-  trial:
-    codeDir: .
-    worker:
-      replicas: 1
+    ```yaml
+    authorName: test
+    experimentName: test_experiment
+    trialConcurrency: 3
+    maxExecDuration: 1h
+    maxTrialNum: 10
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: local
+    #choice: true, false
+    useAnnotation: true
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
       command: python3 mnist.py
+      codeDir: /nni/mnist
       gpuNum: 0
-      cpuNum: 1
-      memoryMB: 8192
-      image: msranni/nni:latest
-  kubeflowConfig:
-    operator: tf-operator
-    nfs:
-      server: 10.10.10.10
-      path: /var/nfs/general
-  ```
-  
-  使用 Azure 存储。
-  
-  ```yaml
-  authorName: default
-  experimentName: example_mni
-  trialConcurrency: 1
-  maxExecDuration: 1h
-  maxTrialNum: 1
-  # 可选项: local, remote, pai, kubeflow
-  trainingServicePlatform: kubeflow
-  searchSpacePath: search_space.json
-  # 可选项: true, false
-  useAnnotation: false
-  #nniManagerIp: 10.10.10.10
-  tuner:
-    # 可选项: TPE, Random, Anneal, Evolution
-    builtinTunerName: TPE
-    classArgs:
-      # 可选项: maximize, minimize
-      optimize_mode: maximize
-  assessor:
-    builtinAssessorName: Medianstop
-    classArgs:
-      optimize_mode: maximize
-  trial:
-    codeDir: .
-    worker:
-      replicas: 1
+    ```
+    
+
+You can add assessor configuration.
+
+    ```yaml
+    authorName: test
+    experimentName: test_experiment
+    trialConcurrency: 3
+    maxExecDuration: 1h
+    maxTrialNum: 10
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: local
+    searchSpacePath: /nni/search_space.json
+    #choice: true, false
+    useAnnotation: false
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    assessor:
+      #choice: Medianstop
+      builtinAssessorName: Medianstop
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
       command: python3 mnist.py
+      codeDir: /nni/mnist
       gpuNum: 0
-      cpuNum: 1
-      memoryMB: 4096
+    ```
+    
+
+Or you could specify your own tuner and assessor file as following,
+
+    ```yaml
+    authorName: test
+    experimentName: test_experiment
+    trialConcurrency: 3
+    maxExecDuration: 1h
+    maxTrialNum: 10
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: local
+    searchSpacePath: /nni/search_space.json
+    #choice: true, false
+    useAnnotation: false
+    tuner:
+      codeDir: /nni/tuner
+      classFileName: mytuner.py
+      className: MyTuner
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    assessor:
+      codeDir: /nni/assessor
+      classFileName: myassessor.py
+      className: MyAssessor
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
+      command: python3 mnist.py
+      codeDir: /nni/mnist
+      gpuNum: 0
+    ```
+    
+
+### Remote mode
+
+If run trial jobs in remote machine, users could specify the remote machine information as following format:
+
+    ```yaml
+    authorName: test
+    experimentName: test_experiment
+    trialConcurrency: 3
+    maxExecDuration: 1h
+    maxTrialNum: 10
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: remote
+    searchSpacePath: /nni/search_space.json
+    #choice: true, false
+    useAnnotation: false
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
+      command: python3 mnist.py
+      codeDir: /nni/mnist
+      gpuNum: 0
+    #machineList can be empty if the platform is local
+    machineList:
+      - ip: 10.10.10.10
+        port: 22
+        username: test
+        passwd: test
+      - ip: 10.10.10.11
+        port: 22
+        username: test
+        passwd: test
+      - ip: 10.10.10.12
+        port: 22
+        username: test
+        sshKeyPath: /nni/sshkey
+        passphrase: qwert
+    ```
+    
+
+### PAI mode
+
+    ```yaml
+    authorName: test
+    experimentName: nni_test1
+    trialConcurrency: 1
+    maxExecDuration:500h
+    maxTrialNum: 1
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: pai
+    searchSpacePath: search_space.json
+    #choice: true, false
+    useAnnotation: false
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution, BatchTuner
+      #SMAC (SMAC should be installed through nnictl)
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
+      command: python3 main.py
+      codeDir: .
+      gpuNum: 4
+      cpuNum: 2
+      memoryMB: 10000
+      #The docker image to run NNI job on pai
       image: msranni/nni:latest
-  kubeflowConfig:
-    operator: tf-operator
-    keyVault:
-      vaultName: Contoso-Vault
-      name: AzureStorageAccountKey
-    azureStorage:
-      accountName: storage
-      azureShare: share01
-  ```
+    paiConfig:
+      #The username to login pai
+      userName: test
+      #The password to login pai
+      passWord: test
+      #The host of restful server of pai
+      host: 10.10.10.10
+    ```
+    
+
+### Kubeflow mode
+
+    kubeflow with nfs storage.
+    
+    ```yaml
+    authorName: default
+    experimentName: example_mni
+    trialConcurrency: 1
+    maxExecDuration: 1h
+    maxTrialNum: 1
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: kubeflow
+    searchSpacePath: search_space.json
+    #choice: true, false
+    useAnnotation: false
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    trial:
+      codeDir: .
+      worker:
+        replicas: 1
+        command: python3 mnist.py
+        gpuNum: 0
+        cpuNum: 1
+        memoryMB: 8192
+        image: msranni/nni:latest
+    kubeflowConfig:
+      operator: tf-operator
+      nfs:
+        server: 10.10.10.10
+        path: /var/nfs/general
+    ```
+    
+
+### Kubeflow with azure storage
+
+    ```yaml
+    authorName: default
+    experimentName: example_mni
+    trialConcurrency: 1
+    maxExecDuration: 1h
+    maxTrialNum: 1
+    #choice: local, remote, pai, kubeflow
+    trainingServicePlatform: kubeflow
+    searchSpacePath: search_space.json
+    #choice: true, false
+    useAnnotation: false
+    #nniManagerIp: 10.10.10.10
+    tuner:
+      #choice: TPE, Random, Anneal, Evolution
+      builtinTunerName: TPE
+      classArgs:
+        #choice: maximize, minimize
+        optimize_mode: maximize
+    assessor:
+      builtinAssessorName: Medianstop
+      classArgs:
+        optimize_mode: maximize
+    trial:
+      codeDir: .
+      worker:
+        replicas: 1
+        command: python3 mnist.py
+        gpuNum: 0
+        cpuNum: 1
+        memoryMB: 4096
+        image: msranni/nni:latest
+    kubeflowConfig:
+      operator: tf-operator
+      keyVault:
+        vaultName: Contoso-Vault
+        name: AzureStorageAccountKey
+      azureStorage:
+        accountName: storage
+        azureShare: share01
+    ```
