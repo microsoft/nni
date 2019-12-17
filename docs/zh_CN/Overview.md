@@ -53,11 +53,11 @@ NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其�
 
 ### 超参调优
 
-This is a core and basic feature of NNI, we provide many popular [automatic tuning algorithms](Tuner/BuiltinTuner.md) (i.e., tuner) and [early stop algorithms](Assessor/BuiltinAssessor.md) (i.e., assessor). You could follow [Quick Start](Tutorial/QuickStart.md) to tune your model (or system). Basically, there are the above three steps and then start an NNI experiment.
+这是 NNI 最核心、基本的功能，其中提供了许多流行的[自动调优算法](Tuner/BuiltinTuner.md) (即 Tuner) 以及 [提前终止算法](Assessor/BuiltinAssessor.md) (即 Assessor)。 可查看[快速入门](Tutorial/QuickStart.md)来调优模型或系统。 基本上通过以上三步，就能开始NNI Experiment。
 
-### General NAS Framework
+### 通用 NAS 框架
 
-This NAS framework is for users to easily specify candidate neural architectures, for example, could specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed description and usage can be found [here](NAS/Overview.md).
+此 NAS 框架可供用户轻松指定候选的神经体系结构，例如，可以为单个层指定多个候选操作（例如，可分离的 conv、扩张 conv），并指定可能的跳过连接。 NNI 将自动找到最佳候选。 On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed description and usage can be found [here](NAS/Overview.md).
 
 NNI has supported many one-shot NAS algorithms, such as ENAS, DARTS, through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, to import an algorithm in your trial code, and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you could choose a tuner and start an NNI experiment.
 
