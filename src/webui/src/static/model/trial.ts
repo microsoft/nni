@@ -109,7 +109,7 @@ class Trial implements TableObj {
     }
 
     get description(): Parameters {
-        let ret: Parameters = {
+        const ret: Parameters = {
             parameters: { },
             intermediate: [ ],
             multiProgress: 1
