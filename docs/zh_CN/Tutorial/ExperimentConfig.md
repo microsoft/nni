@@ -317,55 +317,55 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 ### logCollection
 
-可选。 `http` 或 `none`。 Default: `none`.
+可选。 `http` 或 `none`。 默认值：`none`。
 
-Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+设置在remote、pai、kubeflow、frameworkcontroller 平台中收集日志的方式。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
 
 ### tuner
 
-Required.
+必填。
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**, **classFileName**, **className** and **classArgs** are needed. *Users must choose exactly one way.*
+指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
 #### builtinTunerName
 
-Required if using built-in tuners. String.
+如果使用内置 Tuner，则为必需。 字符串。
 
-Specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+指定系统 Tuner 的名称, NNI SDK 提供的各种 Tuner 的[说明](../Tuner/BuiltinTuner.md)。
 
 #### codeDir
 
-Required if using customized tuners. Path relative to the location of config file.
+如果使用定制 Tuner，则为必需。 相对于配置文件位置的路径。
 
-Specifies the directory of tuner code.
+指定 Tuner 代码的目录。
 
 #### classFileName
 
-Required if using customized tuners. File path relative to **codeDir**.
+如果使用定制 Tuner，则为必需。 相对于 **codeDir** 的文件路径。
 
-Specifies the name of tuner file.
+指定 Tuner 文件的名称。
 
 #### className
 
-Required if using customized tuners. String.
+如果使用定制 Tuner，则为必需。 字符串。
 
-Specifies the name of tuner class.
+指定 Tuner 的名称。
 
 #### classArgs
 
-Optional. Key-value pairs. Default: empty.
+可选。 键值对。 默认值：空。
 
-Specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+指定 Tuner 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Tuner 的配置参数。
 
 #### gpuIndices
 
-Optional. String. Default: empty.
+可选。 字符串。 默认值：空。
 
-Specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+指定 Tuner 进程可以使用的 GPU。 可以指定单个或多个 GPU 索引。 多个 GPU 索引用逗号 `,` 分隔。 例如，`1` 或 `0,1,3`。 如果未设置该字段，则 Tuner 将找不到 GPU（设置 `CUDA_VISIBLE_DEVICES` 成空字符串）。
 
 #### includeIntermediateResults
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
 If **includeIntermediateResults** is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
 
