@@ -301,23 +301,23 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 设置运行 NNI 管理器进程的计算机的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
 
-注意: 可在 NNI 管理器机器上运行 `ifconfig` 来检查 eth0 是否存在。 If not, **nniManagerIp** is recommended to set explicitly.
+注意: 可在 NNI 管理器机器上运行 `ifconfig` 来检查 eth0 是否存在。 如果没有，建议显式设置 **nniManagerIp**。
 
 ### logDir
 
-Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+可选。 目录的路径。 默认值：`<user home directory>/nni/experiment`。
 
-Configures the directory to store logs and data of the experiment.
+配置目录以存储 Experiment 的日志和数据。
 
 ### logLevel
 
-Optional. String. Default: `info`.
+可选。 字符串。 默认值：`info`。
 
-Sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+设置 Experiment 的日志级别。 可设置的日志级别包括：`trace`, `debug`, `info`, `warning`, `error`, `fatal`。
 
 ### logCollection
 
-Optional. `http` or `none`. Default: `none`.
+可选。 `http` 或 `none`。 Default: `none`.
 
 Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
 
