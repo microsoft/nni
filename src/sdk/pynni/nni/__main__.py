@@ -45,10 +45,13 @@ def create_builtin_class_instance(class_name, class_args, is_advisor=False):
         class_constructor = getattr(class_module, ClassName[class_name])
     if class_args:
         class_args = augment_classargs(class_args, class_name)
-        instance = class_constructor(**class_args)
     else:
         class_args = augment_classargs({}, class_name)
+    if class_args:
+        instance = class_constructor(**class_args)
+    else:
         instance = class_constructor()
+
     return instance
 
 
