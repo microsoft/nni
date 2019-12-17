@@ -8,8 +8,8 @@ searchSpacePath: nni_auto_gen_search_space.json
 useAnnotation: false
 tuner:
   codeDir: .
-  classFileName: evolution.py
-  className: SPOSEvolution
+  classFileName: tuner.py
+  className: EvolutionWithFlops
 trial:
   # TODO: change the imagenet dir before release.
   command: python tester.py --imagenet-dir /data/ssd1/v-yugzh/imagenet --spos-prep

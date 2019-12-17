@@ -1,20 +1,20 @@
 import json
 import logging
+import os
 import re
 from collections import deque
 
 import numpy as np
 from nni.tuner import Tuner
 
-from network import ShuffleNetV2OneShot
 
-_logger = logging.getLogger("nni")
+_logger = logging.getLogger(__name__)
 
 
 class SPOSEvolution(Tuner):
 
     def __init__(self, max_epochs=20, num_select=10, num_population=50, m_prob=0.1,
-                 num_crossover=25, num_mutation=25, flops_limit=330E6):
+                 num_crossover=25, num_mutation=25):
         assert num_population >= num_select
         self.max_epochs = max_epochs
         self.num_select = num_select
@@ -22,8 +22,6 @@ class SPOSEvolution(Tuner):
         self.m_prob = m_prob
         self.num_crossover = num_crossover
         self.num_mutation = num_mutation
-        self.flops_limit = flops_limit
-        self.model = ShuffleNetV2OneShot()
         self.epoch = 0
         self.candidates = []
         self.search_space = None
@@ -42,13 +40,15 @@ class SPOSEvolution(Tuner):
         self._next_round()
 
     def _next_round(self):
-        if self.epoch >= self.max_epochs:
-            return
         _logger.info("Epoch %d, generating...", self.epoch)
         if self.epoch == 0:
             self._get_random_population()
+            self.export_results(self.candidates)
         else:
             best_candidates = self._select_top_candidates()
+            self.export_results(best_candidates)
+            if self.epoch >= self.max_epochs:
+                return
             self.candidates = self._get_mutation(best_candidates) + self._get_crossover(best_candidates)
             self._get_random_population()
         self.epoch += 1
@@ -65,8 +65,7 @@ class SPOSEvolution(Tuner):
         return chosen_arch
 
     def _add_to_evaluate_queue(self, cand):
-        _logger.info("Generate candidate %s with flops %d, adding to eval queue.",
-                     self._get_architecture_repr(cand), self.model.get_candidate_flops(cand))
+        _logger.info("Generate candidate %s, adding to eval queue.", self._get_architecture_repr(cand))
         self._reward_dict[self._hashcode(cand)] = 0.
         self._to_evaluate_queue.append(cand)
 
@@ -119,8 +118,6 @@ class SPOSEvolution(Tuner):
     def _is_legal(self, cand):
         if self._hashcode(cand) in self._reward_dict:
             return False
-        if self.model.get_candidate_flops(cand) > self.flops_limit:
-            return False
         return True
 
     def _select_top_candidates(self):
@@ -165,3 +162,13 @@ class SPOSEvolution(Tuner):
             self._next_round()
             assert self._st_callback is not None
             self._bind_and_send_parameters()
+
+    def export_results(self, result):
+        os.makedirs("checkpoints", exist_ok=True)        
+        for i, cand in enumerate(result):
+            converted = dict()
+            for cand_key, cand_val in cand.items():
+                onehot = [k == cand_val["_idx"] for k in range(len(self._search_space[cand_key]["_value"]))]
+                converted[cand_key] = onehot
+            with open(os.path.join("checkpoints", "%03d_%03d.json" % (self.epoch, i)), "w") as fp:
+                json.dump(converted, fp)

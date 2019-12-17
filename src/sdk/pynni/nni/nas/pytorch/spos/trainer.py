@@ -14,28 +14,21 @@ logger = logging.getLogger(__name__)
 
 class SPOSSupernetTrainer(Trainer):
     def __init__(self, model, loss, metrics,
-                 optimizer, num_epochs, dataset_train, dataset_valid,
+                 optimizer, num_epochs, train_loader, valid_loader,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
+        assert torch.cuda.is_available()
         super().__init__(model, mutator if mutator is not None else SPOSSupernetTrainingMutator(model),
-                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
+                         loss, metrics, optimizer, num_epochs, None, None,
                          batch_size, workers, device, log_frequency, callbacks)
 
-        self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
-                                                        num_workers=workers,
-                                                        shuffle=True)
-        self.valid_loader = torch.utils.data.DataLoader(self.dataset_valid,
-                                                        batch_size=batch_size,
-                                                        num_workers=workers,
-                                                        shuffle=True)
+        self.train_loader = train_loader
+        self.valid_loader = valid_loader
 
     def train_one_epoch(self, epoch):
         self.model.train()
         meters = AverageMeterGroup()
         for step, (x, y) in enumerate(self.train_loader):
-            x, y = x.to(self.device), y.to(self.device)
-
             self.optimizer.zero_grad()
             self.mutator.reset()
             logits = self.model(x)
@@ -55,7 +48,6 @@ class SPOSSupernetTrainer(Trainer):
         meters = AverageMeterGroup()
         with torch.no_grad():
             for step, (x, y) in enumerate(self.valid_loader):
-                x, y = x.to(self.device), y.to(self.device)
                 self.mutator.reset()
                 logits = self.model(x)
                 loss = self.loss(logits, y)

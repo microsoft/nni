@@ -11,7 +11,7 @@ import torch.nn as nn
 from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 
-from dataloader import get_imagenet_iter_dali, convert_data_format_dali
+from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
 from utils import CrossEntropyLabelSmooth, accuracy
 
@@ -30,7 +30,7 @@ def retrain_bn(model, criterion, max_iters, log_freq, loader):
         model.train()
         meters = AverageMeterGroup()
         for step in range(max_iters):
-            inputs, targets = convert_data_format_dali(next(loader))
+            inputs, targets = next(loader)
             logits = model(inputs)
             loss = criterion(logits, targets)
             metrics = accuracy(logits, targets)
@@ -46,16 +46,15 @@ def test_acc(model, criterion, log_freq, loader):
     meters = AverageMeterGroup()
     start_time = time.time()
     with torch.no_grad():
-        for step, data in enumerate(loader):
-            inputs, targets = convert_data_format_dali(data)
+        for step, (inputs, targets) in enumerate(loader):
             logits = model(inputs)
             loss = criterion(logits, targets)
             metrics = accuracy(logits, targets)
             metrics["loss"] = loss.item()
             meters.update(metrics)
-            if step % log_freq == 0:
-                logger.info("Valid Step [%d] time %.3fs acc1 %.4f acc5 %.4f loss %.4f",
-                            step + 1, time.time() - start_time,
+            if step % log_freq == 0 or step + 1 == len(loader):
+                logger.info("Valid Step [%d/%d] time %.3fs acc1 %.4f acc5 %.4f loss %.4f",
+                            step + 1, len(loader), time.time() - start_time,
                             meters.acc1.avg, meters.acc5.avg, meters.loss.avg)
     return meters.acc1.avg
 
@@ -102,12 +101,12 @@ if __name__ == "__main__":
     model.load_state_dict(load_and_parse_state_dict(filepath=args.checkpoint))
     model.cuda()
 
-    train_loader, train_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.train_batch_size, args.workers,
-                                                       auto_reset=True, spos_preprocessing=args.spos_preprocessing,
-                                                       seed=args.seed, device_id=0)
-    val_loader, val_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.test_batch_size, args.workers,
-                                                   spos_preprocessing=args.spos_preprocessing, shuffle=True,
-                                                   seed=args.seed, device_id=0, auto_reset=True)
+    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.train_batch_size, args.workers,
+                                          spos_preprocessing=args.spos_preprocessing,
+                                          seed=args.seed, device_id=0)
+    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.test_batch_size, args.workers,
+                                        spos_preprocessing=args.spos_preprocessing, shuffle=True,
+                                        seed=args.seed, device_id=0)
     train_loader = cycle(train_loader)
 
     evaluate_acc(model, criterion, args, train_loader, val_loader)

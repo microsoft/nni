@@ -63,7 +63,23 @@ class HybridValPipe(Pipeline):
         return [output, self.labels]
 
 
-def get_imagenet_iter_dali(split, image_dir, batch_size, num_threads, crop=224, val_size=256, auto_reset=False,
+class ClassificationWrapper:
+    def __init__(self, loader, size):
+        self.loader = loader
+        self.size = size
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        data = next(self.loader)
+        return data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
+
+    def __len__(self):
+        return self.size
+
+
+def get_imagenet_iter_dali(split, image_dir, batch_size, num_threads, crop=224, val_size=256,
                            spos_preprocessing=False, seed=12, shuffle=False, device_id=None):
     world_size, local_rank = 1, 0
     if device_id is None:
@@ -82,10 +98,6 @@ def get_imagenet_iter_dali(split, image_dir, batch_size, num_threads, crop=224, 
         raise AssertionError
     pipeline.build()
     num_samples = pipeline.epoch_size("Reader")
-    return DALIClassificationIterator(pipeline, size=num_samples, fill_last_batch=split == "train",
-                                      auto_reset=auto_reset), \
-           (num_samples + batch_size - 1) // batch_size
-
-
-def convert_data_format_dali(data):
-    return data[0]["data"], data[0]["label"].view(-1).long().cuda(non_blocking=True)
+    print(num_samples)
+    return ClassificationWrapper(DALIClassificationIterator(pipeline, size=num_samples, fill_last_batch=split == "train",
+                                 auto_reset=True), (num_samples + batch_size - 1) // batch_size)

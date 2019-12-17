@@ -1,9 +1,11 @@
 import argparse
 import logging
+import random
 
+import numpy as np
 import torch
 import torch.nn as nn
-from dataloader import get_imagenet_iter_dali, convert_data_format_dali
+from dataloader import get_imagenet_iter_dali
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
@@ -14,14 +16,13 @@ from utils import CrossEntropyLabelSmooth, accuracy
 logger = logging.getLogger("nni")
 
 
-def train(epoch, model, criterion, optimizer, loader, num_iters, writer, args):
+def train(epoch, model, criterion, optimizer, loader, writer, args):
     model.train()
     meters = AverageMeterGroup()
     cur_lr = optimizer.param_groups[0]["lr"]
 
-    for step, data in enumerate(loader):
-        cur_step = num_iters * epoch + step
-        x, y = convert_data_format_dali(data)
+    for step, (x, y) in enumerate(loader):
+        cur_step = len(loader) * epoch + step
         optimizer.zero_grad()
         logits = model(x)
         loss = criterion(logits, y)
@@ -37,28 +38,27 @@ def train(epoch, model, criterion, optimizer, loader, num_iters, writer, args):
         writer.add_scalar("acc1/train", metrics["acc1"], global_step=cur_step)
         writer.add_scalar("acc5/train", metrics["acc5"], global_step=cur_step)
 
-        if step % args.log_frequency == 0 or step + 1 == num_iters:
+        if step % args.log_frequency == 0 or step + 1 == len(loader):
             logger.info("Epoch [%d/%d] Step [%d/%d]  %s", epoch + 1,
-                        args.epochs, step + 1, num_iters, meters)
+                        args.epochs, step + 1, len(loader), meters)
 
     logger.info("Epoch %d training summary: %s", epoch + 1, meters)
 
 
-def validate(epoch, model, criterion, loader, num_iters, writer, args):
+def validate(epoch, model, criterion, loader, writer, args):
     model.eval()
     meters = AverageMeterGroup()
     with torch.no_grad():
-        for step, data in enumerate(loader):
-            x, y = convert_data_format_dali(data)
+        for step, (x, y) in enumerate(loader):
             logits = model(x)
             loss = criterion(logits, y)
             metrics = accuracy(logits, y)
             metrics["loss"] = loss.item()
             meters.update(metrics)
 
-            if step % args.log_frequency == 0 or step + 1 == num_iters:
+            if step % args.log_frequency == 0 or step + 1 == len(loader):
                 logger.info("Epoch [%d/%d] Validation Step [%d/%d]  %s", epoch + 1,
-                            args.epochs, step + 1, num_iters, meters)
+                            args.epochs, step + 1, len(loader), meters)
 
     writer.add_scalar("loss/test", meters.loss.avg, global_step=epoch)
     writer.add_scalar("acc1/test", meters.acc1.avg, global_step=epoch)
@@ -80,8 +80,16 @@ if __name__ == "__main__":
     parser.add_argument("--weight-decay", type=float, default=4E-5)
     parser.add_argument("--label-smooth", type=float, default=0.1)
     parser.add_argument("--log-frequency", type=int, default=10)
+    parser.add_argument("--lr-decay", type=str, default="linear")
+    parser.add_argument("--seed", type=int, default=42)
 
     args = parser.parse_args()
+
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
 
     model = ShuffleNetV2OneShot()
     model.cuda()
@@ -91,20 +99,23 @@ if __name__ == "__main__":
     criterion = CrossEntropyLabelSmooth(1000, 0.1)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                  lambda step: (1.0 - step / args.epochs)
-                                                  if step <= args.epochs else 0,
-                                                  last_epoch=-1)
+    if args.lr_decay == "linear":
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                      lambda step: (1.0 - step / args.epochs)
+                                                      if step <= args.epochs else 0,
+                                                      last_epoch=-1)
+    elif args.lr_decay == "cosine":
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, 1E-3)
+    else:
+        raise ValueError("'%s' not supported." % args.lr_decay)
     writer = SummaryWriter(log_dir=args.tb_dir)
 
-    train_loader, train_iters = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
-    val_loader, val_iters = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
+    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
+    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
 
     for epoch in range(args.epochs):
-        train(epoch, model, criterion, optimizer, train_loader, train_iters, writer, args)
-        validate(epoch, model, criterion, val_loader, val_iters, writer, args)
+        train(epoch, model, criterion, optimizer, train_loader, writer, args)
+        validate(epoch, model, criterion, val_loader, writer, args)
         scheduler.step()
-        train_loader.reset()
-        val_loader.reset()
 
     writer.close()

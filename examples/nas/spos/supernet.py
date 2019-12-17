@@ -1,13 +1,16 @@
 import argparse
+import random
 
+import numpy as np
 import torch
 import torch.nn as nn
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.callbacks import ModelCheckpoint
 from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
 
+from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
-from utils import get_imagenet, CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("SPOS Supernet Training")
@@ -17,16 +20,23 @@ if __name__ == "__main__":
                         help="When true, image values will range from 0 to 255 and use BGR "
                              "(as in original repo).")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--batch-size", type=int, default=1024)
+    parser.add_argument("--batch-size", type=int, default=960)
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--learning-rate", type=float, default=0.5)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight-decay", type=float, default=4E-5)
     parser.add_argument("--label-smooth", type=float, default=0.1)
     parser.add_argument("--log-frequency", type=int, default=10)
+    parser.add_argument("--seed", type=int, default=42)
 
     args = parser.parse_args()
-    dataset_train, dataset_valid = get_imagenet(args.imagenet_dir, spos_pre=args.spos_preprocessing)
+
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
+
     model = ShuffleNetV2OneShot()
     if args.load_checkpoint:
         if not args.spos_preprocessing:
@@ -43,11 +53,14 @@ if __name__ == "__main__":
                                                   lambda step: (1.0 - step / args.epochs)
                                                   if step <= args.epochs else 0,
                                                   last_epoch=-1)
+    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers,
+                                          spos_preprocessing=args.spos_preprocessing)
+    valid_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
+                                          spos_preprocessing=args.spos_preprocessing)
     trainer = SPOSSupernetTrainer(model, criterion, accuracy, optimizer,
-                                  args.epochs, dataset_train, dataset_valid,
+                                  args.epochs, train_loader, valid_loader,
                                   mutator=mutator, batch_size=args.batch_size,
                                   log_frequency=args.log_frequency, workers=args.workers,
                                   callbacks=[LRSchedulerCallback(scheduler),
                                              ModelCheckpoint("./checkpoints")])
     trainer.train()
-    # trainer.validate()
