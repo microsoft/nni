@@ -132,9 +132,9 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
-## Standalone mode for debug
+## 用于调试的独立模式
 
-NNI supports standalone mode for trial code to run without starting an NNI experiment. This is for finding out bugs in trial code more conveniently. NNI annotation natively supports standalone mode, as the added NNI related lines are comments. For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
 
 ```python
 # NOTE: please assign default values to the hyperparameters in your trial code
