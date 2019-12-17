@@ -207,101 +207,101 @@ machineList:
 
 创建 Experiment 的作者的姓名。
 
-*待定: 增加默认值*
+*待定: 增加默认值。*
 
 ### experimentName
 
-Required. String.
+必填。 字符串。
 
-The name of the experiment created.
+创建的 Experiment 名称。
 
-*TBD: add default value.*
+*待定: 增加默认值。*
 
 ### trialConcurrency
 
-Required. Integer between 1 and 99999.
+必填。 1 到 99999 之间的整数。
 
-Specifies the max num of trial jobs run simultaneously.
+指定同时运行的 Trial 任务的最大数量。
 
-If trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach **trialConcurrency** number, some trial jobs will be put into a queue to wait for gpu allocation.
+如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 **trialConcurrency**，Trial 任务会被放入队列，等待分配 GPU 资源。
 
 ### maxExecDuration
 
-Optional. String. Default: 999d.
+可选。 字符串。 默认值：999d。
 
-**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
+**maxExecDuration** 指定实验的最大执行时间。 时间的单位为 {**s**, **m**, **h**, **d**}，其分别表示 {*秒*, *分钟*, *小时*, *天*}。
 
-Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
 ### versionCheck
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
+NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
 
 ### debug
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Debug mode will set versionCheck to false and set logLevel to be 'debug'.
+调试模式会将 versionCheck 设置为 False，并将 logLevel 设置为 'debug'。
 
 ### maxTrialNum
 
-Optional. Integer between 1 and 99999. Default: 99999.
+可选。 1 到 99999 之间的整数。 默认值：99999。
 
-Specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+指定 NNI 创建的最大 Trial 任务数，包括成功和失败的任务。
 
 ### trainingServicePlatform
 
-Required. String.
+必填。 字符串。
 
-Specifies the platform to run the experiment, including **local**, **remote**, **pai**, **kubeflow**, **frameworkcontroller**.
+指定运行 Experiment 的平台，包括 **local**, **remote**, **pai**, **kubeflow**, **frameworkcontroller**.
 
-- **local** run an experiment on local ubuntu machine.
+- **local** 在本机的 Ubuntu 上运行 Experiment。
 
-- **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
+- **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
 
-- **pai** submit trial jobs to [OpenPAI](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please refer to [Guide to PAI Mode](../TrainingService/PaiMode.md)
+- **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [PAI 模式](../TrainingService/PaiMode.md)。
 
-- **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
+- **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。 详情参考 [Kubeflow 文档](../TrainingService/KubeflowMode.md)
 
-- TODO: explain frameworkcontroller.
+- TODO：解释 FrameworkController。
 
 ### searchSpacePath
 
-Optional. Path to existing file.
+可选。 现有文件的路径。
 
-Specifies the path of search space file, which should be a valid path in the local linux machine.
+指定搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
 
-The only exception that **searchSpacePath** can be not fulfilled is when `useAnnotation=True`.
+仅在 `useAnnotation=True` 时，才不需要填写 **searchSpacePath**。
 
 ### useAnnotation
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Use annotation to analysis trial code and generate search space.
+使用 Annotation 分析 Trial 代码并生成搜索空间。
 
-Note: if **useAnnotation** is true, the searchSpacePath field should be removed.
+注意：如果 **useAnnotation** 为 true，searchSpacePath 字段会被删除。
 
 ### multiPhase
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
+启用[多阶段 Experiment](../AdvancedFeature/MultiPhase.md)。
 
 ### multiThread
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Enable multi-thread mode for dispatcher. If multiThread is enabled, dispatcher will start a thread to process each command from NNI Manager.
+为 Dispatcher 启用多线程模式。 如果启用了 multiThread，Dispatcher 将启动一个线程来处理来自 NNI 管理器的每个命令。
 
 ### nniManagerIp
 
-Optional. String. Default: eth0 device IP.
+可选。 字符串。 默认值：eth0 设备的 IP。
 
-Set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+设置运行 NNI 管理器进程的计算机的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
 
-Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, **nniManagerIp** is recommended to set explicitly.
+注意: 可在 NNI 管理器机器上运行 `ifconfig` 来检查 eth0 是否存在。 If not, **nniManagerIp** is recommended to set explicitly.
 
 ### logDir
 
