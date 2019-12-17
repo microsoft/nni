@@ -16,12 +16,12 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 * 想要在自己的代码、模型中试验**不同的自动机器学习算法**。
 * 想要在**不同的环境中**加速运行自动机器学习。
-* Researchers and data scientists who want to easily **implement and experiement new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
-* ML Platform owners who want to **support AutoML in their platform**.
+* 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
+* 在机器学习平台中**支持自动机器学习**。
 
 ### **NNI v1.2 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
-## **NNI capabilities in a glance**
+## **NNI 功能一览**
 
 NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiements. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms.
 
