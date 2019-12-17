@@ -57,6 +57,7 @@ class Model(nn.Module):
 
         self.embedding = nn.Embedding.from_pretrained(torch.from_numpy(embedding), freeze=False)
         self.hidden_units = hidden_units
+        self.num_layers = num_layers
 
         self.init_conv = ConvBN(1, self.embedding.embedding_dim, hidden_units, cnn_keep_prob, False, True)
 
