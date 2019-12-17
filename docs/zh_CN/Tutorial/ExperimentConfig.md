@@ -523,159 +523,159 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 可选。 字符串。 默认值：none。
 
-用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引。 Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引。 多个 GPU 索引，应用逗号（`,`）分隔，如 `1` 或 `0,1,3`。 默认情况下，将使用所有可用的 GPU。
 
 #### maxTrialNumPerGpu
 
-Optional. Integer. Default: 99999.
+可选。 整数。 默认值：99999。
 
-Used to specify the max concurrency trial number on a GPU device.
+用于指定 GPU 设备上的最大并发 Trial 的数量。
 
 #### useActiveGpu
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+用于指定 GPU 上存在其他进程时是否使用此 GPU。 默认情况下，NNI 仅在 GPU 中没有其他活动进程时才使用 GPU。 如果 **useActiveGpu** 设置为 true，则 NNI 无论某 GPU 是否有其它进程，都将使用它。 此字段不适用于 Windows 版的 NNI。
 
 ### machineList
 
-Required in remote mode. A list of key-value pairs with the following keys.
+在 remote 模式下必需。 具有以下键的键值对的列表。
 
 #### ip
 
-Required. IP address that is accessible from the current machine.
+必填。 可从当前计算机访问的 IP 地址。
 
-The IP address of remote machine.
+远程计算机的 IP 地址。
 
 #### port
 
-Optional. Integer. Valid port. Default: 22.
+可选。 整数。 有效端口。 默认值： 22。
 
-The ssh port to be used to connect machine.
+用于连接计算机的 SSH 端口。
 
 #### username
 
-Required if authentication with username/password. String.
+使用用户名/密码进行身份验证时是必需的。 字符串。
 
-The account of remote machine.
+远程计算机的帐户。
 
 #### passwd
 
-Required if authentication with username/password. String.
+使用用户名/密码进行身份验证时是必需的。 字符串。
 
-Specifies the password of the account.
+指定帐户的密码。
 
 #### sshKeyPath
 
-Required if authentication with ssh key. Path to private key file.
+如果使用 SSH 密钥进行身份验证，则为必需。 私钥文件的路径。
 
-If users use ssh key to login remote machine, **sshKeyPath** should be a valid path to a ssh key file.
+如果用户使用 SSH 密钥登录远程计算机，**sshKeyPath** 应是有效的 SSH 密钥文件路径。
 
-*Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd first.*
+*注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会首先使用 passwd。*
 
 #### passphrase
 
-Optional. String.
+可选。 字符串。
 
-Used to protect ssh key, which could be empty if users don't have passphrase.
+用于保护 SSH 密钥，如果用户没有密码，可为空。
 
 #### gpuIndices
 
-Optional. String. Default: none.
+可选。 字符串。 默认值：none。
 
-Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引。 多个 GPU 索引，应用逗号（`,`）分隔，如 `1` 或 `0,1,3`。 默认情况下，将使用所有可用的 GPU。
 
 #### maxTrialNumPerGpu
 
-Optional. Integer. Default: 99999.
+可选。 整数。 默认值：99999。
 
-Used to specify the max concurrency trial number on a GPU device.
+用于指定 GPU 设备上的最大并发 Trial 的数量。
 
 #### useActiveGpu
 
-Optional. Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+用于指定 GPU 上存在其他进程时是否使用此 GPU。 默认情况下，NNI 仅在 GPU 中没有其他活动进程时才使用 GPU。 如果 **useActiveGpu** 设置为 true，则 NNI 无论某 GPU 是否有其它进程，都将使用它。 此字段不适用于 Windows 版的 NNI。
 
 ### kubeflowConfig
 
 #### operator
 
-Required. String. Has to be `tf-operator` or `pytorch-operator`.
+必填。 字符串。 必须是 `tf-operator` 或 `pytorch-operator`。
 
-Specifies the kubeflow's operator to be used, NNI support `tf-operator` in current version.
+指定要使用的 Kubeflow 运算符，当前版本中 NNI 支持 `tf-operator`。
 
 #### storage
 
-Optional. String. Default. `nfs`.
+可选。 字符串。 默认值 `nfs`。
 
-Specifies the storage type of kubeflow, including `nfs` and `azureStorage`.
+指定 Kubeflow 的存储类型，包括 `nfs` 和 `azureStorage`。
 
 #### nfs
 
-Required if using nfs. Key-value pairs.
+如果使用 nfs，则必需。 键值对。
 
-- **server** is the host of nfs server.
+- **server** 是 NFS 服务器的地址。
 
-- **path** is the mounted path of nfs.
+- **path** 是 NFS 挂载的路径。
 
 #### keyVault
 
-Required if using azure storage. Key-value pairs.
+如果使用 Azure 存储，则必需。 键值对。
 
-Set **keyVault** to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
+将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考：https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2 。
 
-- **vaultName** is the value of `--vault-name` used in az command.
+- **vaultName** 是 az 命令中 `--vault-name` 的值。
 
-- **name** is the value of `--name` used in az command.
+- **name** 是 az 命令中 `--name` 的值。
 
 #### azureStorage
 
-Required if using azure storage. Key-value pairs.
+如果使用 Azure 存储，则必需。 键值对。
 
-Set azure storage account to store code files.
+设置 Azure 存储帐户以存储代码文件。
 
-- **accountName** is the name of azure storage account.
+- **accountName** 是 Azure 存储账户的名称。
 
-- **azureShare** is the share of the azure file storage.
+- **azureShare** 是 Azure 文件存储的共享参数。
 
 #### uploadRetryCount
 
-Required if using azure storage. Integer between 1 and 99999.
+如果使用 Azure 存储，则必需。 1 到 99999 之间的整数。
 
-If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
 
 ### paiConfig
 
 #### userName
 
-Required. String.
+必填。 字符串。
 
-The user name of your pai account.
+OpenPAI 帐户的用户名。
 
 #### password
 
-Required if using password authentication. String.
+如果使用密码身份验证，则需要。 字符串。
 
-The password of the pai account.
+OpenPAI 帐户的密码。
 
 #### token
 
-Required if using token authentication. String.
+如果使用 token 身份验证，则需要。 字符串。
 
-Personal access token that can be retrieved from PAI portal.
+可以从 OpenPAI 门户检索的个人访问 token。
 
 #### host
 
-Required. String.
+必填。 字符串。
 
-The hostname of IP address of PAI.
+OpenPAI 的 IP 地址。
 
-## 样例
+## 示例
 
-### Local mode
+### 本机模式
 
-If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
 
     ```yaml
     authorName: test
