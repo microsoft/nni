@@ -170,8 +170,7 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-            expParams.multiPhase, expParams.multiThread);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
@@ -211,8 +210,7 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-            expParams.multiPhase, expParams.multiThread);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
