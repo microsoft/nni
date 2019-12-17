@@ -1,10 +1,10 @@
-# Experiment Config Reference
+# Experiment（实验）配置参考
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 `nnictl` 命令。 配置文件的格式为 YAML。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-- [Experiment Config Reference](#experiment-config-reference) 
+- [Experiment（实验）配置参考](#experiment-config-reference) 
   - [模板](#template)
-  - [Configuration Spec](#configuration-spec) 
+  - [说明](#configuration-spec) 
     - [authorName](#authorname)
     - [experimentName](#experimentname)
     - [trialConcurrency](#trialconcurrency)
@@ -70,15 +70,15 @@
       - [token](#token)
       - [host](#host)
   - [样例](#examples) 
-    - [Local mode](#local-mode)
-    - [Remote mode](#remote-mode)
-    - [PAI mode](#pai-mode)
-    - [Kubeflow mode](#kubeflow-mode)
-    - [Kubeflow with azure storage](#kubeflow-with-azure-storage)
+    - [本机模式](#local-mode)
+    - [远程模式](#remote-mode)
+    - [PAI 模式](#pai-mode)
+    - [Kubeflow 模式](#kubeflow-mode)
+    - [Kubeflow 中使用 Azure 存储](#kubeflow-with-azure-storage)
 
 ## 模板
 
-- **Light weight (without Annotation and Assessor)**
+- **简化版（不包含 Annotation（标记）和 Assessor）**
 
 ```yaml
 authorName:
@@ -199,15 +199,15 @@ machineList:
     passwd:
 ```
 
-## Configuration Spec
+## 说明
 
 ### authorName
 
-Required. String.
+必填。 字符串。
 
-The name of the author who create the experiment.
+创建 Experiment 的作者的姓名。
 
-*TBD: add default value.*
+*待定: 增加默认值*
 
 ### experimentName
 
