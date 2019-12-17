@@ -45,13 +45,13 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 
 更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
-## Core Features
+## 核心功能
 
-NNI provides a key capacity to run multiple instances in parallel to find best combinations of parameters. This feature can be used in various domains, like find best hyperparameters for a deep learning model, or find best configuration for database and other complex system with real data.
+NNI 提供了并行运行多个实例以查找最佳参数组合的能力。 此功能可用于各种领域，例如，为深度学习模型查找最佳超参数，或查找具有真实数据的数据库和其他复杂系统的最佳配置。
 
-NNI is also like to provide algorithm toolkits for machine learning and deep learning, especially neural architecture search (NAS) algorithms, model compression algorithms, and feature engineering algorithms.
+NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其是神经体系结构搜索（NAS）算法，模型压缩算法和特征工程算法。
 
-### Hyperparameter Tuning
+### 超参调优
 
 This is a core and basic feature of NNI, we provide many popular [automatic tuning algorithms](Tuner/BuiltinTuner.md) (i.e., tuner) and [early stop algorithms](Assessor/BuiltinAssessor.md) (i.e., assessor). You could follow [Quick Start](Tutorial/QuickStart.md) to tune your model (or system). Basically, there are the above three steps and then start an NNI experiment.
 
