@@ -17,7 +17,7 @@ import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { Manager } from './manager';
+import { ExperimentParams, Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
@@ -130,15 +130,6 @@ function parseArg(names: string[]): string {
     return '';
 }
 
-function encodeCmdLineArgs(args: any): any {
-    if(process.platform === 'win32'){
-        return JSON.stringify(args);
-    }
-    else{
-        return JSON.stringify(JSON.stringify(args));
-    }
-}
-
 function getCmdPy(): string {
     let cmd = 'python3';
     if(process.platform === 'win32'){
@@ -150,83 +141,14 @@ function getCmdPy(): string {
 /**
  * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
- * @param tuner : For builtin tuner:
- *     {
- *         className: 'EvolutionTuner'
- *         classArgs: {
- *             optimize_mode: 'maximize',
- *             population_size: 3
- *         }
- *     }
- * customized:
- *     {
- *         codeDir: '/tmp/mytuner'
- *         classFile: 'best_tuner.py'
- *         className: 'BestTuner'
- *         classArgs: {
- *             optimize_mode: 'maximize',
- *             population_size: 3
- *         }
- *     }
  *
- * @param assessor: similiar as tuner
- * @param advisor: similar as tuner
+ * @param expParams: experiment startup parameters
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
-    if ((tuner || assessor) && advisor) {
-        throw new Error('Error: specify both tuner/assessor and advisor is not allowed');
-    }
-    if (!tuner && !advisor) {
-        throw new Error('Error: specify neither tuner nor advisor is not allowed');
-    }
-    let command: string = `${getCmdPy()} -m nni`;
-    if (multiPhase) {
-        command += ' --multi_phase';
-    }
-
-    if (multiThread) {
-        command += ' --multi_thread';
-    }
-
-    if (advisor) {
-        command += ` --advisor_class_name ${advisor.className}`;
-        if (advisor.classArgs !== undefined) {
-            command += ` --advisor_args ${encodeCmdLineArgs(advisor.classArgs)}`;
-        }
-        if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
-            command += ` --advisor_directory ${advisor.codeDir}`;
-        }
-        if (advisor.classFileName !== undefined && advisor.classFileName.length > 1) {
-            command += ` --advisor_class_filename ${advisor.classFileName}`;
-        }
-    } else {
-        command += ` --tuner_class_name ${tuner.className}`;
-        if (tuner.classArgs !== undefined) {
-            command += ` --tuner_args ${encodeCmdLineArgs(tuner.classArgs)}`;
-        }
-        if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
-            command += ` --tuner_directory ${tuner.codeDir}`;
-        }
-        if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
-            command += ` --tuner_class_filename ${tuner.classFileName}`;
-        }
-
-        if (assessor !== undefined && assessor.className !== undefined) {
-            command += ` --assessor_class_name ${assessor.className}`;
-            if (assessor.classArgs !== undefined) {
-                command += ` --assessor_args ${encodeCmdLineArgs(assessor.classArgs)}`;
-            }
-            if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
-                command += ` --assessor_directory ${assessor.codeDir}`;
-            }
-            if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
-                command += ` --assessor_class_filename ${assessor.classFileName}`;
-            }
-        }
-    }
-
-    return command;
+function getMsgDispatcherCommand(expParams: ExperimentParams): string {
+    const clonedParams = Object.assign({}, expParams);
+    delete clonedParams.searchSpace;
+    return `${getCmdPy()} -m nni --exp_params '${JSON.stringify(clonedParams)}'`; 
 }
 
 /**

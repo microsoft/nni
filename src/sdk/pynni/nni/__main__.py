@@ -29,76 +29,55 @@ def augment_classargs(input_class_args, classname):
                 input_class_args[key] = value
     return input_class_args
 
-def create_builtin_class_instance(classname, jsonstr_args, is_advisor=False):
+
+def create_builtin_class_instance(class_name, class_args, is_advisor=False):
     if is_advisor:
-        if classname not in AdvisorModuleName or \
-            importlib.util.find_spec(AdvisorModuleName[classname]) is None:
-            raise RuntimeError('Advisor module is not found: {}'.format(classname))
-        class_module = importlib.import_module(AdvisorModuleName[classname])
-        class_constructor = getattr(class_module, AdvisorClassName[classname])
+        if class_name not in AdvisorModuleName or \
+            importlib.util.find_spec(AdvisorModuleName[class_name]) is None:
+            raise RuntimeError('Advisor module is not found: {}'.format(class_name))
+        class_module = importlib.import_module(AdvisorModuleName[class_name])
+        class_constructor = getattr(class_module, AdvisorClassName[class_name])
     else:
-        if classname not in ModuleName or \
-            importlib.util.find_spec(ModuleName[classname]) is None:
-            raise RuntimeError('Tuner module is not found: {}'.format(classname))
-        class_module = importlib.import_module(ModuleName[classname])
-        class_constructor = getattr(class_module, ClassName[classname])
-    if jsonstr_args:
-        class_args = augment_classargs(json.loads(jsonstr_args), classname)
+        if class_name not in ModuleName or \
+            importlib.util.find_spec(ModuleName[class_name]) is None:
+            raise RuntimeError('Tuner module is not found: {}'.format(class_name))
+        class_module = importlib.import_module(ModuleName[class_name])
+        class_constructor = getattr(class_module, ClassName[class_name])
+    if class_args:
+        class_args = augment_classargs(class_args, class_name)
     else:
-        class_args = augment_classargs({}, classname)
+        class_args = augment_classargs({}, class_name)
+    if class_args:
+        instance = class_constructor(**class_args)
+    else:
+        instance = class_constructor()
+
+    return instance
+
+
+def create_customized_class_instance(class_params):
+    code_dir = class_params.get('codeDir')
+    class_filename = class_params.get('classFileName')
+    class_name = class_params.get('className')
+    class_args = class_params.get('classArgs')
+
+    if not os.path.isfile(os.path.join(code_dir, class_filename)):
+        raise ValueError('Class file not found: {}'.format(
+            os.path.join(code_dir, class_filename)))
+    sys.path.append(code_dir)
+    module_name = os.path.splitext(class_filename)[0]
+    class_module = importlib.import_module(module_name)
+    class_constructor = getattr(class_module, class_name)
     if class_args:
         instance = class_constructor(**class_args)
     else:
         instance = class_constructor()
     return instance
 
-def create_customized_class_instance(class_dir, class_filename, classname, jsonstr_args):
-    if not os.path.isfile(os.path.join(class_dir, class_filename)):
-        raise ValueError('Class file not found: {}'.format(
-            os.path.join(class_dir, class_filename)))
-    sys.path.append(class_dir)
-    module_name = os.path.splitext(class_filename)[0]
-    class_module = importlib.import_module(module_name)
-    class_constructor = getattr(class_module, classname)
-    if jsonstr_args:
-        class_args = json.loads(jsonstr_args)
-        instance = class_constructor(**class_args)
-    else:
-        instance = class_constructor()
-    return instance
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
-    parser.add_argument('--advisor_class_name', type=str, required=False,
-                        help='Advisor class name, the class must be a subclass of nni.MsgDispatcherBase')
-    parser.add_argument('--advisor_class_filename', type=str, required=False,
-                        help='Advisor class file path')
-    parser.add_argument('--advisor_args', type=str, required=False,
-                        help='Parameters pass to advisor __init__ constructor')
-    parser.add_argument('--advisor_directory', type=str, required=False,
-                        help='Advisor directory')
-
-    parser.add_argument('--tuner_class_name', type=str, required=False,
-                        help='Tuner class name, the class must be a subclass of nni.Tuner')
-    parser.add_argument('--tuner_class_filename', type=str, required=False,
-                        help='Tuner class file path')
-    parser.add_argument('--tuner_args', type=str, required=False,
-                        help='Parameters pass to tuner __init__ constructor')
-    parser.add_argument('--tuner_directory', type=str, required=False,
-                        help='Tuner directory')
-
-    parser.add_argument('--assessor_class_name', type=str, required=False,
-                        help='Assessor class name, the class must be a subclass of nni.Assessor')
-    parser.add_argument('--assessor_args', type=str, required=False,
-                        help='Parameters pass to assessor __init__ constructor')
-    parser.add_argument('--assessor_directory', type=str, required=False,
-                        help='Assessor directory')
-    parser.add_argument('--assessor_class_filename', type=str, required=False,
-                        help='Assessor class file path')
-
-    parser.add_argument('--multi_phase', action='store_true')
-    parser.add_argument('--multi_thread', action='store_true')
-
+    parser.add_argument('--exp_params', type=str, required=True)
     flags, _ = parser.parse_known_args()
     return flags
 
@@ -108,20 +87,24 @@ def main():
     '''
 
     args = parse_args()
-    if args.multi_thread:
+    logger.debug('exp_params: [%s]', args.exp_params)
+    exp_params = json.loads(args.exp_params)
+    logger.debug('exp_params json obj: [%s]', json.dumps(exp_params, indent=4))
+
+    if exp_params.get('multi_thread'):
         enable_multi_thread()
-    if args.multi_phase:
+    if exp_params.get('multi_phase'):
         enable_multi_phase()
 
-    if args.advisor_class_name:
+    if exp_params.get('advisor') is not None:
         # advisor is enabled and starts to run
-        _run_advisor(args)
-
+        _run_advisor(exp_params)
     else:
         # tuner (and assessor) is enabled and starts to run
-        tuner = _create_tuner(args)
-        if args.assessor_class_name:
-            assessor = _create_assessor(args)
+        assert exp_params.get('tuner') is not None
+        tuner = _create_tuner(exp_params)
+        if exp_params.get('assessor') is not None:
+            assessor = _create_assessor(exp_params)
         else:
             assessor = None
         dispatcher = MsgDispatcher(tuner, assessor)
@@ -139,17 +122,13 @@ def main():
             raise
 
 
-def _run_advisor(args):
-    if args.advisor_class_name in AdvisorModuleName:
+def _run_advisor(exp_params):
+    if exp_params.get('advisor').get('builtinAdvisorName') in AdvisorModuleName:
         dispatcher = create_builtin_class_instance(
-            args.advisor_class_name,
-            args.advisor_args, True)
+            exp_params.get('advisor').get('builtinAdvisorName'),
+            exp_params.get('advisor').get('classArgs'), True)
     else:
-        dispatcher = create_customized_class_instance(
-            args.advisor_directory,
-            args.advisor_class_filename,
-            args.advisor_class_name,
-            args.advisor_args)
+        dispatcher = create_customized_class_instance(exp_params.get('advisor'))
     if dispatcher is None:
         raise AssertionError('Failed to create Advisor instance')
     try:
@@ -159,33 +138,25 @@ def _run_advisor(args):
         raise
 
 
-def _create_tuner(args):
-    if args.tuner_class_name in ModuleName:
+def _create_tuner(exp_params):
+    if exp_params.get('tuner').get('builtinTunerName') in ModuleName:
         tuner = create_builtin_class_instance(
-            args.tuner_class_name,
-            args.tuner_args)
+            exp_params.get('tuner').get('builtinTunerName'),
+            exp_params.get('tuner').get('classArgs'))
     else:
-        tuner = create_customized_class_instance(
-            args.tuner_directory,
-            args.tuner_class_filename,
-            args.tuner_class_name,
-            args.tuner_args)
+        tuner = create_customized_class_instance(exp_params.get('tuner'))
     if tuner is None:
         raise AssertionError('Failed to create Tuner instance')
     return tuner
 
 
-def _create_assessor(args):
-    if args.assessor_class_name in ModuleName:
+def _create_assessor(exp_params):
+    if exp_params.get('assessor').get('builtinAssessorName') in ModuleName:
         assessor = create_builtin_class_instance(
-            args.assessor_class_name,
-            args.assessor_args)
+            exp_params.get('assessor').get('builtinAssessorName'),
+            exp_params.get('assessor').get('classArgs'))
     else:
-        assessor = create_customized_class_instance(
-            args.assessor_directory,
-            args.assessor_class_filename,
-            args.assessor_class_name,
-            args.assessor_args)
+        assessor = create_customized_class_instance(exp_params.get('assessor'))
     if assessor is None:
         raise AssertionError('Failed to create Assessor instance')
     return assessor
