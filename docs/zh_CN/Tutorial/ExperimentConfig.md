@@ -367,43 +367,43 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 可选。 布尔。 默认值：false。
 
-If **includeIntermediateResults** is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
+如果 **includeIntermediateResults** 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。
 
 ### assessor
 
-Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**, **classFileName**, **className** and **classArgs**. *Users must choose exactly one way.*
+指定 Assessor 算法以运行 Experiment。 与 Tuner 类似，有两种设置 Assessor 的方法。 一种方法是使用 NNI SDK 提供的 Assessor。 用户需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
-By default, there is no assessor enabled.
+默认情况下，未启用任何 Assessor。
 
 #### builtinAssessorName
 
-Required if using built-in assessors. String.
+如果使用内置 Assessor，则为必需。 字符串。
 
-Specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
+指定内置 Assessor 的名称，NNI SDK 提供的 Assessor 可参考[这里](../Assessor/BuiltinAssessor.md)。
 
 #### codeDir
 
-Required if using customized assessors. Path relative to the location of config file.
+如果使用定制 Assessor，则为必需。 相对于配置文件位置的路径。
 
-Specifies the directory of assessor code.
+指定 Assessor 代码的目录。
 
 #### classFileName
 
-Required if using customized assessors. File path relative to **codeDir**.
+如果使用定制 Assessor，则为必需。 相对于 **codeDir** 的文件路径。
 
-Specifies the name of assessor file.
+指定 Assessor 文件的名称。
 
 #### className
 
-Required if using customized assessors. String.
+如果使用定制 Assessor，则为必需。 字符串。
 
-Specifies the name of assessor class.
+指定 Assessor 类的名称。
 
 #### classArgs
 
-Optional. Key-value pairs. Default: empty.
+可选。 键值对。 默认值：空。
 
-Specifies the arguments of assessor algorithm.
+指定 Assessor 算法的参数。
 
 ### advisor
 
