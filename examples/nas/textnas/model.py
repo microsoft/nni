@@ -1,17 +1,24 @@
-import numpy as np
 import torch
-import torch.nn.functional as Func
-from torch import nn
+import torch.nn as nn
+from nni.nas.pytorch import mutables
 
 from ops import ConvBN, LinearCombine, AvgPool, MaxPool, RNN, Attention, BatchNorm
-from nni.nas.pytorch import mutables
+from utils import GlobalMaxPool, GlobalAvgPool
 
 
 class Layer(mutables.MutableScope):
-    def __init__(self, key, hidden_units, lstm_keep_prob, att_keep_prob, att_is_mask):
-        super().__init__(key)
-        conv_shortcut = lambda kernel_size: ConvBN(kernel_size, hidden_units, hidden_units,
-                                                   self.cnn_keep_prob, False, True)
+    def __init__(self, key, prev_keys, hidden_units, lstm_keep_prob, att_keep_prob, att_mask):
+        super(Layer, self).__init__(key)
+
+        def conv_shortcut(kernel_size):
+            return ConvBN(kernel_size, hidden_units, hidden_units,
+                          self.cnn_keep_prob, False, True)
+
+        if not prev_keys:
+            # first layer, skip input choice
+            self.prec = None
+        else:
+            self.prec = mutables.InputChoice(choose_from=prev_keys, n_chosen=1)
         self.op = mutables.LayerChoice([
             conv_shortcut(1),
             conv_shortcut(3),
@@ -20,35 +27,46 @@ class Layer(mutables.MutableScope):
             AvgPool(3, False, True),
             MaxPool(3, False, True),
             RNN(hidden_units, lstm_keep_prob),
-            Attention(hidden_units, 4, att_keep_prob, att_is_mask)
+            Attention(hidden_units, 4, att_keep_prob, att_mask)
         ])
+        if not prev_keys:
+            self.skipconnect = None
+        else:
+            self.skipconnect = mutables.InputChoice(choose_from=prev_keys)
         self.bn = BatchNorm(self.out_filters, False, True)
 
-    def forward(self, prev_layers):
-        out = self.mutable(prev_layers[-1])
+    def forward(self, prev_layers, mask):
+        if self.prec is None:
+            assert len(prev_layers) == 1
+            prec = prev_layers[0]
+        else:
+            prec = self.prec(prev_layers[1:])  # skip first
+        out = self.op(prec, mask)
         if self.skipconnect is not None:
-            connection = self.skipconnect(prev_layers[:-1])
+            connection = self.skipconnect(prev_layers[1:])
             if connection is not None:
                 out += connection
-        return self.batch_norm(out)
+        return self.bn(out, mask)
 
 
 class Model(nn.Module):
-    def __init__(self, embedding, hidden_units=32, cnn_keep_prob=1.0,
-                 embed_keep_prob=1.0, final_output_keep_prob=1.0, global_pool="avg"):
+    def __init__(self, embedding, hidden_units=256, num_layers=24,
+                 lstm_keep_prob=0.5, cnn_keep_prob=0.5, att_keep_prob=0.5, att_mask=True,
+                 embed_keep_prob=0.5, final_output_keep_prob=1.0, global_pool="avg"):
         super(Model, self).__init__()
-        layers = []
 
-        self.embedding = nn.Parameter(embedding)
-        self.embedding_dim = embedding.size()[1]
+        self.embedding = nn.Embedding.from_pretrained(torch.from_numpy(embedding), freeze=False)
         self.hidden_units = hidden_units
 
-        self.init_conv = ConvBN(1, self.embedding_dim, hidden_units, cnn_keep_prob, False, True)
+        self.init_conv = ConvBN(1, self.embedding.embedding_dim, hidden_units, cnn_keep_prob, False, True)
 
+        self.layers = nn.ModuleList()
+        layer_ids = []
         for layer_id in range(self.num_layers):
-            layers.append(self._make_layer(layer_id, self.hidden_units))
+            k = "layer_{}".format(layer_id)
+            self.layers.append(Layer(k, layer_ids, hidden_units, lstm_keep_prob, att_keep_prob, att_mask))
+            layer_ids.append(k)
 
-        self.layers = nn.ModuleList(layers)
         self.linear_combine = LinearCombine(self.num_layers)
         self.linear_out = nn.Linear(self.hidden_units, self.class_num)
 
@@ -56,166 +74,27 @@ class Model(nn.Module):
         self.output_dropout = nn.Dropout(p=1 - final_output_keep_prob)
 
         assert global_pool in ["max", "avg"]
-        self.global_pool = nn.AdaptivePooling1d(1)
+        if global_pool == "max":
+            self.global_pool = GlobalMaxPool()
+        elif global_pool == "avg":
+            self.global_pool = GlobalAvgPool()
 
-    def forward(self, sent_ids, mask, pos_ids):
-        seq = Func.embedding(sent_ids.long(), self.embedding)
+    def forward(self, inputs):
+        sent_ids, mask = inputs
+        seq = self.embedding(sent_ids.long())
         seq = self.embed_dropout(seq)
 
         seq = torch.transpose(seq, 1, 2)  # from (N, L, C) -> (N, C, L)
 
         x = self.init_conv(seq, mask)
+        prev_layers = [x]
 
-        start_idx = 0
-        prev_layers = []
-        final_flags = []
-
-        for layer_id in range(self.num_layers):  # run layers
-            layer = self.layers[layer_id]
-            x = self.run_fixed_layer(x, mask, prev_layers, layer, layer_id, start_idx,
-                                     final_flags=final_flags)  # run needed branches
+        for layer in self.layers:
+            x = layer(prev_layers, mask)
             prev_layers.append(x)
-            final_flags.append(1)
 
-            start_idx += 1 + layer_id
-            if self.multi_path:
-                start_idx += 1
-
-        final_layers = []
-        final_layers_idx = []
-        for i in range(0, len(prev_layers)):
-            if self.all_layer_output:
-                if self.num_last_layer_output == 0:
-                    final_layers.append(prev_layers[i])
-                    final_layers_idx.append(i)
-                elif i >= max((len(prev_layers) - self.num_last_layer_output), 0):
-                    final_layers.append(prev_layers[i])
-                    final_layers_idx.append(i)
-            else:
-                final_layers.append(final_flags[i] * prev_layers[i])
-
-        x = self.linear_combine(torch.stack(final_layers))
-
-        class_num = self.class_num
-        batch_size = x.size()[0]
-        inp_c = x.size()[1]
-        inp_l = x.size()[2]
-        if self.output_type == "cls":
-            x = x[:, :, :, 0]  # NCHW, H=1, W=1)
-            x = torch.reshape(x, [-1, inp_c])
-        elif self.output_type == "avg_pool":
-            x = global_avg_pool(x, mask)  # NC
-        elif self.output_type == "max_pool":
-            x = global_max_pool(x, mask)  # NC
-        else:
-            raise ValueError("Unsupported output type.")
-
+        x = self.linear_combine(torch.stack(prev_layers))
+        x = self.global_pool(x)
         x = self.output_dropout(x)
         x = self.linear_out(x)
         return x
-
-    def make_fixed_layer(self, layer_id, out_filters):
-        size = [1, 3, 5, 7]
-        separables = [False, False, False, False]
-
-        branches = []
-
-        if self.fixed_flag:
-            if self.multi_path:
-                branch_id = (layer_id + 1) * (layer_id + 2) // 2
-            else:
-                branch_id = (layer_id) * (layer_id + 1) // 2
-            bn_flag = False
-            for i in range(layer_id):
-                if self.sample_arc[branch_id + 1 + i] == 1:
-                    bn_flag = True
-            branch_id = self.sample_arc[branch_id]
-
-            for operation_id in [0, 1, 2, 3]:  # conv_opt
-                if branch_id == operation_id:
-                    filter_size = size[operation_id]
-                    separable = separables[operation_id]
-                    op = ConvOpt(filter_size, out_filters, out_filters, self.cnn_keep_prob, False, True,
-                                 is_cuda=self.is_cuda)
-                    branches.append(op)
-            if branch_id == 4:
-                branches.append(AvgPoolOpt(3, False, True, is_cuda=self.is_cuda))
-            elif branch_id == 5:
-                branches.append(MaxPoolOpt(3, False, True, is_cuda=self.is_cuda))
-            elif branch_id == 6:
-                branches.append(RnnOpt(out_filters, self.lstm_out_keep_prob, is_cuda=self.is_cuda))
-            elif branch_id == 7:
-                branches.append(AttentionOpt(out_filters, 4, self.attention_keep_prob,
-                                             self.is_mask, is_cuda=self.is_cuda))
-            branches = nn.ModuleList(branches)
-            bn = None
-            if bn_flag:
-                bn = BatchNorm(self.out_filters, False, True, is_cuda=self.is_cuda)
-        else:
-            for operation_id in [0, 1, 2, 3]:  # conv_opt
-                filter_size = size[operation_id]
-                separable = separables[operation_id]
-                op = ConvOpt(filter_size, out_filters, out_filters, self.cnn_keep_prob, False, True,
-                             is_cuda=self.is_cuda)
-                branches.append(op)
-            branches.append(AvgPoolOpt(3, False, True, is_cuda=self.is_cuda))
-            branches.append(MaxPoolOpt(3, False, True, is_cuda=self.is_cuda))
-            branches.append(RnnOpt(out_filters, self.lstm_out_keep_prob, is_cuda=self.is_cuda))
-            branches.append(AttentionOpt(out_filters, 4, self.attention_keep_prob,
-                                         self.is_mask, is_cuda=self.is_cuda))
-            branches = nn.ModuleList(branches)
-            bn = BatchNorm(self.out_filters, False, True, is_cuda=self.is_cuda)
-
-        return nn.ModuleList([branches, bn])
-
-    def run_fixed_layer(self, x, mask, prev_layers, layers, layer_id, start_idx, final_flags):
-        layer = layers[0]
-        bn = layers[1]
-
-        if len(prev_layers) > 0:
-            if self.multi_path:
-                pre_layer_id = self.sample_arc[start_idx]
-                num_pre_layers = len(prev_layers)
-                if num_pre_layers > 5:
-                    num_pre_layers = 5
-                if pre_layer_id >= num_pre_layers:
-                    final_flags[-1] = 0
-                    inputs = prev_layers[-1]
-                else:
-                    layer_idx = len(prev_layers) - 1 - pre_layer_id
-                    final_flags[layer_idx] = 0
-                    inputs = prev_layers[layer_idx]
-            else:
-                inputs = prev_layers[-1]
-                final_flags[-1] = 0
-        else:
-            inputs = x
-
-        if self.multi_path:
-            start_idx += 1
-
-        branches = []
-        # run branch op
-        if self.fixed_flag:
-            branch_id = 0
-        else:
-            branch_id = self.sample_arc[start_idx]
-        branches.append(layer[branch_id](inputs, mask))
-
-        if layer_id == 0:
-            out = sum(branches)
-        else:
-            skip_start = start_idx + 1
-            skip = self.sample_arc[skip_start:skip_start + layer_id]
-
-            res_layers = []
-            for i in range(layer_id):
-                if skip[i] == 1:
-                    res_layers.append(prev_layers[i])
-                    final_flags[i] = 0
-            prev = branches + res_layers
-            out = sum(prev)  # tensor sum
-            if len(prev) > 1:
-                out = bn(out, mask)
-
-        return out

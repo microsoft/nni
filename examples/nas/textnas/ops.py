@@ -180,7 +180,7 @@ class RNN(nn.Module):
         seq = torch.transpose(seq, 1, 2)  # to (N, L, C)
         packed_seq = nn.utils.rnn.pack_padded_sequence(seq, length, batch_first=True,
                                                        enforce_sorted=False)
-        outputs, state = self.bid_rnn(packed_seq)
+        outputs, _ = self.bid_rnn(packed_seq)
         outputs = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True,
                                                    total_length=max_len)[0]
         outputs = outputs.view(-1, max_len, 2, self.hidden_size).sum(2)  # (N, L, C)
@@ -196,7 +196,8 @@ class LinearCombine(nn.Module):
 
         if input_aware:
             raise NotImplementedError("Input aware is not supported.")
-        self.w = nn.Parameter(torch.full((layers_num, 1, 1, 1), 1.0 / layers_num), requires_grad=trainable)
+        self.w = nn.Parameter(torch.full((layers_num, 1, 1, 1), 1.0 / layers_num),
+                              requires_grad=trainable)
 
     def forward(self, seq):
         nw = F.softmax(self.w, dim=0)
