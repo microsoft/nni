@@ -677,80 +677,75 @@ OpenPAI 的 IP 地址。
 
 如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
 
-    ```yaml
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: local
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: true
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
     
 
-You can add assessor configuration.
+增加 Assessor 配置
 
-    ```yaml
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: local
     searchSpacePath: /nni/search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     assessor:
-      #choice: Medianstop
+      #可选项: Medianstop
       builtinAssessorName: Medianstop
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
     
 
-Or you could specify your own tuner and assessor file as following,
+或者可以指定自定义的 Tuner 和 Assessor：
 
-    ```yaml
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: local
     searchSpacePath: /nni/search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
       codeDir: /nni/tuner
       classFileName: mytuner.py
       className: MyTuner
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     assessor:
       codeDir: /nni/assessor
@@ -763,36 +758,35 @@ Or you could specify your own tuner and assessor file as following,
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
     
 
-### Remote mode
+### 远程模式
 
-If run trial jobs in remote machine, users could specify the remote machine information as following format:
+如果要在远程服务器上运行 Trial 任务，需要增加服务器信息：
 
-    ```yaml
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: remote
     searchSpacePath: /nni/search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    #machineList can be empty if the platform is local
+    # 如果是本地 Experiment，machineList 可为空。
     machineList:
+    
       - ip: 10.10.10.10
         port: 22
         username: test
@@ -806,28 +800,26 @@ If run trial jobs in remote machine, users could specify the remote machine info
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
-    ```
     
 
-### PAI mode
+### OpenPAI 模式
 
-    ```yaml
     authorName: test
     experimentName: nni_test1
     trialConcurrency: 1
     maxExecDuration:500h
     maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: pai
     searchSpacePath: search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution, BatchTuner
-      #SMAC (SMAC should be installed through nnictl)
+      #可选项: TPE, Random, Anneal, Evolution, BatchTuner
+      #SMAC (SMAC 需要使用 nnictl package 单独安装)
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     trial:
       command: python3 main.py
@@ -835,38 +827,36 @@ If run trial jobs in remote machine, users could specify the remote machine info
       gpuNum: 4
       cpuNum: 2
       memoryMB: 10000
-      #The docker image to run NNI job on pai
+      # 在 OpenPAI 上运行 NNI 的 Docker 映像
       image: msranni/nni:latest
     paiConfig:
-      #The username to login pai
+      # 登录 OpenPAI 的用户名
       userName: test
-      #The password to login pai
+      # 登录 OpenPAI 的密码
       passWord: test
-      #The host of restful server of pai
+      # OpenPAI 的 RestFUL 服务器地址
       host: 10.10.10.10
-    ```
     
 
-### Kubeflow mode
+### Kubeflow 模式
 
-    kubeflow with nfs storage.
+    使用 NFS 存储。
     
-    ```yaml
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
+    # 可选项: local, remote, pai, kubeflow
     trainingServicePlatform: kubeflow
     searchSpacePath: search_space.json
-    #choice: true, false
+    # 可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      # 可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        # 可选项: maximize, minimize
         optimize_mode: maximize
     trial:
       codeDir: .
@@ -882,28 +872,27 @@ If run trial jobs in remote machine, users could specify the remote machine info
       nfs:
         server: 10.10.10.10
         path: /var/nfs/general
-    ```
+    
     
 
-### Kubeflow with azure storage
+### Kubeflow 中使用 Azure 存储
 
-    ```yaml
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
+    # 可选项: local, remote, pai, kubeflow
     trainingServicePlatform: kubeflow
     searchSpacePath: search_space.json
-    #choice: true, false
+    # 可选项: true, false
     useAnnotation: false
     #nniManagerIp: 10.10.10.10
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      # 可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        # 可选项: maximize, minimize
         optimize_mode: maximize
     assessor:
       builtinAssessorName: Medianstop
@@ -926,4 +915,3 @@ If run trial jobs in remote machine, users could specify the remote machine info
       azureStorage:
         accountName: storage
         azureShare: share01
-    ```
