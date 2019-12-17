@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 // draw accuracy graph data interface
 interface TableObj {
     key: number;
