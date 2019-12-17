@@ -68,7 +68,7 @@ def validate(epoch, model, criterion, loader, writer, args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("SPOS Supernet Training")
+    parser = argparse.ArgumentParser("SPOS Training From Scratch")
     parser.add_argument("--imagenet-dir", type=str, default="./data/imagenet")
     parser.add_argument("--tb-dir", type=str, default="runs")
     parser.add_argument("--architecture", type=str, default="architecture_final.json")

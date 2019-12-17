@@ -20,7 +20,7 @@ if __name__ == "__main__":
                         help="When true, image values will range from 0 to 255 and use BGR "
                              "(as in original repo).")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--batch-size", type=int, default=960)
+    parser.add_argument("--batch-size", type=int, default=896)
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--learning-rate", type=float, default=0.5)
     parser.add_argument("--momentum", type=float, default=0.9)
@@ -43,7 +43,8 @@ if __name__ == "__main__":
             print("You might want to use SPOS preprocessing if you are loading their checkpoints.")
         model.load_state_dict(load_and_parse_state_dict())
     model.cuda()
-    model = nn.DataParallel(model)
+    if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
+        model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
     mutator = SPOSSupernetTrainingMutator(model, flops_func=model.module.get_candidate_flops,
                                           flops_lb=290E6, flops_ub=360E6)
     criterion = CrossEntropyLabelSmooth(1000, 0.1)
