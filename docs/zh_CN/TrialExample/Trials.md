@@ -134,29 +134,29 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
 
 ## 用于调试的独立模式
 
-NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
 
 ```python
-# NOTE: please assign default values to the hyperparameters in your trial code
-nni.get_next_parameter # return {}
-nni.report_final_result # have log printed on stdout, but does not report
-nni.report_intermediate_result # have log printed on stdout, but does not report
-nni.get_experiment_id # return "STANDALONE"
-nni.get_trial_id # return "STANDALONE"
-nni.get_sequence_id # return 0
+＃注意：请为 Trial 代码中的超参分配默认值
+nni.get_next_parameter＃返回 {}
+nni.report_final_result＃已在 stdout 上打印日志，但不报告
+nni.report_intermediate_result＃已在 stdout 上打印日志，但不报告
+nni.get_experiment_id＃返回 "STANDALONE"
+nni.get_trial_id＃返回 "STANDALONE"
+nni.get_sequence_id＃返回 0
 ```
 
-You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code successfully runs with default hyperparameter values.
+可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 Trial 代码会使用默认超参成功运行。
 
-For more debuggability, please refer to [How to Debug](../Tutorial/HowToDebug.md)
+更多调试的信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
 
-## Where are my trials?
+## Trial 存放在什么地方？
 
 ### 本机模式
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
+每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
+如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
 
 ```bash
 #!/bin/bash
@@ -174,13 +174,13 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ### 其它模式
 
-When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni/experiments/$experiment_id$/trials/$trial_id$/` 。
 
-For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md)
+详细信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
 
 <a name="more-examples"></a>
 
-## More Trial Examples
+## 更多 Trial 的示例
 
 * [MNIST 样例](MnistExamples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](Cifar10Examples.md)
