@@ -54,6 +54,10 @@ class BaseMutator(nn.Module):
     def mutables(self):
         return self._structured_mutables
 
+    @property
+    def undedup_mutables(self):
+        return self._structured_mutables.traverse(deduplicate=False)
+
     def forward(self, *inputs):
         raise RuntimeError("Forward is undefined for mutators.")
 

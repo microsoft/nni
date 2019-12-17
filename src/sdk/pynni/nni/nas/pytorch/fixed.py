@@ -77,6 +77,6 @@ def apply_fixed_architecture(model, fixed_arc_path, device=None):
             fixed_arc = json.load(f)
     fixed_arc = _encode_tensor(fixed_arc, device)
     architecture = FixedArchitecture(model, fixed_arc)
-    architecture.to(device)
+    #architecture.to(device)
     architecture.reset()
     return architecture

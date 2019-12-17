@@ -9,20 +9,11 @@ import torch
 from torch import nn as nn
 
 from nni.nas.pytorch.base_trainer import BaseTrainer
-#from nni.nas.pytorch.trainer import TorchTensorEncoder
+from nni.nas.pytorch.trainer import TorchTensorEncoder
 from nni.nas.pytorch.utils import AverageMeter
 from .mutator import ProxylessNasMutator
 from .utils import cross_entropy_with_label_smoothing, accuracy
 
-class TorchTensorEncoder(json.JSONEncoder):
-    def default(self, o):  # pylint: disable=method-hidden
-        if isinstance(o, torch.Tensor):
-            olist = o.tolist()
-            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
-                print("Every element in %s is either 0 or 1. "
-                                "You might consider convert it into bool.", olist)
-            return olist
-        return super().default(o)
 
 class ProxylessNasTrainer(BaseTrainer):
     def __init__(self, model, model_optim, device,
@@ -410,4 +401,7 @@ class ProxylessNasTrainer(BaseTrainer):
         raise NotImplementedError
 
     def train_and_validate(self):
+        raise NotImplementedError
+
+    def checkpoint(self):
         raise NotImplementedError

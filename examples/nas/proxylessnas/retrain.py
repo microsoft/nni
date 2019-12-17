@@ -90,7 +90,7 @@ def train_one_epoch(model, train_loader, device, optimizer, adjust_lr_func, trai
             images, labels = images.to(device), labels.to(device)
             output = model(images)
             if label_smoothing > 0:
-                loss = cross_entropy_with_label_smoothing(output, labels, self.run_config.label_smoothing)
+                loss = cross_entropy_with_label_smoothing(output, labels, label_smoothing)
             else:
                 loss = criterion(output, labels)
             acc1, acc5 = accuracy(output, labels, topk=(1, 5))
@@ -124,8 +124,7 @@ def train(model, optimizer, device, train_loader, valid_loader, test_loader, n_e
                         'Top-1 acc {top1.val:.3f} ({top1.avg:.3f})'. \
                 format(epoch_ + 1, i, nBatch - 1,
                        batch_time=batch_time, data_time=data_time, losses=losses, top1=top1)
-            if print_top5:
-                batch_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
+            batch_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
             batch_log += '\tlr {lr:.5f}'.format(lr=lr)
             return batch_log
     
@@ -173,7 +172,7 @@ def retrain(model, optimizer, device, data_provider, n_epochs):
     model = torch.nn.DataParallel(model)
     model.to(device)
     # train
-    train(model, optimizer, device, train_loader, valid_loader, test_loader, n_epochs)
+    #train(model, optimizer, device, train_loader, valid_loader, test_loader, n_epochs)
     # validate
     validate(model, device, valid_loader, test_loader, is_test=False)
     # test

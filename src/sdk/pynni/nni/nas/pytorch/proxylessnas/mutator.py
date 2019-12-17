@@ -244,7 +244,7 @@ class ProxylessNasMutator(BaseMutator):
         super(ProxylessNasMutator, self).__init__(model)
         self._unused_modules = None
         self.mutable_list = []
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mo = MixedOp(mutable)
             self.mutable_list.append(mutable)
             mutable.registered_module = mo
@@ -274,7 +274,7 @@ class ProxylessNasMutator(BaseMutator):
         """
         For each LayerChoice, binarize based on alpha to only activate one op
         """
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.binarize(mutable)
 
     def set_chosen_op_active(self):
@@ -282,7 +282,7 @@ class ProxylessNasMutator(BaseMutator):
         For each LayerChoice, set the op with highest alpha as the chosen op
         Usually used for validation.
         """
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.set_chosen_op_active()
 
     def num_arch_params(self):
@@ -297,14 +297,14 @@ class ProxylessNasMutator(BaseMutator):
         """
         For each LayerChoice, calculate gradients for architecture weights, i.e., alpha
         """
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.set_arch_param_grad(mutable)
 
     def get_architecture_parameters(self):
         """
         Return architecture weights of each LayerChoice, for arch optimizer
         """
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             yield mutable.registered_module.get_AP_path_alpha()
 
     def change_forward_mode(self, mode):
@@ -314,12 +314,12 @@ class ProxylessNasMutator(BaseMutator):
         return MixedOp.forward_mode
 
     def rescale_updated_arch_param(self):
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.rescale_updated_arch_param()
 
     def unused_modules_off(self):
         self._unused_modules = []
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mixed_op = mutable.registered_module
             unused = {}
             if self.get_forward_mode() in ['full', 'two', 'full_v2']:
@@ -341,17 +341,17 @@ class ProxylessNasMutator(BaseMutator):
         self._unused_modules = None
 
     def arch_requires_grad(self):
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.to_requires_grad()
 
     def arch_disable_grad(self):
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             mutable.registered_module.disable_grad()
 
     def sample_final(self):
         result = dict()
-        for _, mutable, _ in self.named_mutables(distinct=False):
+        for mutable in self.undedup_mutables:
             assert isinstance(mutable, LayerChoice)
             index, _ = mutable.registered_module.chosen_index
-            result[mutable.key] = F.one_hot(torch.tensor(index), num_classes=mutable.length).view(-1)#.bool()
+            result[mutable.key] = F.one_hot(torch.tensor(index), num_classes=mutable.length).view(-1).bool()
         return result
