@@ -407,123 +407,123 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 ### advisor
 
-Optional.
+可选。
 
-Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+指定 Experiment 中的 Advisor 算法。 与 Tuner 和 Assessor 类似，有两种指定 Advisor 的方法。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
 
-When advisor is enabled, settings of tuners and advisors will be bypassed.
+启用 Advisor 后，将忽略 Tuner 和 Advisor 的设置。
 
 #### builtinAdvisorName
 
-Specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
+指定内置 Advisor 的名称。 NNI SDK 提供了 [BOHB](../Tuner/BohbAdvisor.md) 和 [Hyperband](../Tuner/HyperbandAdvisor.md)。
 
 #### codeDir
 
-Required if using customized advisors. Path relative to the location of config file.
+如果使用定制 Advisor，则为必需。 相对于配置文件位置的路径。
 
-Specifies the directory of advisor code.
+指定 Advisor 代码的目录。
 
 #### classFileName
 
-Required if using customized advisors. File path relative to **codeDir**.
+如果使用定制 Advisor，则为必需。 相对于 **codeDir** 的文件路径。
 
-Specifies the name of advisor file.
+指定 Advisor 文件的名称。
 
 #### className
 
-Required if using customized advisors. String.
+如果使用定制 Advisor，则为必需。 字符串。
 
-Specifies the name of advisor class.
+指定 Advisor 类的名称。
 
 #### classArgs
 
-Optional. Key-value pairs. Default: empty.
+可选。 键值对。 默认值：空。
 
-Specifies the arguments of advisor.
+指定 Advisor 的参数。
 
 #### gpuIndices
 
-Optional. String. Default: empty.
+可选。 字符串。 默认值：空。
 
-Specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+指定可以使用的 GPU。 可以指定单个或多个 GPU 索引。 多个 GPU 索引用逗号 `,` 分隔。 例如，`1` 或 `0,1,3`。 如果未设置该字段，则 Tuner 将找不到 GPU（设置 `CUDA_VISIBLE_DEVICES` 成空字符串）。
 
 ### trial
 
-Required. Key-value pairs.
+必填。 键值对。
 
-In local and remote mode, the following keys are required.
+在 local 和 remote 模式下，需要以下键。
 
-- **command**: Required string. Specifies the command to run trial process.
+- **command**：必需字符串。 指定运行 Trial 的命令。
 
-- **codeDir**: Required string. Specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
+- **codeDir**：必需字符串。 指定 Trial 文件的目录。 此目录将在 remote 模式下自动上传。
 
-- **gpuNum**: Optional integer. Specifies the num of gpu to run the trial process. Default value is 0.
+- **gpuNum**：可选、整数。 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
-In PAI mode, the following keys are required.
+在 PAI 模式下，需要以下键。
 
-- **command**: Required string. Specifies the command to run trial process.
+- **command**：必需字符串。 指定运行 Trial 的命令。
 
-- **codeDir**: Required string. Specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
+- **codeDir**：必需字符串。 指定 Trial 文件的目录。 目录中的文件将在 PAI 模式下上传。
 
-- **gpuNum**: Required integer. Specifies the num of gpu to run the trial process. Default value is 0.
+- **gpuNum**：必需、整数。 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
-- **cpuNum**: Required integer. Specifies the cpu number of cpu to be used in pai container.
+- **cpuNum**：必需、整数。 指定要在 OpenPAI 容器中使用的 cpu 数。
 
-- **memoryMB**: Required integer. Set the memory size to be used in pai container, in megabytes.
+- **memoryMB**：必需、整数。 设置要在 OpenPAI 容器中使用的内存大小，以兆字节为单位。
 
-- **image**: Required string. Set the image to be used in pai.
+- **image**：必需字符串。 设置要在 OpenPAI 中使用的 Docker 映像。
 
-- **authFile**: Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. [Reference](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job).
+- **authFile**：可选、字符串。 用于提供 Docker 注册，用于为 OpenPAI 中的映像拉取请求进行身份验证。 [参考](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。
 
-- **shmMB**: Optional integer. Shared memory size of container.
+- **shmMB**：可选、整数。 容器的共享内存大小。
 
-- **portList**: List of key-values pairs with `label`, `beginAt`, `portNumber`. See [job tutorial of PAI](https://github.com/microsoft/pai/blob/master/docs/job_tutorial.md) for details.
+- **portList**: `label`, `beginAt`, `portNumber` 的键值对 list。 参考[ OpenPAI Job 教程](https://github.com/microsoft/pai/blob/master/docs/job_tutorial.md)。
 
-In Kubeflow mode, the following keys are required.
+在 Kubeflow 模式下，需要以下键。
 
-- **codeDir**: The local directory where the code files are in.
+- **codeDir** 指定了代码文件的本机路径。
 
-- **ps**: An optional configuration for kubeflow's tensorflow-operator, which includes
+- **ps**: Kubeflow 的 tensorflow-operator 的可选配置，包括：
   
-      * __replicas__: The replica number of __ps__ role.
+      * __replicas__: __ps__ 角色的副本数量。
       
-      * __command__: The run script in __ps__'s container.
+      * __command__: __ps__ 容器的运行脚本。
       
-      * __gpuNum__: The gpu number to be used in __ps__ container.
+      * __gpuNum__: 在 __ps__ 容器中使用的 GPU 数量。
       
-      * __cpuNum__: The cpu number to be used in __ps__ container.
+      * __cpuNum__: 在 __ps__ 容器中使用的 CPU 数量。
       
-      * __memoryMB__: The memory size of the container.
+      * __memoryMB__：容器的内存大小。
       
-      * __image__: The image to be used in __ps__.
+      * __image__: 在 __ps__ 中使用的 Docker 映像。
       
 
-- **worker**: An optional configuration for kubeflow's tensorflow-operator.
+- **worker** 是 Kubeflow 的 tensorflow-operator 的可选配置。
   
-      * __replicas__: The replica number of __worker__ role.
+      * __replicas__: __worker__ 角色的副本数量。
       
-      * __command__: The run script in __worker__'s container.
+      * __command__: __worker__ 容器的运行脚本。
       
-      * __gpuNum__: The gpu number to be used in __worker__ container.
+      * __gpuNum__: 在 __worker__ 容器中使用的 GPU 数量。
       
-      * __cpuNum__: The cpu number to be used in __worker__ container.
+      * __cpuNum__: 在 __worker__ 容器中使用的 CPU 数量。
       
-      * __memoryMB__: The memory size of the container.
+      * __memoryMB__：容器的内存大小。
       
-      * __image__: The image to be used in __worker__.
+      * __image__: 在 __worker__ 中使用的 Docker 映像。
       
 
 ### localConfig
 
-Optional in local mode. Key-value pairs.
+本机模式下可选。 键值对。
 
-Only applicable if **trainingServicePlatform** is set to `local`, otherwise there should not be **localConfig** section in configuration file.
+仅在 **trainingServicePlatform** 设为 `local` 时有效，否则，配置文件中不应该有 **localConfig** 部分。
 
 #### gpuIndices
 
-Optional. String. Default: none.
+可选。 字符串。 默认值：none。
 
-Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引。 Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
 
 #### maxTrialNumPerGpu
 
