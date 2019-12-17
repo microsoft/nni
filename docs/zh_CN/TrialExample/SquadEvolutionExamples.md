@@ -113,18 +113,18 @@ trial:
   gpuNum: 0
   cpuNum: 1
   memoryMB: 32869
-  #The docker image to run nni job on OpenPAI
+  # 在 OpenPAI 上运行 NNI 的 Docker 映像
   image: msranni/nni:latest
 paiConfig:
-  #The username to login OpenPAI
+  # 登录 OpenPAI 的用户名
   userName: username
-  #The password to login OpenPAI
+  # 登录 OpenPAI 的密码
   passWord: password
-  #The host of restful server of OpenPAI
+  # OpenPAI 的 RestFUL 服务器地址
   host: 10.10.10.10
 ```
 
-将默认值改为个人账户和服务器信息。 Including `nniManagerIp`, `userName`, `passWord` and `host`.
+将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `userName`, `passWord` 和 `host`.
 
 在 "Trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
