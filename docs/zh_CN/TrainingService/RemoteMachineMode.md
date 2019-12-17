@@ -16,9 +16,9 @@ NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remo
 
 ## 运行 Experiment
 
-Install NNI on another machine which has network accessibility to those three machines above, or you can just run `nnictl` on any one of the three to launch the experiment.
+将 NNI 安装在可以访问上述三台计算机的网络的另一台计算机上，或者仅在三台计算机中的任何一台上运行 `nnictl` 即可启动 Experiment。
 
-以 `examples/trials/mnist-annotation` 为例。 Shown here is `examples/trials/mnist-annotation/config_remote.yml`:
+以 `examples/trials/mnist-annotation` 为例。 此处示例在 `examples/trials/mnist-annotation/config_remote.yml`：
 
 ```yaml
 authorName: default
@@ -58,14 +58,14 @@ machineList:
     passwd: bob123
 ```
 
-Files in `codeDir` will be automatically uploaded to the remote machine. You can run NNI on different operating systems (Windows, Linux, MacOS) to spawn experiments on the remote machines (only Linux allowed):
+`codeDir` 中的文件会被自动上传到远程服务器。 可在不同的操作系统上运行 NNI (Windows, Linux, MacOS)，来在远程机器上（仅支持 Linux）运行 Experiment。
 
 ```bash
 nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 ```
 
-You can also use public/private key pairs instead of username/password for authentication. For advanced usages, please refer to [Experiment Config Reference](../Tutorial/ExperimentConfig.md).
+也可使用公钥/私钥对，而非用户名/密码进行身份验证。 有关高级用法，请参考[实验配置参考](../Tutorial/ExperimentConfig.md)。
 
-## Version check
+## 版本校验
 
-NNI support version check feature in since version 0.6, [reference](PaiMode.md).
+从 0.6 开始，NNI 支持版本校验，详情参考[这里](PaiMode.md)。
