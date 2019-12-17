@@ -35,7 +35,7 @@ class Layer(mutables.MutableScope):
 
 class Model(nn.Module):
     def __init__(self, embedding, hidden_units=32, cnn_keep_prob=1.0,
-                 embed_keep_prob=1.0, final_output_keep_prob=1.0):
+                 embed_keep_prob=1.0, final_output_keep_prob=1.0, global_pool="avg"):
         super(Model, self).__init__()
         layers = []
 
@@ -54,6 +54,9 @@ class Model(nn.Module):
 
         self.embed_dropout = nn.Dropout(p=1 - embed_keep_prob)
         self.output_dropout = nn.Dropout(p=1 - final_output_keep_prob)
+
+        assert global_pool in ["max", "avg"]
+        self.global_pool = nn.AdaptivePooling1d(1)
 
     def forward(self, sent_ids, mask, pos_ids):
         seq = Func.embedding(sent_ids.long(), self.embedding)
@@ -91,14 +94,7 @@ class Model(nn.Module):
             else:
                 final_layers.append(final_flags[i] * prev_layers[i])
 
-        if self.all_layer_output and self.output_linear_combine:  # all layer ooutput and use linear_combine
-            x = self._linear_combine(torch.stack(final_layers))
-        else:
-            x = sum(final_layers)
-            if not self.all_layer_output:
-                x /= sum(final_flags)
-            else:
-                x /= len(final_layers)
+        x = self.linear_combine(torch.stack(final_layers))
 
         class_num = self.class_num
         batch_size = x.size()[0]
