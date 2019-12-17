@@ -14,11 +14,12 @@ class Layer(mutables.MutableScope):
             return ConvBN(kernel_size, hidden_units, hidden_units,
                           self.cnn_keep_prob, False, True)
 
-        if not prev_keys:
+        self.n_candidates = len(prev_keys)
+        if self.n_candidates:
+            self.prec = mutables.InputChoice(choose_from=prev_keys, n_chosen=1)
+        else:
             # first layer, skip input choice
             self.prec = None
-        else:
-            self.prec = mutables.InputChoice(choose_from=prev_keys, n_chosen=1)
         self.op = mutables.LayerChoice([
             conv_shortcut(1),
             conv_shortcut(3),
@@ -29,10 +30,10 @@ class Layer(mutables.MutableScope):
             RNN(hidden_units, lstm_keep_prob),
             Attention(hidden_units, 4, att_keep_prob, att_mask)
         ])
-        if not prev_keys:
-            self.skipconnect = None
-        else:
+        if self.n_candidates:
             self.skipconnect = mutables.InputChoice(choose_from=prev_keys)
+        else:
+            self.skipconnect = None
         self.bn = BatchNorm(self.out_filters, False, True)
 
     def forward(self, prev_layers, mask):
@@ -40,17 +41,17 @@ class Layer(mutables.MutableScope):
             assert len(prev_layers) == 1
             prec = prev_layers[0]
         else:
-            prec = self.prec(prev_layers[1:])  # skip first
+            prec = self.prec(prev_layers[-self.prec.n_candidates:])  # skip first
         out = self.op(prec, mask)
         if self.skipconnect is not None:
-            connection = self.skipconnect(prev_layers[1:])
+            connection = self.skipconnect(prev_layers[-self.skipconnect.n_candidates:])
             if connection is not None:
                 out += connection
         return self.bn(out, mask)
 
 
 class Model(nn.Module):
-    def __init__(self, embedding, hidden_units=256, num_layers=24,
+    def __init__(self, embedding, hidden_units=256, num_layers=24, choose_from_k=5,
                  lstm_keep_prob=0.5, cnn_keep_prob=0.5, att_keep_prob=0.5, att_mask=True,
                  embed_keep_prob=0.5, final_output_keep_prob=1.0, global_pool="avg"):
         super(Model, self).__init__()
@@ -62,11 +63,12 @@ class Model(nn.Module):
         self.init_conv = ConvBN(1, self.embedding.embedding_dim, hidden_units, cnn_keep_prob, False, True)
 
         self.layers = nn.ModuleList()
-        layer_ids = []
+        candidate_keys_pool = []
         for layer_id in range(self.num_layers):
             k = "layer_{}".format(layer_id)
-            self.layers.append(Layer(k, layer_ids, hidden_units, lstm_keep_prob, att_keep_prob, att_mask))
-            layer_ids.append(k)
+            self.layers.append(Layer(k, candidate_keys_pool[-choose_from_k:],
+                                     hidden_units, lstm_keep_prob, att_keep_prob, att_mask))
+            candidate_keys_pool.append(k)
 
         self.linear_combine = LinearCombine(self.num_layers)
         self.linear_out = nn.Linear(self.hidden_units, self.class_num)
