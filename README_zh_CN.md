@@ -23,9 +23,9 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 ## **NNI 功能一览**
 
-NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiements. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms.
+NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 通过可扩展的 API，可定制自动机器学习算法和训练平台。 为了方便新用户，NNI 内置了最新的自动机器学习算法，并为流行的训练平台提供了开箱即用的支持。
 
-Within the following table, we summarized the current NNI capabilities, we are gradually adding new capabilities and we'd love to have your contribution.
+下表中，包含了 NNI 的功能，同时在不断地增添新功能，也非常希望您能贡献其中。
 
 <p align="center">
   <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -88,21 +88,21 @@ Within the following table, we summarized the current NNI capabilities, we are g
         </ul>
       </td>
       <td align="left" >
-        <a href="docs/zh_CN/Tuner/BuiltinTuner.md">Hyperparameter Tuning</a>
+        <a href="docs/zh_CN/Tuner/BuiltinTuner.md">超参调优</a>
         <ul>
-          <b>Exhaustive search</b>
+          <b>穷举搜索</b>
           <ul>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
             </ul>
-          <b>Heuristic search</b>
+          <b>启发式搜索</b>
           <ul>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>  
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>  
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
           </ul>
-          <b>Bayesian optimization</b>
+          <b>贝叶斯优化</b>
             <ul>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>  
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
@@ -110,12 +110,12 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a> </li>
             </ul>  
-          <b>RL Based</b>
+          <b>基于强化学习</b>
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a> </li>
           </ul>
         </ul>
-          <a href="docs/en_US/NAS/Overview.md">Neural Architecture Search</a>
+          <a href="docs/en_US/NAS/Overview.md">神经网络架构搜索</a>
           <ul>                        
             <ul>
               <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
@@ -124,15 +124,15 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
-          <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
+          <a href="docs/en_US/Compressor/Overview.md">模型压缩</a>
           <ul>
-            <b>Pruning</b>
+            <b>剪枝</b>
             <ul>
               <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
               <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
               <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
             </ul>
-            <b>Quantization</b>
+            <b>量化</b>
             <ul>
               <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
               <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
