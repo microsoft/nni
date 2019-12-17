@@ -138,15 +138,15 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
             </ul>
           </ul>
-          <a href="docs/en_US/FeatureEngineering/Overview.md">Feature Engineering (Beta)</a>
+          <a href="docs/en_US/FeatureEngineering/Overview.md">特征工程（测试版）</a>
           <ul>
           <li><a href="docs/en_US/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
           <li><a href="docs/en_US/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
           </ul>
-          <a href="docs/en_US/Assessor/BuiltinAssessor.md">Early Stop Algorithms</a>
+          <a href="docs/en_US/Assessor/BuiltinAssessor.md">提前终止算法</a>
           <ul>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>   
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
           </ul>
       </td>
       <td>
@@ -193,11 +193,11 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
 
 ## **安装和验证**
 
-**Install through pip**
+**通过 pip 命令安装**
 
-* We support Linux, MacOS and Windows (local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+* 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux and MacOS
+Linux 和 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -209,19 +209,19 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-Note:
+注意：
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* Currently NNI on Windows support local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md)
+* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。
 
-**Install through source code**
+**通过源代码安装**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows (10.1809) in our current stage.
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
-Linux and MacOS
+Linux 和 MacOS
 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
+* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
     git clone -b v1.2 https://github.com/Microsoft/nni.git
@@ -231,7 +231,7 @@ Linux and MacOS
 
 Windows
 
-* Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
+* 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
   git clone -b v1.2 https://github.com/Microsoft/nni.git
@@ -239,23 +239,23 @@ Windows
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Tutorial/Installation.md)
+参考[安装 NNI](docs/zh_CN/Tutorial/Installation.md) 了解系统需求。
 
-For NNI on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md)
+Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
 
-**Verify install**
+**验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow 1.x installed** before running it. Note that **currently Tensorflow 2.0 is NOT supported**.
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow 1.x**。 注意，**目前不支持 TensorFlow 2.0**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
 
 ```bash
     git clone -b v1.2 https://github.com/Microsoft/nni.git
 ```
 
-Linux and MacOS
+Linux 和 MacOS
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
@@ -269,7 +269,7 @@ Windows
     nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 You can explore the experiment using the `Web UI url`.
 
 ```text
 INFO: Starting restful server...
