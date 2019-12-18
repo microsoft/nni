@@ -61,13 +61,13 @@ NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其�
 
 NNI 通过 Trial SDK 支持多种 one-shot NAS 算法，如：ENAS、DARTS。 使用这些算法时，不需启动 NNI Experiment。 在 Trial 代码中加入算法，直接运行即可。 如果要调整算法中的超参数，或运行多个实例，可以使用 Tuner 并启动 NNI Experiment。
 
-Other than one-shot NAS, NAS can also run in a classic mode where each candidate architecture runs as an independent trial job. In this mode, similar to hyperparameter tuning, users have to start an NNI experiment and choose a tuner for NAS.
+除了 one-shot NAS 外，NAS 还能以 NNI 模式运行，其中每个候选的网络结构都作为独立 Trial 任务运行。 在此模式下，与超参调优类似，必须启动 NNI Experiment 并为 NAS 选择 Tuner。
 
-### Model Compression
+### 模型压缩
 
-Model Compression on NNI includes pruning algorithms and quantization algorithms. These algorithms are provided through NNI trial SDK. Users could directly use them in their trial code and run the trial code without starting an NNI experiment. Detailed description and usage can be found [here](Compressor/Overview.md).
+NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 可以直接在 Trial 代码中使用，并在不启动 NNI Experiment 的情况下运行 Trial 代码。 详情及用法参考[这里](Compressor/Overview.md)。
 
-There are different types of hyperparamters in model compression. One type is the hyperparameters in input configuration, e.g., sparsity, quantization bits, to a compression algorithm. The other type is the hyperparamters in compression algorithms. Here, Hyperparameter tuning of NNI could help a lot in finding the best compressed model automatically. A simple example can be found [here](Compressor/AutoCompression.md).
+模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 A simple example can be found [here](Compressor/AutoCompression.md).
 
 ### Automatic Feature Engineering
 
