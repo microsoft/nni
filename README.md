@@ -33,7 +33,7 @@ NNI provides CommandLine Tool as well as an user friendly WebUI to manage traini
 Within the following table, we summarized the current NNI capabilities, we are gradually adding new capabilities and we'd love to have your contribution.
 
 <p align="center">
-  <a href="#nni-has-been-released"><img src="docs/img/overview.png" /></a>
+  <a href="#nni-has-been-released"><img src="docs/img/overview.svg" /></a>
 </p>
 
 <table>
