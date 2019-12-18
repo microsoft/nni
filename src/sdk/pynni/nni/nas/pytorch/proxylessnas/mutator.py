@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import math
 import torch
 from torch import nn as nn
 from torch.nn import functional as F
 import numpy as np
 
-from .utils import detach_variable
 from nni.nas.pytorch.base_mutator import BaseMutator
 from nni.nas.pytorch.mutables import LayerChoice
+from .utils import detach_variable
 
 class ArchGradientFunction(torch.autograd.Function):
 
@@ -245,9 +246,8 @@ class ProxylessNasMutator(BaseMutator):
         self._unused_modules = None
         self.mutable_list = []
         for mutable in self.undedup_mutables:
-            mo = MixedOp(mutable)
             self.mutable_list.append(mutable)
-            mutable.registered_module = mo
+            mutable.registered_module = MixedOp(mutable)
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """

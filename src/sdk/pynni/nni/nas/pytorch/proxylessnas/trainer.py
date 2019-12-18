@@ -4,6 +4,7 @@
 import math
 import time
 import json
+import logging
 
 import torch
 from torch import nn as nn
@@ -14,6 +15,7 @@ from nni.nas.pytorch.utils import AverageMeter
 from .mutator import ProxylessNasMutator
 from .utils import cross_entropy_with_label_smoothing, accuracy
 
+logger = logging.getLogger(__name__)
 
 class ProxylessNasTrainer(BaseTrainer):
     def __init__(self, model, model_optim, device,
@@ -141,7 +143,7 @@ class ProxylessNasTrainer(BaseTrainer):
                         format(i, len(self.valid_loader) - 1, batch_time=batch_time, loss=losses, top1=top1)
                     # return top5:
                     test_log += '\tTop-5 acc {top5.val:.3f} ({top5.avg:.3f})'.format(top5=top5)
-                    print(test_log)
+                    logger.info(test_log)
         self.mutator.unused_modules_back()
         return losses.avg, top1.avg, top5.avg
 
@@ -152,7 +154,7 @@ class ProxylessNasTrainer(BaseTrainer):
         T_total = self.warmup_epochs * nBatch # total num of batches
 
         for epoch in range(self.warmup_curr_epoch, self.warmup_epochs):
-            print('\n', '-' * 30, 'Warmup epoch: %d' % (epoch + 1), '-' * 30, '\n')
+            logger.info('\n--------Warmup epoch: %d--------\n', epoch + 1)
             batch_time = AverageMeter('batch_time')
             data_time = AverageMeter('data_time')
             losses = AverageMeter('losses')
@@ -162,9 +164,8 @@ class ProxylessNasTrainer(BaseTrainer):
             self.model.train()
 
             end = time.time()
-            print('=====================_warm_up, epoch: ', epoch)
+            logger.info('warm_up epoch: %d', epoch)
             for i, (images, labels) in enumerate(data_loader):
-                #print('=====================_warm_up, minibatch i: ', i)
                 data_time.update(time.time() - end)
                 # lr
                 T_cur = epoch * nBatch + i
@@ -174,8 +175,7 @@ class ProxylessNasTrainer(BaseTrainer):
                 images, labels = images.to(self.device), labels.to(self.device)
                 # compute output
                 self.mutator.reset_binary_gates() # random sample binary gates
-                # remove unused module for speedup
-                self.mutator.unused_modules_off()
+                self.mutator.unused_modules_off() # remove unused module for speedup
                 output = self.model(images)
                 if self.label_smoothing > 0:
                     loss = cross_entropy_with_label_smoothing(output, labels, self.label_smoothing)
@@ -205,14 +205,13 @@ class ProxylessNasTrainer(BaseTrainer):
                                 'Top-5 acc {top5.val:.3f} ({top5.avg:.3f})\tlr {lr:.5f}'. \
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
                                losses=losses, top1=top1, top5=top5, lr=warmup_lr)
-                    print(batch_log)
-                self.save_checkpoint()
+                    logger.info(batch_log)
             val_loss, val_top1, val_top5 = self._validate()
             val_log = 'Warmup Valid [{0}/{1}]\tloss {2:.3f}\ttop-1 acc {3:.3f}\ttop-5 acc {4:.3f}\t' \
                       'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}M'. \
                 format(epoch + 1, self.warmup_epochs, val_loss, val_top1, val_top5, top1=top1, top5=top5)
-            print(val_log)
-            #self.save_checkpoint()
+            logger.info(val_log)
+            self.save_checkpoint()
             self.warmup_curr_epoch += 1
 
     def _get_update_schedule(self, nBatch):
@@ -241,22 +240,17 @@ class ProxylessNasTrainer(BaseTrainer):
         nBatch = len(self.train_loader)
         arch_param_num = self.mutator.num_arch_params()
         binary_gates_num = self.mutator.num_arch_params()
-        #weight_param_num = len(list(self.net.weight_parameters()))
-        print(
-            '#arch_params: %d\t#binary_gates: %d\t#weight_params: xx' %
-            (arch_param_num, binary_gates_num)
-        )
+        logger.info('#arch_params: %d\t#binary_gates: %d', arch_param_num, binary_gates_num)
 
         update_schedule = self._get_update_schedule(nBatch)
 
         for epoch in range(self.train_curr_epoch, self.n_epochs):
-            print('\n', '-' * 30, 'Train epoch: %d' % (epoch + 1), '-' * 30, '\n')
+            logger.info('\n--------Train epoch: %d--------\n', epoch + 1)
             batch_time = AverageMeter('batch_time')
             data_time = AverageMeter('data_time')
             losses = AverageMeter('losses')
             top1 = AverageMeter('top1')
             top5 = AverageMeter('top5')
-            entropy = AverageMeter('entropy')
             # switch to train mode
             self.model.train()
 
@@ -264,9 +258,6 @@ class ProxylessNasTrainer(BaseTrainer):
             for i, (images, labels) in enumerate(self.train_loader):
                 data_time.update(time.time() - end)
                 lr = self._adjust_learning_rate(self.model_optim, epoch, batch=i, nBatch=nBatch)
-                # network entropy
-                #net_entropy = self.mutator.entropy()
-                #entropy.update(net_entropy.data.item() / arch_param_num, 1)
                 # train weight parameters
                 images, labels = images.to(self.device), labels.to(self.device)
                 self.mutator.reset_binary_gates()
@@ -294,7 +285,7 @@ class ProxylessNasTrainer(BaseTrainer):
                         used_time = time.time() - start_time
                         log_str = 'Architecture [%d-%d]\t Time %.4f\t Loss %.4f\t null %s' % \
                                     (epoch + 1, i, used_time, arch_loss, exp_value)
-                        print(log_str)
+                        logger.info(log_str)
                 batch_time.update(time.time() - end)
                 end = time.time()
                 # training log
@@ -303,25 +294,21 @@ class ProxylessNasTrainer(BaseTrainer):
                                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t' \
                                 'Data Time {data_time.val:.3f} ({data_time.avg:.3f})\t' \
                                 'Loss {losses.val:.4f} ({losses.avg:.4f})\t' \
-                                'Entropy {entropy.val:.5f} ({entropy.avg:.5f})\t' \
                                 'Top-1 acc {top1.val:.3f} ({top1.avg:.3f})\t' \
                                 'Top-5 acc {top5.val:.3f} ({top5.avg:.3f})\tlr {lr:.5f}'. \
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
-                               losses=losses, entropy=entropy, top1=top1, top5=top5, lr=lr)
-                    print(batch_log)
+                               losses=losses, top1=top1, top5=top5, lr=lr)
+                    logger.info(batch_log)
             # TODO: print current network architecture
             # validate
             if (epoch + 1) % self.arch_valid_frequency == 0:
                 val_loss, val_top1, val_top5 = self._validate()
                 val_log = 'Valid [{0}]\tloss {1:.3f}\ttop-1 acc {2:.3f} \ttop-5 acc {3:.3f}\t' \
-                          'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}\t' \
-                          'Entropy {entropy.val:.5f}M'. \
-                    format(epoch + 1, val_loss, val_top1,
-                           val_top5, entropy=entropy, top1=top1, top5=top5)
-                print(val_log)
+                          'Train top-1 {top1.avg:.3f}\ttop-5 {top5.avg:.3f}'. \
+                    format(epoch + 1, val_loss, val_top1, val_top5, top1=top1, top5=top5)
+                logger.info(val_log)
             self.save_checkpoint()
             self.train_curr_epoch += 1
-        # convert to normal network according to architecture parameters
 
     def _valid_next_batch(self):
         if self._valid_iter is None:
@@ -360,7 +347,7 @@ class ProxylessNasTrainer(BaseTrainer):
         self.mutator.unused_modules_back()
         self.mutator.change_forward_mode(None)
         time4 = time.time()
-        print('(%.4f, %.4f, %.4f)' % (time2 - time1, time3 - time2, time4 - time3))
+        logger.info('(%.4f, %.4f, %.4f)', time2 - time1, time3 - time2, time4 - time3)
         return loss.data.item(), expected_value.item() if expected_value is not None else None
 
     def save_checkpoint(self):
@@ -387,7 +374,7 @@ class ProxylessNasTrainer(BaseTrainer):
 
     def train(self):
         if self.load_ckpt:
-            load_checkpoint()
+            self.load_checkpoint()
         if self.warmup:
             self._warm_up()
         self._train()
@@ -398,9 +385,6 @@ class ProxylessNasTrainer(BaseTrainer):
             json.dump(exported_arch, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
 
     def validate(self):
-        raise NotImplementedError
-
-    def train_and_validate(self):
         raise NotImplementedError
 
     def checkpoint(self):

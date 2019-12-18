@@ -2,17 +2,18 @@
 # Licensed under the MIT license.
 
 import os
+import sys
+import logging
 from argparse import ArgumentParser
-
-import datasets
 import torch
-import torch.nn as nn
+import datasets
 
 from putils import get_parameters
 from model import SearchMobileNet
 from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
-from retrain import retrain
+from retrain import Retrain
 
+logger = logging.getLogger('nni_proxylessnas')
 
 if __name__ == "__main__":
     parser = ArgumentParser("proxylessnas")
@@ -32,10 +33,18 @@ if __name__ == "__main__":
     parser.add_argument("--n_worker", default=32, type=int)
     parser.add_argument("--resize_scale", default=0.08, type=float)
     parser.add_argument("--distort_color", default='normal', type=str, choices=['normal', 'strong', 'None'])
-    # configurations for retain
-    parser.add_argument("--retrain", default=False, type=bool)
+    # configurations for training mode
+    parser.add_argument("--train_mode", default='search', type=str, choices=['search', 'retrain'])
+    # configurations for search
+    parser.add_argument("--checkpoint_path", default='./search_mobile_net.pt', type=str)
+    parser.add_argument("--arch_path", default='./arch_path.pt', type=str)
+    # configurations for retrain
     parser.add_argument("--exported_arch_path", default=None, type=str)
+
     args = parser.parse_args()
+    if args.train_mode == 'retrain' and args.exported_arch_path is None:
+        logger.error('When --train_mode is retrain, --exported_arch_path must be specified.')
+        sys.exit(-1)
 
     model = SearchMobileNet(width_stages=[int(i) for i in args.width_stages.split(',')],
                             n_cell_stages=[int(i) for i in args.n_cell_stages.split(',')],
@@ -43,9 +52,9 @@ if __name__ == "__main__":
                             n_classes=1000,
                             dropout_rate=args.dropout_rate,
                             bn_param=(args.bn_momentum, args.bn_eps))
-    print('=============================================SearchMobileNet model create done')
+    logger.info('SearchMobileNet model create done')
     model.init_model()
-    print('=============================================SearchMobileNet model init done')
+    logger.info('SearchMobileNet model init done')
 
     # move network to GPU if available
     if torch.cuda.is_available():
@@ -53,8 +62,7 @@ if __name__ == "__main__":
     else:
         device = torch.device('cpu')
 
-    # TODO: net info
-    print('=============================================Start to create data provider')
+    logger.info('Creating data provider...')
     data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
                                                   train_batch_size=args.train_batch_size,
                                                   test_batch_size=args.test_batch_size,
@@ -62,9 +70,7 @@ if __name__ == "__main__":
                                                   n_worker=args.n_worker,
                                                   resize_scale=args.resize_scale,
                                                   distort_color=args.distort_color)
-    print('=============================================Finish to create data provider')
-    train_loader = data_provider.train
-    valid_loader = data_provider.valid
+    logger.info('Creating data provider done')
 
     if args.no_decay_keys:
         keys = args.no_decay_keys
@@ -74,27 +80,30 @@ if __name__ == "__main__":
             {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
         ], lr=0.05, momentum=momentum, nesterov=nesterov)
     else:
-        optimizer = torch.optim.SGD(model, get_parameters(), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
+        optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
-    if not args.retrain:
+    if args.train_mode == 'search':
         # this is architecture search
-        print('=============================================Start to create ProxylessNasTrainer')
+        logger.info('Creating ProxylessNasTrainer...')
         trainer = ProxylessNasTrainer(model,
-                                    model_optim=optimizer,
-                                    train_loader=train_loader,
-                                    valid_loader=valid_loader,
-                                    device=device,
-                                    warmup=True,
-                                    ckpt_path='./search_mobile_net.pt',
-                                    arch_path='./arch_path.pt')
+                                      model_optim=optimizer,
+                                      train_loader=data_provider.train,
+                                      valid_loader=data_provider.valid,
+                                      device=device,
+                                      warmup=True,
+                                      ckpt_path=args.checkpoint_path,
+                                      arch_path=args.arch_path)
 
-        print('=============================================Start to train ProxylessNasTrainer')
+        logger.info('Start to train with ProxylessNasTrainer...')
         trainer.train()
-        trainer.export()
-    else:
+        logger.info('Training done')
+        trainer.export(args.arch_path)
+        logger.info('Best architecture exported in %s', args.arch_path)
+    elif args.train_mode == 'retrain':
         # this is retrain
         from nni.nas.pytorch.fixed import apply_fixed_architecture
         assert os.path.isfile(args.exported_arch_path), \
             "exported_arch_path {} should be a file.".format(args.exported_arch_path)
         apply_fixed_architecture(model, args.exported_arch_path, device=device)
-        retrain(model, optimizer, device, data_provider, n_epochs=300)
+        trainer = Retrain(model, optimizer, device, data_provider, n_epochs=300)
+        trainer.run()
