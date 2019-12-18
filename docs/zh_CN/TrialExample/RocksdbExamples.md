@@ -10,9 +10,9 @@ RocksDB 的性能表现非常依赖于调优操作。 但由于其底层技术�
 
 db_bench</code> 已经加入到了 `PATH` 中。 参考[这里](../Tutorial/QuickStart.md)，了解如何安装并准备 NNI 环境，参考[这里](https://github.com/facebook/rocksdb/blob/master/INSTALL.md)来编译 RocksDB 以及 `db_bench`。</p> 
 
-We also provide a simple script [`db_bench_installation.sh`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) helping to compile and install `db_bench` as well as its dependencies on Ubuntu. 可遵循相同的过程在其它系统中安装 RocksDB。
+此简单脚本 [`db_bench_installation.sh`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh) 可帮助编译并在 Ubuntu 上安装 `db_bench` 及其依赖包。 可遵循相同的过程在其它系统中安装 RocksDB。
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom)*
+*代码路径：[`example/trials/systems/rocksdb-fillrandom`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom)*
 
 
 
@@ -48,7 +48,7 @@ We also provide a simple script [`db_bench_installation.sh`](https://github.com/
 ```
 
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/search_space.json`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/search_space.json)*
+*代码路径：[`example/trials/systems/rocksdb-fillrandom/search_space.json`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/search_space.json)*
 
 
 
@@ -59,7 +59,7 @@ We also provide a simple script [`db_bench_installation.sh`](https://github.com/
 * 使用 `nni.get_next_parameter()` 来获取下一个系统配置。
 * 使用 `nni.report_final_result(metric)` 来返回测试结果。
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/main.py`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/main.py)*
+*代码路径：[`example/trials/systems/rocksdb-fillrandom/main.py`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/main.py)*
 
 
 
@@ -69,11 +69,11 @@ We also provide a simple script [`db_bench_installation.sh`](https://github.com/
 
 这是使用 SMAC 算法调优 RocksDB 的示例：
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
+*代码路径：[`example/trials/systems/rocksdb-fillrandom/config_smac.yml`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/config_smac.yml)*
 
 这是使用 TPE 算法调优 RocksDB 的示例：
 
-*code directory: [`example/trials/systems/rocksdb-fillrandom/config_tpe.yml`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/config_tpe.yml)*
+*代码路径：[`example/trials/systems/rocksdb-fillrandom/config_tpe.yml`](https://github.com/microsoft/nni/tree/master/examples/trials/systems/rocksdb-fillrandom/config_tpe.yml)*
 
 其它 Tuner 算法可以通过相同的方式来使用。 参考[这里](../Tuner/BuiltinTuner.md)了解详情。
 
