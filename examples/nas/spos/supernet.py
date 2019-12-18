@@ -20,7 +20,7 @@ if __name__ == "__main__":
                         help="When true, image values will range from 0 to 255 and use BGR "
                              "(as in original repo).")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--batch-size", type=int, default=840)
+    parser.add_argument("--batch-size", type=int, default=768)
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--learning-rate", type=float, default=0.5)
     parser.add_argument("--momentum", type=float, default=0.9)
