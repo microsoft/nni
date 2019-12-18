@@ -6,7 +6,7 @@ import torch
 import torch.optim as optim
 
 from nni.nas.pytorch.trainer import Trainer
-from nni.nas.pytorch.utils import AverageMeterGroup
+from nni.nas.pytorch.utils import AverageMeterGroup, to_device
 from .mutator import EnasMutator
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class EnasTrainer(Trainer):
         self.mutator.eval()
         meters = AverageMeterGroup()
         for step, (x, y) in enumerate(self.train_loader):
-            x, y = x.to(self.device), y.to(self.device)
+            x, y = to_device(x, self.device), to_device(y, self.device)
             self.optimizer.zero_grad()
 
             with torch.no_grad():
@@ -91,7 +91,7 @@ class EnasTrainer(Trainer):
         mutator_step, total_mutator_steps = 0, self.mutator_steps * self.mutator_steps_aggregate
         while mutator_step < total_mutator_steps:
             for step, (x, y) in enumerate(self.valid_loader):
-                x, y = x.to(self.device), y.to(self.device)
+                x, y = to_device(x, self.device), to_device(y, self.device)
 
                 self.mutator.reset()
                 with torch.no_grad():
@@ -130,7 +130,7 @@ class EnasTrainer(Trainer):
         with torch.no_grad():
             for _ in range(self.test_arc_per_epoch):
                 for step, (x, y) in enumerate(self.test_loader):
-                    x, y = x.to(self.device), y.to(self.device)
+                    x, y = to_device(x, self.device), to_device(y, self.device)
                     self.mutator.reset()
                     logits = self.model(x)
                     if isinstance(logits, tuple):

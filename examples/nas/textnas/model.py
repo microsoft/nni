@@ -57,6 +57,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.embedding = nn.Embedding(embedding.size(0), embedding.size(1))
+        print(self.embedding.weight, embedding.size())
         self.embedding.weight.data.copy_(embedding)
         self.hidden_units = hidden_units
         self.num_layers = num_layers
@@ -98,8 +99,8 @@ class Model(nn.Module):
             x = layer(prev_layers, mask)
             prev_layers.append(x)
 
-        x = self.linear_combine(torch.stack(prev_layers))
-        x = self.global_pool(x)
+        x = self.linear_combine(torch.stack(prev_layers[1:]))
+        x = self.global_pool(x, mask)
         x = self.output_dropout(x)
         x = self.linear_out(x)
         return x

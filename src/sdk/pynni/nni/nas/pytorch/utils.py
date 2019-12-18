@@ -3,6 +3,8 @@
 
 from collections import OrderedDict
 
+import torch
+
 _counter = 0
 
 
@@ -10,6 +12,20 @@ def global_mutable_counting():
     global _counter
     _counter += 1
     return _counter
+
+
+def to_device(obj, device):
+    if torch.is_tensor(obj):
+        return obj.to(device)
+    if isinstance(obj, tuple):
+        return tuple(to_device(t, device) for t in obj)
+    if isinstance(obj, list):
+        return [to_device(t, device) for t in obj]
+    if isinstance(obj, dict):
+        return {k: to_device(v) for k, v in obj.items()}
+    if isinstance(obj, (int, float, str)):
+        return obj
+    raise ValueError("'%s' has unsupported type '%s'" % (obj, type(obj)))
 
 
 class AverageMeterGroup:

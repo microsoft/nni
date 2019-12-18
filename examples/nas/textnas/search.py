@@ -9,6 +9,7 @@ import torch.nn as nn
 from torchtext import data, datasets, vocab
 
 from nni.nas.pytorch.enas import EnasMutator, EnasTrainer
+from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 
 from model import Model
 
@@ -48,7 +49,7 @@ class TextNASTrainer(EnasTrainer):
         TEXT.build_vocab(train, vectors=vocab_glove)
         LABEL.build_vocab(train)
         train_iter, val_iter, test_iter = data.BucketIterator.splits(
-            (train, val, test), batch_size=128, device=device)
+            (train, val, test), batch_size=128, device=self.device)
         self.train_loader = IteratorWrapper(train_iter)
         self.valid_loader = IteratorWrapper(val_iter)
         self.test_loader = IteratorWrapper(test_iter)
@@ -77,17 +78,19 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=0.008, eps=1E-3)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
 
-    trainer = EnasTrainer(model,
-                          loss=criterion,
-                          metrics=lambda output, target: {"acc": accuracy(output, target)},
-                          reward_function=accuracy,
-                          optimizer=optimizer,
-                          callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
-                          batch_size=args.batch_size,
-                          num_epochs=num_epochs,
-                          dataset_train=None,
-                          dataset_valid=None,
-                          log_frequency=args.log_frequency,
-                          mutator=mutator,
-                          mutator_lr=1E-3)
+    trainer = TextNASTrainer(model,
+                             loss=criterion,
+                             metrics=lambda output, target: {"acc": accuracy(output, target)},
+                             reward_function=accuracy,
+                             optimizer=optimizer,
+                             callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                             batch_size=args.batch_size,
+                             num_epochs=num_epochs,
+                             dataset_train=None,
+                             dataset_valid=None,
+                             log_frequency=args.log_frequency,
+                             mutator=mutator,
+                             mutator_lr=1E-3)
+    import time
+    input()
     trainer.train()
