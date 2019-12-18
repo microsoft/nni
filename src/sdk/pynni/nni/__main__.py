@@ -1,9 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-'''
-__main__.py
-'''
 import os
 import sys
 import argparse
