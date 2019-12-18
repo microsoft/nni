@@ -1,15 +1,15 @@
-Knowledge Distillation on NNI Compressor
+NNI Compressor 上使用知识蒸馏
 ===
 
-## KnowledgeDistill
+## 知识蒸馏 (Knowledge Distillation)
 
-Knowledge distillation support, in [Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531),  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student.
+知识蒸馏，在 [Distilling the Knowledge in a Neural Networ](https://arxiv.org/abs/1503.02531) 中，压缩模型被训练成模拟预训练的大模型。  这种训练设置也称为"师生（teacher-student）"方式，其中大模型是教师，小模型是学生。
 
 ![](../../img/distill.png)
 
-### Usage
+### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from knowledge_distill.knowledge_distill import KnowledgeDistill
@@ -21,13 +21,13 @@ for batch_idx, (data, target) in enumerate(train_loader):
     optimizer.zero_grad()
     output = model(data)
     loss = F.cross_entropy(output, target)
-    # you only to add the following line to fine-tune with knowledge distillation
+    # 只需要添加以下行来使用知识蒸馏微调模型
     loss = alpha * loss + beta * kd.loss(data=data, student_out=output)
     loss.backward()
 ```
 
-#### User configuration for KnowledgeDistill
-* **kd_teacher_model:** The pre-trained teacher model
-* **kd_T:** Temperature for smoothing teacher model's output
+#### 知识蒸馏的用户配置
+* **kd_teacher_model:** 预训练过的教师模型
+* **kd_T:** 用于平滑教师模型输出的温度。
 
-The complete code can be found here
+完整代码可在这里找到
