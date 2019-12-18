@@ -8,9 +8,9 @@
 
 [English](README.md)
 
-**NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/en_US/FeatureEngineering/Overview.md)，[神经网络架构搜索](docs/en_US/NAS/Overview.md)，[超参调优](docs/en_US/Tuner/BuiltinTuner.md)以及[模型压缩](docs/en_US/Compressor/Overview.md)。
+**NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.md)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.md)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.md)以及[模型压缩](docs/zh_CN/Compressor/Overview.md)。
 
-NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/en_US/TrainingService/LocalMode.md)，[远程服务器](docs/en_US/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/en_US/TrainingService/PaiMode.md)，[Kubeflow](docs/en_US/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/en_US/TrainingService/FrameworkControllerMode.md)，以及其它云服务。
+NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)，以及其它云服务。
 
 ## **使用场景**
 
@@ -130,23 +130,23 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <ul>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
-              <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="docs/zh_CN/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
             </ul>
             <b>量化</b>
             <ul>
-              <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
-              <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="docs/zh_CN/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
+              <li><a href="docs/zh_CN/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li>
             </ul>
           </ul>
-          <a href="docs/en_US/FeatureEngineering/Overview.md">特征工程（测试版）</a>
+          <a href="docs/zh_CN/FeatureEngineering/Overview.md">特征工程（测试版）</a>
           <ul>
-          <li><a href="docs/en_US/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
-          <li><a href="docs/en_US/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
+          <li><a href="docs/zh_CN/FeatureEngineering/GradientFeatureSelector.md">GradientFeatureSelector</a></li>
+          <li><a href="docs/zh_CN/FeatureEngineering/GBDTSelector.md">GBDTSelector</a></li>
           </ul>
-          <a href="docs/en_US/Assessor/BuiltinAssessor.md">提前终止算法</a>
+          <a href="docs/zh_CN/Assessor/BuiltinAssessor.md">提前终止算法</a>
           <ul>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
           </ul>
       </td>
       <td>
@@ -322,12 +322,12 @@ You can use these commands to get more information about the experiment
 熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =)：
 
 * 推荐新贡献者先找到标有 ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) 标签的 Issue。这些都比较简单，可以从这些问题开始。
-* [NNI 开发环境安装教程](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
-* [如何调试](docs/en_US/Tutorial/HowToDebug.md)
-* [自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
-* [实现定制的训练平台](docs/en_US/TrainingService/HowToImplementTrainingService.md)
+* [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
+* [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
+* [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
+* [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
 * [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
-* [自定义 Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
+* [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
 
@@ -342,11 +342,11 @@ You can use these commands to get more information about the experiment
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
 * ### **相关文章**
    
-   * [超参数优化的对比](docs/en_US/CommunitySharings/HpoComparision.md)
-   * [神经网络结构搜索的对比](docs/en_US/CommunitySharings/NasComparision.md)
-   * [并行化顺序算法：TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
-   * [使用 NNI 为 SVD 自动调参](docs/en_US/CommunitySharings/RecommendersSvd.md)
-   * [使用 NNI 为 SPTAG 自动调参](docs/en_US/CommunitySharings/SptagAutoTune.md)
+   * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparision.md)
+   * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparision.md)
+   * [并行化顺序算法：TPE](docs/zh_CN/CommunitySharings/ParallelizingTpeSearch.md)
+   * [使用 NNI 为 SVD 自动调参](docs/zh_CN/CommunitySharings/RecommendersSvd.md)
+   * [使用 NNI 为 SPTAG 自动调参](docs/zh_CN/CommunitySharings/SptagAutoTune.md)
    * [使用 NNI 为 scikit-learn 查找超参](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
    * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
 
