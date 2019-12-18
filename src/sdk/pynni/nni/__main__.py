@@ -31,7 +31,7 @@ def augment_classargs(input_class_args, classname):
 def create_builtin_class_instance(class_name, class_args, builtin_module_dict, builtin_class_dict):
     if class_name not in builtin_module_dict or \
         importlib.util.find_spec(builtin_module_dict[class_name]) is None:
-        raise RuntimeError('Tuner module is not found: {}'.format(class_name))
+        raise RuntimeError('Builtin module is not found: {}'.format(class_name))
     class_module = importlib.import_module(builtin_module_dict[class_name])
     class_constructor = getattr(class_module, builtin_class_dict[class_name])
 
