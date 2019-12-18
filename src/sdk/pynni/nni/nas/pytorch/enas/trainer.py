@@ -17,7 +17,8 @@ class EnasTrainer(Trainer):
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
                  entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
-                 mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4):
+                 mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4,
+                 test_arc_per_epoch=1):
         super().__init__(model, mutator if mutator is not None else EnasMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
@@ -31,7 +32,11 @@ class EnasTrainer(Trainer):
         self.mutator_steps_aggregate = mutator_steps_aggregate
         self.mutator_steps = mutator_steps
         self.aux_weight = aux_weight
+        self.test_arc_per_epoch = test_arc_per_epoch
 
+        self.init_dataloader()
+
+    def init_dataloader(self):
         n_train = len(self.dataset_train)
         split = n_train // 10
         indices = list(range(n_train))
@@ -122,4 +127,19 @@ class EnasTrainer(Trainer):
                     break
 
     def validate_one_epoch(self, epoch):
-        pass
+        with torch.no_grad():
+            for _ in range(self.test_arc_per_epoch):
+                for step, (x, y) in enumerate(self.test_loader):
+                    x, y = x.to(self.device), y.to(self.device)
+                    self.mutator.reset()
+                    logits = self.model(x)
+                    if isinstance(logits, tuple):
+                        logits, aux_logits = logits
+                    metrics = self.metrics(logits, y)
+                    loss = self.loss(logits, y)
+                    metrics["loss"] = loss.item()
+                    meters.update(metrics)
+
+                    if self.log_frequency is not None and step % self.log_frequency == 0:
+                        logger.info("Test Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                                    self.num_epochs, step + 1, len(self.test_loader), meters)

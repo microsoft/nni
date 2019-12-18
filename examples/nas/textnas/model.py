@@ -7,12 +7,12 @@ from utils import GlobalMaxPool, GlobalAvgPool
 
 
 class Layer(mutables.MutableScope):
-    def __init__(self, key, prev_keys, hidden_units, lstm_keep_prob, att_keep_prob, att_mask):
+    def __init__(self, key, prev_keys, hidden_units, cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask):
         super(Layer, self).__init__(key)
 
         def conv_shortcut(kernel_size):
             return ConvBN(kernel_size, hidden_units, hidden_units,
-                          self.cnn_keep_prob, False, True)
+                          cnn_keep_prob, False, True)
 
         self.n_candidates = len(prev_keys)
         if self.n_candidates:
@@ -34,7 +34,7 @@ class Layer(mutables.MutableScope):
             self.skipconnect = mutables.InputChoice(choose_from=prev_keys)
         else:
             self.skipconnect = None
-        self.bn = BatchNorm(self.out_filters, False, True)
+        self.bn = BatchNorm(hidden_units, False, True)
 
     def forward(self, prev_layers, mask):
         if self.prec is None:
@@ -51,14 +51,16 @@ class Layer(mutables.MutableScope):
 
 
 class Model(nn.Module):
-    def __init__(self, embedding, hidden_units=256, num_layers=24, choose_from_k=5,
+    def __init__(self, embedding, hidden_units=256, num_layers=24, num_classes=5, choose_from_k=5,
                  lstm_keep_prob=0.5, cnn_keep_prob=0.5, att_keep_prob=0.5, att_mask=True,
                  embed_keep_prob=0.5, final_output_keep_prob=1.0, global_pool="avg"):
         super(Model, self).__init__()
 
-        self.embedding = nn.Embedding.from_pretrained(torch.from_numpy(embedding), freeze=False)
+        self.embedding = nn.Embedding(embedding.size(0), embedding.size(1))
+        self.embedding.weight.data.copy_(embedding)
         self.hidden_units = hidden_units
         self.num_layers = num_layers
+        self.num_classes = num_classes
 
         self.init_conv = ConvBN(1, self.embedding.embedding_dim, hidden_units, cnn_keep_prob, False, True)
 
@@ -67,11 +69,11 @@ class Model(nn.Module):
         for layer_id in range(self.num_layers):
             k = "layer_{}".format(layer_id)
             self.layers.append(Layer(k, candidate_keys_pool[-choose_from_k:],
-                                     hidden_units, lstm_keep_prob, att_keep_prob, att_mask))
+                                     hidden_units, cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask))
             candidate_keys_pool.append(k)
 
         self.linear_combine = LinearCombine(self.num_layers)
-        self.linear_out = nn.Linear(self.hidden_units, self.class_num)
+        self.linear_out = nn.Linear(self.hidden_units, self.num_classes)
 
         self.embed_dropout = nn.Dropout(p=1 - embed_keep_prob)
         self.output_dropout = nn.Dropout(p=1 - final_output_keep_prob)
