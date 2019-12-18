@@ -42,6 +42,7 @@ class Retrain:
         self.train_loader = data_provider.train
         self.valid_loader = data_provider.valid
         self.test_loader = data_provider.test
+        self.n_epochs = n_epochs
         self.criterion = nn.CrossEntropyLoss()
 
     def run(self):
