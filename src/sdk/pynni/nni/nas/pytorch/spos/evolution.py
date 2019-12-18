@@ -164,7 +164,7 @@ class SPOSEvolution(Tuner):
             self._bind_and_send_parameters()
 
     def export_results(self, result):
-        os.makedirs("checkpoints", exist_ok=True)        
+        os.makedirs("checkpoints", exist_ok=True)
         for i, cand in enumerate(result):
             converted = dict()
             for cand_key, cand_val in cand.items():
