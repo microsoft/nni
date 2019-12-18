@@ -98,8 +98,6 @@ def run(args):
             print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR)
             print('%r' % error)
             traceback.print_exc()
-            subprocess.run(['nnictl', 'log', 'stderr'])
-            subprocess.run(['nnictl', 'log', 'stdout'])
             raise error
         finally:
             subprocess.run(['nnictl', 'stop'])

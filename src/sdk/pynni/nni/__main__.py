@@ -30,27 +30,17 @@ def augment_classargs(input_class_args, classname):
     return input_class_args
 
 
-def create_builtin_class_instance(class_name, class_args, is_advisor=False):
-    if is_advisor:
-        if class_name not in AdvisorModuleName or \
-            importlib.util.find_spec(AdvisorModuleName[class_name]) is None:
-            raise RuntimeError('Advisor module is not found: {}'.format(class_name))
-        class_module = importlib.import_module(AdvisorModuleName[class_name])
-        class_constructor = getattr(class_module, AdvisorClassName[class_name])
-    else:
-        if class_name not in ModuleName or \
-            importlib.util.find_spec(ModuleName[class_name]) is None:
-            raise RuntimeError('Tuner module is not found: {}'.format(class_name))
-        class_module = importlib.import_module(ModuleName[class_name])
-        class_constructor = getattr(class_module, ClassName[class_name])
-    if class_args:
-        class_args = augment_classargs(class_args, class_name)
-    else:
-        class_args = augment_classargs({}, class_name)
-    if class_args:
-        instance = class_constructor(**class_args)
-    else:
-        instance = class_constructor()
+def create_builtin_class_instance(class_name, class_args, builtin_module_dict, builtin_class_dict):
+    if class_name not in builtin_module_dict or \
+        importlib.util.find_spec(builtin_module_dict[class_name]) is None:
+        raise RuntimeError('Tuner module is not found: {}'.format(class_name))
+    class_module = importlib.import_module(builtin_module_dict[class_name])
+    class_constructor = getattr(class_module, builtin_class_dict[class_name])
+
+    if class_args is None:
+        class_args = {}
+    class_args = augment_classargs(class_args, class_name)
+    instance = class_constructor(**class_args)
 
     return instance
 
@@ -68,10 +58,11 @@ def create_customized_class_instance(class_params):
     module_name = os.path.splitext(class_filename)[0]
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
-    if class_args:
-        instance = class_constructor(**class_args)
-    else:
-        instance = class_constructor()
+
+    if class_args is None:
+        class_args = {}
+    instance = class_constructor(**class_args)
+
     return instance
 
 
@@ -126,7 +117,8 @@ def _run_advisor(exp_params):
     if exp_params.get('advisor').get('builtinAdvisorName') in AdvisorModuleName:
         dispatcher = create_builtin_class_instance(
             exp_params.get('advisor').get('builtinAdvisorName'),
-            exp_params.get('advisor').get('classArgs'), True)
+            exp_params.get('advisor').get('classArgs'),
+            AdvisorModuleName, AdvisorClassName)
     else:
         dispatcher = create_customized_class_instance(exp_params.get('advisor'))
     if dispatcher is None:
@@ -142,7 +134,8 @@ def _create_tuner(exp_params):
     if exp_params.get('tuner').get('builtinTunerName') in ModuleName:
         tuner = create_builtin_class_instance(
             exp_params.get('tuner').get('builtinTunerName'),
-            exp_params.get('tuner').get('classArgs'))
+            exp_params.get('tuner').get('classArgs'),
+            ModuleName, ClassName)
     else:
         tuner = create_customized_class_instance(exp_params.get('tuner'))
     if tuner is None:
@@ -154,7 +147,8 @@ def _create_assessor(exp_params):
     if exp_params.get('assessor').get('builtinAssessorName') in ModuleName:
         assessor = create_builtin_class_instance(
             exp_params.get('assessor').get('builtinAssessorName'),
-            exp_params.get('assessor').get('classArgs'))
+            exp_params.get('assessor').get('classArgs'),
+            ModuleName, ClassName)
     else:
         assessor = create_customized_class_instance(exp_params.get('assessor'))
     if assessor is None:
