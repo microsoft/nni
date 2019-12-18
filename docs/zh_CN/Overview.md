@@ -67,15 +67,15 @@ NNI 通过 Trial SDK 支持多种 one-shot NAS 算法，如：ENAS、DARTS。 �
 
 NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 可以直接在 Trial 代码中使用，并在不启动 NNI Experiment 的情况下运行 Trial 代码。 详情及用法参考[这里](Compressor/Overview.md)。
 
-模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 A simple example can be found [here](Compressor/AutoCompression.md).
+模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 参考[简单示例](Compressor/AutoCompression.md)。
 
-### Automatic Feature Engineering
+### 自动特征工程
 
-Automatic feature engineering is for users to find the best features for the following tasks. Detailed description and usage can be found [here](FeatureEngineering/Overview.md). It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code.
+自动特征工程，为下游任务找到最有效的特征。 详情及用法参考[这里](FeatureEngineering/Overview.md)。 通过 NNI Trial SDK 支持，不必创建 NNI Experiment。 只需在 Trial 代码中加入内置的自动特征工程算法，然后直接运行 Trial 代码。
 
-The auto-feature-engineering algorithms usually have a bunch of hyperparameters themselves. If you want to automatically tune those hyperparameters, you can leverage hyperparameter tuning of NNI, that is, choose a tuning algorithm (i.e., tuner) and start an NNI experiment for it.
+自动特征工程算法通常有一些超参。 如果要自动调整这些超参，可以利用 NNI 的超参数调优，即选择调优算法（即 Tuner）并启动 NNI Experiment。
 
-## Learn More
+## 了解更多信息
 
 * [入门](Tutorial/QuickStart.md)
 * [如何为 NNI 调整代码？](TrialExample/Trials.md)
@@ -87,6 +87,6 @@ The auto-feature-engineering algorithms usually have a bunch of hyperparameters 
 * [如何在多机上运行 Experiment？](TrainingService/RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
 * [示例](TrialExample/MnistExamples.md)
-* [Neural Architecture Search on NNI](NAS/Overview.md)
-* [Automatic model compression on NNI](Compressor/Overview.md)
-* [Automatic feature engineering on NNI](FeatureEngineering/Overview.md)
+* [NNI 上的神经网络架构搜索](NAS/Overview.md)
+* [NNI 上的自动模型压缩](Compressor/Overview.md)
+* [NNI 上的自动特征工程](FeatureEngineering/Overview.md)
