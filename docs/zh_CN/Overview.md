@@ -57,7 +57,7 @@ NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其�
 
 ### 通用 NAS 框架
 
-此 NAS 框架可供用户轻松指定候选的神经体系结构，例如，可以为单个层指定多个候选操作（例如，可分离的 conv、扩张 conv），并指定可能的跳过连接。 NNI 将自动找到最佳候选。 On the other hand, the NAS framework provides simple interface for another type of users (e.g., NAS algorithm researchers) to implement new NAS algorithms. Detailed description and usage can be found [here](NAS/Overview.md).
+此 NAS 框架可供用户轻松指定候选的神经体系结构，例如，可以为单个层指定多个候选操作（例如，可分离的 conv、扩张 conv），并指定可能的跳过连接。 NNI 将自动找到最佳候选。 另一方面，NAS 框架为其他类型的用户（如，NAS 算法研究人员）提供了简单的接口，以实现新的 NAS 算法。 Detailed description and usage can be found [here](NAS/Overview.md).
 
 NNI has supported many one-shot NAS algorithms, such as ENAS, DARTS, through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, to import an algorithm in your trial code, and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you could choose a tuner and start an NNI experiment.
 
