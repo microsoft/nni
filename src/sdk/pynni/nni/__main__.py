@@ -10,6 +10,7 @@ import argparse
 import logging
 import json
 import importlib
+import base64
 
 from .common import enable_multi_thread, enable_multi_phase
 from .constants import ModuleName, ClassName, ClassArgs, AdvisorModuleName, AdvisorClassName
@@ -78,8 +79,9 @@ def main():
     '''
 
     args = parse_args()
-    logger.debug('exp_params: [%s]', args.exp_params)
-    exp_params = json.loads(args.exp_params)
+    exp_params_decode = base64.b64decode(args.exp_params)
+    logger.debug('decoded exp_params: [%s]', exp_params_decode)
+    exp_params = json.loads(exp_params_decode)
     logger.debug('exp_params json obj: [%s]', json.dumps(exp_params, indent=4))
 
     if exp_params.get('multiThread'):

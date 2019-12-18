@@ -148,7 +148,7 @@ function getCmdPy(): string {
 function getMsgDispatcherCommand(expParams: ExperimentParams): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
-    return `${getCmdPy()} -m nni --exp_params '${JSON.stringify(clonedParams)}'`; 
+    return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
 }
 
 /**
