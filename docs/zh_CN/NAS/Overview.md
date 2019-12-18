@@ -6,11 +6,11 @@
 
 以此为动力，NNI 的目标是提供统一的体系结构，以加速NAS上的创新，并将最新的算法更快地应用于现实世界中的问题上。
 
-通过 [统一的接口](NasInterface.md)，有两种方式进行架构搜索。 [第一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](.ClassicNas.md)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
+通过[统一的接口](./NasInterface.md)，有两种方式进行架构搜索。 [第一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](./NasInterface.md#classic-distributed-search)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
 
 * [支持的 One-shot NAS 算法](#supported-one-shot-nas-algorithms)
-* [使用 NNI Experiment 的经典分布式 NAS](.NasInterface.md#classic-distributed-search)
-* [NNI NAS 编程接口](.NasInterface.md)
+* [使用 NNI Experiment 的经典分布式 NAS](./NasInterface.md#classic-distributed-search)
+* [NNI NAS 编程接口](./NasInterface.md)
 
 ## 支持的 One-shot NAS 算法
 
@@ -37,7 +37,7 @@ NNI 现在支持以下 NAS 算法，并且正在添加更多算法。 用户可�
 
 #### 用法
 
-NNI 中的 ENAS 还在开发中，当前仅支持在 CIFAR10 上 Macro/Micro 搜索空间的搜索阶段。 在 PTB 上从头开始训练及其搜索空间尚未完成。
+NNI 中的 ENAS 还在开发中，当前仅支持在 CIFAR10 上 Macro/Micro 搜索空间的搜索阶段。 在 PTB 上从头开始训练及其搜索空间尚未完成。 [详细说明](ENAS.md)。
 
 ```bash
 ＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
@@ -58,7 +58,7 @@ python3 search.py -h
 
 ### DARTS
 
-[DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 在算法上的主要贡献是，引入了一种在两级网络优化中使用的可微分算法。
+[DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 在算法上的主要贡献是，引入了一种在两级网络优化中使用的可微分算法。 [详细说明](DARTS.md)。
 
 #### 用法
 
@@ -96,8 +96,6 @@ python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ## 使用 NNI API
 
 注意，我们正在尝试通过统一的编程接口来支持各种 NAS 算法，当前处于试验阶段。 这意味着当前编程接口将来会有变化。
-
-*先前的 [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) 接口会很快被弃用。*
 
 ### 编程接口
 

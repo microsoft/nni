@@ -16,9 +16,9 @@ NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remo
 
 ## 运行 Experiment
 
-在另一台计算机，或在其中任何一台上安装 NNI，并运行 nnictl 工具。
+将 NNI 安装在可以访问上述三台计算机的网络的另一台计算机上，或者仅在三台计算机中的任何一台上运行 `nnictl` 即可启动 Experiment。
 
-以 `examples/trials/mnist-annotation` 为例。 `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` 来查看详细配置：
+以 `examples/trials/mnist-annotation` 为例。 此处示例在 `examples/trials/mnist-annotation/config_remote.yml`：
 
 ```yaml
 authorName: default
@@ -58,27 +58,13 @@ machineList:
     passwd: bob123
 ```
 
-可以使用不同系统来在远程计算机上运行 Experiment。
-
-#### Linux 和 macOS
-
-填好 `machineList` 部分，然后运行：
+`codeDir` 中的文件会被自动上传到远程服务器。 可在不同的操作系统上运行 NNI (Windows, Linux, MacOS)，来在远程机器上（仅支持 Linux）运行 Experiment。
 
 ```bash
-nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 ```
 
-来启动 Experiment。
-
-#### Windows
-
-填好 `machineList` 部分，然后运行：
-
-```bash
-nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
-```
-
-来启动 Experiment。
+也可使用公钥/私钥对，而非用户名/密码进行身份验证。 有关高级用法，请参考[实验配置参考](../Tutorial/ExperimentConfig.md)。
 
 ## 版本校验
 
