@@ -86,7 +86,7 @@ if __name__ == "__main__":
     best_top1 = 0.
     for epoch in range(args.epochs):
         train(args, train_loader, model, optimizer, criterion, epoch)
-        top1 = validate(args, valid_loader, model, criterion, epoch)
+        top1 = validate(args, test_loader, model, criterion, epoch)
         best_top1 = max(best_top1, top1)
         lr_scheduler.step()
 

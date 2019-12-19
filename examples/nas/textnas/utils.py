@@ -54,7 +54,7 @@ class IteratorWrapper:
         data = next(self.iterator)
         text, length = data.text
         max_length = text.size(1)
-        label = data.label
+        label = data.label - 1
         bs = label.size(0)
         mask = torch.arange(max_length, device=length.device).unsqueeze(0).repeat(bs, 1)
         mask = mask < length.unsqueeze(-1).repeat(1, max_length)
@@ -72,9 +72,9 @@ def get_data_loader(batch_size, device, infinite=True):
     TEXT = data.Field(lower=True, include_lengths=True, batch_first=True)
     LABEL = data.Field(sequential=False)
     sst_folder = datasets.SST.download(data_folder)
-    train = datasets.SST(os.path.join(sst_folder, "train.txt"), TEXT, LABEL, subtrees=True)
-    val = datasets.SST(os.path.join(sst_folder, "dev.txt"), TEXT, LABEL, subtrees=True)
-    test = datasets.SST(os.path.join(sst_folder, "test.txt"), TEXT, LABEL)
+    train = datasets.SST(os.path.join(sst_folder, "train.txt"), TEXT, LABEL, fine_grained=True, subtrees=True)
+    val = datasets.SST(os.path.join(sst_folder, "dev.txt"), TEXT, LABEL, fine_grained=True, subtrees=True)
+    test = datasets.SST(os.path.join(sst_folder, "test.txt"), TEXT, LABEL, fine_grained=True)
     TEXT.build_vocab(train, vectors=vocab.GloVe(cache=data_folder))
     LABEL.build_vocab(train)
     train_iter, val_iter, test_iter = data.BucketIterator.splits(
