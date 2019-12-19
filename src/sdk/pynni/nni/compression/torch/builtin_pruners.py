@@ -219,8 +219,13 @@ class SlimPruner(Pruner):
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
-        mask = torch.ones(weight.size()).type_as(weight)
+        base_mask = torch.ones(weight.size()).type_as(weight).detach()
+        mask = {'weight': base_mask, 'bias': base_mask.detach()}
         try:
+            filters = weight.size(0)
+            num_prune = int(filters * config.get('sparsity'))
+            if filters < 2 or num_prune < 1:
+                return mask
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
@@ -280,12 +285,12 @@ class RankFilterPruner(Pruner):
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
-        mask_weight = torch.ones(weight.size()).type_as(weight)
+        mask_weight = torch.ones(weight.size()).type_as(weight).detach()
         if hasattr(layer.module, 'bias') and layer.module.bias is not None:
-            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias)
+            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
         else:
             mask_bias = None
-        mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
+        mask = {'weight': mask_weight, 'bias': mask_bias}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
@@ -433,7 +438,8 @@ class FPGMPruner(RankFilterPruner):
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
             base_mask['weight'][idx] = 0.
-            base_mask['bias'][idx] = 0.
+            if base_mask['bias'] is not None:
+                base_mask['bias'][idx] = 0.
         return base_mask
 
     def _get_min_gm_kernel_idx(self, weight, n):
