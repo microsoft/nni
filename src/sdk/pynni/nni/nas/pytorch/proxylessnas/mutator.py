@@ -353,5 +353,6 @@ class ProxylessNasMutator(BaseMutator):
         for mutable in self.undedup_mutables:
             assert isinstance(mutable, LayerChoice)
             index, _ = mutable.registered_module.chosen_index
+            # pylint: disable=not-callable
             result[mutable.key] = F.one_hot(torch.tensor(index), num_classes=mutable.length).view(-1).bool()
         return result
