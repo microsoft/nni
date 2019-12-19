@@ -24,7 +24,7 @@ const convertDuration = (num: number) => {
     const hour = Math.floor(num / 3600);
     const minute = Math.floor(num / 60 % 60);
     const second = Math.floor(num % 60);
-    let result = [ ];
+    const result = [ ];
     if (hour > 0) {
         result.push(`${hour}h`);
     }
@@ -163,7 +163,7 @@ const downFile = (content: string, fileName: string) => {
             downTag.download = fileName;
             downTag.href = URL.createObjectURL(file);
         });
-        let eventMouse = document.createEvent('MouseEvents');
+        const eventMouse = document.createEvent('MouseEvents');
         eventMouse.initEvent('click', false, false);
         downTag.dispatchEvent(eventMouse);
     }

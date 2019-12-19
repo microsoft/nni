@@ -74,6 +74,8 @@ class IpcInterface {
         this.readBuffer = Buffer.alloc(0);
 
         this.incomingStream.on('data', (data: Buffer) => { this.receive(data); });
+        this.incomingStream.on('error', (error: Error) => { this.eventEmitter.emit('error', error); });
+        this.outgoingStream.on('error', (error: Error) => { this.eventEmitter.emit('error', error); });
     }
 
     /**
@@ -104,6 +106,10 @@ class IpcInterface {
      */
     public onCommand(listener: (commandType: string, content: string) => void): void {
         this.eventEmitter.on('command', listener);
+    }
+
+    public onError(listener: (error: Error) => void): void {
+        this.eventEmitter.on('error', listener);
     }
 
     /**

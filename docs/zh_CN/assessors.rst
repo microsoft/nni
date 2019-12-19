@@ -6,7 +6,7 @@ Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Tri
 
 这是 MNIST 在使用了 'Curvefitting' Assessor 的 'maximize' 模式后的实验结果，可以看到 Assessor 成功的将大量最终结果不好的 Trial **提前结束** 。 使用 Assessor，能在相同的计算资源下，得到更好的结果。
 
-*实现代码：config_assessor.yml <https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml>*
+*实现代码：config_assessor.yml <https://github.com/Microsoft/nni/blob/master/examples/trials/mnist-tfv1/config_assessor.yml>*
 
 ..  image:: ../img/Assessor.png
 

@@ -60,7 +60,6 @@ class App extends React.Component<{}, AppState> {
         }
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
-                // tslint:disable-next-line:no-any
                 child as React.ReactElement<any>, {
                     interval,
                     columnList, changeColumn: this.changeColumn,
