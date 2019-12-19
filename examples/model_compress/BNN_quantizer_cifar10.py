@@ -135,7 +135,6 @@ def main():
     optimizer_finetune = torch.optim.Adam(model.parameters(), lr=1e-3)
     best_top1 = 0
     for epoch in range(120):
-        quantizer.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer_finetune)
         top1 = test(model, device, test_loader)
