@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Row, Col, Tabs, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { Trial } from '../static/model/trial';
+import { Trial } from '../static/model/trial'; // eslint-disable-line no-unused-vars
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -60,31 +60,31 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             tablePageSize: 20,
             whichGraph: '1',
             searchType: 'id',
-            searchFilter: trial => true,
+            searchFilter: trial => true, // eslint-disable-line 
         };
     }
 
     // search a trial by trial No. & trial id
-    searchTrial = (event: React.ChangeEvent<HTMLInputElement>) => {
+    searchTrial = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const targetValue = event.target.value;
-        let filter = (trial: Trial) => true;
+        let filter = (trial: Trial) => true; // eslint-disable-line
         if (!targetValue.trim()) {
             this.setState({ searchFilter: filter });
             return;
         }
         switch (this.state.searchType) {
             case 'id':
-                filter = trial => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
+                filter = (trial): any => trial.info.id.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
                 break;
             case 'Trial No.':
-                filter = trial => trial.info.sequenceId.toString() === targetValue;
+                filter = (trial): any => trial.info.sequenceId.toString() === targetValue; // elint-disable-line
                 break;
             case 'status':
-                filter = trial => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
+                filter = (trial): any => trial.info.status.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
                 break;
             case 'parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
-                filter = trial => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
+                filter = (trial): any => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue); // elint-disable-line
                 break;
             default:
                 alert(`Unexpected search filter ${this.state.searchType}`);
@@ -92,15 +92,15 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.setState({ searchFilter: filter });
     }
 
-    handleTablePageSizeSelect = (value: string) => {
+    handleTablePageSizeSelect = (value: string): void => {
         this.setState({ tablePageSize: value === 'all' ? -1 : parseInt(value, 10) });
     }
 
-    handleWhichTabs = (activeKey: string) => {
+    handleWhichTabs = (activeKey: string): void => {
         this.setState({ whichGraph: activeKey });
     }
 
-    updateSearchFilterType = (value: string) => {
+    updateSearchFilterType = (value: string): void => {
         // clear input value and re-render table
         if (this.searchInput !== null) {
             this.searchInput.value = '';
@@ -108,7 +108,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.setState({ searchType: value });
     }
 
-    render() {
+    render(): any {
         const { tablePageSize, whichGraph } = this.state;
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
@@ -163,14 +163,14 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     <Col span={14} className="right">
                         <Button
                             className="common"
-                            onClick={() => { if (this.tableList) { this.tableList.addColumn(); }}}
+                            onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); }}}
                         >
                             Add column
                         </Button>
                         <Button
                             className="mediateBtn common"
                             // use child-component tableList's function, the function is in child-component.
-                            onClick={() => { if (this.tableList) { this.tableList.compareBtn(); }}}
+                            onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); }}}
                         >
                             Compare
                         </Button>
@@ -186,7 +186,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             placeholder={`Search by ${this.state.searchType}`}
                             onChange={this.searchTrial}
                             style={{ width: 230 }}
-                            ref={text => (this.searchInput) = text}
+                            ref={text => (this.searchInput) = text} // eslint-disable-line
                         />
                     </Col>
                 </Row>
@@ -196,7 +196,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     columnList={columnList}
                     changeColumn={changeColumn}
                     trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
-                    ref={(tabList) => this.tableList = tabList}
+                    ref={(tabList) => this.tableList = tabList} // eslint-disable-line
                 />
             </div>
         );

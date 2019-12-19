@@ -18,22 +18,22 @@ class ConcurrencyInput extends React.Component<ConcurrencyInputProps, Concurrenc
         this.state = { editting: false };
     }
 
-    save = () => {
+    save = (): void => {
         if (this.input.current !== null) {
             this.props.updateValue(this.input.current.value);
             this.setState({ editting: false });
         }
     }
 
-    cancel = () => {
+    cancel = (): void => {
         this.setState({ editting: false });
     }
 
-    edit = () => {
+    edit = (): void => {
         this.setState({ editting: true });
     }
 
-    render() {
+    render(): any { // eslint-disable-line
         if (this.state.editting) {
             return (
                 <Row className="inputBox">

@@ -55,6 +55,97 @@ interface ColumnIndex {
     index: number;
 }
 
+const AccuracyColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Default metric',
+    className: 'leftTitle',
+    dataIndex: 'accuracy',
+    sorter: (a, b, sortOrder) => {
+        if (a.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.latestAccuracy === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
+        } else {
+            return a.latestAccuracy - b.latestAccuracy;
+        }
+    },
+    render: (text, record): any => (
+        <div>{record.formattedLatestAccuracy}</div>
+    )
+};
+
+const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Trial No.',
+    dataIndex: 'sequenceId',
+    className: 'tableHead',
+    sorter: (a, b) => a.sequenceId - b.sequenceId
+};
+
+const IdColumnConfig: ColumnProps<TableRecord> = {
+    title: 'ID',
+    dataIndex: 'id',
+    className: 'tableHead leftTitle',
+    sorter: (a, b) => a.id.localeCompare(b.id),
+    render: (text, record): any => (
+        <div>{record.id}</div>
+    )
+};
+
+const StartTimeColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Start Time',
+    dataIndex: 'startTime',
+    sorter: (a, b) => a.startTime - b.startTime,
+    render: (text, record): any => (
+        <span>{formatTimestamp(record.startTime)}</span>
+    )
+};
+
+const EndTimeColumnConfig: ColumnProps<TableRecord> = {
+    title: 'End Time',
+    dataIndex: 'endTime',
+    sorter: (a, b, sortOrder) => {
+        if (a.endTime === undefined) {
+            return sortOrder === 'ascend' ? 1 : -1;
+        } else if (b.endTime === undefined) {
+            return sortOrder === 'ascend' ? -1 : 1;
+        } else {
+            return a.endTime - b.endTime;
+        }
+    },
+    render: (text, record): any => (
+        <span>{formatTimestamp(record.endTime, '--')}</span>
+    )
+};
+
+const DurationColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Duration',
+    dataIndex: 'duration',
+    sorter: (a, b) => a.duration - b.duration,
+    render: (text, record): any => (
+        <span className="durationsty">{convertDuration(record.duration)}</span>
+    )
+};
+
+const StatusColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Status',
+    dataIndex: 'status',
+    className: 'tableStatus',
+    render: (text, record): any => (
+        <span className={`${record.status} commonStyle`}>{record.status}</span>
+    ),
+    sorter: (a, b) => a.status.localeCompare(b.status),
+    filters: trialJobStatus.map(status => ({ text: status, value: status })),
+    onFilter: (value, record) => (record.status === value)
+};
+
+const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
+    title: 'Intermediate result',
+    dataIndex: 'intermediateCount',
+    sorter: (a, b) => a.intermediateCount - b.intermediateCount,
+    render: (text, record): any => (
+        <span>{`#${record.intermediateCount}`}</span>
+    )
+};
+
 class TableList extends React.Component<TableListProps, TableListState> {
 
     public intervalTrialLog = 10;
@@ -80,7 +171,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         };
     }
 
-    showIntermediateModal = async (id: string) => {
+    showIntermediateModal = async (id: string): Promise<any> => {
         const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
@@ -113,7 +204,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // intermediate button click -> intermediate graph for each trial
     // support intermediate is dict
-    selectOtherKeys = (value: string) => {
+    selectOtherKeys = (value: string): void => {
 
         const isShowDefault: boolean = value === 'default' ? true : false;
         const { intermediateData, intermediateId } = this.state;
@@ -143,20 +234,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
-    hideIntermediateModal = () => {
+    hideIntermediateModal = (): void => {
         this.setState({
             modalVisible: false
         });
     }
 
-    hideShowColumnModal = () => {
+    hideShowColumnModal = (): void => {
         this.setState({
             isShowColumn: false
         });
     }
 
     // click add column btn, just show the modal of addcolumn
-    addColumn = () => {
+    addColumn = (): void => {
         // show user select check button
         this.setState({
             isShowColumn: true
@@ -164,7 +255,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     // checkbox for coloumn
-    selectedColumn = (checkedValues: Array<string>) => {
+    selectedColumn = (checkedValues: Array<string>): void => {
         // 9: because have nine common column, 
         // [Intermediate count, Start Time, End Time] is hidden by default
         let count = 9;
@@ -216,17 +307,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.props.changeColumn(wantResult);
     }
 
-    openRow = (record: TableRecord) => {
+    openRow = (record: TableRecord): any => {
         return (
             <OpenRow trialId={record.id} />
         );
     }
 
-    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>) => {
+    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>): void => {
         this.setState({ selectRows: selectedRows, selectedRowKeys: selected });
     }
     // open Compare-modal
-    compareBtn = () => {
+    compareBtn = (): void => {
 
         const { selectRows } = this.state;
         if (selectRows.length === 0) {
@@ -236,26 +327,26 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
     // close Compare-modal
-    hideCompareModal = () => {
+    hideCompareModal = (): void => {
         // close modal. clear select rows data, clear selected track
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
     // open customized trial modal
-    setCustomizedTrial = (trialId: string) => {
+    setCustomizedTrial = (trialId: string): void => {
         this.setState({
             isShowCustomizedModal: true,
             copyTrialId: trialId
         });
     }
 
-    closeCustomizedTrial = () => {
+    closeCustomizedTrial = (): void => {
         this.setState({
             isShowCustomizedModal: false,
             copyTrialId: ''
         });
     }
-    render() {
+    render(): any {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,
@@ -264,7 +355,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
-            onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>) => {
+            onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>): void => {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
         };
@@ -341,7 +432,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataIndex: 'operation',
                         key: 'operation',
                         render: (text: string, record: TableRecord) => {
-                            let trialStatus = record.status;
+                            const trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
                             return (
                                 <Row id="detail-button">
@@ -407,15 +498,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     break;
                 case (cc):
                     // remove SEARCH_SPACE title
-                    const realItem = item.replace(' (search space)', '');
+                    // const realItem = item.replace(' (search space)', '');
                     showColumn.push({
-                        title: realItem,
+                        title: item.replace(' (search space)', ''),
                         dataIndex: item,
                         key: item,
                         render: (text: string, record: TableRecord) => {
                             const eachTrial = TRIALS.getTrial(record.id);
                             return (
-                                <span>{eachTrial.description.parameters[realItem]}</span>
+                                <span>{eachTrial.description.parameters[item.replace(' (search space)', '')]}</span>
                             );
                         },
                     });
@@ -430,7 +521,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <Row className="tableList">
                 <div id="tableList">
                     <Table
-                        ref={(table: Table<TableRecord> | null) => this.tables = table}
+                        ref={(table: Table<TableRecord> | null): any => this.tables = table}
                         columns={showColumn}
                         rowSelection={rowSelection}
                         expandedRowRender={this.openRow}
@@ -508,96 +599,5 @@ class TableList extends React.Component<TableListProps, TableListState> {
         );
     }
 }
-
-const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Trial No.',
-    dataIndex: 'sequenceId',
-    className: 'tableHead',
-    sorter: (a, b) => a.sequenceId - b.sequenceId
-};
-
-const IdColumnConfig: ColumnProps<TableRecord> = {
-    title: 'ID',
-    dataIndex: 'id',
-    className: 'tableHead leftTitle',
-    sorter: (a, b) => a.id.localeCompare(b.id),
-    render: (text, record) => (
-        <div>{record.id}</div>
-    )
-};
-
-const StartTimeColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Start Time',
-    dataIndex: 'startTime',
-    sorter: (a, b) => a.startTime - b.startTime,
-    render: (text, record) => (
-        <span>{formatTimestamp(record.startTime)}</span>
-    )
-};
-
-const EndTimeColumnConfig: ColumnProps<TableRecord> = {
-    title: 'End Time',
-    dataIndex: 'endTime',
-    sorter: (a, b, sortOrder) => {
-        if (a.endTime === undefined) {
-            return sortOrder === 'ascend' ? 1 : -1;
-        } else if (b.endTime === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else {
-            return a.endTime - b.endTime;
-        }
-    },
-    render: (text, record) => (
-        <span>{formatTimestamp(record.endTime, '--')}</span>
-    )
-};
-
-const DurationColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Duration',
-    dataIndex: 'duration',
-    sorter: (a, b) => a.duration - b.duration,
-    render: (text, record) => (
-        <span className="durationsty">{convertDuration(record.duration)}</span>
-    )
-};
-
-const StatusColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Status',
-    dataIndex: 'status',
-    className: 'tableStatus',
-    render: (text, record) => (
-        <span className={`${record.status} commonStyle`}>{record.status}</span>
-    ),
-    sorter: (a, b) => a.status.localeCompare(b.status),
-    filters: trialJobStatus.map(status => ({ text: status, value: status })),
-    onFilter: (value, record) => (record.status === value)
-};
-
-const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Intermediate result',
-    dataIndex: 'intermediateCount',
-    sorter: (a, b) => a.intermediateCount - b.intermediateCount,
-    render: (text, record) => (
-        <span>{`#${record.intermediateCount}`}</span>
-    )
-};
-
-const AccuracyColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Default metric',
-    className: 'leftTitle',
-    dataIndex: 'accuracy',
-    sorter: (a, b, sortOrder) => {
-        if (a.latestAccuracy === undefined) {
-            return sortOrder === 'ascend' ? 1 : -1;
-        } else if (b.latestAccuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else {
-            return a.latestAccuracy - b.latestAccuracy;
-        }
-    },
-    render: (text, record) => (
-        <div>{record.formattedLatestAccuracy}</div>
-    )
-};
 
 export default TableList;

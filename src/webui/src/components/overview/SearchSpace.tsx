@@ -13,7 +13,7 @@ class SearchSpace extends React.Component<SearchspaceProps, {}> {
 
     }
 
-    render() {
+    render(): any { // eslint-disable-line
         const { searchSpace } = this.props;
         return (
             <div className="searchSpace">

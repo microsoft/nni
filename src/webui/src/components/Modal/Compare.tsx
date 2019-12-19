@@ -20,7 +20,7 @@ class Compare extends React.Component<CompareProps, {}> {
         super(props);
     }
 
-    intermediate = () => {
+    intermediate = (): any => {
         const { compareRows } = this.props;
         const trialIntermediate: Array<Intermedia> = [];
         const idsList: Array<string> = [];
@@ -52,14 +52,14 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: function (point: Array<number>, data: TooltipForIntermediate) {
+                position: function (point: Array<number>, data: TooltipForIntermediate): Array<number> {
                     if (data.dataIndex < length / 2) {
                         return [point[0], 80];
                     } else {
                         return [point[0] - 300, 80];
                     }
                 },
-                formatter: function (data: TooltipForIntermediate) {
+                formatter: function (data: TooltipForIntermediate): any {
                     const trialId = data.seriesName;
                     let obj = {};
                     const temp = trialIntermediate.find(key => key.name === trialId);
@@ -106,7 +106,7 @@ class Compare extends React.Component<CompareProps, {}> {
     }
 
     // render table column ---
-    initColumn = () => {
+    initColumn = (): any => {
         const idList: Array<string> = [];
         const sequenceIdList: Array<number> = [];
         const durationList: Array<number> = [];
@@ -195,15 +195,15 @@ class Compare extends React.Component<CompareProps, {}> {
         );
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this._isCompareMount = true;
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
         this._isCompareMount = false;
     }
 
-    render() {
+    render(): any{
         const { visible, cancelFunc } = this.props;
 
         return (

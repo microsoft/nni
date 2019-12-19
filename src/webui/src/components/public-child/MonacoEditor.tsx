@@ -17,15 +17,15 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
         super(props);
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this._isMonacoMount = true;
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
         this._isMonacoMount = false;
     }
 
-    render() {
+    render(): any{
         const { content, loading, height } = this.props;
         return (
             <div className="just-for-log">

@@ -19,18 +19,18 @@ class Trial implements TableObj {
         if (!this.sortable || !otherTrial.sortable) {
             return undefined;
         }
-        return this.finalAcc! - otherTrial.finalAcc!;
+        return this.finalAcc! - otherTrial.finalAcc!; // eslint-disable-line
     }
 
     get info(): TrialJobInfo {
-        return this.infoField!;
+        return this.infoField!; // eslint-disable-line
     }
 
     get intermediateMetrics(): MetricDataRecord[] {
         const ret: MetricDataRecord[] = [ ];
         for (let i = 0; i < this.intermediates.length; i++) {
             if (this.intermediates[i]) {
-                ret.push(this.intermediates[i]!);
+                ret.push(this.intermediates[i]!); // eslint-disable-line
             } else {
                 break;
             }
@@ -66,13 +66,13 @@ class Trial implements TableObj {
 
     get tableRecord(): TableRecord {
         const endTime = this.info.endTime || new Date().getTime();
-        const duration = (endTime - this.info.startTime!) / 1000;
+        const duration = (endTime - this.info.startTime!) / 1000; // eslint-disable-line
 
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
-            startTime: this.info.startTime!,
+            startTime: this.info.startTime!, // eslint-disable-line
             endTime: this.info.endTime,
             duration,
             status: this.info.status,
@@ -97,7 +97,7 @@ class Trial implements TableObj {
 
     get duration(): number {
         const endTime = this.info.endTime || new Date().getTime();
-        return (endTime - this.info.startTime!) / 1000;
+        return (endTime - this.info.startTime!) / 1000; // eslint-disable-line
     }
 
     get status(): string {
@@ -203,7 +203,7 @@ class Trial implements TableObj {
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
-            const latest = this.intermediates[this.intermediates.length - 1]!;
+            const latest = this.intermediates[this.intermediates.length - 1]!; // eslint-disable-line
             return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
         }
     }

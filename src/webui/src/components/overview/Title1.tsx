@@ -12,7 +12,7 @@ class Title1 extends React.Component<Title1Props, {}> {
         super(props);
     }
 
-    render() {
+    render(): any { // eslint-disable-line
         const { text, icon, bgcolor } = this.props;
         return (
             <div>

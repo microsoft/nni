@@ -14,12 +14,12 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         super(props);
     }
 
-    render() {
+    render(): any {
         const blacklist = [
             'id', 'logDir', 'startTime', 'endTime',
             'experimentName', 'searchSpace', 'trainingServicePlatform'
         ];
-        const filter = (key: string, val: any) => {
+        const filter = (key: string, val: any): any => {
             if (key === 'trialConcurrency') {
                 return this.props.concurrency;
             }

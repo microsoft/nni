@@ -12,7 +12,7 @@ import '../../static/style/probar.scss';
 
 interface ProgressProps {
     concurrency: number;
-    bestAccuracy: number;
+    bestAccuracy: number | string;
     changeConcurrency: (val: number) => void;
     experimentUpdateBroadcast: number;
 }
@@ -29,7 +29,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         };
     }
 
-    editTrialConcurrency = async (userInput: string) => {
+    editTrialConcurrency = async (userInput: string): Promise<any> => {
         if (!userInput.match(/^[1-9]\d*$/)) {
             message.error('Please enter a positive integer!', 2);
             return;
@@ -46,7 +46,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                params: { update_type: 'TRIAL_CONCURRENCY' }
+                params: { update_type: 'TRIAL_CONCURRENCY' } // eslint-disable-line
             });
             if (res.status === 200) {
                 message.success(`Successfully updated trial concurrency`);
@@ -66,21 +66,22 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         }
     }
 
-    isShowDrawer = () => {
+    isShowDrawer = (): void => {
         this.setState({ isShowLogDrawer: true });
     }
 
-    closeDrawer = () => {
+    closeDrawer = (): void => {
         this.setState({ isShowLogDrawer: false });
     }
 
-    render() {
+    render(): any { // eslint-disable-line
         const { bestAccuracy } = this.props;
         const { isShowLogDrawer } = this.state;
 
         const count = TRIALS.countStatus();
-        const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
-        const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
+
+        const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!; // eslint-disable-line
+        const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount; // eslint-disable-line
 
         const bar2Percent = (bar2 / EXPERIMENT.profile.params.maxTrialNum) * 100;
         const percent = (EXPERIMENT.profile.execDuration / EXPERIMENT.profile.params.maxExecDuration) * 100;
@@ -98,6 +99,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 </div>
             );
         }
+
+        const bestFinalResult = (typeof bestAccuracy === 'number') ? bestAccuracy.toFixed(6) : '--'; 
         return (
             <Row className="progress" id="barBack">
                 <Row className="basic lineBasic">
@@ -136,7 +139,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 />
                 <Row className="basic colorOfbasic mess">
                     <p>Best metric</p>
-                    <div>{isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}</div>
+                    <div>{bestFinalResult}</div>
                 </Row>
                 <Row className="mess">
                     <Col span={6}>

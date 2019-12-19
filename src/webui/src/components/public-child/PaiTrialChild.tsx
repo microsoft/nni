@@ -15,7 +15,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
 
     }
 
-    render() {
+    render(): any {
         const { logString, id, logCollect } = this.props;
         return (
             <div>
@@ -30,6 +30,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                     ?
                                     <a
                                         target="_blank"
+                                        rel="noopener noreferrer"
                                         href={`${DOWNLOAD_IP}/trial_${id}.log`}
                                         style={{ marginRight: 10 }}
                                     >

@@ -41,7 +41,7 @@ class Experiment {
         if (!this.profileField) {
             throw Error('Experiment profile not initialized');
         }
-        return this.profileField!;
+        return this.profileField!; // eslint-disable-line
     }
 
     get trialConcurrency(): number {
@@ -73,14 +73,14 @@ class Experiment {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
-        return this.statusField!.status;
+        return this.statusField!.status; // eslint-disable-line
     }
 
     get error(): string {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
-        return this.statusField!.errors[0] || '';
+        return this.statusField!.errors[0] || ''; // eslint-disable-line
     }
 }
 
