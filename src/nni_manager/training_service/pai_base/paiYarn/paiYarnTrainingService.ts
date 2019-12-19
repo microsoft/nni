@@ -49,22 +49,17 @@ class PAIYarnTrainingService extends PAIBaseTrainingService {
 
     public async run(): Promise<void> {
         this.log.info('Run PAIYarn training service.');
-        const restServer: PAIYarnJobRestServer = component.get(PAIYarnJobRestServer);
-        await restServer.start();
-        restServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
+        this.paiBaseJobRestServer = component.get(PAIYarnJobRestServer);
+        if (this.paiBaseJobRestServer === undefined) {
+            throw new Error('paiBaseJobRestServer not initialized!');
+        }
+        await this.paiBaseJobRestServer.start();
+        this.paiBaseJobRestServer.setEnableVersionCheck = this.versionCheck;
+        this.log.info(`PAI Training service rest server listening on: ${this.paiBaseJobRestServer.endPoint}`);
         await Promise.all([
             this.statusCheckingLoop(),
             this.submitJobLoop()]);
         this.log.info('PAI training service exit.');
-    }
-
-    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
-        this.metricsEmitter.on('metric', listener);
-    }
-
-    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
-        this.metricsEmitter.off('metric', listener);
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
@@ -182,36 +177,6 @@ class PAIYarnTrainingService extends PAIBaseTrainingService {
         }
 
         return deferred.promise;
-    }
-
-    public getClusterMetadata(key: string): Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
-
-        deferred.resolve();
-
-        return deferred.promise;
-    }
-
-    public async cleanUp(): Promise<void> {
-        this.log.info('Stopping PAI training service...');
-        this.stopping = true;
-
-        const deferred: Deferred<void> = new Deferred<void>();
-        const restServer: PAIYarnJobRestServer = component.get(PAIYarnJobRestServer);
-        try {
-            await restServer.stop();
-            deferred.resolve();
-            this.log.info('PAI Training service rest server stopped successfully.');
-        } catch (error) {
-            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
-            deferred.reject(error);
-        }
-
-        return deferred.promise;
-    }
-
-    public get MetricsEmitter(): EventEmitter {
-        return this.metricsEmitter;
     }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
@@ -362,84 +327,6 @@ class PAIYarnTrainingService extends PAIBaseTrainingService {
         return deferred.promise;
     }
 
-    protected async statusCheckingLoop(): Promise<void> {
-        while (!this.stopping) {
-            if(this.paiBaseClusterConfig && this.paiBaseClusterConfig.passWord) {
-                try {
-                    await this.updatePaiToken();
-                } catch (error) {
-                    this.log.error(`${error}`);
-                    //only throw error when initlize paiToken first time
-                    if (this.paiToken === undefined) {
-                        throw new Error(error);
-                    }
-                }
-            }
-            await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiBaseClusterConfig);
-            const restServer: PAIYarnJobRestServer = component.get(PAIYarnJobRestServer);
-            if (restServer.getErrorMessage !== undefined) {
-                throw new Error(restServer.getErrorMessage);
-            }
-            await delay(3000);
-        }
-    }
-
-    /**
-     * Update pai token by the interval time or initialize the pai token
-     */
-    protected async updatePaiToken(): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
-        const currentTime: number = new Date().getTime();
-        //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-            return Promise.resolve();
-        }
-
-        if (this.paiBaseClusterConfig === undefined) {
-            const paiClusterConfigError: string = `pai cluster config not initialized!`;
-            this.log.error(`${paiClusterConfigError}`);
-            throw Error(`${paiClusterConfigError}`);
-        }
-
-        const authenticationReq: request.Options = {
-            uri: `http://${this.paiBaseClusterConfig.host}/rest-server/api/v1/token`,
-            method: 'POST',
-            json: true,
-            body: {
-                username: this.paiBaseClusterConfig.userName,
-                password: this.paiBaseClusterConfig.passWord
-            }
-        };
-
-        request(authenticationReq, (error: Error, response: request.Response, body: any) => {
-            if (error !== undefined && error !== null) {
-                this.log.error(`Get PAI token failed: ${error.message}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-            } else {
-                if (response.statusCode !== 200) {
-                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
-                }
-                this.paiToken = body.token;
-                this.paiTokenUpdateTime = new Date().getTime();
-                deferred.resolve();
-            }
-        });
-
-        let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
-        });
-
-        return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => { clearTimeout(timeoutId); });
-    }
-
-
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
@@ -476,9 +363,11 @@ class PAIYarnTrainingService extends PAIBaseTrainingService {
 
     protected postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        const restServer: PAIYarnJobRestServer = component.get(PAIYarnJobRestServer);
+        if (this.paiBaseJobRestServer === undefined) {
+            throw new Error('paiBaseJobRestServer not implemented!');
+        }
         const req: request.Options = {
-            uri: `${restServer.endPoint}${restServer.apiRootUrl}/parameter-file-meta`,
+            uri: `${this.paiBaseJobRestServer.endPoint}${this.paiBaseJobRestServer.apiRootUrl}/parameter-file-meta`,
             method: 'POST',
             json: true,
             body: parameterFileMeta

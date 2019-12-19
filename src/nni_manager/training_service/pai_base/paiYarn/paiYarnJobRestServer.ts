@@ -22,8 +22,6 @@ export interface ParameterFileMeta {
  */
 @component.Singleton
 export class PAIYarnJobRestServer extends PAIBaseJobRestServer {
-    protected parameterFileMetaList: ParameterFileMeta[] = [];
-
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */

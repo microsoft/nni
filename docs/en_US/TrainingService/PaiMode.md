@@ -61,7 +61,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
 * containerNFSMountPath
     * Required key. Set the mount path in your container used in PAI.
 * paiStoragePlugin
-    * Required key. Set the sotrage plugin name used in PAI.
+    * Required key. Set the storage plugin name used in PAI.
 
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command

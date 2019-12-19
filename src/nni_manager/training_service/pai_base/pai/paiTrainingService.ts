@@ -58,33 +58,18 @@ class PAITrainingService extends PAIBaseTrainingService {
     }
 
     public async run(): Promise<void> {
-        this.log.info('Run PAI training service.');
-        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-        await restServer.start();
-        restServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
+        this.log.info('Run PAIYarn training service.');
+        this.paiBaseJobRestServer = component.get(PAIJobRestServer);
+        if (this.paiBaseJobRestServer === undefined) {
+            throw new Error('paiBaseJobRestServer not initialized!');
+        }
+        await this.paiBaseJobRestServer.start();
+        this.paiBaseJobRestServer.setEnableVersionCheck = this.versionCheck;
+        this.log.info(`PAI Training service rest server listening on: ${this.paiBaseJobRestServer.endPoint}`);
         await Promise.all([
             this.statusCheckingLoop(),
             this.submitJobLoop()]);
         this.log.info('PAI training service exit.');
-    }
-
-    public async cleanUp(): Promise<void> {
-        this.log.info('Stopping PAI training service...');
-        this.stopping = true;
-
-        const deferred: Deferred<void> = new Deferred<void>();
-        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-        try {
-            await restServer.stop();
-            deferred.resolve();
-            this.log.info('PAI Training service rest server stopped successfully.');
-        } catch (error) {
-            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
-            deferred.reject(error);
-        }
-
-        return deferred.promise;
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -144,6 +129,15 @@ class PAITrainingService extends PAIBaseTrainingService {
         }
 
         return deferred.promise;
+    }
+    
+    //TODO: update trial parameters
+    public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
+        }
+        return trialJobDetail;
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
@@ -294,7 +288,6 @@ class PAITrainingService extends PAIBaseTrainingService {
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
-        console.log(paiJobConfig);
 
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API

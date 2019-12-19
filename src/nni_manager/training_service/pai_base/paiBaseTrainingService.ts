@@ -25,13 +25,14 @@ import { execMkdir, validateCodeDir } from '../common/util';
 import { PAIBaseJobInfoCollector } from './paiBaseJobInfoCollector';
 import { PAIBaseJobRestServer, ParameterFileMeta } from './paiBaseJobRestServer';
 import { PAIBaseClusterConfig, PAIBaseTrialJobDetail } from './paiBaseConfig';
+import { PAIJobRestServer } from './pai/paiJobRestServer';
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAIBaseTrainingService implements TrainingService {
+abstract class PAIBaseTrainingService implements TrainingService {
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
     protected readonly trialJobsMap: Map<string, PAIBaseTrialJobDetail>;
@@ -51,6 +52,7 @@ class PAIBaseTrainingService implements TrainingService {
     protected isMultiPhase: boolean = false;
     protected authFileHdfsPath: string | undefined = undefined;
     protected portList?: string | undefined;
+    protected paiBaseJobRestServer?: PAIJobRestServer;
 
     constructor() {
         this.log = getLogger();
@@ -66,24 +68,19 @@ class PAIBaseTrainingService implements TrainingService {
     }
 
     public async run(): Promise<void> {
-        return;
+        throw new Error('Not implemented!');
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<any> {
-        return null;
+        throw new Error('Not implemented!');
     }
 
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
-        if (trialJobDetail === undefined) {
-            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
-        }
-
-        return trialJobDetail;
+        throw new Error('Not implemented!');
     }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
-        return true;
+        throw new Error('Not implemented!');
     }
 
     protected async submitJobLoop(): Promise<void> {
@@ -103,7 +100,7 @@ class PAIBaseTrainingService implements TrainingService {
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
-        return;
+        throw new Error('Not implemented!');
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -197,11 +194,13 @@ class PAIBaseTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping PAI training service...');
         this.stopping = true;
+        if (this.paiBaseJobRestServer === undefined) {
+            throw new Error('paiBaseJobRestServer not initialized!');
+        }
 
         const deferred: Deferred<void> = new Deferred<void>();
-        const restServer: PAIBaseJobRestServer = component.get(PAIBaseJobRestServer);
         try {
-            await restServer.stop();
+            await this.paiBaseJobRestServer.stop();
             deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
@@ -230,9 +229,11 @@ class PAIBaseTrainingService implements TrainingService {
                 }
             }
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiBaseClusterConfig);
-            const restServer: PAIBaseJobRestServer = component.get(PAIBaseJobRestServer);
-            if (restServer.getErrorMessage !== undefined) {
-                throw new Error(restServer.getErrorMessage);
+            if (this.paiBaseJobRestServer === undefined) {
+                throw new Error('paiBaseJobRestServer not implemented!');
+            }
+            if (this.paiBaseJobRestServer.getErrorMessage !== undefined) {
+                throw new Error(this.paiBaseJobRestServer.getErrorMessage);
             }
             await delay(3000);
         }

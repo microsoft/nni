@@ -1,6 +1,6 @@
 **Run an Experiment on OpenpaiYarn**
 ===
-The original `pai` mode is modificated to `paiYarnYarn` mode, which is a distributed training platform based on Yarn.
+The original `pai` mode is modificated to `paiYarn` mode, which is a distributed training platform based on Yarn.
 
 ## Setup environment
 Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
