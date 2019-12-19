@@ -326,7 +326,7 @@ You can use these commands to get more information about the experiment
 * [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
