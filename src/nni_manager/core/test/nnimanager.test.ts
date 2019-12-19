@@ -42,7 +42,7 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 5,
         maxTrialNum: 3,
         trainingServicePlatform: 'local',
-        searchSpace: '{\"lr\": {\"_type\": \"choice\", \"_value\": [0.01,0.001]}}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
             builtinTunerName: 'TPE',
             classArgs: {
@@ -65,7 +65,7 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 6,
         maxTrialNum: 2,
         trainingServicePlatform: 'local',
-        searchSpace: '{\"lr\": {\"_type\": \"choice\", \"_value\": [0.01,0.001]}}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
             builtinTunerName: 'TPE',
             classArgs: {
@@ -198,7 +198,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile SEARCH_SPACE',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.searchSpace).to.be.equal('{\"lr\": {\"_type\": \"choice\", \"_value\": [0.01,0.001]}}');
+                expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
             });
         }).catch((error) => {
             assert.fail(error);
