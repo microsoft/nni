@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 import logging
+from itertools import cycle
+
 import torch
 import torch.optim as optim
 
@@ -16,7 +18,7 @@ class EnasTrainer(Trainer):
     def __init__(self, model, loss, metrics, reward_function,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
-                 entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
+                 entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999, child_steps=500,
                  mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4,
                  test_arc_per_epoch=1):
         super().__init__(model, mutator if mutator is not None else EnasMutator(model),
@@ -31,6 +33,7 @@ class EnasTrainer(Trainer):
         self.baseline = 0.
         self.mutator_steps_aggregate = mutator_steps_aggregate
         self.mutator_steps = mutator_steps
+        self.child_steps = child_steps
         self.aux_weight = aux_weight
         self.test_arc_per_epoch = test_arc_per_epoch
 
@@ -53,13 +56,16 @@ class EnasTrainer(Trainer):
         self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
                                                        batch_size=batch_size,
                                                        num_workers=workers)
+        self.train_loader = cycle(self.train_loader)
+        self.valid_loader = cycle(self.valid_loader)
 
     def train_one_epoch(self, epoch):
         # Sample model and train
         self.model.train()
         self.mutator.eval()
         meters = AverageMeterGroup()
-        for step, (x, y) in enumerate(self.train_loader):
+        for step in range(1, self.child_steps + 1):
+            x, y = next(self.train_loader)
             x, y = to_device(x, self.device), to_device(y, self.device)
             self.optimizer.zero_grad()
 
@@ -81,16 +87,18 @@ class EnasTrainer(Trainer):
             meters.update(metrics)
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                logger.info("Model Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
-                            self.num_epochs, step + 1, len(self.train_loader), meters)
+                logger.info("Model Epoch [%d/%d] Step [%d/%d]  %s", epoch + 1,
+                            self.num_epochs, step, self.child_steps, meters)
 
         # Train sampler (mutator)
         self.model.eval()
         self.mutator.train()
         meters = AverageMeterGroup()
         mutator_step, total_mutator_steps = 0, self.mutator_steps * self.mutator_steps_aggregate
-        while mutator_step < total_mutator_steps:
-            for step, (x, y) in enumerate(self.valid_loader):
+        for mutator_step in range(1, self.mutator_steps + 1):
+            self.mutator_optim.zero_grad()
+            for step in range(1, self.mutator_steps_aggregate + 1):
+                x, y = next(self.valid_loader)
                 x, y = to_device(x, self.device), to_device(y, self.device)
 
                 self.mutator.reset()
@@ -111,24 +119,20 @@ class EnasTrainer(Trainer):
                 metrics["baseline"] = self.baseline
                 metrics["skip"] = self.mutator.sample_skip_penalty
 
-                loss = loss / self.mutator_steps_aggregate
+                loss /= self.mutator_steps_aggregate
                 loss.backward()
                 meters.update(metrics)
 
-                if mutator_step % self.mutator_steps_aggregate == 0:
-                    self.mutator_optim.step()
-                    self.mutator_optim.zero_grad()
-
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    logger.info("RL Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1, self.num_epochs,
-                                mutator_step // self.mutator_steps_aggregate + 1, self.mutator_steps, meters)
-                mutator_step += 1
-                if mutator_step >= total_mutator_steps:
-                    break
+                    logger.info("RL Epoch [%d/%d] Step [%d:%d/%d:%d]  %s", epoch + 1, self.num_epochs,
+                                mutator_step, step, self.mutator_steps, self.mutator_steps_aggregate,
+                                meters)
+
+            self.mutator_optim.step()
 
     def validate_one_epoch(self, epoch):
         with torch.no_grad():
-            for _ in range(self.test_arc_per_epoch):
+            for arc_id in range(self.test_arc_per_epoch):
                 for step, (x, y) in enumerate(self.test_loader):
                     x, y = to_device(x, self.device), to_device(y, self.device)
                     self.mutator.reset()
@@ -140,6 +144,8 @@ class EnasTrainer(Trainer):
                     metrics["loss"] = loss.item()
                     meters.update(metrics)
 
-                    if self.log_frequency is not None and step % self.log_frequency == 0:
-                        logger.info("Test Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
-                                    self.num_epochs, step + 1, len(self.test_loader), meters)
+                    if self.log_frequency is not None and (
+                            step % self.log_frequency == 0 or step + 1 == len(self.test_loader)):
+                        logger.info("Test Epoch [%d/%d] Arc [%d/%d] Step [%d/%d]  %s",
+                                    epoch + 1, self.num_epochs, arc_id + 1, self.test_arc_per_epoch,
+                                    step + 1, len(self.test_loader), meters)

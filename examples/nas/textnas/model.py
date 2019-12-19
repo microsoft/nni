@@ -57,7 +57,6 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.embedding = nn.Embedding(embedding.size(0), embedding.size(1))
-        print(self.embedding.weight, embedding.size())
         self.embedding.weight.data.copy_(embedding)
         self.hidden_units = hidden_units
         self.num_layers = num_layers
