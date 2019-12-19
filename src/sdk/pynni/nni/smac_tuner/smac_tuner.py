@@ -231,7 +231,9 @@ class SMACTuner(Tuner):
             return self.param_postprocess(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
+            challengers_empty = True
             for challenger in challengers:
+                challengers_empty = False
                 if self.dedup:
                     match = [v for k, v in self.total_data.items() \
                              if v.get_dictionary() == challenger.get_dictionary()]
@@ -239,7 +241,7 @@ class SMACTuner(Tuner):
                         continue
                 self.total_data[parameter_id] = challenger
                 return self.param_postprocess(challenger.get_dictionary())
-            assert self.dedup is True
+            assert challengers_empty is False, 'The case that challengers is empty is not handled.'
             self.logger.info('In generate_parameters: No more new parameters.')
             raise nni.NoMoreTrialError('No more new parameters.')
 
