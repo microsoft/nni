@@ -44,7 +44,7 @@ describe('Unit test for nnimanager', function () {
         trainingServicePlatform: 'local',
         searchSpace: '{"x":1}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -52,7 +52,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -67,7 +67,7 @@ describe('Unit test for nnimanager', function () {
         trainingServicePlatform: 'local',
         searchSpace: '{"y":2}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -75,7 +75,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
