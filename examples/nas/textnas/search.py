@@ -63,8 +63,9 @@ if __name__ == "__main__":
                              mutator=mutator,
                              mutator_lr=1E-3,
                              child_steps=3000,
-                             mutator_steps=50,
-                             mutator_steps_aggregate=10,
+                             mutator_steps=500,
+                             mutator_steps_aggregate=1,
                              skip_weight=0.,
-                             test_arc_per_epoch=10)
+                             test_arc_per_epoch=10,
+                             baseline_decay=0.99)
     trainer.train()
