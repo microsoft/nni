@@ -652,6 +652,10 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Tuner command event error: '));
             });
         });
+        this.dispatcher.onError((error: Error) => {
+            this.log.error(`Dispatcher error: ${error.message}`);
+            this.criticalError(new Error('Dispatcher stream error, tuner may have crashed.'));
+        });
     }
 
     private sendInitTunerCommands(): void {

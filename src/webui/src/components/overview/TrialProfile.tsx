@@ -19,7 +19,6 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
             'id', 'logDir', 'startTime', 'endTime',
             'experimentName', 'searchSpace', 'trainingServicePlatform'
         ];
-        // tslint:disable-next-line:no-any
         const filter = (key: string, val: any) => {
             if (key === 'trialConcurrency') {
                 return this.props.concurrency;

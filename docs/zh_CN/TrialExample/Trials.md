@@ -132,6 +132,24 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
+## 用于调试的独立模式
+
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
+
+```python
+＃注意：请为 Trial 代码中的超参分配默认值
+nni.get_next_parameter＃返回 {}
+nni.report_final_result＃已在 stdout 上打印日志，但不报告
+nni.report_intermediate_result＃已在 stdout 上打印日志，但不报告
+nni.get_experiment_id＃返回 "STANDALONE"
+nni.get_trial_id＃返回 "STANDALONE"
+nni.get_sequence_id＃返回 0
+```
+
+可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 Trial 代码会使用默认超参成功运行。
+
+更多调试的信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
+
 ## Trial 存放在什么地方？
 
 ### 本机模式
@@ -162,7 +180,7 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 <a name="more-examples"></a>
 
-## 更多 Trial 的样例
+## 更多 Trial 的示例
 
 * [MNIST 样例](MnistExamples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](Cifar10Examples.md)

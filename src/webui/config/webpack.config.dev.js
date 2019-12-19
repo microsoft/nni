@@ -186,7 +186,7 @@ module.exports = {
       async: false,
       watch: paths.appSrc,
       tsconfig: paths.appTsConfig,
-      tslint: paths.appTsLint,
+      eslint: false
     }),
   ],
   // Some libraries import Node modules but don't use them in the browser.

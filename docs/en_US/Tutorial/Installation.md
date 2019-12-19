@@ -1,6 +1,6 @@
 # Installation of NNI
 
-Currently we support installation on Linux, Mac and Windows(local, remote and pai mode).
+Currently we support installation on Linux, Mac and Windows.
 
 ## **Installation on Linux & Mac**
 

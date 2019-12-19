@@ -45,6 +45,36 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 
 更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
+## 核心功能
+
+NNI 提供了并行运行多个实例以查找最佳参数组合的能力。 此功能可用于各种领域，例如，为深度学习模型查找最佳超参数，或查找具有真实数据的数据库和其他复杂系统的最佳配置。
+
+NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其是神经体系结构搜索（NAS）算法，模型压缩算法和特征工程算法。
+
+### 超参调优
+
+这是 NNI 最核心、基本的功能，其中提供了许多流行的[自动调优算法](Tuner/BuiltinTuner.md) (即 Tuner) 以及 [提前终止算法](Assessor/BuiltinAssessor.md) (即 Assessor)。 可查看[快速入门](Tutorial/QuickStart.md)来调优模型或系统。 基本上通过以上三步，就能开始NNI Experiment。
+
+### 通用 NAS 框架
+
+此 NAS 框架可供用户轻松指定候选的神经体系结构，例如，可以为单个层指定多个候选操作（例如，可分离的 conv、扩张 conv），并指定可能的跳过连接。 NNI 将自动找到最佳候选。 另一方面，NAS 框架为其他类型的用户（如，NAS 算法研究人员）提供了简单的接口，以实现新的 NAS 算法。 详情及用法参考[这里](NAS/Overview.md)。
+
+NNI 通过 Trial SDK 支持多种 one-shot NAS 算法，如：ENAS、DARTS。 使用这些算法时，不需启动 NNI Experiment。 在 Trial 代码中加入算法，直接运行即可。 如果要调整算法中的超参数，或运行多个实例，可以使用 Tuner 并启动 NNI Experiment。
+
+除了 one-shot NAS 外，NAS 还能以 NNI 模式运行，其中每个候选的网络结构都作为独立 Trial 任务运行。 在此模式下，与超参调优类似，必须启动 NNI Experiment 并为 NAS 选择 Tuner。
+
+### 模型压缩
+
+NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 可以直接在 Trial 代码中使用，并在不启动 NNI Experiment 的情况下运行 Trial 代码。 详情及用法参考[这里](Compressor/Overview.md)。
+
+模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 参考[简单示例](Compressor/AutoCompression.md)。
+
+### 自动特征工程
+
+自动特征工程，为下游任务找到最有效的特征。 详情及用法参考[这里](FeatureEngineering/Overview.md)。 通过 NNI Trial SDK 支持，不必创建 NNI Experiment。 只需在 Trial 代码中加入内置的自动特征工程算法，然后直接运行 Trial 代码。
+
+自动特征工程算法通常有一些超参。 如果要自动调整这些超参，可以利用 NNI 的超参数调优，即选择调优算法（即 Tuner）并启动 NNI Experiment。
+
 ## 了解更多信息
 
 * [入门](Tutorial/QuickStart.md)
@@ -57,3 +87,6 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 * [如何在多机上运行 Experiment？](TrainingService/RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
 * [示例](TrialExample/MnistExamples.md)
+* [NNI 上的神经网络架构搜索](NAS/Overview.md)
+* [NNI 上的自动模型压缩](Compressor/Overview.md)
+* [NNI 上的自动特征工程](FeatureEngineering/Overview.md)
