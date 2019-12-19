@@ -5,6 +5,7 @@ import logging
 from itertools import cycle
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from nni.nas.pytorch.trainer import Trainer
@@ -82,6 +83,7 @@ class EnasTrainer(Trainer):
             loss = self.loss(logits, y)
             loss = loss + self.aux_weight * aux_loss
             loss.backward()
+            nn.utils.clip_grad_norm_(self.model.parameters(), 5.)
             self.optimizer.step()
             metrics["loss"] = loss.item()
             meters.update(metrics)
@@ -116,6 +118,7 @@ class EnasTrainer(Trainer):
                 metrics["reward"] = reward
                 metrics["loss"] = loss.item()
                 metrics["ent"] = self.mutator.sample_entropy.item()
+                metrics["log_prob"] = self.mutator.sample_log_prob.item()
                 metrics["baseline"] = self.baseline
                 metrics["skip"] = self.mutator.sample_skip_penalty
 
@@ -125,10 +128,11 @@ class EnasTrainer(Trainer):
 
                 cur_step = step + (mutator_step - 1) * self.mutator_steps_aggregate
                 if self.log_frequency is not None and cur_step % self.log_frequency == 0:
-                    logger.info("RL Epoch [%d/%d] Step [%d:%d/%d:%d]  %s", epoch + 1, self.num_epochs,
-                                mutator_step, step, self.mutator_steps, self.mutator_steps_aggregate,
+                    logger.info("RL Epoch [%d/%d] Step [%d/%d] [%d/%d]  %s", epoch + 1, self.num_epochs,
+                                mutator_step, self.mutator_steps, step, self.mutator_steps_aggregate,
                                 meters)
 
+            nn.utils.clip_grad_norm_(self.mutator.parameters(), 5.)
             self.mutator_optim.step()
 
     def validate_one_epoch(self, epoch):

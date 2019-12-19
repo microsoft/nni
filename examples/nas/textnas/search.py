@@ -90,7 +90,7 @@ if __name__ == "__main__":
     model = Model(embedding)
 
     num_epochs = 10
-    mutator = EnasMutator(model, tanh_constant=None)
+    mutator = EnasMutator(model, tanh_constant=None, entropy_reduction="mean")
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.008, eps=1E-3)
@@ -115,5 +115,6 @@ if __name__ == "__main__":
                              child_steps=3000,
                              mutator_steps=50,
                              mutator_steps_aggregate=10,
+                             skip_weight=0.,
                              test_arc_per_epoch=10)
     trainer.train()

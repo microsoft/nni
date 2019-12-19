@@ -30,7 +30,7 @@ class StackedLSTMCell(nn.Module):
 class EnasMutator(Mutator):
 
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
-                 skip_target=0.4, branch_bias=0.25):
+                 skip_target=0.4, branch_bias=0.25, entropy_reduction="sum"):
         super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
@@ -45,6 +45,8 @@ class EnasMutator(Mutator):
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
         self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)  # pylint: disable=not-callable
+        assert entropy_reduction in ["sum", "mean"], "Entropy reduction must be one of sum and mean."
+        self.entropy_reduction = torch.sum if entropy_reduction == "sum" else torch.mean
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction="none")
         self.bias_dict = nn.ParameterDict()
 
@@ -116,9 +118,9 @@ class EnasMutator(Mutator):
             logit += self.bias_dict[mutable.key]
         branch_id = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
         log_prob = self.cross_entropy_loss(logit, branch_id)
-        self.sample_log_prob += torch.sum(log_prob)
+        self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
-        self.sample_entropy += torch.sum(entropy)
+        self.sample_entropy += self.entropy_reduction(entropy)
         self._inputs = self.embedding(branch_id)
         return F.one_hot(branch_id, num_classes=self.max_layer_choice).bool().view(-1)
 
@@ -153,7 +155,7 @@ class EnasMutator(Mutator):
             log_prob = self.cross_entropy_loss(logit, index)
             self._inputs = anchors[index.item()]
 
-        self.sample_log_prob += torch.sum(log_prob)
+        self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
-        self.sample_entropy += torch.sum(entropy)
+        self.sample_entropy += self.entropy_reduction(entropy)
         return skip.bool()
