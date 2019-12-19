@@ -40,7 +40,10 @@ class AverageMeterGroup:
             self.meters[k].update(v)
 
     def __str__(self):
-        return "  ".join(str(v) for _, v in self.meters.items())
+        return "  ".join(str(v) for v in self.meters.values())
+
+    def summary(self):
+        return "  ".join(v.summary() for v in self.meters.values())
 
 
 class AverageMeter:
@@ -75,6 +78,10 @@ class AverageMeter:
 
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+    def summary(self):
+        fmtstr = '{name}: {avg' + self.fmt + '}'
         return fmtstr.format(**self.__dict__)
 
 

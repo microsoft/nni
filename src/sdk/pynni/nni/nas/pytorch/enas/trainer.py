@@ -123,7 +123,8 @@ class EnasTrainer(Trainer):
                 loss.backward()
                 meters.update(metrics)
 
-                if self.log_frequency is not None and step % self.log_frequency == 0:
+                cur_step = step + (mutator_step - 1) * self.mutator_steps_aggregate
+                if self.log_frequency is not None and cur_step % self.log_frequency == 0:
                     logger.info("RL Epoch [%d/%d] Step [%d:%d/%d:%d]  %s", epoch + 1, self.num_epochs,
                                 mutator_step, step, self.mutator_steps, self.mutator_steps_aggregate,
                                 meters)
@@ -133,6 +134,7 @@ class EnasTrainer(Trainer):
     def validate_one_epoch(self, epoch):
         with torch.no_grad():
             for arc_id in range(self.test_arc_per_epoch):
+                meters = AverageMeterGroup()
                 for step, (x, y) in enumerate(self.test_loader):
                     x, y = to_device(x, self.device), to_device(y, self.device)
                     self.mutator.reset()
@@ -144,8 +146,6 @@ class EnasTrainer(Trainer):
                     metrics["loss"] = loss.item()
                     meters.update(metrics)
 
-                    if self.log_frequency is not None and (
-                            step % self.log_frequency == 0 or step + 1 == len(self.test_loader)):
-                        logger.info("Test Epoch [%d/%d] Arc [%d/%d] Step [%d/%d]  %s",
-                                    epoch + 1, self.num_epochs, arc_id + 1, self.test_arc_per_epoch,
-                                    step + 1, len(self.test_loader), meters)
+                logger.info("Test Epoch [%d/%d] Arc [%d/%d] Summary  %s",
+                            epoch + 1, self.num_epochs, arc_id + 1, self.test_arc_per_epoch,
+                            meters.summary())

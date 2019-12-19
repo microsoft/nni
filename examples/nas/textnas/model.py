@@ -7,7 +7,7 @@ from utils import GlobalMaxPool, GlobalAvgPool
 
 
 class Layer(mutables.MutableScope):
-    def __init__(self, key, prev_keys, hidden_units, cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask):
+    def __init__(self, key, prev_keys, hidden_units, choose_from_k, cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask):
         super(Layer, self).__init__(key)
 
         def conv_shortcut(kernel_size):
@@ -16,7 +16,7 @@ class Layer(mutables.MutableScope):
 
         self.n_candidates = len(prev_keys)
         if self.n_candidates:
-            self.prec = mutables.InputChoice(choose_from=prev_keys, n_chosen=1)
+            self.prec = mutables.InputChoice(choose_from=prev_keys[-choose_from_k:], n_chosen=1)
         else:
             # first layer, skip input choice
             self.prec = None
@@ -68,8 +68,8 @@ class Model(nn.Module):
         candidate_keys_pool = []
         for layer_id in range(self.num_layers):
             k = "layer_{}".format(layer_id)
-            self.layers.append(Layer(k, candidate_keys_pool[-choose_from_k:],
-                                     hidden_units, cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask))
+            self.layers.append(Layer(k, candidate_keys_pool, hidden_units, choose_from_k,
+                                     cnn_keep_prob, lstm_keep_prob, att_keep_prob, att_mask))
             candidate_keys_pool.append(k)
 
         self.linear_combine = LinearCombine(self.num_layers)

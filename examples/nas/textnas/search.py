@@ -76,7 +76,7 @@ def get_data_loader(batch_size, device):
     test_loader = IteratorWrapper(test_iter)
     logger.info("Loaded %d batches for training, %d for validation, %d for testing.",
                 len(train_loader), len(valid_loader), len(test_loader))
-    return TEXT.vocab.vectors, cycle(train_loader), cycle(valid_loader), cycle(test_loader)
+    return TEXT.vocab.vectors, cycle(train_loader), cycle(valid_loader), test_loader
 
 
 if __name__ == "__main__":
