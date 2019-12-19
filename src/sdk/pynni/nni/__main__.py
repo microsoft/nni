@@ -64,14 +64,11 @@ def create_customized_class_instance(class_params):
     return instance
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='parse command line parameters.')
-    parser.add_argument('--exp_params', type=str, required=True)
-    flags, _ = parser.parse_known_args()
-    return flags
-
 def main():
-    args = parse_args()
+    parser = argparse.ArgumentParser(description='Dispatcher command line parser')
+    parser.add_argument('--exp_params', type=str, required=True)
+    args, _ = parser.parse_known_args()
+
     exp_params_decode = base64.b64decode(args.exp_params).decode('utf-8')
     logger.debug('decoded exp_params: [%s]', exp_params_decode)
     exp_params = json.loads(exp_params_decode)
