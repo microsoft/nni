@@ -29,11 +29,11 @@ local:
 pai:
   nniManagerIp:
   maxExecDuration: 15m
-  paiConfig:
+  paiYarnConfig:
     host:
     passWord:
     userName:
-  trainingServicePlatform: pai
+  trainingServicePlatform: paiYarn
   trial:
     gpuNum: 1
     cpuNum: 1
