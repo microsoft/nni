@@ -8,24 +8,24 @@ import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialJobStatus } from '../../common/trainingService';
-import { PAIBaseClusterConfig, PAIBaseTrialJobDetail } from './paiBaseConfig';
+import { PAIClusterConfig, PAITrialJobDetail } from './paiConfig';
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
-export class PAIBaseJobInfoCollector {
-    private readonly trialJobsMap: Map<string, PAIBaseTrialJobDetail>;
+export class PAIJobInfoCollector {
+    private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
     private readonly log: Logger = getLogger();
     private readonly statusesNeedToCheck: TrialJobStatus[];
     private readonly finalStatuses: TrialJobStatus[];
 
-    constructor(jobMap: Map<string, PAIBaseTrialJobDetail>) {
+    constructor(jobMap: Map<string, PAITrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'UNKNOWN', 'WAITING'];
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(token? : string, paiBaseClusterConfig?: PAIBaseClusterConfig): Promise<void> {
+    public async retrieveTrialStatus(token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
         if (paiBaseClusterConfig === undefined || token === undefined) {
             return Promise.resolve();
         }
@@ -41,7 +41,7 @@ export class PAIBaseJobInfoCollector {
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiBaseTrialJob: PAIBaseTrialJobDetail, paiToken: string, paiBaseClusterConfig: PAIBaseClusterConfig): Promise<void> {
+    private getSinglePAITrialJobInfo(paiBaseTrialJob: PAITrialJobDetail, paiToken: string, paiBaseClusterConfig: PAIClusterConfig): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiBaseTrialJob.status)) {
             deferred.resolve();

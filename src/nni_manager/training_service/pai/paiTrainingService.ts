@@ -22,29 +22,28 @@ import { delay, generateParamFileName,
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../common/util';
-import { PAIBaseJobInfoCollector } from './paiBaseJobInfoCollector';
-import { PAIBaseJobRestServer, ParameterFileMeta } from './paiBaseJobRestServer';
-import { PAIBaseClusterConfig, PAIBaseTrialJobDetail } from './paiBaseConfig';
-import { PAIJobRestServer } from './pai/paiJobRestServer';
+import { PAIJobInfoCollector } from './paiJobInfoCollector';
+import { PAIJobRestServer, ParameterFileMeta } from './paiJobRestServer';
+import { PAIClusterConfig, PAITrialJobDetail } from './paiConfig';
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-abstract class PAIBaseTrainingService implements TrainingService {
+abstract class PAITrainingService implements TrainingService {
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
-    protected readonly trialJobsMap: Map<string, PAIBaseTrialJobDetail>;
+    protected readonly trialJobsMap: Map<string, PAITrialJobDetail>;
     protected readonly expRootDir: string;
-    protected paiBaseClusterConfig?: PAIBaseClusterConfig;
+    protected paiClusterConfig?: PAIClusterConfig;
     protected readonly jobQueue: string[];
     protected stopping: boolean = false;
     protected paiToken? : string;
     protected paiTokenUpdateTime?: number;
     protected readonly paiTokenUpdateInterval: number;
     protected readonly experimentId!: string;
-    protected readonly paiJobCollector: PAIBaseJobInfoCollector;
+    protected readonly paiJobCollector: PAIJobInfoCollector;
     protected paiRestServerPort?: number;
     protected nniManagerIpConfig?: NNIManagerIpConfig;
     protected versionCheck: boolean = true;
@@ -52,23 +51,33 @@ abstract class PAIBaseTrainingService implements TrainingService {
     protected isMultiPhase: boolean = false;
     protected authFileHdfsPath: string | undefined = undefined;
     protected portList?: string | undefined;
-    protected paiBaseJobRestServer?: PAIJobRestServer;
+    protected paiJobRestServer?: PAIJobRestServer;
 
     constructor() {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
-        this.trialJobsMap = new Map<string, PAIBaseTrialJobDetail>();
+        this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         this.jobQueue = [];
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();
-        this.paiJobCollector = new PAIBaseJobInfoCollector(this.trialJobsMap);
+        this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.logCollection = 'none';
         this.log.info('Construct paiBase training service.');
     }
 
     public async run(): Promise<void> {
-        throw new Error('Not implemented!');
+        this.log.info('Run PAI training service.');
+        if (this.paiJobRestServer === undefined) {
+            throw new Error('paiJobRestServer not initialized!');
+        }
+        await this.paiJobRestServer.start();
+        this.paiJobRestServer.setEnableVersionCheck = this.versionCheck;
+        this.log.info(`PAI Training service rest server listening on: ${this.paiJobRestServer.endPoint}`);
+        await Promise.all([
+            this.statusCheckingLoop(),
+            this.submitJobLoop()]);
+        this.log.info('PAI training service exit.');
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<any> {
@@ -114,11 +123,11 @@ abstract class PAIBaseTrainingService implements TrainingService {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        if (this.paiBaseClusterConfig === undefined) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
 
-        const paiBaseTrialJob: PAIBaseTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        const paiBaseTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
         if (paiBaseTrialJob === undefined) {
             return Promise.reject(`trial job ${trialJobId} not found`);
@@ -140,7 +149,7 @@ abstract class PAIBaseTrainingService implements TrainingService {
     }
 
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail: PAIBaseTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred: Deferred<void> = new Deferred<void>();
         if (trialJobDetail === undefined) {
             this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
@@ -148,7 +157,7 @@ abstract class PAIBaseTrainingService implements TrainingService {
             return Promise.reject();
         }
 
-        if (this.paiBaseClusterConfig === undefined) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
         if (this.paiToken === undefined) {
@@ -156,7 +165,7 @@ abstract class PAIBaseTrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `http://${this.paiBaseClusterConfig.host}/rest-server/api/v1/user/${this.paiBaseClusterConfig.userName}\
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
 /jobs/${trialJobDetail.paiJobName}/executionType`, 
             method: 'PUT',
             json: true,
@@ -194,13 +203,13 @@ abstract class PAIBaseTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping PAI training service...');
         this.stopping = true;
-        if (this.paiBaseJobRestServer === undefined) {
+        if (this.paiJobRestServer === undefined) {
             throw new Error('paiBaseJobRestServer not initialized!');
         }
 
         const deferred: Deferred<void> = new Deferred<void>();
         try {
-            await this.paiBaseJobRestServer.stop();
+            await this.paiJobRestServer.stop();
             deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
@@ -217,7 +226,7 @@ abstract class PAIBaseTrainingService implements TrainingService {
 
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            if(this.paiBaseClusterConfig && this.paiBaseClusterConfig.passWord) {
+            if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
                 try {
                     await this.updatePaiToken();
                 } catch (error) {
@@ -228,12 +237,12 @@ abstract class PAIBaseTrainingService implements TrainingService {
                     }
                 }
             }
-            await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiBaseClusterConfig);
-            if (this.paiBaseJobRestServer === undefined) {
+            await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
+            if (this.paiJobRestServer === undefined) {
                 throw new Error('paiBaseJobRestServer not implemented!');
             }
-            if (this.paiBaseJobRestServer.getErrorMessage !== undefined) {
-                throw new Error(this.paiBaseJobRestServer.getErrorMessage);
+            if (this.paiJobRestServer.getErrorMessage !== undefined) {
+                throw new Error(this.paiJobRestServer.getErrorMessage);
             }
             await delay(3000);
         }
@@ -251,19 +260,19 @@ abstract class PAIBaseTrainingService implements TrainingService {
             return Promise.resolve();
         }
 
-        if (this.paiBaseClusterConfig === undefined) {
+        if (this.paiClusterConfig === undefined) {
             const paiClusterConfigError: string = `pai cluster config not initialized!`;
             this.log.error(`${paiClusterConfigError}`);
             throw Error(`${paiClusterConfigError}`);
         }
 
         const authenticationReq: request.Options = {
-            uri: `http://${this.paiBaseClusterConfig.host}/rest-server/api/v1/token`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
             method: 'POST',
             json: true,
             body: {
-                username: this.paiBaseClusterConfig.userName,
-                password: this.paiBaseClusterConfig.passWord
+                username: this.paiClusterConfig.userName,
+                password: this.paiClusterConfig.passWord
             }
         };
 
@@ -295,4 +304,4 @@ abstract class PAIBaseTrainingService implements TrainingService {
     }
 }
 
-export { PAIBaseTrainingService };
+export { PAITrainingService };

@@ -7,8 +7,8 @@ import { Request, Response, Router } from 'express';
 import { Inject } from 'typescript-ioc';
 import * as component from '../../../common/component';
 import { ClusterJobRestServer } from '../../common/clusterJobRestServer';
-import { PAIYarnTrainingService } from './paiYarnTrainingService';
-import { PAIBaseJobRestServer } from '../paiBaseJobRestServer';
+import { PAIK8STrainingService } from './paiK8STrainingService';
+import { PAIJobRestServer } from '../paiJobRestServer';
 
 export interface ParameterFileMeta {
     readonly experimentId: string;
@@ -21,11 +21,11 @@ export interface ParameterFileMeta {
  *
  */
 @component.Singleton
-export class PAIYarnJobRestServer extends PAIBaseJobRestServer {
+export class PAIK8SJobRestServer extends PAIJobRestServer {
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
     constructor() {
-        super(component.get(PAIYarnTrainingService));
+        super(component.get(PAIK8STrainingService));
     }
 }

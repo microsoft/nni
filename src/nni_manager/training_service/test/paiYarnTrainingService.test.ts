@@ -11,7 +11,7 @@ import * as component from '../../common/component';
 import { TrialJobApplicationForm } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { PAIYarnTrainingService } from '../pai_base/paiYarn/paiYarnTrainingService';
+import { PAIYarnTrainingService } from '../pai/paiYarn/paiYarnTrainingService';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name

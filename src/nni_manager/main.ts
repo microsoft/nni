@@ -20,8 +20,8 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { PAITrainingService } from './training_service/pai_base/pai/paiTrainingService';
-import { PAIYarnTrainingService } from './training_service/pai_base/paiYarn/paiYarnTrainingService';
+import { PAIK8STrainingService } from './training_service/pai/paiK8S/paiK8STrainingService';
+import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -45,7 +45,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
-            .to(PAITrainingService)
+            .to(PAIK8STrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'paiYarn') {
             Container.bind(TrainingService)

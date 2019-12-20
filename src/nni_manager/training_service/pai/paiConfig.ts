@@ -6,7 +6,7 @@
 import {TrialConfig} from '../common/trialConfig';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
-export class PAIBaseClusterConfig {
+export class PAIClusterConfig {
     public readonly userName: string;
     public readonly passWord?: string;
     public readonly host: string;
@@ -30,7 +30,7 @@ export class PAIBaseClusterConfig {
 /**
  * PAI trial job detail
  */
-export class PAIBaseTrialJobDetail implements TrialJobDetail {
+export class PAITrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
     public paiJobName: string;

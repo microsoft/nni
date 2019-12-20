@@ -23,7 +23,7 @@ import {TrialConfig} from '../../common/trialConfig';
 /**
  * PAI trial configuration
  */
-export class NNIPAITrialConfig extends TrialConfig {
+export class NNIPAIK8STrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;

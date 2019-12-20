@@ -7,7 +7,7 @@ import { Request, Response, Router } from 'express';
 import { Inject } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
-import { PAIBaseTrainingService } from './paiBaseTrainingService';
+import { PAITrainingService } from './paiTrainingService';
 
 export interface ParameterFileMeta {
     readonly experimentId: string;
@@ -20,25 +20,25 @@ export interface ParameterFileMeta {
  *
  */
 @component.Singleton
-export class PAIBaseJobRestServer extends ClusterJobRestServer {
+export class PAIJobRestServer extends ClusterJobRestServer {
     protected parameterFileMetaList: ParameterFileMeta[] = [];
 
     @Inject
-    protected readonly paiBaseTrainingService: PAIBaseTrainingService;
+    protected readonly paiTrainingService: PAITrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor (paiBaseTrainingService: PAIBaseTrainingService) {
+    constructor (paiBaseTrainingService: PAITrainingService) {
         super();
-        this.paiBaseTrainingService = paiBaseTrainingService;
+        this.paiTrainingService = paiBaseTrainingService;
     }
 
     protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
         for (const singleMetric of metrics) {
-            this.paiBaseTrainingService.MetricsEmitter.emit('metric', {
+            this.paiTrainingService.MetricsEmitter.emit('metric', {
                 id : jobId,
                 data : singleMetric
             });

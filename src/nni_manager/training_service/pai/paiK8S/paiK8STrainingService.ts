@@ -37,11 +37,11 @@ import { delay, generateParamFileName,
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir, execCopydir } from '../../common/util';
-import { PAI_LITE_TRIAL_COMMAND_FORMAT } from './paiData';
-import { NNIPAITrialConfig } from './paiConfig';
-import { PAIJobRestServer } from './paiJobRestServer';
-import { PAIBaseTrainingService } from '../paiBaseTrainingService';
-import { PAIBaseClusterConfig, PAIBaseTrialJobDetail } from '../../pai_base/paiBaseConfig';
+import { PAI_K8S_TRIAL_COMMAND_FORMAT } from './paiK8SData';
+import { NNIPAIK8STrialConfig } from './paiK8SConfig';
+import { PAIK8SJobRestServer } from './paiK8SJobRestServer';
+import { PAITrainingService } from '../paiTrainingService';
+import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 
 const yaml = require('js-yaml');
 
@@ -50,26 +50,11 @@ const yaml = require('js-yaml');
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAITrainingService extends PAIBaseTrainingService {
-    protected paiTrialConfig: NNIPAITrialConfig | undefined;
+class PAIK8STrainingService extends PAITrainingService {
+    protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
 
     constructor() {
         super();
-    }
-
-    public async run(): Promise<void> {
-        this.log.info('Run PAIYarn training service.');
-        this.paiBaseJobRestServer = component.get(PAIJobRestServer);
-        if (this.paiBaseJobRestServer === undefined) {
-            throw new Error('paiBaseJobRestServer not initialized!');
-        }
-        await this.paiBaseJobRestServer.start();
-        this.paiBaseJobRestServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`PAI Training service rest server listening on: ${this.paiBaseJobRestServer.endPoint}`);
-        await Promise.all([
-            this.statusCheckingLoop(),
-            this.submitJobLoop()]);
-        this.log.info('PAI training service exit.');
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -82,13 +67,14 @@ class PAITrainingService extends PAIBaseTrainingService {
                 break;
 
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiBaseClusterConfig = <PAIBaseClusterConfig>JSON.parse(value);
+                this.paiJobRestServer = component.get(PAIK8SJobRestServer);
+                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
 
-                if(this.paiBaseClusterConfig.passWord) {
+                if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
-                } else if(this.paiBaseClusterConfig.token) {
-                    this.paiToken = this.paiBaseClusterConfig.token;
+                } else if(this.paiClusterConfig.token) {
+                    this.paiToken = this.paiClusterConfig.token;
                 } else {
                     deferred.reject(new Error('pai cluster config format error, please set password or token!'));
                 }
@@ -97,12 +83,12 @@ class PAITrainingService extends PAIBaseTrainingService {
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (this.paiBaseClusterConfig === undefined) {
+                if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
                     deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
-                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
+                this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
@@ -141,10 +127,10 @@ class PAITrainingService extends PAIBaseTrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        if (this.paiBaseClusterConfig === undefined) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error(`paiClusterConfig not initialized!`);
         }
-        const deferred: Deferred<PAIBaseTrialJobDetail> = new Deferred<PAIBaseTrialJobDetail>();
+        const deferred: Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -153,7 +139,7 @@ class PAITrainingService extends PAIBaseTrainingService {
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const logPath: string = '';
-        const trialJobDetail: PAIBaseTrialJobDetail = new PAIBaseTrialJobDetail(
+        const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
             paiJobName,
@@ -225,13 +211,13 @@ class PAITrainingService extends PAIBaseTrainingService {
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        const trialJobDetail: PAIBaseTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
         if (trialJobDetail === undefined) {
             throw new Error(`Failed to find PAITrialJobDetail for job ${trialJobId}`);
         }
 
-        if (this.paiBaseClusterConfig === undefined) {
+        if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
         if (this.paiTrialConfig === undefined) {
@@ -241,10 +227,11 @@ class PAITrainingService extends PAIBaseTrainingService {
             throw new Error('PAI token is not initialized');
         }
 
-        if (this.paiRestServerPort === undefined) {
-            const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-            this.paiRestServerPort = restServer.clusterRestServerPort;
+        if (this.paiJobRestServer === undefined) {
+            throw new Error('paiJobRestServer is not initialized');
         }
+
+        this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
 
         // Step 1. Prepare PAI job configuration
         const trialLocalFolder: string = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, trialJobId);
@@ -270,7 +257,7 @@ class PAITrainingService extends PAIBaseTrainingService {
         const version: string = this.versionCheck ? await getVersion() : '';
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobId}`;
         const nniPaiTrialCommand: string = String.Format(
-            PAI_LITE_TRIAL_COMMAND_FORMAT,
+            PAI_K8S_TRIAL_COMMAND_FORMAT,
             `${containerWorkingDir}`,
             `${containerWorkingDir}/nnioutput`,
             trialJobId,
@@ -292,7 +279,7 @@ class PAITrainingService extends PAIBaseTrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `http://${this.paiBaseClusterConfig.host}/rest-server/api/v2/jobs`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
             headers: {
@@ -317,4 +304,4 @@ class PAITrainingService extends PAIBaseTrainingService {
     }
 }
 
-export { PAITrainingService };
+export { PAIK8STrainingService };
