@@ -282,9 +282,7 @@ class PAIYarnTrainingService extends PAITrainingService {
         } catch (error) {
             this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
             trialJobDetail.status = 'FAILED'; // eslint-disable-line require-atomic-updates
-            deferred.resolve(true);
-
-            return deferred.promise;
+            return true;
         }
 
         // Step 3. Submit PAI job via Rest call

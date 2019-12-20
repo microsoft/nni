@@ -58,47 +58,26 @@ class PAIK8STrainingService extends PAITrainingService {
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
         switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                deferred.resolve();
-                break;
-
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
-
                 if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
                 } else if(this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
-                } else {
-                    deferred.reject(new Error('pai cluster config format error, please set password or token!'));
                 }
-
-                deferred.resolve();
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
-                    deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
-
                 // Validate to make sure codeDir doesn't have too many files
-                try {
-                    await validateCodeDir(this.paiTrialConfig.codeDir);
-                } catch (error) {
-                    this.log.error(error);
-                    deferred.reject(new Error(error));
-                    break;
-                }
-                deferred.resolve();
+                await validateCodeDir(this.paiTrialConfig.codeDir);
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
@@ -111,10 +90,8 @@ class PAIK8STrainingService extends PAITrainingService {
                 break;
             default:
                 //Reject for unknown keys
-                deferred.reject(new Error(`Uknown key: ${key}`));
+                this.log.error(`Uknown key: ${key}`);
         }
-
-        return deferred.promise;
     }
     
     //TODO: update trial parameters
@@ -133,7 +110,6 @@ class PAIK8STrainingService extends PAITrainingService {
         if (this.paiTrialConfig === undefined) {
             throw new Error(`paiTrialConfig not initialized!`);
         }
-        const deferred: Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -153,9 +129,8 @@ class PAIK8STrainingService extends PAITrainingService {
 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         this.jobQueue.push(trialJobId);
-        deferred.resolve(trialJobDetail);
 
-        return deferred.promise;
+        return trialJobDetail;
     }
 
     public generateJobConfigInYamlFormat(trialJobId: string, command: string) {

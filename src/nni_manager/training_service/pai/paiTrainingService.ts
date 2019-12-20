@@ -119,7 +119,7 @@ abstract class PAITrainingService implements TrainingService {
             jobs.push(await this.getTrialJob(key));
         }
 
-        return Promise.resolve(jobs);
+        return jobs;
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
@@ -127,13 +127,13 @@ abstract class PAITrainingService implements TrainingService {
             throw new Error('PAI Cluster config is not initialized');
         }
 
-        const paiBaseTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        const paiTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
-        if (paiBaseTrialJob === undefined) {
-            return Promise.reject(`trial job ${trialJobId} not found`);
+        if (paiTrialJob === undefined) {
+            throw new Error(`trial job ${trialJobId} not found`);
         }
 
-        return Promise.resolve(paiBaseTrialJob);
+        return paiTrialJob;
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
@@ -193,31 +193,23 @@ abstract class PAITrainingService implements TrainingService {
     }
 
     public getClusterMetadata(key: string): Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
-
-        deferred.resolve();
-
-        return deferred.promise;
+        throw new Error('Not implemented!');
     }
 
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping PAI training service...');
         this.stopping = true;
+
         if (this.paiJobRestServer === undefined) {
-            throw new Error('paiBaseJobRestServer not initialized!');
+            throw new Error('paiJobRestServer not initialized!');
         }
 
-        const deferred: Deferred<void> = new Deferred<void>();
         try {
             await this.paiJobRestServer.stop();
-            deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
             this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
-            deferred.reject(error);
         }
-
-        return deferred.promise;
     }
 
     public get MetricsEmitter(): EventEmitter {
