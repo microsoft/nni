@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser = ArgumentParser("textnas")
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=50, type=int)
-    parser.add_argument("--arc-checkpoint", default="checkpoints/epoch_0.json", type=str)
+    parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
     args = parser.parse_args()
 
