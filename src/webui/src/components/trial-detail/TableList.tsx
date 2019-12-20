@@ -68,9 +68,7 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
             return a.latestAccuracy - b.latestAccuracy;
         }
     },
-    render: (text, record): any => (
-        <div>{record.formattedLatestAccuracy}</div>
-    )
+    render: (text, record): any => <div>{record.formattedLatestAccuracy}</div>
 };
 
 const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
