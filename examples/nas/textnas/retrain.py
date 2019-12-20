@@ -85,8 +85,8 @@ if __name__ == "__main__":
 
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.008, eps=1E-3, weight_decay=2E-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0.0004)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.002, eps=1E-3, weight_decay=2E-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0.002)
 
     best_top1 = 0.
     for epoch in range(args.epochs):
