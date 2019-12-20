@@ -6,16 +6,23 @@ NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法�
 
 ## 支持的算法
 
-NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括两种剪枝算法以及三种量化算法：
+NNI 提供了几种压缩算法，包括剪枝和量化算法：
+
+**剪枝**
+
+| 名称                                              | 算法简介                                                                                                                                   |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)        | 根据权重的绝对值，来按比例修剪权重。                                                                                                                     |
+| [AGP Pruner](./Pruner.md#agp-pruner)            | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                    |
+| [L1Filter Pruner](./Pruner.md#l1filter-pruner)  | 剪除卷积层中最不重要的过滤器 (PRUNING FILTERS FOR EFFICIENT CONVNETS)[参考论文](https://arxiv.org/abs/1608.08710)                                        |
+| [Slim Pruner](./Pruner.md#slim-pruner)          | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming)[参考论文](https://arxiv.org/abs/1708.06519) |
+| [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635) |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner)          | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)   |
+
+**量化**
 
 | 名称                                                  | 算法简介                                                                                                                                                                       |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)            | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                         |
-| [AGP Pruner](./Pruner.md#agp-pruner)                | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                        |
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner)      | 剪除卷积层中最不重要的过滤器 (PRUNING FILTERS FOR EFFICIENT CONVNETS)[参考论文](https://arxiv.org/abs/1608.08710)                                                                            |
-| [Slim Pruner](./Pruner.md#slim-pruner)              | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming)[参考论文](https://arxiv.org/abs/1708.06519)                                     |
-| [Lottery Ticket Pruner](./Pruner.md#agp-pruner)     | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635)                                     |
-| [FPGM Pruner](./Pruner.md#fpgm-pruner)              | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)                                       |
 | [Naive Quantizer](./Quantizer.md#naive-quantizer)   | 默认将权重量化为 8 位                                                                                                                                                               |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer)       | 为 Efficient Integer-Arithmetic-Only Inference 量化并训练神经网络。 [参考论文](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 [参考论文](https://arxiv.org/abs/1606.06160)                                                                                              |
@@ -23,15 +30,6 @@ NNI 提供了两种朴素压缩算法以及三种流行的压缩算法，包括�
 ## 内置压缩算法的用法
 
 通过简单的示例来展示如何修改 Trial 代码来使用压缩算法。 比如，需要通过 Level Pruner 来将权重剪枝 80%，首先在代码中训练模型前，添加以下内容（[完整代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)）。
-
-TensorFlow 代码
-
-```python
-from nni.compression.tensorflow import LevelPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(tf.get_default_graph(), config_list)
-pruner.compress()
-```
 
 PyTorch 代码
 
@@ -42,7 +40,17 @@ pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
-可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。
+TensorFlow 代码
+
+```python
+from nni.compression.tensorflow import LevelPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+pruner = LevelPruner(tf.get_default_graph(), config_list)
+pruner.compress()
+```
+
+
+可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。 此外，如果要使用知识蒸馏算法，可参考 [KD 示例](../TrialExample/KDExample.md)
 
 函数调用 `pruner.compress()` 来修改用户定义的模型（在 Tensorflow 中，通过 `tf.get_default_graph()` 来获得模型，而 PyTorch 中 model 是定义的模型类），并修改模型来插入 mask。 然后运行模型时，这些 mask 即会生效。 mask 可在运行时通过算法来调整。
 

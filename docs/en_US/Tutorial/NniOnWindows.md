@@ -1,6 +1,6 @@
 # NNI on Windows (experimental feature)
 
-Currently we support local, remote and pai mode on Windows. Windows 10.1809 is well tested and recommended.
+Running NNI on Windows is an experimental feature. Windows 10.1809 is well tested and recommended.
 
 ## **Installation on Windows**
 
@@ -40,6 +40,9 @@ Make sure C++ 14.0 compiler installed then try to run `nnictl package install --
 
 ### Not supported tuner on Windows
 SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
+
+### Use a Windows server as a remote worker
+Currently you can't.
 
 Note:
 

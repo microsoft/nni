@@ -3,6 +3,18 @@ import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } f
 import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
 
+function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
+    const ret = new Map<string, MetricDataRecord[]>();
+    for (const metric of metrics) {
+        if (ret.has(metric.trialJobId)) {
+            ret.get(metric.trialJobId)!.push(metric);
+        } else {
+            ret.set(metric.trialJobId, [ metric ]);
+        }
+    }
+    return ret;
+}
+
 class TrialManager {
     private trials: Map<string, Trial> = new Map<string, Trial>();
     private infoInitialized: boolean = false;
@@ -139,18 +151,6 @@ class TrialManager {
         this.metricInitialized = true;
         return updated;
     }
-}
-
-function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
-    const ret = new Map<string, MetricDataRecord[]>();
-    for (const metric of metrics) {
-        if (ret.has(metric.trialJobId)) {
-            ret.get(metric.trialJobId)!.push(metric);
-        } else {
-            ret.set(metric.trialJobId, [ metric ]);
-        }
-    }
-    return ret;
 }
 
 export { TrialManager };
