@@ -19,7 +19,6 @@ export interface ParameterFileMeta {
  * PAI Training service Rest server, provides rest API to support pai job metrics update
  *
  */
-@component.Singleton
 export class PAIJobRestServer extends ClusterJobRestServer {
     protected parameterFileMetaList: ParameterFileMeta[] = [];
 
