@@ -12,7 +12,7 @@ interface SuccessTableProps {
     trialIds: string[];
 }
 
-function openRow(record: TableRecord) { // eslint-disable-line
+function openRow(record: TableRecord): any {
     return (
         <OpenRow trialId={record.id} />
     );
@@ -23,7 +23,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
         super(props);
     }
 
-    render(): any { // eslint-disable-line
+    render(): any {
         const columns = [
             {
                 title: 'Trial No.',
@@ -35,7 +35,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 dataIndex: 'id',
                 width: 60,
                 className: 'tableHead leftTitle',
-                render: (text: string, record: TableRecord) => { // eslint-disable-line
+                render: (text: string, record: TableRecord): any => {
                     return (
                         <div>{record.id}</div>
                     );
@@ -44,7 +44,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 title: 'Duration',
                 dataIndex: 'duration',
                 width: 140,
-                render: (text: string, record: TableRecord) => { // eslint-disable-line
+                render: (text: string, record: TableRecord): any => {
                     return (
                         <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
                     );

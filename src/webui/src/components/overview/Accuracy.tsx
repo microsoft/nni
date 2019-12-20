@@ -21,7 +21,7 @@ class Accuracy extends React.Component<AccuracyProps, {}> {
 
     }
 
-    render(): any { // eslint-disable-line
+    render(): any {
         const { accNodata, accuracyData, height } = this.props;
         return (
             <div>

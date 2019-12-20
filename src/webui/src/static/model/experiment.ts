@@ -41,7 +41,8 @@ class Experiment {
         if (!this.profileField) {
             throw Error('Experiment profile not initialized');
         }
-        return this.profileField!; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.profileField!;
     }
 
     get trialConcurrency(): number {
@@ -73,14 +74,16 @@ class Experiment {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
-        return this.statusField!.status; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.statusField!.status;
     }
 
     get error(): string {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
-        return this.statusField!.errors[0] || ''; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.statusField!.errors[0] || '';
     }
 }
 

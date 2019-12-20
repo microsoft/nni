@@ -189,7 +189,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    fresh = (event: React.SyntheticEvent<EventTarget>): any => {
+    fresh = (event: React.SyntheticEvent<EventTarget>): void => {
         event.preventDefault();
         event.stopPropagation();
         this.setState({ isdisabledFresh: true }, () => {

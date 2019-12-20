@@ -12,7 +12,7 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
         super(props);
     }
 
-    render(): any { // eslint-disable-line
+    render(): any {
         return (
             <Row className="main">
                 <Col span={8} className="padItem basic">

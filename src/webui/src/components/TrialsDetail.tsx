@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Row, Col, Tabs, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { Trial } from '../static/model/trial'; // eslint-disable-line no-unused-vars
+import { Trial } from '../static/model/trial';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -60,14 +60,16 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             tablePageSize: 20,
             whichGraph: '1',
             searchType: 'id',
-            searchFilter: trial => true, // eslint-disable-line 
+            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+            searchFilter: trial => true // eslint-disable-line @typescript-eslint/no-unused-vars
         };
     }
 
     // search a trial by trial No. & trial id
     searchTrial = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const targetValue = event.target.value;
-        let filter = (trial: Trial) => true; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        let filter = (trial: Trial) => true; // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!targetValue.trim()) {
             this.setState({ searchFilter: filter });
             return;
@@ -186,7 +188,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             placeholder={`Search by ${this.state.searchType}`}
                             onChange={this.searchTrial}
                             style={{ width: 230 }}
-                            ref={text => (this.searchInput) = text} // eslint-disable-line
+                            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+                            ref={text => (this.searchInput) = text}
                         />
                     </Col>
                 </Row>
@@ -196,7 +199,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     columnList={columnList}
                     changeColumn={changeColumn}
                     trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
-                    ref={(tabList) => this.tableList = tabList} // eslint-disable-line
+                    ref={(tabList) => this.tableList = tabList} // eslint-disable-line @typescript-eslint/explicit-function-return-type
                 />
             </div>
         );

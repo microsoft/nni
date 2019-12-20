@@ -56,7 +56,7 @@ function checkValidServiceWorker(swUrl: string): void {
       // Ensure service worker exists, and that we really are getting a JS file.
       if (
         response.status === 404 ||
-        response.headers.get('content-type')!.indexOf('javascript') === -1 // eslint-disable-line
+        response.headers.get('content-type')!.indexOf('javascript') === -1// eslint-disable-line @typescript-eslint/no-non-null-assertion
       ) {
         // No service worker found. Probably a different app. Reload the page.
         navigator.serviceWorker.ready.then(registration => {
@@ -80,7 +80,7 @@ export default function register(): void {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(
-      process.env.PUBLIC_URL!, // eslint-disable-line
+      process.env.PUBLIC_URL!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
       window.location.toString()
     );
     if (publicUrl.origin !== window.location.origin) {

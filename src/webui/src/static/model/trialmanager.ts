@@ -7,7 +7,8 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
     const ret = new Map<string, MetricDataRecord[]>();
     for (const metric of metrics) {
         if (ret.has(metric.trialJobId)) {
-            ret.get(metric.trialJobId)!.push(metric); // eslint-disable-line
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            ret.get(metric.trialJobId)!.push(metric);
         } else {
             ret.set(metric.trialJobId, [ metric ]);
         }
@@ -35,15 +36,18 @@ class TrialManager {
     }
 
     public getTrial(trialId: string): Trial {
-        return this.trials.get(trialId)!; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.trials.get(trialId)!;
     }
 
     public getTrials(trialIds: string[]): Trial[] {
-        return trialIds.map(trialId => this.trials.get(trialId)!); // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return trialIds.map(trialId => this.trials.get(trialId)!);
     }
 
     public table(trialIds: string[]): TableRecord[] {
-        return trialIds.map(trialId => this.trials.get(trialId)!.tableRecord); // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return trialIds.map(trialId => this.trials.get(trialId)!.tableRecord);
     }
 
     public toArray(): Trial[] {
@@ -61,7 +65,8 @@ class TrialManager {
     }
 
     public sort(): Trial[] {
-        return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!); // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
     }
 
     public countStatus(): Map<string, number> {
@@ -77,7 +82,8 @@ class TrialManager {
         ]);
         for (const trial of this.trials.values()) {
             if (trial.initialized()) {
-                cnt.set(trial.info.status, cnt.get(trial.info.status)! + 1); // eslint-disable-line
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                cnt.set(trial.info.status, cnt.get(trial.info.status)! + 1);
             }
         }
         return cnt;
@@ -89,7 +95,8 @@ class TrialManager {
         if (response.status === 200) {
             for (const info of response.data as TrialJobInfo[]) {
                 if (this.trials.has(info.id)) {
-                    updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated; // eslint-disable-line
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated;
                 } else {
                     this.trials.set(info.id, new Trial(info, undefined));
                     updated = true;
@@ -141,7 +148,8 @@ class TrialManager {
         let updated = false;
         for (const [ trialId, metrics ] of groupMetricsByTrial(allMetrics).entries()) {
             if (this.trials.has(trialId)) {
-                const trial = this.trials.get(trialId)!; // eslint-disable-line
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const trial = this.trials.get(trialId)!;
                 updated = (latestOnly ? trial.updateLatestMetrics(metrics) : trial.updateMetrics(metrics)) || updated;
             } else {
                 this.trials.set(trialId, new Trial(undefined, metrics));

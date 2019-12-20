@@ -33,7 +33,7 @@ class ConcurrencyInput extends React.Component<ConcurrencyInputProps, Concurrenc
         this.setState({ editting: true });
     }
 
-    render(): any { // eslint-disable-line
+    render(): any {
         if (this.state.editting) {
             return (
                 <Row className="inputBox">

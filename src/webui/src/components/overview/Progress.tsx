@@ -46,7 +46,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                params: { update_type: 'TRIAL_CONCURRENCY' } // eslint-disable-line
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                params: { update_type: 'TRIAL_CONCURRENCY' }
             });
             if (res.status === 200) {
                 message.success(`Successfully updated trial concurrency`);
@@ -74,14 +75,15 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         this.setState({ isShowLogDrawer: false });
     }
 
-    render(): any { // eslint-disable-line
+    render(): any {
         const { bestAccuracy } = this.props;
         const { isShowLogDrawer } = this.state;
 
         const count = TRIALS.countStatus();
-
-        const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!; // eslint-disable-line
-        const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
 
         const bar2Percent = (bar2 / EXPERIMENT.profile.params.maxTrialNum) * 100;
         const percent = (EXPERIMENT.profile.execDuration / EXPERIMENT.profile.params.maxExecDuration) * 100;

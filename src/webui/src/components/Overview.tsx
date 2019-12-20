@@ -59,7 +59,8 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const searchSpace = this.convertSearchSpace();
 
         const bestTrials = this.findBestTrials();
-        const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : ''; // eslint-disable-line
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : '';
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
 

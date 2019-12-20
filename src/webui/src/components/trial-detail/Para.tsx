@@ -365,9 +365,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     percentNum = (value: string): void => {
 
         const vals = parseFloat(value);
-        this.setState({ percent: vals }, () => { // eslint-disable-line
-            this.reInit();
-        });
+        this.setState({ percent: vals }, () => { this.reInit(); });
     }
 
     // deal with response data into pic data
