@@ -11,8 +11,9 @@ import torch.nn as nn
 from nni.nas.pytorch.enas import EnasMutator, EnasTrainer
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 
+from dataloader import read_data_sst
 from model import Model
-from utils import accuracy, get_data_loader
+from utils import accuracy
 
 
 logger = logging.getLogger("nni.textnas")
@@ -36,7 +37,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    embedding, train_loader, valid_loader, test_loader = get_data_loader(args.batch_size, device)
+    train_dataset, valid_dataset, test_dataset, embedding = read_data_sst("data")
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, num_workers=4, shuffle=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, num_workers=4, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, num_workers=4)
+    train_loader, valid_loader = cycle(train_loader), cycle(valid_loader)
     model = Model(embedding)
 
     num_epochs = 10

@@ -67,13 +67,13 @@ def accuracy(output, target):
     return (predicted == target).sum().item() / batch_size
 
 
-def get_data_loader(batch_size, device, infinite=True):
+def get_data_loader(batch_size, device, infinite=True, subtrees=True):
     data_folder = "data"
     TEXT = data.Field(lower=True, include_lengths=True, batch_first=True)
     LABEL = data.Field(sequential=False)
     sst_folder = datasets.SST.download(data_folder)
-    train = datasets.SST(os.path.join(sst_folder, "train.txt"), TEXT, LABEL, fine_grained=True, subtrees=True)
-    val = datasets.SST(os.path.join(sst_folder, "dev.txt"), TEXT, LABEL, fine_grained=True, subtrees=True)
+    train = datasets.SST(os.path.join(sst_folder, "train.txt"), TEXT, LABEL, fine_grained=True, subtrees=subtrees)
+    val = datasets.SST(os.path.join(sst_folder, "dev.txt"), TEXT, LABEL, fine_grained=True, subtrees=subtrees)
     test = datasets.SST(os.path.join(sst_folder, "test.txt"), TEXT, LABEL, fine_grained=True)
     TEXT.build_vocab(train, vectors=vocab.GloVe(cache=data_folder))
     LABEL.build_vocab(train)

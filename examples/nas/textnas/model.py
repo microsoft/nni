@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from nni.nas.pytorch import mutables
@@ -56,8 +57,7 @@ class Model(nn.Module):
                  embed_keep_prob=0.5, final_output_keep_prob=1.0, global_pool="avg"):
         super(Model, self).__init__()
 
-        self.embedding = nn.Embedding(embedding.size(0), embedding.size(1))
-        self.embedding.weight.data.copy_(embedding)
+        self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         self.hidden_units = hidden_units
         self.num_layers = num_layers
         self.num_classes = num_classes
