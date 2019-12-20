@@ -23,15 +23,14 @@ export interface ParameterFileMeta {
 export class PAIJobRestServer extends ClusterJobRestServer {
     protected parameterFileMetaList: ParameterFileMeta[] = [];
 
-    @Inject
     protected readonly paiTrainingService: PAITrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor (paiBaseTrainingService: PAITrainingService) {
+    constructor (paiTrainingService: PAITrainingService) {
         super();
-        this.paiTrainingService = paiBaseTrainingService;
+        this.paiTrainingService = paiTrainingService;
     }
 
     protected handleTrialMetrics(jobId: string, metrics: any[]): void {

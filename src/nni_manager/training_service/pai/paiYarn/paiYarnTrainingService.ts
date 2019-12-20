@@ -26,11 +26,11 @@ import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIJobConfig, PAITaskRole } from './paiYarnConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_TRIAL_COMMAND_FORMAT } from './paiYarnData';
 import { PAIJobInfoCollector } from '../paiJobInfoCollector';
-import { PAIYarnJobRestServer, ParameterFileMeta } from './paiYarnJobRestServer';
 import { PAITrainingService } from '../paiTrainingService';
 import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 
 import * as WebHDFS from 'webhdfs';
+import { PAIJobRestServer, ParameterFileMeta } from '../paiJobRestServer';
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -94,7 +94,7 @@ class PAIYarnTrainingService extends PAITrainingService {
                 break;
 
             case TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG:
-                this.paiJobRestServer = component.get(PAIYarnJobRestServer);
+                this.paiJobRestServer = new PAIJobRestServer(component.get(PAIYarnTrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
 
                 this.hdfsClient = WebHDFS.createClient({
@@ -183,10 +183,11 @@ class PAIYarnTrainingService extends PAITrainingService {
             throw new Error('PAI token is not initialized');
         }
 
-        if (this.paiRestServerPort === undefined) {
-            const restServer: PAIYarnJobRestServer = component.get(PAIYarnJobRestServer);
-            this.paiRestServerPort = restServer.clusterRestServerPort;
+        if (this.paiJobRestServer === undefined) {
+            throw new Error('paiJobRestServer is not initialized');
         }
+
+        this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
 
         // Make sure experiment code files is copied from local to HDFS
         if (this.copyExpCodeDirPromise !== undefined) {

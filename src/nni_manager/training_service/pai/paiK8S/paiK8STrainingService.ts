@@ -39,9 +39,9 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir, execCopydir } from '../../common/util';
 import { PAI_K8S_TRIAL_COMMAND_FORMAT } from './paiK8SData';
 import { NNIPAIK8STrialConfig } from './paiK8SConfig';
-import { PAIK8SJobRestServer } from './paiK8SJobRestServer';
 import { PAITrainingService } from '../paiTrainingService';
 import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
+import { PAIJobRestServer } from '../paiJobRestServer';
 
 const yaml = require('js-yaml');
 
@@ -67,7 +67,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 break;
 
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiJobRestServer = component.get(PAIK8SJobRestServer);
+                this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
 
                 if(this.paiClusterConfig.passWord) {
