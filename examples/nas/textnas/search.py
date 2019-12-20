@@ -2,9 +2,11 @@
 # Licensed under the MIT license.
 
 import logging
+import random
 from argparse import ArgumentParser
 from itertools import cycle
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -33,8 +35,15 @@ class TextNASTrainer(EnasTrainer):
 if __name__ == "__main__":
     parser = ArgumentParser("textnas")
     parser.add_argument("--batch-size", default=128, type=int)
-    parser.add_argument("--log-frequency", default=25, type=int)
+    parser.add_argument("--log-frequency", default=50, type=int)
+    parser.add_argument("--seed", default=1234, type=int)
     args = parser.parse_args()
+
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     train_dataset, valid_dataset, test_dataset, embedding = read_data_sst("data")
@@ -45,10 +54,10 @@ if __name__ == "__main__":
     model = Model(embedding)
 
     num_epochs = 10
-    mutator = EnasMutator(model, tanh_constant=None, entropy_reduction="mean")
+    mutator = EnasMutator(model, temperature=None, tanh_constant=None, entropy_reduction="mean")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.008, eps=1E-3, weight_decay=2E-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.04, eps=1E-3, weight_decay=2E-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
 
     trainer = TextNASTrainer(model,
@@ -67,11 +76,11 @@ if __name__ == "__main__":
                              log_frequency=args.log_frequency,
                              mutator=mutator,
                              mutator_lr=2E-3,
-                             mutator_steps=500,
-                             mutator_steps_aggregate=1,
-                             child_steps=3000,
-                             skip_weight=0.,
-                             entropy_weight=0.,
+                             mutator_steps=100,
+                             mutator_steps_aggregate=10,
+                             child_steps=1,
+                             skip_weight=0.01,
+                             entropy_weight=0.001,
                              baseline_decay=0.99,
                              test_arc_per_epoch=10)
     trainer.train()

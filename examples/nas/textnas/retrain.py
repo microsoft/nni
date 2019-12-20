@@ -2,8 +2,10 @@
 # Licensed under the MIT license.
 
 import logging
+import random
 from argparse import ArgumentParser
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -22,7 +24,7 @@ def train(config, train_loader, model, optimizer, criterion, device, epoch):
     losses = AverageMeter("loss")
     accs = AverageMeter("acc")
     cur_lr = optimizer.param_groups[0]["lr"]
-    logger.info("Epoch %d LR %.6f", epoch, cur_lr)
+    logger.info("Epoch %d LR %.6f", epoch + 1, cur_lr)
 
     model.train()
     for step, ((text, mask), y) in enumerate(train_loader):
@@ -74,7 +76,14 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", default=50, type=int)
     parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--seed", default=1234, type=int)
     args = parser.parse_args()
+
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     train_dataset, _, test_dataset, embedding = read_data_sst("data", train_with_valid=True)
@@ -85,8 +94,8 @@ if __name__ == "__main__":
 
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.002, eps=1E-3, weight_decay=2E-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0.002)
+    optimizer = torch.optim.Adam(model.parameters(), lr=2E-3, eps=1E-3, weight_decay=1E-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=8E-4)
 
     best_top1 = 0.
     for epoch in range(args.epochs):

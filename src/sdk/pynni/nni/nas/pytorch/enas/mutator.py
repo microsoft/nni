@@ -30,11 +30,12 @@ class StackedLSTMCell(nn.Module):
 class EnasMutator(Mutator):
 
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
-                 skip_target=0.4, branch_bias=0.25, entropy_reduction="sum"):
+                 skip_target=0.4, temperature=None, branch_bias=0.25, entropy_reduction="sum"):
         super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
         self.tanh_constant = tanh_constant
+        self.temperature = temperature
         self.cell_exit_extra_step = cell_exit_extra_step
         self.skip_target = skip_target
         self.branch_bias = branch_bias
@@ -112,6 +113,8 @@ class EnasMutator(Mutator):
     def _sample_layer_choice(self, mutable):
         self._lstm_next_step()
         logit = self.soft(self._h[-1])
+        if self.temperature is not None:
+            logit /= self.temperature
         if self.tanh_constant is not None:
             logit = self.tanh_constant * torch.tanh(logit)
         if mutable.key in self.bias_dict:
@@ -135,6 +138,8 @@ class EnasMutator(Mutator):
         query = torch.cat(query, 0)
         query = torch.tanh(query + self.attn_query(self._h[-1]))
         query = self.v_attn(query)
+        if self.temperature is not None:
+            query /= self.temperature
         if self.tanh_constant is not None:
             query = self.tanh_constant * torch.tanh(query)
 
