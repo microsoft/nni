@@ -130,6 +130,9 @@ class PAIK8STrainingService extends PAITrainingService {
         if (this.paiClusterConfig === undefined) {
             throw new Error(`paiClusterConfig not initialized!`);
         }
+        if (this.paiTrialConfig === undefined) {
+            throw new Error(`paiTrialConfig not initialized!`);
+        }
         const deferred: Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
@@ -138,7 +141,7 @@ class PAIK8STrainingService extends PAITrainingService {
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
-        const logPath: string = '';
+        const logPath: string = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, trialJobId);
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',

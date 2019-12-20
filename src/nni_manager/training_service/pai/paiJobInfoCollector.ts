@@ -31,19 +31,19 @@ export class PAIJobInfoCollector {
         }
 
         const updatePaiTrialJobs: Promise<void>[] = [];
-        for (const [trialJobId, paiBaseTrialJob] of this.trialJobsMap) {
-            if (paiBaseTrialJob === undefined) {
+        for (const [trialJobId, paiTrialJob] of this.trialJobsMap) {
+            if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiBaseTrialJob, token, paiBaseClusterConfig));
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, token, paiBaseClusterConfig));
         }
 
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiBaseTrialJob: PAITrialJobDetail, paiToken: string, paiBaseClusterConfig: PAIClusterConfig): Promise<void> {
+    private getSinglePAITrialJobInfo(paiTrialJob: PAITrialJobDetail, paiToken: string, paiClusterConfig: PAIClusterConfig): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        if (!this.statusesNeedToCheck.includes(paiBaseTrialJob.status)) {
+        if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
 
             return deferred.promise;
@@ -52,7 +52,7 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            uri: `http://${paiBaseClusterConfig.host}/rest-server/api/v1/user/${paiBaseClusterConfig.userName}/jobs/${paiBaseTrialJob.paiJobName}`,
+            uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
                headers: {
@@ -64,57 +64,61 @@ export class PAIJobInfoCollector {
         //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 500) {
-                this.log.error(`PAI Training service: get job info for trial ${paiBaseTrialJob.id} from PAI Cluster failed!`);
+                this.log.error(`PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!`);
                 // Queried PAI job info failed, set job status to UNKNOWN
-                if (paiBaseTrialJob.status === 'WAITING' || paiBaseTrialJob.status === 'RUNNING') {
-                    paiBaseTrialJob.status = 'UNKNOWN';
+                if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
+                    paiTrialJob.status = 'UNKNOWN';
                 }
             } else {
                 if (response.body.jobStatus && response.body.jobStatus.state) {
                     switch (response.body.jobStatus.state) {
                         case 'WAITING':
-                            paiBaseTrialJob.status = 'WAITING';
+                            paiTrialJob.status = 'WAITING';
                             break;
                         case 'RUNNING':
-                            paiBaseTrialJob.status = 'RUNNING';
-                            if (paiBaseTrialJob.startTime === undefined) {
-                                paiBaseTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
+                            paiTrialJob.status = 'RUNNING';
+                            if (paiTrialJob.startTime === undefined) {
+                                paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                             }
-                            if (paiBaseTrialJob.url === undefined) {
-                                paiBaseTrialJob.url = response.body.jobStatus.appTrackingUrl;
+                            if (paiTrialJob.url === undefined) {
+                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
                             }
                             break;
                         case 'SUCCEEDED':
-                            paiBaseTrialJob.status = 'SUCCEEDED';
+                            paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
-                            if (paiBaseTrialJob.isEarlyStopped !== undefined) {
-                                paiBaseTrialJob.status = paiBaseTrialJob.isEarlyStopped === true ?
+                            if (paiTrialJob.isEarlyStopped !== undefined) {
+                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ?
                                         'EARLY_STOPPED' : 'USER_CANCELED';
                             } else {
                                 /* if paiTrialJob's isEarlyStopped is undefined, that mean we didn't stop it via cancellation,
                                  * mark it as SYS_CANCELLED by PAI
                                  */
-                                paiBaseTrialJob.status = 'SYS_CANCELED';
+                                paiTrialJob.status = 'SYS_CANCELED';
                             }
                             break;
                         case 'FAILED':
-                            paiBaseTrialJob.status = 'FAILED';
+                            paiTrialJob.status = 'FAILED';
                             break;
                         default:
-                            paiBaseTrialJob.status = 'UNKNOWN';
+                            paiTrialJob.status = 'UNKNOWN';
                     }
                     // For final job statues, update startTime, endTime and url
-                    if (this.finalStatuses.includes(paiBaseTrialJob.status)) {
-                        if (paiBaseTrialJob.startTime === undefined) {
-                            paiBaseTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
+                    if (this.finalStatuses.includes(paiTrialJob.status)) {
+                        if (paiTrialJob.startTime === undefined) {
+                            paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                         }
-                        if (paiBaseTrialJob.endTime === undefined) {
-                            paiBaseTrialJob.endTime = response.body.jobStatus.completedTime;
+                        if (paiTrialJob.endTime === undefined) {
+                            paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
                         // Set pai trial job's url to WebHDFS output path
-                        if (paiBaseTrialJob.logPath !== undefined) {
-                            paiBaseTrialJob.url += `,${paiBaseTrialJob.logPath}`;
+                        if (paiTrialJob.logPath !== undefined) {
+                            if (paiTrialJob.url) {
+                                paiTrialJob.url += `,${paiTrialJob.logPath}`;
+                            } else {
+                                paiTrialJob.url = `${paiTrialJob.logPath}`;
+                            }
                         }
                     }
                 }
