@@ -107,7 +107,7 @@ class App extends React.Component<{}, AppState> {
         }
     }
 
-    private async lastRefresh(): Promise<any> {
+    private async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));

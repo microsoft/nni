@@ -169,7 +169,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         };
     }
 
-    showIntermediateModal = async (id: string): Promise<any> => {
+    showIntermediateModal = async (id: string): Promise<void> => {
         const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];

@@ -69,7 +69,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
     }
 
-    async componentDidMount(): Promise<any> {
+    async componentDidMount(): Promise<void> {
         this.refresh();
         window.addEventListener('resize', this.setLogDrawerHeight);
     }
