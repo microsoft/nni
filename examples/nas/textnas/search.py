@@ -61,11 +61,12 @@ if __name__ == "__main__":
                              test_loader=test_loader,
                              log_frequency=args.log_frequency,
                              mutator=mutator,
-                             mutator_lr=1E-3,
-                             child_steps=3000,
+                             mutator_lr=2E-3,
                              mutator_steps=500,
                              mutator_steps_aggregate=1,
+                             child_steps=3000,
                              skip_weight=0.,
-                             test_arc_per_epoch=10,
-                             baseline_decay=0.99)
+                             entropy_weight=0.,
+                             baseline_decay=0.99,
+                             test_arc_per_epoch=10)
     trainer.train()

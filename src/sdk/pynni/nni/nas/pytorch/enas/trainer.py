@@ -108,10 +108,9 @@ class EnasTrainer(Trainer):
                     logits = self.model(x)
                 metrics = self.metrics(logits, y)
                 reward = self.reward_function(logits, y)
-                if self.entropy_weight is not None:
-                    reward += self.entropy_weight * self.mutator.sample_entropy
+                if self.entropy_weight:
+                    reward += self.entropy_weight * self.mutator.sample_entropy.item()
                 self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
-                self.baseline = self.baseline.detach().item()
                 loss = self.mutator.sample_log_prob * (reward - self.baseline)
                 if self.skip_weight:
                     loss += self.skip_weight * self.mutator.sample_skip_penalty
