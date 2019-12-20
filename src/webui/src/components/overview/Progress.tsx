@@ -29,7 +29,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         };
     }
 
-    editTrialConcurrency = async (userInput: string): Promise<any> => {
+    editTrialConcurrency = async (userInput: string): Promise<void> => {
         if (!userInput.match(/^[1-9]\d*$/)) {
             message.error('Please enter a positive integer!', 2);
             return;

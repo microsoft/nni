@@ -27,7 +27,7 @@ class App extends React.Component<{}, AppState> {
         };
     }
 
-    async componentDidMount(): Promise<any> {
+    async componentDidMount(): Promise<void> {
         await Promise.all([ EXPERIMENT.init(), TRIALS.init() ]);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
@@ -86,7 +86,7 @@ class App extends React.Component<{}, AppState> {
         );
     }
 
-    private refresh = async (): Promise<any> => {
+    private refresh = async (): Promise<void> => {
         const [ experimentUpdated, trialsUpdated ] = await Promise.all([ EXPERIMENT.update(), TRIALS.update() ]);
         if (experimentUpdated) {
             this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
