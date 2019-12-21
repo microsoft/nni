@@ -75,11 +75,11 @@ if __name__ == "__main__":
     parser = ArgumentParser("textnas")
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=50, type=int)
-    parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
+    parser.add_argument("--arc-checkpoint", default="searched.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--seed", default=1234, type=int)
     parser.add_argument("--init-lr", default=2E-3, type=float)
-    parser.add_argument("--final-lr", default=1E-4, type=float)
+    parser.add_argument("--final-lr", default=2E-3, type=float)
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
