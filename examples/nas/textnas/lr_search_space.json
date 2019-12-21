@@ -1,0 +1,10 @@
+{
+    "init_lr": {
+        "_type": "loguniform",
+        "_value": [5E-4, 1E-2]
+    },
+    "final_lr": {
+        "_type": "loguniform",
+        "_value": [5E-5, 2E-3]
+    }
+}

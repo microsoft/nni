@@ -78,7 +78,7 @@ if __name__ == "__main__":
                              mutator_lr=2E-3,
                              mutator_steps=100,
                              mutator_steps_aggregate=10,
-                             child_steps=1,
+                             child_steps=3000,
                              skip_weight=0.01,
                              entropy_weight=0.001,
                              baseline_decay=0.99,
