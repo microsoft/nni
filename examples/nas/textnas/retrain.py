@@ -81,7 +81,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     init_lr = 2E-3
-    final_lr = 8E-4
+    final_lr = 1E-4
     param = nni.get_next_parameter()
     if param:
         init_lr = param["init_lr"]
