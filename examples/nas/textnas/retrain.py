@@ -78,16 +78,9 @@ if __name__ == "__main__":
     parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--seed", default=1234, type=int)
+    parser.add_argument("--init-lr", default=2E-3, type=float)
+    parser.add_argument("--final-lr", default=1E-4, type=float)
     args = parser.parse_args()
-
-    init_lr = 2E-3
-    final_lr = 1E-4
-    param = nni.get_next_parameter()
-    if param:
-        init_lr = param["init_lr"]
-        final_lr = param["final_lr"]
-        if final_lr > init_lr:
-            raise ValueError
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
@@ -104,16 +97,14 @@ if __name__ == "__main__":
 
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, weight_decay=1E-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=final_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr, weight_decay=1E-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.final_lr)
 
     best_top1 = top1 = 0.
     for epoch in range(args.epochs):
         train(args, train_loader, model, optimizer, criterion, device, epoch)
         top1 = validate(args, test_loader, model, criterion, device, epoch)
-        nni.report_intermediate_result(top1)
         best_top1 = max(best_top1, top1)
         lr_scheduler.step()
 
     logger.info("Best Acc = {:.4%}".format(best_top1))
-    nni.report_final_result(top1)
