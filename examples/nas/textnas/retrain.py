@@ -83,9 +83,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed + 1)
-    np.random.seed(args.seed + 2)
-    random.seed(args.seed + 3)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr, weight_decay=1E-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr, eps=1E-3, weight_decay=1E-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.final_lr)
 
     best_top1 = top1 = 0.
