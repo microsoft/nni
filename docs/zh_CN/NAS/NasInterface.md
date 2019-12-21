@@ -2,8 +2,6 @@
 
 我们正在尝试通过统一的编程接口来支持各种 NAS 算法，当前处于试验阶段。 这意味着当前编程接口可能会进行重大变化。
 
-*先前的 [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) 接口会很快被弃用。*
-
 ## 模型的编程接口
 
 在两种场景下需要用于设计和搜索模型的编程接口。
@@ -55,7 +53,7 @@ def forward(self, x):
     out = self.input_switch([in_tensor1, in_tensor2, in_tensor3])
     ...
 ```
-`InputChoice` 是一个 PyTorch module，初始化时需要元信息，例如，从多少个输入后选中选择多少个输入，初始化的 `InputChoice` 名称。 真正候选的输入张量只能在 `forward` 函数中获得。 在 `InputChoice` 中，`forward` 会在调用时传入实际的候选输入张量。
+`InputChoice` 是一个 PyTorch module，初始化时需要元信息，例如，从多少个输入后选中选择多少个输入，以及初始化的 `InputChoice` 名称。 真正候选的输入张量只能在 `forward` 函数中获得。 在 `forward` 函数中，`InputChoice` 模块需要在 `__init__` 中创建 (如, `self.input_switch`)，其会在有了实际候选输入 Tensor 的时候被调用。
 
 一些 [NAS Trainer](#one-shot-training-mode) 需要知道输入张量的来源层，因此在 `InputChoice` 中添加了输入参数 `choose_from` 来表示每个候选输入张量的来源层。 `choose_from` 是 str 的 list，每个元素都是 `LayerChoice` 和`InputChoice` 的 `key`，或者 module 的 name (详情参考[代码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/mutables.py))。
 
@@ -75,7 +73,7 @@ class Cell(mutables.MutableScope):
 
 ## 两种训练模式
 
-在使用上述 API 在模型中嵌入 搜索空间后，下一步是从搜索空间中找到最好的模型。 有两种驯良模式：[one-shot 训练模式](#one-shot-training-mode) and [经典的分布式搜索](#classic-distributed-search)。
+在使用上述 API 在模型中嵌入 搜索空间后，下一步是从搜索空间中找到最好的模型。 有两种训练模式：[one-shot 训练模式](#one-shot-training-mode) and [经典的分布式搜索](#classic-distributed-search)。
 
 ### One-shot 训练模式
 
@@ -100,9 +98,7 @@ trainer.export(file='./chosen_arch')
 
 不同的 Trainer 可能有不同的输入参数，具体取决于其算法。 详细参数可参考具体的 [Trainer 代码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。 无需通过 `nnictl` 来启动 NNI Experiment。
 
-[这里](./Overview.md#supported-one-shot-nas-algorithms)是所有支持的 Trainer。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py)是使用 NNI NAS API 的简单示例。
-
-[这里]()是完整示例的代码。
+[这里](Overview.md#supported-one-shot-nas-algorithms)是所有支持的 Trainer。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/simple/train.py)是使用 NNI NAS API 的简单示例。
 
 ### 经典分布式搜索
 
