@@ -12,7 +12,6 @@ from nni.nas.pytorch.mutables import LayerChoice
 from .utils import detach_variable
 
 class ArchGradientFunction(torch.autograd.Function):
-
     @staticmethod
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
@@ -36,8 +35,13 @@ class ArchGradientFunction(torch.autograd.Function):
 
 class MixedOp(nn.Module):
     """
-    This class is to instantiate and manage info of one LayerChoice
+    This class is to instantiate and manage info of one LayerChoice.
+    It includes architecture weights, binary weights, and member functions
+    operating the weights.
     """
+    # forward/backward mode for LayerChoice: None, two, full, and full_v2.
+    # For training architecture weights, we use full_v2 by default, and for training
+    # model weights, we use None.
     forward_mode = None
     def __init__(self, mutable):
         """
@@ -64,11 +68,26 @@ class MixedOp(nn.Module):
         self.AP_path_alpha.requires_grad = True
         self.AP_path_wb.requires_grad = True
 
-    def disable_grad(self):
+    def to_disable_grad(self):
         self.AP_path_alpha.requires_grad = False
         self.AP_path_wb.requires_grad = False
 
     def forward(self, mutable, x):
+        """
+        Define forward of LayerChoice. For 'full_v2', backward is also defined.
+
+        Parameters
+        ----------
+        mutable : LayerChoice
+            this layer's mutable
+        x : tensor
+            inputs of this layer, only support one input
+
+        Returns
+        -------
+        output: tensor
+            output of this layer
+        """
         if MixedOp.forward_mode == 'full' or MixedOp.forward_mode == 'two':
             output = 0
             for _i in self.active_index:
@@ -78,7 +97,6 @@ class MixedOp(nn.Module):
                 oi = self.candidate_ops[_i](x)
                 output = output + self.AP_path_wb[_i] * oi.detach()
         elif MixedOp.forward_mode == 'full_v2':
-            # does not work in DataParallel, possible memory leak
             def run_function(key, candidate_ops, active_id):
                 def forward(_x):
                     return candidate_ops[active_id](_x)
@@ -119,22 +137,47 @@ class MixedOp(nn.Module):
 
     @property
     def chosen_index(self):
-        """ choose the max one """
+        """
+        choose the op with max prob
+
+        Returns
+        -------
+        int
+            index of the chosen one
+        numpy.float32
+            prob of the chosen one
+        """
         probs = self.probs_over_ops.data.cpu().numpy()
         index = int(np.argmax(probs))
         return index, probs[index]
 
     def active_op(self, mutable):
-        """ assume only one path is active """
+        """
+        assume only one path is active
+
+        Returns
+        -------
+        PyTorch module
+            the chosen operation
+        """
         return mutable.choices[self.active_index[0]]
 
     @property
     def active_op_index(self):
-        """ return active op's index """
+        """
+        return active op's index, the active op is sampled
+
+        Returns
+        -------
+        int
+            index of the active op
+        """
         return self.active_index[0]
 
     def set_chosen_op_active(self):
-        """ set chosen index, active and inactive indexes """
+        """
+        set chosen index, active and inactive indexes
+        """
         chosen_idx, _ = self.chosen_index
         self.active_index = [chosen_idx]
         self.inactive_index = [_i for _i in range(0, chosen_idx)] + \
@@ -142,7 +185,13 @@ class MixedOp(nn.Module):
 
     def binarize(self, mutable):
         """
-        Sample based on alpha, and set binary weights accordingly
+        Sample based on alpha, and set binary weights accordingly.
+        AP_path_wb is set in this function, which is called binarize.
+
+        Parameters
+        ----------
+        mutable : LayerChoice
+            this layer's mutable
         """
         self.log_prob = None
         # reset binary gates
@@ -186,7 +235,8 @@ class MixedOp(nn.Module):
 
     def set_arch_param_grad(self, mutable):
         """
-        Calculate alpha gradient for this LayerChoice
+        Calculate alpha gradient for this LayerChoice.
+        It is calculated using gradient of binary gate, probs of ops.
         """
         binary_grads = self.AP_path_wb.grad.data
         if self.active_op(mutable).is_zero_layer():
@@ -217,6 +267,9 @@ class MixedOp(nn.Module):
         return
 
     def rescale_updated_arch_param(self):
+        """
+        rescale architecture weights for the 'two' mode.
+        """
         if not isinstance(self.active_index[0], tuple):
             assert self.active_op.is_zero_layer()
             return
@@ -233,9 +286,19 @@ class MixedOp(nn.Module):
 
 
 class ProxylessNasMutator(BaseMutator):
+    """
+    This mutator initializes and operates all the LayerChoices of the input model.
+    It is for the corresponding trainer to control the training process of LayerChoices,
+    coordinating with whole training process.
+    """
     def __init__(self, model):
         """
-        Init a MixedOp instance for each named mutable i.e., LayerChoice
+        Init a MixedOp instance for each mutable i.e., LayerChoice.
+        And register the instantiated MixedOp in corresponding LayerChoice.
+        If does not register it in LayerChoice, DataParallel does not work then,
+        because architecture weights are not included in the DataParallel model.
+        When MixedOPs are registered, we use ```requires_grad``` to control
+        whether calculate gradients of architecture weights.
 
         Parameters
         ----------
@@ -251,20 +314,23 @@ class ProxylessNasMutator(BaseMutator):
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
-        Callback of layer choice forward. Override if you are an advanced user.
-        On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
-        (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy speicified
-        in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
+        Callback of layer choice forward. This function defines the forward
+        logic of the input mutable. So mutable is only interface, its real
+        implementation is defined in mutator.
 
         Parameters
         ----------
         mutable: LayerChoice
+            forward logic of this input mutable
         inputs: list of torch.Tensor
+            inputs of this mutable
 
         Returns
         -------
         torch.Tensor
-        index of the chosen op
+            output of this mutable, i.e., LayerChoice
+        int
+            index of the chosen op
         """
         # FIXME: return mask, to be consistent with other algorithms
         idx = mutable.registered_module.active_op_index
@@ -272,14 +338,16 @@ class ProxylessNasMutator(BaseMutator):
 
     def reset_binary_gates(self):
         """
-        For each LayerChoice, binarize based on alpha to only activate one op
+        For each LayerChoice, binarize binary weights
+        based on alpha to only activate one op.
+        It traverses all the mutables in the model to do this.
         """
         for mutable in self.undedup_mutables:
             mutable.registered_module.binarize(mutable)
 
     def set_chosen_op_active(self):
         """
-        For each LayerChoice, set the op with highest alpha as the chosen op
+        For each LayerChoice, set the op with highest alpha as the chosen op.
         Usually used for validation.
         """
         for mutable in self.undedup_mutables:
@@ -287,9 +355,12 @@ class ProxylessNasMutator(BaseMutator):
 
     def num_arch_params(self):
         """
+        The number of mutables, i.e., LayerChoice
+
         Returns
         -------
-        The number of LayerChoice in user model
+        int
+            the number of LayerChoice in user model
         """
         return len(self.mutable_list)
 
@@ -302,22 +373,46 @@ class ProxylessNasMutator(BaseMutator):
 
     def get_architecture_parameters(self):
         """
-        Return architecture weights of each LayerChoice, for arch optimizer
+        Get all the architecture parameters.
+
+        yield
+        -----
+        PyTorch Parameter
+            Return AP_path_alpha of the traversed mutable
         """
         for mutable in self.undedup_mutables:
             yield mutable.registered_module.get_AP_path_alpha()
 
     def change_forward_mode(self, mode):
+        """
+        Update forward mode of MixedOps, as training architecture weights and
+        model weights use different forward modes.
+        """
         MixedOp.forward_mode = mode
 
     def get_forward_mode(self):
+        """
+        Get forward mode of MixedOp
+
+        Returns
+        -------
+        string
+            the current forward mode of MixedOp
+        """
         return MixedOp.forward_mode
 
     def rescale_updated_arch_param(self):
+        """
+        Rescale architecture weights in 'two' mode.
+        """
         for mutable in self.undedup_mutables:
             mutable.registered_module.rescale_updated_arch_param()
 
     def unused_modules_off(self):
+        """
+        Remove unused modules for each mutables.
+        The removed modules are kept in ```self._unused_modules``` for resume later.
+        """
         self._unused_modules = []
         for mutable in self.undedup_mutables:
             mixed_op = mutable.registered_module
@@ -333,6 +428,9 @@ class ProxylessNasMutator(BaseMutator):
             self._unused_modules.append(unused)
 
     def unused_modules_back(self):
+        """
+        Resume the removed modules back.
+        """
         if self._unused_modules is None:
             return
         for m, unused in zip(self.mutable_list, self._unused_modules):
@@ -341,14 +439,29 @@ class ProxylessNasMutator(BaseMutator):
         self._unused_modules = None
 
     def arch_requires_grad(self):
+        """
+        Make architecture weights require gradient
+        """
         for mutable in self.undedup_mutables:
             mutable.registered_module.to_requires_grad()
 
     def arch_disable_grad(self):
+        """
+        Disable gradient of architecture weights, i.e., does not
+        calcuate gradient for them.
+        """
         for mutable in self.undedup_mutables:
-            mutable.registered_module.disable_grad()
+            mutable.registered_module.to_disable_grad()
 
     def sample_final(self):
+        """
+        Generate the final chosen architecture.
+
+        Returns
+        -------
+        dict
+            the choice of each mutable, i.e., LayerChoice
+        """
         result = dict()
         for mutable in self.undedup_mutables:
             assert isinstance(mutable, LayerChoice)
