@@ -496,6 +496,9 @@ class ActivationRankFilterPruner(Pruner):
     """
     A structured pruning base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
+    Hengyuan Hu, Rui Peng, Yu-Wing Tai and Chi-Keung Tang,
+    "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
+    https://arxiv.org/abs/1607.03250
     """
 
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
