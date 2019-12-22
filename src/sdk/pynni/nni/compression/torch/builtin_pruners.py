@@ -5,7 +5,8 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
+__all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner',
+           'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -237,7 +238,7 @@ class SlimPruner(Pruner):
         return mask
 
 
-class RankFilterPruner(Pruner):
+class WeightRankFilterPruner(Pruner):
     """
     A structured pruning base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
@@ -303,7 +304,7 @@ class RankFilterPruner(Pruner):
         return mask
 
 
-class L1FilterPruner(RankFilterPruner):
+class L1FilterPruner(WeightRankFilterPruner):
     """
     A structured pruning algorithm that prunes the filters of smallest magnitude
     weights sum in the convolution layers to achieve a preset level of network sparsity.
@@ -353,7 +354,7 @@ class L1FilterPruner(RankFilterPruner):
         return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
 
 
-class L2FilterPruner(RankFilterPruner):
+class L2FilterPruner(WeightRankFilterPruner):
     """
     A structured pruning algorithm that prunes the filters with the
     smallest L2 norm of the absolute kernel weights are masked.
@@ -399,7 +400,7 @@ class L2FilterPruner(RankFilterPruner):
         return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
 
 
-class FPGMPruner(RankFilterPruner):
+class FPGMPruner(WeightRankFilterPruner):
     """
     A filter pruner via geometric median.
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
@@ -487,3 +488,136 @@ class FPGMPruner(RankFilterPruner):
 
     def update_epoch(self, epoch):
         self.mask_calculated_ops = set()
+
+
+class ActivationRankFilterPruner(Pruner):
+    """
+    A structured pruning base class that prunes the filters with the smallest
+    importance criterion in convolution layers to achieve a preset level of network sparsity.
+    """
+
+    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+
+        super().__init__(model, config_list)
+        self.mask_calculated_ops = set()
+        self.statistics_batch_num = statistics_batch_num
+        self.collected_activation = {}
+        self.hooks = {}
+        assert activation in ['relu']
+        if activation == 'relu':
+            self.activation = torch.nn.functional.relu
+        else:
+            self.activation = None
+
+    def compress(self):
+        """
+        Compress the model with algorithm implemented by subclass.
+
+        The model will be instrumented and user should never edit it after calling this method.
+        `self.modules_to_compress` records all the to-be-compressed layers
+        """
+        modules_to_compress = self.detect_modules_to_compress()
+        for layer, config in modules_to_compress:
+            self._instrument_layer(layer, config)
+            self.collected_activation[layer.name] = []
+
+            def _hook(module, input, output, name=layer.name):
+                if len(self.collected_activation[name]) < self.statistics_batch_num:
+                    self.collected_activation[name].append(self.activation(output.detach().cpu()))
+
+            layer.module.register_forward_hook(_hook)
+        return self.bound_model
+
+    def _get_mask(self, base_mask, activations, num_prune):
+        return {'weight': None, 'bias': None}
+
+    def calc_mask(self, layer, config):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest importance criterion of the kernel weights are masked.
+        Parameters
+        ----------
+        layer : LayerInfo
+            the layer to instrument the compression operation
+        config : dict
+            layer's pruning config
+        Returns
+        -------
+        torch.Tensor
+            mask of the layer's weight
+        """
+
+        weight = layer.module.weight.data
+        op_name = layer.name
+        op_type = layer.type
+        assert 0 <= config.get('sparsity') < 1
+        assert op_type in ['Conv1d', 'Conv2d']
+        assert op_type in config.get('op_types')
+        if op_name in self.mask_calculated_ops:
+            assert op_name in self.mask_dict
+            return self.mask_dict.get(op_name)
+        mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        if hasattr(layer.module, 'bias') and layer.module.bias is not None:
+            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
+        else:
+            mask_bias = None
+        mask = {'weight': mask_weight, 'bias': mask_bias}
+        try:
+            filters = weight.size(0)
+            num_prune = int(filters * config.get('sparsity'))
+            if filters < 2 or num_prune < 1 or len(self.collected_activation[layer.name]) < self.statistics_batch_num:
+                return mask
+            mask = self._get_mask(mask, self.collected_activation[layer.name], num_prune)
+        finally:
+            if len(self.collected_activation[layer.name]) == self.statistics_batch_num:
+                self.mask_dict.update({op_name: mask})
+                self.mask_calculated_ops.add(op_name)
+        return mask
+
+
+class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
+    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, activation, statistics_batch_num)
+
+    def _get_mask(self, base_mask, activations, num_prune):
+        apoz = self._calc_apoz(activations)
+        prune_indices = torch.argsort(apoz)[:num_prune]
+        for idx in prune_indices:
+            base_mask['weight'][idx] = 0.
+            if base_mask['bias'] is not None:
+                base_mask['bias'][idx] = 0.
+        return base_mask
+
+    def _calc_apoz(self, activations):
+        activations = torch.cat(activations, 0)
+        _eq_zero = torch.eq(activations, torch.zeros_like(activations))
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / torch.numel(_eq_zero[:, 0, :, :])
+        return _apoz
+
+
+class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
+    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, activation, statistics_batch_num)
+
+    def _get_mask(self, base_mask, activations, num_prune):
+        mean_activation = self._cal_mean_activation(activations)
+        prune_indices = torch.argsort(mean_activation)[:num_prune]
+        for idx in prune_indices:
+            base_mask['weight'][idx] = 0.
+            if base_mask['bias'] is not None:
+                base_mask['bias'][idx] = 0.
+        return base_mask
+
+    def _cal_mean_activation(self, activations):
+        activations = torch.cat(activations, 0)
+        mean_activation = torch.mean(activations, dim=(0, 2, 3))
+        return mean_activation
