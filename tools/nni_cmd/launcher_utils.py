@@ -262,7 +262,7 @@ def validate_machine_list(experiment_config):
 
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
-    if experiment_config.get('trainingServicePlatform') in ['pai', 'PAIYarn']:
+    if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
         if experiment_config.get('trial').get('shmMB') and \
         experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')

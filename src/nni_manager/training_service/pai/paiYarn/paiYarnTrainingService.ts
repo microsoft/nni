@@ -51,7 +51,6 @@ class PAIYarnTrainingService extends PAITrainingService {
         if (this.paiClusterConfig === undefined) {
             throw new Error(`paiBaseClusterConfig not initialized!`);
         }
-        const deferred: Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -79,18 +78,14 @@ class PAIYarnTrainingService extends PAITrainingService {
 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         this.jobQueue.push(trialJobId);
-        deferred.resolve(trialJobDetail);
 
-        return deferred.promise;
+        return trialJobDetail;
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                deferred.resolve();
                 break;
 
             case TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG:
@@ -110,28 +105,20 @@ class PAIYarnTrainingService extends PAITrainingService {
                 } else if(this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
                 } else {
-                    deferred.reject(new Error('paiBase cluster config format error, please set password or token!'));
+                    throw new Error('pai cluster config format error, please set password or token!');
                 }
 
-                deferred.resolve();
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
-                    deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
 
                 // Validate to make sure codeDir doesn't have too many files
-                try {
-                    await validateCodeDir(this.paiTrialConfig.codeDir);
-                } catch (error) {
-                    this.log.error(error);
-                    deferred.reject(new Error(error));
-                    break;
-                }
+                await validateCodeDir(this.paiTrialConfig.codeDir);
            
                 // Copy experiment files from local folder to HDFS
                 this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(
@@ -146,7 +133,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                     this.copyAuthFilePromise = HDFSClientUtility.copyFileToHdfs(this.paiTrialConfig.authFile, this.authFileHdfsPath, this.hdfsClient);
                 }
 
-                deferred.resolve();
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
@@ -161,8 +147,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
         }
-
-        return deferred.promise;
     }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
@@ -349,7 +333,7 @@ class PAIYarnTrainingService extends PAITrainingService {
     protected postParameterFileMeta(parameterFileMeta: ParameterFileMeta): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if (this.paiJobRestServer === undefined) {
-            throw new Error('paiBaseJobRestServer not implemented!');
+            throw new Error('paiJobRestServer not implemented!');
         }
         const req: request.Options = {
             uri: `${this.paiJobRestServer.endPoint}${this.paiJobRestServer.apiRootUrl}/parameter-file-meta`,
