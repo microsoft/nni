@@ -48,7 +48,7 @@ class Layer(mutables.MutableScope):
             connection = self.skipconnect(prev_layers[-self.skipconnect.n_candidates:])
             if connection is not None:
                 out += connection
-                out = self.bn(out, mask)
+        out = self.bn(out, mask)
         return out
 
 
