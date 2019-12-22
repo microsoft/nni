@@ -52,19 +52,24 @@ You can view example for more information
 
 #### User configuration for QAT Quantizer
 * **quant_types:** : list of string
+
 type of quantization you want to apply, currently support 'weight', 'input', 'output'.
 
 * **op_types:** list of string
+
 specify the type of modules that will be quantized. eg. 'Conv2D'
 
 * **op_names:** list of string
+
 specify the name of modules that will be quantized. eg. 'conv1'
 
 * **quant_bits:** int or dict of {str : int}
+
 bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
 when the type is int, all quantization types share same bits length.
 
 * **quant_start_step:** int
+
 disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
 state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
@@ -132,15 +137,19 @@ You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https:/
 
 #### User configuration for BNN Quantizer
 * **quant_types:** : list of string
+
 type of quantization you want to apply, currently support 'weight', 'input', 'output'.
 
 * **op_types:** list of string
+
 specify the type of modules that will be quantized. eg. 'Conv2D'
 
 * **op_names:** list of string
+
 specify the name of modules that will be quantized. eg. 'conv1'
 
 * **quant_bits:** int or dict of {str : int}
+
 bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
 when the type is int, all quantization types share same bits length.
 
