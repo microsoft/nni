@@ -83,17 +83,14 @@ In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bit
 ### Usage
 To implement DoReFa Quantizer, you can add code below before your training code
 
-Tensorflow code
-```python
-from nni.compressors.tensorflow import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(tf.get_default_graph(), config_list)
-quantizer.compress()
-```
 PyTorch code
 ```python
 from nni.compressors.torch import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+config_list = [{ 
+    'quant_types': ['weight'],
+    'quant_bits': 8, 
+    'op_types': 'default' 
+}]
 quantizer = DoReFaQuantizer(model, config_list)
 quantizer.compress()
 ```
@@ -101,7 +98,22 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-* **q_bits:** This is to specify the q_bits operations to be quantized to
+* **quant_types:** : list of string
+
+type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+
+* **op_types:** list of string
+
+specify the type of modules that will be quantized. eg. 'Conv2D'
+
+* **op_names:** list of string
+
+specify the name of modules that will be quantized. eg. 'conv1'
+
+* **quant_bits:** int or dict of {str : int}
+
+bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+when the type is int, all quantization types share same bits length.
 
 
 ## BNN Quantizer
