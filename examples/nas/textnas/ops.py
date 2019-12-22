@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from utils import get_length
+from utils import get_length, INF
 
 
 class Mask(nn.Module):
@@ -33,7 +33,6 @@ class BatchNorm(nn.Module):
 
 
 class ConvBN(nn.Module):
-    """ _conv_opt + batch_norm """
 
     def __init__(self, kernal_size, in_channels, out_channels, cnn_keep_prob,
                  pre_mask, post_mask, with_bn=True, with_relu=True):
@@ -140,7 +139,7 @@ class Attention(nn.Module):
         key_masks = torch.unsqueeze(key_masks, 1)  # (h*N, 1, T_k)
         key_masks = key_masks.repeat(1, queries.size()[1], 1)  # (h*N, T_q, T_k)
 
-        paddings = torch.ones_like(outputs) * (-2 ** 32 + 1)  # extremely small value
+        paddings = torch.ones_like(outputs) * (-INF)  # extremely small value
         outputs = torch.where(torch.eq(key_masks, 0), paddings, outputs)
 
         query_masks = mask.repeat(num_heads, 1)  # (h*N, T_q)

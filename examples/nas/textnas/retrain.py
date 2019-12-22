@@ -55,7 +55,7 @@ def validate(config, valid_loader, model, criterion, device, epoch):
     model.eval()
     with torch.no_grad():
         for step, ((text, mask), y) in enumerate(valid_loader):
-            text, mask, y = text.to(device), mask.to(device), y.to(device)            
+            text, mask, y = text.to(device), mask.to(device), y.to(device)
             bs = text.size(0)
             logits = model((text, mask))
             loss = criterion(logits, y)
@@ -71,15 +71,35 @@ def validate(config, valid_loader, model, criterion, device, epoch):
     return accs.avg
 
 
+def debug_load_checkpoint(path):
+    archit = [5, 7, 3, 6, 1, 1, 0, 6, 5, 5, 7, 4, 1, 2, 0, 3, 2, 4, 3, 3, 5, 7, 7, 3]
+
+    def convert(k):
+        import re
+
+        def sub_func(match):
+            return "{}.op.choices.{}".format(match.group(1), archit[int(match.group(2))])
+        k = re.sub(r"^(layers\.(\d+))\.0\.0", sub_func, k)
+        k = re.sub(r"^(layers\.\d+\.)1", r"\1bn", k)
+        k = re.sub(r"^_linear_combine", r"linear_combine", k)
+        k = re.sub(r"^embedding$", r"embedding.weight", k)
+        return k
+
+    child_model_state_dict = torch.load(path)["child_model_state_dict"]
+    converted_state_dict = {convert(k): v for k, v in child_model_state_dict.items()}
+    return converted_state_dict
+
+
 if __name__ == "__main__":
     parser = ArgumentParser("textnas")
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=50, type=int)
     parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
-    parser.add_argument("--seed", default=1111, type=int)
-    parser.add_argument("--init-lr", default=2E-3, type=float)
-    parser.add_argument("--final-lr", default=2E-3, type=float)
+    parser.add_argument("--seed", default=2, type=int)
+    parser.add_argument("--init-lr", default=5E-3, type=float)
+    parser.add_argument("--final-lr", default=5E-4, type=float)
+    parser.add_argument("--evaluate", default=None, type=str)
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -100,11 +120,16 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr, eps=1E-3, weight_decay=1E-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.final_lr)
 
-    best_top1 = top1 = 0.
-    for epoch in range(args.epochs):
-        train(args, train_loader, model, optimizer, criterion, device, epoch)
-        top1 = validate(args, test_loader, model, criterion, device, epoch)
-        best_top1 = max(best_top1, top1)
-        lr_scheduler.step()
+    if args.evaluate:
+        model.eval()
+        model.load_state_dict(debug_load_checkpoint(args.evaluate), strict=False)
+        validate(args, test_loader, model, criterion, device, -1)
+    else:
+        best_top1 = top1 = 0.
+        for epoch in range(args.epochs):
+            train(args, train_loader, model, optimizer, criterion, device, epoch)
+            top1 = validate(args, test_loader, model, criterion, device, epoch)
+            best_top1 = max(best_top1, top1)
+            lr_scheduler.step()
 
-    logger.info("Best Acc = {:.4%}".format(best_top1))
+        logger.info("Best Acc = {:.4%}".format(best_top1))

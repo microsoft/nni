@@ -37,10 +37,10 @@ class Layer(mutables.MutableScope):
             self.skipconnect = None
         self.bn = BatchNorm(hidden_units, False, True)
 
-    def forward(self, prev_layers, mask):
+    def forward(self, last_layer, prev_layers, mask):
+        # pass an extra last_layer to deal with layer 0 (prev_layers is empty)
         if self.prec is None:
-            assert len(prev_layers) == 1
-            prec = prev_layers[0]
+            prec = last_layer
         else:
             prec = self.prec(prev_layers[-self.prec.n_candidates:])  # skip first
         out = self.op(prec, mask)
@@ -48,7 +48,8 @@ class Layer(mutables.MutableScope):
             connection = self.skipconnect(prev_layers[-self.skipconnect.n_candidates:])
             if connection is not None:
                 out += connection
-        return self.bn(out, mask)
+                out = self.bn(out, mask)
+        return out
 
 
 class Model(nn.Module):
@@ -92,13 +93,13 @@ class Model(nn.Module):
         seq = torch.transpose(seq, 1, 2)  # from (N, L, C) -> (N, C, L)
 
         x = self.init_conv(seq, mask)
-        prev_layers = [x]
+        prev_layers = []
 
         for layer in self.layers:
-            x = layer(prev_layers, mask)
+            x = layer(x, prev_layers, mask)
             prev_layers.append(x)
 
-        x = self.linear_combine(torch.stack(prev_layers[1:]))
+        x = self.linear_combine(torch.stack(prev_layers))
         x = self.global_pool(x, mask)
         x = self.output_dropout(x)
         x = self.linear_out(x)
