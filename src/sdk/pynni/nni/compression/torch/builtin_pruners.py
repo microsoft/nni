@@ -221,7 +221,7 @@ class SlimPruner(Pruner):
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
-        mask = {'weight': base_mask, 'bias': base_mask.detach()}
+        mask = {'weight': base_mask.detach(), 'bias': base_mask.detach()}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
@@ -530,7 +530,7 @@ class ActivationRankFilterPruner(Pruner):
             self._instrument_layer(layer, config)
             self.collected_activation[layer.name] = []
 
-            def _hook(module, input, output, name=layer.name):
+            def _hook(module_, input_, output, name=layer.name):
                 if len(self.collected_activation[name]) < self.statistics_batch_num:
                     self.collected_activation[name].append(self.activation(output.detach().cpu()))
 

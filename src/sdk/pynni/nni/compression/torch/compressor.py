@@ -238,7 +238,7 @@ class Pruner(Compressor):
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
                 m.weight.data = m.weight.data.mul(masks['weight'])
                 if masks.__contains__('bias') and hasattr(m, 'bias') and m.bias is not None:
-                    m.bias.data = m.weight.data.mul(masks['bias'])
+                    m.bias.data = m.bias.data.mul(masks['bias'])
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
         torch.save(self.bound_model.state_dict(), model_path)
