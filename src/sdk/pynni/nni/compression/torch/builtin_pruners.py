@@ -40,8 +40,8 @@ class LevelPruner(Pruner):
             layer's pruning config
         Returns
         -------
-        torch.Tensor
-            mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         weight = layer.module.weight.data
@@ -97,8 +97,8 @@ class AGP_Pruner(Pruner):
             layer's pruning config
         Returns
         -------
-        torch.Tensor
-            mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         weight = layer.module.weight.data
@@ -211,8 +211,8 @@ class SlimPruner(Pruner):
             layer's pruning config
         Returns
         -------
-        torch.Tensor
-            mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         weight = layer.module.weight.data
@@ -275,8 +275,8 @@ class WeightRankFilterPruner(Pruner):
             layer's pruning config
         Returns
         -------
-        torch.Tensor
-            mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         weight = layer.module.weight.data
@@ -334,16 +334,16 @@ class L1FilterPruner(WeightRankFilterPruner):
         Filters with the smallest sum of its absolute kernel weights are masked.
         Parameters
         ----------
-        base_mask : torch.Tensor
-            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        base_mask : dict
+            The basic mask with the same shape of weight or bias, all item in the basic mask is 1.
         weight : torch.Tensor
             Layer's weight
         num_prune : int
             Num of filters to prune
         Returns
         -------
-        torch.Tensor
-            Mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         filters = weight.shape[0]
@@ -359,7 +359,7 @@ class L1FilterPruner(WeightRankFilterPruner):
 class L2FilterPruner(WeightRankFilterPruner):
     """
     A structured pruning algorithm that prunes the filters with the
-    smallest L2 norm of the absolute kernel weights are masked.
+    smallest L2 norm of the weights.
     """
 
     def __init__(self, model, config_list):
@@ -381,16 +381,16 @@ class L2FilterPruner(WeightRankFilterPruner):
         Filters with the smallest L2 norm of the absolute kernel weights are masked.
         Parameters
         ----------
-        base_mask : torch.Tensor
-            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        base_mask : dict
+            The basic mask with the same shape of weight or bias, all item in the basic mask is 1.
         weight : torch.Tensor
             Layer's weight
         num_prune : int
             Num of filters to prune
         Returns
         -------
-        torch.Tensor
-            Mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
         filters = weight.shape[0]
         w = weight.view(filters, -1)
@@ -427,16 +427,16 @@ class FPGMPruner(WeightRankFilterPruner):
         Filters with the smallest sum of its absolute kernel weights are masked.
         Parameters
         ----------
-        base_mask : torch.Tensor
-            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        base_mask : dict
+            The basic mask with the same shape of weight and bias, all item in the basic mask is 1.
         weight : torch.Tensor
             Layer's weight
         num_prune : int
             Num of filters to prune
         Returns
         -------
-        torch.Tensor
-            Mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
@@ -507,6 +507,10 @@ class ActivationRankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        activation : str
+            Activation function
+        statistics_batch_num : int
+            Num of batches for activation statistics
         """
 
         super().__init__(model, config_list)
@@ -522,10 +526,7 @@ class ActivationRankFilterPruner(Pruner):
 
     def compress(self):
         """
-        Compress the model with algorithm implemented by subclass.
-
-        The model will be instrumented and user should never edit it after calling this method.
-        `self.modules_to_compress` records all the to-be-compressed layers
+        Compress the model, register a hook for collecting activations.
         """
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
@@ -545,7 +546,7 @@ class ActivationRankFilterPruner(Pruner):
     def calc_mask(self, layer, config):
         """
         Calculate the mask of given layer.
-        Filters with the smallest importance criterion of the kernel weights are masked.
+        Filters with the smallest importance criterion which is calculated from the activation are masked.
         Parameters
         ----------
         layer : LayerInfo
@@ -554,15 +555,15 @@ class ActivationRankFilterPruner(Pruner):
             layer's pruning config
         Returns
         -------
-        torch.Tensor
-            mask of the layer's weight
+        dict
+            dictionary for storing masks
         """
 
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
         assert 0 <= config.get('sparsity') < 1
-        assert op_type in ['Conv1d', 'Conv2d']
+        assert op_type in ['Conv2d']
         assert op_type in config.get('op_types')
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
@@ -587,10 +588,44 @@ class ActivationRankFilterPruner(Pruner):
 
 
 class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
+    """
+    A structured pruning algorithm that prunes the filters with the
+    smallest APoZ(average percentage of zeros) of output activations.
+    """
+
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        activation : str
+            Activation function
+        statistics_batch_num : int
+            Num of batches for activation statistics
+        """
         super().__init__(model, config_list, activation, statistics_batch_num)
 
     def _get_mask(self, base_mask, activations, num_prune):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+        Parameters
+        ----------
+        base_mask : dict
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        activations : list
+            Layer's output activations
+        num_prune : int
+            Num of filters to prune
+        Returns
+        -------
+        dict
+            dictionary for storing masks
+        """
         apoz = self._calc_apoz(activations)
         prune_indices = torch.argsort(apoz)[:num_prune]
         for idx in prune_indices:
@@ -600,6 +635,17 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         return base_mask
 
     def _calc_apoz(self, activations):
+        """
+        Calculate APoZ(average percentage of zeros) of activations.
+        Parameters
+        ----------
+        activations : list
+            Layer's output activations
+        Returns
+        -------
+        torch.Tensor
+            Filter's APoZ(average percentage of zeros) of the activations
+        """
         activations = torch.cat(activations, 0)
         _eq_zero = torch.eq(activations, torch.zeros_like(activations))
         _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / torch.numel(_eq_zero[:, 0, :, :])
@@ -607,10 +653,44 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
 
 
 class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
+    """
+    A structured pruning algorithm that prunes the filters with the
+    smallest mean value of output activations.
+    """
+
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        activation : str
+            Activation function
+        statistics_batch_num : int
+            Num of batches for activation statistics
+        """
         super().__init__(model, config_list, activation, statistics_batch_num)
 
     def _get_mask(self, base_mask, activations, num_prune):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+        Parameters
+        ----------
+        base_mask : dict
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        activations : list
+            Layer's output activations
+        num_prune : int
+            Num of filters to prune
+        Returns
+        -------
+        dict
+            dictionary for storing masks
+        """
         mean_activation = self._cal_mean_activation(activations)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:
@@ -620,6 +700,17 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         return base_mask
 
     def _cal_mean_activation(self, activations):
+        """
+        Calculate mean value of activations.
+        Parameters
+        ----------
+        activations : list
+            Layer's output activations
+        Returns
+        -------
+        torch.Tensor
+            Filter's mean value of the output activations
+        """
         activations = torch.cat(activations, 0)
         mean_activation = torch.mean(activations, dim=(0, 2, 3))
         return mean_activation
