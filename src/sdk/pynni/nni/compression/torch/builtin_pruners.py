@@ -499,6 +499,9 @@ class ActivationRankFilterPruner(Pruner):
     Hengyuan Hu, Rui Peng, Yu-Wing Tai and Chi-Keung Tang,
     "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
     https://arxiv.org/abs/1607.03250
+    Pavlo Molchanov, Stephen Tyree, Tero Karras, Timo Aila and Jan Kautz,
+    "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
+    https://arxiv.org/abs/1611.06440
     """
 
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
@@ -633,7 +636,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
             dictionary for storing masks
         """
         apoz = self._calc_apoz(activations)
-        prune_indices = torch.argsort(apoz)[:num_prune]
+        prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
         for idx in prune_indices:
             base_mask['weight'][idx] = 0.
             if base_mask['bias'] is not None:
