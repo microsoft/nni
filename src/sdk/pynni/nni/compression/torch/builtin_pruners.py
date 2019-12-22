@@ -662,9 +662,9 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
     """
     A structured pruning algorithm that prunes the filters with the
     smallest mean value of output activations.
-    Hengyuan Hu, Rui Peng, Yu-Wing Tai and Chi-Keung Tang,
-    "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
-    https://arxiv.org/abs/1607.03250
+    Pavlo Molchanov, Stephen Tyree, Tero Karras, Timo Aila and Jan Kautz,
+    "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
+    https://arxiv.org/abs/1611.06440
     """
 
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
