@@ -97,8 +97,8 @@ if __name__ == "__main__":
     parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--seed", default=2, type=int)
-    parser.add_argument("--init-lr", default=5E-3, type=float)
-    parser.add_argument("--final-lr", default=5E-4, type=float)
+    parser.add_argument("--init-lr", default=2E-3, type=float)
+    parser.add_argument("--final-lr", default=1E-3, type=float)
     parser.add_argument("--evaluate", default=None, type=str)
     args = parser.parse_args()
 

@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import os
 import random
 from argparse import ArgumentParser
 from itertools import cycle
@@ -11,7 +12,7 @@ import torch
 import torch.nn as nn
 
 from nni.nas.pytorch.enas import EnasMutator, EnasTrainer
-from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
+from nni.nas.pytorch.callbacks import LRSchedulerCallback
 
 from dataloader import read_data_sst
 from model import Model
@@ -65,7 +66,7 @@ if __name__ == "__main__":
                              metrics=lambda output, target: {"acc": accuracy(output, target)},
                              reward_function=accuracy,
                              optimizer=optimizer,
-                             callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                             callbacks=[LRSchedulerCallback(lr_scheduler)],
                              batch_size=args.batch_size,
                              num_epochs=num_epochs,
                              dataset_train=None,
@@ -84,3 +85,6 @@ if __name__ == "__main__":
                              baseline_decay=0.99,
                              test_arc_per_epoch=10)
     trainer.train()
+    os.makedirs("checkpoints", exist_ok=True)
+    for i in range(20):
+        trainer.export(os.path.join("checkpoints", "architecture_%02d.json" % i))
