@@ -217,6 +217,8 @@ pruner.compress()
 - **sparsity:** This is to specify the sparsity operations to be compressed to
 - **op_types:** Only Conv2d is supported in L1Filter Pruner
 
+***
+
 ### L2Filter Pruner
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights.
@@ -238,6 +240,7 @@ pruner.compress()
 - **op_types:** Only Conv2d is supported in L1Filter Pruner
 
 ## ActivationRankFilterPruner
+
 
 ### ActivationAPoZRankFilterPruner
 
@@ -267,6 +270,8 @@ You can view example for more information
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 
+***
+
 ### ActivationMeanRankFilterPruner
 
 This is an one-shot pruner, ActivationMeanRankFilterPruner is an implementation of paper [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440)
@@ -294,6 +299,8 @@ You can view example for more information
 #### User configuration for ActivationMeanRankFilterPruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
+
+***
 
 ## Slim Pruner
 
