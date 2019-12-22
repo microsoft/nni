@@ -27,7 +27,7 @@ class LevelPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.if_init_list = {}
+        self.mask_calculated_ops = set()
 
     def calc_mask(self, layer, config):
         """
@@ -46,16 +46,18 @@ class LevelPruner(Pruner):
 
         weight = layer.module.weight.data
         op_name = layer.name
-        if self.if_init_list.get(op_name, True):
+        if op_name not in self.mask_calculated_ops:
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-            mask = torch.gt(w_abs, threshold).type_as(weight)
+            mask_weight = torch.gt(w_abs, threshold).type_as(weight)
+            mask = {'weight': mask_weight}
             self.mask_dict.update({op_name: mask})
-            self.if_init_list.update({op_name: False})
+            self.mask_calculated_ops.add(op_name)
         else:
+            assert op_name in self.mask_dict
             mask = self.mask_dict[op_name]
         return mask
 
@@ -105,7 +107,7 @@ class AGP_Pruner(Pruner):
         freq = config.get('frequency', 1)
         if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
                 and (self.now_epoch - start_epoch) % freq == 0:
-            mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
+            mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
             target_sparsity = self.compute_target_sparsity(config)
             k = int(weight.numel() * target_sparsity)
             if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
@@ -113,11 +115,11 @@ class AGP_Pruner(Pruner):
             # if we want to generate new mask, we should update weigth first
             w_abs = weight.abs() * mask
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-            new_mask = torch.gt(w_abs, threshold).type_as(weight)
+            new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
             self.mask_dict.update({op_name: new_mask})
             self.if_init_list.update({op_name: False})
         else:
-            new_mask = self.mask_dict.get(op_name, torch.ones(weight.shape).type_as(weight))
+            new_mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
         return new_mask
 
     def compute_target_sparsity(self, config):
@@ -221,7 +223,7 @@ class SlimPruner(Pruner):
             assert op_name in self.mask_dict
             return self.mask_dict.get(op_name)
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
-        mask = {'weight': base_mask.detach(), 'bias': base_mask.detach()}
+        mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))

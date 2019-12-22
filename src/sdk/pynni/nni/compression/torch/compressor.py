@@ -200,7 +200,7 @@ class Pruner(Compressor):
             mask_weight = mask['weight']
             layer.module.weight.data = old_weight.mul(mask_weight)
             # apply mask to bias
-            if hasattr(layer.module, 'bias') and layer.module.bias is not None:
+            if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
                 old_bias = layer.module.bias.data
                 mask_bias = mask['bias']
                 layer.module.bias.data = old_bias.mul(mask_bias)
