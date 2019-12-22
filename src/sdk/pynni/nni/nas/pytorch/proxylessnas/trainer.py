@@ -31,13 +31,23 @@ class ProxylessNasTrainer(BaseTrainer):
         Parameters
         ----------
         model : pytorch model
+            the user model, which has mutables
         model_optim : pytorch optimizer
+            the user defined optimizer
+        device : pytorch device
+            the devices to train/search the model
         train_loader : pytorch data loader
+            data loader for the training set
         valid_loader : pytorch data loader
-        device : device
+            data loader for the validation set
+        label_smoothing : float
+            for label smoothing
         n_epochs : int
+            number of epochs to train/search
         init_lr : float
             init learning rate for training the model
+        binary_mode : str
+            the forward/backward mode for the binary weights in mutator
         arch_init_type : str
             the way to init architecture parameters
         arch_init_ratio : float
@@ -46,12 +56,17 @@ class ProxylessNasTrainer(BaseTrainer):
             learning rate of the architecture parameters optimizer
         arch_weight_decay : float
             weight decay of the architecture parameters optimizer
+        grad_update_arch_param_every : int
+        grad_update_steps : int
         warmup : bool
             whether to do warmup
         warmup_epochs : int
             the number of epochs to do in warmup
         arch_valid_frequency : int
             frequency of printing validation result
+        load_ckpt : bool
+        ckpt_path : str
+        arch_path : str
         """
         self.model = model
         self.model_optim = model_optim
