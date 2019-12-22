@@ -3,7 +3,6 @@
 
 import logging
 import json_tricks
-from ..env_vars import trial_env_vars
 from ..common import init_standalone_logger
 
 __all__ = [
@@ -14,8 +13,7 @@ __all__ = [
     'send_metric',
 ]
 
-if trial_env_vars.NNI_PLATFORM is None:
-    init_standalone_logger()
+init_standalone_logger()
 
 _logger = logging.getLogger('nni')
 
