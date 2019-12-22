@@ -3,6 +3,7 @@
 
 import logging
 import json_tricks
+
 from ..common import init_standalone_logger
 
 __all__ = [
@@ -14,7 +15,6 @@ __all__ = [
 ]
 
 init_standalone_logger()
-
 _logger = logging.getLogger('nni')
 
 
