@@ -40,8 +40,6 @@ This is an iterative pruner, In [To prune, or not to prune: exploring the effica
 ### Usage
 You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
 
-First, you should import pruner and add mask to model.
-
 Tensorflow code
 ```python
 from nni.compression.tensorflow import AGP_Pruner
@@ -71,7 +69,7 @@ pruner = AGP_Pruner(model, config_list)
 pruner.compress()
 ```
 
-Second, you should add code below to update epoch number when you finish one epoch in your training code.
+you should add code below to update epoch number when you finish one epoch in your training code.
 
 Tensorflow code 
 ```python
@@ -136,14 +134,13 @@ The above configuration means that there are 5 times of iterative pruning. As th
 ## WeightRankFilterPruner
 WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
 
-### FPGM Pruner
+### 1, FPGM Pruner
 
 This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
 
 >Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
 
 #### Usage
-First, you should import pruner and add mask to model.
 
 Tensorflow code
 ```python
@@ -167,7 +164,7 @@ pruner.compress()
 ```
 Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-Second, you should add code below to update epoch number at beginning of each epoch.
+you should add code below to update epoch number at beginning of each epoch.
 
 Tensorflow code
 ```python
@@ -184,7 +181,7 @@ You can view example for more information
 
 ***
 
-### L1Filter Pruner
+### 2, L1Filter Pruner
 
 This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
 
@@ -220,7 +217,7 @@ pruner.compress()
 
 ***
 
-### L2Filter Pruner
+### 3, L2Filter Pruner
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights.
 
@@ -241,15 +238,13 @@ pruner.compress()
 - **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
 
 ## ActivationRankFilterPruner
+WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity
 
-
-### ActivationAPoZRankFilterPruner
+### 1, ActivationAPoZRankFilterPruner
 
 This is an one-shot pruner, ActivationAPoZRankFilterPruner is an implementation of paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250)
 
 #### Usage
-
-You should import pruner and add mask to model.
 
 PyTorch code
 
@@ -274,13 +269,11 @@ You can view example for more information
 
 ***
 
-### ActivationMeanRankFilterPruner
+### 2, ActivationMeanRankFilterPruner
 
 This is an one-shot pruner, ActivationMeanRankFilterPruner is an implementation of paper [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440)
 
 #### Usage
-
-You should import pruner and add mask to model.
 
 PyTorch code
 

@@ -57,7 +57,7 @@ class LevelPruner(Pruner):
             self.mask_dict.update({op_name: mask})
             self.mask_calculated_ops.add(op_name)
         else:
-            assert op_name in self.mask_dict
+            assert op_name in self.mask_dict, "op_name not in the mask_dict"
             mask = self.mask_dict[op_name]
         return mask
 
@@ -258,7 +258,7 @@ class WeightRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        self.mask_calculated_ops = set()  # operations whose mask has been calculated
 
     def _get_mask(self, base_mask, weight, num_prune):
         return {'weight': None, 'bias': None}
@@ -282,8 +282,8 @@ class WeightRankFilterPruner(Pruner):
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
-        assert 0 <= config.get('sparsity') < 1
-        assert op_type in ['Conv1d', 'Conv2d']
+        assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
+        assert op_type in ['Conv1d', 'Conv2d'], "only support Conv1d and Conv2d"
         assert op_type in config.get('op_types')
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
@@ -525,7 +525,7 @@ class ActivationRankFilterPruner(Pruner):
         self.statistics_batch_num = statistics_batch_num
         self.collected_activation = {}
         self.hooks = {}
-        assert activation in ['relu','relu6']
+        assert activation in ['relu', 'relu6']
         if activation == 'relu':
             self.activation = torch.nn.functional.relu
         elif activation == 'relu6':
@@ -573,8 +573,8 @@ class ActivationRankFilterPruner(Pruner):
         weight = layer.module.weight.data
         op_name = layer.name
         op_type = layer.type
-        assert 0 <= config.get('sparsity') < 1
-        assert op_type in ['Conv2d']
+        assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
+        assert op_type in ['Conv2d'], "only support Conv2d"
         assert op_type in config.get('op_types')
         if op_name in self.mask_calculated_ops:
             assert op_name in self.mask_dict
