@@ -1,14 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .trial import *
-from .smartparam import *
-from .nas_utils import training_update
+from .env_vars import dispatcher_env_vars
 
-class NoMoreTrialError(Exception):
-    def __init__(self, ErrorInfo):
-        super().__init__(self)
-        self.errorinfo = ErrorInfo
+if dispatcher_env_vars.SDK_PROCESS == 'dispatcher':
+    class NoMoreTrialError(Exception):
+        def __init__(self, ErrorInfo):
+            super().__init__(self)
+            self.errorinfo = ErrorInfo
 
-    def __str__(self):
-        return self.errorinfo
+        def __str__(self):
+            return self.errorinfo
+else:
+    from .trial import *
+    from .smartparam import *
+    from .nas_utils import training_update
