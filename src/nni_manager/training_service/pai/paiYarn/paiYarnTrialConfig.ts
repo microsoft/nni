@@ -3,12 +3,12 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig';
+import {TrialConfig} from '../../common/trialConfig';
 
 /**
  * PAI configuration to run trials
  */
-export class PAITrialConfig extends TrialConfig {
+export class PAIYarnTrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;
