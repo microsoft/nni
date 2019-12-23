@@ -16,6 +16,7 @@ _trial_env_var_names = [
 ]
 
 _dispatcher_env_var_names = [
+    'SDK_PROCESS',
     'NNI_MODE',
     'NNI_CHECKPOINT_DIRECTORY',
     'NNI_LOG_DIRECTORY',

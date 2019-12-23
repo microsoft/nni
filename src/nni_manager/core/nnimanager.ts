@@ -359,6 +359,7 @@ class NNIManager implements Manager {
         }
 
         const nniEnv = {
+            SDK_PROCESS: 'dispatcher',
             NNI_MODE: mode,
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
