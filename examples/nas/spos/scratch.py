@@ -82,6 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", type=int, default=10)
     parser.add_argument("--lr-decay", type=str, default="linear")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--spos-preprocessing", default=False, action="store_true")
 
     args = parser.parse_args()
 
@@ -110,8 +111,10 @@ if __name__ == "__main__":
         raise ValueError("'%s' not supported." % args.lr_decay)
     writer = SummaryWriter(log_dir=args.tb_dir)
 
-    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers)
-    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers)
+    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers,
+                                          spos_preprocessing=args.spos_preprocessing)
+    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
+                                        spos_preprocessing=args.spos_preprocessing)
 
     for epoch in range(args.epochs):
         train(epoch, model, criterion, optimizer, train_loader, writer, args)
