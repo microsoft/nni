@@ -58,8 +58,8 @@ if __name__ == "__main__":
     mutator = EnasMutator(model, temperature=None, tanh_constant=None, entropy_reduction="mean")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.04, eps=1E-3, weight_decay=2E-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=5e-3, eps=1e-3, weight_decay=2e-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-5)
 
     trainer = TextNASTrainer(model,
                              loss=criterion,
@@ -76,12 +76,10 @@ if __name__ == "__main__":
                              test_loader=test_loader,
                              log_frequency=args.log_frequency,
                              mutator=mutator,
-                             mutator_lr=2E-3,
-                             mutator_steps=100,
-                             mutator_steps_aggregate=10,
+                             mutator_lr=2e-3,
+                             mutator_steps=500,
+                             mutator_steps_aggregate=1,
                              child_steps=3000,
-                             skip_weight=0.01,
-                             entropy_weight=0.001,
                              baseline_decay=0.99,
                              test_arc_per_epoch=10)
     trainer.train()

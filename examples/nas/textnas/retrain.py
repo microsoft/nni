@@ -97,8 +97,9 @@ if __name__ == "__main__":
     parser.add_argument("--arc-checkpoint", default="final_arc.json", type=str)
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--seed", default=2, type=int)
-    parser.add_argument("--init-lr", default=2E-3, type=float)
-    parser.add_argument("--final-lr", default=1E-3, type=float)
+    parser.add_argument("--initial-lr", default=2E-3, type=float)
+    parser.add_argument("--ending-lr", default=1E-3, type=float)
+    parser.add_argument("--weight-decay", default=3E-6, type=float)
     parser.add_argument("--evaluate", default=None, type=str)
     args = parser.parse_args()
 
@@ -117,8 +118,8 @@ if __name__ == "__main__":
 
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr, eps=1E-3, weight_decay=1E-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.final_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.initial_lr, eps=1E-3, weight_decay=args.weight_decay)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.ending_lr)
 
     if args.evaluate:
         model.eval()
