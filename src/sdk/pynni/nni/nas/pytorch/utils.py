@@ -22,7 +22,7 @@ def to_device(obj, device):
     if isinstance(obj, list):
         return [to_device(t, device) for t in obj]
     if isinstance(obj, dict):
-        return {k: to_device(v) for k, v in obj.items()}
+        return {k: to_device(v, device) for k, v in obj.items()}
     if isinstance(obj, (int, float, str)):
         return obj
     raise ValueError("'%s' has unsupported type '%s'" % (obj, type(obj)))

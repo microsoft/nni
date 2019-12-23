@@ -27,6 +27,8 @@ class EnasTrainer(Trainer):
                          batch_size, workers, device, log_frequency, callbacks)
         self.reward_function = reward_function
         self.mutator_optim = optim.Adam(self.mutator.parameters(), lr=mutator_lr)
+        self.batch_size = batch_size
+        self.workers = workers
 
         self.entropy_weight = entropy_weight
         self.skip_weight = skip_weight
@@ -47,16 +49,16 @@ class EnasTrainer(Trainer):
         train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:-split])
         valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[-split:])
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+                                                        batch_size=self.batch_size,
                                                         sampler=train_sampler,
-                                                        num_workers=workers)
+                                                        num_workers=self.workers)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+                                                        batch_size=self.batch_size,
                                                         sampler=valid_sampler,
-                                                        num_workers=workers)
+                                                        num_workers=self.workers)
         self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
-                                                       batch_size=batch_size,
-                                                       num_workers=workers)
+                                                       batch_size=self.batch_size,
+                                                       num_workers=self.workers)
         self.train_loader = cycle(self.train_loader)
         self.valid_loader = cycle(self.valid_loader)
 
@@ -96,7 +98,6 @@ class EnasTrainer(Trainer):
         self.model.eval()
         self.mutator.train()
         meters = AverageMeterGroup()
-        mutator_step, total_mutator_steps = 0, self.mutator_steps * self.mutator_steps_aggregate
         for mutator_step in range(1, self.mutator_steps + 1):
             self.mutator_optim.zero_grad()
             for step in range(1, self.mutator_steps_aggregate + 1):
@@ -138,12 +139,12 @@ class EnasTrainer(Trainer):
         with torch.no_grad():
             for arc_id in range(self.test_arc_per_epoch):
                 meters = AverageMeterGroup()
-                for step, (x, y) in enumerate(self.test_loader):
+                for x, y in self.test_loader:
                     x, y = to_device(x, self.device), to_device(y, self.device)
                     self.mutator.reset()
                     logits = self.model(x)
                     if isinstance(logits, tuple):
-                        logits, aux_logits = logits
+                        logits, _ = logits
                     metrics = self.metrics(logits, y)
                     loss = self.loss(logits, y)
                     metrics["loss"] = loss.item()
