@@ -213,24 +213,18 @@ def validate_customized_file(experiment_config, spec_key):
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
-    if experiment_config['tuner'].get('builtinTunerName'):
-        experiment_config['tuner']['className'] = experiment_config['tuner']['builtinTunerName']
-    else:
+    if not experiment_config['tuner'].get('builtinTunerName'):
         validate_customized_file(experiment_config, 'tuner')
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
     if experiment_config.get('assessor'):
-        if experiment_config['assessor'].get('builtinAssessorName'):
-            experiment_config['assessor']['className'] = experiment_config['assessor']['builtinAssessorName']
-        else:
+        if not experiment_config['assessor'].get('builtinAssessorName'):
             validate_customized_file(experiment_config, 'assessor')
 
 def parse_advisor_content(experiment_config):
     '''Validate whether advisor in experiment_config is valid'''
-    if experiment_config['advisor'].get('builtinAdvisorName'):
-        experiment_config['advisor']['className'] = experiment_config['advisor']['builtinAdvisorName']
-    else:
+    if not experiment_config['advisor'].get('builtinAdvisorName'):
         validate_customized_file(experiment_config, 'advisor')
 
 def validate_annotation_content(experiment_config, spec_key, builtin_name):
