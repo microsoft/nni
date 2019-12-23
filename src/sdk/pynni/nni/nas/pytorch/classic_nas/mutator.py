@@ -67,9 +67,22 @@ class ClassicMutator(Mutator):
         else:
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
-        self._cache = self.sample_final()
+        self.reset()
 
     def _sample_layer_choice(self, mutable, idx, value, search_space_item):
+        """
+        Convert layer choice to tensor representation.
+
+        Parameters
+        ----------
+        mutable : Mutable
+        idx : int
+            Number `idx` of list will be selected.
+        value : str
+            The verbose representation of the selected value.
+        search_space_item : list
+            The list for corresponding search space.
+        """
         # doesn't support multihot for layer choice yet
         onehot_list = [False] * mutable.length
         assert 0 <= idx < mutable.length and search_space_item[idx] == value, \
@@ -78,6 +91,19 @@ class ClassicMutator(Mutator):
         return torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
 
     def _sample_input_choice(self, mutable, idx, value, search_space_item):
+        """
+        Convert input choice to tensor representation.
+
+        Parameters
+        ----------
+        mutable : Mutable
+        idx : int
+            Number `idx` of list will be selected.
+        value : str
+            The verbose representation of the selected value.
+        search_space_item : list
+            The list for corresponding search space.
+        """
         multihot_list = [False] * mutable.n_candidates
         for i, v in zip(idx, value):
             assert 0 <= i < mutable.n_candidates and search_space_item[i] == v, \
@@ -109,9 +135,6 @@ class ClassicMutator(Mutator):
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return result
-
-    def reset(self):
-        pass  # do nothing, only sample once at initialization
 
     def _standalone_generate_chosen(self):
         """
