@@ -9,35 +9,34 @@ class VGG_Cifar10(nn.Module):
     def __init__(self, num_classes=1000):
         super(VGG_Cifar10, self).__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1,
-                      bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(3, 128, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(128, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
             nn.Conv2d(128, 128, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.BatchNorm2d(128),
+            nn.BatchNorm2d(128, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
             nn.Conv2d(128, 256, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
 
             nn.Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
 
             nn.Conv2d(256, 512, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(512),
+            nn.BatchNorm2d(512, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
 
             nn.Conv2d(512, 512, kernel_size=3, padding=1, bias=False),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.BatchNorm2d(512),
+            nn.BatchNorm2d(512, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True)
         )
 
@@ -49,8 +48,7 @@ class VGG_Cifar10(nn.Module):
             nn.BatchNorm1d(1024),
             nn.Hardtanh(inplace=True),
             nn.Linear(1024, num_classes), # do not quantize output
-            nn.BatchNorm1d(num_classes, affine=False),
-            nn.LogSoftmax()
+            nn.BatchNorm1d(num_classes, affine=False)
         )
 
 
@@ -95,6 +93,12 @@ def test(model, device, test_loader):
         test_loss, acc))
     return acc
 
+def adjust_learning_rate(optimizer, epoch):
+    update_list = [55, 100, 150,200,400,600]
+    if epoch in update_list:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = param_group['lr'] * 0.1
+    return
 
 def main():
     torch.manual_seed(0)
@@ -120,7 +124,7 @@ def main():
         'quant_types': ['weight'],
         'quant_bits': 1,
         'op_types': ['Conv2d', 'Linear'],
-        'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
+        'op_names': ['features.3', 'features.7', 'features.10', 'features.14', 'classifier.0', 'classifier.3']
     }, {
         'quant_types': ['output'],
         'quant_bits': 1,
@@ -132,11 +136,12 @@ def main():
     model = quantizer.compress()
 
     print('=' * 10 + 'train' + '=' * 10)
-    optimizer_finetune = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
     best_top1 = 0
-    for epoch in range(120):
+    for epoch in range(400):
         print('# Epoch {} #'.format(epoch))
-        train(model, device, train_loader, optimizer_finetune)
+        train(model, device, train_loader, optimizer)
+        adjust_learning_rate(optimizer, epoch)
         top1 = test(model, device, test_loader)
         if top1 > best_top1:
             best_top1 = top1
