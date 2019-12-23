@@ -68,7 +68,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             const legend: Array<string> = [];
             // max length
             const length = trialIntermediate[0].data.length;
-            const xAxis: Array<number> = [];
+            const xAxis: number[] = [];
             Object.keys(trialIntermediate).map(item => {
                 const temp = trialIntermediate[item];
                 legend.push(temp.name);
@@ -80,7 +80,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 tooltip: {
                     trigger: 'item',
                     enterable: true,
-                    position: function (point: Array<number>, data: TooltipForIntermediate): Array<number> {
+                    position: function (point: number[], data: TooltipForIntermediate): number[] {
                         if (data.dataIndex < length / 2) {
                             return [point[0], 80];
                         } else {

@@ -40,7 +40,7 @@ class Compare extends React.Component<CompareProps, {}> {
         const legend: Array<string> = [];
         // max length
         const length = trialIntermediate[0] !== undefined ? trialIntermediate[0].data.length : 0;
-        const xAxis: Array<number> = [];
+        const xAxis: number[] = [];
         Object.keys(trialIntermediate).map(item => {
             const temp = trialIntermediate[item];
             legend.push(temp.name);
@@ -108,8 +108,8 @@ class Compare extends React.Component<CompareProps, {}> {
     // render table column ---
     initColumn = (): React.ReactNode => {
         const idList: Array<string> = [];
-        const sequenceIdList: Array<number> = [];
-        const durationList: Array<number> = [];
+        const sequenceIdList: number[] = [];
+        const durationList: number[] = [];
 
         const compareRows = this.props.compareRows.map(tableRecord => TRIALS.getTrial(tableRecord.id));
 

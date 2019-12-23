@@ -76,13 +76,13 @@ class Para extends React.Component<ParaProps, ParaState> {
     getParallelAxis =
         (
             dimName: Array<string>, parallelAxis: Array<Dimobj>,
-            accPara: Array<number>, eachTrialParams: Array<string>,
+            accPara: number[], eachTrialParams: Array<string>,
             lengthofTrials: number
         ): void => {
             // get data for every lines. if dim is choice type, number -> toString()
             const paraYdata: number[][] = [];
             Object.keys(eachTrialParams).map(item => {
-                const temp: Array<number> = [];
+                const temp: number[] = [];
                 for (let i = 0; i < dimName.length; i++) {
                     if ('type' in parallelAxis[i]) {
                         temp.push(eachTrialParams[item][dimName[i]].toString());
@@ -126,7 +126,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         // filter succeed trials [{}, {}, {}]
         const dataSource = source.filter(filterByStatus);
         const lenOfDataSource: number = dataSource.length;
-        const accPara: Array<number> = [];
+        const accPara: number[] = [];
         // specific value array
         const eachTrialParams: Array<string> = [];
         // experiment interface search space obj

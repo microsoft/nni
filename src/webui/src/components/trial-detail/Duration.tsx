@@ -8,7 +8,7 @@ require('echarts/lib/component/title');
 
 interface Runtrial {
     trialId: Array<string>;
-    trialTime: Array<number>;
+    trialTime: number[];
 }
 
 interface DurationProps {
@@ -76,7 +76,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
     drawDurationGraph = (source: Array<TableObj>): any => {
         // why this function run two times when props changed?
         const trialId: Array<string> = [];
-        const trialTime: Array<number> = [];
+        const trialTime: number[] = [];
         const trialRun: Array<Runtrial> = [];
         const trialJobs = source.filter(filterDuration);
         Object.keys(trialJobs).map(item => {

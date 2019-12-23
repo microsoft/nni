@@ -143,7 +143,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: Array<number>, data: TooltipForAccuracy): Array<number> => (
+                position: (point: number[], data: TooltipForAccuracy): number[] => (
                     [(data.data[0] < maxSequenceId ? point[0] : (point[0] - 300)), 80]
                 ),
                 formatter: (data: TooltipForAccuracy): any => (
