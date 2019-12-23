@@ -57,16 +57,21 @@ class ProxylessNasTrainer(BaseTrainer):
         arch_weight_decay : float
             weight decay of the architecture parameters optimizer
         grad_update_arch_param_every : int
+            update architecture weights every this number of minibatches
         grad_update_steps : int
+            during each update of architecture weights, the number of steps to train
         warmup : bool
             whether to do warmup
         warmup_epochs : int
-            the number of epochs to do in warmup
+            the number of epochs to do during warmup
         arch_valid_frequency : int
             frequency of printing validation result
         load_ckpt : bool
+            whether load checkpoint
         ckpt_path : str
+            checkpoint path, if load_ckpt is True, ckpt_path cannot be None
         arch_path : str
+            the path to store chosen architecture
         """
         self.model = model
         self.model_optim = model_optim
@@ -115,6 +120,9 @@ class ProxylessNasTrainer(BaseTrainer):
         self.train_curr_epoch = 0
 
     def _init_arch_params(self, init_type='normal', init_ratio=1e-3):
+        """
+        Initialize architecture weights
+        """
         for param in self.mutator.get_architecture_parameters():
             if init_type == 'normal':
                 param.data.normal_(0, init_ratio)
@@ -124,6 +132,14 @@ class ProxylessNasTrainer(BaseTrainer):
                 raise NotImplementedError
 
     def _validate(self):
+        """
+        Do validation. During validation, LayerChoices use the chosen active op.
+
+        Returns
+        -------
+        float, float, float
+            average loss, average top1 accuracy, average top5 accuracy
+        """
         self.valid_loader.batch_sampler.batch_size = self.valid_batch_size
         self.valid_loader.batch_sampler.drop_last = False
 
@@ -163,6 +179,9 @@ class ProxylessNasTrainer(BaseTrainer):
         return losses.avg, top1.avg, top5.avg
 
     def _warm_up(self):
+        """
+        Warm up the model, during warm up, architecture weights are not trained.
+        """
         lr_max = 0.05
         data_loader = self.train_loader
         nBatch = len(data_loader)
@@ -230,6 +249,20 @@ class ProxylessNasTrainer(BaseTrainer):
             self.warmup_curr_epoch += 1
 
     def _get_update_schedule(self, nBatch):
+        """
+        Generate schedule for training architecture weights. Key means after which minibatch
+        to update architecture weights, value means how many steps for the update.
+
+        Parameters
+        ----------
+        nBatch : int
+            the total number of minibatches in one epoch
+
+        Returns
+        -------
+        dict
+            the schedule for updating architecture weights
+        """
         schedule = {}
         for i in range(nBatch):
             if (i + 1) % self.grad_update_arch_param_every == 0:
@@ -237,6 +270,9 @@ class ProxylessNasTrainer(BaseTrainer):
         return schedule
 
     def _calc_learning_rate(self, epoch, batch=0, nBatch=None):
+        """
+        Update learning rate.
+        """
         T_total = self.n_epochs * nBatch
         T_cur = epoch * nBatch + batch
         lr = 0.5 * self.init_lr * (1 + math.cos(math.pi * T_cur / T_total))
@@ -245,6 +281,22 @@ class ProxylessNasTrainer(BaseTrainer):
     def _adjust_learning_rate(self, optimizer, epoch, batch=0, nBatch=None):
         """
         Adjust learning of a given optimizer and return the new learning rate
+
+        Parameters
+        ----------
+        optimizer : pytorch optimizer
+            the used optimizer
+        epoch : int
+            the current epoch number
+        batch : int
+            the current minibatch
+        nBatch : int
+            the total number of minibatches in one epoch
+
+        Returns
+        -------
+        float
+            the adjusted learning rate
         """
         new_lr = self._calc_learning_rate(epoch, batch, nBatch)
         for param_group in optimizer.param_groups:
@@ -252,6 +304,13 @@ class ProxylessNasTrainer(BaseTrainer):
         return new_lr
 
     def _train(self):
+        """
+        Train the model, it trains model weights and architecute weights.
+        Architecture weights are trained according to the schedule.
+        Before updating architecture weights, ```requires_grad``` is enabled.
+        Then, it is disabled after the updating, in order not to update
+        architecture weights when training model weights.
+        """
         nBatch = len(self.train_loader)
         arch_param_num = self.mutator.num_arch_params()
         binary_gates_num = self.mutator.num_arch_params()
@@ -326,6 +385,14 @@ class ProxylessNasTrainer(BaseTrainer):
             self.train_curr_epoch += 1
 
     def _valid_next_batch(self):
+        """
+        Get next one minibatch from validation set
+
+        Returns
+        -------
+        (tensor, tensor)
+            the tuple of images and labels
+        """
         if self._valid_iter is None:
             self._valid_iter = iter(self.valid_loader)
         try:
@@ -336,6 +403,16 @@ class ProxylessNasTrainer(BaseTrainer):
         return data
 
     def _gradient_step(self):
+        """
+        This gradient step is for updating architecture weights.
+        Mutator is intensively used in this function to operate on
+        architecture weights.
+
+        Returns
+        -------
+        float, None
+            loss of the model, None
+        """
         # use the same batch size as train batch size for architecture weights
         self.valid_loader.batch_sampler.batch_size = self.train_batch_size
         self.valid_loader.batch_sampler.drop_last = True
@@ -366,6 +443,10 @@ class ProxylessNasTrainer(BaseTrainer):
         return loss.data.item(), expected_value.item() if expected_value is not None else None
 
     def save_checkpoint(self):
+        """
+        Save checkpoint of the whole model. Saving model weights and architecture weights in
+        ```ckpt_path```, and saving currently chosen architecture in ```arch_path```.
+        """
         if self.ckpt_path:
             state = {
                 'warmup_curr_epoch': self.warmup_curr_epoch,
@@ -379,6 +460,9 @@ class ProxylessNasTrainer(BaseTrainer):
             self.export(self.arch_path)
 
     def load_checkpoint(self):
+        """
+        Load the checkpoint from ```ckpt_path```.
+        """
         assert self.ckpt_path is not None, "If load_ckpt is not None, ckpt_path should not be None"
         ckpt = torch.load(self.ckpt_path)
         self.warmup_curr_epoch = ckpt['warmup_curr_epoch']
@@ -388,6 +472,9 @@ class ProxylessNasTrainer(BaseTrainer):
         self.arch_optimizer.load_state_dict(ckpt['arch_optim'])
 
     def train(self):
+        """
+        Train the whole model.
+        """
         if self.load_ckpt:
             self.load_checkpoint()
         if self.warmup:
@@ -395,6 +482,14 @@ class ProxylessNasTrainer(BaseTrainer):
         self._train()
 
     def export(self, file_name):
+        """
+        Export the chosen architecture into a file
+
+        Parameters
+        ----------
+        file_name : str
+            the file that stores exported chosen architecture
+        """
         exported_arch = self.mutator.sample_final()
         with open(file_name, 'w') as f:
             json.dump(exported_arch, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
