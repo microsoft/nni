@@ -29,7 +29,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         };
     }
 
-    editTrialConcurrency = async (userInput: string) => {
+    editTrialConcurrency = async (userInput: string): Promise<void> => {
         if (!userInput.match(/^[1-9]\d*$/)) {
             message.error('Please enter a positive integer!', 2);
             return;
@@ -46,6 +46,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
+                // eslint-disable-next-line @typescript-eslint/camelcase
                 params: { update_type: 'TRIAL_CONCURRENCY' }
             });
             if (res.status === 200) {
@@ -66,20 +67,22 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         }
     }
 
-    isShowDrawer = () => {
+    isShowDrawer = (): void => {
         this.setState({ isShowLogDrawer: true });
     }
 
-    closeDrawer = () => {
+    closeDrawer = (): void => {
         this.setState({ isShowLogDrawer: false });
     }
 
-    render() {
+    render(): React.ReactNode {
         const { bestAccuracy } = this.props;
         const { isShowLogDrawer } = this.state;
 
         const count = TRIALS.countStatus();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
 
         const bar2Percent = (bar2 / EXPERIMENT.profile.params.maxTrialNum) * 100;
@@ -98,6 +101,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 </div>
             );
         }
+
         return (
             <Row className="progress" id="barBack">
                 <Row className="basic lineBasic">
