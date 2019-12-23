@@ -9,13 +9,12 @@ from torch.utils import data
 
 logger = logging.getLogger("nni.textnas")
 
-word_to_word_mapping = {
-    '{': '-LCB-',
-    '}': '-RCB-'
-}
-
 
 class PTBTree:
+    WORD_TO_WORD_MAPPING = {
+        '{': '-LCB-',
+        '}': '-RCB-'
+    }
 
     def __init__(self):
         self.subtrees = []
@@ -67,8 +66,8 @@ class PTBTree:
         self.standardise_node()
 
     def standardise_node(self):
-        if self.word in word_to_word_mapping:
-            self.word = word_to_word_mapping[self.word]
+        if self.word in self.WORD_TO_WORD_MAPPING:
+            self.word = self.WORD_TO_WORD_MAPPING[self.word]
 
     def __repr__(self, single_line=True, depth=0):
         ans = ''
