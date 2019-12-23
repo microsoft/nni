@@ -15,6 +15,10 @@ from nni.nas.pytorch.mutator import Mutator
 
 logger = logging.getLogger(__name__)
 
+NNI_GEN_SEARCH_SPACE = "NNI_GEN_SEARCH_SPACE"
+LAYER_CHOICE = "layer_choice"
+INPUT_CHOICE = "input_choice"
+
 
 def get_and_apply_next_architecture(model):
     """
@@ -52,9 +56,9 @@ class ClassicMutator(Mutator):
         super(ClassicMutator, self).__init__(model)
         self._chosen_arch = {}
         self._search_space = self._generate_search_space()
-        if "NNI_GEN_SEARCH_SPACE" in os.environ:
+        if NNI_GEN_SEARCH_SPACE in os.environ:
             # dry run for only generating search space
-            self._dump_search_space(os.environ["NNI_GEN_SEARCH_SPACE"])
+            self._dump_search_space(os.environ[NNI_GEN_SEARCH_SPACE])
             sys.exit(0)
 
         if trial_env_vars.NNI_PLATFORM is None:
@@ -119,10 +123,10 @@ class ClassicMutator(Mutator):
         """
         chosen_arch = {}
         for key, val in self._search_space.items():
-            if val["_type"] == "layer_choice":
+            if val["_type"] == LAYER_CHOICE:
                 choices = val["_value"]
                 chosen_arch[key] = {"_value": choices[0], "_idx": 0}
-            elif val["_type"] == "input_choice":
+            elif val["_type"] == INPUT_CHOICE:
                 choices = val["_value"]["candidates"]
                 n_chosen = val["_value"]["n_chosen"]
                 chosen_arch[key] = {"_value": choices[:n_chosen], "_idx": list(range(n_chosen))}
@@ -151,10 +155,10 @@ class ClassicMutator(Mutator):
             if isinstance(mutable, LayerChoice):
                 key = mutable.key
                 val = [repr(choice) for choice in mutable.choices]
-                search_space[key] = {"_type": "layer_choice", "_value": val}
+                search_space[key] = {"_type": LAYER_CHOICE, "_value": val}
             elif isinstance(mutable, InputChoice):
                 key = mutable.key
-                search_space[key] = {"_type": "input_choice",
+                search_space[key] = {"_type": INPUT_CHOICE,
                                      "_value": {"candidates": mutable.choose_from,
                                                 "n_chosen": mutable.n_chosen}}
             else:
