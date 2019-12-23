@@ -5,6 +5,14 @@ import torch
 from torch import nn as nn
 
 def detach_variable(inputs):
+    """
+    Detach variables
+
+    Parameters
+    ----------
+    inputs : pytorch tensors
+        pytorch tensors
+    """
     if isinstance(inputs, tuple):
         return tuple([detach_variable(x) for x in inputs])
     else:
@@ -16,12 +24,17 @@ def cross_entropy_with_label_smoothing(pred, target, label_smoothing=0.1):
     """
     Parameters
     ----------
-    pred :
-    target :
-    label_smoothing :
+    pred : pytorch tensor
+        predicted value
+    target : pytorch tensor
+        label
+    label_smoothing : float
+        the degree of label smoothing
 
     Returns
     -------
+    pytorch tensor
+        cross entropy
     """
     logsoftmax = nn.LogSoftmax()
     n_classes = pred.size(1)
@@ -39,12 +52,17 @@ def accuracy(output, target, topk=(1,)):
 
     Parameters
     ----------
-    output :
-    target :
-    topk :
+    output : pytorch tensor
+        output, e.g., predicted value
+    target : pytorch tensor
+        label
+    topk : tuple
+        specify top1 and top5
 
     Returns
     -------
+    list
+        accuracy of top1 and top5
     """
     maxk = max(topk)
     batch_size = target.size(0)
