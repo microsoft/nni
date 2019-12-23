@@ -23,7 +23,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
         super(props);
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const columns = [
             {
                 title: 'Trial No.',
@@ -35,7 +35,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 dataIndex: 'id',
                 width: 60,
                 className: 'tableHead leftTitle',
-                render: (text: string, record: TableRecord): any => {
+                render: (text: string, record: TableRecord): React.ReactNode => {
                     return (
                         <div>{record.id}</div>
                     );
@@ -44,7 +44,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 title: 'Duration',
                 dataIndex: 'duration',
                 width: 140,
-                render: (text: string, record: TableRecord): any => {
+                render: (text: string, record: TableRecord): React.ReactNode => {
                     return (
                         <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
                     );
@@ -54,7 +54,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 dataIndex: 'status',
                 width: 150,
                 className: 'tableStatus',
-                render: (text: string, record: TableRecord): any => {
+                render: (text: string, record: TableRecord): React.ReactNode => {
                     return (
                         <div className={`${record.status} commonStyle`}>{record.status}</div>
                     );
@@ -62,7 +62,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             }, {
                 title: 'Default metric',
                 dataIndex: 'accuracy',
-                render: (text: string, record: TableRecord): any => {
+                render: (text: string, record: TableRecord): React.ReactNode => {
                     return (
                         <DefaultMetric trialId={record.id} />
                     );

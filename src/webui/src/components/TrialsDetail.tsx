@@ -60,33 +60,33 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             tablePageSize: 20,
             whichGraph: '1',
             searchType: 'id',
-            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-            searchFilter: trial => true // eslint-disable-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+            searchFilter: trial => true 
         };
     }
 
     // search a trial by trial No. & trial id
     searchTrial = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const targetValue = event.target.value;
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-        let filter = (trial: Trial) => true; // eslint-disable-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+        let filter = (trial: Trial) => true;
         if (!targetValue.trim()) {
             this.setState({ searchFilter: filter });
             return;
         }
         switch (this.state.searchType) {
             case 'id':
-                filter = (trial): any => trial.info.id.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
+                filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
                 break;
             case 'Trial No.':
-                filter = (trial): any => trial.info.sequenceId.toString() === targetValue; // elint-disable-line
+                filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue; // elint-disable-line
                 break;
             case 'status':
-                filter = (trial): any => trial.info.status.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
+                filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
                 break;
             case 'parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
-                filter = (trial): any => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue); // elint-disable-line
+                filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue); // elint-disable-line
                 break;
             default:
                 alert(`Unexpected search filter ${this.state.searchType}`);
@@ -110,7 +110,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.setState({ searchType: value });
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { tablePageSize, whichGraph } = this.state;
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);

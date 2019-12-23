@@ -13,7 +13,7 @@ class SearchSpace extends React.Component<SearchspaceProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { searchSpace } = this.props;
         return (
             <div className="searchSpace">

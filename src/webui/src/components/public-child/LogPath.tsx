@@ -12,7 +12,7 @@ class LogPath extends React.Component<LogpathProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { logStr } = this.props;
         const isTwopath = logStr.indexOf(',') !== -1
             ?

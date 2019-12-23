@@ -16,7 +16,7 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { who, percent, description, maxString, bgclass } = this.props;
 
         return (

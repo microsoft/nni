@@ -13,7 +13,7 @@ class TrialLog extends React.Component<TrialLogProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { logStr } = this.props;
 
         return (

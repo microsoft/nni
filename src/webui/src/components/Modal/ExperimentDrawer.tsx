@@ -93,7 +93,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         window.removeEventListener('resize', this.onWindowResize);
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { isVisble, closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
         return (

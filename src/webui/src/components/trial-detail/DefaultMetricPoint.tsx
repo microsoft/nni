@@ -91,7 +91,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         };
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const graph = this.generateGraph();
         const accNodata = (graph === EmptyGraph ? 'No data' : '');
         const onEvents = { 'dataZoom': this.metricDataZoom };

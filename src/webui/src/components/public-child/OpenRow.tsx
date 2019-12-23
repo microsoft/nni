@@ -55,7 +55,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.hideFormatModal();
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { isShowFormatModal, formatStr } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
@@ -73,7 +73,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     Trails for multiphase experiment will return a set of parameters,
                                     we are listing the latest parameter in webportal.
                                     <br />
-                                    For the entire parameter set, please refer to the following&quot;
+                                    For the entire parameter set, please refer to the following &quot;
                                     <a
                                         href={trialLink}
                                         rel="noopener noreferrer"

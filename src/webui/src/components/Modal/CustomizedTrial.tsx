@@ -139,7 +139,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { closeCustomizeModal, visible } = this.props;
         const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
         const {

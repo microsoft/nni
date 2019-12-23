@@ -12,7 +12,7 @@ import '../../static/style/probar.scss';
 
 interface ProgressProps {
     concurrency: number;
-    bestAccuracy: number | string;
+    bestAccuracy: number;
     changeConcurrency: (val: number) => void;
     experimentUpdateBroadcast: number;
 }
@@ -75,7 +75,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         this.setState({ isShowLogDrawer: false });
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { bestAccuracy } = this.props;
         const { isShowLogDrawer } = this.state;
 
@@ -102,7 +102,6 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
             );
         }
 
-        const bestFinalResult = (typeof bestAccuracy === 'number') ? bestAccuracy.toFixed(6) : '--'; 
         return (
             <Row className="progress" id="barBack">
                 <Row className="basic lineBasic">
@@ -141,7 +140,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 />
                 <Row className="basic colorOfbasic mess">
                     <p>Best metric</p>
-                    <div>{bestFinalResult}</div>
+                    <div>{isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}</div>
                 </Row>
                 <Row className="mess">
                     <Col span={6}>

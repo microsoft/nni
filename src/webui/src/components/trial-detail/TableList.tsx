@@ -68,7 +68,7 @@ const AccuracyColumnConfig: ColumnProps<TableRecord> = {
             return a.latestAccuracy - b.latestAccuracy;
         }
     },
-    render: (text, record): any => <div>{record.formattedLatestAccuracy}</div>
+    render: (text, record): React.ReactNode => <div>{record.formattedLatestAccuracy}</div>
 };
 
 const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
@@ -83,7 +83,7 @@ const IdColumnConfig: ColumnProps<TableRecord> = {
     dataIndex: 'id',
     className: 'tableHead leftTitle',
     sorter: (a, b) => a.id.localeCompare(b.id),
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <div>{record.id}</div>
     )
 };
@@ -92,7 +92,7 @@ const StartTimeColumnConfig: ColumnProps<TableRecord> = {
     title: 'Start Time',
     dataIndex: 'startTime',
     sorter: (a, b) => a.startTime - b.startTime,
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <span>{formatTimestamp(record.startTime)}</span>
     )
 };
@@ -109,7 +109,7 @@ const EndTimeColumnConfig: ColumnProps<TableRecord> = {
             return a.endTime - b.endTime;
         }
     },
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <span>{formatTimestamp(record.endTime, '--')}</span>
     )
 };
@@ -118,7 +118,7 @@ const DurationColumnConfig: ColumnProps<TableRecord> = {
     title: 'Duration',
     dataIndex: 'duration',
     sorter: (a, b) => a.duration - b.duration,
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <span className="durationsty">{convertDuration(record.duration)}</span>
     )
 };
@@ -127,7 +127,7 @@ const StatusColumnConfig: ColumnProps<TableRecord> = {
     title: 'Status',
     dataIndex: 'status',
     className: 'tableStatus',
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <span className={`${record.status} commonStyle`}>{record.status}</span>
     ),
     sorter: (a, b) => a.status.localeCompare(b.status),
@@ -139,7 +139,7 @@ const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
     title: 'Intermediate result',
     dataIndex: 'intermediateCount',
     sorter: (a, b) => a.intermediateCount - b.intermediateCount,
-    render: (text, record): any => (
+    render: (text, record): React.ReactNode => (
         <span>{`#${record.intermediateCount}`}</span>
     )
 };
@@ -344,7 +344,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copyTrialId: ''
         });
     }
-    render(): any {
+    render(): React.ReactNode {
         const { pageSize, columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         const { intermediateOption, modalVisible, isShowColumn,

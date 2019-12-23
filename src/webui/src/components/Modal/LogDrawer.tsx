@@ -79,7 +79,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         window.removeEventListener('resize', this.setLogDrawerHeight);
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
         return (

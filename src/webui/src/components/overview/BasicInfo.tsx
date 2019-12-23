@@ -12,7 +12,7 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
         super(props);
     }
 
-    render(): any {
+    render(): React.ReactNode {
         return (
             <Row className="main">
                 <Col span={8} className="padItem basic">

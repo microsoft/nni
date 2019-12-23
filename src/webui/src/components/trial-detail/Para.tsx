@@ -598,7 +598,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         return false;
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { option, paraNodata, dimName, isLoadConfirm } = this.state;
         return (
             <Row className="parameter">

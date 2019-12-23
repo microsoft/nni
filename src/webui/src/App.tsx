@@ -53,7 +53,7 @@ class App extends React.Component<{}, AppState> {
         this.setState({ metricGraphMode: val });
     }
 
-    render(): any{
+    render(): React.ReactNode{
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page

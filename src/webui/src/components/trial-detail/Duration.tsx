@@ -116,7 +116,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         return false;
     }
 
-    render(): any {
+    render(): React.ReactNode {
 
         const { source } = this.props;
         const graph = this.drawDurationGraph(source);

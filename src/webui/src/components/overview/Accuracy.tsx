@@ -21,7 +21,7 @@ class Accuracy extends React.Component<AccuracyProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { accNodata, accuracyData, height } = this.props;
         return (
             <div>

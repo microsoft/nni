@@ -271,7 +271,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         return false;
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
         const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };
         return (

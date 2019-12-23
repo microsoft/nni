@@ -25,7 +25,7 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
         this._isMonacoMount = false;
     }
 
-    render(): any{
+    render(): React.ReactNode{
         const { content, loading, height } = this.props;
         return (
             <div className="just-for-log">

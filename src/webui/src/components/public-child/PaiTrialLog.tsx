@@ -17,7 +17,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { logStr, id, logCollection } = this.props;
         const isTwopath = logStr.indexOf(',') !== -1
             ?

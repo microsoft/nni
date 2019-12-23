@@ -52,7 +52,7 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: function (point: Array<number>, data: TooltipForIntermediate): Array<number> {
+                position: function (point: number[], data: TooltipForIntermediate): number[] {
                     if (data.dataIndex < length / 2) {
                         return [point[0], 80];
                     } else {
@@ -106,7 +106,7 @@ class Compare extends React.Component<CompareProps, {}> {
     }
 
     // render table column ---
-    initColumn = (): any => {
+    initColumn = (): React.ReactNode => {
         const idList: Array<string> = [];
         const sequenceIdList: Array<number> = [];
         const durationList: Array<number> = [];
@@ -203,7 +203,7 @@ class Compare extends React.Component<CompareProps, {}> {
         this._isCompareMount = false;
     }
 
-    render(): any{
+    render(): React.ReactNode{
         const { visible, cancelFunc } = this.props;
 
         return (

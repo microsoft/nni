@@ -15,7 +15,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
 
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { logString, id, logCollect } = this.props;
         return (
             <div>

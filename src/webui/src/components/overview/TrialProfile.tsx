@@ -14,7 +14,7 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         super(props);
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const blacklist = [
             'id', 'logDir', 'startTime', 'endTime',
             'experimentName', 'searchSpace', 'trainingServicePlatform'

@@ -52,7 +52,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         this.setState({ trialConcurrency: val });
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const { trialConcurrency } = this.state;
         const { experimentUpdateBroadcast, metricGraphMode } = this.props;
 
@@ -60,7 +60,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : '';
+        const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
 

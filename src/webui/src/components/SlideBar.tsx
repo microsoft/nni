@@ -332,7 +332,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         this.getNNIversion();
     }
 
-    render(): any {
+    render(): React.ReactNode {
         const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
         const tablet = (<MediaQuery minWidth={885} maxWidth={1281}>{this.tabeltHTML()}</MediaQuery>);
         const desktop = (<MediaQuery minWidth={1282}>{this.desktopHTML()}</MediaQuery>);
