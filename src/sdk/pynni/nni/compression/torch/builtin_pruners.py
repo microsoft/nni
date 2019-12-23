@@ -340,6 +340,7 @@ class L1FilterPruner(WeightRankFilterPruner):
             Layer's weight
         num_prune : int
             Num of filters to prune
+
         Returns
         -------
         dict
@@ -524,9 +525,11 @@ class ActivationRankFilterPruner(Pruner):
         self.statistics_batch_num = statistics_batch_num
         self.collected_activation = {}
         self.hooks = {}
-        assert activation in ['relu']
+        assert activation in ['relu','relu6']
         if activation == 'relu':
             self.activation = torch.nn.functional.relu
+        elif activation == 'relu6':
+            self.activation = torch.nn.functional.relu6
         else:
             self.activation = None
 
@@ -553,12 +556,14 @@ class ActivationRankFilterPruner(Pruner):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion which is calculated from the activation are masked.
+
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
+
         Returns
         -------
         dict
@@ -622,6 +627,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         """
         Calculate the mask of given layer.
         Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+
         Parameters
         ----------
         base_mask : dict
@@ -630,6 +636,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
             Layer's output activations
         num_prune : int
             Num of filters to prune
+
         Returns
         -------
         dict
@@ -646,10 +653,12 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
     def _calc_apoz(self, activations):
         """
         Calculate APoZ(average percentage of zeros) of activations.
+
         Parameters
         ----------
         activations : list
             Layer's output activations
+
         Returns
         -------
         torch.Tensor
@@ -690,6 +699,7 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         """
         Calculate the mask of given layer.
         Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+
         Parameters
         ----------
         base_mask : dict
@@ -698,6 +708,7 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
             Layer's output activations
         num_prune : int
             Num of filters to prune
+
         Returns
         -------
         dict
@@ -714,10 +725,12 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
     def _cal_mean_activation(self, activations):
         """
         Calculate mean value of activations.
+
         Parameters
         ----------
         activations : list
             Layer's output activations
+
         Returns
         -------
         torch.Tensor

@@ -36,10 +36,10 @@ ActivationMeanRankFilterPruner prunes the filters with the smallest mean value o
 
 PyTorch code
 
-```
+```python
 from nni.compression.torch import ActivationAPoZRankFilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'], 'op_names': ['conv1', 'conv2'] }]
-pruner = ActivationAPoZRankFilterPruner(model, config_list,statistics_batch_num=1)
+pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
 pruner.compress()
 ```
 

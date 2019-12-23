@@ -10,7 +10,7 @@ We first sort the weights in the specified layer by their absolute values. And t
 ### Usage
 
 Tensorflow code
-```
+```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model_graph, config_list)
@@ -18,7 +18,7 @@ pruner.compress()
 ```
 
 PyTorch code
-```
+```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
@@ -134,6 +134,7 @@ The above configuration means that there are 5 times of iterative pruning. As th
 
 ***
 ## WeightRankFilterPruner
+WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
 
 ### FPGM Pruner
 
@@ -205,7 +206,7 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 
 PyTorch code
 
-```
+```python
 from nni.compression.torch import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L1FilterPruner(model, config_list)
@@ -215,7 +216,7 @@ pruner.compress()
 #### User configuration for L1Filter Pruner
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
+- **op_types:** Only Conv1d and Conv2d is supported in L1Filter Pruner
 
 ***
 
@@ -227,7 +228,7 @@ This is a structured pruning algorithm that prunes the filters with the smallest
 
 PyTorch code
 
-```
+```python
 from nni.compression.torch import L2FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L2FilterPruner(model, config_list)
@@ -237,7 +238,7 @@ pruner.compress()
 #### User configuration for L2Filter Pruner
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
+- **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
 
 ## ActivationRankFilterPruner
 
@@ -269,6 +270,7 @@ You can view example for more information
 #### User configuration for ActivationAPoZRankFilterPruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
 
 ***
 
@@ -299,6 +301,7 @@ You can view example for more information
 #### User configuration for ActivationMeanRankFilterPruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner
 
 ***
 
@@ -314,7 +317,7 @@ This is an one-shot pruner, In ['Learning Efficient Convolutional Networks throu
 
 PyTorch code
 
-```
+```python
 from nni.compression.torch import SlimPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
 pruner = SlimPruner(model, config_list)
