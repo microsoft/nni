@@ -38,10 +38,12 @@ class MixedOp(nn.Module):
     This class is to instantiate and manage info of one LayerChoice.
     It includes architecture weights, binary weights, and member functions
     operating the weights.
+
+    forward_mode:
+        forward/backward mode for LayerChoice: None, two, full, and full_v2.
+        For training architecture weights, we use full_v2 by default, and for training
+        model weights, we use None.
     """
-    # forward/backward mode for LayerChoice: None, two, full, and full_v2.
-    # For training architecture weights, we use full_v2 by default, and for training
-    # model weights, we use None.
     forward_mode = None
     def __init__(self, mutable):
         """
@@ -51,26 +53,26 @@ class MixedOp(nn.Module):
             A LayerChoice in user model
         """
         super(MixedOp, self).__init__()
-        self.AP_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
-        self.AP_path_wb = nn.Parameter(torch.Tensor(mutable.length))
-        self.AP_path_alpha.requires_grad = False
-        self.AP_path_wb.requires_grad = False
+        self.ap_path_alpha = nn.Parameter(torch.Tensor(mutable.length))
+        self.ap_path_wb = nn.Parameter(torch.Tensor(mutable.length))
+        self.ap_path_alpha.requires_grad = False
+        self.ap_path_wb.requires_grad = False
         self.active_index = [0]
         self.inactive_index = None
         self.log_prob = None
         self.current_prob_over_ops = None
         self.n_choices = mutable.length
 
-    def get_AP_path_alpha(self):
-        return self.AP_path_alpha
+    def get_ap_path_alpha(self):
+        return self.ap_path_alpha
 
     def to_requires_grad(self):
-        self.AP_path_alpha.requires_grad = True
-        self.AP_path_wb.requires_grad = True
+        self.ap_path_alpha.requires_grad = True
+        self.ap_path_wb.requires_grad = True
 
     def to_disable_grad(self):
-        self.AP_path_alpha.requires_grad = False
-        self.AP_path_wb.requires_grad = False
+        self.ap_path_alpha.requires_grad = False
+        self.ap_path_wb.requires_grad = False
 
     def forward(self, mutable, x):
         """
@@ -92,10 +94,10 @@ class MixedOp(nn.Module):
             output = 0
             for _i in self.active_index:
                 oi = self.candidate_ops[_i](x)
-                output = output + self.AP_path_wb[_i] * oi
+                output = output + self.ap_path_wb[_i] * oi
             for _i in self.inactive_index:
                 oi = self.candidate_ops[_i](x)
-                output = output + self.AP_path_wb[_i] * oi.detach()
+                output = output + self.ap_path_wb[_i] * oi.detach()
         elif MixedOp.forward_mode == 'full_v2':
             def run_function(key, candidate_ops, active_id):
                 def forward(_x):
@@ -116,8 +118,8 @@ class MixedOp(nn.Module):
                     return binary_grads
                 return backward
             output = ArchGradientFunction.apply(
-                x, self.AP_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
-                backward_function(mutable.key, mutable.choices, self.active_index[0], self.AP_path_wb))
+                x, self.ap_path_wb, run_function(mutable.key, mutable.choices, self.active_index[0]),
+                backward_function(mutable.key, mutable.choices, self.active_index[0], self.ap_path_wb))
         else:
             output = self.active_op(mutable)(x)
         return output
@@ -132,7 +134,7 @@ class MixedOp(nn.Module):
         pytorch tensor
             probability distribution
         """
-        probs = F.softmax(self.AP_path_alpha, dim=0)  # softmax to probability
+        probs = F.softmax(self.ap_path_alpha, dim=0)  # softmax to probability
         return probs
 
     @property
@@ -186,7 +188,7 @@ class MixedOp(nn.Module):
     def binarize(self, mutable):
         """
         Sample based on alpha, and set binary weights accordingly.
-        AP_path_wb is set in this function, which is called binarize.
+        ap_path_wb is set in this function, which is called binarize.
 
         Parameters
         ----------
@@ -195,13 +197,13 @@ class MixedOp(nn.Module):
         """
         self.log_prob = None
         # reset binary gates
-        self.AP_path_wb.data.zero_()
+        self.ap_path_wb.data.zero_()
         probs = self.probs_over_ops
         if MixedOp.forward_mode == 'two':
             # sample two ops according to probs
             sample_op = torch.multinomial(probs.data, 2, replacement=False)
             probs_slice = F.softmax(torch.stack([
-                self.AP_path_alpha[idx] for idx in sample_op
+                self.ap_path_alpha[idx] for idx in sample_op
             ]), dim=0)
             self.current_prob_over_ops = torch.zeros_like(probs)
             for i, idx in enumerate(sample_op):
@@ -213,7 +215,7 @@ class MixedOp(nn.Module):
             self.active_index = [active_op]
             self.inactive_index = [inactive_op]
             # set binary gate
-            self.AP_path_wb.data[active_op] = 1.0
+            self.ap_path_wb.data[active_op] = 1.0
         else:
             sample = torch.multinomial(probs, 1)[0].item()
             self.active_index = [sample]
@@ -221,13 +223,14 @@ class MixedOp(nn.Module):
                                 [_i for _i in range(sample + 1, len(mutable.choices))]
             self.log_prob = torch.log(probs[sample])
             self.current_prob_over_ops = probs
-            self.AP_path_wb.data[sample] = 1.0
+            self.ap_path_wb.data[sample] = 1.0
         # avoid over-regularization
         for choice in mutable.choices:
             for _, param in choice.named_parameters():
                 param.grad = None
 
-    def _delta_ij(self, i, j):
+    @staticmethod
+    def delta_ij(i, j):
         if i == j:
             return 1
         else:
@@ -238,32 +241,32 @@ class MixedOp(nn.Module):
         Calculate alpha gradient for this LayerChoice.
         It is calculated using gradient of binary gate, probs of ops.
         """
-        binary_grads = self.AP_path_wb.grad.data
+        binary_grads = self.ap_path_wb.grad.data
         if self.active_op(mutable).is_zero_layer():
-            self.AP_path_alpha.grad = None
+            self.ap_path_alpha.grad = None
             return
-        if self.AP_path_alpha.grad is None:
-            self.AP_path_alpha.grad = torch.zeros_like(self.AP_path_alpha.data)
+        if self.ap_path_alpha.grad is None:
+            self.ap_path_alpha.grad = torch.zeros_like(self.ap_path_alpha.data)
         if MixedOp.forward_mode == 'two':
             involved_idx = self.active_index + self.inactive_index
             probs_slice = F.softmax(torch.stack([
-                self.AP_path_alpha[idx] for idx in involved_idx
+                self.ap_path_alpha[idx] for idx in involved_idx
             ]), dim=0).data
             for i in range(2):
                 for j in range(2):
                     origin_i = involved_idx[i]
                     origin_j = involved_idx[j]
-                    self.AP_path_alpha.grad.data[origin_i] += \
-                        binary_grads[origin_j] * probs_slice[j] * (self._delta_ij(i, j) - probs_slice[i])
+                    self.ap_path_alpha.grad.data[origin_i] += \
+                        binary_grads[origin_j] * probs_slice[j] * (MixedOp.delta_ij(i, j) - probs_slice[i])
             for _i, idx in enumerate(self.active_index):
-                self.active_index[_i] = (idx, self.AP_path_alpha.data[idx].item())
+                self.active_index[_i] = (idx, self.ap_path_alpha.data[idx].item())
             for _i, idx in enumerate(self.inactive_index):
-                self.inactive_index[_i] = (idx, self.AP_path_alpha.data[idx].item())
+                self.inactive_index[_i] = (idx, self.ap_path_alpha.data[idx].item())
         else:
             probs = self.probs_over_ops.data
             for i in range(self.n_choices):
                 for j in range(self.n_choices):
-                    self.AP_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (self._delta_ij(i, j) - probs[i])
+                    self.ap_path_alpha.grad.data[i] += binary_grads[j] * probs[j] * (MixedOp.delta_ij(i, j) - probs[i])
         return
 
     def rescale_updated_arch_param(self):
@@ -275,14 +278,14 @@ class MixedOp(nn.Module):
             return
         involved_idx = [idx for idx, _ in (self.active_index + self.inactive_index)]
         old_alphas = [alpha for _, alpha in (self.active_index + self.inactive_index)]
-        new_alphas = [self.AP_path_alpha.data[idx] for idx in involved_idx]
+        new_alphas = [self.ap_path_alpha.data[idx] for idx in involved_idx]
 
         offset = math.log(
             sum([math.exp(alpha) for alpha in new_alphas]) / sum([math.exp(alpha) for alpha in old_alphas])
         )
 
         for idx in involved_idx:
-            self.AP_path_alpha.data[idx] -= offset
+            self.ap_path_alpha.data[idx] -= offset
 
 
 class ProxylessNasMutator(BaseMutator):
@@ -378,10 +381,10 @@ class ProxylessNasMutator(BaseMutator):
         yield
         -----
         PyTorch Parameter
-            Return AP_path_alpha of the traversed mutable
+            Return ap_path_alpha of the traversed mutable
         """
         for mutable in self.undedup_mutables:
-            yield mutable.registered_module.get_AP_path_alpha()
+            yield mutable.registered_module.get_ap_path_alpha()
 
     def change_forward_mode(self, mode):
         """

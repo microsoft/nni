@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import torch
-from torch import nn as nn
+import torch.nn as nn
 
 def detach_variable(inputs):
     """

@@ -1,23 +1,3 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 from collections import OrderedDict
 import torch
 import torch.nn as nn
@@ -68,9 +48,9 @@ class MobileInvertedResidualBlock(nn.Module):
         elif self.shortcut is None:
             res = out
         else:
-           conv_x = out
-           skip_x = self.shortcut(x)
-           res = skip_x + conv_x
+            conv_x = out
+            skip_x = self.shortcut(x)
+            res = skip_x + conv_x
         return res
 
 
@@ -90,11 +70,11 @@ class ShuffleLayer(nn.Module):
         x = x.view(batchsize, -1, height, width)
         return x
 
-class My2DLayer(nn.Module):
+class Base2DLayer(nn.Module):
     
     def __init__(self, in_channels, out_channels,
                  use_bn=True, act_func='relu', dropout_rate=0, ops_order='weight_bn_act'):
-        super(My2DLayer, self).__init__()
+        super(Base2DLayer, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -161,7 +141,7 @@ class My2DLayer(nn.Module):
         return False
 
 
-class ConvLayer(My2DLayer):
+class ConvLayer(Base2DLayer):
 
     def __init__(self, in_channels, out_channels,
                  kernel_size=3, stride=1, dilation=1, groups=1, bias=False, has_shuffle=False,
@@ -194,7 +174,7 @@ class ConvLayer(My2DLayer):
         return weight_dict
 
 
-class IdentityLayer(My2DLayer):
+class IdentityLayer(Base2DLayer):
 
     def __init__(self, in_channels, out_channels,
                  use_bn=False, act_func=None, dropout_rate=0, ops_order='weight_bn_act'):

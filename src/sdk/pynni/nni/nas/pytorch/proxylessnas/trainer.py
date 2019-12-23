@@ -373,7 +373,6 @@ class ProxylessNasTrainer(BaseTrainer):
                         format(epoch + 1, i, nBatch - 1, batch_time=batch_time, data_time=data_time,
                                losses=losses, top1=top1, top5=top5, lr=lr)
                     logger.info(batch_log)
-            # TODO: print current network architecture
             # validate
             if (epoch + 1) % self.arch_valid_frequency == 0:
                 val_loss, val_top1, val_top5 = self._validate()
