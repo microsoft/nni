@@ -232,8 +232,7 @@ def load_word_num_dict(phrases, word_num_dict):
     return word_num_dict
 
 
-def init_trainable_embedding(embedding_path, word_id_dict):
-    embed_dim = 300
+def init_trainable_embedding(embedding_path, word_id_dict, embed_dim=300):
     word_embed_model = load_glove_model(embedding_path, embed_dim)
     assert word_embed_model["pool"].shape[1] == embed_dim
     embedding = np.random.random([len(word_id_dict), embed_dim]).astype(np.float32) / 2.0 - 0.25
@@ -287,7 +286,6 @@ def load_glove_model(filename, embed_dim):
 
 def read_data_sst(data_path, max_input_length=64, min_count=1, train_with_valid=False,
                   train_ratio=1., valid_ratio=1., is_binary=False, only_sentence=False):
-    texts, labels, mask = {}, {}, {}
     word_id_dict = dict()
     word_num_dict = Counter()
 
@@ -323,11 +321,11 @@ def read_data_sst(data_path, max_input_length=64, min_count=1, train_with_valid=
     embedding = init_trainable_embedding(os.path.join(data_path, "glove.840B.300d.txt"), word_id_dict)
     logger.info("Finish initialize word embedding.")
 
-    dataset_train = sst_get_trainable_data(train_phrases, word_id_dict, 64)
+    dataset_train = sst_get_trainable_data(train_phrases, word_id_dict, max_input_length)
     logger.info("Loaded %d training samples.", len(dataset_train))
-    dataset_valid = sst_get_trainable_data(valid_phrases, word_id_dict, 64)
+    dataset_valid = sst_get_trainable_data(valid_phrases, word_id_dict, max_input_length)
     logger.info("Loaded %d validation samples.", len(dataset_valid))
-    dataset_test = sst_get_trainable_data(test_phrases, word_id_dict, 64)
+    dataset_test = sst_get_trainable_data(test_phrases, word_id_dict, max_input_length)
     logger.info("Loaded %d test samples.", len(dataset_test))
 
     return dataset_train, dataset_valid, dataset_test, torch.from_numpy(embedding)
