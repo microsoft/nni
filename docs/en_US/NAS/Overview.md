@@ -21,6 +21,7 @@ NNI supports below NAS algorithms now and being adding more. User can reproduce 
 | [ENAS](#enas) | Efficient Neural Architecture Search via Parameter Sharing [Reference Paper][1] |
 | [DARTS](#darts) | DARTS: Differentiable Architecture Search [Reference Paper][3] |
 | [P-DARTS](#p-darts) | Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation [Reference Paper](https://arxiv.org/abs/1904.12760)|
+| [ProxylessNAS](#proxylessnas) | ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware [Reference Paper](https://arxiv.org/pdf/1812.00332.pdf)|
 
 Note, these algorithms run **standalone without nnictl**, and supports PyTorch only. Tensorflow 2.0 will be supported in future release.
 
@@ -92,6 +93,26 @@ python3 search.py
 cd ../darts
 python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ```
+
+### ProxylessNAS
+
+The paper [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) removes proxy, it directly learn the architectures for large-scale target tasks and target hardware platforms. It addresses high memory consumption issue of differentiable NAS and reduces the computational cost to the same level of regular training while still allowing a large candidate set.
+
+#### Usage
+
+```bash
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+git clone https://github.com/Microsoft/nni.git
+
+# search the best architecture
+cd examples/nas/proxylessnas
+python3 main.py
+
+# train the best architecture after you get the best architecture
+python3 main.py --train_mode='retrain' --exported_arch_path='your_arch_path'
+```
+
+Please refer to [here](Proxylessnas.md) for detailed usage and implementation of ProxylessNAS on NNI.
 
 ## Use NNI API
 
