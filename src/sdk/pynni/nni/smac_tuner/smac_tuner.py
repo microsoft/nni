@@ -18,10 +18,13 @@ from smac.utils.io.cmd_reader import CMDReader
 
 from ConfigSpaceNNI import Configuration
 
+import nni
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .convert_ss_to_scenario import generate_scenario
+
+logger = logging.getLogger('smac_AutoML')
 
 class SMACTuner(Tuner):
     """
@@ -29,15 +32,17 @@ class SMACTuner(Tuner):
     It only supports ``SMAC`` mode, and does not support the multiple instances of SMAC3 (i.e.,
     the same configuration is run multiple times).
     """
-    def __init__(self, optimize_mode="maximize"):
+    def __init__(self, optimize_mode="maximize", config_dedup=False):
         """
         Parameters
         ----------
         optimize_mode : str
             Optimize mode, 'maximize' or 'minimize', by default 'maximize'
+        config_dedup : bool
+            If True, the tuner will not generate a configuration that has been already generated.
+            If False, a configuration may be generated twice, but it is rare for relatively large search space.
         """
-        self.logger = logging.getLogger(
-            self.__module__ + "." + self.__class__.__name__)
+        self.logger = logger
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.total_data = {}
         self.optimizer = None
@@ -47,6 +52,7 @@ class SMACTuner(Tuner):
         self.loguniform_key = set()
         self.categorical_dict = {}
         self.cs = None
+        self.dedup = config_dedup
 
     def _main_cli(self):
         """
@@ -127,7 +133,7 @@ class SMACTuner(Tuner):
         search_space : dict
             The format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
-
+        self.logger.info('update search space in SMAC.')
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
@@ -225,9 +231,19 @@ class SMACTuner(Tuner):
             return self.param_postprocess(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
+            challengers_empty = True
             for challenger in challengers:
+                challengers_empty = False
+                if self.dedup:
+                    match = [v for k, v in self.total_data.items() \
+                             if v.get_dictionary() == challenger.get_dictionary()]
+                    if match:
+                        continue
                 self.total_data[parameter_id] = challenger
                 return self.param_postprocess(challenger.get_dictionary())
+            assert challengers_empty is False, 'The case that challengers is empty is not handled.'
+            self.logger.info('In generate_parameters: No more new parameters.')
+            raise nni.NoMoreTrialError('No more new parameters.')
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
@@ -261,9 +277,16 @@ class SMACTuner(Tuner):
             for challenger in challengers:
                 if cnt >= len(parameter_id_list):
                     break
+                if self.dedup:
+                    match = [v for k, v in self.total_data.items() \
+                             if v.get_dictionary() == challenger.get_dictionary()]
+                    if match:
+                        continue
                 self.total_data[parameter_id_list[cnt]] = challenger
                 params.append(self.param_postprocess(challenger.get_dictionary()))
                 cnt += 1
+            if self.dedup and not params:
+                self.logger.info('In generate_multiple_parameters: No more new parameters.')
         return params
 
     def import_data(self, data):

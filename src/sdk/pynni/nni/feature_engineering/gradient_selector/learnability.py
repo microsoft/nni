@@ -25,9 +25,9 @@ import scipy.special
 import torch
 import torch.nn as nn
 
-import nni.feature_engineering.gradient_selector.constants as constants
-import nni.feature_engineering.gradient_selector.syssettings as syssettings
-from nni.feature_engineering.gradient_selector.fginitialize import ChunkDataLoader
+from . import constants
+from . import syssettings
+from .fginitialize import ChunkDataLoader
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)
 sparsetensor = syssettings.torch.sparse.tensortype

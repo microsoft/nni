@@ -32,7 +32,7 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -53,10 +53,19 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('Anneal', 'SMAC'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'Anneal', 'SMAC'),
+    'Anneal': {
+        'builtinTunerName': 'Anneal',
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    },
+    'SMAC': {
+        'builtinTunerName': 'SMAC',
+        Optional('classArgs'): {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            'config_dedup': setType('config_dedup', bool)
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
@@ -223,7 +232,7 @@ common_trial_schema = {
     }
 }
 
-pai_trial_schema = {
+pai_yarn_trial_schema = {
     'trial':{
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
@@ -244,6 +253,34 @@ pai_trial_schema = {
             "beginAt": setType('beginAt', int),
             "portNumber": setType('portNumber', int)
         }]
+    }
+}
+
+pai_yarn_config_schema = {
+    'paiYarnConfig': Or({
+        'userName': setType('userName', str),
+        'passWord': setType('passWord', str),
+        'host': setType('host', str)
+    }, {
+        'userName': setType('userName', str),
+        'token': setType('token', str),
+        'host': setType('host', str)
+    })
+}
+
+
+pai_trial_schema = {
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
+        'memoryMB': setType('memoryMB', int),
+        'image': setType('image', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
+        'containerNFSMountPath': setType('containerNFSMountPath', str),
+        'paiStoragePlugin': setType('paiStoragePlugin', str)
     }
 }
 
@@ -395,6 +432,8 @@ LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schema})
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+
+PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 

@@ -1,6 +1,6 @@
-#################
+##############
 NAS Algorithms
-#################
+##############
 
 Automatic neural architecture search is taking an increasingly important role on finding better models.
 Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually designed and tuned models.
@@ -20,6 +20,6 @@ For details, please refer to the following tutorials:
 
     Overview <NAS/Overview>
     NAS Interface <NAS/NasInterface>
-    ENAS <NAS/Overview>
-    DARTS <NAS/Overview>
+    ENAS <NAS/ENAS>
+    DARTS <NAS/DARTS>
     P-DARTS <NAS/Overview>

@@ -20,7 +20,8 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService';
+import { PAIK8STrainingService } from './training_service/pai/paiK8S/paiK8STrainingService';
+import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -44,7 +45,11 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
-            .to(PAITrainingService)
+            .to(PAIK8STrainingService)
+            .scope(Scope.Singleton);
+    } else if (platformMode === 'paiYarn') {
+            Container.bind(TrainingService)
+            .to(PAIYarnTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService)
@@ -55,7 +60,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
             .to(FrameworkControllerTrainingService)
             .scope(Scope.Singleton);
     } else {
-        throw new Error(`Error: unsupported mode: ${mode}`);
+        throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
     Container.bind(Manager)
         .to(NNIManager)
@@ -76,7 +81,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -88,7 +93,7 @@ if (!strPort || strPort.length === 0) {
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

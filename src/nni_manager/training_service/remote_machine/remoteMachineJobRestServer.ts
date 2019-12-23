@@ -15,7 +15,7 @@ import { RemoteMachineTrainingService } from './remoteMachineTrainingService';
 @component.Singleton
 export class RemoteMachineJobRestServer extends ClusterJobRestServer {
     @Inject
-    private readonly remoteMachineTrainingService : RemoteMachineTrainingService;
+    private readonly remoteMachineTrainingService: RemoteMachineTrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
@@ -25,8 +25,7 @@ export class RemoteMachineJobRestServer extends ClusterJobRestServer {
         this.remoteMachineTrainingService = component.get(RemoteMachineTrainingService);
     }
 
-    // tslint:disable-next-line:no-any
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+    protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWNls
         for (const singleMetric of metrics) {

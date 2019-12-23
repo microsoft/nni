@@ -84,7 +84,7 @@ config_list_agp = [{'initial_sparsity': 0, 'final_sparsity': conv0_sparsity,
                    {'initial_sparsity': 0, 'final_sparsity': conv1_sparsity,
                     'start_epoch': 0, 'end_epoch': 3,
                     'frequency': 1,'op_name': 'conv1' },]
-PRUNERS = {'level':LevelPruner(model, config_list_level)，'agp':AGP_Pruner(model, config_list_agp)}
+PRUNERS = {'level':LevelPruner(model, config_list_level), 'agp':AGP_Pruner(model, config_list_agp)}
 pruner = PRUNERS(params['prune_method']['_name'])
 pruner.compress()
 ... # fine tuning

@@ -30,19 +30,19 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         };
     }
 
-    showFormatModal = (trial: Trial) => {
+    showFormatModal = (trial: Trial): void => {
         // get copy parameters
         const params = JSON.stringify(trial.info.hyperParameters, null, 4);
         // open modal with format string
         this.setState({ isShowFormatModal: true, formatStr: params });
     }
 
-    hideFormatModal = () => {
+    hideFormatModal = (): void => {
         // close modal, destroy state format string data
         this.setState({ isShowFormatModal: false, formatStr: '' });
     }
 
-    copyParams = () => {
+    copyParams = (): void => {
         // json format
         const { formatStr } = this.state;
         if (copy(formatStr)) {
@@ -55,7 +55,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.hideFormatModal();
     }
 
-    render() {
+    render(): React.ReactNode {
         const { isShowFormatModal, formatStr } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
@@ -73,10 +73,17 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     Trails for multiphase experiment will return a set of parameters,
                                     we are listing the latest parameter in webportal.
                                     <br />
-                                    For the entire parameter set, please refer to the following "
-                                    <a href={trialLink} target="_blank">{trialLink}</a>".
+                                    For the entire parameter set, please refer to the following &quot;
+                                    <a
+                                        href={trialLink}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                        style={{marginLeft: 2}}
+                                    >
+                                        {trialLink}
+                                    </a>&quot;
                                     <br />
-                                    Current Phase: {multiProgress}.
+                                    Current Phase:{multiProgress}.
                                 </Row>
                                 :
                                 <div />
@@ -88,8 +95,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     <Row className="bgHyper">
                                         <JSONTree
                                             hideRoot={true}
-                                            shouldExpandNode={() => true}  // default expandNode
-                                            getItemString={() => (<span />)}  // remove the {} items
+                                            shouldExpandNode={(): boolean => true}  // default expandNode
+                                            getItemString={(): any => (<span />)}  // remove the {} items
                                             data={trial.description.parameters}
                                         />
                                     </Row>
@@ -103,8 +110,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 </Row>
                                 :
                                 <Row className="logpath">
-                                    <span className="logName">Error: </span>
-                                    <span className="error">'This trial's parameters are not available.'</span>
+                                    <span className="logName" style={{marginRight: 2}}>Error:</span>
+                                    <span className="error">&apos;This trial&apos;s parameters are not available.&apos;</span>
                                 </Row>
                         }
                     </TabPane>

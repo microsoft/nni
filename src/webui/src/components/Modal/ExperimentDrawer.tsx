@@ -29,7 +29,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         };
     }
 
-    getExperimentContent = () => {
+    getExperimentContent = (): void => {
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -41,7 +41,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
-                    let trialMessagesArr = res1.data;
+                    const trialMessagesArr = res1.data;
                     const interResultList = res2.data;
                     Object.keys(trialMessagesArr).map(item => {
                         // not deal with trial's hyperParameters
@@ -66,34 +66,34 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
             }));
     }
 
-    downExperimentParameters = () => {
+    downExperimentParameters = (): void => {
         const { experiment } = this.state;
         downFile(experiment, 'experiment.json');
     }
 
-    onWindowResize = () => {
+    onWindowResize = (): void => {
         this.setState(() => ({expDrawerHeight: window.innerHeight - 48}));
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this._isCompareMount = true;
         this.getExperimentContent();
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    componentWillReceiveProps(nextProps: ExpDrawerProps) {
+    componentWillReceiveProps(nextProps: ExpDrawerProps): void {
         const { isVisble } = nextProps;
         if (isVisble === true) {
             this.getExperimentContent();
         }
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
         this._isCompareMount = false;
         window.removeEventListener('resize', this.onWindowResize);
     }
 
-    render() {
+    render(): React.ReactNode {
         const { isVisble, closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
         return (

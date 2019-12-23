@@ -44,7 +44,7 @@ maxExecDuration: 10h
 maxTrialNum: 100
 #choice: local, remote, pai, kubeflow, frameworkcontroller
 trainingServicePlatform: frameworkcontroller
-searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
+searchSpacePath: ~/nni/examples/trials/mnist-tfv1/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -59,7 +59,7 @@ assessor:
     optimize_mode: maximize
   gpuNum: 0
 trial:
-  codeDir: ~/nni/examples/trials/mnist
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   taskRoles:
     - name: worker
       taskNum: 1

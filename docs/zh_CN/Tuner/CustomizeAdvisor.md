@@ -35,4 +35,4 @@ advisor:
 
 ## 示例
 
-[参考示例](../../../examples/tuners/mnist_keras_customized_advisor)。
+参考[示例](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor)。

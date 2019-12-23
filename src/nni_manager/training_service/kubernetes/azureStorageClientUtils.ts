@@ -11,7 +11,6 @@ import { String } from 'typescript-string-operations';
 import { getLogger } from '../../common/log';
 import { mkDirP } from '../../common/utils';
 
-// tslint:disable: no-redundant-jsdoc no-any no-unsafe-any
 export namespace AzureStorageClientUtility {
 
     /**
@@ -66,7 +65,7 @@ export namespace AzureStorageClientUtility {
         let rootDirectory: string = '';
         for (const directory of directories) {
             rootDirectory += directory;
-            let result:boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
+            const result: boolean = await createDirectory(fileServerClient, rootDirectory, azureShare);
             if (!result) {
                 deferred.resolve(false);
                 return deferred.promise;
@@ -114,7 +113,6 @@ export namespace AzureStorageClientUtility {
     async function downloadFile(fileServerClient: any, azureDirectory: string, azureFileName: any, azureShare: any,
                                 localFilePath: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        // tslint:disable-next-line:non-literal-fs-path
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath),
                                                (error: any, result: any, response: any) => {
             if (error) {
@@ -136,12 +134,11 @@ export namespace AzureStorageClientUtility {
      * @param azureShare : the azure share used
      * @param localDirectory : local directory to be uploaded
      */
-    // tslint:disable:non-literal-fs-path
     export async function uploadDirectory(fileServerClient: azureStorage.FileService, azureDirectory: string, azureShare: any,
                                           localDirectory: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
-        let result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
+        const result: boolean = await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
         if (!result) {
             deferred.resolve(false);
             return deferred.promise;
@@ -221,4 +218,3 @@ export namespace AzureStorageClientUtility {
         return deferred.promise;
     }
 }
-// tslint:enable: no-redundant-jsdoc no-any no-unsafe-any

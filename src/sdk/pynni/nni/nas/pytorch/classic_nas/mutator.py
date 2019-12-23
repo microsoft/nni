@@ -15,12 +15,15 @@ from nni.nas.pytorch.mutator import Mutator
 
 logger = logging.getLogger(__name__)
 
+NNI_GEN_SEARCH_SPACE = "NNI_GEN_SEARCH_SPACE"
+LAYER_CHOICE = "layer_choice"
+INPUT_CHOICE = "input_choice"
+
 
 def get_and_apply_next_architecture(model):
     """
     Wrapper of ClassicMutator to make it more meaningful,
     similar to ```get_next_parameter``` for HPO.
-
     Parameters
     ----------
     model : pytorch model
@@ -45,7 +48,6 @@ class ClassicMutator(Mutator):
         use ```nnictl``` to start an experiment. The other is standalone mode
         where users directly run the trial command, this mode chooses the first
         one(s) for each LayerChoice and InputChoice.
-
         Parameters
         ----------
         model : PyTorch model
@@ -54,9 +56,9 @@ class ClassicMutator(Mutator):
         super(ClassicMutator, self).__init__(model)
         self._chosen_arch = {}
         self._search_space = self._generate_search_space()
-        if "NNI_GEN_SEARCH_SPACE" in os.environ:
+        if NNI_GEN_SEARCH_SPACE in os.environ:
             # dry run for only generating search space
-            self._dump_search_space(os.environ["NNI_GEN_SEARCH_SPACE"])
+            self._dump_search_space(os.environ[NNI_GEN_SEARCH_SPACE])
             sys.exit(0)
 
         if trial_env_vars.NNI_PLATFORM is None:
@@ -65,7 +67,50 @@ class ClassicMutator(Mutator):
         else:
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
-        self._cache = self.sample_final()
+        self.reset()
+
+    def _sample_layer_choice(self, mutable, idx, value, search_space_item):
+        """
+        Convert layer choice to tensor representation.
+
+        Parameters
+        ----------
+        mutable : Mutable
+        idx : int
+            Number `idx` of list will be selected.
+        value : str
+            The verbose representation of the selected value.
+        search_space_item : list
+            The list for corresponding search space.
+        """
+        # doesn't support multihot for layer choice yet
+        onehot_list = [False] * mutable.length
+        assert 0 <= idx < mutable.length and search_space_item[idx] == value, \
+            "Index '{}' in search space '{}' is not '{}'".format(idx, search_space_item, value)
+        onehot_list[idx] = True
+        return torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
+
+    def _sample_input_choice(self, mutable, idx, value, search_space_item):
+        """
+        Convert input choice to tensor representation.
+
+        Parameters
+        ----------
+        mutable : Mutable
+        idx : int
+            Number `idx` of list will be selected.
+        value : str
+            The verbose representation of the selected value.
+        search_space_item : list
+            The list for corresponding search space.
+        """
+        multihot_list = [False] * mutable.n_candidates
+        for i, v in zip(idx, value):
+            assert 0 <= i < mutable.n_candidates and search_space_item[i] == v, \
+                "Index '{}' in search space '{}' is not '{}'".format(i, search_space_item, v)
+            assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
+            multihot_list[i] = True
+        return torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
 
     def sample_search(self):
         return self.sample_final()
@@ -82,41 +127,24 @@ class ClassicMutator(Mutator):
                 "'{}' is not a valid choice.".format(data)
             value = data["_value"]
             idx = data["_idx"]
-            search_space_ref = self._search_space[mutable.key]["_value"]
+            search_space_item = self._search_space[mutable.key]["_value"]
             if isinstance(mutable, LayerChoice):
-                # doesn't support multihot for layer choice yet
-                onehot_list = [False] * mutable.length
-                assert 0 <= idx < mutable.length and search_space_ref[idx] == value, \
-                    "Index '{}' in search space '{}' is not '{}'".format(idx, search_space_ref, value)
-                onehot_list[idx] = True
-                result[mutable.key] = torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
+                result[mutable.key] = self._sample_layer_choice(mutable, idx, value, search_space_item)
             elif isinstance(mutable, InputChoice):
-                multihot_list = [False] * mutable.n_candidates
-                for i, v in zip(idx, value):
-                    assert 0 <= i < mutable.n_candidates and search_space_ref[i] == v, \
-                        "Index '{}' in search space '{}' is not '{}'".format(i, search_space_ref, v)
-                    assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
-                    multihot_list[i] = True
-                result[mutable.key] = torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
+                result[mutable.key] = self._sample_input_choice(mutable, idx, value, search_space_item)
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return result
-
-    def reset(self):
-        pass  # do nothing, only sample once at initialization
 
     def _standalone_generate_chosen(self):
         """
         Generate the chosen architecture for standalone mode,
         i.e., choose the first one(s) for LayerChoice and InputChoice.
-
         ::
             { key_name: {"_value": "conv1",
                          "_idx": 0} }
-
             { key_name: {"_value": ["in1"],
                          "_idx": [0]} }
-
         Returns
         -------
         dict
@@ -124,10 +152,10 @@ class ClassicMutator(Mutator):
         """
         chosen_arch = {}
         for key, val in self._search_space.items():
-            if val["_type"] == "layer_choice":
+            if val["_type"] == LAYER_CHOICE:
                 choices = val["_value"]
                 chosen_arch[key] = {"_value": choices[0], "_idx": 0}
-            elif val["_type"] == "input_choice":
+            elif val["_type"] == INPUT_CHOICE:
                 choices = val["_value"]["candidates"]
                 n_chosen = val["_value"]["n_chosen"]
                 chosen_arch[key] = {"_value": choices[:n_chosen], "_idx": list(range(n_chosen))}
@@ -139,15 +167,12 @@ class ClassicMutator(Mutator):
         """
         Generate search space from mutables.
         Here is the search space format:
-
         ::
             { key_name: {"_type": "layer_choice",
                          "_value": ["conv1", "conv2"]} }
-
             { key_name: {"_type": "input_choice",
                          "_value": {"candidates": ["in1", "in2"],
                                     "n_chosen": 1}} }
-
         Returns
         -------
         dict
@@ -159,10 +184,10 @@ class ClassicMutator(Mutator):
             if isinstance(mutable, LayerChoice):
                 key = mutable.key
                 val = [repr(choice) for choice in mutable.choices]
-                search_space[key] = {"_type": "layer_choice", "_value": val}
+                search_space[key] = {"_type": LAYER_CHOICE, "_value": val}
             elif isinstance(mutable, InputChoice):
                 key = mutable.key
-                search_space[key] = {"_type": "input_choice",
+                search_space[key] = {"_type": INPUT_CHOICE,
                                      "_value": {"candidates": mutable.choose_from,
                                                 "n_chosen": mutable.n_chosen}}
             else:

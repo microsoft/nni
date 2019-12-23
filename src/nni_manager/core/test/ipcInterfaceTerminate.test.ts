@@ -21,18 +21,26 @@ function startProcess(): void {
     const dispatcherCmd: string = getMsgDispatcherCommand(
         // Mock tuner config
         {
-            className: 'DummyTuner',
-            codeDir: './',
-            classFileName: 'dummy_tuner.py'
-        },
-        // Mock assessor config
-        {
-            className: 'DummyAssessor',
-            codeDir: './',
-            classFileName: 'dummy_assessor.py'
-        },
-        // advisor
-        undefined
+            experimentName: 'exp1',
+            maxExecDuration: 3600,
+            searchSpace: '',
+            trainingServicePlatform: 'local',
+            authorName: '',
+            trialConcurrency: 1,
+            maxTrialNum: 5,
+            tuner: {
+                className: 'DummyTuner',
+                codeDir: './',
+                classFileName: 'dummy_tuner.py',
+                checkpointDir: './'
+            },
+            assessor: {
+                className: 'DummyAssessor',
+                codeDir: './',
+                classFileName: 'dummy_assessor.py',
+                checkpointDir: './'
+            }
+        }
     );
     const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);
     proc.on('error', (error: Error): void => {
@@ -47,7 +55,7 @@ function startProcess(): void {
     // create IPC interface
     dispatcher = createDispatcherInterface(proc);
     (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
-        console.log(commandType, content);  // tslint:disable-line:no-console
+        console.log(commandType, content);
     });
 }
 

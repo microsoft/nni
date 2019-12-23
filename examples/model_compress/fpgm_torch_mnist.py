@@ -1,8 +1,7 @@
-from nni.compression.torch import FPGMPruner
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-
+from nni.compression.torch import FPGMPruner
 
 class Mnist(torch.nn.Module):
     def __init__(self):
@@ -23,8 +22,8 @@ class Mnist(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
     def _get_conv_weight_sparsity(self, conv_layer):
-        num_zero_filters = (conv_layer.weight.data.sum((2,3)) == 0).sum()
-        num_filters = conv_layer.weight.data.size(0) * conv_layer.weight.data.size(1)
+        num_zero_filters = (conv_layer.weight.data.sum((1, 2, 3)) == 0).sum()
+        num_filters = conv_layer.weight.data.size(0)
         return num_zero_filters, num_filters, float(num_zero_filters)/num_filters
 
     def print_conv_filter_sparsity(self):
@@ -41,7 +40,8 @@ def train(model, device, train_loader, optimizer):
         output = model(data)
         loss = F.nll_loss(output, target)
         if batch_idx % 100 == 0:
-            print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
+            print('{:.2f}%  Loss {:.4f}'.format(100 * batch_idx / len(train_loader), loss.item()))
+        if batch_idx == 0:
             model.print_conv_filter_sparsity()
         loss.backward()
         optimizer.step()
@@ -59,7 +59,7 @@ def test(model, device, test_loader):
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
 
-    print('Loss: {}  Accuracy: {}%)\n'.format(
+    print('Loss: {:.4f}  Accuracy: {}%)\n'.format(
         test_loss, 100 * correct / len(test_loader.dataset)))
 
 
@@ -78,9 +78,6 @@ def main():
     model = Mnist()
     model.print_conv_filter_sparsity()
 
-    '''you can change this to LevelPruner to implement it
-    pruner = LevelPruner(configure_list)
-    '''
     configure_list = [{
         'sparsity': 0.5,
         'op_types': ['Conv2d']
@@ -96,6 +93,7 @@ def main():
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
 
+    pruner.export_model('model.pth', 'mask.pth')
 
 if __name__ == '__main__':
     main()
