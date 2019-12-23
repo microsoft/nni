@@ -142,7 +142,7 @@ def sst_get_id_input(content, word_id_dict, max_input_length):
     words = content.split(" ")
     sentence = [word_id_dict["<pad>"]] * max_input_length
     mask = [0] * max_input_length
-    unknown = word_id_dict["unknown"]
+    unknown = word_id_dict["<unknown>"]
     for i, word in enumerate(words[:max_input_length]):
         sentence[i] = word_id_dict.get(word, unknown)
         mask[i] = 1
