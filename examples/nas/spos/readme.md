@@ -27,6 +27,8 @@ NOTE: The data loading used in the official repo is [slightly different from usu
 
 ## Step 2. Evolution Search
 
+Single Path One-Shot leverages evolution algorithm to search for the best architecture. The tester, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
+
 To have a search space ready for NNI framework, first run
 
 ```
