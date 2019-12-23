@@ -1,19 +1,49 @@
 # Single Path One-Shot Neural Architecture Search with Uniform Sampling
 
-Single Path One-Shot by Megvii Research. [Paper link](https://arxiv.org/abs/1904.00420) [Official repo](https://github.com/megvii-model/SinglePathOneShot)
+Single Path One-Shot by Megvii Research. [Paper link](https://arxiv.org/abs/1904.00420). [Official repo](https://github.com/megvii-model/SinglePathOneShot).
 
 Block search only. Channel search is not supported yet.
+
+Only GPU version is provided here.
 
 TODO: Reproduction results.
 
 ## Preparation
+
+### Requirements
+
+* PyTorch >= 1.2
+* NVIDIA DALI >= 0.16 as we use DALI to accelerate the data loading of ImageNet.
+
+### Data
 
 Need to download the flops lookup table from [here](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN).
 Put `op_flops_dict.pkl` and `checkpoint-150000.pth.tar` (if you don't want to retrain the supernet) under `data` directory.
 
 Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Link it to `data/imagenet` will be more convenient.
 
-We don't support SPOS on CPU. You need to have at least one GPU to run the experiment. This is mainly because NVIDIA DALI is used as a prerequisite to accelerate the data loading of ImageNet.
+After preparation, it's expected to have the following code structure:
+
+```
+spos
+├── architecture_final.json
+├── blocks.py
+├── config_search.yml
+├── data
+│   ├── imagenet
+│   │   ├── train
+│   │   └── val
+│   └── op_flops_dict.pkl
+├── dataloader.py
+├── network.py
+├── nni_auto_gen_search_space.json
+├── readme.md
+├── scratch.py
+├── supernet.py
+├── tester.py
+├── tuner.py
+└── utils.py
+```
 
 ## Step 1. Train Supernet
 
@@ -23,7 +53,7 @@ python supernet.py
 
 Will export the checkpoint to checkpoints directory, for the next step.
 
-NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5). The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
+NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5), as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
 
 ## Step 2. Evolution Search
 
