@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class SPOSSupernetTrainer(Trainer):
+    """
+    This trainer trains a supernet that can be used for evolution search.
+    """
+
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, train_loader, valid_loader,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
