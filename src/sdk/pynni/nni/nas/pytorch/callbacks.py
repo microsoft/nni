@@ -47,9 +47,8 @@ class LRSchedulerCallback(Callback):
 
 
 class ArchitectureCheckpoint(Callback):
-    def __init__(self, checkpoint_dir, every="epoch"):
+    def __init__(self, checkpoint_dir):
         super().__init__()
-        assert every == "epoch"
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
@@ -60,9 +59,8 @@ class ArchitectureCheckpoint(Callback):
 
 
 class ModelCheckpoint(Callback):
-    def __init__(self, checkpoint_dir, every="epoch"):
+    def __init__(self, checkpoint_dir):
         super().__init__()
-        assert every == "epoch"
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
