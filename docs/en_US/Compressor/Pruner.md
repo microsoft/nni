@@ -238,7 +238,7 @@ pruner.compress()
 - **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
 
 ## ActivationRankFilterPruner
-WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity
+ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity
 
 ### 1, ActivationAPoZRankFilterPruner
 
