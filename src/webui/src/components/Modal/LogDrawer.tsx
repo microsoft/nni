@@ -33,19 +33,19 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         };
     }
 
-    downloadNNImanager = () => {
+    downloadNNImanager = (): void => {
         if (this.state.nniManagerLogStr !== null) {
             downFile(this.state.nniManagerLogStr, 'nnimanager.log');
         }
     }
 
-    downloadDispatcher = () => {
+    downloadDispatcher = (): void => {
         if (this.state.dispatcherLogStr !== null) {
             downFile(this.state.dispatcherLogStr, 'dispatcher.log');
         }
     }
 
-    dispatcherHTML = () => {
+    dispatcherHTML = (): any => {
         return (
             <div>
                 <span>Dispatcher Log</span>
@@ -56,7 +56,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         );
     }
 
-    nnimanagerHTML = () => {
+    nnimanagerHTML = (): any => {
         return (
             <div>
                 <span>NNImanager Log</span>
@@ -65,21 +65,21 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         );
     }
 
-    setLogDrawerHeight = () => {
+    setLogDrawerHeight = (): void => {
         this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
     }
 
-    async componentDidMount() {
+    async componentDidMount(): Promise<void> {
         this.refresh();
         window.addEventListener('resize', this.setLogDrawerHeight);
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
         window.clearTimeout(this.timerId);
         window.removeEventListener('resize', this.setLogDrawerHeight);
     }
 
-    render() {
+    render(): React.ReactNode {
         const { closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
         return (
@@ -164,7 +164,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         );
     }
 
-    private refresh = () => {
+    private refresh = (): void => {
         window.clearTimeout(this.timerId);
         const dispatcherPromise = axios.get(`${DOWNLOAD_IP}/dispatcher.log`);
         const nniManagerPromise = axios.get(`${DOWNLOAD_IP}/nnimanager.log`);
@@ -184,7 +184,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         });
     }
 
-    private manualRefresh = () => {
+    private manualRefresh = (): void => {
         this.setState({ isLoading: true });
         this.refresh();
     }

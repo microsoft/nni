@@ -42,7 +42,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate: Array<number>;
+    intermediate: number[];
     multiProgress?: number;
 }
 
