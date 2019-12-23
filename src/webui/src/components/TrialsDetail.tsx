@@ -76,17 +76,17 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         }
         switch (this.state.searchType) {
             case 'id':
-                filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
+                filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'Trial No.':
-                filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue; // elint-disable-line
+                filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue;
                 break;
             case 'status':
-                filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase()); // elint-disable-line
+                filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
-                filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue); // elint-disable-line
+                filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
                 break;
             default:
                 alert(`Unexpected search filter ${this.state.searchType}`);
