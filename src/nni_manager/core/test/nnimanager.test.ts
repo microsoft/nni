@@ -42,9 +42,9 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 5,
         maxTrialNum: 3,
         trainingServicePlatform: 'local',
-        searchSpace: '{"x":1}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -52,7 +52,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -65,9 +65,9 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 6,
         maxTrialNum: 2,
         trainingServicePlatform: 'local',
-        searchSpace: '{"y":2}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -75,7 +75,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -198,7 +198,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile SEARCH_SPACE',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.searchSpace).to.be.equal('{"y":2}');
+                expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
             });
         }).catch((error) => {
             assert.fail(error);
