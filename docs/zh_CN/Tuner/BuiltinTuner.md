@@ -26,7 +26,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 要使用 NNI 内置的 Tuner，需要在 `config.yml` 文件中添加 **builtinTunerName** 和 **classArgs**。 这一节会介绍推荐的场景、参数等详细用法以及示例。
 
-注意：参考样例中的格式来创建新的 `config.yml` 文件。 一些内置的 Tuner 还需要通过 `nnictl package` 命令先安装，如 SMAC。
+注意：参考示例中的格式来创建新的 `config.yml` 文件。 一些内置的 Tuner 还需要通过 `nnictl package` 命令先安装，如 SMAC。
 
 <a name="TPE"></a>
 
@@ -158,6 +158,7 @@ nnictl package install --name=SMAC
 **参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for relatively large search space.
 
 **示例**
 
@@ -274,7 +275,7 @@ NetworkMorphism 需要先安装 [PyTorch](https://pytorch.org/get-started/locall
 
 **建议场景**
 
-需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。 [详细说明](./NetworkmorphismTuner.md)
+需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[示例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。 [详细说明](./NetworkmorphismTuner.md)
 
 **参数**
 
@@ -310,7 +311,7 @@ tuner:
 
 **建议场景**
 
-与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送`精度`这样的最终结果给 Tuner。 [详细说明](./MetisTuner.md)
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[示例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送`精度`这样的最终结果给 Tuner。 [详细说明](./MetisTuner.md)
 
 **参数**
 
