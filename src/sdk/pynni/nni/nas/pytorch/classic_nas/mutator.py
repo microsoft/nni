@@ -69,6 +69,23 @@ class ClassicMutator(Mutator):
             self._chosen_arch = nni.get_next_parameter()
         self._cache = self.sample_final()
 
+    def _sample_layer_choice(self, mutable, idx, value, search_space_item):
+        # doesn't support multihot for layer choice yet
+        onehot_list = [False] * mutable.length
+        assert 0 <= idx < mutable.length and search_space_item[idx] == value, \
+            "Index '{}' in search space '{}' is not '{}'".format(idx, search_space_item, value)
+        onehot_list[idx] = True
+        return torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
+
+    def _sample_input_choice(self, mutable, idx, value, search_space_item):
+        multihot_list = [False] * mutable.n_candidates
+        for i, v in zip(idx, value):
+            assert 0 <= i < mutable.n_candidates and search_space_item[i] == v, \
+                "Index '{}' in search space '{}' is not '{}'".format(i, search_space_item, v)
+            assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
+            multihot_list[i] = True
+        return torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
+
     def sample_search(self):
         return self.sample_final()
 
@@ -84,22 +101,11 @@ class ClassicMutator(Mutator):
                 "'{}' is not a valid choice.".format(data)
             value = data["_value"]
             idx = data["_idx"]
-            search_space_ref = self._search_space[mutable.key]["_value"]
+            search_space_item = self._search_space[mutable.key]["_value"]
             if isinstance(mutable, LayerChoice):
-                # doesn't support multihot for layer choice yet
-                onehot_list = [False] * mutable.length
-                assert 0 <= idx < mutable.length and search_space_ref[idx] == value, \
-                    "Index '{}' in search space '{}' is not '{}'".format(idx, search_space_ref, value)
-                onehot_list[idx] = True
-                result[mutable.key] = torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
+                result[mutable.key] = self._sample_layer_choice(mutable, idx, value, search_space_item)
             elif isinstance(mutable, InputChoice):
-                multihot_list = [False] * mutable.n_candidates
-                for i, v in zip(idx, value):
-                    assert 0 <= i < mutable.n_candidates and search_space_ref[i] == v, \
-                        "Index '{}' in search space '{}' is not '{}'".format(i, search_space_ref, v)
-                    assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
-                    multihot_list[i] = True
-                result[mutable.key] = torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
+                result[mutable.key] = self._sample_input_choice(mutable, idx, value, search_space_item)
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return result
