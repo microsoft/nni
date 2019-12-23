@@ -4,9 +4,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from 'ts-deferred';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger } from '../../common/log';
-import { unixPathJoin } from '../../common/utils';
+import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { getLogger } from '../../../common/log';
+import { unixPathJoin } from '../../../common/utils';
 
 /**
  * HDFS client utility, including copy file/directory
