@@ -81,4 +81,4 @@ The final architecture exported from every epoch of evolution can be found in `c
 python scratch.py
 ```
 
-It will automatically use `architecture_final.json`, which is already tracked here. You can use any architecture (e.g., the architecture found in step 2) with `--fixed-arc` option.
+By default, it will use `architecture_final.json`. This architecture is provided by the official repo (converted into NNI format). You can use any architecture (e.g., the architecture found in step 2) with `--fixed-arc` option.
