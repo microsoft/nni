@@ -266,7 +266,7 @@ class Quantizer(Compressor):
         config : dict
             the configuration for weight quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_weight()")
+        raise NotImplementedError('Quantizer must overload quantize_weight()')
 
     def quantize_output(self, output, config, op, op_type, op_name):
         """
@@ -280,7 +280,7 @@ class Quantizer(Compressor):
         config : dict
             the configuration for output quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_output()")
+        raise NotImplementedError('Quantizer must overload quantize_output()')
 
     def quantize_input(self, *inputs, config, op, op_type, op_name):
         """
@@ -294,7 +294,7 @@ class Quantizer(Compressor):
         config : dict
             the configuration for inputs quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_input()")
+        raise NotImplementedError('Quantizer must overload quantize_input()')
 
 
     def _instrument_layer(self, layer, config):
@@ -309,37 +309,40 @@ class Quantizer(Compressor):
             the configuration for quantization
         """
         assert layer._forward is None, 'Each model can only be compressed once'
-        assert "quant_types" in config, 'must provide quant_types in config'
-        assert isinstance(config["quant_types"], list), 'quant_types must be list type'
-        assert "quant_bits" in config, 'must provide quant_bits in config'
-        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
+        assert 'quant_types' in config, 'must provide quant_types in config'
+        assert isinstance(config['quant_types'], list), 'quant_types must be list type'
+        assert 'quant_bits' in config, 'must provide quant_bits in config'
+        assert isinstance(config['quant_bits'], int) or isinstance(config['quant_bits'], dict), 'quant_bits must be dict type or int type'
 
-        if isinstance(config["quant_bits"], dict):
-            for quant_type in config["quant_types"]:
-                assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
+        if isinstance(config['quant_bits'], dict):
+            for quant_type in config['quant_types']:
+                assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
-        if 'weight' in config["quant_types"]:
+        if 'weight' in config['quant_types']:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
             else:
-                layer.module.register_parameter("old_weight", torch.nn.Parameter(layer.module.weight))
-                delattr(layer.module, "weight")
+                # old_weight is used to store origin weight and weight is used to store quantized weight
+                # the reason why weight is buffer instead of parameter is because in pytorch parameter is used as leaf
+                # if weight is leaf , then old_weight can not be updated.
+                layer.module.register_parameter('old_weight', torch.nn.Parameter(layer.module.weight))
+                delattr(layer.module, 'weight')
                 layer.module.register_buffer('weight', layer.module.old_weight)
 
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
-            if 'input' in config["quant_types"]:
+            if 'input' in config['quant_types']:
                 inputs = self.quant_grad.apply(inputs, QuantType.QUANT_INPUT, self.quantize_input, config, layer)
 
-            if 'weight' in config["quant_types"] and _check_weight(layer.module):
+            if 'weight' in config['quant_types'] and _check_weight(layer.module):
                 new_weight = self.quant_grad.apply(layer.module.old_weight, QuantType.QUANT_WEIGHT, self.quantize_weight, config, layer)
                 layer.module.weight = new_weight
                 result = layer._forward(*inputs)
             else:
                 result = layer._forward(*inputs)
 
-            if 'output' in config["quant_types"]:
+            if 'output' in config['quant_types']:
                 result = self.quant_grad.apply(result, QuantType.QUANT_OUTPUT, self.quantize_output, config, layer)
             return result
 
