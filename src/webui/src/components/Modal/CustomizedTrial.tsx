@@ -39,7 +39,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
     }
 
     // [submit click] user add a new trial [submit a trial]
-    addNewTrial = () => {
+    addNewTrial = (): void => {
         const { searchSpace, copyTrialParameter } = this.state;
         // get user edited hyperParameter, ps: will change data type if you modify the input val
         const customized = this.props.form.getFieldsValue();
@@ -76,19 +76,19 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     }
 
-    warningConfirm = () => {
+    warningConfirm = (): void => {
         this.setState(() => ({ isShowWarning: false }));
         const { customParameters } = this.state;
         this.submitCustomize(customParameters);
     }
 
-    warningCancel = () => {
+    warningCancel = (): void => {
         this.setState(() => ({ isShowWarning: false }));
     }
 
-    submitCustomize = (customized: Object) => {
+    submitCustomize = (customized: Record<string, any>): void => {
         // delete `tag` key
-        for (let i in customized) {
+        for (const i in customized) {
             if (i === 'tag') {
                 delete customized[i];
             }
@@ -106,24 +106,24 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                     this.setState(() => ({ isShowSubmitFailed: true }));
                 }
             })
-            .catch(error => {
+            .catch(() => {
                 this.setState(() => ({ isShowSubmitFailed: true }));
             });
     }
 
-    closeSucceedHint = () => {
+    closeSucceedHint = (): void => {
         // also close customized trial modal
         this.setState(() => ({ isShowSubmitSucceed: false }));
         this.props.closeCustomizeModal();
     }
 
-    closeFailedHint = () => {
+    closeFailedHint = (): void => {
         // also close customized trial modal
         this.setState(() => ({ isShowSubmitFailed: false }));
         this.props.closeCustomizeModal();
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         const { copyTrialId } = this.props;
         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
@@ -131,7 +131,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    componentWillReceiveProps(nextProps: CustomizeProps) {
+    componentWillReceiveProps(nextProps: CustomizeProps): void {
         const { copyTrialId } = nextProps;
         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
@@ -139,7 +139,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    render() {
+    render(): React.ReactNode {
         const { closeCustomizeModal, visible } = this.props;
         const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
         const {

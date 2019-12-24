@@ -66,7 +66,6 @@ export class MockedNNIManager extends Manager {
             startTime: Date.now(),
             endTime: Date.now(),
             tags: ['test'],
-            // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
             form: {

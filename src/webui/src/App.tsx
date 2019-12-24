@@ -27,7 +27,7 @@ class App extends React.Component<{}, AppState> {
         };
     }
 
-    async componentDidMount() {
+    async componentDidMount(): Promise<void> {
         await Promise.all([ EXPERIMENT.init(), TRIALS.init() ]);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
@@ -35,7 +35,7 @@ class App extends React.Component<{}, AppState> {
         this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
     }
 
-    changeInterval = (interval: number) => {
+    changeInterval = (interval: number): void => {
         this.setState({ interval });
         if (this.timerId === null && interval !== 0) {
             window.setTimeout(this.refresh);
@@ -45,22 +45,21 @@ class App extends React.Component<{}, AppState> {
     }
 
     // TODO: use local storage
-    changeColumn = (columnList: Array<string>) => {
+    changeColumn = (columnList: Array<string>): void => {
         this.setState({ columnList: columnList });
     }
 
-    changeMetricGraphMode = (val: 'max' | 'min') => {
+    changeMetricGraphMode = (val: 'max' | 'min'): void => {
         this.setState({ metricGraphMode: val });
     }
 
-    render() {
+    render(): React.ReactNode{
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
-                // tslint:disable-next-line:no-any
                 child as React.ReactElement<any>, {
                     interval,
                     columnList, changeColumn: this.changeColumn,
@@ -87,7 +86,7 @@ class App extends React.Component<{}, AppState> {
         );
     }
 
-    private refresh = async () => {
+    private refresh = async (): Promise<void> => {
         const [ experimentUpdated, trialsUpdated ] = await Promise.all([ EXPERIMENT.update(), TRIALS.update() ]);
         if (experimentUpdated) {
             this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
@@ -108,7 +107,7 @@ class App extends React.Component<{}, AppState> {
         }
     }
 
-    private async lastRefresh() {
+    private async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));

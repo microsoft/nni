@@ -46,7 +46,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         };
     }
 
-    drawIntermediate = (source: Array<TableObj>) => {
+    drawIntermediate = (source: Array<TableObj>): void => {
         if (source.length > 0) {
             this.setState({
                 length: source.length,
@@ -68,7 +68,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             const legend: Array<string> = [];
             // max length
             const length = trialIntermediate[0].data.length;
-            const xAxis: Array<number> = [];
+            const xAxis: number[] = [];
             Object.keys(trialIntermediate).map(item => {
                 const temp = trialIntermediate[item];
                 legend.push(temp.name);
@@ -80,14 +80,14 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 tooltip: {
                     trigger: 'item',
                     enterable: true,
-                    position: function (point: Array<number>, data: TooltipForIntermediate) {
+                    position: function (point: number[], data: TooltipForIntermediate): number[] {
                         if (data.dataIndex < length / 2) {
                             return [point[0], 80];
                         } else {
                             return [point[0] - 300, 80];
                         }
                     },
-                    formatter: function (data: TooltipForIntermediate) {
+                    formatter: function (data: TooltipForIntermediate): any {
                         const trialId = data.seriesName;
                         let obj = {};
                         const temp = trialIntermediate.find(key => key.name === trialId);
@@ -154,7 +154,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     }
 
     // confirm btn function [filter data]
-    filterLines = () => {
+    filterLines = (): void => {
         const filterSource: Array<TableObj> = [];
         this.setState({ isLoadconfirmBtn: true }, () => {
             const { source } = this.props;
@@ -195,19 +195,19 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         });
     }
 
-    switchTurn = (checked: boolean) => {
+    switchTurn = (checked: boolean): void => {
         this.setState({ isFilter: checked });
         if (checked === false) {
             this.drawIntermediate(this.props.source);
         }
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         const { source } = this.props;
         this.drawIntermediate(source);
     }
 
-    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState) {
+    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState): void {
         const { isFilter, filterSource } = nextState;
         const { whichGraph, source } = nextProps;
 
@@ -226,7 +226,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         }
     }
 
-    shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
+    shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState): boolean {
         const { whichGraph, source } = nextProps;
         const beforeGraph = this.props.whichGraph;
         if (whichGraph === '4') {
@@ -271,7 +271,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         return false;
     }
 
-    render() {
+    render(): React.ReactNode {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
         const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };
         return (
@@ -285,18 +285,18 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                 <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
-                                    ref={input => this.pointInput = input}
+                                    ref={(input): any => this.pointInput = input}
                                     className="strange"
                                 />
                                 <span>Metric range</span>
                                 <input
                                     // placeholder="range"
-                                    ref={input => this.minValInput = input}
+                                    ref={(input): any => this.minValInput = input}
                                 />
                                 <span className="hyphen">-</span>
                                 <input
                                     // placeholder="range"
-                                    ref={input => this.maxValInput = input}
+                                    ref={(input): any => this.maxValInput = input}
                                 />
                                 <Button
                                     type="primary"
@@ -330,7 +330,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         );
     }
 
-    private intermediateDataZoom = (e: EventMap) => {
+    private intermediateDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
                 startMediaY: (e.batch[0].start !== null ? e.batch[0].start : 0),

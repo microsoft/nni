@@ -26,10 +26,10 @@ import torch
 from sklearn.feature_selection import SelectKBest, \
     f_classif, mutual_info_classif, f_regression, mutual_info_regression
 
-import nni.feature_engineering.gradient_selector.constants as constants
-import nni.feature_engineering.gradient_selector.syssettings as syssettings
-from nni.feature_engineering.gradient_selector.learnability import Solver
-from nni.feature_engineering.gradient_selector.utils import EMA
+from . import constants
+from . import syssettings
+from .learnability import Solver
+from .utils import EMA
 
 torch.set_default_tensor_type(syssettings.torch.tensortype)
 

@@ -682,10 +682,13 @@ def search_space_auto_gen(args):
     trial_dir = os.path.expanduser(args.trial_dir)
     file_path = os.path.expanduser(args.file)
     if not os.path.isabs(file_path):
-        abs_file_path = os.path.join(os.getcwd(), file_path)
+        file_path = os.path.join(os.getcwd(), file_path)
     assert os.path.exists(trial_dir)
-    if os.path.exists(abs_file_path):
-        print_warning('%s already exits, will be over written' % abs_file_path)
+    if os.path.exists(file_path):
+        print_warning('%s already exists, will be overwritten.' % file_path)
     print_normal('Dry run to generate search space...')
-    Popen(args.trial_command, cwd=trial_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE=abs_file_path), shell=True).wait()
-    print_normal('Dry run to generate search space, Done')
+    Popen(args.trial_command, cwd=trial_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE=file_path), shell=True).wait()
+    if not os.path.exists(file_path):
+        print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
+    else:
+        print_normal('Generate search space done: \'{}\'.'.format(file_path))

@@ -17,7 +17,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
 
     }
 
-    render() {
+    render(): React.ReactNode {
         const { logStr, id, logCollection } = this.props;
         const isTwopath = logStr.indexOf(',') !== -1
             ?
@@ -37,12 +37,13 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                         <Row>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href={`${DOWNLOAD_IP}/trial_${id}.log`}
                                                 style={{ marginRight: 10 }}
                                             >
                                                 Trial stdout
                                             </a>
-                                            <a target="_blank" href={logStr.split(',')[1]}>hdfsLog</a>
+                                            <a target="_blank" rel="noopener noreferrer" href={logStr.split(',')[1]}>hdfsLog</a>
                                         </Row>
                                         :
                                         <Row>

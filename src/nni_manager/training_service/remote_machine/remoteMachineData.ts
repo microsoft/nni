@@ -13,13 +13,13 @@ import { GPUInfo, GPUSummary } from '../common/gpuData';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip : string = '';
-    public readonly port : number = 22;
-    public readonly username : string = '';
+    public readonly ip: string = '';
+    public readonly port: number = 22;
+    public readonly username: string = '';
     public readonly passwd: string = '';
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
-    public gpuSummary : GPUSummary | undefined;
+    public gpuSummary: GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
     //TODO: initialize varialbe in constructor
@@ -43,11 +43,11 @@ export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
  * The execution result for command executed on remote machine
  */
 export class RemoteCommandResult {
-    public readonly stdout : string;
-    public readonly stderr : string;
-    public readonly exitCode : number;
+    public readonly stdout: string;
+    public readonly stderr: string;
+    public readonly exitCode: number;
 
-    constructor(stdout : string, stderr : string, exitCode : number) {
+    constructor(stdout: string, stderr: string, exitCode: number) {
         this.stdout = stdout;
         this.stderr = stderr;
         this.exitCode = exitCode;
@@ -186,7 +186,6 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
@@ -225,9 +224,9 @@ export class SSHClientManager {
     }
 }
 
-export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
+export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType};
 
-export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
+export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cudaVisibleDevice: string};
 
 export enum ScheduleResultType {
     // Schedule succeeded
