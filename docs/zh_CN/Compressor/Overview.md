@@ -10,14 +10,18 @@ NNI 提供了几种压缩算法，包括剪枝和量化算法：
 
 **剪枝**
 
-| 名称                                              | 算法简介                                                                                                                                   |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)        | 根据权重的绝对值，来按比例修剪权重。                                                                                                                     |
-| [AGP Pruner](./Pruner.md#agp-pruner)            | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                    |
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner)  | 剪除卷积层中最不重要的过滤器 (PRUNING FILTERS FOR EFFICIENT CONVNETS)[参考论文](https://arxiv.org/abs/1608.08710)                                        |
-| [Slim Pruner](./Pruner.md#slim-pruner)          | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming)[参考论文](https://arxiv.org/abs/1708.06519) |
-| [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635) |
-| [FPGM Pruner](./Pruner.md#fpgm-pruner)          | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)   |
+| 名称                                                                           | 算法简介                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)                                     | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                                                                            |
+| [AGP Pruner](./Pruner.md#agp-pruner)                                         | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                                                                           |
+| [Lottery Ticket Pruner](./Pruner.md#agp-pruner)                              | The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. [Reference Paper](https://arxiv.org/abs/1803.03635)                                                                    |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner)                                       | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)                                                                                                               |
+| [L1Filter Pruner](./Pruner.md#l1filter-pruner)                               | Pruning filters with the smallest L1 norm of weights in convolution layers(PRUNING FILTERS FOR EFFICIENT CONVNETS)[Reference Paper](https://arxiv.org/abs/1608.08710)                                                                                         |
+| [L2Filter Pruner](./Pruner.md#l2filter-pruner)                               | Pruning filters with the smallest L2 norm of weights in convolution layers                                                                                                                                                                                    |
+| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | Pruning filters prunes the filters with the smallest APoZ(average percentage of zeros) of output activations(Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures)[Reference Paper](https://arxiv.org/abs/1607.03250) |
+| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | Pruning filters prunes the filters with the smallest mean value of output activations(Pruning Convolutional Neural Networks for Resource Efficient Inference)[Reference Paper](https://arxiv.org/abs/1611.06440)                                              |
+| [Slim Pruner](./Pruner.md#slim-pruner)                                       | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming)[Reference Paper](https://arxiv.org/abs/1708.06519)                                                         |
+
 
 **量化**
 
