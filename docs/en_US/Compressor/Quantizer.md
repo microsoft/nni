@@ -170,7 +170,7 @@ We implemented one of the experiments in [Binarized Neural Networks: Training De
 
 | Model         | Accuracy  | 
 | ------------- | --------- | 
-| VGGNet        | 86.93%     |
+| VGGNet        | 86.93%    |
 
 
 The experiments code can be found at [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 
