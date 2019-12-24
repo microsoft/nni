@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from .compressor import Quantizer
+from .compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
 
