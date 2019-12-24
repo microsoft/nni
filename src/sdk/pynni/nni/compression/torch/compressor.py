@@ -402,3 +402,4 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
+    
