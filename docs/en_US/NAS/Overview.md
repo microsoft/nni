@@ -96,7 +96,7 @@ python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 
 ### ProxylessNAS
 
-The paper [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) removes proxy, it directly learn the architectures for large-scale target tasks and target hardware platforms. It addresses high memory consumption issue of differentiable NAS and reduces the computational cost to the same level of regular training while still allowing a large candidate set.
+The paper [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) removes proxy, it directly learns the architectures for large-scale target tasks and target hardware platforms. It addresses high memory consumption issue of differentiable NAS and reduces the computational cost to the same level of regular training while still allowing a large candidate set.
 
 #### Usage
 

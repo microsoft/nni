@@ -77,6 +77,8 @@ class MixedOp(nn.Module):
     def forward(self, mutable, x):
         """
         Define forward of LayerChoice. For 'full_v2', backward is also defined.
+        The 'two' mode is explained in section 3.2.1 in the paper.
+        The 'full_v2' mode is explained in Appendix D in the paper.
 
         Parameters
         ----------

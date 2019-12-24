@@ -255,7 +255,9 @@ class LinearLayer(nn.Module):
 
 
 class MBInvertedConvLayer(nn.Module):
-
+    """
+    This layer is introduced in section 4.2 in the paper https://arxiv.org/pdf/1812.00332.pdf
+    """
     def __init__(self, in_channels, out_channels,
                  kernel_size=3, stride=1, expand_ratio=6, mid_channels=None):
         super(MBInvertedConvLayer, self).__init__()
