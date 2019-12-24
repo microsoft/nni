@@ -100,7 +100,7 @@ def get_bits_length(config, quant_type):
 
 
 class QAT_Quantizer(Quantizer):
-    """Quantizer using the DoReFa scheme, as defined in:
+    """Quantizer defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
@@ -227,16 +227,13 @@ class DoReFaQuantizer(Quantizer):
     (https://arxiv.org/abs/1606.06160)
     """
     def __init__(self, model, config_list):
-        """
-        config_list: supported keys:
-            - q_bits
-        """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
+        weight_bits = get_bits_length(config, 'weight')
         out = weight.tanh()
         out = out / (2 * out.abs().max()) + 0.5
-        out = self.quantize(out, config['q_bits'])
+        out = self.quantize(out, weight_bits)
         out = 2 * out -1
         return out
 
