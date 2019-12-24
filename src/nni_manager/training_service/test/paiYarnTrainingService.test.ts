@@ -11,14 +11,14 @@ import * as component from '../../common/component';
 import { TrialJobApplicationForm } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { PAITrainingService } from '../pai/paiTrainingService';
+import { PAIYarnTrainingService } from '../pai/paiYarn/paiYarnTrainingService';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name
 const mockedTrialPath: string = './training_service/test/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
-describe('Unit Test for PAITrainingService', () => {
+describe('Unit Test for PAIYarnTrainingService', () => {
     let skip: boolean = false;
     let testPaiClusterInfo: any;
     let paiCluster: any;
@@ -33,7 +33,7 @@ describe('Unit Test for PAITrainingService', () => {
         skip = true;
     }
 
-    let paiTrainingService: PAITrainingService;
+    let paiYarnTrainingService: PAIYarnTrainingService;
 
     console.log(tmp.dirSync().name);
 
@@ -51,15 +51,15 @@ describe('Unit Test for PAITrainingService', () => {
         if (skip) {
             return;
         }
-        paiTrainingService = component.get(PAITrainingService);
-        paiTrainingService.run();
+        paiYarnTrainingService = component.get(PAIYarnTrainingService);
+        paiYarnTrainingService.run();
     });
 
     afterEach(() => {
         if (skip) {
             return;
         }
-        paiTrainingService.cleanUp();
+        paiYarnTrainingService.cleanUp();
     });
 
     it('Get PAI token', async () => {
@@ -67,14 +67,14 @@ describe('Unit Test for PAITrainingService', () => {
             return;
         }
         console.log(`paiCluster is ${paiCluster}`)
-        await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.PAI_CLUSTER_CONFIG, paiCluster);
-        await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, paiTrialConfig);
+        await paiYarnTrainingService.setClusterMetadata(TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG, paiCluster);
+        await paiYarnTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, paiTrialConfig);
         const form: TrialJobApplicationForm = {
             sequenceId: 0,
             hyperParameters: { value: '', index: 0 }
         };
         try {
-            const trialDetail = await paiTrainingService.submitTrialJob(form);
+            const trialDetail = await paiYarnTrainingService.submitTrialJob(form);
             chai.expect(trialDetail.status).to.be.equals('WAITING');
         } catch(error) {
             console.log('Submit job failed:' + error);

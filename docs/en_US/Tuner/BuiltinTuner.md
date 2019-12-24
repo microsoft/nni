@@ -160,6 +160,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 **Requirement of classArgs**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for relatively large search space.
 
 **Usage example**
 

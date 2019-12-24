@@ -5,7 +5,7 @@ import os
 import json
 from schema import SchemaError
 from schema import Schema
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
                            FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
 from .common_utils import print_error, print_warning, print_normal
 
@@ -143,13 +143,14 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller']:
+        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn']:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
         'local': LOCAL_CONFIG_SCHEMA,
         'remote': REMOTE_CONFIG_SCHEMA,
         'pai': PAI_CONFIG_SCHEMA,
+        'paiYarn': PAI_YARN_CONFIG_SCHEMA,
         'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
         'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
         }
@@ -213,24 +214,18 @@ def validate_customized_file(experiment_config, spec_key):
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
-    if experiment_config['tuner'].get('builtinTunerName'):
-        experiment_config['tuner']['className'] = experiment_config['tuner']['builtinTunerName']
-    else:
+    if not experiment_config['tuner'].get('builtinTunerName'):
         validate_customized_file(experiment_config, 'tuner')
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
     if experiment_config.get('assessor'):
-        if experiment_config['assessor'].get('builtinAssessorName'):
-            experiment_config['assessor']['className'] = experiment_config['assessor']['builtinAssessorName']
-        else:
+        if not experiment_config['assessor'].get('builtinAssessorName'):
             validate_customized_file(experiment_config, 'assessor')
 
 def parse_advisor_content(experiment_config):
     '''Validate whether advisor in experiment_config is valid'''
-    if experiment_config['advisor'].get('builtinAdvisorName'):
-        experiment_config['advisor']['className'] = experiment_config['advisor']['builtinAdvisorName']
-    else:
+    if not experiment_config['advisor'].get('builtinAdvisorName'):
         validate_customized_file(experiment_config, 'advisor')
 
 def validate_annotation_content(experiment_config, spec_key, builtin_name):
@@ -261,7 +256,7 @@ def validate_machine_list(experiment_config):
 
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
-    if experiment_config.get('trainingServicePlatform') == 'pai':
+    if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
         if experiment_config.get('trial').get('shmMB') and \
         experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')

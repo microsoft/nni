@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj } from './interface';
 
-const convertTime = (num: number) => {
+const convertTime = (num: number): string => {
     if (num <= 0) {
         return '0';
     }
@@ -17,7 +17,7 @@ const convertTime = (num: number) => {
 };
 
 // trial's duration, accurate to seconds for example 10min 30s
-const convertDuration = (num: number) => {
+const convertDuration = (num: number): string => {
     if (num < 1) {
         return '0s';
     }
@@ -39,7 +39,7 @@ const convertDuration = (num: number) => {
 
 // get final result value
 // draw Accuracy point graph
-const getFinalResult = (final?: MetricDataRecord[]) => {
+const getFinalResult = (final?: MetricDataRecord[]): number => {
     let acc;
     let showDefault = 0;
     if (final) {
@@ -58,7 +58,7 @@ const getFinalResult = (final?: MetricDataRecord[]) => {
 };
 
 // get final result value // acc obj
-const getFinal = (final?: MetricDataRecord[]) => {
+const getFinal = (final?: MetricDataRecord[]): any => {
     let showDefault: FinalType;
     if (final) {
         showDefault = JSON.parse(final[final.length - 1].data);
@@ -72,7 +72,7 @@ const getFinal = (final?: MetricDataRecord[]) => {
 };
 
 // detail page table intermediate button
-const intermediateGraphOption = (intermediateArr: number[], id: string) => {
+const intermediateGraphOption = (intermediateArr: number[], id: string): any => {
     const sequence: number[] = [];
     const lengthInter = intermediateArr.length;
     for (let i = 1; i <= lengthInter; i++) {
@@ -108,7 +108,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string) => {
 };
 
 // kill job
-const killJob = (key: number, id: string, status: string, updateList?: Function) => {
+const killJob = (key: number, id: string, status: string, updateList?: Function): void => {
     axios(`${MANAGER_IP}/trial-jobs/${id}`, {
         method: 'DELETE',
         headers: {
@@ -138,16 +138,16 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
         });
 };
 
-const filterByStatus = (item: TableObj) => {
+const filterByStatus = (item: TableObj): any => {
     return item.status === 'SUCCEEDED';
 };
 
 // a waittiong trial may havn't start time 
-const filterDuration = (item: TableObj) => {
+const filterDuration = (item: TableObj): any => {
     return item.status !== 'WAITING';
 };
 
-const downFile = (content: string, fileName: string) => {
+const downFile = (content: string, fileName: string): void => {
     const aTag = document.createElement('a');
     const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
     const file = new Blob([content], { type: 'application/json' });

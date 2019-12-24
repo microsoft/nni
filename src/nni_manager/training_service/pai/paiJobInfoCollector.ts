@@ -8,8 +8,7 @@ import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialJobStatus } from '../../common/trainingService';
-import { PAIClusterConfig } from './paiConfig';
-import { PAITrialJobDetail } from './paiData';
+import { PAIClusterConfig, PAITrialJobDetail } from './paiConfig';
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
@@ -26,8 +25,8 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig): Promise<void> {
-        if (paiClusterConfig === undefined || paiToken === undefined) {
+    public async retrieveTrialStatus(token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
+        if (paiBaseClusterConfig === undefined || token === undefined) {
             return Promise.resolve();
         }
 
@@ -36,7 +35,7 @@ export class PAIJobInfoCollector {
             if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig));
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, token, paiBaseClusterConfig));
         }
 
         await Promise.all(updatePaiTrialJobs);
@@ -56,7 +55,7 @@ export class PAIJobInfoCollector {
             uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
-            headers: {
+               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${paiToken}`
             }
@@ -114,8 +113,12 @@ export class PAIJobInfoCollector {
                             paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
                         // Set pai trial job's url to WebHDFS output path
-                        if (paiTrialJob.hdfsLogPath !== undefined) {
-                            paiTrialJob.url += `,${paiTrialJob.hdfsLogPath}`;
+                        if (paiTrialJob.logPath !== undefined) {
+                            if (paiTrialJob.url) {
+                                paiTrialJob.url += `,${paiTrialJob.logPath}`;
+                            } else {
+                                paiTrialJob.url = `${paiTrialJob.logPath}`;
+                            }
                         }
                     }
                 }
