@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import argparse
+import logging
 import random
 
 import numpy as np
@@ -14,6 +15,8 @@ from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTraine
 from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
 from utils import CrossEntropyLabelSmooth, accuracy
+
+logger = logging.getLogger("nni.spos.supernet")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("SPOS Supernet Training")
@@ -31,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--label-smooth", type=float, default=0.1)
     parser.add_argument("--log-frequency", type=int, default=10)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--label-smoothing", type=float, default=0.1)
 
     args = parser.parse_args()
 
@@ -43,14 +47,14 @@ if __name__ == "__main__":
     model = ShuffleNetV2OneShot()
     if args.load_checkpoint:
         if not args.spos_preprocessing:
-            print("You might want to use SPOS preprocessing if you are loading their checkpoints.")
+            logger.warning("You might want to use SPOS preprocessing if you are loading their checkpoints.")
         model.load_state_dict(load_and_parse_state_dict())
     model.cuda()
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
     mutator = SPOSSupernetTrainingMutator(model, flops_func=model.module.get_candidate_flops,
                                           flops_lb=290E6, flops_ub=360E6)
-    criterion = CrossEntropyLabelSmooth(1000, 0.1)
+    criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,

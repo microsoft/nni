@@ -18,7 +18,7 @@ from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
 from utils import CrossEntropyLabelSmooth, accuracy
 
-logger = logging.getLogger("nni")
+logger = logging.getLogger("nni.spos.tester")
 
 
 def retrain_bn(model, criterion, max_iters, log_freq, loader):

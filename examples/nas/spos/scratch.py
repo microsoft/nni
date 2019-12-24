@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from network import ShuffleNetV2OneShot
 from utils import CrossEntropyLabelSmooth, accuracy
 
-logger = logging.getLogger("nni")
+logger = logging.getLogger("nni.spos.scratch")
 
 
 def train(epoch, model, criterion, optimizer, loader, writer, args):
@@ -86,6 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr-decay", type=str, default="linear")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--spos-preprocessing", default=False, action="store_true")
+    parser.add_argument("--label-smoothing", type=float, default=0.1)
 
     args = parser.parse_args()
 
@@ -100,7 +101,7 @@ if __name__ == "__main__":
     apply_fixed_architecture(model, args.architecture)
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
-    criterion = CrossEntropyLabelSmooth(1000, 0.1)
+    criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
     if args.lr_decay == "linear":

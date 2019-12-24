@@ -205,7 +205,7 @@ class SPOSEvolution(Tuner):
 
     def export_results(self, result):
         """
-        Export a number of candidates to `checkpoints dir.
+        Export a number of candidates to `checkpoints` dir.
 
         Parameters
         ----------
