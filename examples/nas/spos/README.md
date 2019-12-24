@@ -6,14 +6,12 @@ Block search only. Channel search is not supported yet.
 
 Only GPU version is provided here.
 
-TODO: Reproduction results.
-
 ## Preparation
 
 ### Requirements
 
 * PyTorch >= 1.2
-* NVIDIA DALI >= 0.16 as we use DALI to accelerate the data loading of ImageNet.
+* NVIDIA DALI >= 0.16 as we use DALI to accelerate the data loading of ImageNet. [Installation guide](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/installation.html)
 
 ### Data
 
@@ -81,3 +79,10 @@ python scratch.py
 ```
 
 By default, it will use `architecture_final.json`. This architecture is provided by the official repo (converted into NNI format). You can use any architecture (e.g., the architecture found in step 2) with `--fixed-arc` option.
+
+## Current Reproduction Results
+
+Reproduction is still undergoing. Due to the gap between official release and original paper, we compare our current results with official repo (our run) and paper.
+
+* Evolution phase is almost aligned with official repo. Our evolution algorithm shows a converging trend and reaches ~65% accuracy at the end of search.
+* Retrain phase is not aligned. Our retraining code, which uses the architecture released by the authors, reaches 72.14% accuracy, still having a gap towards 73.61% by official release and 74.3% reported in original paper.
