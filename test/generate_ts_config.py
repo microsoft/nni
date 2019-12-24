@@ -14,11 +14,11 @@ def update_training_service_config(args):
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
     if args.ts == 'pai':
         if args.pai_user is not None:
-            config[args.ts]['paiConfig']['userName'] = args.pai_user
+            config[args.ts]['paiYarnConfig']['userName'] = args.pai_user
         if args.pai_pwd is not None:
-            config[args.ts]['paiConfig']['passWord'] = args.pai_pwd
+            config[args.ts]['paiYarnConfig']['passWord'] = args.pai_pwd
         if args.pai_host is not None:
-            config[args.ts]['paiConfig']['host'] = args.pai_host
+            config[args.ts]['paiYarnConfig']['host'] = args.pai_host
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.data_dir is not None:

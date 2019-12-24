@@ -30,26 +30,28 @@ from sklearn.feature_selection import SelectFromModel
 
 from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
-url_zip_train = 'https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2'
-urllib.request.urlretrieve(url_zip_train, filename='train.bz2')
 
-f_svm = open('train.svm', 'wt')
-with bz2.open('train.bz2', 'rb') as f_zip:
-    data = f_zip.read()
-    f_svm.write(data.decode('utf-8'))
-f_svm.close()
+def test():
+    url_zip_train = 'https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2'
+    urllib.request.urlretrieve(url_zip_train, filename='train.bz2')
+
+    f_svm = open('train.svm', 'wt')
+    with bz2.open('train.bz2', 'rb') as f_zip:
+        data = f_zip.read()
+        f_svm.write(data.decode('utf-8'))
+    f_svm.close()
 
 
-X, y = load_svmlight_file('train.svm')
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    X, y = load_svmlight_file('train.svm')
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-fgs = FeatureGradientSelector(n_features=10)
-fgs.fit(X_train, y_train)
 
-print("selected features\t", fgs.get_selected_features())
+    pipeline = make_pipeline(FeatureGradientSelector(n_epochs=1, n_features=10), LogisticRegression())
+    # pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
 
-pipeline = make_pipeline(FeatureGradientSelector(n_epochs=1, n_features=10), LogisticRegression())
-# pipeline = make_pipeline(SelectFromModel(ExtraTreesClassifier(n_estimators=50)), LogisticRegression())
-pipeline.fit(X_train, y_train)
+    pipeline.fit(X_train, y_train)
 
-print("Pipeline Score: ", pipeline.score(X_train, y_train))
+    print("Pipeline Score: ", pipeline.score(X_train, y_train))
+
+if __name__ == "__main__":
+    test()

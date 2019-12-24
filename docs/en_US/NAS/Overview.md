@@ -97,8 +97,6 @@ python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 
 NOTE, we are trying to support various NAS algorithms with unified programming interface, and it's in very experimental stage. It means the current programing interface may be updated in future.
 
-*previous [NAS annotation](../AdvancedFeature/GeneralNasInterfaces.md) interface will be deprecated soon.*
-
 ### Programming interface
 
 The programming interface of designing and searching a model is often demanded in two scenarios.

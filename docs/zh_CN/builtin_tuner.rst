@@ -17,3 +17,4 @@
     Network Morphism<Tuner/NetworkmorphismTuner>
     Hyperband<Tuner/HyperbandAdvisor>
     BOHB<Tuner/BohbAdvisor>
+    PPO Tuner <Tuner/PPOTuner>

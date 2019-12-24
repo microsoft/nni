@@ -62,7 +62,7 @@ setuptools.setup(
         'scipy',
         'coverage',
         'colorama',
-        'sklearn'
+        'scikit-learn>=0.20,<0.22'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',

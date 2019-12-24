@@ -17,7 +17,7 @@ export class GPUInfo {
     // the index number of this GPU (starting from 0)
     public readonly index: number;
 
-    constructor(activeProcessNum : number, gpuMemUtil : number, gpuUtil : number, index : number) {
+    constructor(activeProcessNum: number, gpuMemUtil: number, gpuUtil: number, index: number) {
         this.activeProcessNum = activeProcessNum;
         this.gpuMemUtil = gpuMemUtil;
         this.gpuUtil = gpuUtil;

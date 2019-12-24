@@ -43,7 +43,7 @@ TPE, as a black-box optimization, can be used in various scenarios and shows goo
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 
-Note: We have optimized the parallelism of TPE for large-scale trial-concurrency. For the principle of optimization or turn-on optimization, please refer to [TPE document](HyperoptTuner.md).
+Note: We have optimized the parallelism of TPE for large-scale trial-concurrency. For the principle of optimization or turn-on optimization, please refer to [TPE document](./HyperoptTuner.md).
 
 **Usage example:**
 
@@ -160,6 +160,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 **Requirement of classArgs**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for relatively large search space.
 
 **Usage example**
 

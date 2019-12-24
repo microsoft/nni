@@ -20,7 +20,6 @@ import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile } from '../common/manager';
 import { TrialJobDetail } from '../common/trainingService';
 
-/* tslint:disable:no-any */
 
 const createTables: string = `
 create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text, sequenceId integer);
@@ -91,7 +90,6 @@ class SqlDB implements Database {
         this.log.debug(`Database directory: ${dbDir}`);
         assert(fs.existsSync(dbDir));
 
-        // tslint:disable-next-line:no-bitwise
         const mode: number = createNew ? (sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE) : sqlite3.OPEN_READWRITE;
         const dbFileName: string = path.join(dbDir, 'nni.sqlite');
 

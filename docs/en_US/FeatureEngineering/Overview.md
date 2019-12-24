@@ -243,13 +243,14 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 `Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
-| Dataset | Baseline | GradientFeatureSelector top20 | GradientFeatureSelector auto | TreeBasedClassifier | #Train | #Feature | 
-| ----------- | ------ | ------ | ------- | ------- | -------- |-------- |
-| colon-cancer | 0.7547 | 0.7368 | 0.5389 | 0.7223 | 62 | 2,000 |
-| gisette | 0.9725 | 0.9241 | 0.9658 |0.9792 | 6,000 | 5,000 |
-| rcv1 | 0.9644 | 0.7333 | 0.9548 |0.9615 | 20,242 | 47,236 |
-| news20.binary | 0.9208 | 0.8780  | 0.8875 | 0.9070 | 19,996 | 1,355,191 |
-| real-sim | 0.9681 |  0.7969 | 0.9439  |0.9591 | 72,309 | 20,958 |
+| Dataset | All Features + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | #Train | #Feature | 
+| ----------- | ------ | ------ | ------- | ------- | -------- |
+| colon-cancer | 0.7547, 890ms, 348MiB | 0.7368, 363ms, 286MiB | 0.7223, 171ms, 1171 MiB | 62 | 2,000 |
+| gisette | 0.9725, 215ms, 584MiB | 0.89416, 446ms, 397MiB | 0.9792, 911ms, 234MiB | 6,000 | 5,000 |
+| avazu | 0.8834, N/A, N/A | N/A, N/A, N/A | N/A, N/A, N/A | 40,428,967 | 1,000,000 |
+| rcv1 | 0.9644, 557ms, 241MiB | 0.7333, 401ms, 281MiB | 0.9615, 752ms, 284MiB | 20,242 | 47,236 |
+| news20.binary | 0.9208, 707ms, 361MiB | 0.6870, 565ms, 371MiB | 0.9070, 904ms, 364MiB | 19,996 | 1,355,191 |
+| real-sim | 0.9681, 433ms, 274MiB | 0.7969, 251ms, 274MiB | 0.9591, 643ms, 367MiB | 72,309 | 20,958 |
 
 The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/
 )

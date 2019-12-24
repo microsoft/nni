@@ -4,11 +4,9 @@
 'use strict';
 
 import * as cpp from 'child-process-promise';
-import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { String } from 'typescript-string-operations';
 import { getLogger, Logger } from '../../common/log';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
@@ -88,7 +86,6 @@ class GPUScheduler {
         runGpuMetricsCollector(this.gpuMetricCollectorScriptFolder);
     }
 
-    // tslint:disable:non-literal-fs-path
     private async updateGPUSummary(): Promise<void> {
         const gpuMetricPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
         if (fs.existsSync(gpuMetricPath)) {

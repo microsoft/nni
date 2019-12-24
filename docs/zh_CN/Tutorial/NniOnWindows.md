@@ -1,6 +1,6 @@
 # Windows 上的 NNI（实验阶段的功能）
 
-当前 Windows 上支持本机、远程和 OpenPAI 模式。 推荐 Windows 10 的 1809 版，其经过了测试。
+在 Windows 上运行 NNI 是测试中的功能。 推荐 Windows 10 的 1809 版，其经过了测试。
 
 ## **在 Windows 上安装**
 
@@ -9,7 +9,7 @@
 完成操作后，使用 **config_windows.yml** 配置来开始 Experiment 进行验证。
 
 ```bash
-nnictl create --config nni\examples\trials\mnist\config_windows.yml
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。
@@ -44,6 +44,10 @@ nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ### Windows 上不支持的 Tuner
 
 当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
+
+### 将 Windows 服务器用作远程服务器
+
+目前不支持。
 
 注意：
 
