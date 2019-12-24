@@ -16,6 +16,7 @@ class LayerInfo:
 
         self._forward = None
 
+
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -193,10 +194,16 @@ class Pruner(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
+            mask = self.calc_mask(layer, config)
             # apply mask to weight
             old_weight = layer.module.weight.data
-            mask = self.calc_mask(layer, config)
-            layer.module.weight.data = old_weight.mul(mask)
+            mask_weight = mask['weight']
+            layer.module.weight.data = old_weight.mul(mask_weight)
+            # apply mask to bias
+            if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
+                old_bias = layer.module.bias.data
+                mask_bias = mask['bias']
+                layer.module.bias.data = old_bias.mul(mask_bias)
             # calculate forward
             ret = layer._forward(*inputs)
             return ret
@@ -224,12 +231,14 @@ class Pruner(Compressor):
         for name, m in self.bound_model.named_modules():
             if name == "":
                 continue
-            mask = self.mask_dict.get(name)
-            if mask is not None:
-                mask_sum = mask.sum().item()
-                mask_num = mask.numel()
+            masks = self.mask_dict.get(name)
+            if masks is not None:
+                mask_sum = masks['weight'].sum().item()
+                mask_num = masks['weight'].numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                m.weight.data = m.weight.data.mul(mask)
+                m.weight.data = m.weight.data.mul(masks['weight'])
+                if masks.__contains__('bias') and hasattr(m, 'bias') and m.bias is not None:
+                    m.bias.data = m.bias.data.mul(masks['bias'])
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
         torch.save(self.bound_model.state_dict(), model_path)
@@ -258,7 +267,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         weight : Tensor
@@ -272,7 +280,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize output.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         output : Tensor
@@ -286,7 +293,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         inputs : Tensor
@@ -300,7 +306,6 @@ class Quantizer(Compressor):
     def _instrument_layer(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
-
         Parameters
         ----------
         layer : LayerInfo
@@ -365,7 +370,6 @@ class QuantGrad(torch.autograd.Function):
         """
         This method should be overrided by subclass to provide customized backward function,
         default implementation is Straight-Through Estimator
-
         Parameters
         ----------
         tensor : Tensor
@@ -375,7 +379,6 @@ class QuantGrad(torch.autograd.Function):
         quant_type : QuantType
             the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
             you can define different behavior for different types.
-
         Returns
         -------
         tensor
@@ -399,3 +402,4 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
+    
