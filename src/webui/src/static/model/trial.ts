@@ -19,10 +19,12 @@ class Trial implements TableObj {
         if (!this.sortable || !otherTrial.sortable) {
             return undefined;
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.finalAcc! - otherTrial.finalAcc!;
     }
 
     get info(): TrialJobInfo {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.infoField!;
     }
 
@@ -30,6 +32,7 @@ class Trial implements TableObj {
         const ret: MetricDataRecord[] = [ ];
         for (let i = 0; i < this.intermediates.length; i++) {
             if (this.intermediates[i]) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 ret.push(this.intermediates[i]!);
             } else {
                 break;
@@ -66,12 +69,14 @@ class Trial implements TableObj {
 
     get tableRecord(): TableRecord {
         const endTime = this.info.endTime || new Date().getTime();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
 
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             startTime: this.info.startTime!,
             endTime: this.info.endTime,
             duration,
@@ -97,6 +102,7 @@ class Trial implements TableObj {
 
     get duration(): number {
         const endTime = this.info.endTime || new Date().getTime();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return (endTime - this.info.startTime!) / 1000;
     }
 
@@ -203,6 +209,7 @@ class Trial implements TableObj {
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const latest = this.intermediates[this.intermediates.length - 1]!;
             return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
         }

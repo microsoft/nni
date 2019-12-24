@@ -19,19 +19,17 @@ export interface ParameterFileMeta {
  * PAI Training service Rest server, provides rest API to support pai job metrics update
  *
  */
-@component.Singleton
 export class PAIJobRestServer extends ClusterJobRestServer {
-    private parameterFileMetaList: ParameterFileMeta[] = [];
+    protected parameterFileMetaList: ParameterFileMeta[] = [];
 
-    @Inject
-    private readonly paiTrainingService: PAITrainingService;
+    protected readonly paiTrainingService: PAITrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor() {
+    constructor (paiTrainingService: PAITrainingService) {
         super();
-        this.paiTrainingService = component.get(PAITrainingService);
+        this.paiTrainingService = paiTrainingService;
     }
 
     protected handleTrialMetrics(jobId: string, metrics: any[]): void {

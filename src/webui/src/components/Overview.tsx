@@ -35,30 +35,31 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         };
     }
 
-    clickMaxTop = (event: React.SyntheticEvent<EventTarget>) => {
+    clickMaxTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         // #999 panel active bgcolor; #b3b3b3 as usual
         const { changeMetricGraphMode } = this.props;
         changeMetricGraphMode('max');
     }
 
-    clickMinTop = (event: React.SyntheticEvent<EventTarget>) => {
+    clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         const { changeMetricGraphMode } = this.props;
         changeMetricGraphMode('min');
     }
 
-    changeConcurrency = (val: number) => {
+    changeConcurrency = (val: number): void => {
         this.setState({ trialConcurrency: val });
     }
 
-    render() {
+    render(): React.ReactNode {
         const { trialConcurrency } = this.state;
         const { experimentUpdateBroadcast, metricGraphMode } = this.props;
 
         const searchSpace = this.convertSearchSpace();
 
         const bestTrials = this.findBestTrials();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
@@ -147,7 +148,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const searchSpace = Object.assign({}, EXPERIMENT.searchSpace);
         Object.keys(searchSpace).map(item => {
             const key = searchSpace[item]._type;
-            let value = searchSpace[item]._value;
+            const value = searchSpace[item]._value;
             switch (key) {
                 case 'quniform':
                 case 'qnormal':
@@ -161,7 +162,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     }
 
     private findBestTrials(): Trial[] {
-        let bestTrials = TRIALS.sort();
+        const bestTrials = TRIALS.sort();
         if (this.props.metricGraphMode === 'max') {
             bestTrials.reverse().splice(10);
         } else {

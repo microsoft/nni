@@ -76,13 +76,13 @@ class Para extends React.Component<ParaProps, ParaState> {
     getParallelAxis =
         (
             dimName: Array<string>, parallelAxis: Array<Dimobj>,
-            accPara: Array<number>, eachTrialParams: Array<string>,
+            accPara: number[], eachTrialParams: Array<string>,
             lengthofTrials: number
-        ) => {
+        ): void => {
             // get data for every lines. if dim is choice type, number -> toString()
             const paraYdata: number[][] = [];
             Object.keys(eachTrialParams).map(item => {
-                let temp: Array<number> = [];
+                const temp: number[] = [];
                 for (let i = 0; i < dimName.length; i++) {
                     if ('type' in parallelAxis[i]) {
                         temp.push(eachTrialParams[item][dimName[i]].toString());
@@ -122,11 +122,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             this.setState({ paraBack: paraData });
         }
 
-    hyperParaPic = (source: Array<TableObj>, searchSpace: string) => {
+    hyperParaPic = (source: Array<TableObj>, searchSpace: string): void => {
         // filter succeed trials [{}, {}, {}]
         const dataSource = source.filter(filterByStatus);
         const lenOfDataSource: number = dataSource.length;
-        const accPara: Array<number> = [];
+        const accPara: number[] = [];
         // specific value array
         const eachTrialParams: Array<string> = [];
         // experiment interface search space obj
@@ -148,6 +148,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (isNested === false) {
             for (i; i < dimName.length; i++) {
                 const searchKey = searchRange[dimName[i]];
+                const data: Array<string> = [];
                 switch (searchKey._type) {
                     case 'uniform':
                     case 'quniform':
@@ -167,7 +168,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                         });
                         break;
                     case 'choice':
-                        const data: Array<string> = [];
                         for (let j = 0; j < searchKey._value.length; j++) {
                             data.push(searchKey._value[j].toString());
                         }
@@ -220,11 +220,10 @@ class Para extends React.Component<ParaProps, ParaState> {
         } else {
             for (i; i < dimName.length; i++) {
                 const searchKey = searchRange[dimName[i]];
+                const data: Array<string> = [];
                 switch (searchKey._type) {
                     case 'choice':
-                        const data: Array<string> = [];
-                        let j = 0;
-                        for (j; j < searchKey._value.length; j++) {
+                        for (let j = 0; j < searchKey._value.length; j++) {
                             const item = searchKey._value[j];
                             Object.keys(item).map(key => {
                                 if (key !== '_name' && key !== '_type') {
@@ -292,7 +291,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             show: true
                         },
                         axisLabel: {
-                            formatter: function (value?: string) {
+                            formatter: function (value?: string): string | null {
                                 if (value !== undefined) {
                                     const length = value.length;
                                     if (length > 16) {
@@ -340,7 +339,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             if (isNested !== false) {
                 eachTrialParams.forEach(element => {
                     Object.keys(element).forEach(key => {
-                        let item = element[key];
+                        const item = element[key];
                         if (typeof item === 'object') {
                             Object.keys(item).forEach(index => {
                                 if (index !== '_name') {
@@ -363,16 +362,14 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     // get percent value number
-    percentNum = (value: string) => {
+    percentNum = (value: string): void => {
 
-        let vals = parseFloat(value);
-        this.setState({ percent: vals }, () => {
-            this.reInit();
-        });
+        const vals = parseFloat(value);
+        this.setState({ percent: vals }, () => { this.reInit(); });
     }
 
     // deal with response data into pic data
-    getOption = (dataObj: ParaObj, lengthofTrials: number) => {
+    getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
         // dataObj [[y1], [y2]... [default metric]]
         const { max, min } = this.state;
         const parallelAxis = dataObj.parallelAxis;
@@ -407,7 +404,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                         show: true
                     },
                     axisLabel: {
-                        formatter: function (value: string) {
+                        formatter: function (value: string): string {
                             const length = value.length;
                             if (length > 16) {
                                 const temp = value.split('');
@@ -442,16 +439,16 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     // get swap parallel axis
-    getSwapArr = (value: Array<string>) => {
+    getSwapArr = (value: Array<string>): void => {
         this.setState({ swapAxisArr: value });
     }
 
-    reInit = () => {
+    reInit = (): void => {
         const { dataSource, expSearchSpace } = this.props;
         this.hyperParaPic(dataSource, expSearchSpace);
     }
 
-    swapReInit = () => {
+    swapReInit = (): void => {
         const { clickCounts, succeedRenderCount } = this.state;
         const val = clickCounts + 1;
         this.setState({ isLoadConfirm: true, clickCounts: val, });
@@ -509,12 +506,12 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
-    sortDimY = (a: Dimobj, b: Dimobj) => {
+    sortDimY = (a: Dimobj, b: Dimobj): number => {
         return a.dim - b.dim;
     }
 
     // deal with after swap data into pic
-    swapGraph = (paraBack: ParaObj, swapAxisArr: string[]) => {
+    swapGraph = (paraBack: ParaObj, swapAxisArr: string[]): void => {
         const paralDim = paraBack.parallelAxis;
         const paraData = paraBack.data;
         let temp: number;
@@ -563,18 +560,18 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.reInit();
     }
 
-    componentWillReceiveProps(nextProps: ParaProps) {
+    componentWillReceiveProps(nextProps: ParaProps): void {
         const { dataSource, expSearchSpace, whichGraph } = nextProps;
         if (whichGraph === '2') {
             this.hyperParaPic(dataSource, expSearchSpace);
         }
     }
 
-    shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState) {
+    shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState): boolean {
 
         const { whichGraph } = nextProps;
         const beforeGraph = this.props.whichGraph;
@@ -601,7 +598,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         return false;
     }
 
-    render() {
+    render(): React.ReactNode {
         const { option, paraNodata, dimName, isLoadConfirm } = this.state;
         return (
             <Row className="parameter">
