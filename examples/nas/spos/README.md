@@ -36,7 +36,6 @@ spos
 │   └── op_flops_dict.pkl
 ├── dataloader.py
 ├── network.py
-├── nni_auto_gen_search_space.json
 ├── readme.md
 ├── scratch.py
 ├── supernet.py

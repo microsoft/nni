@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from nni.nas.pytorch.spos import SPOSEvolution
 
 from network import ShuffleNetV2OneShot

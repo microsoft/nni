@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import os
 
 import nvidia.dali.ops as ops
@@ -98,5 +101,6 @@ def get_imagenet_iter_dali(split, image_dir, batch_size, num_threads, crop=224, 
         raise AssertionError
     pipeline.build()
     num_samples = pipeline.epoch_size("Reader")
-    return ClassificationWrapper(DALIClassificationIterator(pipeline, size=num_samples, fill_last_batch=split == "train",
-                                 auto_reset=True), (num_samples + batch_size - 1) // batch_size)
+    return ClassificationWrapper(
+        DALIClassificationIterator(pipeline, size=num_samples, fill_last_batch=split == "train",
+                                   auto_reset=True), (num_samples + batch_size - 1) // batch_size)
