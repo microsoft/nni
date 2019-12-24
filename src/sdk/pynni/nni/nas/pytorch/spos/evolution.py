@@ -9,6 +9,7 @@ from collections import deque
 
 import numpy as np
 from nni.tuner import Tuner
+from nni.nas.pytorch.classic_nas.mutator import LAYER_CHOICE, INPUT_CHOICE
 
 
 _logger = logging.getLogger(__name__)
@@ -82,11 +83,11 @@ class SPOSEvolution(Tuner):
     def _random_candidate(self):
         chosen_arch = dict()
         for key, val in self._search_space.items():
-            if val["_type"] == "layer_choice":
+            if val["_type"] == LAYER_CHOICE:
                 choices = val["_value"]
                 index = self.random_state.randint(len(choices))
                 chosen_arch[key] = {"_value": choices[index], "_idx": index}
-            elif val["_type"] == "input_choice":
+            elif val["_type"] == INPUT_CHOICE:
                 raise NotImplementedError("Input choice is not implemented yet.")
         return chosen_arch
 
