@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -94,7 +97,7 @@ def test(model, device, test_loader):
     return acc
 
 def adjust_learning_rate(optimizer, epoch):
-    update_list = [55, 100, 150,200,400,600]
+    update_list = [55, 100, 150, 200, 400, 600]
     if epoch in update_list:
         for param_group in optimizer.param_groups:
             param_group['lr'] = param_group['lr'] * 0.1
