@@ -7,6 +7,7 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
     const ret = new Map<string, MetricDataRecord[]>();
     for (const metric of metrics) {
         if (ret.has(metric.trialJobId)) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             ret.get(metric.trialJobId)!.push(metric);
         } else {
             ret.set(metric.trialJobId, [ metric ]);
@@ -35,14 +36,17 @@ class TrialManager {
     }
 
     public getTrial(trialId: string): Trial {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.trials.get(trialId)!;
     }
 
     public getTrials(trialIds: string[]): Trial[] {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return trialIds.map(trialId => this.trials.get(trialId)!);
     }
 
     public table(trialIds: string[]): TableRecord[] {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return trialIds.map(trialId => this.trials.get(trialId)!.tableRecord);
     }
 
@@ -61,6 +65,7 @@ class TrialManager {
     }
 
     public sort(): Trial[] {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
     }
 
@@ -77,6 +82,7 @@ class TrialManager {
         ]);
         for (const trial of this.trials.values()) {
             if (trial.initialized()) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 cnt.set(trial.info.status, cnt.get(trial.info.status)! + 1);
             }
         }
@@ -89,6 +95,7 @@ class TrialManager {
         if (response.status === 200) {
             for (const info of response.data as TrialJobInfo[]) {
                 if (this.trials.has(info.id)) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated;
                 } else {
                     this.trials.set(info.id, new Trial(info, undefined));
@@ -141,6 +148,7 @@ class TrialManager {
         let updated = false;
         for (const [ trialId, metrics ] of groupMetricsByTrial(allMetrics).entries()) {
             if (this.trials.has(trialId)) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const trial = this.trials.get(trialId)!;
                 updated = (latestOnly ? trial.updateLatestMetrics(metrics) : trial.updateMetrics(metrics)) || updated;
             } else {

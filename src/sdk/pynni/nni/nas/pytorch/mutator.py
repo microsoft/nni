@@ -41,7 +41,8 @@ class Mutator(BaseMutator):
 
     def reset(self):
         """
-        Reset the mutator by call the `sample_search` to resample (for search).
+        Reset the mutator by call the `sample_search` to resample (for search). Stores the result in a local
+        variable so that `on_forward_layer_choice` and `on_forward_input_choice` can use the decision directly.
 
         Returns
         -------
