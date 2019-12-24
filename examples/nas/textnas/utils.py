@@ -1,10 +1,7 @@
 import logging
-import os
-from itertools import cycle
 
 import torch
 import torch.nn as nn
-from torchtext import data, datasets, vocab
 
 INF = 1E10
 EPS = 1E-12
@@ -65,26 +62,3 @@ def accuracy(output, target):
     batch_size = target.size(0)
     _, predicted = torch.max(output.data, 1)
     return (predicted == target).sum().item() / batch_size
-
-
-def get_data_loader(batch_size, device, infinite=True, subtrees=True):
-    data_folder = "data"
-    TEXT = data.Field(lower=True, include_lengths=True, batch_first=True)
-    LABEL = data.Field(sequential=False)
-    sst_folder = datasets.SST.download(data_folder)
-    train = datasets.SST(os.path.join(sst_folder, "train.txt"), TEXT, LABEL, fine_grained=True, subtrees=subtrees)
-    val = datasets.SST(os.path.join(sst_folder, "dev.txt"), TEXT, LABEL, fine_grained=True, subtrees=subtrees)
-    test = datasets.SST(os.path.join(sst_folder, "test.txt"), TEXT, LABEL, fine_grained=True)
-    TEXT.build_vocab(train, vectors=vocab.GloVe(cache=data_folder))
-    LABEL.build_vocab(train)
-    train_iter, val_iter, test_iter = data.BucketIterator.splits(
-        (train, val, test), batch_size=batch_size, device=device)
-    train_loader = IteratorWrapper(train_iter)
-    valid_loader = IteratorWrapper(val_iter)
-    test_loader = IteratorWrapper(test_iter)
-    logger.info("Loaded %d batches for training, %d for validation, %d for testing.",
-                len(train_loader), len(valid_loader), len(test_loader))
-    if infinite:
-        train_loader = cycle(train_loader)
-        valid_loader = cycle(valid_loader)
-    return TEXT.vocab.vectors, train_loader, valid_loader, test_loader
