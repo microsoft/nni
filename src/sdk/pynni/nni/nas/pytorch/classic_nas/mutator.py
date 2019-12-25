@@ -104,10 +104,11 @@ class ClassicMutator(Mutator):
         search_space_item : list
             The list for corresponding search space.
         """
+        candidate_repr = search_space_item["candidates"]
         multihot_list = [False] * mutable.n_candidates
         for i, v in zip(idx, value):
-            assert 0 <= i < mutable.n_candidates and search_space_item[i] == v, \
-                "Index '{}' in search space '{}' is not '{}'".format(i, search_space_item, v)
+            assert 0 <= i < mutable.n_candidates and candidate_repr[i] == v, \
+                "Index '{}' in search space '{}' is not '{}'".format(i, candidate_repr, v)
             assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
             multihot_list[i] = True
         return torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
