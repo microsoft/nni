@@ -68,6 +68,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 } else if(this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
                 }
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -253,19 +254,11 @@ class PAIK8STrainingService extends PAITrainingService {
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
-        
-        // If users' host start with 'http://' or 'https://', use the original host,
-        // or format it to 'http://${this.paiClusterConfig.host}'
-        let paiHost: string = '';
-        if (this.paiClusterConfig.host.startsWith('http')) {
-            paiHost = this.paiClusterConfig.host;
-        } else {
-            paiHost = `http://${this.paiClusterConfig.host}`;
-        }
+
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `${paiHost}/rest-server/api/v2/jobs`,
+            uri: `${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
             headers: {
