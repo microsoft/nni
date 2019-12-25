@@ -219,7 +219,7 @@ abstract class PAITrainingService implements TrainingService {
     protected formatPAIHost(host: string): string {
         // If users' host start with 'http://' or 'https://', use the original host,
         // or format to 'http//${host}'
-        if (host.startsWith('http')) {
+        if (host.startsWith('http://') || host.startsWith('https://')) {
             return host;
         } else {
             return `http://${host}`;
