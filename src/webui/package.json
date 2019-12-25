@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "antd": "3.10.9",
+    "antd": "3.10.10",
     "autoprefixer": "^9.6.1",
     "axios": "^0.19.0",
     "babel-loader": "^8.0.6",
@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@types/node": "^10.14.14",
-    "@types/react": "16.4.17",
+    "@types/react": "16.8.4",
     "@types/react-dom": "^16.0.7",
     "@types/react-json-tree": "^0.6.11",
     "@types/react-responsive": "^3.0.3",
@@ -69,7 +69,7 @@
     "typescript": "^3.5.3"
   },
   "resolutions": {
-    "@types/react": "16.4.17",
+    "@types/react": "16.8.4",
     "js-yaml": "^3.13.1",
     "serialize-javascript": "^2.1.1"
   },
