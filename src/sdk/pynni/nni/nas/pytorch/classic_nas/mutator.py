@@ -10,7 +10,7 @@ import torch
 
 import nni
 from nni.env_vars import trial_env_vars
-from nni.nas.pytorch.mutables import LayerChoice, InputChoice
+from nni.nas.pytorch.mutables import LayerChoice, InputChoice, MutableScope
 from nni.nas.pytorch.mutator import Mutator
 
 logger = logging.getLogger(__name__)
@@ -190,6 +190,8 @@ class ClassicMutator(Mutator):
                 search_space[key] = {"_type": INPUT_CHOICE,
                                      "_value": {"candidates": mutable.choose_from,
                                                 "n_chosen": mutable.n_chosen}}
+            elif isinstance(mutable, MutableScope):
+                logger.warning("Mutable scope '%s' is skipped during generating search space.", mutable.key)
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return search_space
