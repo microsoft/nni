@@ -17,6 +17,7 @@ class LotteryTicketPruner(Pruner):
     4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
     5. Repeat step 2, 3, and 4.
     """
+
     def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=True):
         """
         Parameters
@@ -55,7 +56,8 @@ class LotteryTicketPruner(Pruner):
             assert 'prune_iterations' in config, 'prune_iterations must exist in your config'
             assert 'sparsity' in config, 'sparsity must exist in your config'
             if prune_iterations is not None:
-                assert prune_iterations == config['prune_iterations'], 'The values of prune_iterations must be equal in your config'
+                assert prune_iterations == config[
+                    'prune_iterations'], 'The values of prune_iterations must be equal in your config'
             prune_iterations = config['prune_iterations']
         return prune_iterations
 
@@ -67,8 +69,8 @@ class LotteryTicketPruner(Pruner):
             if print_mask:
                 print('mask: ', mask)
             # calculate current sparsity
-            mask_num = mask.sum().item()
-            mask_size = mask.numel()
+            mask_num = mask['weight'].sum().item()
+            mask_size = mask['weight'].numel()
             print('sparsity: ', 1 - mask_num / mask_size)
         torch.set_printoptions(profile='default')
 
@@ -84,11 +86,11 @@ class LotteryTicketPruner(Pruner):
             curr_sparsity = self._calc_sparsity(sparsity)
             assert self.mask_dict.get(op_name) is not None
             curr_mask = self.mask_dict.get(op_name)
-            w_abs = weight.abs() * curr_mask
+            w_abs = weight.abs() * curr_mask['weight']
             k = int(w_abs.numel() * curr_sparsity)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
-        return mask
+        return {'weight': mask}
 
     def calc_mask(self, layer, config):
         """

@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from .compressor import Quantizer
+from .compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
 
@@ -241,3 +241,33 @@ class DoReFaQuantizer(Quantizer):
         scale = pow(2, q_bits)-1
         output = torch.round(input_ri*scale)/scale
         return output
+
+
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        if quant_type == QuantType.QUANT_OUTPUT:
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
+class BNNQuantizer(Quantizer):
+    """Binarized Neural Networks, as defined in:
+    Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1
+    (https://arxiv.org/abs/1602.02830)
+    """
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        self.quant_grad = ClipGrad
+
+    def quantize_weight(self, weight, config, **kwargs):
+        out = torch.sign(weight)
+        # remove zeros
+        out[out == 0] = 1
+        return out
+
+    def quantize_output(self, output, config, **kwargs):
+        out = torch.sign(output)
+        # remove zeros
+        out[out == 0] = 1
+        return out
