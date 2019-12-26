@@ -564,7 +564,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         this.reInit();
     }
 
-    componentWillReceiveProps(nextProps: ParaProps): void {
+    UNSAFE_componentWillReceiveProps(nextProps: ParaProps): void {
         const { dataSource, expSearchSpace, whichGraph } = nextProps;
         if (whichGraph === '2') {
             this.hyperParaPic(dataSource, expSearchSpace);

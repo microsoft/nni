@@ -81,7 +81,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    componentWillReceiveProps(nextProps: ExpDrawerProps): void {
+    UNSAFE_componentWillReceiveProps(nextProps: ExpDrawerProps): void {
         const { isVisble } = nextProps;
         if (isVisble === true) {
             this.getExperimentContent();

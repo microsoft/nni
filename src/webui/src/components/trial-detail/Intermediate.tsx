@@ -207,7 +207,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         this.drawIntermediate(source);
     }
 
-    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState): void {
+    UNSAFE_componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState): void {
         const { isFilter, filterSource } = nextState;
         const { whichGraph, source } = nextProps;
 

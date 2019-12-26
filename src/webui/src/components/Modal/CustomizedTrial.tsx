@@ -131,7 +131,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    componentWillReceiveProps(nextProps: CustomizeProps): void {
+    UNSAFE_componentWillReceiveProps(nextProps: CustomizeProps): void {
         const { copyTrialId } = nextProps;
         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
