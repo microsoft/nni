@@ -260,7 +260,7 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
 ### Usage of user customized compression algorithm
 
-__[Coming Soon]__ ...
+__Coming Soon__ ...
 
 ## **Reference and Feedback**
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
