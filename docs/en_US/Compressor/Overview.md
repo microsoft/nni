@@ -30,6 +30,7 @@ We have provided several compression algorithms, including several pruning and q
 | [Naive Quantizer](./Quantizer.md#naive-quantizer) |  Quantize weights to default 8 bits |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
+| [BNN Quantizer](./Quantizer.md#BNN-Quantizer) | Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. [Reference Paper](https://arxiv.org/abs/1602.02830)|
 
 ## Usage of built-in compression algorithms
 
@@ -61,17 +62,27 @@ The function call `pruner.compress()` modifies user defined model (in Tensorflow
 When instantiate a compression algorithm, there is `config_list` passed in. We describe how to write this config below.
 
 ### User configuration for a compression algorithm
+When compressing a model, users may want to specify the ratio for sparsity, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object. 
 
-When compressing a model, users may want to specify the ratio for sparsity, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object. In each `dict`, there are some keys commonly supported by NNI compression:
+The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them. 
+
+#### Common keys
+In each `dict`, there are some keys commonly supported by NNI compression:
 
 * __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
 * __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
+#### Keys for quantization algorithms
+**If you use quantization algorithms, you need to especify more keys. If you use pruning algorithms, you can safely skip these keys**
+
+* __quant_types__ : list of string. Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+
+#### Other keys specified for every compression algorithm
 There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
 
-The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them. 
 
+#### example
 A simple example of configuration is shown below:
 
 ```python
@@ -183,11 +194,9 @@ Some algorithms may want global information for generating masks, for example, a
 The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
 
 ```python
-# This is writing a Quantizer in tensorflow.
-# For writing a Quantizer in PyTorch, you can simply replace
-# nni.compression.tensorflow.Quantizer with
-# nni.compression.torch.Quantizer
-class YourQuantizer(nni.compression.tensorflow.Quantizer):
+from nni.compression.torch.compressor import Quantizer
+
+class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         """
         Suggest you to use the NNI defined spec for config
@@ -257,7 +266,46 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         """
         pass
 ```
+#### customize backward function
+Sometimes it's necessary for a quantization operation to have a customized backward function, such as Straight-Through Estimator,
+user can customize a backward function as follow:
 
-### Usage of user customized compression algorithm
+```python
+from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
 
-__[TODO]__ ...
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        """
+        This method should be overrided by subclass to provide customized backward function,
+        default implementation is Straight-Through Estimator
+        Parameters
+        ----------
+        tensor : Tensor
+            input of quantization operation
+        grad_output : Tensor
+            gradient of the output of quantization operation
+        quant_type : QuantType
+            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            you can define different behavior for different types.
+        Returns
+        -------
+        tensor
+            gradient of the input of quantization operation
+        """
+
+        # for quant_output function, set grad to zero if the absolute value of tensor is larger than 1
+        if quant_type == QuantType.QUANT_OUTPUT: 
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
+class YourQuantizer(Quantizer):
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        # set your customized backward function to overwrite default backward function
+        self.quant_grad = ClipGrad
+
+```
+
+The default backward function for quant_weight, quant_input, quant_output is Straight-Through Estimator. 

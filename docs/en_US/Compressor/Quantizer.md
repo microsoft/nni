@@ -51,16 +51,6 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **quant_types:** : list of string
-
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
 specify the name of modules that will be quantized. eg. 'conv1'
 
 * **quant_bits:** int or dict of {str : int}
@@ -98,18 +88,6 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-* **quant_types:** : list of string
-
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
-specify the name of modules that will be quantized. eg. 'conv1'
-
 * **quant_bits:** int or dict of {str : int}
 
 bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
@@ -130,13 +108,13 @@ from nni.compression.torch import BNNQuantizer
 model = VGG_Cifar10(num_classes=10)
 
 configure_list = [{
-    'quant_types': ['weight'],
     'quant_bits': 1,
+    'quant_types': ['weight'],
     'op_types': ['Conv2d', 'Linear'],
     'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
 }, {
-    'quant_types': ['output'],
     'quant_bits': 1,
+    'quant_types': ['output'],
     'op_types': ['Hardtanh'],
     'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
 }]
@@ -148,18 +126,6 @@ model = quantizer.compress()
 You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
 
 #### User configuration for BNN Quantizer
-* **quant_types:** : list of string
-
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
-specify the name of modules that will be quantized. eg. 'conv1'
-
 * **quant_bits:** int or dict of {str : int}
 
 bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
