@@ -51,12 +51,9 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-specify the name of modules that will be quantized. eg. 'conv1'
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-* **quant_bits:** int or dict of {str : int}
-
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 * **quant_start_step:** int
 
@@ -88,10 +85,9 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-* **quant_bits:** int or dict of {str : int}
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 
 ## BNN Quantizer
@@ -126,10 +122,9 @@ model = quantizer.compress()
 You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
 
 #### User configuration for BNN Quantizer
-* **quant_bits:** int or dict of {str : int}
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 ### Experiment
 We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:

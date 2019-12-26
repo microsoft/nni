@@ -76,7 +76,14 @@ In each `dict`, there are some keys commonly supported by NNI compression:
 #### Keys for quantization algorithms
 **If you use quantization algorithms, you need to especify more keys. If you use pruning algorithms, you can safely skip these keys**
 
-* __quant_types__ : list of string. Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+* __quant_types__ : list of string. 
+
+Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+
+* __quant_bits__ : int or dict of {str : int}
+
+bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+when the type is int, all quantization types share same bits length.
 
 #### Other keys specified for every compression algorithm
 There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
