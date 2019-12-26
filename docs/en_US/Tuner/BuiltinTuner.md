@@ -1,4 +1,4 @@
-# Built-in Tuners
+# Built-in Tuners for Hyperparameter Tuning
 
 NNI provides state-of-the-art tuning algorithm as our built-in tuners and makes them easy to use. Below is the brief summary of NNI currently built-in tuners:
 
@@ -453,3 +453,9 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
+
+## **Reference and Feedback**
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To [know more about Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
+* To [know more about model compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
