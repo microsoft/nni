@@ -6,12 +6,10 @@ We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it
 
 ### Usage
 tensorflow
-```python
-nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
+```python nni.compression.tensorflow.NaiveQuantizer(model_graph).compress()
 ```
 pytorch
-```python
-nni.compressors.torch.NaiveQuantizer(model).compress()
+```python nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -29,7 +27,7 @@ You can quantize your model to 8 bits with the code below before your training c
 
 PyTorch code
 ```python
-from nni.compressors.torch import QAT_Quantizer
+from nni.compression.torch import QAT_Quantizer
 model = Mnist()
 
 config_list = [{
@@ -72,7 +70,7 @@ To implement DoReFa Quantizer, you can add code below before your training code
 
 PyTorch code
 ```python
-from nni.compressors.torch import DoReFaQuantizer
+from nni.compression.torch import DoReFaQuantizer
 config_list = [{ 
     'quant_types': ['weight'],
     'quant_bits': 8, 
