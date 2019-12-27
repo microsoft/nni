@@ -1,6 +1,6 @@
-# 内置 Tuner
+# Built-in Tuners for Hyperparameter Tuning
 
-NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
+NNI provides state-of-the-art tuning algorithms as our built-in tuners and makes them easy to use. 下面是内置 Tuner 的简单介绍：
 
 注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](../CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
 
@@ -451,3 +451,11 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
+
+## **Reference and Feedback**
+
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
