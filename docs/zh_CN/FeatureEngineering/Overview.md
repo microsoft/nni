@@ -1,4 +1,4 @@
-# 特征工程
+# Feature Engineering with NNI
 
 我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
@@ -254,3 +254,10 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
 
 代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
+
+## **Reference and Feedback**
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
