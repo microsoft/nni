@@ -1,4 +1,4 @@
-# Compressor
+# Model Compression with NNI
 
 我们很高兴的宣布，基于 NNI 的模型压缩工具发布了 Alpha 版本。该版本仍处于试验阶段，根据用户反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
@@ -258,4 +258,11 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
 
 ### 使用用户自定义的压缩算法
 
-__[TODO]__ ...
+_Coming Soon_ ...
+
+## **Reference and Feedback**
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
