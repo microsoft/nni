@@ -13,7 +13,7 @@ We have provided several compression algorithms, including several pruning and q
 
 **Pruning**
 
-Pruning algorithms compresses the original network by removing redundant weights, which can reduce model complexity and address the over-ﬁtting issue.
+Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and address the over-ﬁtting issue.
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
@@ -30,7 +30,7 @@ Pruning algorithms compresses the original network by removing redundant weights
 
 **Quantization**
 
-Quantization algorithms compresses the original network by reducing the number of bits required to represent weights or activations, which can reduce the computations and the inference time.
+Quantization algorithms compress the original network by reducing the number of bits required to represent weights or activations, which can reduce the computations and the inference time.
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
