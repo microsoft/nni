@@ -60,8 +60,8 @@ class ActivationRankFilterPruner(Pruner):
             layer.module.register_forward_hook(_hook)
         return self.bound_model
 
-    def _get_mask(self, base_mask, activations, num_prune):
-        return {'weight': None, 'bias': None}
+    def get_mask(self, base_mask, activations, num_prune):
+        raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
     def calc_mask(self, layer, config):
         """
@@ -101,7 +101,7 @@ class ActivationRankFilterPruner(Pruner):
             num_prune = int(filters * config.get('sparsity'))
             if filters < 2 or num_prune < 1 or len(self.collected_activation[layer.name]) < self.statistics_batch_num:
                 return mask
-            mask = self._get_mask(mask, self.collected_activation[layer.name], num_prune)
+            mask = self.get_mask(mask, self.collected_activation[layer.name], num_prune)
         finally:
             if len(self.collected_activation[layer.name]) == self.statistics_batch_num:
                 self.mask_dict.update({op_name: mask})
@@ -134,7 +134,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         """
         super().__init__(model, config_list, activation, statistics_batch_num)
 
-    def _get_mask(self, base_mask, activations, num_prune):
+    def get_mask(self, base_mask, activations, num_prune):
         """
         Calculate the mask of given layer.
         Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
@@ -206,7 +206,7 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         """
         super().__init__(model, config_list, activation, statistics_batch_num)
 
-    def _get_mask(self, base_mask, activations, num_prune):
+    def get_mask(self, base_mask, activations, num_prune):
         """
         Calculate the mask of given layer.
         Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.

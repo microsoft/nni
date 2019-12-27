@@ -29,8 +29,8 @@ class WeightRankFilterPruner(Pruner):
         super().__init__(model, config_list)
         self.mask_calculated_ops = set()  # operations whose mask has been calculated
 
-    def _get_mask(self, base_mask, weight, num_prune):
-        return {'weight': None, 'bias': None}
+    def get_mask(self, base_mask, weight, num_prune):
+        raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
     def calc_mask(self, layer, config):
         """
@@ -68,7 +68,7 @@ class WeightRankFilterPruner(Pruner):
             num_prune = int(filters * config.get('sparsity'))
             if filters < 2 or num_prune < 1:
                 return mask
-            mask = self._get_mask(mask, weight, num_prune)
+            mask = self.get_mask(mask, weight, num_prune)
         finally:
             self.mask_dict.update({op_name: mask})
             self.mask_calculated_ops.add(op_name)
@@ -97,7 +97,7 @@ class L1FilterPruner(WeightRankFilterPruner):
 
         super().__init__(model, config_list)
 
-    def _get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune):
         """
         Calculate the mask of given layer.
         Filters with the smallest sum of its absolute kernel weights are masked.
@@ -145,7 +145,7 @@ class L2FilterPruner(WeightRankFilterPruner):
 
         super().__init__(model, config_list)
 
-    def _get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune):
         """
         Calculate the mask of given layer.
         Filters with the smallest L2 norm of the absolute kernel weights are masked.
@@ -191,7 +191,7 @@ class FPGMPruner(WeightRankFilterPruner):
         """
         super().__init__(model, config_list)
 
-    def _get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune):
         """
         Calculate the mask of given layer.
         Filters with the smallest sum of its absolute kernel weights are masked.
