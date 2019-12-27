@@ -92,7 +92,7 @@ bits length of quantization, key is the quantization type, value is the quantiza
         },
 }
 ```
-when the key is int type, all quantization types share same bits length. eg. 
+when the value is int type, all quantization types share same bits length. eg. 
 ```
 {
     quant_bits: 8, # weight or output quantization are all 8 bits
