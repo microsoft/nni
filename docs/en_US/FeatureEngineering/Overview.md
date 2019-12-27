@@ -1,4 +1,4 @@
-# FeatureEngineering
+# Feature Engineering with NNI
 
 We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
 
@@ -256,3 +256,10 @@ The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw
 )
 
 The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.
+
+## **Reference and Feedback**
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
