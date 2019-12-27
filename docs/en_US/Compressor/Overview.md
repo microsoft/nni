@@ -86,7 +86,7 @@ bits length of quantization, key is the quantization type, value is the length, 
 when the type is int, all quantization types share same bits length.
 
 #### Other keys specified for every compression algorithm
-There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, some , some.
+There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, [Level Pruner](./Pruner.md#level-pruner) requires `sparsity` key to specify how much a model should be pruned.
 
 
 #### example
@@ -273,9 +273,8 @@ class YourQuantizer(Quantizer):
         """
         pass
 ```
-#### customize backward function
-Sometimes it's necessary for a quantization operation to have a customized backward function, such as Straight-Through Estimator,
-user can customize a backward function as follow:
+#### Customize backward function
+Sometimes it's necessary for a quantization operation to have a customized backward function, such as [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste), user can customize a backward function as follow:
 
 ```python
 from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
@@ -315,4 +314,4 @@ class YourQuantizer(Quantizer):
 
 ```
 
-The default backward function for quant_weight, quant_input, quant_output is Straight-Through Estimator. 
+If you do not customize `QuantGrad`, the default backward is Straight-Through Estimator. 
