@@ -74,17 +74,30 @@ In each `dict`, there are some keys commonly supported by NNI compression:
 * __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
 #### Keys for quantization algorithms
-**If you use quantization algorithms, you need to especify more keys. If you use pruning algorithms, you can safely skip these keys**
+**If you use quantization algorithms, you need to specify more keys. If you use pruning algorithms, you can safely skip these keys**
 
 * __quant_types__ : list of string. 
 
-Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+Type of quantization you want to apply, currently support 'weight', 'input', 'output'. 'weight' means applying quantization operation
+to the weight parameter of modules. 'input' means applying quantization operation to the input of module forward method. 'output' means applying quantization operation to the output of module forward method, which is often called as 'activation' in some papers.
 
 * __quant_bits__ : int or dict of {str : int}
 
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
-
+bits length of quantization, key is the quantization type, value is the quantization bits length, eg. 
+```
+{
+    quant_bits: {
+        'weight': 8,
+        'output': 4,
+        },
+}
+```
+when the key is int type, all quantization types share same bits length. eg. 
+```
+{
+    quant_bits: 8, # weight or output quantization are all 8 bits
+}
+```
 #### Other keys specified for every compression algorithm
 There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, [Level Pruner](./Pruner.md#level-pruner) requires `sparsity` key to specify how much a model should be pruned.
 
