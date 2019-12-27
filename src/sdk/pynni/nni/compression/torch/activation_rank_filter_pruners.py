@@ -12,13 +12,8 @@ logger = logging.getLogger('torch activation rank filter pruners')
 class ActivationRankFilterPruner(Pruner):
     """
     A structured pruning base class that prunes the filters with the smallest
-    importance criterion in convolution layers to achieve a preset level of network sparsity.
-    Hengyuan Hu, Rui Peng, Yu-Wing Tai and Chi-Keung Tang,
-    "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
-    https://arxiv.org/abs/1607.03250
-    Pavlo Molchanov, Stephen Tyree, Tero Karras, Timo Aila and Jan Kautz,
-    "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
-    https://arxiv.org/abs/1611.06440
+    importance criterion in convolution layers (using activation values)
+    to achieve a preset level of network sparsity.
     """
 
     def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
