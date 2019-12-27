@@ -261,12 +261,10 @@ class YourQuantizer(Quantizer):
 
         return new_input
 
-    # note for pytorch version, there is no sess in input arguments
-    def update_epoch(self, epoch_num, sess):
+    def update_epoch(self, epoch_num):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
-    def step(self, sess):
+    def step(self):
         """
         Can do some processing based on the model or weights binded
         in the func bind_model
