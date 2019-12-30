@@ -98,6 +98,7 @@ class PAIYarnTrainingService extends PAITrainingService {
                     port: 80,
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
+                    
                 });
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 if(this.paiClusterConfig.passWord) {
@@ -272,7 +273,7 @@ class PAIYarnTrainingService extends PAITrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
+            uri: `${this.protocol}${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
             method: 'POST',
             json: true,
             body: paiJobConfig,
