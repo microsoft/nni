@@ -11,6 +11,6 @@ tuner:
   classFileName: tuner.py
   className: EvolutionWithFlops
 trial:
-  command: python tester.py --imagenet-dir /path/to/your/imagenet --spos-prep
+  command: python tester.py --imagenet-dir data/imagenet --spos-prep
   codeDir: .
   gpuNum: 1
