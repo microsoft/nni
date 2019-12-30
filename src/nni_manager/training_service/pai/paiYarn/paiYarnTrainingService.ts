@@ -91,6 +91,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             case TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIYarnTrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
 
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
@@ -100,7 +101,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                     host: this.paiClusterConfig.host
                     
                 });
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
