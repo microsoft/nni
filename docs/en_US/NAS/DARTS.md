@@ -6,7 +6,7 @@ The paper [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806
 
 Authors' code optimizes the network weights and architecture weights alternatively in mini-batches. They further explore the possibility that uses second order optimization (unroll) instead of first order, to improve the performance.
 
-Implementation on NNI is based on the [official implementation](https://github.com/quark0/darts) and a [popular 3rd-party repo](https://github.com/khanrc/pt.darts). DARTS on NNI is designed to be general for arbitrary search space. A CNN search space tailored for CIFAR10, same as the original paper, is implemented as a use case of DARTS. See [here](examples/nas/darts). [link](ENAS.md)
+Implementation on NNI is based on the [official implementation](https://github.com/quark0/darts) and a [popular 3rd-party repo](https://github.com/khanrc/pt.darts). DARTS on NNI is designed to be general for arbitrary search space. [A CNN search space tailored for CIFAR10](https://github.com/microsoft/nni/tree/master/examples/nas/darts), same as the original paper, is implemented as a use case of DARTS.
 
 ## Reproduction Results
 
@@ -17,6 +17,20 @@ The above-mentioned example is meant to reproduce the results in the paper, we d
 | First order (CIFAR10)  | 3.00 +/- 0.14 | 2.78         |
 | Second order (CIFAR10) | 2.76 +/- 0.09 | 2.89         |
 
+## Example Usage
+
+```bash
+# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+git clone https://github.com/Microsoft/nni.git
+
+# search the best architecture
+cd examples/nas/darts
+python3 search.py
+
+# train the best architecture
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
+```
+
 ## Reference
 
 ### PyTorch
@@ -24,6 +38,8 @@ The above-mentioned example is meant to reproduce the results in the paper, we d
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.darts.DartsTrainer
     :members:
+
+    .. automethod:: __init__
 
 ..  autoclass:: nni.nas.pytorch.darts.DartsMutator
     :members:

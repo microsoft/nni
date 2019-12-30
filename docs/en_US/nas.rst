@@ -22,4 +22,4 @@ For details, please refer to the following tutorials:
     NAS Interface <NAS/NasInterface>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
-    P-DARTS <NAS/Overview>
+    P-DARTS <NAS/PDARTS>

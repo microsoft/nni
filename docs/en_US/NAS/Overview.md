@@ -33,65 +33,17 @@ Note, these algorithms run **standalone without nnictl**, and supports PyTorch o
 
 ### ENAS
 
-[Efficient Neural Architecture Search via Parameter Sharing][1]. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
-
-#### Usage
-
-ENAS in NNI is still under development and we only support search phase for macro/micro search space on CIFAR10. Training from scratch and search space on PTB has not been finished yet. [Detailed Description](ENAS.md)
-
-```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
-git clone https://github.com/Microsoft/nni.git
-
-# search the best architecture
-cd examples/nas/enas
-
-# search in macro search space
-python3 search.py --search-for macro
-
-# search in micro search space
-python3 search.py --search-for micro
-
-# view more options for search
-python3 search.py -h
-```
+[Efficient Neural Architecture Search via Parameter Sharing][1]. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance. [Detailed Description](ENAS.md)
 
 ### DARTS
 
 The main contribution of [DARTS: Differentiable Architecture Search][3] on algorithm is to introduce a novel algorithm for differentiable network architecture search on bilevel optimization. [Detailed Description](DARTS.md)
 
-#### Usage
-
-```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
-git clone https://github.com/Microsoft/nni.git
-
-# search the best architecture
-cd examples/nas/darts
-python3 search.py
-
-# train the best architecture
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
-```
-
 ### P-DARTS
 
 [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) bases on [DARTS](#DARTS). It's contribution on algorithm is to introduce an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
 
-#### Usage
 
-```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
-git clone https://github.com/Microsoft/nni.git
-
-# search the best architecture
-cd examples/nas/pdarts
-python3 search.py
-
-# train the best architecture, it's the same progress as darts.
-cd ../darts
-python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
-```
 
 ## Use NNI API
 
