@@ -91,7 +91,8 @@ class Compare extends React.Component<CompareProps, {}> {
             },
             yAxis: {
                 type: 'value',
-                name: 'Metric'
+                name: 'Metric',
+                scale: true
             },
             series: trialIntermediate
         };
