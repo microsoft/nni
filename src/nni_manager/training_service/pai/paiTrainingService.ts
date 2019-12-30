@@ -165,7 +165,7 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
+            uri: `${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
 /jobs/${trialJobDetail.paiJobName}/executionType`, 
             method: 'PUT',
             json: true,
@@ -216,6 +216,16 @@ abstract class PAITrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
+    protected formatPAIHost(host: string): string {
+        // If users' host start with 'http://' or 'https://', use the original host,
+        // or format to 'http//${host}'
+        if (host.startsWith('http://') || host.startsWith('https://')) {
+            return host;
+        } else {
+            return `http://${host}`;
+        }
+    }
+
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
             if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
@@ -259,7 +269,7 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         const authenticationReq: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
+            uri: `${this.paiClusterConfig.host}/rest-server/api/v1/token`,
             method: 'POST',
             json: true,
             body: {

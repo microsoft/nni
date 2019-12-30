@@ -16,6 +16,7 @@ class LayerInfo:
 
         self._forward = None
 
+
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -193,10 +194,16 @@ class Pruner(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
+            mask = self.calc_mask(layer, config)
             # apply mask to weight
             old_weight = layer.module.weight.data
-            mask = self.calc_mask(layer, config)
-            layer.module.weight.data = old_weight.mul(mask)
+            mask_weight = mask['weight']
+            layer.module.weight.data = old_weight.mul(mask_weight)
+            # apply mask to bias
+            if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
+                old_bias = layer.module.bias.data
+                mask_bias = mask['bias']
+                layer.module.bias.data = old_bias.mul(mask_bias)
             # calculate forward
             ret = layer._forward(*inputs)
             return ret
@@ -224,12 +231,14 @@ class Pruner(Compressor):
         for name, m in self.bound_model.named_modules():
             if name == "":
                 continue
-            mask = self.mask_dict.get(name)
-            if mask is not None:
-                mask_sum = mask.sum().item()
-                mask_num = mask.numel()
+            masks = self.mask_dict.get(name)
+            if masks is not None:
+                mask_sum = masks['weight'].sum().item()
+                mask_num = masks['weight'].numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                m.weight.data = m.weight.data.mul(mask)
+                m.weight.data = m.weight.data.mul(masks['weight'])
+                if masks.__contains__('bias') and hasattr(m, 'bias') and m.bias is not None:
+                    m.bias.data = m.bias.data.mul(masks['bias'])
             else:
                 _logger.info('Layer: %s  NOT compressed', name)
         torch.save(self.bound_model.state_dict(), model_path)
@@ -250,11 +259,14 @@ class Quantizer(Compressor):
     Base quantizer for pytorch quantizer
     """
 
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        self.quant_grad = QuantGrad
+
     def quantize_weight(self, weight, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         weight : Tensor
@@ -262,13 +274,12 @@ class Quantizer(Compressor):
         config : dict
             the configuration for weight quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_weight()")
+        raise NotImplementedError('Quantizer must overload quantize_weight()')
 
     def quantize_output(self, output, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize output.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         output : Tensor
@@ -276,13 +287,12 @@ class Quantizer(Compressor):
         config : dict
             the configuration for output quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_output()")
+        raise NotImplementedError('Quantizer must overload quantize_output()')
 
     def quantize_input(self, *inputs, config, op, op_type, op_name):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         inputs : Tensor
@@ -290,13 +300,12 @@ class Quantizer(Compressor):
         config : dict
             the configuration for inputs quantization
         """
-        raise NotImplementedError("Quantizer must overload quantize_input()")
+        raise NotImplementedError('Quantizer must overload quantize_input()')
 
 
     def _instrument_layer(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
-
         Parameters
         ----------
         layer : LayerInfo
@@ -305,62 +314,92 @@ class Quantizer(Compressor):
             the configuration for quantization
         """
         assert layer._forward is None, 'Each model can only be compressed once'
-        assert "quant_types" in config, 'must provide quant_types in config'
-        assert isinstance(config["quant_types"], list), 'quant_types must be list type'
-        assert "quant_bits" in config, 'must provide quant_bits in config'
-        assert isinstance(config["quant_bits"], int) or isinstance(config["quant_bits"], dict), 'quant_bits must be dict type or int type'
+        assert 'quant_types' in config, 'must provide quant_types in config'
+        assert isinstance(config['quant_types'], list), 'quant_types must be list type'
+        assert 'quant_bits' in config, 'must provide quant_bits in config'
+        assert isinstance(config['quant_bits'], int) or isinstance(config['quant_bits'], dict), 'quant_bits must be dict type or int type'
 
-        if isinstance(config["quant_bits"], dict):
-            for quant_type in config["quant_types"]:
-                assert quant_type in config["quant_bits"], 'bits length for %s must be specified in quant_bits dict' % quant_type
+        if isinstance(config['quant_bits'], dict):
+            for quant_type in config['quant_types']:
+                assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
-        if 'weight' in config["quant_types"]:
+        if 'weight' in config['quant_types']:
             if not _check_weight(layer.module):
                 _logger.warning('Module %s does not have parameter "weight"', layer.name)
+            else:
+                # old_weight is used to store origin weight and weight is used to store quantized weight
+                # the reason why weight is buffer instead of parameter is because in pytorch parameter is used as leaf
+                # if weight is leaf , then old_weight can not be updated.
+                layer.module.register_parameter('old_weight', torch.nn.Parameter(layer.module.weight))
+                delattr(layer.module, 'weight')
+                layer.module.register_buffer('weight', layer.module.old_weight)
+
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
-            if 'input' in config["quant_types"]:
-                inputs = straight_through_quantize_input.apply(inputs, self, config, layer)
+            if 'input' in config['quant_types']:
+                inputs = self.quant_grad.apply(inputs, QuantType.QUANT_INPUT, self.quantize_input, config, layer)
 
-            if 'weight' in config["quant_types"] and _check_weight(layer.module):
-                weight = layer.module.weight.data
-                new_weight = self.quantize_weight(weight, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-                layer.module.weight.data = new_weight
+            if 'weight' in config['quant_types'] and _check_weight(layer.module):
+                new_weight = self.quant_grad.apply(layer.module.old_weight, QuantType.QUANT_WEIGHT, self.quantize_weight, config, layer)
+                layer.module.weight = new_weight
                 result = layer._forward(*inputs)
-                layer.module.weight.data = weight
             else:
                 result = layer._forward(*inputs)
 
-            if 'output' in config["quant_types"]:
-                result = straight_through_quantize_output.apply(result, self, config, layer)
+            if 'output' in config['quant_types']:
+                result = self.quant_grad.apply(result, QuantType.QUANT_OUTPUT, self.quantize_output, config, layer)
             return result
 
         layer.module.forward = new_forward
 
+class QuantType:
+    """
+    Enum class for quantization type.
+    """
+    QUANT_INPUT = 0
+    QUANT_WEIGHT = 1
+    QUANT_OUTPUT = 2
 
-class straight_through_quantize_output(torch.autograd.Function):
+class QuantGrad(torch.autograd.Function):
+    """
+    Base class for overriding backward function of quantization operation.
+    """
     @staticmethod
-    def forward(ctx, output, quantizer, config, layer):
-        return quantizer.quantize_output(output, config, op=layer.module, op_type=layer.type, op_name=layer.name)
+    def quant_backward(tensor, grad_output, quant_type):
+        """
+        This method should be overrided by subclass to provide customized backward function,
+        default implementation is Straight-Through Estimator
+        Parameters
+        ----------
+        tensor : Tensor
+            input of quantization operation
+        grad_output : Tensor
+            gradient of the output of quantization operation
+        quant_type : QuantType
+            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            you can define different behavior for different types.
+        Returns
+        -------
+        tensor
+            gradient of the input of quantization operation
+        """
+        return grad_output
 
     @staticmethod
-    def backward(ctx, grad_output):
-        # Straight-through estimator
-        return grad_output, None, None, None
+    def forward(ctx, tensor, quant_type, quant_func, config, layer):
+        ctx.save_for_backward(tensor, torch.Tensor([quant_type]))
+        return quant_func(tensor, config, op=layer.module, op_type=layer.type, op_name=layer.name)
 
-class straight_through_quantize_input(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, inputs, quantizer, config, layer):
-        return quantizer.quantize_input(inputs, config, op=layer.module, op_type=layer.type, op_name=layer.name)
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        # Straight-through estimator
-        return grad_output, None, None, None
+    @classmethod
+    def backward(cls, ctx, grad_output):
+        tensor, quant_type = ctx.saved_variables
+        output = cls.quant_backward(tensor, grad_output, quant_type)
+        return output, None, None, None, None
 
 def _check_weight(module):
     try:
-        return isinstance(module.weight, torch.nn.Parameter) and isinstance(module.weight.data, torch.Tensor)
+        return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
+    

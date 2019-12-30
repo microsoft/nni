@@ -3,9 +3,9 @@
 
 import logging
 import torch
-from .compressor import Quantizer
+from .compressor import Quantizer, QuantGrad, QuantType
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def get_bits_length(config, quant_type):
 
 
 class QAT_Quantizer(Quantizer):
-    """Quantizer using the DoReFa scheme, as defined in:
+    """Quantizer defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
@@ -227,16 +227,13 @@ class DoReFaQuantizer(Quantizer):
     (https://arxiv.org/abs/1606.06160)
     """
     def __init__(self, model, config_list):
-        """
-        config_list: supported keys:
-            - q_bits
-        """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
+        weight_bits = get_bits_length(config, 'weight')
         out = weight.tanh()
         out = out / (2 * out.abs().max()) + 0.5
-        out = self.quantize(out, config['q_bits'])
+        out = self.quantize(out, weight_bits)
         out = 2 * out -1
         return out
 
@@ -244,3 +241,33 @@ class DoReFaQuantizer(Quantizer):
         scale = pow(2, q_bits)-1
         output = torch.round(input_ri*scale)/scale
         return output
+
+
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        if quant_type == QuantType.QUANT_OUTPUT:
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
+class BNNQuantizer(Quantizer):
+    """Binarized Neural Networks, as defined in:
+    Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1
+    (https://arxiv.org/abs/1602.02830)
+    """
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        self.quant_grad = ClipGrad
+
+    def quantize_weight(self, weight, config, **kwargs):
+        out = torch.sign(weight)
+        # remove zeros
+        out[out == 0] = 1
+        return out
+
+    def quantize_output(self, output, config, **kwargs):
+        out = torch.sign(output)
+        # remove zeros
+        out[out == 0] = 1
+        return out

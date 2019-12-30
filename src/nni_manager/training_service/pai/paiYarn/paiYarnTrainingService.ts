@@ -107,7 +107,7 @@ class PAIYarnTrainingService extends PAITrainingService {
                 } else {
                     throw new Error('pai cluster config format error, please set password or token!');
                 }
-
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -272,7 +272,7 @@ class PAIYarnTrainingService extends PAITrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
+            uri: `${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
             method: 'POST',
             json: true,
             body: paiJobConfig,
