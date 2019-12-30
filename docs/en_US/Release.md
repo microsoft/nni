@@ -23,13 +23,13 @@
 
     Adopted the Kubeflow 0.7's new supports for tf-operator.
 
-### Automation
+### Engineering (code and build automation)
 * Enforced [ESLint](https://eslint.org/) on static code analysis.
 
 ### Small changes & Bug Fixes
 * correctly recognize builtin tuner and customized tuner
 * logging in dispatcher base
-* properly catch tuner's error 
+* fix the bug where tuner/assessor's failure sometimes kills the experiment.
 * Fix local system as remote machine [issue](https://github.com/microsoft/nni/issues/1852)
 * de-duplicate trial configuration in smac tuner [ticket](https://github.com/microsoft/nni/issues/1364)
 
