@@ -15,14 +15,14 @@ logger = logging.getLogger("nni.textnas")
 
 class PTBTree:
     WORD_TO_WORD_MAPPING = {
-        '{': '-LCB-',
-        '}': '-RCB-'
+        "{": "-LCB-",
+        "}": "-RCB-"
     }
 
     def __init__(self):
         self.subtrees = []
         self.word = None
-        self.label = ''
+        self.label = ""
         self.parent = None
         self.span = (-1, -1)
         self.word_vector = None  # HOS, store dx1 RNN word vector
@@ -37,7 +37,7 @@ class PTBTree:
         for i in range(pos + 1, len(text)):
             char = text[i]
             # update the depth
-            if char == '(':
+            if char == "(":
                 depth += 1
                 if depth == 1:
                     subtree = PTBTree()
@@ -46,19 +46,19 @@ class PTBTree:
                     right = subtree.span[1]
                     self.span = (left, right)
                     self.subtrees.append(subtree)
-            elif char == ')':
+            elif char == ")":
                 depth -= 1
                 if len(self.subtrees) == 0:
                     pos = i
                     for j in range(i, 0, -1):
-                        if text[j] == ' ':
+                        if text[j] == " ":
                             pos = j
                             break
                     self.word = text[pos + 1:i]
                     self.span = (left, left + 1)
 
             # we've reached the end of the category that is the root of this subtree
-            if depth == 0 and char == ' ' and self.label == '':
+            if depth == 0 and char == " " and self.label == "":
                 self.label = text[pos + 1:i]
             # we've reached the end of the scope for this bracket
             if depth < 0:
@@ -73,17 +73,17 @@ class PTBTree:
             self.word = self.WORD_TO_WORD_MAPPING[self.word]
 
     def __repr__(self, single_line=True, depth=0):
-        ans = ''
+        ans = ""
         if not single_line and depth > 0:
-            ans = '\n' + depth * '\t'
-        ans += '(' + self.label
+            ans = "\n" + depth * "\t"
+        ans += "(" + self.label
         if self.word is not None:
-            ans += ' ' + self.word
+            ans += " " + self.word
         for subtree in self.subtrees:
             if single_line:
-                ans += ' '
+                ans += " "
             ans += subtree.__repr__(single_line, depth + 1)
-        ans += ')'
+        ans += ")"
         return ans
 
 
@@ -93,23 +93,23 @@ def read_tree(source):
     while True:
         line = source.readline()
         # Check if we are out of input
-        if line == '':
+        if line == "":
             return None
         # strip whitespace and only use if this contains something
         line = line.strip()
-        if line == '':
+        if line == "":
             continue
         cur_text.append(line)
         # Update depth
         for char in line:
-            if char == '(':
+            if char == "(":
                 depth += 1
-            elif char == ')':
+            elif char == ")":
                 depth -= 1
         # At depth 0 we have a complete tree
         if depth == 0:
             tree = PTBTree()
-            tree.set_by_text(' '.join(cur_text))
+            tree.set_by_text(" ".join(cur_text))
             return tree
     return None
 
@@ -228,7 +228,7 @@ def get_word_id_dict(word_num_dict, word_id_dict, min_count):
 
 def load_word_num_dict(phrases, word_num_dict):
     for sentence, _ in phrases:
-        words = sentence.split(' ')
+        words = sentence.split(" ")
         for cur_word in words:
             word = cur_word.strip()
             word_num_dict[word] += 1
