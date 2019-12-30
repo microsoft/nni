@@ -19,6 +19,26 @@ class DartsTrainer(Trainer):
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None, arc_learning_rate=3.0E-4, unrolled=False):
+        """
+
+        Parameters
+        ----------
+        model
+        loss
+        metrics
+        optimizer
+        num_epochs
+        dataset_train
+        dataset_valid
+        mutator
+        batch_size
+        workers
+        device
+        log_frequency
+        callbacks
+        arc_learning_rate
+        unrolled
+        """
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
