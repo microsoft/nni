@@ -99,6 +99,7 @@ class PAIYarnTrainingService extends PAITrainingService {
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
                 });
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
@@ -107,7 +108,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                 } else {
                     throw new Error('pai cluster config format error, please set password or token!');
                 }
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
