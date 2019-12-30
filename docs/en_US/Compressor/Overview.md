@@ -21,11 +21,11 @@ Pruning algorithms compress the original network by removing redundant weights o
 | [AGP Pruner](./Pruner.md#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
 | [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. [Reference Paper](https://arxiv.org/abs/1803.03635)|
 | [FPGM Pruner](./Pruner.md#fpgm-pruner) | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)|
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner) | Pruning filters with the smallest L1 norm of weights in convolution layers(PRUNING FILTERS FOR EFFICIENT CONVNETS)[Reference Paper](https://arxiv.org/abs/1608.08710) |
+| [L1Filter Pruner](./Pruner.md#l1filter-pruner) | Pruning filters with the smallest L1 norm of weights in convolution layers (Pruning Filters for Efficient Convnets) [Reference Paper](https://arxiv.org/abs/1608.08710) |
 | [L2Filter Pruner](./Pruner.md#l2filter-pruner) | Pruning filters with the smallest L2 norm of weights in convolution layers |
-| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | Pruning filters prunes the filters with the smallest APoZ(average percentage of zeros) of output activations(Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures)[Reference Paper](https://arxiv.org/abs/1607.03250) |
-| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | Pruning filters prunes the filters with the smallest mean value of output activations(Pruning Convolutional Neural Networks for Resource Efficient Inference)[Reference Paper](https://arxiv.org/abs/1611.06440) |
-| [Slim Pruner](./Pruner.md#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming)[Reference Paper](https://arxiv.org/abs/1708.06519) |
+| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | Pruning filters based on the metric APoZ (average percentage of zeros) which measures the percentage of zeros in activations of (convolutional) layers. [Reference Paper](https://arxiv.org/abs/1607.03250) |
+| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | Pruning filters based on the metric that calculates the smallest mean value of output activations |
+| [Slim Pruner](./Pruner.md#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming) [Reference Paper](https://arxiv.org/abs/1708.06519) |
 
 
 **Quantization**
