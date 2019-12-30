@@ -18,11 +18,9 @@ textnas
 │   │       └── train.txt
 │   └── glove.840B.300d.txt
 ├── dataloader.py
-├── final_arc.json
 ├── model.py
 ├── ops.py
 ├── README.md
-├── retrain.py
 ├── search.py
 └── utils.py
 ```
@@ -44,12 +42,4 @@ By default, 20 sampled architectures will be exported into `checkpoints` directo
 
 ## Retrain
 
-Note that we have already provided one of our searched architecture as `final_arc.json`, which you can directly use if you have skipped the last step.
-
-Retrain any architecture you want with
-
-```
-python retrain.py --arc-checkpoint /path/to/your/arc
-```
-
-The default hyper-parameters are expected to give you an accuracy between 51% and 52%. 52.67% can be achieved when trained in detail.
+Not ready.
