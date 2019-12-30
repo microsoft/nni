@@ -52,7 +52,7 @@ abstract class PAITrainingService implements TrainingService {
     protected authFileHdfsPath: string | undefined = undefined;
     protected portList?: string | undefined;
     protected paiJobRestServer?: PAIJobRestServer;
-    protected protocol: string = 'http://';
+    protected protocol: string = 'http';
 
     constructor() {
         this.log = getLogger();
@@ -166,7 +166,7 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `${this.protocol}${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
 /jobs/${trialJobDetail.paiJobName}/executionType`, 
             method: 'PUT',
             json: true,
@@ -221,10 +221,10 @@ abstract class PAITrainingService implements TrainingService {
         // If users' host start with 'http://' or 'https://', use the original host,
         // or format to 'http//${host}'
         if (host.startsWith('http://')) {
-            this.protocol = 'http://';
+            this.protocol = 'http';
             return host.replace('http://', '');
         } else if (host.startsWith('https://')) {
-            this.protocol = 'https://';
+            this.protocol = 'https';
             return host.replace('https://', '');
         } else {
             return host;
@@ -274,7 +274,7 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         const authenticationReq: request.Options = {
-            uri: `${this.protocol}${this.paiClusterConfig.host}/rest-server/api/v1/token`,
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
             method: 'POST',
             json: true,
             body: {
