@@ -28,12 +28,11 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             {
                 title: 'Trial No.',
                 dataIndex: 'sequenceId',
-                width: 140,
                 className: 'tableHead'
             }, {
                 title: 'ID',
                 dataIndex: 'id',
-                width: 60,
+                width: 80,
                 className: 'tableHead leftTitle',
                 render: (text: string, record: TableRecord): React.ReactNode => {
                     return (
