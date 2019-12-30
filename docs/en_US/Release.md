@@ -1,5 +1,33 @@
 # ChangeLog
 
+## Release 1.3 - 12/30/2019
+
+### Major Features
+
+#### Neural Architecture Search Algorithms Support
+* [Single Path One Shot](https://github.com/microsoft/nni/tree/v1.3/examples/nas/spos/) Example
+
+#### Model Compression Algorithms Support
+* [Knowledge Distillzation](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/TrialExample/KDExample.md) Example
+* Pruners
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#3-l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#1-activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#2-activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
+#### Training Service
+* NFS Support for PAI
+* Kubeflow update adoption
+
+### Automation
+* Enforced [ESLint](https://eslint.org/) on static code analysis.
+
+### Small changes & Bug Fixes
+* correctly recognize builtin tuner and customized tuner
+* nnictl command auto complete
+* properly catch tuner's error
+* Fix local system as remote machine [issue](https://github.com/microsoft/nni/issues/1852)
+* de-duplicate trial configuration in smac tuner [ticket](https://github.com/microsoft/nni/issues/1364)
+
 ## Release 1.2 - 12/02/2019
 
 ### Major Features
