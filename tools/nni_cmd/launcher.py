@@ -517,7 +517,7 @@ def manage_stopped_experiment(args, mode):
     experiment_id = None
     #find the latest stopped experiment
     if not args.id:
-        print_error('Please set experiment id! \nYou could use \'nnictl {0} {id}\' to {0} a stopped experiment!\n' \
+        print_error('Please set experiment id! \nYou could use \'nnictl {0} id\' to {0} a stopped experiment!\n' \
         'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
         exit(1)
     else:
