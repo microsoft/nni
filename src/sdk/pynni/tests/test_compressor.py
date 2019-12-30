@@ -136,12 +136,12 @@ class CompressorTestCase(TestCase):
         model.conv2.weight.data = torch.tensor(w).float()
         layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
         masks = pruner.calc_mask(layer, config_list[0])
-        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
+        assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
         pruner.update_epoch(1)
         model.conv2.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(layer, config_list[1])
-        assert all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
+        assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     @tf2
     def test_tf_fpgm_pruner(self):
@@ -190,8 +190,8 @@ class CompressorTestCase(TestCase):
         mask1 = pruner.calc_mask(layer1, config_list[0])
         layer2 = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
         mask2 = pruner.calc_mask(layer2, config_list[1])
-        assert all(torch.sum(mask1, (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
-        assert all(torch.sum(mask2, (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
+        assert all(torch.sum(mask1['weight'], (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
+        assert all(torch.sum(mask2['weight'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
 
     def test_torch_slim_pruner(self):
         """
@@ -218,8 +218,10 @@ class CompressorTestCase(TestCase):
         mask1 = pruner.calc_mask(layer1, config_list[0])
         layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
         mask2 = pruner.calc_mask(layer2, config_list[0])
-        assert all(mask1.numpy() == np.array([0., 1., 1., 1., 1.]))
-        assert all(mask2.numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask1['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask2['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask1['bias'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask2['bias'].numpy() == np.array([0., 1., 1., 1., 1.]))
 
         config_list = [{'sparsity': 0.6, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
@@ -230,8 +232,10 @@ class CompressorTestCase(TestCase):
         mask1 = pruner.calc_mask(layer1, config_list[0])
         layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
         mask2 = pruner.calc_mask(layer2, config_list[0])
-        assert all(mask1.numpy() == np.array([0., 0., 0., 1., 1.]))
-        assert all(mask2.numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask1['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask2['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask1['bias'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask2['bias'].numpy() == np.array([0., 0., 0., 1., 1.]))
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()

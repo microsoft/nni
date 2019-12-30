@@ -65,7 +65,7 @@ tuner_schema_dict = {
         'builtinTunerName': 'SMAC',
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            'config_dedup': setType('config_dedup', bool)
+            Optional('config_dedup'): setType('config_dedup', bool)
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
