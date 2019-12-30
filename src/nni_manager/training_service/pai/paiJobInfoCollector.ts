@@ -81,7 +81,11 @@ export class PAIJobInfoCollector {
                                 paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                             }
                             if (paiTrialJob.url === undefined) {
-                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
+                                if (response.body.jobStatus.appTrackingUrl) {
+                                    paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
+                                } else {
+                                    paiTrialJob.url = paiTrialJob.logPath;
+                                }
                             }
                             break;
                         case 'SUCCEEDED':
@@ -114,7 +118,7 @@ export class PAIJobInfoCollector {
                         }
                         // Set pai trial job's url to WebHDFS output path
                         if (paiTrialJob.logPath !== undefined) {
-                            if (paiTrialJob.url) {
+                            if (paiTrialJob.url && paiTrialJob.url !== paiTrialJob.logPath) {
                                 paiTrialJob.url += `,${paiTrialJob.logPath}`;
                             } else {
                                 paiTrialJob.url = `${paiTrialJob.logPath}`;
