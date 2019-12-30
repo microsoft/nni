@@ -18,7 +18,7 @@ Only GPU version is provided here.
 Need to download the flops lookup table from [here](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN).
 Put `op_flops_dict.pkl` and `checkpoint-150000.pth.tar` (if you don't want to retrain the supernet) under `data` directory.
 
-Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Link it to `data/imagenet` will be more convenient.
+Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Linking it to `data/imagenet` will be more convenient.
 
 After preparation, it's expected to have the following code structure:
 
@@ -48,7 +48,7 @@ spos
 python supernet.py
 ```
 
-Will export the checkpoint to checkpoints directory, for the next step.
+Will export the checkpoint to `checkpoints` directory, for the next step.
 
 NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5), as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
 
@@ -63,6 +63,8 @@ nnictl ss_gen -t "python tester.py"
 ```
 
 This will generate a file called `nni_auto_gen_search_space.json`, which is a serialized representation of your search space.
+
+By default, it will use `checkpoint-150000.pth.tar` downloaded previously. In case you want to use the checkpoint trained by yourself from the last step, specify `--checkpoint` in the command in `config_search.yml`.
 
 Then search with evolution tuner.
 
