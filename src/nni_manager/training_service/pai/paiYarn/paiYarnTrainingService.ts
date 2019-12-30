@@ -91,6 +91,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             case TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIYarnTrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
 
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
@@ -107,7 +108,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                 } else {
                     throw new Error('pai cluster config format error, please set password or token!');
                 }
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
