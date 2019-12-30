@@ -38,6 +38,8 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=50, type=int)
     parser.add_argument("--seed", default=1234, type=int)
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--lr", default=5e-3, type=float)
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -54,12 +56,11 @@ if __name__ == "__main__":
     train_loader, valid_loader = cycle(train_loader), cycle(valid_loader)
     model = Model(embedding)
 
-    num_epochs = 10
     mutator = EnasMutator(model, temperature=None, tanh_constant=None, entropy_reduction="mean")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=5e-3, eps=1e-3, weight_decay=2e-6)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, eps=1e-3, weight_decay=2e-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-5)
 
     trainer = TextNASTrainer(model,
                              loss=criterion,
@@ -68,7 +69,7 @@ if __name__ == "__main__":
                              optimizer=optimizer,
                              callbacks=[LRSchedulerCallback(lr_scheduler)],
                              batch_size=args.batch_size,
-                             num_epochs=num_epochs,
+                             num_epochs=args.epochs,
                              dataset_train=None,
                              dataset_valid=None,
                              train_loader=train_loader,
