@@ -25,7 +25,7 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(protocak: string, token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
+    public async retrieveTrialStatus(protocal: string, token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
         if (paiBaseClusterConfig === undefined || token === undefined) {
             return Promise.resolve();
         }
@@ -35,7 +35,7 @@ export class PAIJobInfoCollector {
             if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(protocak, paiTrialJob, token, paiBaseClusterConfig));
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(protocal, paiTrialJob, token, paiBaseClusterConfig));
         }
 
         await Promise.all(updatePaiTrialJobs);
