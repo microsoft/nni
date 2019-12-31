@@ -29,6 +29,7 @@ def to_device(obj, device):
 
 
 class AverageMeterGroup:
+    """Average meter group for multiple average meters"""
 
     def __init__(self):
         self.meters = OrderedDict()

@@ -9,7 +9,6 @@ from utils import get_length, INF
 
 
 class Mask(nn.Module):
-
     def forward(self, seq, mask):
         # seq: (N, C, L)
         # mask: (N, L)
@@ -36,7 +35,6 @@ class BatchNorm(nn.Module):
 
 
 class ConvBN(nn.Module):
-
     def __init__(self, kernal_size, in_channels, out_channels, cnn_keep_prob,
                  pre_mask, post_mask, with_bn=True, with_relu=True):
         super(ConvBN, self).__init__()
@@ -45,8 +43,7 @@ class ConvBN(nn.Module):
         self.post_mask = post_mask
         self.with_bn = with_bn
         self.with_relu = with_relu
-        self.conv = nn.Conv1d(in_channels, out_channels, kernal_size, 1, bias=True,
-                              padding=(kernal_size - 1) // 2)
+        self.conv = nn.Conv1d(in_channels, out_channels, kernal_size, 1, bias=True, padding=(kernal_size - 1) // 2)
         self.dropout = nn.Dropout(p=(1 - cnn_keep_prob))
 
         if with_bn:

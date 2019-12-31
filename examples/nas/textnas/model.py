@@ -15,8 +15,7 @@ class Layer(mutables.MutableScope):
         super(Layer, self).__init__(key)
 
         def conv_shortcut(kernel_size):
-            return ConvBN(kernel_size, hidden_units, hidden_units,
-                          cnn_keep_prob, False, True)
+            return ConvBN(kernel_size, hidden_units, hidden_units, cnn_keep_prob, False, True)
 
         self.n_candidates = len(prev_keys)
         if self.n_candidates:
