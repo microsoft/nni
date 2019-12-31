@@ -101,6 +101,7 @@ class PAIYarnTrainingService extends PAITrainingService {
                     host: this.paiClusterConfig.host
                     
                 });
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
