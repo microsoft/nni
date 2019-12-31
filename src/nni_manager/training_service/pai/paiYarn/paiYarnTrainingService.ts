@@ -91,6 +91,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             case TrialConfigMetadataKey.PAI_YARN_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIYarnTrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
 
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
@@ -98,7 +99,9 @@ class PAIYarnTrainingService extends PAITrainingService {
                     port: 80,
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
+                    
                 });
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
                 if(this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
@@ -107,7 +110,6 @@ class PAIYarnTrainingService extends PAITrainingService {
                 } else {
                     throw new Error('pai cluster config format error, please set password or token!');
                 }
-
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -272,7 +274,7 @@ class PAIYarnTrainingService extends PAITrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
             method: 'POST',
             json: true,
             body: paiJobConfig,

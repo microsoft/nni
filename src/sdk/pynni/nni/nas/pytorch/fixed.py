@@ -41,18 +41,18 @@ class FixedArchitecture(Mutator):
         return self._fixed_arc
 
 
-def _encode_tensor(data, device):
+def _encode_tensor(data):
     if isinstance(data, list):
         if all(map(lambda o: isinstance(o, bool), data)):
-            return torch.tensor(data, dtype=torch.bool, device=device)  # pylint: disable=not-callable
+            return torch.tensor(data, dtype=torch.bool)  # pylint: disable=not-callable
         else:
-            return torch.tensor(data, dtype=torch.float, device=device)  # pylint: disable=not-callable
+            return torch.tensor(data, dtype=torch.float)  # pylint: disable=not-callable
     if isinstance(data, dict):
-        return {k: _encode_tensor(v, device) for k, v in data.items()}
+        return {k: _encode_tensor(v) for k, v in data.items()}
     return data
 
 
-def apply_fixed_architecture(model, fixed_arc_path, device=None):
+def apply_fixed_architecture(model, fixed_arc_path):
     """
     Load architecture from `fixed_arc_path` and apply to model.
 
@@ -62,21 +62,16 @@ def apply_fixed_architecture(model, fixed_arc_path, device=None):
         Model with mutables.
     fixed_arc_path : str
         Path to the JSON that stores the architecture.
-    device : torch.device
-        Architecture weights will be transfered to `device`.
 
     Returns
     -------
     FixedArchitecture
     """
 
-    if device is None:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if isinstance(fixed_arc_path, str):
         with open(fixed_arc_path, "r") as f:
             fixed_arc = json.load(f)
-    fixed_arc = _encode_tensor(fixed_arc, device)
+    fixed_arc = _encode_tensor(fixed_arc)
     architecture = FixedArchitecture(model, fixed_arc)
-    architecture.to(device)
     architecture.reset()
     return architecture

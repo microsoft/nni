@@ -1,5 +1,38 @@
 # ChangeLog
 
+## Release 1.3 - 12/30/2019
+
+### Major Features
+
+#### Neural Architecture Search Algorithms Support
+* [Single Path One Shot](https://github.com/microsoft/nni/tree/v1.3/examples/nas/spos/) algorithm and the example using it
+
+#### Model Compression Algorithms Support
+* [Knowledge Distillation](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/TrialExample/KDExample.md) algorithm and the example using itExample
+* Pruners
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#3-l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#1-activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#2-activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
+#### Training Service
+* NFS Support for PAI
+    
+    Instead of using HDFS as default storage, since OpenPAI v0.11, OpenPAI can have NFS or AzureBlob or other storage as default storage. In this release, NNI extended the support for this recent change made by OpenPAI, and could integrate with OpenPAI v0.11 or later version with various default storage.
+
+* Kubeflow update adoption
+
+    Adopted the Kubeflow 0.7's new supports for tf-operator.
+
+### Engineering (code and build automation)
+* Enforced [ESLint](https://eslint.org/) on static code analysis.
+
+### Small changes & Bug Fixes
+* correctly recognize builtin tuner and customized tuner
+* logging in dispatcher base
+* fix the bug where tuner/assessor's failure sometimes kills the experiment.
+* Fix local system as remote machine [issue](https://github.com/microsoft/nni/issues/1852)
+* de-duplicate trial configuration in smac tuner [ticket](https://github.com/microsoft/nni/issues/1364)
+
 ## Release 1.2 - 12/02/2019
 
 ### Major Features
