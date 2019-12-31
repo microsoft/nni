@@ -69,7 +69,7 @@
       - [password](#password)
       - [token](#token)
       - [host](#host)
-  - [样例](#examples) 
+  - [示例](#examples) 
     - [本机模式](#local-mode)
     - [远程模式](#remote-mode)
     - [PAI 模式](#pai-mode)
