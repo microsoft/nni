@@ -19,6 +19,42 @@ class DartsTrainer(Trainer):
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None, arc_learning_rate=3.0E-4, unrolled=False):
+        """
+        Initialize a DartsTrainer.
+
+        Parameters
+        ----------
+        model : nn.Module
+            PyTorch model to be trained.
+        loss : callable
+            Receives logits and ground truth label, return a loss tensor.
+        metrics : callable
+            Receives logits and ground truth label, return a dict of metrics.
+        optimizer : Optimizer
+            The optimizer used for optimizing the model.
+        num_epochs : int
+            Number of epochs planned for training.
+        dataset_train : Dataset
+            Dataset for training. Will be split for training weights and architecture weights.
+        dataset_valid : Dataset
+            Dataset for testing.
+        mutator : DartsMutator
+            Use in case of customizing your own DartsMutator. By default will instantiate a DartsMutator.
+        batch_size : int
+            Batch size.
+        workers : int
+            Workers for data loading.
+        device : torch.device
+            ``torch.device("cpu")`` or ``torch.device("cuda")``.
+        log_frequency : int
+            Step count per logging.
+        callbacks : list of Callback
+            list of callbacks to trigger at events.
+        arc_learning_rate : float
+            Learning rate of architecture parameters.
+        unrolled : float
+            ``True`` if using second order optimization, else first order optimization.
+        """
         super().__init__(model, mutator if mutator is not None else DartsMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
