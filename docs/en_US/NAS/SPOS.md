@@ -1,4 +1,4 @@
-# Single Path One-Shot
+# Single Path One-Shot (SPOS)
 
 ## Introduction
 
