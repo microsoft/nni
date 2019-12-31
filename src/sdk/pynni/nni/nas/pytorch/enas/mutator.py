@@ -36,7 +36,8 @@ class EnasMutator(Mutator):
 
         Parameters
         ----------
-        model : PyTorch Model
+        model : nn.Module
+            PyTorch model.
         lstm_size : int
             Controller LSTM hidden units.
         lstm_num_layers : int

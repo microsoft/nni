@@ -23,3 +23,4 @@ For details, please refer to the following tutorials:
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
     P-DARTS <NAS/PDARTS>
+    SPOS <NAS/SPOS>
