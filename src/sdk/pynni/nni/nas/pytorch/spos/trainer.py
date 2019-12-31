@@ -21,6 +21,37 @@ class SPOSSupernetTrainer(Trainer):
                  optimizer, num_epochs, train_loader, valid_loader,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
+        """
+        Parameters
+        ----------
+        model : nn.Module
+            Model with mutables.
+        mutator : Mutator
+            A mutator object that has been initialized with the model.
+        loss : callable
+            Called with logits and targets. Returns a loss tensor.
+        metrics : callable
+            Returns a dict that maps metrics keys to metrics data.
+        optimizer : Optimizer
+            Optimizer that optimizes the model.
+        num_epochs : int
+            Number of epochs of training.
+        train_loader : iterable
+            Data loader of training. Raise ``StopIteration`` when one epoch is exhausted.
+        dataset_valid : iterable
+            Data loader of validation. Raise ``StopIteration`` when one epoch is exhausted.
+        batch_size : int
+            Batch size.
+        workers: int
+            Number of threads for data preprocessing. Not used for this trainer. Maybe removed in future.
+        device : torch.device
+            Device object. Either ``torch.device("cuda")`` or ``torch.device("cpu")``. When ``None``, trainer will
+            automatic detects GPU and selects GPU first.
+        log_frequency : int
+            Number of mini-batches to log metrics.
+        callbacks : list of Callback
+            Callbacks to plug into the trainer. See Callbacks.
+        """
         assert torch.cuda.is_available()
         super().__init__(model, mutator if mutator is not None else SPOSSupernetTrainingMutator(model),
                          loss, metrics, optimizer, num_epochs, None, None,
