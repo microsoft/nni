@@ -19,7 +19,7 @@ class SPOSSupernetTrainer(Trainer):
 
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, train_loader, valid_loader,
-                 mutator=None, batch_size=64, device=None, log_frequency=None,
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
                  callbacks=None):
         """
         Parameters
@@ -42,6 +42,8 @@ class SPOSSupernetTrainer(Trainer):
             Data loader of validation. Raise ``StopIteration`` when one epoch is exhausted.
         batch_size : int
             Batch size.
+        workers: int
+            Number of threads for data preprocessing. Not used for this trainer. Maybe removed in future.
         device : torch.device
             Device object. Either ``torch.device("cuda")`` or ``torch.device("cpu")``. When ``None``, trainer will
             automatic detects GPU and selects GPU first.
@@ -53,7 +55,7 @@ class SPOSSupernetTrainer(Trainer):
         assert torch.cuda.is_available()
         super().__init__(model, mutator if mutator is not None else SPOSSupernetTrainingMutator(model),
                          loss, metrics, optimizer, num_epochs, None, None,
-                         batch_size, 0, device, log_frequency, callbacks)
+                         batch_size, workers, device, log_frequency, callbacks)
 
         self.train_loader = train_loader
         self.valid_loader = valid_loader
