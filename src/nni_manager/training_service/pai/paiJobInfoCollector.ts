@@ -25,7 +25,7 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
+    public async retrieveTrialStatus(protocol: string, token? : string, paiBaseClusterConfig?: PAIClusterConfig): Promise<void> {
         if (paiBaseClusterConfig === undefined || token === undefined) {
             return Promise.resolve();
         }
@@ -35,13 +35,13 @@ export class PAIJobInfoCollector {
             if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, token, paiBaseClusterConfig));
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(protocol, paiTrialJob, token, paiBaseClusterConfig));
         }
 
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiTrialJob: PAITrialJobDetail, paiToken: string, paiClusterConfig: PAIClusterConfig): Promise<void> {
+    private getSinglePAITrialJobInfo(protocol: string, paiTrialJob: PAITrialJobDetail, paiToken: string, paiClusterConfig: PAIClusterConfig): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
@@ -52,7 +52,7 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            uri: `${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
+            uri: `${protocol}://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
                headers: {
@@ -81,7 +81,11 @@ export class PAIJobInfoCollector {
                                 paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                             }
                             if (paiTrialJob.url === undefined) {
-                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
+                                if (response.body.jobStatus.appTrackingUrl) {
+                                    paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
+                                } else {
+                                    paiTrialJob.url = paiTrialJob.logPath;
+                                }
                             }
                             break;
                         case 'SUCCEEDED':
@@ -114,7 +118,7 @@ export class PAIJobInfoCollector {
                         }
                         // Set pai trial job's url to WebHDFS output path
                         if (paiTrialJob.logPath !== undefined) {
-                            if (paiTrialJob.url) {
+                            if (paiTrialJob.url && paiTrialJob.url !== paiTrialJob.logPath) {
                                 paiTrialJob.url += `,${paiTrialJob.logPath}`;
                             } else {
                                 paiTrialJob.url = `${paiTrialJob.logPath}`;
