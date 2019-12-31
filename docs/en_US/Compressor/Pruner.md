@@ -1,6 +1,19 @@
 Pruner on NNI Compressor
 ===
 
+Index of supported pruning algorithms
+* [Level Pruner](#level-pruner)
+* [AGP Pruner](#agp-pruner)
+* [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
+* [Slim Pruner](#slim-pruner)
+* [Filter Pruners with Weight Rank](#weightrankfilterpruner)
+    * [FPGM Pruner](#fpgm-pruner)
+    * [L1Filter Pruner](#l1filter-pruner)
+    * [L2Filter Pruner](#l2filter-pruner)
+* [Filter Pruners with Activation Rank](#activationrankfilterpruner)
+    * [APoZ Rank Pruner](#activationapozrankfilterpruner)
+    * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+
 ## Level Pruner
 
 This is one basic one-shot pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%). 
@@ -131,12 +144,42 @@ The above configuration means that there are 5 times of iterative pruning. As th
 * **sparsity:** The final sparsity when the compression is done.
 
 ***
+
+## Slim Pruner
+
+This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+
+![](../../img/slim_pruner.png)
+
+> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SlimPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+pruner = SlimPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for Slim Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+
+
 ## WeightRankFilterPruner
 WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
 
-### 1, FPGM Pruner
+### FPGM Pruner
 
 This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+
+FPGMPruner prune filters with the smallest geometric median
+
+ ![](../../img/fpgm_fig1.png)
 
 >Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
 
@@ -181,9 +224,9 @@ You can view example for more information
 
 ***
 
-### 2, L1Filter Pruner
+### L1Filter Pruner
 
-This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf. The reproduced experiment results can be found [here](l1filterpruner.md)
 
 ![](../../img/l1filter_pruner.png)
 
@@ -217,9 +260,9 @@ pruner.compress()
 
 ***
 
-### 3, L2Filter Pruner
+### L2Filter Pruner
 
-This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights.
+This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
 
 #### Usage
 
@@ -240,9 +283,13 @@ pruner.compress()
 ## ActivationRankFilterPruner
 ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity
 
-### 1, ActivationAPoZRankFilterPruner
+### ActivationAPoZRankFilterPruner
 
-This is an one-shot pruner, ActivationAPoZRankFilterPruner is an implementation of paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250)
+We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `APoZ` which is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250). Iterative pruning based on `APoZ` will be supported in future release.
+
+The APoZ is defined as:
+
+![](../../img/apoz.png)
 
 #### Usage
 
@@ -269,9 +316,9 @@ You can view example for more information
 
 ***
 
-### 2, ActivationMeanRankFilterPruner
+### ActivationMeanRankFilterPruner
 
-This is an one-shot pruner, ActivationMeanRankFilterPruner is an implementation of paper [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440)
+We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `mean activation` which is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
 
 #### Usage
 
@@ -297,27 +344,3 @@ You can view example for more information
 - **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner
 
 ***
-
-## Slim Pruner
-
-This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
-
-![](../../img/slim_pruner.png)
-
-> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
-
-### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import SlimPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-pruner = SlimPruner(model, config_list)
-pruner.compress()
-```
-
-#### User configuration for Slim Pruner
-
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner

@@ -14,6 +14,26 @@ _logger = logging.getLogger(__name__)
 
 
 class DartsMutator(Mutator):
+    """
+    Connects the model in a DARTS (differentiable) way.
+
+    An extra connection is automatically inserted for each LayerChoice, when this connection is selected, there is no
+    op on this LayerChoice (namely a ``ZeroOp``), in which case, every element in the exported choice list is ``false``
+    (not chosen).
+
+    All input choice will be fully connected in the search phase. On exporting, the input choice will choose inputs based
+    on keys in ``choose_from``. If the keys were to be keys of LayerChoices, the top logit of the corresponding LayerChoice
+    will join the competition of input choice to compete against other logits. Otherwise, the logit will be assumed 0.
+
+    It's possible to cut branches by setting parameter ``choices`` in a particular position to ``-inf``. After softmax, the
+    value would be 0. Framework will ignore 0 values and not connect. Note that the gradient on the ``-inf`` location will
+    be 0. Since manipulations with ``-inf`` will be ``nan``, you need to handle the gradient update phase carefully.
+
+    Attributes
+    ----------
+    choices: ParameterDict
+        dict that maps keys of LayerChoices to weighted-connection float tensors.
+    """
     def __init__(self, model):
         super().__init__(model)
         self.choices = nn.ParameterDict()

@@ -31,6 +31,31 @@ class EnasMutator(Mutator):
 
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
                  skip_target=0.4, branch_bias=0.25):
+        """
+        Initialize a EnasMutator.
+
+        Parameters
+        ----------
+        model : nn.Module
+            PyTorch model.
+        lstm_size : int
+            Controller LSTM hidden units.
+        lstm_num_layers : int
+            Number of layers for stacked LSTM.
+        tanh_constant : float
+            Logits will be equal to ``tanh_constant * tanh(logits)``. Don't use ``tanh`` if this value is ``None``.
+        cell_exit_extra_step : bool
+            If true, RL controller will perform an extra step at the exit of each MutableScope, dump the hidden state
+            and mark it as the hidden state of this MutableScope. This is to align with the original implementation of paper.
+        skip_target : float
+            Target probability that skipconnect will appear.
+        branch_bias : float
+            Manual bias applied to make some operations more likely to be chosen.
+            Currently this is implemented with a hardcoded match rule that aligns with original repo.
+            If a mutable has a ``reduce`` in its key, all its op choices
+            that contains `conv` in their typename will receive a bias of ``+self.branch_bias`` initially; while others
+            receive a bias of ``-self.branch_bias``.
+        """
         super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
