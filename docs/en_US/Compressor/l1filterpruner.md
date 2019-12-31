@@ -1,19 +1,7 @@
-WeightRankFilterPruner on NNI Compressor
+L1FilterPruner on NNI
 ===
 
-## 1. Introduction
-
-WeightRankFilterPruner is a series of pruners which prune filters according to some importance criterion calculated from the filters' weight.
-
-|     Pruner     |    Importance criterion     |                       Reference paper                        |
-| :------------: | :-------------------------: | :----------------------------------------------------------: |
-| L1FilterPruner |     L1 norm of weights      | [PRUNING FILTERS FOR EFFICIENT CONVNETS](https://arxiv.org/abs/1608.08710) |
-| L2FilterPruner |     L2 norm of weights      |                                                              |
-|   FPGMPruner   | Geometric Median of weights | [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) |
-
-## 2. Pruners
-
-### L1FilterPruner
+## Introduction
 
 L1FilterPruner is a general structured pruning algorithm for pruning filters in the convolutional layers.
 
@@ -33,37 +21,7 @@ In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710),
 > 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
 >      weights are copied to the new model.
 
-### L2FilterPruner
-
-L2FilterPruner is similar to L1FilterPruner, but only replace the importance criterion from L1 norm to L2 norm
-
-### FPGMPruner
-
-Yang He, Ping Liu, Ziwei Wang, Zhilan Hu, Yi Yang
-
-"[Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/abs/1811.00250)", CVPR 2019.
-
-FPGMPruner prune filters with the smallest geometric median
-
- ![](../../img/fpgm_fig1.png)
-
-## 3. Usage
-
-PyTorch code
-
-```
-from nni.compression.torch import L1FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'], 'op_names': ['conv1', 'conv2'] }]
-pruner = L1FilterPruner(model, config_list)
-pruner.compress()
-```
-
-#### User configuration for L1Filter Pruner
-
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
-
-## 4. Experiment
+## Experiment
 
 We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) with **L1FilterPruner**, we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
 
