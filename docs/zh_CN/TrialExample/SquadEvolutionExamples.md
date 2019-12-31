@@ -1,6 +1,6 @@
 # 在阅读理解上使用自动模型架构搜索
 
-该样例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
+该示例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
 
 ## 1. 搜索空间
 
@@ -20,7 +20,7 @@
 
 另一个时间更快，性能更好的版本正在开发中。 很快将发布。
 
-## 2. 如何在本机运行此样例？
+## 2. 如何在本机运行此示例？
 
 ### 2.1 使用下载脚本来下载数据
 
@@ -81,7 +81,7 @@ trial:
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
-## 3 在 OpenPAI 上运行此样例
+## 3 在 OpenPAI 上运行此示例
 
 根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本 Experiment 需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
 
@@ -140,7 +140,7 @@ nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 
 ### 4.1 实现方法
 
-基于进化算法架构的问答和其它样例一样，有两个部分：Trial 和 Tuner。
+基于进化算法架构的问答和其它示例一样，有两个部分：Trial 和 Tuner。
 
 ### 4.2 Trial
 
@@ -251,7 +251,7 @@ class CustomerTuner(Tuner):
 
 ### 4.4 模型配置格式
 
-这是模型配置的样例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
+这是模型配置的示例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
 
 ```json
 {
