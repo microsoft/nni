@@ -13,17 +13,17 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: pai
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -39,7 +39,7 @@ trial:
   virtualCluster: default
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
-# Configuration to access OpenPAI Cluster
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
   token: your_pai_token
@@ -60,11 +60,11 @@ paiConfig:
 * virtualCluster 
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
 * nniManagerNFSMountPath 
-    * Required key. Set the mount path in your nniManager machine.
+    * 必填。 在 nniManager 计算机上设置挂载的路径。
 * containerNFSMountPath 
-    * Required key. Set the mount path in your container used in PAI.
+    * 必填。 在 OpenPAI 的容器中设置挂载路径。
 * paiStoragePlugin 
-    * Required key. Set the storage plugin name used in PAI.
+    * 必填。 Set the storage plugin name used in PAI.
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 
