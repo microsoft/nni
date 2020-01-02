@@ -1,11 +1,11 @@
-L1FilterPruner on NNI
+NN I 上的 L1FilterPruner
 ===
 
-## Introduction
+## 介绍
 
-L1FilterPruner is a general structured pruning algorithm for pruning filters in the convolutional layers.
+L1FilterPruner 是在卷积层中用来修剪过滤器的通用剪枝算法。
 
-In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+在 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 以及 Hans Peter Graf。
 
 ![](../../img/l1filter_pruner.png)
 
@@ -15,19 +15,19 @@ In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710),
 > 
 > 1. 对于每个过滤器 ![](http://latex.codecogs.com/gif.latex?F_{i,j})，计算其绝对内核权重之和![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
 > 2. 将过滤器按 ![](http://latex.codecogs.com/gif.latex?s_j) 排序。
-> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 The kernels in the next convolutional layer corresponding to the pruned feature maps are also removed.
-> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel weights are copied to the new model.
+> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
+> 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
-## Experiment
+## 实验
 
-We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) with **L1FilterPruner**, we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+我们通过 **L1FilterPruner** 实现了 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 $64\%$ 的参数。 我们的实验结果如下：
 
-| Model           | Error(paper/ours) | Parameters | Pruned |
-| --------------- | ----------------- | ---------- | ------ |
-| VGG-16          | 6.75/6.49         | 1.5x10^7   |        |
-| VGG-16-pruned-A | 6.60/6.47         | 5.4x10^6   | 64.0%  |
+| 模型              | 错误率(论文/我们的) | 参数量      | 剪除率   |
+| --------------- | ----------- | -------- | ----- |
+| VGG-16          | 6.75/6.49   | 1.5x10^7 |       |
+| VGG-16-pruned-A | 6.60/6.47   | 5.4x10^6 | 64.0% |
 
-The experiments code can be found at [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+实验代码在 [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
 
 
