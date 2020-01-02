@@ -1,6 +1,6 @@
-# Feature Engineering with NNI
+# NNI 中的特征工程
 
-我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
+我们很高兴的宣布，基于 NNI 的特征工程工具发布了试用版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
 当前支持以下特征选择器：
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
@@ -255,9 +255,9 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
 
-## **Reference and Feedback**
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+## **参考和反馈**
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[神经网络结构搜索的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md)；
+* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md)；
