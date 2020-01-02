@@ -168,20 +168,20 @@ pruner.compress()
 
 
 ## WeightRankFilterPruner
-WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
+WeightRankFilterPruner 是一系列的 Pruner，在卷积层权重上，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### FPGM Pruner
 
-This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 
-FPGMPruner prune filters with the smallest geometric median
+具有最小几何中位数的 FPGMPruner 修剪过滤器
 
  ![](../../img/fpgm_fig1.png)
-> Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
-#### Usage
+#### 用法
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import FPGMPruner
 config_list = [{
@@ -191,7 +191,7 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
 config_list = [{
@@ -201,43 +201,43 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-you should add code below to update epoch number at beginning of each epoch.
+需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for FPGM Pruner
-* **sparsity:** How much percentage of convolutional filters are to be pruned.
+#### FPGM Pruner 的用户配置
+* **sparsity:** 卷积过滤器要修剪的百分比。
 
 ***
 
 ### L1Filter Pruner
 
-This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf. The reproduced experiment results can be found [here](l1filterpruner.md)
+这是一种一次性的 Pruner，由 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 和 Hans Peter Graf。 [重现的实验结果](l1filterpruner.md)
 
 ![](../../img/l1filter_pruner.png)
 
-> L1Filter Pruner prunes filters in the **convolution layers**
+> L1Filter Pruner 修剪**卷积层**中的过滤器
 > 
-> The procedure of pruning m filters from the ith convolutional layer is as follows:
+> 从第 i 个卷积层修剪 m 个过滤器的过程如下：
 > 
-> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
-> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
-> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The kernels in the next convolutional layer corresponding to the pruned feature maps are also removed.
-> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel weights are copied to the new model.
+> 1. 对于每个过滤器 ![](http://latex.codecogs.com/gif.latex?F_{i,j})，计算其绝对内核权重之和![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
+> 2. 将过滤器按 ![](http://latex.codecogs.com/gif.latex?s_j) 排序。
+> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
+> 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import L1FilterPruner
@@ -246,20 +246,20 @@ pruner = L1FilterPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for L1Filter Pruner
+#### L1Filter Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv1d and Conv2d is supported in L1Filter Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 L1Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
 ***
 
 ### L2Filter Pruner
 
-This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
+这是一种结构化剪枝算法，用于修剪权重的最小 L2 规范筛选器。 它被实现为一次性修剪器。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import L2FilterPruner
@@ -268,10 +268,10 @@ pruner = L2FilterPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for L2Filter Pruner
+#### L2Filter Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 L2Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
 ## ActivationRankFilterPruner
 ActivationRankFilterPruner 是一系列的 Pruner，从卷积层激活的输出，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
@@ -302,20 +302,20 @@ pruner.compress()
 
 查看示例进一步了解
 
-#### User configuration for ActivationAPoZRankFilterPruner
+#### ActivationAPoZRankFilterPruner 的用户配置
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 在 ActivationAPoZRankFilterPruner 中仅支持 Conv2d。
 
 ***
 
 ### ActivationMeanRankFilterPruner
 
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `mean activation` which is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+其实现为一次性修剪器，基于 `平均激活` 准则来修剪卷积层，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中有说明。 本文中提到的其他修剪标准将在以后的版本中支持。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import ActivationMeanRankFilterPruner
@@ -327,13 +327,13 @@ pruner = ActivationMeanRankFilterPruner(model, config_list)
 pruner.compress()
 ```
 
-Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for ActivationMeanRankFilterPruner
+#### ActivationMeanRankFilterPruner 的用户配置
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
 
 ***
