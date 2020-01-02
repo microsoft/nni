@@ -299,24 +299,24 @@ class ClipGrad(QuantGrad):
     @staticmethod
     def quant_backward(tensor, grad_output, quant_type):
         """
-        This method should be overrided by subclass to provide customized backward function,
-        default implementation is Straight-Through Estimator
+        此方法应被子类重载来提供定制的 backward 函数，
+        默认实现是 Straight-Through Estimator
         Parameters
         ----------
         tensor : Tensor
-            input of quantization operation
+            量化操作的输入
         grad_output : Tensor
-            gradient of the output of quantization operation
+            量化操作输出的梯度
         quant_type : QuantType
-            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
-            you can define different behavior for different types.
+            量化类型，可为 `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            可为不同的类型定义不同的行为。
         Returns
         -------
         tensor
-            gradient of the input of quantization operation
+            量化输入的梯度
         """
 
-        # for quant_output function, set grad to zero if the absolute value of tensor is larger than 1
+        # 对于 quant_output 函数，如果张量的绝对值大于 1，则将梯度设置为 0
         if quant_type == QuantType.QUANT_OUTPUT: 
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output
@@ -325,16 +325,16 @@ class ClipGrad(QuantGrad):
 class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
-        # set your customized backward function to overwrite default backward function
+        # 定制 backward 函数来重载默认的 backward 函数
         self.quant_grad = ClipGrad
 
 ```
 
-If you do not customize `QuantGrad`, the default backward is Straight-Through Estimator. _Coming Soon_ ...
+如果不定制 `QuantGrad`，默认的 backward 为 Straight-Through Estimator。 _即将推出_...
 
-## **Reference and Feedback**
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
-* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+## **参考和反馈**
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md)；
+* 了解 NNI 中[ NAS 的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md)；
