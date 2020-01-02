@@ -107,12 +107,12 @@ python scratch.py
 
 ## 已知的局限
 
-* 仅支持 Block 搜索。 Channel search is not supported yet.
-* Only GPU version is provided here.
+* 仅支持 Block 搜索。 尚不支持通道搜索。
+* 仅提供 GPU 版本。
 
-## Current Reproduction Results
+## 当前重现结果
 
-Reproduction is still undergoing. Due to the gap between official release and original paper, we compare our current results with official repo (our run) and paper.
+重现中。 由于官方版本和原始论文之间的不同，我们将当前结果与官方 Repo（我们运行的结果）和论文进行了比较。
 
-* Evolution phase is almost aligned with official repo. Our evolution algorithm shows a converging trend and reaches ~65% accuracy at the end of search. Nevertheless, this result is not on par with paper. For details, please refer to [this issue](https://github.com/megvii-model/SinglePathOneShot/issues/6).
-* Retrain phase is not aligned. Our retraining code, which uses the architecture released by the authors, reaches 72.14% accuracy, still having a gap towards 73.61% by official release and 74.3% reported in original paper.
+* 进化阶段几乎与官方 Repo 一致。 进化算法显示出了收敛趋势，在搜索结束时达到约 65% 的精度。 但此结果与论文不一致。 详情参考[此 issue](https://github.com/megvii-model/SinglePathOneShot/issues/6)。
+* 重新训练阶段未匹配。 我们的重新训练代码，使用了作者发布的架构，获得了 72.14% 的准确率，与官方发布的 73.61%，和原始论文中的 74.3% 有一定差距。
