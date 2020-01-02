@@ -1,1 +1,1 @@
-This is a naive example that demonstrates how to use NNI interface to implement a NAS search space.
+这是一个简单示例，演示如何使用 NNI 接口实现 NAS 搜索空间。
