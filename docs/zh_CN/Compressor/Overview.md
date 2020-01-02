@@ -109,7 +109,7 @@ pruner.compress()
 
 
 #### 示例
-A simple example of configuration is shown below:
+配置的简单示例如下：
 
 ```python
 [
@@ -128,33 +128,33 @@ A simple example of configuration is shown below:
 ]
 ```
 
-It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and please do not compress `op_name3`.
+其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
 ### 其它 API
 
-Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](./Pruner.md#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke. One is `update_epoch`, you can use it as follows:
+一些压缩算法使用 Epoch 来控制压缩进度（如[AGP](./Pruner.md#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此提供了另外两个 API。 一个是 `update_epoch`，可参考下例使用：
 
-Tensorflow code
+TensorFlow 代码
 
 ```python
 pruner.update_epoch(epoch, sess)
 ```
 
-PyTorch code
+PyTorch 代码
 
 ```python
 pruner.update_epoch(epoch)
 ```
 
-The other is `step`, it can be called with `pruner.step()` after each minibatch. Note that not all algorithms need these two APIs, for those that do not need them, calling them is allowed but has no effect.
+另一个是 `step`，可在每个批处理后调用 `pruner.step()`。 注意，并不是所有的算法都需要这两个 API，对于不需要它们的算法，调用它们不会有影响。
 
-You can easily export the compressed model using the following API if you are pruning your model, `state_dict` of the sparse model weights will be stored in `model.pth`, which can be loaded by `torch.load('model.pth')`
+使用下列 API 可轻松将压缩后的模型导出，稀疏模型的 `state_dict` 会保存在 `model.pth` 文件中，可通过 `torch.load('model.pth')` 加载。
 
 ```
 pruner.export_model(model_path='model.pth')
 ```
 
-`mask_dict` and pruned model in `onnx` format(`input_shape` need to be specified) can also be exported like this:
+`mask_dict` 和 `onnx` 格式的剪枝模型（需要指定 `input_shape`）可这样导出：
 
 ```python
 pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
@@ -162,62 +162,61 @@ pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='mod
 
 ## 定制新的压缩算法
 
-To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruner and quantizer respectively.
+为了简化压缩算法的编写，NNI 设计了简单且灵活的接口。 对于 Pruner 和 Quantizer 分别有相应的接口。
 
 ### 剪枝算法
 
-If you want to write a new pruning algorithm, you can write a class that inherits `nni.compression.tensorflow.Pruner` or `nni.compression.torch.Pruner` depending on which framework you use. Then, override the member functions with the logic of your algorithm.
+要实现新的剪枝算法，根据使用的框架，添加继承于 `nni.compression.tensorflow.Pruner` 或 `nni.compression.torch.Pruner` 的类。 然后，根据算法逻辑来重写成员函数。
 
 ```python
-# This is writing a pruner in tensorflow.
-# For writing a pruner in PyTorch, you can simply replace
-# nni.compression.tensorflow.Pruner with
+# TensorFlow 中定制 Pruner。
+# PyTorch 的 Pruner，只需将
+# nni.compression.tensorflow.Pruner 替换为
 # nni.compression.torch.Pruner
 class YourPruner(nni.compression.tensorflow.Pruner):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def calc_mask(self, layer, config):
         """
-        Pruners should overload this method to provide mask for weight tensors.
-        The mask must have the same shape and type comparing to the weight.
-        It will be applied with ``mul()`` operation on the weight.
-        This method is effectively hooked to ``forward()`` method of the model.
+        Pruner 需要重载此方法来为权重提供掩码
+        掩码必须与权重有相同的形状和类型。
+        将对权重执行 ``mul()`` 操作。
+        此方法会挂载到模型的 ``forward()`` 方法上。
 
         Parameters
         ----------
         layer: LayerInfo
-            calculate mask for ``layer``'s weight
+            为 ``layer`` 的权重计算掩码
         config: dict
-            the configuration for generating the mask
+            生成权重所需要的掩码
         """
         return your_mask
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def update_epoch(self, epoch_num, sess):
         pass
 
-    # note for pytorch version, there is no sess in input arguments
+    #  PyTorch 版本不需要 sess 参数
     def step(self, sess):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据需要可基于 bind_model 方法中的模型或权重进行操作
         """
         pass
 ```
 
-For the simplest algorithm, you only need to override `calc_mask`. It receives the to-be-compressed layers one by one along with their compression configuration. You generate the mask for this weight in this function and return. Then NNI applies the mask for you.
+对于最简单的算法，只需要重写 `calc_mask` 函数。 它会接收需要压缩的层以及其压缩配置。 可在此函数中为此权重生成 mask 并返回。 NNI 会应用此 mask。
 
-Some algorithms generate mask based on training progress, i.e., epoch number. We provide `update_epoch` for the pruner to be aware of the training progress. It should be called at the beginning of each epoch.
+一些算法根据训练进度来生成 mask，如 Epoch 数量。 Pruner 可使用 `update_epoch` 来了解训练进度。 应在每个 Epoch 之前调用它。
 
-Some algorithms may want global information for generating masks, for example, all weights of the model (for statistic information). Your can use `self.bound_model` in the Pruner class for accessing weights. If you also need optimizer's information (for example in Pytorch), you could override `__init__` to receive more arguments such as model's optimizer. Then `step` can process or update the information according to the algorithm. You can refer to [source code of built-in algorithms](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors) for example implementations.
+一些算法可能需要全局的信息来生成 mask，例如模型的所有权重（用于生成统计信息）. 可在 Pruner 类中通过 `self.bound_model` 来访问权重。 如果需要优化器的信息（如在 Pytorch 中），可重载 `__init__` 来接收优化器等参数。 然后 `step` 可以根据算法来处理或更新信息。 可参考[内置算法的源码](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/compressors)作为示例。
 
 ### 量化算法
 
-The interface for customizing quantization algorithm is similar to that of pruning algorithms. The only difference is that `calc_mask` is replaced with `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+定制量化算法的接口与剪枝算法类似。 唯一的不同是使用 `quantize_weight` 替换了 `calc_mask`。 `quantize_weight` 直接返回量化后的权重，而不是 mask。这是因为对于量化算法，量化后的权重不能通过应用 mask 来获得。
 
 ```python
 from nni.compression.torch.compressor import Quantizer
@@ -225,58 +224,58 @@ from nni.compression.torch.compressor import Quantizer
 class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        quantize should overload this method to quantize weight tensors.
-        This method is effectively hooked to :meth:`forward` of the model.
+        quantize 需要重载此方法来为权重提供掩码
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         weight : Tensor
-            weight that needs to be quantized
+            要被量化的权重
         config : dict
-            the configuration for weight quantization
+            权重量化的配置
         """
 
-        # Put your code to generate `new_weight` here
+        # 此处逻辑生成 `new_weight`
 
         return new_weight
 
     def quantize_output(self, output, config, **kwargs):
         """
-        quantize should overload this method to quantize output.
-        This method is effectively hooked to `:meth:`forward` of the model.
+        重载此方法输出量化
+        此方法挂载于模型的 `:meth:`forward`。
 
         Parameters
         ----------
         output : Tensor
-            output that needs to be quantized
+            需要被量化的输出
         config : dict
-            the configuration for output quantization
+            输出量化的配置
         """
 
-        # Put your code to generate `new_output` here
+        # 实现生成 `new_output`
 
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
-        quantize should overload this method to quantize input.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法量化输入
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         inputs : Tensor
-            inputs that needs to be quantized
+            需要被量化的张量
         config : dict
-            the configuration for inputs quantization
+            输入量化的配置
         """
 
-        # Put your code to generate `new_input` here
+        # 生成 `new_input` 的代码
 
         return new_input
 
@@ -290,8 +289,8 @@ class YourQuantizer(Quantizer):
         """
         pass
 ```
-#### Customize backward function
-Sometimes it's necessary for a quantization operation to have a customized backward function, such as [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste), user can customize a backward function as follow:
+#### 定制 backward 函数
+有时，量化操作必须自定义 backward 函数，例如 [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste)，可如下定制 backward 函数：
 
 ```python
 from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
