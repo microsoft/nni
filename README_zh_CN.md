@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **NNI v1.2 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI v1.3 has been released! &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -224,7 +224,7 @@ Linux 和 MacOS
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -234,7 +234,7 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v1.2 https://github.com/Microsoft/nni.git
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
@@ -250,7 +250,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)�
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 MacOS
