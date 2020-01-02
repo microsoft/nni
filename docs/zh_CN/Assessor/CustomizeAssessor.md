@@ -54,9 +54,9 @@ assessor:
 
 注意在 **2** 中， `trial_history` 对象与 Trial 通过 `report_intermediate_result` 函数返回给 Assessor 的对象完全一致。
 
-The working directory of your assessor is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`,
+Assessor 的工作目录是`<home>/nni/experiments/<experiment_id>/log` 可从环境变量 `NNI_LOG_DIRECTORY` 中获取。
 
-More detail example you could see:
+更多示例，可参考：
 
 > * [medianstop-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor)
 > * [curvefitting-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/curvefitting_assessor)
