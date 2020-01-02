@@ -106,9 +106,9 @@ python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 
 NNI 提出的 API 在[这里](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/darts)包含了基于此 API 的 NAS 实现示例。
 
-## **Reference and Feedback**
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+## **参考和反馈**
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md)；
+* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md)；
