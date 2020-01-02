@@ -58,21 +58,21 @@ paiYarnConfig:
 * authFile
     * 可选。在使用 paiYarn 模式时，为私有 Docker 仓库设置认证文件，[见参考文档](https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job)。提供 authFile 的本地路径即可， NNI 会上传此文件。
 * portList
-    * 可选。 Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, [Refer](https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification). The config schema in NNI is shown below:
+    * 可选。 设置 OpenPAIYarn 的 portList。指定了容器中使用的端口列表，[参考文档](https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification)。<br /> 示例如下： NNI 中的配置架构如下所示：
     ```
     portList:
       - label: test
         beginAt: 8080
         portNumber: 2
     ```
-    Let's say you want to launch a tensorboard in the mnist example using the port. So the first step is to write a wrapper script `launch_paiYarn.sh` of `mnist.py`.
+    假设需要在 MNIST 示例中使用端口来运行 TensorBoard。 第一步是编写 `mnist.py` 的包装脚本 `launch_paiYarn.sh`。
 
     ```bash
     export TENSORBOARD_PORT=paiYarn_PORT_LIST_${paiYarn_CURRENT_TASK_ROLE_NAME}_0_tensorboard
     tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
     python3 mnist.py
     ```
-    The config file of portList should be filled as following:
+    portList 的配置部分如下：
 
     ```yaml
   trial:
@@ -83,14 +83,14 @@ paiYarnConfig:
         portNumber: 1
     ```
 
-NNI support two kind of authorization method in paiYarn, including password and paiYarn token, [refer](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication). The authorization is configured in `paiYarnConfig` field. For password authorization, the `paiYarnConfig` schema is:
+NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn Token，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
   host: 10.1.1.1
 ```
-For paiYarn token authorization, the `paiYarnConfig` schema is:
+Token 认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
@@ -98,11 +98,11 @@ paiYarnConfig:
   host: 10.1.1.1
 ```
 
-Once complete to fill NNI experiment config file and save (for example, save as exp_paiYarn.yml), then run the following command
+完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_paiYarn.yml），运行以下命令：
 ```
 nnictl create --config exp_paiYarn.yml
 ```
-to start the experiment in paiYarn mode. NNI will create OpenpaiYarn job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see jobs created by NNI in the OpenpaiYarn cluster's web portal, like: ![](../../img/nni_paiYarn_joblist.jpg)
+来在 paiYarn 模式下启动 Experiment。 NNI will create OpenpaiYarn job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see jobs created by NNI in the OpenpaiYarn cluster's web portal, like: ![](../../img/nni_paiYarn_joblist.jpg)
 
 Notice: In paiYarn mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
