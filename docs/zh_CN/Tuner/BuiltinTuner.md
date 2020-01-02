@@ -1,6 +1,6 @@
-# Built-in Tuners for Hyperparameter Tuning
+# 内置的超参调优 Tuner
 
-NNI provides state-of-the-art tuning algorithms as our built-in tuners and makes them easy to use. 下面是内置 Tuner 的简单介绍：
+NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
 注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](../CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
 
@@ -158,7 +158,7 @@ nnictl package install --name=SMAC
 **参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for relatively large search space.
+* **config_dedup** (*True 或 False, 可选, 默认为 False*) - 如果为 True，则 Tuner 不会生成重复的配置。 If False, a configuration may be generated twice, but it is rare for relatively large search space.
 
 **示例**
 
