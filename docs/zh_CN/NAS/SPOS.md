@@ -2,25 +2,25 @@
 
 ## 介绍
 
-在 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 中提出的 one-shot NAS 方法，通过构造简化的通过统一路径采样方法训练的超网络来解决 One-Shot 模型训练的问题。这样所有架构（及其权重）都得到了完全且平等的训练。 An evolutionary algorithm is then applied to efficiently search for the best-performing architectures without any fine tuning.
+在 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 中提出的 one-shot NAS 方法，通过构造简化的通过统一路径采样方法训练的超网络来解决 One-Shot 模型训练的问题。这样所有架构（及其权重）都得到了完全且平等的训练。 然后，采用进化算法无需任何微调即可有效的搜索出性能最佳的体系结构。
 
-Implementation on NNI is based on [official repo](https://github.com/megvii-model/SinglePathOneShot). We implement a trainer that trains the supernet and a evolution tuner that leverages the power of NNI framework that speeds up the evolutionary search phase. We have also shown
+在 NNI 上的实现基于 [官方 Repo](https://github.com/megvii-model/SinglePathOneShot). 实现了一个训练超级网络的 Trainer，以及一个利用 NNI 框架能力来加速进化搜索阶段的进化 Tuner。 还展示了
 
-## Examples
+## 示例
 
-Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
+此示例是论文中的搜索空间，使用 flops 限制来执行统一的采样方法。
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
+[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
 
-### Requirements
+### 必需组件
 
-NVIDIA DALI >= 0.16 is needed as we use DALI to accelerate the data loading of ImageNet. [Installation guide](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/installation.html)
+由于使用了 DALI 来加速 ImageNet 的数据读取，需要 NVIDIA DALI >= 0.16。 [安装指南](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/installation.html)
 
-Download the flops lookup table from [here](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN) (maintained by [Megvii](https://github.com/megvii-model)). Put `op_flops_dict.pkl` and `checkpoint-150000.pth.tar` (if you don't want to retrain the supernet) under `data` directory.
+从[这里](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN) (由 [Megvii](https://github.com/megvii-model) 维护) 下载 flops 查找表。 将 `op_flops_dict.pkl` 和 `checkpoint-150000.pth.tar` (如果不需要重新训练超网络) 放到 `data` 目录中。
 
-Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Linking it to `data/imagenet` will be more convenient.
+准备标准格式的 ImageNet (参考[这里的脚本](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4))。 将其链接到 `data/imagenet` 会更方便。
 
-After preparation, it's expected to have the following code structure:
+准备好后，应具有以下代码结构：
 
 ```
 spos
@@ -42,49 +42,49 @@ spos
 └── utils.py
 ```
 
-### Step 1. Train Supernet
+### 步骤 1. 训练超网络
 
 ```
 python supernet.py
 ```
 
-Will export the checkpoint to `checkpoints` directory, for the next step.
+会将检查点导出到 `checkpoints` 目录中，为下一步做准备。
 
-NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5), as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
+注意：数据加载的官方 Repo [与通常的方法有所不同](https://github.com/megvii-model/SinglePathOneShot/issues/5)，使用了 BGR 张量，以及 0 到 255 之间的值来与自己的深度学习框架对齐。 选项 `--spos-preprocessing` 会模拟原始的使用行为，并能使用预训练的检查点。
 
-### Step 2. Evolution Search
+### 步骤 2. 进化搜索
 
-Single Path One-Shot leverages evolution algorithm to search for the best architecture. The tester, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
+单路径 One-Shot 利用进化算法来搜索最佳架构。 tester 负责通过训练图像的子集来测试采样的体系结构，重新计算所有批处理规范，并在完整的验证集上评估架构。
 
-In order to make the tuner aware of the flops limit and have the ability to calculate the flops, we created a new tuner called `EvolutionWithFlops` in `tuner.py`, inheriting the tuner in SDK.
+为了使 Tuner 识别 flops 限制并能计算 flops，在 `tuner.py` 中创建了新的 `EvolutionWithFlops` Tuner，其继承于 SDK 中的 tuner。
 
-To have a search space ready for NNI framework, first run
+要为 NNI 框架准备好搜索空间，首先运行
 
 ```
 nnictl ss_gen -t "python tester.py"
 ```
 
-This will generate a file called `nni_auto_gen_search_space.json`, which is a serialized representation of your search space.
+将生成 `nni_auto_gen_search_space.json` 文件，这是搜索空间的序列化形式。
 
-By default, it will use `checkpoint-150000.pth.tar` downloaded previously. In case you want to use the checkpoint trained by yourself from the last step, specify `--checkpoint` in the command in `config_search.yml`.
+默认情况下，它将使用前面下载的 `checkpoint-150000.pth.tar`。 如果要使用从自行训练的检查点，在 `config_search.yml` 中的命令上指定 `---checkpoint`。
 
-Then search with evolution tuner.
+然后使用进化 Tuner 搜索。
 
 ```
 nnictl create --config config_search.yml
 ```
 
-The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni/experiments/your_experiment_id/log`.
+从每个 Epoch 导出的最终架构可在 Tuner 工作目录下的 `checkpoints` 中找到，默认值为 `$HOME/nni/experiments/your_experiment_id/log`。
 
-### Step 3. Train from Scratch
+### 步骤 3. 从头开始训练
 
 ```
 python scratch.py
 ```
 
-By default, it will use `architecture_final.json`. This architecture is provided by the official repo (converted into NNI format). You can use any architecture (e.g., the architecture found in step 2) with `--fixed-arc` option.
+默认情况下，它将使用 `architecture_final.json`. 该体系结构由官方仓库提供（转换成了 NNI 格式）。 通过 `--fixed-arc` 选项，可使用任何结构（例如，步骤 2 中找到的结构）。
 
-## Reference
+## 参考
 
 ### PyTorch
 
@@ -105,14 +105,14 @@ By default, it will use `architecture_final.json`. This architecture is provided
     .. automethod:: __init__
 ```
 
-## Known Limitations
+## 已知的局限
 
-* Block search only. Channel search is not supported yet.
-* Only GPU version is provided here.
+* 仅支持 Block 搜索。 尚不支持通道搜索。
+* 仅提供 GPU 版本。
 
-## Current Reproduction Results
+## 当前重现结果
 
-Reproduction is still undergoing. Due to the gap between official release and original paper, we compare our current results with official repo (our run) and paper.
+重现中。 由于官方版本和原始论文之间的不同，我们将当前结果与官方 Repo（我们运行的结果）和论文进行了比较。
 
-* Evolution phase is almost aligned with official repo. Our evolution algorithm shows a converging trend and reaches ~65% accuracy at the end of search. Nevertheless, this result is not on par with paper. For details, please refer to [this issue](https://github.com/megvii-model/SinglePathOneShot/issues/6).
-* Retrain phase is not aligned. Our retraining code, which uses the architecture released by the authors, reaches 72.14% accuracy, still having a gap towards 73.61% by official release and 74.3% reported in original paper.
+* 进化阶段几乎与官方 Repo 一致。 进化算法显示出了收敛趋势，在搜索结束时达到约 65% 的精度。 但此结果与论文不一致。 详情参考[此 issue](https://github.com/megvii-model/SinglePathOneShot/issues/6)。
+* 重新训练阶段未匹配。 我们的重新训练代码，使用了作者发布的架构，获得了 72.14% 的准确率，与官方发布的 73.61%，和原始论文中的 74.3% 有一定差距。

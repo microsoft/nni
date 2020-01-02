@@ -1,18 +1,18 @@
 # P-DARTS
 
-## Examples
+## 示例
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/pdarts)
+[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/pdarts)
 
 ```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
 git clone https://github.com/Microsoft/nni.git
 
-# search the best architecture
+# 搜索最好的架构
 cd examples/nas/pdarts
 python3 search.py
 
-# train the best architecture, it's the same progress as darts.
+# 训练最好的架构，过程与 darts 相同。
 cd ../darts
 python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
 ```
