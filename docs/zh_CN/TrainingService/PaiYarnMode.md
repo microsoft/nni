@@ -1,27 +1,27 @@
-**Run an Experiment on OpenpaiYarn**
+**在 OpenPAIYarn 上运行 Experiment**
 ===
-The original `pai` mode is modificated to `paiYarn` mode, which is a distributed training platform based on Yarn.
+原始的 `pai` 模式改为了 `paiYarn` 模式，这是基于 Yarn 的分布式训练平台。
 
-## Setup environment
-Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
+## 设置环境
+参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
-## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
+## 运行 Experiment
+以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai, paiYarn
+# 可选项: local, remote, pai, paiYarn
 trainingServicePlatform: paiYarn
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -34,31 +34,31 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# Configuration to access OpenpaiYarn Cluster
+# 配置访问的 OpenpaiYarn 集群
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
   host: 10.1.1.1
 ```
 
-Note: You should set `trainingServicePlatform: paiYarn` in NNI config YAML file if you want to start experiment in paiYarn mode.
+注意：如果用 paiYarn 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: paiYarn`。
 
-Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in paiYarn mode have these additional keys:
+与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，paiYarn 模式的 Trial 有额外的配置：
 * cpuNum
-    * Required key. Should be positive number based on your trial program's CPU  requirement
+    * 必填。 Trial 程序的 CPU 需求，必须为正数。
 * memoryMB
-    * Required key. Should be positive number based on your trial program's memory requirement
+    * 必填。 Trial 程序的内存需求，必须为正数。
 * image
-    * Required key. In paiYarn mode, your trial program will be scheduled by OpenpaiYarn to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
+    * 必填。 在 paiYarn 模式中，Trial 程序由 OpenpaiYarn 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
+    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。
 * virtualCluster
-    * Optional key. Set the virtualCluster of OpenpaiYarn. If omitted, the job will run on default virtual cluster.
+    * 可选。 设置 OpenPAIYarn 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
 * shmMB
-    * Optional key. Set the shmMB configuration of OpenpaiYarn, it set the shared memory for one task in the task role.
+    * 可选。 设置 OpenPAIYarn 的 shmMB，即 Docker 中的共享内存。
 * authFile
-    * Optional key, Set the auth file path for private registry while using paiYarn mode, [Refer](https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job), you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
+    * 可选。在使用 paiYarn 模式时，为私有 Docker 仓库设置认证文件，[见参考文档](https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job)。提供 authFile 的本地路径即可， NNI 会上传此文件。
 * portList
-    * Optional key. Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, [Refer](https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification). The config schema in NNI is shown below:
+    * 可选。 Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, [Refer](https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification). The config schema in NNI is shown below:
     ```
     portList:
       - label: test
