@@ -81,15 +81,15 @@ pruner.compress()
 * __exclude__：默认为 False。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。
 
 #### 量化算法的键值
-**If you use quantization algorithms, you need to specify more keys. If you use pruning algorithms, you can safely skip these keys**
+**如果使用量化算法，则需要设置更多键值。 如果使用剪枝算法，则可以忽略这些键值**
 
-* __quant_types__ : list of string.
+* __quant_types__ : 字符串列表。
 
-Type of quantization you want to apply, currently support 'weight', 'input', 'output'. 'weight' means applying quantization operation to the weight parameter of modules. 'input' means applying quantization operation to the input of module forward method. 'output' means applying quantization operation to the output of module forward method, which is often called as 'activation' in some papers.
+要应用量化的类型，当前支持 "权重"，"输入"，"输出"。 "权重"是指将量化操作应用到 module 的权重参数上。 "输入" 是指对 module 的 forward 方法的输入应用量化操作。 "输出"是指将量化运法应用于模块 forward 方法的输出，在某些论文中，这种方法称为"激活"。
 
-* __quant_bits__ : int or dict of {str : int}
+* __quant_bits__ : int 或 dict {str : int}
 
-bits length of quantization, key is the quantization type, value is the quantization bits length, eg.
+量化的位宽，键是量化类型，值是量化位宽度，例如：
 ```
 {
     quant_bits: {
@@ -98,17 +98,17 @@ bits length of quantization, key is the quantization type, value is the quantiza
         },
 }
 ```
-when the value is int type, all quantization types share same bits length. eg.
+当值为 int 类型时，所有量化类型使用相同的位宽。 例如：
 ```
 {
-    quant_bits: 8, # weight or output quantization are all 8 bits
+    quant_bits: 8, # 权重和输出的位宽都为 8 bits
 }
 ```
-#### Other keys specified for every compression algorithm
-There are also other keys in the `dict`, but they are specific for every compression algorithm. For example, [Level Pruner](./Pruner.md#level-pruner) requires `sparsity` key to specify how much a model should be pruned.
+#### 为每个压缩算法指定的其他键
+`dict` 还有一些其它键值，由特定的压缩算法所使用。 例如， [Level Pruner](./Pruner.md#level-pruner) 需要 `sparsity` 键，用于指定修剪的量。
 
 
-#### example
+#### 示例
 A simple example of configuration is shown below:
 
 ```python
