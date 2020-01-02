@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiement new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **NNI v1.2 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **NNI v1.3 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiements. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms. 
