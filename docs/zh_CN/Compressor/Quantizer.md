@@ -111,19 +111,19 @@ quantizer = BNNQuantizer(model, configure_list)
 model = quantizer.compress()
 ```
 
-You can view example [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
+可以查看示例 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 了解更多信息。
 
-#### User configuration for BNN Quantizer
-common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+#### BNN Quantizer 的用户配置
+压缩算法所需的常见配置可在[通用配置](./Overview.md#User-configuration-for-a-compression-algorithm)中找到。
 
-configuration needed by this algorithm :
+此算法所需的配置：
 
-### Experiment
-We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
+### 实验
+我们实现了 [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830) 中的一个实验，对 CIFAR-10 上的 **VGGNet** 进行了量化操作。 我们的实验结果如下：
 
-| Model  | Accuracy |
-| ------ | -------- |
-| VGGNet | 86.93%   |
+| 模型     | 精度     |
+| ------ | ------ |
+| VGGNet | 86.93% |
 
 
-The experiments code can be found at [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 
+实验代码可在 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 
