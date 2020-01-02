@@ -2,25 +2,25 @@
 
 ## 介绍
 
-在 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 中提出的 one-shot NAS 方法，通过构造简化的通过统一路径采样方法训练的超网络来解决 One-Shot 模型训练的问题。这样所有架构（及其权重）都得到了完全且平等的训练。 An evolutionary algorithm is then applied to efficiently search for the best-performing architectures without any fine tuning.
+在 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 中提出的 one-shot NAS 方法，通过构造简化的通过统一路径采样方法训练的超网络来解决 One-Shot 模型训练的问题。这样所有架构（及其权重）都得到了完全且平等的训练。 然后，采用进化算法无需任何微调即可有效的搜索出性能最佳的体系结构。
 
-Implementation on NNI is based on [official repo](https://github.com/megvii-model/SinglePathOneShot). We implement a trainer that trains the supernet and a evolution tuner that leverages the power of NNI framework that speeds up the evolutionary search phase. We have also shown
+在 NNI 上的实现基于 [官方 Repo](https://github.com/megvii-model/SinglePathOneShot). 实现了一个训练超级网络的 Trainer，以及一个利用 NNI 框架能力来加速进化搜索阶段的进化 Tuner。 还展示了
 
-## Examples
+## 示例
 
-Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
+此示例是论文中的搜索空间，使用 flops 限制来执行统一的采样方法。
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
+[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
 
-### Requirements
+### 必需组件
 
-NVIDIA DALI >= 0.16 is needed as we use DALI to accelerate the data loading of ImageNet. [Installation guide](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/installation.html)
+由于使用了 DALI 来加速 ImageNet 的数据读取，需要 NVIDIA DALI >= 0.16。 [安装指南](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/installation.html)
 
-Download the flops lookup table from [here](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN) (maintained by [Megvii](https://github.com/megvii-model)). Put `op_flops_dict.pkl` and `checkpoint-150000.pth.tar` (if you don't want to retrain the supernet) under `data` directory.
+从[这里](https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN) (由 [Megvii](https://github.com/megvii-model) 维护) 下载 flops 查找表。 将 `op_flops_dict.pkl` 和 `checkpoint-150000.pth.tar` (如果不需要重新训练超网络) 放到 `data` 目录中。
 
-Prepare ImageNet in the standard format (follow the script [here](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4)). Linking it to `data/imagenet` will be more convenient.
+准备标准格式的 ImageNet (参考[这里的脚本](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4))。 将其链接到 `data/imagenet` 会更方便。
 
-After preparation, it's expected to have the following code structure:
+准备好后，应具有以下代码结构：
 
 ```
 spos
@@ -42,13 +42,13 @@ spos
 └── utils.py
 ```
 
-### Step 1. Train Supernet
+### 步骤 1. 训练超网络
 
 ```
 python supernet.py
 ```
 
-Will export the checkpoint to `checkpoints` directory, for the next step.
+会将检查点导出到 `checkpoints` 目录中，为下一步做准备。
 
 NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5), as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
 
