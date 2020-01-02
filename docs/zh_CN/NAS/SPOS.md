@@ -50,41 +50,41 @@ python supernet.py
 
 会将检查点导出到 `checkpoints` 目录中，为下一步做准备。
 
-NOTE: The data loading used in the official repo is [slightly different from usual](https://github.com/megvii-model/SinglePathOneShot/issues/5), as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option `--spos-preprocessing` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
+注意：数据加载的官方 Repo [与通常的方法有所不同](https://github.com/megvii-model/SinglePathOneShot/issues/5)，使用了 BGR 张量，以及 0 到 255 之间的值来与自己的深度学习框架对齐。 选项 `--spos-preprocessing` 会模拟原始的使用行为，并能使用预训练的检查点。
 
-### Step 2. Evolution Search
+### 步骤 2. 进化搜索
 
-Single Path One-Shot leverages evolution algorithm to search for the best architecture. The tester, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
+单路径 One-Shot 利用进化算法来搜索最佳架构。 tester 负责通过训练图像的子集来测试采样的体系结构，重新计算所有批处理规范，并在完整的验证集上评估架构。
 
-In order to make the tuner aware of the flops limit and have the ability to calculate the flops, we created a new tuner called `EvolutionWithFlops` in `tuner.py`, inheriting the tuner in SDK.
+为了使 Tuner 识别 flops 限制并能计算 flops，在 `tuner.py` 中创建了新的 `EvolutionWithFlops` Tuner，其继承于 SDK 中的 tuner。
 
-To have a search space ready for NNI framework, first run
+要为 NNI 框架准备好搜索空间，首先运行
 
 ```
 nnictl ss_gen -t "python tester.py"
 ```
 
-This will generate a file called `nni_auto_gen_search_space.json`, which is a serialized representation of your search space.
+将生成 `nni_auto_gen_search_space.json` 文件，这是搜索空间的序列化形式。
 
-By default, it will use `checkpoint-150000.pth.tar` downloaded previously. In case you want to use the checkpoint trained by yourself from the last step, specify `--checkpoint` in the command in `config_search.yml`.
+默认情况下，它将使用前面下载的 `checkpoint-150000.pth.tar`。 如果要使用从自行训练的检查点，在 `config_search.yml` 中的命令上指定 `---checkpoint`。
 
-Then search with evolution tuner.
+然后使用进化 Tuner 搜索。
 
 ```
 nnictl create --config config_search.yml
 ```
 
-The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni/experiments/your_experiment_id/log`.
+从每个 Epoch 导出的最终架构可在 Tuner 工作目录下的 `checkpoints` 中找到，默认值为 `$HOME/nni/experiments/your_experiment_id/log`。
 
-### Step 3. Train from Scratch
+### 步骤 3. 从头开始训练
 
 ```
 python scratch.py
 ```
 
-By default, it will use `architecture_final.json`. This architecture is provided by the official repo (converted into NNI format). You can use any architecture (e.g., the architecture found in step 2) with `--fixed-arc` option.
+默认情况下，它将使用 `architecture_final.json`. 该体系结构由官方仓库提供（转换成了 NNI 格式）。 通过 `--fixed-arc` 选项，可使用任何结构（例如，步骤 2 中找到的结构）。
 
-## Reference
+## 参考
 
 ### PyTorch
 
@@ -105,9 +105,9 @@ By default, it will use `architecture_final.json`. This architecture is provided
     .. automethod:: __init__
 ```
 
-## Known Limitations
+## 已知的局限
 
-* Block search only. Channel search is not supported yet.
+* 仅支持 Block 搜索。 Channel search is not supported yet.
 * Only GPU version is provided here.
 
 ## Current Reproduction Results
