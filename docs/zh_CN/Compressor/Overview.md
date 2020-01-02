@@ -1,9 +1,9 @@
-# Model Compression with NNI
-As larger neural networks with more layers and nodes are considered, reducing their storage and computational cost becomes critical, especially for some real-time applications. Model compression can be used to address this problem.
+# 使用 NNI 进行模型压缩
+随着更多层和节点大型神经网络的使用，降低其存储和计算成本变得至关重要，尤其是对于某些实时应用程序。 模型压缩可用于解决此问题。
 
-We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute.
+我们很高兴的宣布，基于 NNI 的模型压缩工具发布了试用版本。该版本仍处于试验阶段，根据用户反馈会进行改进。 诚挚邀请您使用、反馈，或有更多贡献。
 
-NNI provides an easy-to-use toolkit to help user design and use compression algorithms. It currently supports PyTorch with unified interface. For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
+NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 当前支持基于 PyTorch 的统一接口。 For users to compress their models, they only need to add several lines in their code. There are some popular model compression algorithms built-in in NNI. Users could further use NNI's auto tuning power to find the best compressed model, which is detailed in [Auto Model Compression](./AutoCompression.md). On the other hand, users could easily customize their new compression algorithms using NNI's interface, refer to the tutorial [here](#customize-new-compression-algorithms).
 
 For a survey of model compression, you can refer to this paper: [Recent Advances in Efficient Computation of Deep Convolutional Neural Networks](https://arxiv.org/pdf/1802.00939.pdf).
 
