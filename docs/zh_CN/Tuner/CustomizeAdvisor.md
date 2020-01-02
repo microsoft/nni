@@ -33,8 +33,8 @@ advisor:
     arg1: value1
 ```
 
-**Note that** The working directory of your advisor is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`.
+**注意：**Advisor 的工作目录是`<home>/nni/experiments/<experiment_id>/log` 可从环境变量 `NNI_LOG_DIRECTORY` 中获取。
 
 ## 示例
 
-Here we provide an [example](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor).
+参考[示例](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor)。
