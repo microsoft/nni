@@ -229,7 +229,7 @@ Linux and MacOS
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -239,7 +239,7 @@ Windows
 * Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
 
 ```bash
-  git clone -b v1.2 https://github.com/Microsoft/nni.git
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
@@ -255,7 +255,7 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 * Download the examples via clone the source code.
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
 ```
 
 Linux and MacOS
