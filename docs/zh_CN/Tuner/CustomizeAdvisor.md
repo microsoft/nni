@@ -16,7 +16,7 @@ class CustomizedAdvisor(MsgDispatcherBase):
         ...
 ```
 
-**2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**。 [此文档](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase)可帮助理解 `MsgDispatcherBase`。
+**2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**。 [此文档](https://nni.readthedocs.io/zh/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase)可帮助理解 `MsgDispatcherBase`。
 
 **3. 在 Experiment 的 YAML 文件中配置好自定义的 Advisor。**
 
