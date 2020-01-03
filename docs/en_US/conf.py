@@ -21,7 +21,7 @@ from recommonmark.transform import AutoStructify
 
 # -- Project information ---------------------------------------------------
 
-project = 'Neural Network Intelligence'
+project = 'NNI'
 copyright = '2020, Microsoft'
 author = 'Microsoft'
 
@@ -109,6 +109,7 @@ html_static_path = ['../static']
 # html_sidebars = {}
 
 html_logo = '../img/nni_logo_dark.png'
+html_title = 'An AutoML distrubited tool for deep learning (NNI %s)' % release
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
