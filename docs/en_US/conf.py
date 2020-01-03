@@ -109,7 +109,7 @@ html_static_path = ['../static']
 # html_sidebars = {}
 
 html_logo = '../img/nni_logo_dark.png'
-html_title = 'An AutoML distrubited tool for deep learning (NNI %s)' % release
+html_title = 'An AutoML distrubited tool for deep learning (%s %s)' % (project, release)
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
