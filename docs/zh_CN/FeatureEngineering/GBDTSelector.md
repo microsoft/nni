@@ -45,11 +45,11 @@ print(fgs.get_selected_features(10))
 
 * **y** (数组，必需) - 目标值 (分类中为标签，回归中为实数)，shape = [n_samples].
 
-* **lgb_params** (dict, 必需) - lightgbm 模型参数。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/Parameters.html)
+* **lgb_params** (dict, 必需) - lightgbm 模型参数。 详情参考[这里](https://lightgbm.readthedocs.io/zh/latest/Parameters.html)
 
 * **eval_ratio** (float, 必需) - 数据大小的比例 用于从 self.X 中拆分出评估和训练数据。
 
-* **early_stopping_rounds** (int, 必需) - lightgbm 中的提前终止设置。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/Parameters.html)。
+* **early_stopping_rounds** (int, 必需) - lightgbm 中的提前终止设置。 详情参考[这里](https://lightgbm.readthedocs.io/zh/latest/Parameters.html)。
 
 * **importance_type** (str, 必需) - 可为 'split' 或 'gain'。 'split' 表示 '结果包含特征在模型中使用的次数' 而 'gain' 表示 '结果包含此特征拆分出的总收益'。 详情参考[这里](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance)。
 
