@@ -61,6 +61,8 @@ class EnasTrainer(Trainer):
             Weight of skip penalty loss.
         baseline_decay : float
             Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
+        child_steps : int
+            How many mini-batches for model training per epoch.
         mutator_lr : float
             Learning rate for RL controller.
         mutator_steps_aggregate : int
@@ -69,6 +71,8 @@ class EnasTrainer(Trainer):
             Number of mini-batches for each epoch of RL controller learning.
         aux_weight : float
             Weight of auxiliary head loss. ``aux_weight * aux_loss`` will be added to total loss.
+        test_arc_per_epoch : int
+            How many architectures are chosen for direct test after each epoch.
         """
         super().__init__(model, mutator if mutator is not None else EnasMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,

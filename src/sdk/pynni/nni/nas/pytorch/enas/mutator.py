@@ -49,12 +49,16 @@ class EnasMutator(Mutator):
             and mark it as the hidden state of this MutableScope. This is to align with the original implementation of paper.
         skip_target : float
             Target probability that skipconnect will appear.
+        temperature : float
+            Temperature constant that divides the logits.
         branch_bias : float
             Manual bias applied to make some operations more likely to be chosen.
             Currently this is implemented with a hardcoded match rule that aligns with original repo.
             If a mutable has a ``reduce`` in its key, all its op choices
             that contains `conv` in their typename will receive a bias of ``+self.branch_bias`` initially; while others
             receive a bias of ``-self.branch_bias``.
+        entropy_reduction : str
+            Can be one of ``sum`` and ``mean``. How the entropy of multi-input-choice is reduced.
         """
         super().__init__(model)
         self.lstm_size = lstm_size
