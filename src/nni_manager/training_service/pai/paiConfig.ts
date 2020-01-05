@@ -9,7 +9,7 @@ import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../
 export class PAIClusterConfig {
     public readonly userName: string;
     public readonly passWord?: string;
-    public readonly host: string;
+    public host: string;
     public readonly token?: string;
 
     /**

@@ -211,6 +211,7 @@ class SPOSEvolution(Tuner):
         Parameters
         ----------
         result : dict
+            Chosen architectures to be exported.
         """
         os.makedirs("checkpoints", exist_ok=True)
         for i, cand in enumerate(result):
