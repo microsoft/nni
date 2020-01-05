@@ -8,7 +8,7 @@ require('echarts/lib/component/title');
 
 interface Runtrial {
     trialId: Array<string>;
-    trialTime: Array<number>;
+    trialTime: number[];
 }
 
 interface DurationProps {
@@ -32,7 +32,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         };
     }
 
-    getOption = (dataObj: Runtrial) => {
+    getOption = (dataObj: Runtrial): any => {
         const { startDuration, endDuration } = this.state;
         return {
             tooltip: {
@@ -73,10 +73,10 @@ class Duration extends React.Component<DurationProps, DurationState> {
         };
     }
 
-    drawDurationGraph = (source: Array<TableObj>) => {
+    drawDurationGraph = (source: Array<TableObj>): any => {
         // why this function run two times when props changed?
         const trialId: Array<string> = [];
-        const trialTime: Array<number> = [];
+        const trialTime: number[] = [];
         const trialRun: Array<Runtrial> = [];
         const trialJobs = source.filter(filterDuration);
         Object.keys(trialJobs).map(item => {
@@ -91,7 +91,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         return this.getOption(trialRun[0]);
     }
 
-    shouldComponentUpdate(nextProps: DurationProps, nextState: DurationState) {
+    shouldComponentUpdate(nextProps: DurationProps): boolean {
 
         const { whichGraph, source } = nextProps;
         if (whichGraph === '3') {
@@ -116,7 +116,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         return false;
     }
 
-    render() {
+    render(): React.ReactNode {
 
         const { source } = this.props;
         const graph = this.drawDurationGraph(source);
@@ -134,7 +134,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         );
     }
 
-    private durationDataZoom = (e: EventMap) => {
+    private durationDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
                 startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),

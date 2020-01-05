@@ -22,13 +22,13 @@ from recommonmark.transform import AutoStructify
 # -- Project information ---------------------------------------------------
 
 project = 'Neural Network Intelligence'
-copyright = '2019, Microsoft'
+copyright = '2020, Microsoft'
 author = 'Microsoft'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.2'
+release = 'v1.3'
 
 # -- General configuration ---------------------------------------------------
 

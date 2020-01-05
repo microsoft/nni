@@ -16,7 +16,7 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
 
     }
 
-    render() {
+    render(): React.ReactNode {
         const { who, percent, description, maxString, bgclass } = this.props;
 
         return (
@@ -31,7 +31,7 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
                                     percent={percent}
                                     strokeWidth={30}
                                     // strokeLinecap={'square'}
-                                    format={() => description}
+                                    format={(): string => description}
                                 />
                             </div>
                             <Row className="description">

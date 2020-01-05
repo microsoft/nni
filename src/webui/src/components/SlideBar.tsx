@@ -50,7 +50,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         };
     }
 
-    getNNIversion = () => {
+    getNNIversion = (): void => {
         axios(`${MANAGER_IP}/version`, {
             method: 'GET'
         })
@@ -61,7 +61,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
             });
     }
 
-    handleMenuClick = (e: EventPer) => {
+    handleMenuClick = (e: EventPer): void => {
         this.setState({ menuVisible: false });
         switch (e.key) {
             // to see & download experiment parameters
@@ -87,11 +87,11 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         }
     }
 
-    handleVisibleChange = (flag: boolean) => {
+    handleVisibleChange = (flag: boolean): void => {
         this.setState({ menuVisible: flag });
     }
 
-    getInterval = (value: string) => {
+    getInterval = (value: string): void => {
         if (value === 'close') {
             this.props.changeInterval(0);
         } else {
@@ -99,7 +99,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         }
     }
 
-    menu = () => {
+    menu = (): any => {
         return (
             <Menu onClick={this.handleMenuClick}>
                 <Menu.Item key="1">Experiment Parameters</Menu.Item>
@@ -110,14 +110,14 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     // nav bar
-    navigationBar = () => {
+    navigationBar = (): any => {
         const { version } = this.state;
         const feedBackLink = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
             <Menu onClick={this.handleMenuClick} className="menu-list" style={{ width: 216 }}>
                 {/* <Menu onClick={this.handleMenuClick} className="menu-list" style={{width: window.innerWidth}}> */}
                 <Menu.Item key="feedback">
-                    <a href={feedBackLink} target="_blank">Feedback</a>
+                    <a href={feedBackLink}  rel="noopener noreferrer" target="_blank">Feedback</a>
                 </Menu.Item>
                 <Menu.Item key="version">Version: {version}</Menu.Item>
                 <SubMenu
@@ -137,7 +137,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    mobileTabs = () => {
+    mobileTabs = (): any => {
         return (
             // <Menu className="menuModal" style={{width: 880, position: 'fixed', left: 0, top: 56}}>
             <Menu className="menuModal" style={{ padding: '0 10px' }}>
@@ -147,7 +147,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    refreshInterval = () => {
+    refreshInterval = (): any => {
         const {
             form: { getFieldDecorator },
             // form: { getFieldDecorator, getFieldValue },
@@ -171,7 +171,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    select = () => {
+    select = (): any => {
         const { isdisabledFresh } = this.state;
 
         return (
@@ -189,7 +189,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    fresh = (event: React.SyntheticEvent<EventTarget>) => {
+    fresh = (event: React.SyntheticEvent<EventTarget>): void => {
         event.preventDefault();
         event.stopPropagation();
         this.setState({ isdisabledFresh: true }, () => {
@@ -197,7 +197,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         });
     }
 
-    desktopHTML = () => {
+    desktopHTML = (): any => {
         const { version, menuVisible } = this.state;
         const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         return (
@@ -213,7 +213,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                             className="fresh"
                             type="ghost"
                         >
-                            <a target="_blank" href="https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html">
+                            <a target="_blank" rel="noopener noreferrer" href="https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html">
                                 <img
                                     src={require('../static/img/icon/ques.png')}
                                     alt="question"
@@ -246,7 +246,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
                         </Dropdown>
                     </span>
                     <span className="feedback">
-                        <a href={feed} target="_blank">
+                        <a href={feed} target="_blank" rel="noopener noreferrer">
                             <img
                                 src={require('../static/img/icon/issue.png')}
                                 alt="NNI github issue"
@@ -260,7 +260,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    tabeltHTML = () => {
+    tabeltHTML = (): any => {
         return (
             <Row className="nav">
                 <Col className="tabelt-left" span={14}>
@@ -280,7 +280,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
 
-    mobileHTML = () => {
+    mobileHTML = (): any => {
         const { isdisabledFresh } = this.state;
         return (
             <Row className="nav">
@@ -319,20 +319,20 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
         );
     }
     // close log drawer (nnimanager.dispatcher)
-    closeLogDrawer = () => {
+    closeLogDrawer = (): void => {
         this.setState({ isvisibleLogDrawer: false, activeKey: '' });
     }
 
     // close download experiment parameters drawer
-    closeExpDrawer = () => {
+    closeExpDrawer = (): void => {
         this.setState({ isvisibleExperimentDrawer: false });
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.getNNIversion();
     }
 
-    render() {
+    render(): React.ReactNode {
         const mobile = (<MediaQuery maxWidth={884}>{this.mobileHTML()}</MediaQuery>);
         const tablet = (<MediaQuery minWidth={885} maxWidth={1281}>{this.tabeltHTML()}</MediaQuery>);
         const desktop = (<MediaQuery minWidth={1282}>{this.desktopHTML()}</MediaQuery>);

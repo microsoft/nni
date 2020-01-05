@@ -1,0 +1,22 @@
+{
+  "LayerChoice1": [false, false, true, false],
+  "LayerChoice2": [false, true, false, false],
+  "LayerChoice3": [true, false, false, false],
+  "LayerChoice4": [false, true, false, false],
+  "LayerChoice5": [false, false, true, false],
+  "LayerChoice6": [true, false, false, false],
+  "LayerChoice7": [false, false, true, false],
+  "LayerChoice8": [true, false, false, false],
+  "LayerChoice9": [false, false, true, false],
+  "LayerChoice10": [true, false, false, false],
+  "LayerChoice11": [false, false, true, false],
+  "LayerChoice12": [false, false, false, true],
+  "LayerChoice13": [true, false, false, false],
+  "LayerChoice14": [true, false, false, false],
+  "LayerChoice15": [true, false, false, false],
+  "LayerChoice16": [true, false, false, false],
+  "LayerChoice17": [false, false, false, true],
+  "LayerChoice18": [false, false, true, false],
+  "LayerChoice19": [false, false, false, true],
+  "LayerChoice20": [false, false, false, true]
+}

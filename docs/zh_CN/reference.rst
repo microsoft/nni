@@ -10,3 +10,4 @@
     配置<Tutorial/ExperimentConfig>
     搜索空间<Tutorial/SearchSpaceSpec>
     实现训练平台<TrainingService/HowToImplementTrainingService>
+    Framework Library <SupportedFramework_Library>

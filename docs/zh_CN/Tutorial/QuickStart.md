@@ -48,7 +48,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-注意：完整实现请参考 [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
+注意：完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
 上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
@@ -84,7 +84,7 @@ NNI 用来帮助超参调优。它的流程如下：
 + }
 ```
 
-*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
+*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
 **第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
@@ -111,7 +111,7 @@ NNI 用来帮助超参调优。它的流程如下：
       run_trial(params)
 ```
 
-*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
+*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
 **第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`，以及`其它信息`，如调优算法，最大尝试次数，最大运行时间等等。
 
@@ -136,16 +136,16 @@ trial:
 
 注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
 
-*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
+*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
 
-上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
+上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
 
 #### Linux 和 macOS
 
 从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
 #### Windows
@@ -155,7 +155,7 @@ trial:
 **注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist\config_windows.yml
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。

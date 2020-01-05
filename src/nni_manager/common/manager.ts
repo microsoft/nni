@@ -27,7 +27,7 @@ interface ExperimentParams {
     versionCheck?: boolean;
     logCollection?: string;
     tuner?: {
-        className: string;
+        className?: string;
         builtinTunerName?: string;
         codeDir?: string;
         classArgs?: any;
@@ -37,7 +37,7 @@ interface ExperimentParams {
         gpuIndices?: string;
     };
     assessor?: {
-        className: string;
+        className?: string;
         builtinAssessorName?: string;
         codeDir?: string;
         classArgs?: any;
@@ -45,7 +45,7 @@ interface ExperimentParams {
         checkpointDir: string;
     };
     advisor?: {
-        className: string;
+        className?: string;
         builtinAdvisorName?: string;
         codeDir?: string;
         classArgs?: any;

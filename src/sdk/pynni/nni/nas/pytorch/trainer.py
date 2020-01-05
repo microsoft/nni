@@ -52,7 +52,7 @@ class Trainer(BaseTrainer):
         workers : int
             Number of workers used in data preprocessing.
         device : torch.device
-            Device object. Either `torch.device("cuda")` or torch.device("cpu")`. When `None`, trainer will
+            Device object. Either ``torch.device("cuda")`` or ``torch.device("cpu")``. When ``None``, trainer will
             automatic detects GPU and selects GPU first.
         log_frequency : int
             Number of mini-batches to log metrics.

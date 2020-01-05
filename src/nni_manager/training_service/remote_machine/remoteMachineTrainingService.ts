@@ -442,7 +442,7 @@ class RemoteMachineTrainingService implements TrainingService {
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
                     `tail -n 1 ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
-                if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
+                if (cmdresult !== undefined && cmdresult.stdout !== undefined && cmdresult.stdout.length > 0) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
                     if (rmMeta.gpuSummary.gpuCount === 0) {
                         this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);

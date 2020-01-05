@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 // draw accuracy graph data interface
 interface TableObj {
     key: number;
@@ -44,7 +42,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate: Array<number>;
+    intermediate: number[];
     multiProgress?: number;
 }
 

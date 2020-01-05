@@ -11,7 +11,7 @@ class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
         super(props);
     }
 
-    render() {
+    render(): React.ReactNode {
         const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
         return (
             <div>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>
