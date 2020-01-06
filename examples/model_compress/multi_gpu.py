@@ -42,8 +42,8 @@ def train(model, train_loader, optimizer, criterion, device):
         imgs, targets = imgs.to(device), targets.to(device)
         output = model(imgs)
         train_loss = criterion(output, targets)
-        # train_loss.backward()
-        # optimizer.step()
+        train_loss.backward()
+        optimizer.step()
     return train_loss.item()
 
 def test(model, test_loader, criterion, device):
@@ -72,7 +72,6 @@ if __name__ == '__main__':
     device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
     model = fc1()
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)
     criterion = nn.CrossEntropyLoss()
 
     configure_list = [{
@@ -85,9 +84,11 @@ if __name__ == '__main__':
 
     if torch.cuda.device_count()>1:
         model = nn.DataParallel(model)
-    
+  
     model.to(device)
-
+    optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)  
+    for name, par in model.named_parameters():
+        print(name)
     # for i in pruner.get_prune_iterations():
     #     pruner.prune_iteration_start()
     loss = 0

@@ -14,8 +14,6 @@ class LayerInfo:
         self.name = name
         self.type = type(module).__name__
 
-        self._forward = None
-
 
 class Compressor:
     """
@@ -60,8 +58,7 @@ class Compressor:
         """
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            module = self._instrument_layer(layer, config, self.bound_model)
-            layer.module = module
+            self._instrument_layer(layer, config, self.bound_model)
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -144,28 +141,27 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
-class Wrapper(torch.nn.Module):
-    def __init__(self, module, layer, config, pruner):
+class PrunerLayerWrapper(torch.nn.Module):
+    def __init__(self, module, name, type, config, pruner):
         super().__init__()
+        # origin layer information
         self.module = module
-        self.layer = layer
+        self.name = name
+        self.type = type
+        # config and pruner
         self.config = config
         self.pruner = pruner
+        # register buffer for mask
+        self.register_buffer("weight_mask", None)
+        self.register_buffer("bias_mask", None)
 
     def forward(self, *input):
-        mask = self.pruner.calc_mask(self.module, self.layer.name, self.config)
+        self.pruner.calc_mask(self)
         # apply mask to weight
-        old_weight = self.module.weight.data
-        mask_weight = mask['weight']
-
-        print("GPU location: ", old_weight.get_device(), mask_weight.get_device(), input[0].get_device())
-
-        self.module.weight.data = old_weight.mul(mask_weight)
+        self.module.weight.data = self.module.weight.data.mul(self.weight_mask)
         # apply mask to bias
-        if mask.__contains__('bias') and hasattr(self.module, 'bias') and self.module.bias is not None:
-            old_bias = self.module.bias.data
-            mask_bias = mask['bias']
-            self.module.bias.data = old_bias.mul(mask_bias)
+        if hasattr(self.module, 'bias') and self.module.bias is not None:
+            self.module.bias.data = self.module.bias.data.mul(self.bias_mask)
         ret = self.module(*input)
         return ret
     
@@ -183,7 +179,6 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
-        self.mask_dict = {}
 
     def calc_mask(self, layer, config):
         """
@@ -212,31 +207,8 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        module = Wrapper(getattr(model, layer.name), layer, config, self)
+        module = PrunerLayerWrapper(getattr(model, layer.name), layer.name, layer.type, config, self)
         setattr(model, layer.name, module)
-        return module
-        # assert layer._forward is None, 'Each model can only be compressed once'
-        # if not _check_weight(layer.module):
-        #     _logger.warning('Module %s does not have parameter "weight"', layer.name)
-        #     return
-        # layer._forward = layer.module.forward
-        
-        # def new_forward(*inputs):
-        #     mask = self.calc_mask(layer, config)
-        #     # apply mask to weight
-        #     old_weight = layer.module.weight.data
-        #     mask_weight = mask['weight']
-        #     layer.module.weight.data = old_weight.mul(mask_weight)
-        #     # apply mask to bias
-        #     if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
-        #         old_bias = layer.module.bias.data
-        #         mask_bias = mask['bias']
-        #         layer.module.bias.data = old_bias.mul(mask_bias)
-        #     # calculate forward
-        #     ret = layer._forward(*inputs)
-        #     return ret
-
-        # layer.module.forward = new_forward
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
         """

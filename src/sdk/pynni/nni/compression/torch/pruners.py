@@ -199,7 +199,7 @@ class SlimPruner(Pruner):
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
@@ -215,18 +215,18 @@ class SlimPruner(Pruner):
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_name = layer.name
-        op_type = layer.type
+        weight = wrapper.module.weight.data
+        op_name = wrapper.name
+        op_type = wrapper.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+        # if op_name in self.mask_calculated_ops:
+        #     assert op_name in self.mask_dict
+        #     return self.mask_dict.get(op_name)
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
         try:
             filters = weight.size(0)
-            num_prune = int(filters * config.get('sparsity'))
+            num_prune = int(filters * wrapper.config.get('sparsity'))
             if filters < 2 or num_prune < 1:
                 return mask
             w_abs = weight.abs()
@@ -234,8 +234,10 @@ class SlimPruner(Pruner):
             mask_bias = mask_weight.clone()
             mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
         finally:
-            self.mask_dict.update({layer.name: mask})
-            self.mask_calculated_ops.add(layer.name)
+            wrapper.weight_mask = mask["weight"]
+            wrapper.bias_mask = mask["bias"]
+            # self.mask_dict.update({layer.name: mask})
+            # self.mask_calculated_ops.add(layer.name)
 
         return mask
 
