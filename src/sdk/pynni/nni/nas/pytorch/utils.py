@@ -4,6 +4,8 @@
 import logging
 from collections import OrderedDict
 
+import torch
+
 _counter = 0
 
 _logger = logging.getLogger(__name__)
@@ -15,7 +17,22 @@ def global_mutable_counting():
     return _counter
 
 
+def to_device(obj, device):
+    if torch.is_tensor(obj):
+        return obj.to(device)
+    if isinstance(obj, tuple):
+        return tuple(to_device(t, device) for t in obj)
+    if isinstance(obj, list):
+        return [to_device(t, device) for t in obj]
+    if isinstance(obj, dict):
+        return {k: to_device(v, device) for k, v in obj.items()}
+    if isinstance(obj, (int, float, str)):
+        return obj
+    raise ValueError("'%s' has unsupported type '%s'" % (obj, type(obj)))
+
+
 class AverageMeterGroup:
+    """Average meter group for multiple average meters"""
 
     def __init__(self):
         self.meters = OrderedDict()
@@ -33,7 +50,10 @@ class AverageMeterGroup:
         return self.meters[item]
 
     def __str__(self):
-        return "  ".join(str(v) for _, v in self.meters.items())
+        return "  ".join(str(v) for v in self.meters.values())
+
+    def summary(self):
+        return "  ".join(v.summary() for v in self.meters.values())
 
 
 class AverageMeter:
@@ -70,6 +90,10 @@ class AverageMeter:
 
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+    def summary(self):
+        fmtstr = '{name}: {avg' + self.fmt + '}'
         return fmtstr.format(**self.__dict__)
 
 
