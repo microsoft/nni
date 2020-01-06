@@ -30,4 +30,4 @@ for batch_idx, (data, target) in enumerate(train_loader):
 * **kd_teacher_model:** The pre-trained teacher model 
 * **kd_T:** Temperature for smoothing teacher model's output
 
-The complete code can be found here
+The complete code can be found [here](https://github.com/microsoft/nni/tree/v1.3/examples/model_compress/knowledge_distill/)

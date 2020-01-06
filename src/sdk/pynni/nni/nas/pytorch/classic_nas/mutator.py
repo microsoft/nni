@@ -10,7 +10,7 @@ import torch
 
 import nni
 from nni.env_vars import trial_env_vars
-from nni.nas.pytorch.mutables import LayerChoice, InputChoice
+from nni.nas.pytorch.mutables import LayerChoice, InputChoice, MutableScope
 from nni.nas.pytorch.mutator import Mutator
 
 logger = logging.getLogger(__name__)
@@ -104,10 +104,11 @@ class ClassicMutator(Mutator):
         search_space_item : list
             The list for corresponding search space.
         """
+        candidate_repr = search_space_item["candidates"]
         multihot_list = [False] * mutable.n_candidates
         for i, v in zip(idx, value):
-            assert 0 <= i < mutable.n_candidates and search_space_item[i] == v, \
-                "Index '{}' in search space '{}' is not '{}'".format(i, search_space_item, v)
+            assert 0 <= i < mutable.n_candidates and candidate_repr[i] == v, \
+                "Index '{}' in search space '{}' is not '{}'".format(i, candidate_repr, v)
             assert not multihot_list[i], "'{}' is selected twice in '{}', which is not allowed.".format(i, idx)
             multihot_list[i] = True
         return torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
@@ -121,17 +122,20 @@ class ClassicMutator(Mutator):
                                                                                        self._chosen_arch.keys())
         result = dict()
         for mutable in self.mutables:
-            assert mutable.key in self._chosen_arch, "Expected '{}' in chosen arch, but not found.".format(mutable.key)
-            data = self._chosen_arch[mutable.key]
-            assert isinstance(data, dict) and "_value" in data and "_idx" in data, \
-                "'{}' is not a valid choice.".format(data)
-            value = data["_value"]
-            idx = data["_idx"]
-            search_space_item = self._search_space[mutable.key]["_value"]
+            if isinstance(mutable, (LayerChoice, InputChoice)):
+                assert mutable.key in self._chosen_arch, \
+                    "Expected '{}' in chosen arch, but not found.".format(mutable.key)
+                data = self._chosen_arch[mutable.key]
+                assert isinstance(data, dict) and "_value" in data and "_idx" in data, \
+                    "'{}' is not a valid choice.".format(data)
             if isinstance(mutable, LayerChoice):
-                result[mutable.key] = self._sample_layer_choice(mutable, idx, value, search_space_item)
+                result[mutable.key] = self._sample_layer_choice(mutable, data["_idx"], data["_value"],
+                                                                self._search_space[mutable.key]["_value"])
             elif isinstance(mutable, InputChoice):
-                result[mutable.key] = self._sample_input_choice(mutable, idx, value, search_space_item)
+                result[mutable.key] = self._sample_input_choice(mutable, data["_idx"], data["_value"],
+                                                                self._search_space[mutable.key]["_value"])
+            elif isinstance(mutable, MutableScope):
+                logger.info("Mutable scope '%s' is skipped during parsing choices.", mutable.key)
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return result
@@ -190,6 +194,8 @@ class ClassicMutator(Mutator):
                 search_space[key] = {"_type": INPUT_CHOICE,
                                      "_value": {"candidates": mutable.choose_from,
                                                 "n_chosen": mutable.n_chosen}}
+            elif isinstance(mutable, MutableScope):
+                logger.info("Mutable scope '%s' is skipped during generating search space.", mutable.key)
             else:
                 raise TypeError("Unsupported mutable type: '%s'." % type(mutable))
         return search_space

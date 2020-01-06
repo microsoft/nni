@@ -58,7 +58,7 @@
   },
   "resolutions": {
     "mem": "^4.0.0",
-    "handlebars": "^4.1.0",
+    "handlebars": "^4.5.3",
     "lodash": "^4.17.13",
     "lodash.merge": "^4.6.2",
     "node.extend": "^1.1.7",
