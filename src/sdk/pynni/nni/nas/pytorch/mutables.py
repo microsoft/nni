@@ -159,7 +159,7 @@ class InputChoice(Mutable):
                                                                   "than number of candidates."
 
         self.n_candidates = n_candidates
-        self.choose_from = choose_from
+        self.choose_from = choose_from.copy()
         self.n_chosen = n_chosen
         self.reduction = reduction
         self.return_mask = return_mask
