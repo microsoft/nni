@@ -506,7 +506,7 @@ class PPOTuner(Tuner):
         Parameters
         ----------
         parameter_id : int
-            Unique identifier for requested hyper-parameters. 
+            Unique identifier for requested hyper-parameters.
             This will later be used in :meth:`receive_trial_result`.
         **kwargs
             Not used
