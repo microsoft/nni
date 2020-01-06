@@ -109,7 +109,7 @@ html_static_path = ['../static']
 # html_sidebars = {}
 
 html_logo = '../img/nni_logo_dark.png'
-html_title = 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning (%s %s)' % \
+html_title = '支持神经网络结构搜索、模型压缩、超参调优的开源自动机器学习工具 (%s %s)' % \
     (project, release)
 
 # -- Options for HTMLHelp output ---------------------------------------------
