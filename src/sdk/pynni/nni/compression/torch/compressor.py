@@ -60,7 +60,8 @@ class Compressor:
         """
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            self._instrument_layer(layer, config)
+            module = self._instrument_layer(layer, config, self.bound_model)
+            layer.module = module
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -143,7 +144,31 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
+class Wrapper(torch.nn.Module):
+    def __init__(self, module, layer, config, pruner):
+        super().__init__()
+        self.module = module
+        self.layer = layer
+        self.config = config
+        self.pruner = pruner
 
+    def forward(self, *input):
+        mask = self.pruner.calc_mask(self.module, self.layer.name, self.config)
+        # apply mask to weight
+        old_weight = self.module.weight.data
+        mask_weight = mask['weight']
+
+        print("GPU location: ", old_weight.get_device(), mask_weight.get_device(), input[0].get_device())
+
+        self.module.weight.data = old_weight.mul(mask_weight)
+        # apply mask to bias
+        if mask.__contains__('bias') and hasattr(self.module, 'bias') and self.module.bias is not None:
+            old_bias = self.module.bias.data
+            mask_bias = mask['bias']
+            self.module.bias.data = old_bias.mul(mask_bias)
+        ret = self.module(*input)
+        return ret
+    
 class Pruner(Compressor):
     """
     Prune to an exact pruning level specification
@@ -176,7 +201,7 @@ class Pruner(Compressor):
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
-    def _instrument_layer(self, layer, config):
+    def _instrument_layer(self, layer, config, model):
         """
         Create a wrapper forward function to replace the original one.
 
@@ -187,28 +212,31 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        assert layer._forward is None, 'Each model can only be compressed once'
-        if not _check_weight(layer.module):
-            _logger.warning('Module %s does not have parameter "weight"', layer.name)
-            return
-        layer._forward = layer.module.forward
+        module = Wrapper(getattr(model, layer.name), layer, config, self)
+        setattr(model, layer.name, module)
+        return module
+        # assert layer._forward is None, 'Each model can only be compressed once'
+        # if not _check_weight(layer.module):
+        #     _logger.warning('Module %s does not have parameter "weight"', layer.name)
+        #     return
+        # layer._forward = layer.module.forward
+        
+        # def new_forward(*inputs):
+        #     mask = self.calc_mask(layer, config)
+        #     # apply mask to weight
+        #     old_weight = layer.module.weight.data
+        #     mask_weight = mask['weight']
+        #     layer.module.weight.data = old_weight.mul(mask_weight)
+        #     # apply mask to bias
+        #     if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
+        #         old_bias = layer.module.bias.data
+        #         mask_bias = mask['bias']
+        #         layer.module.bias.data = old_bias.mul(mask_bias)
+        #     # calculate forward
+        #     ret = layer._forward(*inputs)
+        #     return ret
 
-        def new_forward(*inputs):
-            mask = self.calc_mask(layer, config)
-            # apply mask to weight
-            old_weight = layer.module.weight.data
-            mask_weight = mask['weight']
-            layer.module.weight.data = old_weight.mul(mask_weight)
-            # apply mask to bias
-            if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
-                old_bias = layer.module.bias.data
-                mask_bias = mask['bias']
-                layer.module.bias.data = old_bias.mul(mask_bias)
-            # calculate forward
-            ret = layer._forward(*inputs)
-            return ret
-
-        layer.module.forward = new_forward
+        # layer.module.forward = new_forward
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
         """
