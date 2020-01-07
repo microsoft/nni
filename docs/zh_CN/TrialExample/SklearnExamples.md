@@ -20,7 +20,7 @@ nnictl create --config ./config.yml
 
 示例使用了数字数据集，它是由 1797 个 8x8 的图片组成，每个图片都是一个手写数字，目标是将图片分为 10 类。
 
-在这个示例中，使用 SVC 作为模型，并为此模型选择一些参数，包括 `"C", "keral", "degree", "gamma" 和 "coef0"`。 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
+In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "kernel", "degree", "gamma" and "coef0"`. 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
 
 ### 2.2 回归
 
@@ -63,7 +63,7 @@ nnictl create --config ./config.yml
     ```json
     {
     "C": {"_type":"uniform","_value":[0.1, 1]},
-    "keral": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
+    "kernel": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
     "degree": {"_type":"choice","_value":[1, 2, 3, 4]},
     "gamma": {"_type":"uniform","_value":[0.01, 0.1]},
     "coef0 ": {"_type":"uniform","_value":[0.01, 0.1]}
@@ -75,7 +75,7 @@ nnictl create --config ./config.yml
     ```python
     params = {
         'C': 1.0,
-        'keral': 'linear',
+        'kernel': 'linear',
         'degree': 3,
         'gamma': 0.01,
         'coef0': 0.01
