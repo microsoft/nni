@@ -36,10 +36,13 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# 配置访问的 OpenPAI 集群
+  virtualCluster: default
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
-  passWord: your_pai_password
+  token: your_pai_token
   host: 10.1.1.1
 ```
 
@@ -56,56 +59,12 @@ paiConfig:
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。
 * virtualCluster 
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
-* shmMB 
-    * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
-* authFile 
-    * 可选。在使用 pai 模式时，为私有 Docker 仓库设置认证文件，[见参考文档](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。提供 authFile 的本地路径即可， NNI 会上传此文件。
-
-* portList
-    
-    * 可选。 设置 OpenPAI 的 portList。指定了容器中使用的端口列表，[参考文档](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification)。  
-        示例如下：
-        portList:
-          - label: test
-            beginAt: 8080
-            portNumber: 2
-        
-    
-    假设需要在 MNIST 示例中使用端口来运行 TensorBoard。 第一步是编写 `mnist.py` 的包装脚本 `launch_pai.sh`。
-    
-    ```bash
-    export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
-    tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
-    python3 mnist.py
-    ```
-    
-    portList 的配置部分如下：
-    
-    ```yaml
-    trial:
-    command: bash launch_pai.sh
-    portList:
-      - label: tensorboard
-        beginAt: 0
-        portNumber: 1
-    ```
-
-NNI 支持 OpenPAI 中的两种认证授权方法，即密码和 Token，[参考](https://github.com/microsoft/pai/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 认证在 `paiConfig` 字段中配置。   
-密码认证的 `paiConfig` 配置如下：
-
-    paiConfig:
-      userName: your_pai_nni_user
-      passWord: your_pai_password
-      host: 10.1.1.1
-    
-
-Token 认证的 `paiConfig` 配置如下：
-
-    paiConfig:
-      userName: your_pai_nni_user
-      token: your_pai_token
-      host: 10.1.1.1
-    
+* nniManagerNFSMountPath 
+    * 必填。 在 nniManager 计算机上设置挂载的路径。
+* containerNFSMountPath 
+    * 必填。 在 OpenPAI 的容器中设置挂载路径。
+* paiStoragePlugin 
+    * 必填。 设置 PAI 中使用的存储插件的名称。
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
@@ -126,9 +85,7 @@ Token 认证的 `paiConfig` 配置如下：
 
 ## 数据管理
 
-如果训练数据集不大，可放在 codeDir 中，NNI会将其上传到 HDFS，或者构建 Docker 映像来包含数据。 如果数据集非常大，则不可放在 codeDir 中，可参考此[指南](https://github.com/microsoft/pai/blob/master/docs/user/storage.md)来将数据目录挂载到容器中。
-
-如果要将 Trial 的其它输出保存到 HDFS 上，如模型文件等，需要在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来保存输出文件。NNI 的 SDK 会将文件从 Trial 容器的 `NNI_OUTPUT_DIR` 复制到 HDFS 上，目标路径为：`hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`。
+使用 NNI 启动 Experiment 前，应在 nniManager 计算机中设置相应的挂载数据的路径。 OpenPAI 有自己的存储（NFS、AzureBlob ...），在 PAI 中使用的存储将在启动作业时挂载到容器中。 应通过 `paiStoragePlugin` 字段选择 OpenPAI 中的存储类型。 然后，应将存储挂载到 nniManager 计算机上，并在配置文件中设置 `nniManagerNFSMountPath`，NNI会生成 bash 文件并将 `codeDir` 中的数据拷贝到 `nniManagerNFSMountPath` 文件夹中，然后启动 Trial 任务。 `nniManagerNFSMountPath` 中的数据会同步到 OpenPAI 存储中，并挂载到 OpenPAI 的容器中。 容器中的数据路径在 `containerNFSMountPath` 设置，NNI 将进入该文件夹，运行脚本启动 Trial 任务。
 
 ## 版本校验
 
