@@ -229,7 +229,6 @@ class SlimPruner(Pruner):
             filters = weight.size(0)
             num_prune = int(filters * wrapper.config.get('sparsity'))
             if filters < 2 or num_prune < 1:
-                print("called")
                 wrapper.weight_mask = mask_weight
                 wrapper.bias_mask = mask_bias
                 return
