@@ -6,12 +6,12 @@ We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it
 
 ### Usage
 tensorflow
-```
-python nni.compression.tensorflow.NaiveQuantizer(model_graph).compress()
+```python 
+nni.compression.tensorflow.NaiveQuantizer(model_graph).compress()
 ```
 pytorch
-```
-python nni.compression.torch.NaiveQuantizer(model).compress()
+```python 
+nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
