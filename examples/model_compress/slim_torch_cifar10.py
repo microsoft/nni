@@ -93,7 +93,7 @@ def main():
         torch.save(model.state_dict(), 'vgg19_cifar10.pth')
 
     # Test base model accuracy
-    print('=' * 40 + 'Test the original model' + '=' * 10)
+    print('=' * 10 + 'Test the original model' + '=' * 10)
     model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.60%
