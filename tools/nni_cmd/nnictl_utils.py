@@ -3,6 +3,7 @@
 
 import csv
 import os
+import sys
 import json
 import time
 import re
@@ -627,7 +628,10 @@ def set_monitor(auto_exit, time_interval, port=None, pid=None):
     '''set the experiment monitor engine'''
     while True:
         try:
-            os.system('clear')
+            if sys.platform == 'win32':
+                os.system('cls')
+            else:
+                os.system('clear')
             update_experiment()
             show_experiment_info()
             if auto_exit:
