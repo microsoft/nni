@@ -1,11 +1,11 @@
 import math
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
-
 
 def updateBN(model):
     for m in model.modules():
@@ -49,6 +49,13 @@ def test(model, device, test_loader):
 
 
 def main():
+    parser = argparse.ArgumentParser("multiple gpu with pruning")
+    parser.add_argument("--epochs", type=int, default=160)
+    parser.add_argument("--retrain", default=False, action="store_true")
+    parser.add_argument("--parallel", default=False, action="store_true")
+
+    args = parser.parse_args()
+
     torch.manual_seed(0)
     device = torch.device('cuda')
     train_loader = torch.utils.data.DataLoader(
@@ -72,19 +79,21 @@ def main():
     model.to(device)
 
     # Train the base VGG-19 model
-    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    epochs = 160
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    for epoch in range(epochs):
-        if epoch in [epochs * 0.5, epochs * 0.75]:
-            for param_group in optimizer.param_groups:
-                param_group['lr'] *= 0.1
-        train(model, device, train_loader, optimizer, True)
-        test(model, device, test_loader)
-    torch.save(model.state_dict(), 'vgg19_cifar10.pth')
+    if args.retrain:
+        print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+        epochs = args.epochs
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+        for epoch in range(epochs):
+            if epoch in [epochs * 0.5, epochs * 0.75]:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] *= 0.1
+            print("epoch {}".format(epoch))
+            train(model, device, train_loader, optimizer, True)
+            test(model, device, test_loader)
+        torch.save(model.state_dict(), 'vgg19_cifar10.pth')
 
     # Test base model accuracy
-    print('=' * 10 + 'Test the original model' + '=' * 10)
+    print('=' * 40 + 'Test the original model' + '=' * 10)
     model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.60%
@@ -99,8 +108,12 @@ def main():
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
     pruner = SlimPruner(model, configure_list)
     model = pruner.compress()
-    test(model, device, test_loader)
-    # top1 = 93.55%
+    if args.parallel:
+        if torch.cuda.device_count() > 1:
+            print("use {} gpus for pruning".format(torch.cuda.device_count()))
+            model = nn.DataParallel(model)
+        else:
+            print("only detect 1 gpu, fall back")
 
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)

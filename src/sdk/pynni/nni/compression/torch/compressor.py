@@ -34,7 +34,11 @@ class Compressor:
         self.bound_model = model
         self.config_list = config_list
         self.modules_to_compress = None
+        self.modules_wrapper = None
 
+    def get_modules_wrapper(self):
+        return self.modules_wrapper
+    
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
@@ -56,9 +60,17 @@ class Compressor:
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
         """
+        if self.modules_wrapper is not None:
+            # already compressed
+            return
+        else:
+            self.modules_wrapper = []
+
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            self._instrument_layer(layer, config, self.bound_model)
+            wrapper = self._instrument_layer(layer, config)
+            setattr(self.bound_model, wrapper.name, wrapper)
+            self.modules_wrapper.append(wrapper)
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -196,7 +208,7 @@ class Pruner(Compressor):
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
-    def _instrument_layer(self, layer, config, model):
+    def _instrument_layer(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
 
@@ -207,8 +219,8 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        module = PrunerLayerWrapper(getattr(model, layer.name), layer.name, layer.type, config, self)
-        setattr(model, layer.name, module)
+        wrapper = PrunerLayerWrapper(layer.module, layer.name, layer.type, config, self)
+        return wrapper
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
         """
@@ -225,26 +237,29 @@ class Pruner(Compressor):
         input_shape : list or tuple
             input shape to onnx model
         """
-        if self.detect_modules_to_compress() and not self.mask_dict:
-            _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
+        # if self.detect_modules_to_compress() and not self.mask_dict:
+        #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
-        for name, m in self.bound_model.named_modules():
-            if name == "":
-                continue
-            masks = self.mask_dict.get(name)
-            if masks is not None:
-                mask_sum = masks['weight'].sum().item()
-                mask_num = masks['weight'].numel()
+        mask_dict = {}
+        for wrapper in self.get_modules_wrapper():
+            weight_mask = wrapper.weight_mask
+            bias_mask = wrapper.bias_mask
+            if weight_mask is not None:
+                mask_sum = weight_mask.sum().item()
+                mask_num = weight_mask.numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
-                m.weight.data = m.weight.data.mul(masks['weight'])
-                if masks.__contains__('bias') and hasattr(m, 'bias') and m.bias is not None:
-                    m.bias.data = m.bias.data.mul(masks['bias'])
-            else:
-                _logger.info('Layer: %s  NOT compressed', name)
+                wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
+                if bias_mask is not None and hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+                    wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
+            # de-wrap
+            setattr(self.bound_model, wrapper.name, wrapper.module)
+            # save mask to dict
+            mask_dict[wrapper.name] = {"weight": weight_mask, "bias": bias_mask}
+        
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
         if mask_path is not None:
-            torch.save(self.mask_dict, mask_path)
+            torch.save(mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
@@ -253,6 +268,9 @@ class Pruner(Compressor):
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
+        # re-wrap
+        for wrapper in self.get_modules_wrapper():
+            setattr(self.bound_model, wrapper.name, wrapper)
 
 class Quantizer(Compressor):
     """
