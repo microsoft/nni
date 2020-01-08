@@ -493,7 +493,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                                             experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
-    if args.watch:
+    if args.wait:
         set_monitor(True, 3, args.port, rest_process.pid)
 
 def create_experiment(args):

@@ -49,7 +49,7 @@ nnictl support commands:
   |--config, -c|  True| |YAML configure file of the experiment|
   |--port, -p|False| |the port of restful server|
   |--debug, -d|False||set debug mode|
-  |--watch, -w|False||set watch mode|
+  |--wait, -w|False||create an experiment and wait for it to terminate|
 
 * Examples
 
@@ -98,7 +98,7 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  True| |The id of the experiment you want to resume|
   |--port, -p|  False| |Rest port of the experiment you want to resume|
   |--debug, -d|False||set debug mode|
-  |--watch, -w|False||set watch mode|
+  |--wait, -w|False||resume an experiment and wait for it to terminate|
 
 * Example
 
