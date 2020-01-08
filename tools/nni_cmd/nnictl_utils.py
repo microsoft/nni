@@ -632,7 +632,7 @@ def set_monitor(auto_exit, time_interval, port=None, pid=None):
             show_experiment_info()
             if auto_exit:
                 status = get_experiment_status(port)
-                if status in ['DONE', 'ERROR', 'STOPPED']: 
+                if status in ['DONE', 'ERROR', 'STOPPED']:
                     print_normal('Experiment status is {0}.'.format(status))
                     print_normal('Stopping experiment...')
                     kill_command(pid)
