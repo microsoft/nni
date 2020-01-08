@@ -20,7 +20,7 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
                           detect_port, get_user, get_python_dir
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
-from .nnictl_utils import update_experiment
+from .nnictl_utils import update_experiment, set_monitor
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -493,6 +493,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                                             experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
+    if args.watch:
+        set_monitor(True, 3, args.port, rest_process.pid)
 
 def create_experiment(args):
     '''start a new experiment'''
@@ -506,8 +508,8 @@ def create_experiment(args):
     validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
-    launch_experiment(args, experiment_config, 'new', config_file_name)
     nni_config.set_config('restServerPort', args.port)
+    launch_experiment(args, experiment_config, 'new', config_file_name)
 
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
