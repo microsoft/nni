@@ -12,23 +12,23 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from recommonmark.transform import AutoStructify
+from recommonmark.parser import CommonMarkParser
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
 
-from recommonmark.parser import CommonMarkParser
-from recommonmark.transform import AutoStructify
 
 # -- Project information ---------------------------------------------------
 
-project = 'Neural Network Intelligence'
-copyright = '2019, Microsoft'
+project = 'NNI'
+copyright = '2020, Microsoft'
 author = 'Microsoft'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.2'
+release = 'v1.3'
 
 # -- General configuration ---------------------------------------------------
 
@@ -109,6 +109,8 @@ html_static_path = ['../static']
 # html_sidebars = {}
 
 html_logo = '../img/nni_logo_dark.png'
+html_title = '支持神经网络结构搜索、模型压缩、超参调优的开源自动机器学习工具 (%s %s)' % \
+    (project, release)
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -190,6 +192,6 @@ def setup(app):
     app.add_config_value('recommonmark_config', {
         'enable_eval_rst': True,
         'enable_auto_toc_tree': False,
-            }, True)
+    }, True)
     app.add_transform(AutoStructify)
     app.add_stylesheet('css/custom.css')

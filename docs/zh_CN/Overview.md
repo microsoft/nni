@@ -37,7 +37,7 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 > 
 > 第二步：[改动模型代码](TrialExample/Trials.md)
 > 
-> 第三步：[>定义 Experiment 配置](Tutorial/ExperimentConfig.md)
+> 第三步：[定义 Experiment 配置](Tutorial/ExperimentConfig.md)
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="绘图"/>

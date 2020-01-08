@@ -1,6 +1,19 @@
 NNI Compressor 中的 Pruner
 ===
 
+支持的剪枝算法
+* [Level Pruner](#level-pruner)
+* [AGP Pruner](#agp-pruner)
+* [Lottery Ticket 假设](#lottery-ticket-hypothesis)
+* [Slim Pruner](#slim-pruner)
+* [具有权重等级的 Filter Pruners](#weightrankfilterpruner)
+    * [FPGM Pruner](#fpgm-pruner)
+    * [L1Filter Pruner](#l1filter-pruner)
+    * [L2Filter Pruner](#l2filter-pruner)
+* [具有激活等级的 Filter Pruners](#activationrankfilterpruner)
+    * [APoZ Rank Pruner](#activationapozrankfilterpruner)
+    * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+
 ## Level Pruner
 
 这是个基本的一次性 Pruner：可设置目标稀疏度（以分数表示，0.6 表示会剪除 60%）。
@@ -10,7 +23,7 @@ NNI Compressor 中的 Pruner
 ### 用法
 
 TensorFlow 代码
-```
+```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model_graph, config_list)
@@ -18,7 +31,7 @@ pruner.compress()
 ```
 
 PyTorch 代码
-```
+```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
@@ -36,8 +49,6 @@ pruner.compress()
 
 ### 用法
 通过下列代码，可以在 10 个 Epoch 中将权重稀疏度从 0% 剪枝到 80%。
-
-首先，导入 Pruner 来为模型添加遮盖。
 
 TensorFlow 代码
 ```python
@@ -68,7 +79,7 @@ pruner = AGP_Pruner(model, config_list)
 pruner.compress()
 ```
 
-其次，在训练代码中每完成一个 Epoch，更新一下 Epoch 数值。
+在训练代码中每完成一个 Epoch，更新一下 Epoch 数值。
 
 TensorFlow 代码
 ```python
@@ -130,12 +141,45 @@ for _ in pruner.get_prune_iterations():
 * **sparsity:** 压缩完成后的最终稀疏度。
 
 ***
-## FPGM Pruner
-这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
-> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
+
+## Slim Pruner
+
+这是一次性的 Pruner，在 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
+
+![](../../img/slim_pruner.png)
+
+> Slim Pruner **会遮盖卷据层通道之后 BN 层对应的缩放因子**，训练时在缩放因子上的 L1 正规化应在批量正规化 (BN) 层之后来做。BN 层的缩放因子在修剪时，是**全局排序的**，因此稀疏模型能自动找到给定的稀疏度。
 
 ### 用法
-首先，导入 Pruner 来为模型添加遮盖。
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import SlimPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+pruner = SlimPruner(model, config_list)
+pruner.compress()
+```
+
+#### Slim Pruner 的用户配置
+
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
+
+
+## WeightRankFilterPruner
+WeightRankFilterPruner 是一系列的 Pruner，在卷积层权重上，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
+
+### FPGM Pruner
+
+这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
+
+具有最小几何中位数的 FPGMPruner 修剪过滤器
+
+ ![](../../img/fpgm_fig1.png)
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
+
+#### 用法
 
 TensorFlow 代码
 ```python
@@ -159,7 +203,7 @@ pruner.compress()
 ```
 注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-另外，需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
+需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
 
 TensorFlow 代码
 ```python
@@ -176,9 +220,9 @@ pruner.update_epoch(epoch)
 
 ***
 
-## L1Filter Pruner
+### L1Filter Pruner
 
-这是一种一次性的 Pruner，由 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 和 Hans Peter Graf。
+这是一种一次性的 Pruner，由 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 和 Hans Peter Graf。 [重现的实验结果](l1filterpruner.md)
 
 ![](../../img/l1filter_pruner.png)
 
@@ -191,7 +235,11 @@ pruner.update_epoch(epoch)
 > 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
 > 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
-```
+#### 用法
+
+PyTorch 代码
+
+```python
 from nni.compression.torch import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L1FilterPruner(model, config_list)
@@ -201,28 +249,91 @@ pruner.compress()
 #### L1Filter Pruner 的用户配置
 
 - **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
+- **op_types:** 在 L1Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
-## Slim Pruner
+***
 
-这是一次性的 Pruner，在 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
+### L2Filter Pruner
 
-![](../../img/slim_pruner.png)
+这是一种结构化剪枝算法，用于修剪权重的最小 L2 规范筛选器。 它被实现为一次性修剪器。
 
-> Slim Pruner **会遮盖卷据层通道之后 BN 层对应的缩放因子**，训练时在缩放因子上的 L1 正规化应在批量正规化 (BN) 层之后来做。BN 层的缩放因子在修剪时，是**全局排序的**，因此稀疏模型能自动找到给定的稀疏度。
-
-### 用法
+#### 用法
 
 PyTorch 代码
 
-```
-from nni.compression.torch import SlimPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-pruner = SlimPruner(model, config_list)
+```python
+from nni.compression.torch import L2FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = L2FilterPruner(model, config_list)
 pruner.compress()
 ```
 
-#### Slim Pruner 的用户配置
+#### L2Filter Pruner 的用户配置
 
 - **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
+- **op_types:** 在 L2Filter Pruner 中仅支持 Conv1d 和 Conv2d。
+
+## ActivationRankFilterPruner
+ActivationRankFilterPruner 是一系列的 Pruner，从卷积层激活的输出，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
+
+### ActivationAPoZRankFilterPruner
+
+我们将其实现为一次性剪枝器，它基于 `APoZ` 修剪卷积层，参考论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250)。 基于迭代剪枝的 `APoZ` 将在以后的版本中支持。
+
+APoZ 定义为：
+
+![](../../img/apoz.png)
+
+#### 用法
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import ActivationAPoZRankFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
+pruner.compress()
+```
+
+注意：ActivationAPoZRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
+
+查看示例进一步了解
+
+#### ActivationAPoZRankFilterPruner 的用户配置
+
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 在 ActivationAPoZRankFilterPruner 中仅支持 Conv2d。
+
+***
+
+### ActivationMeanRankFilterPruner
+
+其实现为一次性修剪器，基于 `平均激活` 准则来修剪卷积层，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中有说明。 本文中提到的其他修剪标准将在以后的版本中支持。
+
+#### 用法
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import ActivationMeanRankFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = ActivationMeanRankFilterPruner(model, config_list)
+pruner.compress()
+```
+
+注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
+
+查看示例进一步了解
+
+#### ActivationMeanRankFilterPruner 的用户配置
+
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
+
+***

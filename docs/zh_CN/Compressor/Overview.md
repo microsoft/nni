@@ -1,8 +1,11 @@
-# Compressor
+# 使用 NNI 进行模型压缩
+随着更多层和节点大型神经网络的使用，降低其存储和计算成本变得至关重要，尤其是对于某些实时应用程序。 模型压缩可用于解决此问题。
 
-我们很高兴的宣布，基于 NNI 的模型压缩工具发布了 Alpha 版本。该版本仍处于试验阶段，根据用户反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
+我们很高兴的宣布，基于 NNI 的模型压缩工具发布了试用版本。该版本仍处于试验阶段，根据用户反馈会进行改进。 诚挚邀请您使用、反馈，或有更多贡献。
 
-NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 其使用了统一的接口来支持 TensorFlow 和 PyTorch。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
+NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 当前支持基于 PyTorch 的统一接口。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
+
+模型压缩方面的综述可参考：[Recent Advances in Efficient Computation of Deep Convolutional Neural Networks](https://arxiv.org/pdf/1802.00939.pdf)。
 
 ## 支持的算法
 
@@ -10,22 +13,31 @@ NNI 提供了几种压缩算法，包括剪枝和量化算法：
 
 **剪枝**
 
-| 名称                                              | 算法简介                                                                                                                                   |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)        | 根据权重的绝对值，来按比例修剪权重。                                                                                                                     |
-| [AGP Pruner](./Pruner.md#agp-pruner)            | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                    |
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner)  | 剪除卷积层中最不重要的过滤器 (PRUNING FILTERS FOR EFFICIENT CONVNETS)[参考论文](https://arxiv.org/abs/1608.08710)                                        |
-| [Slim Pruner](./Pruner.md#slim-pruner)          | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming)[参考论文](https://arxiv.org/abs/1708.06519) |
-| [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635) |
-| [FPGM Pruner](./Pruner.md#fpgm-pruner)          | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)   |
+剪枝算法通过删除冗余权重或层通道来压缩原始网络，从而降低模型复杂性并解决过拟合问题。
+
+| 名称                                                                           | 算法简介                                                                                                                                    |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)                                     | 根据权重的绝对值，来按比例修剪权重。                                                                                                                      |
+| [AGP Pruner](./Pruner.md#agp-pruner)                                         | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                     |
+| [Lottery Ticket Pruner](./Pruner.md#agp-pruner)                              | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635)  |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner)                                       | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)    |
+| [L1Filter Pruner](./Pruner.md#l1filter-pruner)                               | 在卷积层中具有最小 L1 权重规范的剪枝过滤器（用于 Efficient Convnets 的剪枝过滤器） [参考论文](https://arxiv.org/abs/1608.08710)                                          |
+| [L2Filter Pruner](./Pruner.md#l2filter-pruner)                               | 在卷积层中具有最小 L2 权重规范的剪枝过滤器                                                                                                                 |
+| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | 基于指标 APoZ（平均百分比零）的剪枝过滤器，该指标测量（卷积）图层激活中零的百分比。 [参考论文](https://arxiv.org/abs/1607.03250)                                                   |
+| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | 基于计算输出激活最小平均值指标的剪枝过滤器                                                                                                                   |
+| [Slim Pruner](./Pruner.md#slim-pruner)                                       | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming) [参考论文](https://arxiv.org/abs/1708.06519) |
+
 
 **量化**
+
+量化算法通过减少表示权重或激活所需的精度位数来压缩原始网络，这可以减少计算和推理时间。
 
 | 名称                                                  | 算法简介                                                                                                                                                                       |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Naive Quantizer](./Quantizer.md#naive-quantizer)   | 默认将权重量化为 8 位                                                                                                                                                               |
 | [QAT Quantizer](./Quantizer.md#qat-quantizer)       | 为 Efficient Integer-Arithmetic-Only Inference 量化并训练神经网络。 [参考论文](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) |
 | [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 [参考论文](https://arxiv.org/abs/1606.06160)                                                                                              |
+| [BNN Quantizer](./Quantizer.md#BNN-Quantizer)       | 二进制神经网络：使用权重和激活限制为 +1 或 -1 的深度神经网络。 [参考论文](https://arxiv.org/abs/1602.02830)                                                                                               |
 
 ## 内置压缩算法的用法
 
@@ -57,17 +69,46 @@ pruner.compress()
 实例化压缩算法时，会传入 `config_list`。 配置说明如下。
 
 ### 压缩算法中的用户配置
+压缩模型时，用户可能希望指定稀疏率，为不同类型的操作指定不同的比例，排除某些类型的操作，或仅压缩某类操作。 配置规范可用于表达此类需求。 可将其视为一个 Python 的 `list` 对象，其中每个元素都是一个 `dict` 对象。
 
-压缩模型时，用户可能希望指定稀疏率，为不同类型的操作指定不同的比例，排除某些类型的操作，或仅压缩某类操作。 配置规范可用于表达此类需求。 可将其视为一个 Python 的 `list` 对象，其中每个元素都是一个 `dict` 对象。 在每个 `dict` 中，有一些 NNI 压缩算法支持的键值：
+`list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
+
+#### 通用键值
+在每个 `dict` 中，有一些 NNI 压缩算法支持的键值：
 
 * __op_types__：指定要压缩的操作类型。 'default' 表示使用算法的默认设置。
 * __op_names__：指定需要压缩的操作的名称。 如果没有设置此字段，操作符不会通过名称筛选。
 * __exclude__：默认为 False。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。
 
-`dict` 还有一些其它键值，由特定的压缩算法所使用。 例如：
+#### 量化算法的键值
+**如果使用量化算法，则需要设置更多键值。 如果使用剪枝算法，则可以忽略这些键值**
 
-`list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
+* __quant_types__ : 字符串列表。
 
+要应用量化的类型，当前支持 "权重"，"输入"，"输出"。 "权重"是指将量化操作应用到 module 的权重参数上。 "输入" 是指对 module 的 forward 方法的输入应用量化操作。 "输出"是指将量化运法应用于模块 forward 方法的输出，在某些论文中，这种方法称为"激活"。
+
+* __quant_bits__ : int 或 dict {str : int}
+
+量化的位宽，键是量化类型，值是量化位宽度，例如：
+```
+{
+    quant_bits: {
+        'weight': 8,
+        'output': 4,
+        },
+}
+```
+当值为 int 类型时，所有量化类型使用相同的位宽。 例如：
+```
+{
+    quant_bits: 8, # 权重和输出的位宽都为 8 bits
+}
+```
+#### 为每个压缩算法指定的其他键
+`dict` 还有一些其它键值，由特定的压缩算法所使用。 例如， [Level Pruner](./Pruner.md#level-pruner) 需要 `sparsity` 键，用于指定修剪的量。
+
+
+#### 示例
 配置的简单示例如下：
 
 ```python
@@ -178,11 +219,9 @@ class YourPruner(nni.compression.tensorflow.Pruner):
 定制量化算法的接口与剪枝算法类似。 唯一的不同是使用 `quantize_weight` 替换了 `calc_mask`。 `quantize_weight` 直接返回量化后的权重，而不是 mask。这是因为对于量化算法，量化后的权重不能通过应用 mask 来获得。
 
 ```python
-# TensorFlow 中定制 Quantizer。
-# PyTorch 的 Quantizer，只需将
-# nni.compression.tensorflow.Quantizer 替换为
-# nni.compression.torch.Quantizer
-class YourQuantizer(nni.compression.tensorflow.Quantizer):
+from nni.compression.torch.compressor import Quantizer
+
+class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         """
         建议使用 NNI 定义的规范来配置
@@ -231,27 +270,71 @@ class YourQuantizer(nni.compression.tensorflow.Quantizer):
         Parameters
         ----------
         inputs : Tensor
-            需要量化的输入
+            需要被量化的张量
         config : dict
-            输入量化用的配置
+            输入量化的配置
         """
 
-        # 实现生成 `new_input`
+        # 生成 `new_input` 的代码
 
         return new_input
 
-    # Pytorch 版本不需要 sess 参数
-    def update_epoch(self, epoch_num, sess):
+    def update_epoch(self, epoch_num):
         pass
 
-    # Pytorch 版本不需要 sess 参数
-    def step(self, sess):
+    def step(self):
         """
-       根据需要可基于 bind_model 方法中的模型或权重进行操作
+        Can do some processing based on the model or weights binded
+        in the func bind_model
         """
         pass
 ```
+#### 定制 backward 函数
+有时，量化操作必须自定义 backward 函数，例如 [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste)，可如下定制 backward 函数：
 
-### 使用用户自定义的压缩算法
+```python
+from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
 
-__[TODO]__ ...
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        """
+        此方法应被子类重载来提供定制的 backward 函数，
+        默认实现是 Straight-Through Estimator
+        Parameters
+        ----------
+        tensor : Tensor
+            量化操作的输入
+        grad_output : Tensor
+            量化操作输出的梯度
+        quant_type : QuantType
+            量化类型，可为 `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            可为不同的类型定义不同的行为。
+        Returns
+        -------
+        tensor
+            量化输入的梯度
+        """
+
+        # 对于 quant_output 函数，如果张量的绝对值大于 1，则将梯度设置为 0
+        if quant_type == QuantType.QUANT_OUTPUT: 
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
+class YourQuantizer(Quantizer):
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        # 定制 backward 函数来重载默认的 backward 函数
+        self.quant_grad = ClipGrad
+
+```
+
+如果不定制 `QuantGrad`，默认的 backward 为 Straight-Through Estimator。 _即将推出_...
+
+## **参考和反馈**
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/FeatureEngineering/Overview.md)；
+* 了解 NNI 中[ NAS 的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/BuiltinTuner.md)；

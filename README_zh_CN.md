@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **NNI v1.2 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI v1.3 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -224,7 +224,7 @@ Linux 和 MacOS
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -234,7 +234,7 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v1.2 https://github.com/Microsoft/nni.git
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
@@ -250,7 +250,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)�
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 MacOS
@@ -326,7 +326,7 @@ You can use these commands to get more information about the experiment
 * [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
@@ -349,6 +349,7 @@ You can use these commands to get more information about the experiment
    * [使用 NNI 为 SPTAG 自动调参](docs/zh_CN/CommunitySharings/SptagAutoTune.md)
    * [使用 NNI 为 scikit-learn 查找超参](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
    * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
+   * **Blog (中文)** - [NNI 2019 新功能汇总](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **反馈**
 
