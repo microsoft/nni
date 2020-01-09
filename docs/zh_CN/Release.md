@@ -231,7 +231,7 @@
 
 * [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
   * NNI 可在 Windows 上使用本机模式
-* [New advisor: BOHB](Tuner/BohbAdvisor.md) 
+* [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
 * [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment) 
   * Generate analysis results report after the experiment execution
@@ -333,48 +333,48 @@
 #### 改进用户体验
 
 * 为 OpenPAI, Kubeflow 和 FrameworkController 模式提供更好的日志支持。 
-  * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI manager will store trial's stdout/stderr messages in local log file.
-  * Show the link for trial log file on WebUI.
-* Support to show final result's all key-value pairs.
+  * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。
+  * 在 WEB 界面上显示 Trial 日志的链接。
+* 支持将最终结果显示为键值对。
 
-## Release 0.4.1 - 12/14/2018
+## 发布 0.4.1 - 12/14/2018
 
-### Major Features
+### 主要功能
 
-#### New tuner supports
+#### 支持新的 Tuner
 
-* Support [network morphism](Tuner/NetworkmorphismTuner.md) as a new tuner
+* 支持新的 [network morphism](Tuner/NetworkmorphismTuner.md) Tuner。
 
-#### Training Service improvements
+#### 改进训练平台
 
-* Migrate [Kubeflow training service](TrainingService/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
-* [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
-* Improvement on local code files uploading to OpenPAI HDFS
-* Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
+* 将 [Kubeflow 训练平台](TrainingService/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
+* 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
+* 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
-#### NNICTL improvements
+#### 改进 NNICTL
 
-* Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
+* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 可使用 **nnictl -v** 来显示安装的 NNI 版本。
 
-#### WebUI improvements
+#### 改进 WEB 界面
 
-* Enable modify concurrency number during experiment
-* Add feedback link to NNI github 'create issue' page
-* Enable customize top 10 trials regarding to metric numbers (largest or smallest)
-* Enable download logs for dispatcher & nnimanager
-* Enable automatic scaling of axes for metric number
-* Update annotation to support displaying real choice in searchspace
+* 在 Experiment 运行中可修改并发数量
+* 增加指向 NNI Github 的反馈链接，可直接创建问题
+* 可根据指标，定制选择（最大或最小）的前 10 个 Trial。
+* 为 dispatcher 和 nnimanager 提供下载日志的功能
+* 为指标数值图提供自动缩放的数轴
+* 改进 Annotation，支持在搜索空间中显示实际的选项
 
-### New examples
+### 新示例
 
-* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
+* 使用 PyTorch 的[分布式 MNIST 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
-## Release 0.4 - 12/6/2018
+## 发布 0.4 - 12/6/2018
 
-### Major Features
+### 主要功能
 
-* [Kubeflow Training service](TrainingService/KubeflowMode.md) 
+* [Kubeflow 训练平台](TrainingService/KubeflowMode.md) 
   * 支持 tf-operator
   * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](Tuner/GridsearchTuner.md)
