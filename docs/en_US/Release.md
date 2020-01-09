@@ -186,7 +186,7 @@
   * Run trial jobs on the GPU running non-NNI jobs
 * Kubeflow v1beta2 operator
   * Support Kubeflow TFJob/PyTorchJob v1beta2
-* [General NAS programming interface](AdvancedFeature/GeneralNasInterfaces.md)
+* [General NAS programming interface](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md)
   * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
   * Provide a new command `nnictl trial codegen` for debugging the NAS code
   * Tutorial of NAS programming interface, example of NAS on MNIST, customized random tuner for NAS
@@ -299,7 +299,7 @@
 * Support [Metis tuner](Tuner/MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
 * Support [Curve fitting assessor](Assessor/CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](AdvancedFeature/AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
+* Advanced Support of [Weight Sharing](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
 

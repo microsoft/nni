@@ -5,10 +5,9 @@ NNI Compressor 中的 Quantizer
 Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试量化算法。
 
 ### 用法
-tensorflow ```python nni.compression.tensorflow.NaiveQuantizer(model_graph).compress()
-```
 pytorch
-```python nni.compression.torch.NaiveQuantizer(model).compress()
+```python 
+model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
