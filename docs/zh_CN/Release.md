@@ -21,22 +21,22 @@
 
 * OpenPAI 的 NFS 支持
     
-    Instead of using HDFS as default storage, since OpenPAI v0.11, OpenPAI can have NFS or AzureBlob or other storage as default storage. In this release, NNI extended the support for this recent change made by OpenPAI, and could integrate with OpenPAI v0.11 or later version with various default storage.
+    从 OpenPAI v0.11开始，HDFS 不再用作默认存储，可将 NFS、AzureBlob 或其他存储用作默认存储。 在本次版本中，NNI 扩展了对 OpenPAI 最近改动的支持，可与 OpenPAI v0.11 及后续版本的默认存储集成。
 
-* Kubeflow update adoption
+* Kubeflow 更新适配
     
-    Adopted the Kubeflow 0.7's new supports for tf-operator.
+    适配 Kubeflow 0.7 对 tf-operator 的新支持。
 
-### Engineering (code and build automation)
+### 工程（代码和生成自动化）
 
-* Enforced [ESLint](https://eslint.org/) on static code analysis.
+* 启用 [ESLint](https://eslint.org/) 静态代码分析。
 
-### Small changes & Bug Fixes
+### 小改动和 Bug 修复
 
-* correctly recognize builtin tuner and customized tuner
-* logging in dispatcher base
-* fix the bug where tuner/assessor's failure sometimes kills the experiment.
-* Fix local system as remote machine [issue](https://github.com/microsoft/nni/issues/1852)
+* 正确识别内置 Tuner 和定制 Tuner
+* Dispatcher 基类的日志
+* 修复有时 Tuner、Assessor 的失败会终止 Experiment 的 Bug。
+* 修复本机作为远程计算机的[问题](https://github.com/microsoft/nni/issues/1852)
 * de-duplicate trial configuration in smac tuner [ticket](https://github.com/microsoft/nni/issues/1364)
 
 ## Release 1.2 - 12/02/2019
