@@ -342,5 +342,3 @@ You can view example for more information
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner
-
-***
