@@ -111,9 +111,11 @@ def main():
         if torch.cuda.device_count() > 1:
             print("use {} gpus for pruning".format(torch.cuda.device_count()))
             model = nn.DataParallel(model)
+            # model = nn.DataParallel(model, device_ids=[0, 1])
         else:
             print("only detect 1 gpu, fall back")
     
+    model.to(device)
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)

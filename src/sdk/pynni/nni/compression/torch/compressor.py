@@ -169,18 +169,19 @@ class PrunerLayerWrapper(torch.nn.Module):
         self.config = config
         self.pruner = pruner
         # register buffer for mask
-        self.register_buffer("weight_mask", None)
-        self.register_buffer("bias_mask", None)
+
+        self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
+        if hasattr(self.module, 'bias') and self.module.bias is not None:
+            self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
 
     def forward(self, *input):
         mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config)
-        self.weight_mask = mask['weight']
-        self.bias_mask = mask['bias']
-        
+        self.weight_mask.copy_(mask['weight'])
         # apply mask to weight
         self.module.weight.data = self.module.weight.data.mul(self.weight_mask)
         # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
+            self.bias_mask.copy_(mask['bias'])
             self.module.bias.data = self.module.bias.data.mul(self.bias_mask)
         ret = self.module(*input)
         return ret
@@ -251,7 +252,6 @@ class Pruner(Compressor):
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
         for wrapper in self.get_modules_wrapper():
-            print(wrapper.name, wrapper.weight_mask)
             weight_mask = wrapper.weight_mask
             bias_mask = wrapper.bias_mask
             if weight_mask is not None:
