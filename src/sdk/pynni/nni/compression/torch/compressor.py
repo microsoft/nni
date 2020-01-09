@@ -14,7 +14,12 @@ class LayerInfo:
         self.name = name
         self.type = type(module).__name__
 
-
+def setattr_(model, name, module):
+    name_list = name.split(".")
+    for name in name_list[:-1]:
+        model = getattr(model, name)
+    setattr(model, name_list[-1], module)
+    
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -69,7 +74,7 @@ class Compressor:
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
             wrapper = self._instrument_layer(layer, config)
-            setattr(self.bound_model, wrapper.name, wrapper)
+            setattr_(self.bound_model, wrapper.name, wrapper)
             self.modules_wrapper.append(wrapper)
         return self.bound_model
 
@@ -168,7 +173,10 @@ class PrunerLayerWrapper(torch.nn.Module):
         self.register_buffer("bias_mask", None)
 
     def forward(self, *input):
-        self.pruner.calc_mask(self)
+        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config)
+        self.weight_mask = mask['weight']
+        self.bias_mask = mask['bias']
+        
         # apply mask to weight
         self.module.weight.data = self.module.weight.data.mul(self.weight_mask)
         # apply mask to bias
@@ -219,6 +227,7 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
+        _logger.info("compressing module {0}.".format(layer.name))
         wrapper = PrunerLayerWrapper(layer.module, layer.name, layer.type, config, self)
         return wrapper
 
@@ -242,17 +251,18 @@ class Pruner(Compressor):
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
         for wrapper in self.get_modules_wrapper():
+            print(wrapper.name, wrapper.weight_mask)
             weight_mask = wrapper.weight_mask
             bias_mask = wrapper.bias_mask
             if weight_mask is not None:
                 mask_sum = weight_mask.sum().item()
                 mask_num = weight_mask.numel()
-                _logger.info('Layer: %s  Sparsity: %.2f', name, 1 - mask_sum / mask_num)
+                _logger.info('Layer: %s  Sparsity: %.2f', wrapper.name, 1 - mask_sum / mask_num)
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
                 if bias_mask is not None and hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
                     wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
             # de-wrap
-            setattr(self.bound_model, wrapper.name, wrapper.module)
+            setattr_(self.bound_model, wrapper.name, wrapper.module)
             # save mask to dict
             mask_dict[wrapper.name] = {"weight": weight_mask, "bias": bias_mask}
         
@@ -270,7 +280,7 @@ class Pruner(Compressor):
 
         # re-wrap
         for wrapper in self.get_modules_wrapper():
-            setattr(self.bound_model, wrapper.name, wrapper)
+            setattr_(self.bound_model, wrapper.name, wrapper)
 
 class Quantizer(Compressor):
     """

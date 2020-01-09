@@ -77,7 +77,6 @@ def main():
 
     model = VGG(depth=19)
     model.to(device)
-
     # Train the base VGG-19 model
     if args.retrain:
         print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
@@ -103,7 +102,7 @@ def main():
         'sparsity': 0.7,
         'op_types': ['BatchNorm2d'],
     }]
-
+    
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
     pruner = SlimPruner(model, configure_list)
@@ -114,7 +113,7 @@ def main():
             model = nn.DataParallel(model)
         else:
             print("only detect 1 gpu, fall back")
-
+    
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
