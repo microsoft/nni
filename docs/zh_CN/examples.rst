@@ -11,4 +11,4 @@
     EvolutionSQuAD<./TrialExample/SquadEvolutionExamples>
     GBDT<./TrialExample/GbdtExample>
     RocksDB <./TrialExample/RocksdbExamples>
-    KDExample <./TrialExample/KDExample>
+    KD 示例 <./TrialExample/KDExample>
