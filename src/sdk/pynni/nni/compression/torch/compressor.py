@@ -73,7 +73,7 @@ class Compressor:
 
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            wrapper = self._instrument_layer(layer, config)
+            wrapper = self._wrap_modules(layer, config)
             setattr_(self.bound_model, wrapper.name, wrapper)
             self.modules_wrapper.append(wrapper)
         return self.bound_model
@@ -134,7 +134,7 @@ class Compressor:
         If user want to update model every step, user can override this method
         """
 
-    def _instrument_layer(self, layer, config):
+    def _wrap_modules(self, layer, config):
         """
         This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
 
@@ -158,7 +158,7 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
-class PrunerLayerWrapper(torch.nn.Module):
+class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, name, type, config, pruner):
         super().__init__()
         # origin layer information
@@ -217,9 +217,9 @@ class Pruner(Compressor):
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
-    def _instrument_layer(self, layer, config):
+    def _wrap_modules(self, layer, config):
         """
-        Create a wrapper forward function to replace the original one.
+        Create a wrapper module to replace the original one.
 
         Parameters
         ----------
@@ -229,7 +229,7 @@ class Pruner(Compressor):
             the configuration for generating the mask
         """
         _logger.info("compressing module {0}.".format(layer.name))
-        wrapper = PrunerLayerWrapper(layer.module, layer.name, layer.type, config, self)
+        wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
         return wrapper
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
@@ -331,7 +331,7 @@ class Quantizer(Compressor):
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
 
-    def _instrument_layer(self, layer, config):
+    def _wrap_modules(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
         Parameters
