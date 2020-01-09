@@ -106,7 +106,7 @@ nnictl create --config exp_paiYarn.yml
 ```
 to start the experiment in paiYarn mode. NNI will create OpenpaiYarn job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`.
 You can see jobs created by NNI in the OpenpaiYarn cluster's web portal, like:
-![](../../img/nni_paiYarn_joblist.jpg)
+![](../../img/nni_pai_joblist.jpg)
 
 Notice: In paiYarn mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
