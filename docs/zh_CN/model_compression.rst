@@ -18,7 +18,7 @@ NNI 中也内置了一些流程的模型压缩算法。
     概述 <Compressor/Overview>
     Level Pruner <Compressor/Pruner>
     AGP Pruner <Compressor/Pruner>
-    L1Filter Pruner <Compressor/L1FilterPruner>
+    L1Filter Pruner <Compressor/l1filterpruner>
     Slim Pruner <Compressor/SlimPruner>
     Lottery Ticket Pruner <Compressor/LotteryTicketHypothesis>
     FPGM Pruner <Compressor/Pruner>
