@@ -19,7 +19,7 @@ def setattr_(model, name, module):
     for name in name_list[:-1]:
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
-    
+
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -43,7 +43,7 @@ class Compressor:
 
     def get_modules_wrapper(self):
         return self.modules_wrapper
-    
+
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
@@ -159,12 +159,12 @@ class Compressor:
         return expanded_op_types
 
 class PrunerModuleWrapper(torch.nn.Module):
-    def __init__(self, module, name, type, config, pruner):
+    def __init__(self, module, module_name, module_type, config, pruner):
         super().__init__()
         # origin layer information
         self.module = module
-        self.name = name
-        self.type = type
+        self.name = module_name
+        self.type = module_type
         # config and pruner
         self.config = config
         self.pruner = pruner
@@ -174,18 +174,17 @@ class PrunerModuleWrapper(torch.nn.Module):
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
 
-    def forward(self, *input):
+    def forward(self, *inputs):
         mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config)
         self.weight_mask.copy_(mask['weight'])
         # apply mask to weight
-        self.module.weight.data = self.module.weight.data.mul(self.weight_mask)
+        self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
         # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.bias_mask.copy_(mask['bias'])
-            self.module.bias.data = self.module.bias.data.mul(self.bias_mask)
-        ret = self.module(*input)
-        return ret
-    
+            self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
+        return self.module(*inputs)
+
 class Pruner(Compressor):
     """
     Prune to an exact pruning level specification
@@ -228,9 +227,8 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        _logger.info("compressing module {0}.".format(layer.name))
-        wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
-        return wrapper
+        _logger.info("compressing module %s.", layer.name)
+        return PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
         """
@@ -265,7 +263,7 @@ class Pruner(Compressor):
             setattr_(self.bound_model, wrapper.name, wrapper.module)
             # save mask to dict
             mask_dict[wrapper.name] = {"weight": weight_mask, "bias": bias_mask}
-        
+
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
         if mask_path is not None:

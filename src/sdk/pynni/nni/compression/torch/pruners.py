@@ -216,7 +216,6 @@ class SlimPruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
         op_type = layer.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
         # if op_name in self.mask_calculated_ops:
