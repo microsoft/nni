@@ -32,7 +32,7 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -297,6 +297,27 @@ pai_config_schema = {
     })
 }
 
+dlts_trial_schema = {
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'image': setType('image', str),
+    }
+}
+
+dlts_config_schema = {
+    'dltsConfig': {
+        'dashboard': setType('dashboard', str),
+
+        'cluster': setType('cluster', str),
+        'team': setType('team', str),
+
+        'email': setType('email', str),
+        'password': setType('password', str),
+    }
+}
+
 kubeflow_trial_schema = {
     'trial':{
         'codeDir':  setPathCheck('codeDir'),
@@ -437,6 +458,8 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
 PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
+
+DLTS_CONFIG_SCHEMA = Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 
