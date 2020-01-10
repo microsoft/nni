@@ -9,6 +9,7 @@ from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
 class MutableOp(nn.Module):
     def __init__(self, kernel_size):
+        super().__init__()
         self.conv = nn.Conv2d(3, 120, kernel_size, padding=kernel_size // 2)
         self.nested_mutable = InputChoice(n_candidates=10)
 
@@ -16,7 +17,7 @@ class MutableOp(nn.Module):
         return self.conv(x)
 
 
-class NaiveSearchSpace(nn.Module):
+class NestedSpace(nn.Module):
     def __init__(self, test_case):
         super().__init__()
         self.test_case = test_case

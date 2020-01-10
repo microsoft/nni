@@ -42,7 +42,6 @@ class Node(MutableScope):
 class Layer(nn.Module):
     def __init__(self, num_nodes, channels):
         super().__init__()
-
         self.num_nodes = num_nodes
         self.nodes = nn.ModuleList()
         node_labels = [InputChoice.NO_KEY, InputChoice.NO_KEY]
@@ -52,7 +51,6 @@ class Layer(nn.Module):
         self.final_conv_w = nn.Parameter(torch.zeros(channels, self.num_nodes + 2, channels, 1, 1),
                                          requires_grad=True)
         self.bn = nn.BatchNorm2d(channels, affine=False)
-        self.reset_parameters()
 
     def forward(self, pprev, prev):
         prev_nodes_out = [pprev, prev]
@@ -71,8 +69,9 @@ class Layer(nn.Module):
 
 
 class SpaceWithMutableScope(nn.Module):
-    def __init__(self, num_layers=2, num_nodes=5, channels=24, in_channels=3, num_classes=10):
+    def __init__(self, test_case, num_layers=4, num_nodes=5, channels=16, in_channels=3, num_classes=10):
         super().__init__()
+        self.test_case = test_case
         self.num_layers = num_layers
 
         self.stem = nn.Sequential(

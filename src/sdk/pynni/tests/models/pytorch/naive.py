@@ -33,11 +33,11 @@ class NaiveSearchSpace(nn.Module):
         self.test_case.assertEqual(mask.size(), torch.Size([2]))
         x1 = F.relu(self.conv3(x0))
 
+        _, mask = self.skipconnect2([x0, x1])
         x0 = self.skipconnect([x0])
         if x0 is not None:
             x1 += x0
         x = self.pool(self.bn(x1))
-        _, mask = self.skipconnect2([x0, x1])
         self.test_case.assertEqual(mask.size(), torch.Size([2]))
 
         x = self.gap(x).view(bs, -1)
