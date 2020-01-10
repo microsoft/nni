@@ -14,5 +14,5 @@ tuner:
     product: 2
 trial:
   codeDir: EfficientNet-PyTorch
-  command: python main.py /data/imagenet -j 12 -a efficientnet --batch-size 64 --lr 0.064 --wd 1e-5 --epochs 5 --request-from-nni
+  command: python main.py /data/imagenet -j 12 -a efficientnet --batch-size 48 --lr 0.048 --wd 1e-5 --epochs 5 --request-from-nni
   gpuNum: 1
