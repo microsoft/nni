@@ -19,7 +19,7 @@ Note:
 
 * For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
-* For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
+* For the `system requirements` of NNI, please refer to [Install NNI on Linux&Mac](InstallationLinux.md) or [Windows](InstallationWin.md)
 
 ## "Hello World" example on MNIST
 

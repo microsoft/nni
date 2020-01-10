@@ -4,6 +4,7 @@ NNI TrainingService provides the training platform for running NNI trial jobs. N
 NNI not only provides few built-in training service options, but also provides a method for customers to build their own training service easily.
 
 ## Built-in TrainingService
+
 |TrainingService|Brief Introduction|
 |---|---|
 |[__Local__](./LocalMode.md)|NNI supports running an experiment on local machine, called local mode. Local mode means that NNI will run the trial jobs and nniManager process in same machine, and support gpu schedule function for trial jobs.|

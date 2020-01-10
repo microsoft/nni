@@ -16,8 +16,6 @@ to accelerate innovations on NAS, and apply state-of-art algorithms on real worl
 For details, please refer to the following tutorials:
 
 ..  toctree::
-    :maxdepth: 2
-
     Overview <NAS/Overview>
     NAS Interface <NAS/NasInterface>
     ENAS <NAS/ENAS>
