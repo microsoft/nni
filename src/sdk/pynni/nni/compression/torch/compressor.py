@@ -194,7 +194,9 @@ class Pruner(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
-            mask = self.calc_mask(layer, config)
+            '''mask = self.calc_mask(layer, config)
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            mask['weight'].to(device)
             # apply mask to weight
             old_weight = layer.module.weight.data
             mask_weight = mask['weight']
@@ -203,7 +205,8 @@ class Pruner(Compressor):
             if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
                 old_bias = layer.module.bias.data
                 mask_bias = mask['bias']
-                layer.module.bias.data = old_bias.mul(mask_bias)
+                mask_bias.to(device)
+                layer.module.bias.data = old_bias.mul(mask_bias)'''
             # calculate forward
             ret = layer._forward(*inputs)
             return ret
@@ -250,6 +253,7 @@ class Pruner(Compressor):
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
             input_data = torch.Tensor(*input_shape)
+            input_data = input_data.to('cuda')
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
