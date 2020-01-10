@@ -119,11 +119,11 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 - `layer_transformer.py` 包含了一些层转换，包括变宽，变深，或在层中增加跳跃连接。
 - `nn.py` 包含生成初始化网的类。
 - `metric.py` 包括了一些指标类，如 Accuracy 和 MSE。
-- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的样例。
+- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的示例。
 
-## 4. 网络表示的 JSON 样例
+## 4. 网络表示的 JSON 示例
 
-这是定义的中间表示 JSON 样例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
+这是定义的中间表示 JSON 示例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 示例如下。
 
 ```json
 {

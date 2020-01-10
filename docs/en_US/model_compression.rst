@@ -18,7 +18,7 @@ For details, please refer to the following tutorials:
     Overview <Compressor/Overview>
     Level Pruner <Compressor/Pruner>
     AGP Pruner <Compressor/Pruner>
-    L1Filter Pruner <Compressor/L1FilterPruner>
+    L1Filter Pruner <Compressor/l1filterpruner>
     Slim Pruner <Compressor/SlimPruner>
     Lottery Ticket Pruner <Compressor/LotteryTicketHypothesis>
     FPGM Pruner <Compressor/Pruner>

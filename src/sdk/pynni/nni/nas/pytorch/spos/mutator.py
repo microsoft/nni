@@ -17,6 +17,7 @@ class SPOSSupernetTrainingMutator(RandomMutator):
         Parameters
         ----------
         model : nn.Module
+            PyTorch model.
         flops_func : callable
             Callable that takes a candidate from `sample_search` and returns its candidate. When `flops_func`
             is None, functions related to flops will be deactivated.

@@ -5,7 +5,7 @@ import logging
 import torch
 from .compressor import Quantizer, QuantGrad, QuantType
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer']
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
 logger = logging.getLogger(__name__)
 

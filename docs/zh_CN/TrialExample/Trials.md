@@ -2,7 +2,7 @@
 
 **Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 样例。
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 示例。
 
 <a name="nni-api"></a>
 
@@ -10,7 +10,7 @@
 
 ### 第一步：准备搜索空间参数文件。
 
-样例如下：
+示例如下：
 
 ```json
 {
@@ -156,7 +156,7 @@ nni.get_sequence_id＃返回 0
 
 每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
+如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件示例：
 
 ```bash
 #!/bin/bash
@@ -182,7 +182,7 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ## 更多 Trial 的示例
 
-* [MNIST 样例](MnistExamples.md)
+* [MNIST 示例](MnistExamples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](Cifar10Examples.md)
 * [如何在 NNI 调优 SciKit-learn 的参数](SklearnExamples.md)
 * [在阅读理解上使用自动模型架构搜索。](SquadEvolutionExamples.md)

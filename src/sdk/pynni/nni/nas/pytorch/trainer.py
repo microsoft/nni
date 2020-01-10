@@ -52,7 +52,7 @@ class Trainer(BaseTrainer):
         workers : int
             Number of workers used in data preprocessing.
         device : torch.device
-            Device object. Either `torch.device("cuda")` or torch.device("cpu")`. When `None`, trainer will
+            Device object. Either ``torch.device("cuda")`` or ``torch.device("cpu")``. When ``None``, trainer will
             automatic detects GPU and selects GPU first.
         log_frequency : int
             Number of mini-batches to log metrics.
@@ -96,12 +96,12 @@ class Trainer(BaseTrainer):
                 callback.on_epoch_begin(epoch)
 
             # training
-            _logger.info("Epoch %d Training", epoch)
+            _logger.info("Epoch %d Training", epoch + 1)
             self.train_one_epoch(epoch)
 
             if validate:
                 # validation
-                _logger.info("Epoch %d Validating", epoch)
+                _logger.info("Epoch %d Validating", epoch + 1)
                 self.validate_one_epoch(epoch)
 
             for callback in self.callbacks:

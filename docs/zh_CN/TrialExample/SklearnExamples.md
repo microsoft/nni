@@ -4,7 +4,7 @@
 
 NNI 支持多种调优算法来为 scikit-learn 搜索最好的模型和超参，并支持本机、远程服务器和云服务等多种环境。
 
-## 1. 如何运行此样例
+## 1. 如何运行此示例
 
 安装 NNI 包，并使用命令行工具 `nnictl` 来启动 Experiment。 有关安装和环境准备的内容，参考[这里](../Tutorial/QuickStart.md)。
 
@@ -14,7 +14,7 @@ NNI 支持多种调优算法来为 scikit-learn 搜索最好的模型和超参�
 nnictl create --config ./config.yml
 ```
 
-## 2. 样例概述
+## 2. 示例概述
 
 ### 2.1 分类
 
@@ -24,7 +24,7 @@ nnictl create --config ./config.yml
 
 ### 2.2 回归
 
-此样例使用了波士顿房价数据，数据集由波士顿各地区房价所组成，还包括了房屋的周边信息，例如：犯罪率 (CRIM)，非零售业务的面积 (INDUS)，房主年龄 (AGE) 等等。这些信息可用来预测波士顿的房价。
+此示例使用了波士顿房价数据，数据集由波士顿各地区房价所组成，还包括了房屋的周边信息，例如：犯罪率 (CRIM)，非零售业务的面积 (INDUS)，房主年龄 (AGE) 等等。这些信息可用来预测波士顿的房价。
 
 本例中，尝试了不同的回归模型，包括 `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` 和一些参数，如 `"svr_kernel", "knr_weights"`。 关于这些模型算法和参数的更多信息，可参考[这里](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning)。
 

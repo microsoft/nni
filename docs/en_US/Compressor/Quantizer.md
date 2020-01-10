@@ -5,13 +5,9 @@ Quantizer on NNI Compressor
 We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
 
 ### Usage
-tensorflow
-```python
-nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
-```
 pytorch
-```python
-nni.compressors.torch.NaiveQuantizer(model).compress()
+```python 
+model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -29,7 +25,7 @@ You can quantize your model to 8 bits with the code below before your training c
 
 PyTorch code
 ```python
-from nni.compressors.torch import QAT_Quantizer
+from nni.compression.torch import QAT_Quantizer
 model = Mnist()
 
 config_list = [{
@@ -51,22 +47,9 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **quant_types:** : list of string
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
-specify the name of modules that will be quantized. eg. 'conv1'
-
-* **quant_bits:** int or dict of {str : int}
-
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 * **quant_start_step:** int
 
@@ -85,7 +68,7 @@ To implement DoReFa Quantizer, you can add code below before your training code
 
 PyTorch code
 ```python
-from nni.compressors.torch import DoReFaQuantizer
+from nni.compression.torch import DoReFaQuantizer
 config_list = [{ 
     'quant_types': ['weight'],
     'quant_bits': 8, 
@@ -98,22 +81,9 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-* **quant_types:** : list of string
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
-specify the name of modules that will be quantized. eg. 'conv1'
-
-* **quant_bits:** int or dict of {str : int}
-
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 
 ## BNN Quantizer
@@ -130,13 +100,13 @@ from nni.compression.torch import BNNQuantizer
 model = VGG_Cifar10(num_classes=10)
 
 configure_list = [{
-    'quant_types': ['weight'],
     'quant_bits': 1,
+    'quant_types': ['weight'],
     'op_types': ['Conv2d', 'Linear'],
     'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
 }, {
-    'quant_types': ['output'],
     'quant_bits': 1,
+    'quant_types': ['output'],
     'op_types': ['Hardtanh'],
     'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
 }]
@@ -148,22 +118,9 @@ model = quantizer.compress()
 You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
 
 #### User configuration for BNN Quantizer
-* **quant_types:** : list of string
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
-type of quantization you want to apply, currently support 'weight', 'input', 'output'.
-
-* **op_types:** list of string
-
-specify the type of modules that will be quantized. eg. 'Conv2D'
-
-* **op_names:** list of string
-
-specify the name of modules that will be quantized. eg. 'conv1'
-
-* **quant_bits:** int or dict of {str : int}
-
-bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-when the type is int, all quantization types share same bits length.
+configuration needed by this algorithm :
 
 ### Experiment
 We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
