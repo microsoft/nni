@@ -216,11 +216,11 @@ class SlimPruner(Pruner):
         """
 
         weight = layer.module.weight.data
+        op_name = layer.name
         op_type = layer.type
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        # if op_name in self.mask_calculated_ops:
-        #     assert op_name in self.mask_dict
-        #     return self.mask_dict.get(op_name)
+        if op_name in self.mask_calculated_ops:
+            return None
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
         try:
@@ -233,9 +233,7 @@ class SlimPruner(Pruner):
             mask_bias = mask_weight.clone()
             mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
         finally:
-            pass
-            # self.mask_dict.update({layer.name: mask})
-            # self.mask_calculated_ops.add(layer.name)
+            self.mask_calculated_ops.add(layer.name)
         return mask
 
 class LotteryTicketPruner(Pruner):

@@ -176,12 +176,14 @@ class PrunerModuleWrapper(torch.nn.Module):
 
     def forward(self, *inputs):
         mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config)
-        self.weight_mask.copy_(mask['weight'])
+        if mask is not None:
+            self.weight_mask.copy_(mask['weight'])
         # apply mask to weight
         self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
         # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.bias_mask.copy_(mask['bias'])
+            if mask is not None:
+                self.bias_mask.copy_(mask['bias'])
             self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
 
@@ -249,7 +251,7 @@ class Pruner(Compressor):
         #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
-        for wrapper in self.get_modules_wrapper():
+        for wrapper in reversed(self.get_modules_wrapper()):
             weight_mask = wrapper.weight_mask
             bias_mask = wrapper.bias_mask
             if weight_mask is not None:
@@ -277,7 +279,7 @@ class Pruner(Compressor):
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         # re-wrap
-        for wrapper in self.get_modules_wrapper():
+        for wrapper in reversed(self.get_modules_wrapper()):
             setattr_(self.bound_model, wrapper.name, wrapper)
 
 class Quantizer(Compressor):
