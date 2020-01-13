@@ -1,6 +1,6 @@
-#########################################
-Neural Network Intelligence Documentation
-#########################################
+###########################
+Neural Network Intelligence
+###########################
 
 ********
 Contents

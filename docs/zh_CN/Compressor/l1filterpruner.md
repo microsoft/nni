@@ -1,7 +1,7 @@
-NNI Compressor 中的 L1FilterPruner
+NN I 上的 L1FilterPruner
 ===
 
-## 1. 介绍
+## 介绍
 
 L1FilterPruner 是在卷积层中用来修剪过滤器的通用剪枝算法。
 
@@ -18,25 +18,9 @@ L1FilterPruner 是在卷积层中用来修剪过滤器的通用剪枝算法。
 > 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
 > 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
-## 2. 用法
+## 实验
 
-PyTorch 代码
-
-```
-from nni.compression.torch import L1FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'], 'op_names': ['conv1', 'conv2'] }]
-pruner = L1FilterPruner(model, config_list)
-pruner.compress()
-```
-
-#### L1Filter Pruner 的用户配置
-
-- **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
-
-## 3. 实验
-
-我们实现了 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 $64\%$ 的参数。 我们的实验结果如下：
+我们通过 **L1FilterPruner** 实现了 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 $64\%$ 的参数。 我们的实验结果如下：
 
 | 模型              | 错误率(论文/我们的) | 参数量      | 剪除率   |
 | --------------- | ----------- | -------- | ----- |

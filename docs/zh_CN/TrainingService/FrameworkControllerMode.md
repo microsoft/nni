@@ -32,7 +32,7 @@
 
 参考[Kubeflow 训练平台](KubeflowMode.md)的设计，FrameworkController 训练平台与其类似。
 
-## 样例
+## 示例
 
 FrameworkController 配置文件的格式如下：
 
@@ -93,7 +93,7 @@ frameworkcontrollerConfig:
 
 注意：如果用 FrameworkController 模式运行，需要在 YAML 文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
 
-FrameworkController 模式的 Trial 配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。
+FrameworkController 模式的 Trial 配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 示例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。
 
 frameworkcontroller 模式中的 Trial 配置使用以下主键：
 
