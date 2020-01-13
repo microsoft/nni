@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
+import importlib
+import os
+import sys
 from unittest import TestCase, main
 
 import torch
@@ -10,14 +12,18 @@ from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.random import RandomMutator
 from nni.nas.pytorch.utils import reset_global_mutable_counting
 
-from .models.pytorch import NaiveSearchSpace, NestedSpace, SpaceWithMutableScope
-
 
 class NasTestCase(TestCase):
 
     def setUp(self):
         self.default_input_size = [3, 32, 32]
-        self.default_cls = [NaiveSearchSpace, SpaceWithMutableScope]
+        self.model_path = os.path.join(os.path.dirname(__file__), "models")
+        sys.path.append(self.model_path)
+        self.model_module = importlib.import_module("pytorch_models")
+        self.default_cls = [self.model_module.NaiveSearchSpace, self.model_module.SpaceWithMutableScope]
+
+    def tearDown(self):
+        sys.path.remove(self.model_path)
 
     def iterative_sample_and_forward(self, model, mutator=None, input_size=None, n_iters=20, test_backward=True):
         if input_size is None:
@@ -57,13 +63,13 @@ class NasTestCase(TestCase):
         self.default_mutator_test_pipeline(DartsMutator)
 
     def test_apply_twice(self):
-        model = NaiveSearchSpace(self)
+        model = self.model_module.NaiveSearchSpace(self)
         with self.assertRaises(RuntimeError):
             for _ in range(2):
                 RandomMutator(model)
 
     def test_nested_space(self):
-        model = NestedSpace(self)
+        model = self.model_module.NestedSpace(self)
         with self.assertRaises(RuntimeError):
             RandomMutator(model)
 
