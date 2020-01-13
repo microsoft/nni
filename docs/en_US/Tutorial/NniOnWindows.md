@@ -1,5 +1,5 @@
 # NNI on Windows
-As Linux version, NNI on Windows supports local, remote as well as cloud integration mode for OpenPAI and other training sercies.
+Differ from Linux version, NNI only supports local mode right now. Please comment in [NNI's backlog issue](https://github.com/microsoft/nni/issues/1917) if you have needs on other modes for NNI on Windows.
 
 ## System Requirements
 Our test for Windows were majorly made on Windows 10.1809, for any other Windows versions, we'd like to get your (community users') suppport on verification and feedback.
