@@ -91,8 +91,8 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install torch==1.2.0 --user
+      python3 -m pip install torchvision==0.4.0 --user
       python3 -m pip install tensorflow==1.13.1 --user
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
       brew install swig@3
@@ -131,7 +131,7 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+      python -m pip install torch===1.2.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install torchvision --user
       python -m pip install tensorflow==1.13.1 --user
     displayName: 'Install dependencies'
