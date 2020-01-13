@@ -44,9 +44,8 @@ class NasTestCase(TestCase):
             model_fixed = model_cls(self)
             with torch.no_grad():
                 arc = mutator.export()
-                arc = {k: v.cpu().numpy().tolist() for k, v in arc.items()}
             apply_fixed_architecture(model_fixed, arc)
-            self.iterative_sample_and_forward(model, n_iters=1)
+            self.iterative_sample_and_forward(model_fixed, n_iters=1)
 
     def test_random_mutator(self):
         self.default_mutator_test_pipeline(RandomMutator)
