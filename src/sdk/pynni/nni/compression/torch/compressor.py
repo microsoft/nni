@@ -14,7 +14,7 @@ class LayerInfo:
         self.name = name
         self.type = type(module).__name__
 
-def setattr_(model, name, module):
+def _setattr(model, name, module):
     name_list = name.split(".")
     for name in name_list[:-1]:
         model = getattr(model, name)
@@ -58,6 +58,22 @@ class Compressor:
                     self.modules_to_compress.append((layer, config))
         return self.modules_to_compress
 
+    def _wrap_model(self):
+        """
+        wrap all modules that needed to be compressed
+
+        """
+        for wrapper in reversed(self.get_modules_wrapper()):
+            _setattr(self.bound_model, wrapper.name, wrapper)
+
+    def _unwrap_model(self):
+        """
+        unwrap all modules that needed to be compressed
+
+        """
+        for wrapper in self.get_modules_wrapper():
+            _setattr(self.bound_model, wrapper.name, wrapper.module)
+
     def compress(self):
         """
         Compress the model with algorithm implemented by subclass.
@@ -74,8 +90,8 @@ class Compressor:
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
             wrapper = self._wrap_modules(layer, config)
-            setattr_(self.bound_model, wrapper.name, wrapper)
             self.modules_wrapper.append(wrapper)
+        self._wrap_model()
         return self.bound_model
 
     def get_modules_to_compress(self):
@@ -170,6 +186,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.pruner = pruner
         # register buffer for mask
 
+        self.register_buffer("calculated", torch.Tensor([0]))
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
@@ -251,7 +268,9 @@ class Pruner(Compressor):
         #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
-        for wrapper in reversed(self.get_modules_wrapper()):
+        self._unwrap_model() # used for generating correct state_dict name without wrapper state
+
+        for wrapper in self.get_modules_wrapper():
             weight_mask = wrapper.weight_mask
             bias_mask = wrapper.bias_mask
             if weight_mask is not None:
@@ -261,8 +280,6 @@ class Pruner(Compressor):
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
                 if bias_mask is not None and hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
                     wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
-            # de-wrap
-            setattr_(self.bound_model, wrapper.name, wrapper.module)
             # save mask to dict
             mask_dict[wrapper.name] = {"weight": weight_mask, "bias": bias_mask}
 
@@ -278,9 +295,7 @@ class Pruner(Compressor):
             torch.onnx.export(self.bound_model, input_data, onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
-        # re-wrap
-        for wrapper in reversed(self.get_modules_wrapper()):
-            setattr_(self.bound_model, wrapper.name, wrapper)
+        self._wrap_model()
 
 class Quantizer(Compressor):
     """

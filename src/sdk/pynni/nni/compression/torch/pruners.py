@@ -223,17 +223,14 @@ class SlimPruner(Pruner):
             return None
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
-        try:
-            filters = weight.size(0)
-            num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1:
-                return mask
+        filters = weight.size(0)
+        num_prune = int(filters * config.get('sparsity'))
+        if filters >= 2 and num_prune >= 1:
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
-        finally:
-            self.mask_calculated_ops.add(layer.name)
+        self.mask_calculated_ops.add(layer.name)
         return mask
 
 class LotteryTicketPruner(Pruner):
