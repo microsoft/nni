@@ -30,4 +30,4 @@ for batch_idx, (data, target) in enumerate(train_loader):
 * **kd_teacher_model:** 预训练过的教师模型
 * **kd_T:** 用于平滑教师模型输出的温度。
 
-完整代码可在这里找到
+完整[在这里](https://github.com/microsoft/nni/tree/v1.3/examples/model_compress/knowledge_distill/)。
