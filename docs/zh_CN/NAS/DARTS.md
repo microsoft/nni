@@ -2,11 +2,11 @@
 
 ## 介绍
 
-论文 [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 通过可微分的方式来解决架构搜索中的伸缩性挑战。 Their method is based on the continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent.
+论文 [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 通过可微分的方式来解决架构搜索中的伸缩性挑战。 此方法基于架构的连续放松的表示，从而允许在架构搜索时能使用梯度下降。
 
-Authors' code optimizes the network weights and architecture weights alternatively in mini-batches. 还进一步探讨了使用二阶优化（unroll）来替代一阶，来提高性能的可能性。
+为了实现，作者在小批量中交替优化网络权重和架构权重。 还进一步探讨了使用二阶优化（unroll）来替代一阶，来提高性能的可能性。
 
-NNI 的实现基于[官方实现](https://github.com/quark0/darts)以及一个[第三方实现](https://github.com/khanrc/pt.darts)。 DARTS on NNI is designed to be general for arbitrary search space. A CNN search space tailored for CIFAR10, same as the original paper, is implemented as a use case of DARTS.
+NNI 的实现基于[官方实现](https://github.com/quark0/darts)以及一个[第三方实现](https://github.com/khanrc/pt.darts)。 NNI 上的 DARTS 设计为可用于任何搜索空间。 A CNN search space tailored for CIFAR10, same as the original paper, is implemented as a use case of DARTS.
 
 ## Reproduction Results
 
