@@ -60,8 +60,9 @@ class Logger {
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
     private readonly: boolean = false;
+    private foreground: boolean = false;
 
-    constructor(fileName?: string) {
+    constructor(foreground: boolean, fileName?: string) {
         let logFile: string | undefined = fileName;
         if (logFile === undefined) {
             logFile = this.DEFAULT_LOGFILE;
@@ -81,6 +82,7 @@ class Logger {
         }
 
         this.readonly = isReadonly();
+        this.foreground = foreground;
     }
 
     public close(): void {
@@ -129,10 +131,12 @@ class Logger {
     private log(level: string, param: any[]): void {
         if (!this.readonly) {
             const buffer: WritableStreamBuffer = new WritableStreamBuffer();
-            buffer.write(`[${(new Date()).toLocaleString()}] ${level} `);
-            buffer.write(format(param));
-            buffer.write('\n');
+            const logContent = `[${(new Date()).toLocaleString()}] ${level} ${format(param)}\n`;
+            buffer.write(logContent);
             buffer.end();
+            if (this.foreground) {
+                console.log(logContent);
+            }
             this.bufferSerialEmitter.feed(buffer.getContents());
         }
     }
