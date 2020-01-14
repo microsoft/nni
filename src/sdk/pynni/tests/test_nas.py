@@ -6,6 +6,7 @@ import sys
 from unittest import TestCase, main
 
 import torch
+from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.enas import EnasMutator
 from nni.nas.pytorch.fixed import apply_fixed_architecture
@@ -72,6 +73,12 @@ class NasTestCase(TestCase):
         model = self.model_module.NestedSpace(self)
         with self.assertRaises(RuntimeError):
             RandomMutator(model)
+
+    def test_classic_nas(self):
+        for model_cls in self.default_cls:
+            model = model_cls(self)
+            get_and_apply_next_architecture(model)
+            self.iterative_sample_and_forward(model)
 
 
 if __name__ == '__main__':
