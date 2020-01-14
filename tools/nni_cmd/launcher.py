@@ -20,7 +20,7 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
                           detect_port, get_user, get_python_dir
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
-from .nnictl_utils import update_experiment, set_monitor
+from .nnictl_utils import update_experiment
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -508,7 +508,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                 print(log_content)
         except KeyboardInterrupt:
             kill_command(rest_process.pid)
-            print_normal('Stopping experiment...')            
+            print_normal('Stopping experiment...')    
 
 def create_experiment(args):
     '''start a new experiment'''
