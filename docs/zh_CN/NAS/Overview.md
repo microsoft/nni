@@ -6,7 +6,7 @@
 
 以此为动力，NNI 的目标是提供统一的体系结构，以加速NAS上的创新，并将最新的算法更快地应用于现实世界中的问题上。
 
-通过[统一的接口](./NasInterface.md)，有两种方式进行架构搜索。 [第一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](./NasInterface.md#classic-distributed-search)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
+通过[统一的接口](./NasInterface.md)，有两种方式进行架构搜索。 [One](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [第二种](./NasInterface.md#classic-distributed-search)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
 
 * [支持的 One-shot NAS 算法](#supported-one-shot-nas-algorithms)
 * [使用 NNI Experiment 的经典分布式 NAS](./NasInterface.md#classic-distributed-search)
@@ -14,97 +14,36 @@
 
 ## 支持的 One-shot NAS 算法
 
-NNI 现在支持以下 NAS 算法，并且正在添加更多算法。 用户可以重现算法或在自己的数据集上使用它。 鼓励用户使用 [NNI API](#use-nni-api) 实现其它算法，以使更多人受益。
+NNI supports below NAS algorithms now and is adding more. User can reproduce an algorithm or use it on their own dataset. We also encourage users to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
 
-| 名称                  | 算法简介                                                                                                                                          |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ENAS](#enas)       | Efficient Neural Architecture Search via Parameter Sharing [参考论文](https://arxiv.org/abs/1802.03268)                                           |
-| [DARTS](#darts)     | DARTS: Differentiable Architecture Search [参考论文](https://arxiv.org/abs/1806.09055)                                                            |
-| [P-DARTS](#p-darts) | Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation [参考论文](https://arxiv.org/abs/1904.12760) |
+| 名称                   | 算法简介                                                                                                                                                                                                                                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ENAS](ENAS.md)      | [Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268). In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance. |
+| [DARTS](DARTS.md)    | [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) introduces a novel algorithm for differentiable network architecture search on bilevel optimization.                                                                                                                                                             |
+| [P-DARTS](PDARTS.md) | [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) is based on DARTS. It introduces an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.                                             |
+| [SPOS](SPOS.md)      | [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) constructs a simplified supernet trained with an uniform path sampling method, and applies an evolutionary algorithm to efficiently search for the best-performing architectures.                                                    |
 
-注意，这些算法**不需要 nnictl**，独立运行，仅支持 PyTorch。 将来的版本会支持 Tensorflow 2.0。
+One-shot algorithms run **standalone without nnictl**. Only PyTorch version has been implemented. Tensorflow 2.x will be supported in future release.
 
-### 依赖项
+Here are some common dependencies to run the examples. PyTorch needs to be above 1.2 to use `BoolTensor`.
 
 * NNI 1.2+
 * tensorboard
 * PyTorch 1.2+
 * git
 
-### ENAS
-
-[Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268). 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 它通过在子模型间共享参数来实现加速和出色的性能指标。
-
-#### 用法
-
-NNI 中的 ENAS 还在开发中，当前仅支持在 CIFAR10 上 Macro/Micro 搜索空间的搜索阶段。 在 PTB 上从头开始训练及其搜索空间尚未完成。 [详细说明](ENAS.md)。
-
-```bash
-＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
-git clone https://github.com/Microsoft/nni.git
-
-# 搜索最好的网络架构
-cd examples/nas/enas
-
-# 在 Macro 搜索空间中搜索
-python3 search.py --search-for macro
-
-# 在 Micro 搜索空间中搜索
-python3 search.py --search-for micro
-
-# 查看更多选项
-python3 search.py -h
-```
-
-### DARTS
-
-[DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 在算法上的主要贡献是，引入了一种在两级网络优化中使用的可微分算法。 [详细说明](DARTS.md)。
-
-#### 用法
-
-```bash
-＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
-git clone https://github.com/Microsoft/nni.git
-
-# 搜索最好的架构
-cd examples/nas/darts
-python3 search.py
-
-# 训练最好的架构
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
-```
-
-### P-DARTS
-
-[Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) 基于 [DARTS](#DARTS)。 它在算法上的主要贡献是引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。
-
-#### 用法
-
-```bash
-＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
-git clone https://github.com/Microsoft/nni.git
-
-# 搜索最好的架构
-cd examples/nas/pdarts
-python3 search.py
-
-# 训练最好的架构，过程与 darts 相同。
-cd ../darts
-python3 retrain.py --arc-checkpoint ../pdarts/checkpoints/epoch_2.json
-```
-
 ## 使用 NNI API
 
-注意，我们正在尝试通过统一的编程接口来支持各种 NAS 算法，当前处于试验阶段。 这意味着当前编程接口将来会有变化。
+NOTE, we are trying to support various NAS algorithms with unified programming interface, and it's in very experimental stage. It means the current programing interface may be updated in future.
 
-### 编程接口
+### Programming interface
 
-在两种场景下需要用于设计和搜索模型的编程接口。
+The programming interface of designing and searching a model is often demanded in two scenarios.
 
 1. 在设计神经网络时，可能在层、子模型或连接上有多种选择，并且无法确定是其中一种或某些的组合的结果最好。 因此，需要简单的方法来表达候选的层或子模型。
 2. 在神经网络上应用 NAS 时，需要统一的方式来表达架构的搜索空间，这样不必为不同的搜索算法来更改代码。
 
-NNI 提出的 API 在[这里](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。 [这里](https://github.com/microsoft/nni/tree/master/examples/nas/darts)包含了基于此 API 的 NAS 实现示例。
+NNI proposed API is [here](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/master/examples/nas/naive) is an example of NAS implementation, which bases on NNI proposed interface.
 
 ## **参考和反馈**
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
