@@ -61,7 +61,7 @@ class ClassicMutator(Mutator):
             self._dump_search_space(os.environ[NNI_GEN_SEARCH_SPACE])
             sys.exit(0)
 
-        if trial_env_vars.NNI_PLATFORM is None or trial_env_vars.NNI:
+        if trial_env_vars.NNI_PLATFORM is None:
             logger.warning("This is in standalone mode, the chosen are the first one(s).")
             self._chosen_arch = self._standalone_generate_chosen()
         else:
