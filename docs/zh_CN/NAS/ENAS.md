@@ -10,26 +10,26 @@ Implementation on NNI is based on the [official implementation in Tensorflow](ht
 
 ### CIFAR10 Macro/Micro Search Space
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/enas)
+[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/enas)
 
 ```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
 git clone https://github.com/Microsoft/nni.git
 
-# search the best architecture
+# 搜索最好的网络架构
 cd examples/nas/enas
 
-# search in macro search space
+# 在 Macro 搜索空间中搜索
 python3 search.py --search-for macro
 
-# search in micro search space
+# 在 Micro 搜索空间中搜索
 python3 search.py --search-for micro
 
-# view more options for search
+# 查看更多选项
 python3 search.py -h
 ```
 
-## Reference
+## 参考
 
 ### PyTorch
 
