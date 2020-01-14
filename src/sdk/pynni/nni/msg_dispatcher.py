@@ -62,7 +62,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
         ret['parameter_index'] = parameter_index
     else:
         ret['parameter_index'] = 0
-    return json_tricks.dumps(ret)
+    return json_tricks.dumps(ret, allow_nan=True)
 
 
 class MsgDispatcher(MsgDispatcherBase):

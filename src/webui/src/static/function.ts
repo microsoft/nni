@@ -1,3 +1,4 @@
+import * as JSON5 from 'json5';
 import axios from 'axios';
 import { message } from 'antd';
 import { MANAGER_IP } from './const';
@@ -174,7 +175,7 @@ function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): stri
 }
 
 function metricAccuracy(metric: MetricDataRecord): number {
-    const data = JSON.parse(metric.data);
+    const data = parseMetrics(metric.data);
     return typeof data === 'number' ? data : NaN;
 }
 
@@ -183,8 +184,16 @@ function formatAccuracy(accuracy: number): string {
     return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+function parseMetrics(metricData: string): any {
+    if (metricData.includes('NaN')) {
+        return JSON5.parse(metricData)
+    } else {
+        return JSON.parse(metricData)
+    }
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy
+    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics
 };
