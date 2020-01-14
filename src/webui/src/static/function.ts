@@ -174,6 +174,14 @@ function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): stri
     return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
 }
 
+function parseMetrics(metricData: string): any {
+    if (metricData.includes('NaN')) {
+        return JSON5.parse(metricData)
+    } else {
+        return JSON.parse(metricData)
+    }
+}
+
 function metricAccuracy(metric: MetricDataRecord): number {
     const data = parseMetrics(metric.data);
     return typeof data === 'number' ? data : NaN;
@@ -182,14 +190,6 @@ function metricAccuracy(metric: MetricDataRecord): number {
 function formatAccuracy(accuracy: number): string {
     // TODO: how to format NaN?
     return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-}
-
-function parseMetrics(metricData: string): any {
-    if (metricData.includes('NaN')) {
-        return JSON5.parse(metricData)
-    } else {
-        return JSON.parse(metricData)
-    }
 }
 
 export {
