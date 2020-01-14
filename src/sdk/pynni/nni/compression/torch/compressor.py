@@ -42,9 +42,6 @@ class Compressor:
         self.modules_wrapper = None
         self.buffers = {}
 
-    def get_modules_wrapper(self):
-        return self.modules_wrapper
-
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
@@ -97,11 +94,15 @@ class Compressor:
         return self.bound_model
 
     def register_buffer(self, name, value):
+        """
+        To register buffers used in wrapped module's forward method.
+
+        """
         self.buffers[name] = value
 
     def get_modules_to_compress(self):
         """
-        To obtain all the to-be-compressed layers.
+        To obtain all the to-be-compressed modules.
 
         Returns
         -------
@@ -110,6 +111,17 @@ class Compressor:
             `layer` is `LayerInfo`, `config` is a `dict`
         """
         return self.modules_to_compress
+
+    def get_modules_wrapper(self):
+        """
+        To obtain all the wrapped modules.
+
+        Returns
+        -------
+        list
+            a list of the wrapped modules
+        """
+        return self.modules_wrapper
 
     def select_config(self, layer):
         """
@@ -181,6 +193,22 @@ class Compressor:
 
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
+        """
+        Wrap an module to enable data parallel, forward method customization and buffer registeration.
+
+        Parameters
+        ----------
+        module : pytorch module
+            the module user wants to compress
+        config : dict
+            the configurations that users specify for compression
+        module_name : str
+            the name of the module to compress, wrapper module shares same name
+        module_type : str
+            the type of the module to compress
+        pruner ： Pruner
+            the pruner used to calculate mask
+        """
         super().__init__()
         # origin layer information
         self.module = module
