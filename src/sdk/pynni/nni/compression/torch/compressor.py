@@ -78,6 +78,11 @@ class Compressor:
 
         The model will be instrumented and user should never edit it after calling this method.
         `self.modules_to_compress` records all the to-be-compressed layers
+
+        Returns
+        -------
+        torch.nn.Module
+            model with specified modules compressed.
         """
         if self.modules_wrapper is not None:
             # already compressed
