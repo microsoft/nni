@@ -40,6 +40,7 @@ class Compressor:
         self.config_list = config_list
         self.modules_to_compress = None
         self.modules_wrapper = None
+        self.buffers = {}
 
     def get_modules_wrapper(self):
         return self.modules_wrapper
@@ -91,8 +92,12 @@ class Compressor:
         for layer, config in modules_to_compress:
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper.append(wrapper)
+
         self._wrap_model()
         return self.bound_model
+
+    def register_buffer(self, name, value):
+        self.buffers[name] = value
 
     def get_modules_to_compress(self):
         """
@@ -184,15 +189,20 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
-        # register buffer for mask
 
-        self.register_buffer("calculated", torch.Tensor([0]))
+        # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
 
+        # register user specified buffer
+        self.buffer_kwargs = {}
+        for name in self.pruner.buffers:
+            self.register_buffer(name, self.pruner.buffers[name].clone())
+            self.buffer_kwargs[name] = getattr(self, name)
+
     def forward(self, *inputs):
-        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config)
+        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config, **self.buffer_kwargs)
         if mask is not None:
             self.weight_mask.copy_(mask['weight'])
         # apply mask to weight
