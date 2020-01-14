@@ -9,7 +9,7 @@ import random
 import site
 import time
 import tempfile
-from subprocess import Popen, check_call, CalledProcessError, PIPE
+from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni_annotation import expand_annotations, generate_search_space
 from nni.constants import ModuleName, AdvisorModuleName
 from .launcher_utils import validate_all_content
@@ -123,7 +123,7 @@ def start_rest_server(args, platform, mode, config_file_name, experiment_id=None
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
             if args.foreground:
-                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE, creationflags=CREATE_NEW_PROCESS_GROUP)
+                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NEW_PROCESS_GROUP)
             else:
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
         else:
