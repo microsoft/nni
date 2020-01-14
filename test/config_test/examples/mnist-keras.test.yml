@@ -19,5 +19,5 @@ trial:
 useAnnotation: false
 multiPhase: false
 multiThread: false
-debug: true
+
 trainingServicePlatform: local
