@@ -508,7 +508,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                 print(log_content)
         except KeyboardInterrupt:
             kill_command(rest_process.pid)
-            print_normal('Stopping experiment...')    
+            print_normal('Stopping experiment...')
 
 def create_experiment(args):
     '''start a new experiment'''
