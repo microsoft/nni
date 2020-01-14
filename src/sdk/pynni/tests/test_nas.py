@@ -67,7 +67,7 @@ class NasTestCase(TestCase):
                 if cuda_test:
                     model_fixed.cuda()
                     if cuda_test > 1:
-                        model = nn.DataParallel(model)
+                        model_fixed = nn.DataParallel(model)
                 with torch.no_grad():
                     arc = mutator.export()
                 apply_fixed_architecture(model_fixed, arc)
