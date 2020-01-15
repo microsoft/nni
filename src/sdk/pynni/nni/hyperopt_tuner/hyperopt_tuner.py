@@ -260,7 +260,7 @@ class HyperoptTuner(Tuner):
 
         Parameters
         ----------
-        parameter_id : list of int
+        parameter_id : int
 
         Returns
         -------
