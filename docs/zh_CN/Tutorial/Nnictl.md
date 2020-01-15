@@ -50,7 +50,7 @@ nnictl 支持的命令：
   | --port, -p   | False |     | RESTful 服务的端口          |
   | --debug, -d  | False |     | 设置为调试模式                |
 
-* 样例
+* 示例
   
   > 在默认端口 8080 上创建一个新的 Experiment
   
@@ -98,7 +98,7 @@ nnictl 支持的命令：
   | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
   | --debug, -d | False |     | 设置为调试模式                          |
 
-* 样例
+* 示例
   
   > 在指定的端口 8088 上恢复 Experiment
   
@@ -241,7 +241,7 @@ nnictl 支持的命令：
   | id          | False |     | 需要设置的 Experiment 的 ID |
   | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
-  * 样例
+  * 示例
     
     > 更新 Experiment 的并发数量
     
@@ -499,7 +499,7 @@ nnictl 支持的命令：
   
   * 详细说明
     
-    NNI 支持导入用户的数据，确保数据格式正确。 样例如下：
+    NNI 支持导入用户的数据，确保数据格式正确。 示例如下：
     
     ```json
     [

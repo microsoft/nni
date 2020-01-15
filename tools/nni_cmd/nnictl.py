@@ -51,6 +51,7 @@ def parse_args():
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_start.add_argument('--watch', '-w', action='store_true', help=' set watch mode')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
@@ -58,6 +59,7 @@ def parse_args():
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_resume.add_argument('--watch', '-w', action='store_true', help=' set watch mode')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
