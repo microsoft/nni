@@ -1,10 +1,10 @@
 import json
 import os
 
-import apex  # pylint: disable=import-error
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import apex  # pylint: disable=import-error
 from apex.parallel import DistributedDataParallel  # pylint: disable=import-error
 from nni.nas.pytorch.cdarts import RegularizedDartsMutator, RegularizedMutatorParallel, DartsDiscreteMutator
 from nni.nas.pytorch.utils import AverageMeterGroup
@@ -208,7 +208,7 @@ class CdartsTrainer(object):
             self.optimizer_alpha.zero_grad()
             self.optimizer_large.zero_grad()
             reg_decay = max(self.regular_coeff * (1 - float(epoch - self.warmup_epochs) / (
-                 (self.epochs - self.warmup_epochs) * self.regular_ratio)), 0)
+                (self.epochs - self.warmup_epochs) * self.regular_ratio)), 0)
             loss_regular = self.mutator_small.reset_with_loss()
             if loss_regular:
                 loss_regular *= reg_decay
