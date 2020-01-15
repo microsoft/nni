@@ -10,10 +10,24 @@ from nni.nas.pytorch.mutator import Mutator  # pylint: disable=wrong-import-orde
 
 
 class RegularizedDartsMutator(DartsMutator):
+    """
+    DartsMutator with choice cut and regularization on some of the choices.
+    """
+
     def reset(self):
         raise ValueError("You should probably call `reset_with_loss`.")
 
     def cut_choices(self, cut_num=2):
+        """
+        Cut the choices with the smallest weights.
+        ``cut_num`` should be the accumulative number of cutting, e.g., if first time cutting
+        is 2, the second time should be 4 to cut another two.
+
+        Parameters
+        ----------
+        cut_num : int
+            Number of choices to cut, so far.
+        """
         # `cut_choices` is implemented but not used
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
@@ -23,6 +37,9 @@ class RegularizedDartsMutator(DartsMutator):
                         self.choices[mutable.key][i] = -float("inf")
 
     def reset_with_loss(self):
+        """
+        Resample and return loss. If loss is 0, to avoid device issue, it will return ``None``.
+        """
         self._cache, reg_loss = self.sample_search()
         return reg_loss
 
@@ -66,6 +83,17 @@ class RegularizedMutatorParallel(DistributedDataParallel):
 class DartsDiscreteMutator(Mutator):
 
     def __init__(self, model, parent_mutator):
+        """
+        Initialization.
+
+        Parameters
+        ----------
+        model : nn.Module
+            The model to apply the mutator.
+        parent_mutator : Mutator
+            The mutator that is used to call ``sample_final()`` method to get the architecture
+            for training.
+        """
         super().__init__(model)
         self.__dict__["parent_mutator"] = parent_mutator  # avoid parameters to be included
 

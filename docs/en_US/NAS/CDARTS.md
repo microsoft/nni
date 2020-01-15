@@ -5,6 +5,7 @@ CDARTS builds a cyclic feedback mechanism between the search and evaluation netw
 
 ## Reproduction Results
 This is CDARTS based on the NNI platform, which currently supports CIFAR10 search and retrain. ImageNet search and retrain should also be supported, and we provide corresponding interfaces. Our reproduced results on NNI are slightly lower than the paper, but much higher than the original DARTS. Here we show the results of three independent experiments on CIFAR10.
+
 | Runs | Paper | NNI | 
 | ---- |:-------------:| :-----:|
 | 1 | 97.52 | 97.44 |
@@ -31,4 +32,23 @@ bash run_search_cifar.sh
 
 # train the best architecture.
 bash run_retrain_cifar.sh
+```
+
+## Reference
+
+### PyTorch
+
+```eval_rst
+..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
+    :members:
+
+    .. automethod:: __init__
+
+..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
+    :members:
+
+..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
+    :members:
+
+    .. automethod:: __init__
 ```

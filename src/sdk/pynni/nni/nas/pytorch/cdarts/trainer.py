@@ -36,6 +36,7 @@ class CdartsTrainer(object):
                  nasnet_lr=0.2, local_rank=0, share_module=True):
         """
         Initialize a CdartsTrainer.
+        
         Parameters
         ----------
         model_small : nn.Module
