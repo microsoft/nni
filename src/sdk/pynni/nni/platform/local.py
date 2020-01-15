@@ -6,10 +6,10 @@ import sys
 import json
 import time
 import subprocess
-import json_tricks
 
 from ..common import init_logger
 from ..env_vars import trial_env_vars
+from ..utils import to_json
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):
@@ -30,12 +30,12 @@ _multiphase = trial_env_vars.MULTI_PHASE
 _param_index = 0
 
 def request_next_parameter():
-    metric = json_tricks.dumps({
+    metric = to_json({
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
         'parameter_index': _param_index
-    }, allow_nan=True)
+    })
     send_metric(metric)
 
 def get_next_parameter():
