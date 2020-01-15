@@ -3,10 +3,11 @@
 
 import torch
 
-from apex.parallel import DistributedDataParallel # pylint: disable=import-error
+from apex.parallel import DistributedDataParallel  # pylint: disable=import-error
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.mutator import Mutator
+
 
 class RegularizedDartsMutator(DartsMutator):
     def reset(self):

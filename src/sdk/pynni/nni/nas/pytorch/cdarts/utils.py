@@ -1,7 +1,9 @@
-import os
 import json
+import os
+
 import torch
 import torch.distributed as dist
+
 
 class CyclicIterator:
     def __init__(self, loader, sampler, distributed):
@@ -30,15 +32,13 @@ class CyclicIterator:
             self._next_epoch()
             return next(self.iterator)
 
+
 class TorchTensorEncoder(json.JSONEncoder):
     def default(self, o):  # pylint: disable=method-hidden
         if isinstance(o, torch.Tensor):
-            olist = o.tolist()
-            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
-                _logger.warning("Every element in %s is either 0 or 1. "
-                                "You might consider convert it into bool.", olist)
-            return olist
+            return o.tolist()
         return super().default(o)
+
 
 def accuracy(output, target, topk=(1,)):
     """ Computes the precision@k for the specified values of k """
@@ -58,6 +58,7 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(1.0 / batch_size))
     return res
+
 
 def reduce_tensor(tensor):
     rt = tensor.clone()
