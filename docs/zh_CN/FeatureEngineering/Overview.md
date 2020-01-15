@@ -1,6 +1,6 @@
-# 特征工程
+# NNI 中的特征工程
 
-我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
+我们很高兴的宣布，基于 NNI 的特征工程工具发布了试用版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
 当前支持以下特征选择器：
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
@@ -254,3 +254,10 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
 
 代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
+
+## **参考和反馈**
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[神经网络结构搜索的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
+* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/BuiltinTuner.md)；
