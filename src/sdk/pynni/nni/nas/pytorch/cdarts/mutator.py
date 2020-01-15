@@ -4,9 +4,9 @@
 import torch
 
 from apex.parallel import DistributedDataParallel  # pylint: disable=import-error
-from nni.nas.pytorch.darts import DartsMutator
-from nni.nas.pytorch.mutables import LayerChoice
-from nni.nas.pytorch.mutator import Mutator
+from nni.nas.pytorch.darts import DartsMutator  # pylint: disable=wrong-import-order
+from nni.nas.pytorch.mutables import LayerChoice  # pylint: disable=wrong-import-order
+from nni.nas.pytorch.mutator import Mutator  # pylint: disable=wrong-import-order
 
 
 class RegularizedDartsMutator(DartsMutator):
