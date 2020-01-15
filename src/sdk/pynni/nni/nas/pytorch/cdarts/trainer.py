@@ -2,13 +2,13 @@ import json
 import os
 import torch
 import torch.nn as nn
-import torch.distributed as dist
 import torch.nn.functional as F
 import apex # pylint: disable=import-error
 
 from apex.parallel import DistributedDataParallel # pylint: disable=import-error
 from nni.nas.pytorch.cdarts import RegularizedDartsMutator, RegularizedMutatorParallel, DartsDiscreteMutator
 from nni.nas.pytorch.utils import AverageMeterGroup
+from .utils import CyclicIterator, TorchTensorEncoder, accuracy, reduce_metrics
 
 PHASE_SMALL = "small"
 PHASE_LARGE = "large"
@@ -152,7 +152,7 @@ class CdartsTrainer(object):
                 self.model_large.callback_queued = True
             # mutator large never gets optimized, so do not need parallelized
 
-    def warmup(self, phase, epoch):
+    def _warmup(self, phase, epoch):
         assert phase in [PHASE_SMALL, PHASE_LARGE]
         if phase == PHASE_SMALL:
             model, optimizer = self.model_small, self.optimizer_small
@@ -192,7 +192,7 @@ class CdartsTrainer(object):
                     if p != p:  # equivalent to `isnan(p)`
                         param[i] = float("-inf")
 
-    def joint_train(self, epoch):
+    def _joint_train(self, epoch):
         self.model_large.train()
         self.model_small.train()
         meters = AverageMeterGroup()
@@ -246,12 +246,12 @@ class CdartsTrainer(object):
             if epoch < self.warmup_epochs:
                 with torch.no_grad():  # otherwise grads will be retained on the architecture params
                     self.mutator_small.reset_with_loss()
-                self.warmup(PHASE_SMALL, epoch)
+                self._warmup(PHASE_SMALL, epoch)
             else:
                 with torch.no_grad():
                     self.mutator_large.reset()
-                self.warmup(PHASE_LARGE, epoch)
-                self.joint_train(epoch)
+                self._warmup(PHASE_LARGE, epoch)
+                self._joint_train(epoch)
 
             self.export(os.path.join(self.checkpoint_dir, "epoch_{:02d}.json".format(epoch)),
                         os.path.join(self.checkpoint_dir, "epoch_{:02d}.genotypes".format(epoch)))
@@ -263,71 +263,3 @@ class CdartsTrainer(object):
                 json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
             with open(genotype_file, "w") as f:
                 f.write(str(genotypes))
-
-class CyclicIterator:
-    def __init__(self, loader, sampler, distributed):
-        self.loader = loader
-        self.sampler = sampler
-        self.epoch = 0
-        self.distributed = distributed
-        self._next_epoch()
-
-    def _next_epoch(self):
-        if self.distributed:
-            self.sampler.set_epoch(self.epoch)
-        self.iterator = iter(self.loader)
-        self.epoch += 1
-
-    def __len__(self):
-        return len(self.loader)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        try:
-            return next(self.iterator)
-        except StopIteration:
-            self._next_epoch()
-            return next(self.iterator)
-
-class TorchTensorEncoder(json.JSONEncoder):
-    def default(self, o):  # pylint: disable=method-hidden
-        if isinstance(o, torch.Tensor):
-            olist = o.tolist()
-            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
-                _logger.warning("Every element in %s is either 0 or 1. "
-                                "You might consider convert it into bool.", olist)
-            return olist
-        return super().default(o)
-
-def accuracy(output, target, topk=(1,)):
-    """ Computes the precision@k for the specified values of k """
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    # one-hot case
-    if target.ndimension() > 1:
-        target = target.max(1)[1]
-
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(correct_k.mul_(1.0 / batch_size))
-    return res
-
-def reduce_tensor(tensor):
-    rt = tensor.clone()
-    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
-    rt /= float(os.environ["WORLD_SIZE"])
-    return rt
-
-
-def reduce_metrics(metrics, distributed=False):
-    if distributed:
-        return {k: reduce_tensor(v).item() for k, v in metrics.items()}
-    return {k: v.item() for k, v in metrics.items()}
