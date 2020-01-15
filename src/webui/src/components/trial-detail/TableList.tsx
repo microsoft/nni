@@ -431,7 +431,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'operation',
                         render: (text: string, record: TableRecord) => {
                             const trialStatus = record.status;
-                            const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
+                            // could kill a job when its status is RUNNING or UNKNOWN
+                            const flag: boolean = (trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN') ? false : true;
                             return (
                                 <Row id="detail-button">
                                     {/* see intermediate result graph */}
