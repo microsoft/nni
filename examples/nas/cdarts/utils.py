@@ -11,6 +11,7 @@ import torch.nn as nn
 
 from genotypes import Genotype
 from ops import PRIMITIVES
+from nni.nas.pytorch.cdarts.utils import *
 
 
 def get_logger(file_path):
@@ -72,51 +73,6 @@ class CrossEntropyLabelSmooth(nn.Module):
         targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
         loss = (-targets * log_probs).mean(0).sum()
         return loss
-
-
-class TorchTensorEncoder(json.JSONEncoder):
-    def default(self, o):  # pylint: disable=method-hidden
-        if isinstance(o, torch.Tensor):
-            olist = o.tolist()
-            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
-                _logger.warning("Every element in %s is either 0 or 1. "
-                                "You might consider convert it into bool.", olist)
-            return olist
-        return super().default(o)
-
-
-def accuracy(output, target, topk=(1,)):
-    """ Computes the precision@k for the specified values of k """
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    # one-hot case
-    if target.ndimension() > 1:
-        target = target.max(1)[1]
-
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(correct_k.mul_(1.0 / batch_size))
-    return res
-
-
-def reduce_tensor(tensor):
-    rt = tensor.clone()
-    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
-    rt /= float(os.environ["WORLD_SIZE"])
-    return rt
-
-
-def reduce_metrics(metrics, distributed=False):
-    if distributed:
-        return {k: reduce_tensor(v).item() for k, v in metrics.items()}
-    return {k: v.item() for k, v in metrics.items()}
-
 
 def parse_results(results, n_nodes):
     concat = range(2, 2 + n_nodes)

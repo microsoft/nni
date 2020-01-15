@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 
 OPS = {
-    'none': lambda C, stride, affine: Zero(stride),
     'avg_pool_3x3': lambda C, stride, affine: PoolWithoutBN('avg', C, 3, stride, 1, affine=affine),
     'max_pool_3x3': lambda C, stride, affine: PoolWithoutBN('max', C, 3, stride, 1, affine=affine),
     'skip_connect': lambda C, stride, affine: nn.Identity() if stride == 1 else FactorizedReduce(C, C, affine=affine),

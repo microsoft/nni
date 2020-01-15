@@ -7,10 +7,10 @@ from argparse import ArgumentParser
 import torch
 import torch.nn as nn
 
+import apex  # pylint: disable=import-error
 import datasets
 import utils
-import apex # pylint: disable=import-error
-from apex.parallel import DistributedDataParallel # pylint: disable=import-error
+from apex.parallel import DistributedDataParallel  # pylint: disable=import-error
 from config import RetrainConfig
 from datasets.cifar import get_augment_datasets
 from model import Model
