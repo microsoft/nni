@@ -1,16 +1,14 @@
 import json
-import logging
 import os
-
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 import torch.nn.functional as F
+import apex # pylint: disable=import-error
 
-import apex
-from apex.parallel import DistributedDataParallel
+from apex.parallel import DistributedDataParallel # pylint: disable=import-error
 from nni.nas.pytorch.cdarts import RegularizedDartsMutator, RegularizedMutatorParallel, DartsDiscreteMutator
 from nni.nas.pytorch.utils import AverageMeterGroup
-from utils import CyclicIterator, TorchTensorEncoder, accuracy, reduce_metrics
 
 PHASE_SMALL = "small"
 PHASE_LARGE = "large"
@@ -28,36 +26,100 @@ class InteractiveKLLoss(nn.Module):
 
 
 class CdartsTrainer(object):
-    def __init__(self, model_small, model_large, criterion, loaders, samplers, logger, config):
+    def __init__(self, model_small, model_large, criterion, loaders, samplers, logger,
+                 regular_coeff=5, regular_ratio=0.2, warmup_epochs=2, fix_head=True,
+                 epochs=32, steps_per_epoch=None, loss_alpha=2, loss_T=2, distributed=True,
+                 log_frequency=10, grad_clip=5.0, interactive_type='kl', output_path='./outputs',
+                 w_lr=0.2, w_momentum=0.9, w_weight_decay=3e-4, alpha_lr=0.2, alpha_weight_decay=1e-4,
+                 nasnet_lr=0.2, local_rank=0, share_module=True):
+        """
+        Initialize a CdartsTrainer.
+        Parameters
+        ----------
+        model_small : nn.Module
+            PyTorch model to be trained. This is the search network of CDARTS.
+        model_large : nn.Module
+            PyTorch model to be trained. This is the evaluation network of CDARTS.
+        criterion : callable
+            Receives logits and ground truth label, return a loss tensor.
+        loaders : list
+            List of training dataset and test dataset. Will be split for training weights and architecture weights.
+        samplers : list of Dateset Samplers
+            List of training dataset and test dataset samplers.
+        logger : callable
+            The logging object. It receives the contents for logging.
+        regular_coeff : float
+            The coefficient of regular loss.
+        regular_ratio : float
+            The ratio of regular loss.
+        warmup_epochs : int
+            The epochs to warmup the search network
+        fix_head : bool
+            ``True`` if fixing the paramters of auxiliary heads, else unfix the paramters of auxiliary heads. 
+        epochs : int
+            Number of epochs planned for training.
+        steps_per_epoch : int
+            Steps of one epoch.
+        loss_alpha : float
+            The loss coefficient.
+        loss_T : float
+            The loss coefficient.
+        distributed : bool
+            ``True`` if using distributed training, else non-distributed training.
+        log_frequency : int
+            Step count per logging.
+        grad_clip : float
+            Gradient clipping for weights.
+        interactive_type : string
+            ``kl`` or ``smoothl1``.
+        output_path : string
+            Log storage path.
+        w_lr : float
+            Learning rate of the search network parameters.
+        w_momentum : float
+            Momentum of the search and the evaluation network.
+        w_weight_decay : float
+            The weight decay the search and the evaluation network parameters.
+        alpha_lr : float
+            Learning rate of the architecture parameters.
+        alpha_weight_decay : float
+            The weight decay the architecture parameters.
+        nasnet_lr : float
+            Learning rate of the evaluation network parameters.
+        local_rank : int
+            The number of thread.
+        share_module : bool
+            ``True`` if sharing the stem and auxiliary heads, else not sharing these modules.
+        """
         train_loader, valid_loader = loaders
         train_sampler, valid_sampler = samplers
-        self.train_loader = CyclicIterator(train_loader, train_sampler, config.distributed)
-        self.valid_loader = CyclicIterator(valid_loader, valid_sampler, config.distributed)
+        self.train_loader = CyclicIterator(train_loader, train_sampler, distributed)
+        self.valid_loader = CyclicIterator(valid_loader, valid_sampler, distributed)
 
-        self.regular_coeff = config.regular_coeff
-        self.regular_ratio = config.regular_ratio
-        self.warmup_epochs = config.warmup_epochs
-        self.fix_head = config.fix_head
-        self.epochs = config.epochs
-        self.steps_per_epoch = config.steps_per_epoch
+        self.regular_coeff = regular_coeff
+        self.regular_ratio = regular_ratio
+        self.warmup_epochs = warmup_epochs
+        self.fix_head = fix_head
+        self.epochs = epochs
+        self.steps_per_epoch = steps_per_epoch
         if self.steps_per_epoch is None:
             self.steps_per_epoch = min(len(self.train_loader), len(self.valid_loader))
-        self.loss_alpha = config.loss_alpha
-        self.grad_clip = config.grad_clip
-        if config.interactive_type == "kl":
-            self.interactive_loss = InteractiveKLLoss(config.loss_T)
-        elif config.interactive_type == "smoothl1":
+        self.loss_alpha = loss_alpha
+        self.grad_clip = grad_clip
+        if interactive_type == "kl":
+            self.interactive_loss = InteractiveKLLoss(loss_T)
+        elif interactive_type == "smoothl1":
             self.interactive_loss = nn.SmoothL1Loss()
-        self.loss_T = config.loss_T
-        self.distributed = config.distributed
-        self.log_frequency = config.log_frequency
-        self.main_proc = not config.distributed or config.local_rank == 0
+        self.loss_T = loss_T
+        self.distributed = distributed
+        self.log_frequency = log_frequency
+        self.main_proc = not distributed or local_rank == 0
 
         self.logger = logger
-        self.checkpoint_dir = config.output_path
+        self.checkpoint_dir = output_path
         if self.main_proc:
             os.makedirs(self.checkpoint_dir, exist_ok=True)
-        if config.distributed:
+        if distributed:
             torch.distributed.barrier()
 
         self.model_small = model_small
@@ -72,20 +134,20 @@ class CdartsTrainer(object):
         self.mutator_large = DartsDiscreteMutator(self.model_large, self.mutator_small).cuda()
         self.criterion = criterion
 
-        self.optimizer_small = torch.optim.SGD(self.model_small.parameters(), config.w_lr,
-                                               momentum=config.w_momentum, weight_decay=config.w_weight_decay)
-        self.optimizer_large = torch.optim.SGD(self.model_large.parameters(), config.nasnet_lr,
-                                               momentum=config.w_momentum, weight_decay=config.w_weight_decay)
-        self.optimizer_alpha = torch.optim.Adam(self.mutator_small.parameters(), config.alpha_lr,
-                                                betas=(0.5, 0.999), weight_decay=config.alpha_weight_decay)
+        self.optimizer_small = torch.optim.SGD(self.model_small.parameters(), w_lr,
+                                               momentum=w_momentum, weight_decay=w_weight_decay)
+        self.optimizer_large = torch.optim.SGD(self.model_large.parameters(), nasnet_lr,
+                                               momentum=w_momentum, weight_decay=w_weight_decay)
+        self.optimizer_alpha = torch.optim.Adam(self.mutator_small.parameters(), alpha_lr,
+                                                betas=(0.5, 0.999), weight_decay=alpha_weight_decay)
 
-        if config.distributed:
+        if distributed:
             apex.parallel.convert_syncbn_model(self.model_small)
             apex.parallel.convert_syncbn_model(self.model_large)
             self.model_small = DistributedDataParallel(self.model_small, delay_allreduce=True)
             self.model_large = DistributedDataParallel(self.model_large, delay_allreduce=True)
             self.mutator_small = RegularizedMutatorParallel(self.mutator_small, delay_allreduce=True)
-            if config.share_module:
+            if share_module:
                 self.model_small.callback_queued = True
                 self.model_large.callback_queued = True
             # mutator large never gets optimized, so do not need parallelized
@@ -201,3 +263,71 @@ class CdartsTrainer(object):
                 json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
             with open(genotype_file, "w") as f:
                 f.write(str(genotypes))
+
+class CyclicIterator:
+    def __init__(self, loader, sampler, distributed):
+        self.loader = loader
+        self.sampler = sampler
+        self.epoch = 0
+        self.distributed = distributed
+        self._next_epoch()
+
+    def _next_epoch(self):
+        if self.distributed:
+            self.sampler.set_epoch(self.epoch)
+        self.iterator = iter(self.loader)
+        self.epoch += 1
+
+    def __len__(self):
+        return len(self.loader)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except StopIteration:
+            self._next_epoch()
+            return next(self.iterator)
+
+class TorchTensorEncoder(json.JSONEncoder):
+    def default(self, o):  # pylint: disable=method-hidden
+        if isinstance(o, torch.Tensor):
+            olist = o.tolist()
+            if "bool" not in o.type().lower() and all(map(lambda d: d == 0 or d == 1, olist)):
+                _logger.warning("Every element in %s is either 0 or 1. "
+                                "You might consider convert it into bool.", olist)
+            return olist
+        return super().default(o)
+
+def accuracy(output, target, topk=(1,)):
+    """ Computes the precision@k for the specified values of k """
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    # one-hot case
+    if target.ndimension() > 1:
+        target = target.max(1)[1]
+
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(1.0 / batch_size))
+    return res
+
+def reduce_tensor(tensor):
+    rt = tensor.clone()
+    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
+    rt /= float(os.environ["WORLD_SIZE"])
+    return rt
+
+
+def reduce_metrics(metrics, distributed=False):
+    if distributed:
+        return {k: reduce_tensor(v).item() for k, v in metrics.items()}
+    return {k: v.item() for k, v in metrics.items()}

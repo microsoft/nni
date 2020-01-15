@@ -1,12 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
+from apex.parallel import DistributedDataParallel # pylint: disable=import-error
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.mutator import Mutator

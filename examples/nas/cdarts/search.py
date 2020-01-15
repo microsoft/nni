@@ -40,5 +40,10 @@ if __name__ == "__main__":
         model_large = Model(config.dataset, 20).cuda()
 
     criterion = nn.CrossEntropyLoss()
-    trainer = CdartsTrainer(model_small, model_large, criterion, loaders, samplers, logger, config)
+    trainer = CdartsTrainer(model_small, model_large, criterion, loaders, samplers, logger,
+                            config.regular_coeff, config.regular_ratio, config.warmup_epochs, config.fix_head,
+                            config.epochs, config.steps_per_epoch, config.loss_alpha, config.loss_T, config.distributed,
+                            config.log_frequency, config.grad_clip, config.interactive_type, config.output_path,
+                            config.w_lr, config.w_momentum, config.w_weight_decay, config.alpha_lr, config.alpha_weight_decay,
+                            config.nasnet_lr, config.local_rank, config.share_module)
     trainer.train()
