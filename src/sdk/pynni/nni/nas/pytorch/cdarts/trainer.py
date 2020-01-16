@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import torch
@@ -49,7 +50,7 @@ class CdartsTrainer(object):
             List of training dataset and test dataset. Will be split for training weights and architecture weights.
         samplers : list of Dateset Samplers
             List of training dataset and test dataset samplers.
-        logger : callable
+        logger : logging.Logger
             The logging object. It receives the contents for logging.
         regular_coeff : float
             The coefficient of regular loss.
