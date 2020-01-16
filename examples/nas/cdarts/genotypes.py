@@ -1,7 +1,10 @@
-""" Genotypes
-    - Genotype: normal/reduce gene + normal/reduce cell output connection (concat)
-    - gene: discrete ops information (w/o output connection)
-    - dag: real ops (can be mixed or discrete, but Genotype has only discrete information itself)
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+"""
+- Genotype: normal/reduce gene + normal/reduce cell output connection (concat)
+- gene: discrete ops information (w/o output connection)
+- dag: real ops (can be mixed or discrete, but Genotype has only discrete information itself)
 """
 from collections import namedtuple
 

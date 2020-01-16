@@ -1,4 +1,6 @@
-""" Config class for search/retrain """
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import argparse
 from functools import partial
 
