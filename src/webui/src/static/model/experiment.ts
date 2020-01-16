@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { MANAGER_IP } from '../const';
-import { ExperimentProfile, NNIManagerStatus } from '../interface';
+import { ExperimentProfile, NNIManagerStatus } from '../interface'; // eslint-disable-line no-unused-vars
 
 function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProfile): boolean {
     if (!profile1 || !profile2) {
@@ -79,6 +79,7 @@ class Experiment {
     }
 
     get error(): string {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }

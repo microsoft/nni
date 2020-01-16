@@ -16,6 +16,10 @@
   z-index: 1000;
 }
 
+.headerCon{
+  width: 90%;
+  margin: 0 auto;
+}
 .contentBox{
   width: 100%;
 }
@@ -26,4 +30,8 @@
   margin-top: 74px;
   margin-bottom: 30px;
   background: #fff;
+}
+
+.ccc{
+  background-color: red;
 }

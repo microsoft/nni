@@ -1,14 +1,14 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from 'src/static/interface';
-import { filterDuration } from 'src/static/function';
-require('echarts/lib/chart/bar');
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/title');
+import { TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { filterDuration } from '../../static/function';
+import 'echarts/lib/chart/bar';
+import 'echarts/lib/component/tooltip';
+import 'echarts/lib/component/title';
 
 interface Runtrial {
     trialId: Array<string>;
-    trialTime: number[];
+    trialTime: Array<number>;
 }
 
 interface DurationProps {
@@ -17,8 +17,7 @@ interface DurationProps {
 }
 
 interface DurationState {
-    startDuration: number; // for record data zoom
-    endDuration: number;
+    durationSource: {};
 }
 
 class Duration extends React.Component<DurationProps, DurationState> {
@@ -27,13 +26,20 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
         super(props);
         this.state = {
-            startDuration: 0, // for record data zoom
-            endDuration: 100,
+            durationSource: this.initDuration(this.props.source),
         };
+
     }
 
-    getOption = (dataObj: Runtrial): any => {
-        const { startDuration, endDuration } = this.state;
+    initDuration = (source: Array<TableObj>): any => {
+        const trialId: Array<string> = [];
+        const trialTime: Array<number> = [];
+        const trialJobs = source.filter(filterDuration);
+        Object.keys(trialJobs).map(item => {
+            const temp = trialJobs[item];
+            trialId.push(temp.sequenceId);
+            trialTime.push(temp.duration);
+        });
         return {
             tooltip: {
                 trigger: 'axis',
@@ -47,16 +53,62 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 left: '1%',
                 right: '4%'
             },
-            dataZoom: [
-                {
-                    id: 'dataZoomY',
-                    type: 'inside',
-                    yAxisIndex: [0],
-                    filterMode: 'empty',
-                    start: startDuration,
-                    end: endDuration
-                },
-            ],
+
+            dataZoom: [{
+                type: 'slider',
+                name: 'trial',
+                filterMode: 'filter',
+                yAxisIndex: 0,
+                orient: 'vertical'
+            }, {
+                type: 'slider',
+                name: 'trial',
+                filterMode: 'filter',
+                xAxisIndex: 0
+            }],
+            xAxis: {
+                name: 'Time',
+                type: 'value',
+            },
+            yAxis: {
+                name: 'Trial',
+                type: 'category',
+                data: trialId
+            },
+            series: [{
+                type: 'bar',
+                data: trialTime
+            }]
+        };
+    }
+
+    getOption = (dataObj: Runtrial): any => {
+        return {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                bottom: '3%',
+                containLabel: true,
+                left: '1%',
+                right: '4%'
+            },
+
+            dataZoom: [{
+                type: 'slider',
+                name: 'trial',
+                filterMode: 'filter',
+                yAxisIndex: 0,
+                orient: 'vertical'
+            }, {
+                type: 'slider',
+                name: 'trial',
+                filterMode: 'filter',
+                xAxisIndex: 0
+            }],
             xAxis: {
                 name: 'Time',
                 type: 'value',
@@ -73,10 +125,10 @@ class Duration extends React.Component<DurationProps, DurationState> {
         };
     }
 
-    drawDurationGraph = (source: Array<TableObj>): any => {
+    drawDurationGraph = (source: Array<TableObj>): void => {
         // why this function run two times when props changed?
         const trialId: Array<string> = [];
-        const trialTime: number[] = [];
+        const trialTime: Array<number> = [];
         const trialRun: Array<Runtrial> = [];
         const trialJobs = source.filter(filterDuration);
         Object.keys(trialJobs).map(item => {
@@ -88,7 +140,21 @@ class Duration extends React.Component<DurationProps, DurationState> {
             trialId: trialId,
             trialTime: trialTime
         });
-        return this.getOption(trialRun[0]);
+        this.setState({
+            durationSource: this.getOption(trialRun[0])
+        });
+    }
+
+    componentDidMount(): void {
+        const { source } = this.props;
+        this.drawDurationGraph(source);
+    }
+
+    componentWillReceiveProps(nextProps: DurationProps): void {
+        const { whichGraph, source } = nextProps;
+        if (whichGraph === '3') {
+            this.drawDurationGraph(source);
+        }
     }
 
     shouldComponentUpdate(nextProps: DurationProps): boolean {
@@ -117,30 +183,17 @@ class Duration extends React.Component<DurationProps, DurationState> {
     }
 
     render(): React.ReactNode {
-
-        const { source } = this.props;
-        const graph = this.drawDurationGraph(source);
-        const onEvents = { 'dataZoom': this.durationDataZoom };
+        const { durationSource } = this.state;
         return (
             <div>
                 <ReactEcharts
-                    option={graph}
+                    option={durationSource}
                     style={{ width: '95%', height: 412, margin: '0 auto' }}
                     theme="my_theme"
                     notMerge={true} // update now
-                    onEvents={onEvents}
                 />
             </div>
         );
-    }
-
-    private durationDataZoom = (e: EventMap): void => {
-        if (e.batch !== undefined) {
-            this.setState(() => ({
-                startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),
-                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 100)
-            }));
-        }
     }
 }
 

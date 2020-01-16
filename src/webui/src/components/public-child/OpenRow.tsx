@@ -4,12 +4,11 @@ import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
-import { Row, Tabs, Button, message, Modal } from 'antd';
+import { Stack, PrimaryButton, Pivot, PivotItem, Dialog, DialogFooter, DefaultButton } from 'office-ui-fabric-react';
 import { MANAGER_IP } from '../../static/const';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
 import JSONTree from 'react-json-tree';
-const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
     trialId: string;
@@ -45,13 +44,18 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     copyParams = (): void => {
         // json format
         const { formatStr } = this.state;
-        if (copy(formatStr)) {
-            message.destroy();
-            message.success('Success copy parameters to clipboard in form of python dict !', 3);
+        if (copy.default(formatStr)) {
+            alert('succeed');
         } else {
-            message.destroy();
-            message.error('Failed !', 2);
+            alert('failed');
         }
+        // if (copy(formatStr) === true) {
+        //     // message.destroy();
+        //     // message.success('Success copy parameters to clipboard in form of python dict !', 3);
+        // } else {
+        //     // message.destroy();
+        //     // message.error('Failed !', 2);
+        // }
         this.hideFormatModal();
     }
 
@@ -63,59 +67,54 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
         const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
-            <Row className="openRowContent hyperpar">
-                <Tabs tabPosition="left" className="card">
-                    <TabPane tab="Parameters" key="1">
+            <Stack className="openRowContent hyperpar">
+                <Pivot>
+                    <PivotItem headerText="Parameters" key="1" itemIcon="Recent">
                         {
                             EXPERIMENT.multiPhase
                                 ?
-                                <Row className="link">
-                                    Trails for multiphase experiment will return a set of parameters,
-                                    we are listing the latest parameter in webportal.
-                                    <br />
-                                    For the entire parameter set, please refer to the following &quot;
-                                    <a
-                                        href={trialLink}
-                                        rel="noopener noreferrer"
-                                        target="_blank"
-                                        style={{marginLeft: 2}}
-                                    >
-                                        {trialLink}
-                                    </a>&quot;
-                                    <br />
-                                    Current Phase:{multiProgress}.
-                                </Row>
+                                <Stack className="link">
+                                    {
+                                        `
+                                        Trails for multiphase experiment will return a set of parameters,
+                                        we are listing the latest parameter in webportal.
+                                        For the entire parameter set, please refer to the following "
+                                        `
+                                    }
+                                    <a href={trialLink} rel="noopener noreferrer" target="_blank">{trialLink}</a>{`".`}
+                                    <div>Current Phase: {multiProgress}.</div>
+                                </Stack>
                                 :
                                 <div />
                         }
                         {
                             trial.info.hyperParameters !== undefined
                                 ?
-                                <Row id="description">
-                                    <Row className="bgHyper">
+                                <Stack id="description">
+                                    <Stack className="bgHyper">
                                         <JSONTree
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true}  // default expandNode
-                                            getItemString={(): any => (<span />)}  // remove the {} items
+                                            // getItemString={(): null => (<span />)}  // remove the {} items
+                                            getItemString={(): null => null}  // remove the {} items
                                             data={trial.description.parameters}
                                         />
-                                    </Row>
-                                    <Row className="copy">
-                                        <Button
+                                    </Stack>
+                                    <Stack className="copy" styles={{root: {width: 128}}}>
+                                        <PrimaryButton
                                             onClick={this.showFormatModal.bind(this, trial)}
-                                        >
-                                            Copy as json
-                                        </Button>
-                                    </Row>
-                                </Row>
+                                            text="Copy as json"
+                                        />
+                                    </Stack>
+                                </Stack>
                                 :
-                                <Row className="logpath">
-                                    <span className="logName" style={{marginRight: 2}}>Error:</span>
-                                    <span className="error">&apos;This trial&apos;s parameters are not available.&apos;</span>
-                                </Row>
+                                <Stack className="logpath">
+                                    <span className="logName">Error: </span>
+                                    <span className="error">{`This trial's parameters are not available.'`}</span>
+                                </Stack>
                         }
-                    </TabPane>
-                    <TabPane tab="Log" key="2">
+                    </PivotItem>
+                    <PivotItem headerText="Log" key="2">
                         {
                             // FIXME: this should not be handled in web UI side
                             EXPERIMENT.trainingServicePlatform !== 'local'
@@ -128,24 +127,30 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 :
                                 <TrialLog logStr={logPathRow} id={trialId} />
                         }
-                    </TabPane>
-                </Tabs>
-                <Modal
-                    title="Format"
-                    okText="Copy"
-                    centered={true}
-                    visible={isShowFormatModal}
-                    onCancel={this.hideFormatModal}
-                    maskClosable={false} // click mongolian layer don't close modal
-                    onOk={this.copyParams}
-                    destroyOnClose={true}
-                    width="60%"
-                    className="format"
-                >
-                    {/* write string in pre to show format string */}
-                    <pre className="formatStr">{formatStr}</pre>
-                </Modal>
-            </Row >
+                    </PivotItem>
+                </Pivot>
+                {
+                    isShowFormatModal && <Dialog
+                        hidden={false}
+                        onDismiss={this.hideFormatModal}
+                        className="format"
+                        minWidth={600}
+                        dialogContentProps={{
+                            // type: DialogType.normal,
+                            title: 'Format',
+                            closeButtonAriaLabel: 'Close',
+                            // subText: 'Do you want to send this message without a subject?'
+                        }}
+                    >
+                        {/* write string in pre to show format string */}
+                        <pre className="formatStr">{formatStr}</pre>
+                        <DialogFooter>
+                            <PrimaryButton onClick={this.copyParams} text="Copy" />
+                            <DefaultButton onClick={this.hideFormatModal} text="Cancel" />
+                        </DialogFooter>
+                    </Dialog>
+                }
+            </Stack >
         );
     }
 }

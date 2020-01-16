@@ -1,21 +1,27 @@
 import * as React from 'react';
-import { Row, Col } from 'antd';
+import { Stack } from 'office-ui-fabric-react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
+import NavCon from './components/NavCon';
 import './App.css';
-import SlideBar from './components/SlideBar';
+
+// interface AppProps {
+//     path: string;
+// }
 
 interface AppState {
     interval: number;
-    columnList: Array<string>;
+    columnList: string[];
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
 }
 
+// class App extends React.Component<AppProps, AppState> {
 class App extends React.Component<{}, AppState> {
-    private timerId: number | null;
 
+    private timerId!: number | null;
+    // constructor(props: AppProps) {
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -28,7 +34,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     async componentDidMount(): Promise<void> {
-        await Promise.all([ EXPERIMENT.init(), TRIALS.init() ]);
+        await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
@@ -45,7 +51,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     // TODO: use local storage
-    changeColumn = (columnList: Array<string>): void => {
+    changeColumn = (columnList: string[]): void => {
         this.setState({ columnList: columnList });
     }
 
@@ -53,41 +59,45 @@ class App extends React.Component<{}, AppState> {
         this.setState({ metricGraphMode: val });
     }
 
-    render(): React.ReactNode{
+    render(): React.ReactNode {
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
-        const reactPropsChildren = React.Children.map(this.props.children, child =>
-            React.cloneElement(
+        const reactPropsChildren = React.Children.map(this.props.children, child => {
+            return React.cloneElement(
                 child as React.ReactElement<any>, {
-                    interval,
-                    columnList, changeColumn: this.changeColumn,
-                    experimentUpdateBroadcast,
-                    trialsUpdateBroadcast,
-                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
-                })
-        );
+                test: 1,
+                interval: interval,
+                columnList: columnList,
+                changeColumn: this.changeColumn,
+                experimentUpdateBroadcast: experimentUpdateBroadcast,
+                trialsUpdateBroadcast: trialsUpdateBroadcast,
+                metricGraphMode: metricGraphMode,
+                changeMetricGraphMode: this.changeMetricGraphMode
+            })
+        });
+
         return (
-            <Row className="nni" style={{ minHeight: window.innerHeight }}>
-                <Row className="header">
-                    <Col span={1} />
-                    <Col className="headerCon" span={22}>
-                        <SlideBar changeInterval={this.changeInterval} />
-                    </Col>
-                    <Col span={1} />
-                </Row>
-                <Row className="contentBox">
-                    <Row className="content">
+            <Stack className="nni" style={{ minHeight: window.innerHeight }}>
+                <div className="header">
+                    <div className="headerCon">
+                        {/* <NavCon changeInterval={this.changeInterval}/> */}
+                        <NavCon />
+                    </div>
+                </div>
+                <Stack className="contentBox">
+                    <Stack className="content">
+                        {/* {this.props.children} */}
                         {reactPropsChildren}
-                    </Row>
-                </Row>
-            </Row>
+                    </Stack>
+                </Stack>
+            </Stack>
         );
     }
 
     private refresh = async (): Promise<void> => {
-        const [ experimentUpdated, trialsUpdated ] = await Promise.all([ EXPERIMENT.update(), TRIALS.update() ]);
+        const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
         if (experimentUpdated) {
             this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
         }
@@ -95,7 +105,7 @@ class App extends React.Component<{}, AppState> {
             this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         }
 
-        if ([ 'DONE', 'ERROR', 'STOPPED' ].includes(EXPERIMENT.status)) {
+        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
             // experiment finished, refresh once more to ensure consistency
             if (this.state.interval > 0) {
                 this.setState({ interval: 0 });
@@ -116,3 +126,5 @@ class App extends React.Component<{}, AppState> {
 }
 
 export default App;
+
+

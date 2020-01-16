@@ -1,9 +1,12 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Drawer, Tabs, Row, Col, Button, Icon } from 'antd';
+import {
+    Stack, StackItem, Panel, PrimaryButton, DefaultButton,
+    Pivot, PivotItem
+} from 'office-ui-fabric-react';
+import { a } from '../Buttons/Icon';
 import { DOWNLOAD_IP } from '../../static/const';
 import { downFile } from '../../static/function';
-const { TabPane } = Tabs;
 import MonacoHTML from '../public-child/MonacoEditor';
 import '../../static/style/logDrawer.scss';
 
@@ -45,22 +48,22 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         }
     }
 
-    dispatcherHTML = (): any => {
+    dispatcherHTML = (): React.ReactNode => {
         return (
             <div>
                 <span>Dispatcher Log</span>
                 <span className="refresh" onClick={this.manualRefresh}>
-                    <Icon type="sync" />
+                    {a}
                 </span>
             </div>
         );
     }
 
-    nnimanagerHTML = (): any => {
+    nnimanagerHTML = (): React.ReactNode => {
         return (
             <div>
                 <span>NNImanager Log</span>
-                <span className="refresh" onClick={this.manualRefresh}><Icon type="sync" /></span>
+                <span className="refresh" onClick={this.manualRefresh}>{a}</span>
             </div>
         );
     }
@@ -74,93 +77,66 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         window.addEventListener('resize', this.setLogDrawerHeight);
     }
 
-    componentWillUnmount(): void {
+    componentWillUnmount(): void{
         window.clearTimeout(this.timerId);
         window.removeEventListener('resize', this.setLogDrawerHeight);
     }
 
     render(): React.ReactNode {
-        const { closeDrawer, activeTab } = this.props;
+        const { closeDrawer } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
+
         return (
-            <Row>
-                <Drawer
-                    placement="right"
-                    closable={false}
-                    destroyOnClose={true}
-                    onClose={closeDrawer}
-                    visible={true}
-                    width="76%"
-                    height={logDrawerHeight}
-                // className="logDrawer"
+            <Stack>
+                <Panel
+                    isOpen={true}
+                    onDismiss={closeDrawer}
+                    // headerText="Panel with footer at bottom"
+                    closeButtonAriaLabel="Close"
+                    // onRenderFooterContent={onRenderFooterContent}
+                    isFooterAtBottom={true}
                 >
-                    <div className="card-container log-tab-body">
-                        <Tabs
-                            type="card"
-                            defaultActiveKey={activeTab}
+                    <div className="log-tab-body">
+                        <Pivot
+                            // onLinkClick
                             style={{ height: logDrawerHeight, minHeight: 190 }}
                         >
-                            {/* <Tabs type="card" onTabClick={this.selectwhichLog} defaultActiveKey={activeTab}> */}
-                            {/* <TabPane tab="Dispatcher Log" key="dispatcher"> */}
-                            <TabPane tab={this.dispatcherHTML()} key="dispatcher">
-                                <div>
-                                    <MonacoHTML
-                                        content={dispatcherLogStr || 'Loading...'}
-                                        loading={isLoading}
-                                        height={logDrawerHeight - 104}
-                                    />
-                                </div>
-                                <Row className="buttons">
-                                    <Col span={12} className="download">
-                                        <Button
-                                            type="primary"
-                                            onClick={this.downloadDispatcher}
-                                        >
-                                            Download
-                                        </Button>
-                                    </Col>
-                                    <Col span={12} className="close">
-                                        <Button
-                                            type="default"
-                                            onClick={closeDrawer}
-                                        >
-                                            Close
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </TabPane>
-                            <TabPane tab={this.nnimanagerHTML()} key="nnimanager">
+                            {/* <PivotItem headerText={this.dispatcherHTML()} key="dispatcher" onLinkClick> */}
+                            <PivotItem headerText="Dispatcher Log" key="dispatcher">
+                                <MonacoHTML
+                                    content={dispatcherLogStr || 'Loading...'}
+                                    loading={isLoading}
+                                    height={logDrawerHeight - 104}
+                                />
+                                <Stack horizontal className="buttons">
+                                    <StackItem grow={12} className="download">
+                                        <PrimaryButton text="Download" onClick={this.downloadDispatcher} />
+                                    </StackItem>
+                                    <StackItem grow={12} className="close">
+                                        <DefaultButton text="Close" onClick={closeDrawer} />
+                                    </StackItem>
+                                </Stack>
+                            </PivotItem>
+                            <PivotItem headerText="NNIManager Log" key="nnimanager">
                                 {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
-                                <div>
-                                    <MonacoHTML
-                                        content={nniManagerLogStr || 'Loading...'}
-                                        loading={isLoading}
-                                        height={logDrawerHeight - 104}
-                                    />
-                                </div>
-                                <Row className="buttons">
-                                    <Col span={12} className="download">
-                                        <Button
-                                            type="primary"
-                                            onClick={this.downloadNNImanager}
-                                        >
-                                            Download
-                                        </Button>
-                                    </Col>
-                                    <Col span={12} className="close">
-                                        <Button
-                                            type="default"
-                                            onClick={closeDrawer}
-                                        >
-                                            Close
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </TabPane>
-                        </Tabs>
+                                <MonacoHTML
+                                    content={nniManagerLogStr || 'Loading...'}
+                                    loading={isLoading}
+                                    height={logDrawerHeight - 104}
+                                />
+                                <Stack horizontal className="buttons">
+                                    <StackItem grow={12} className="download">
+                                        <PrimaryButton text="Download" onClick={this.downloadNNImanager} />
+                                    </StackItem>
+                                    <StackItem grow={12} className="close">
+                                        <DefaultButton text="Close" onClick={closeDrawer} />
+                                    </StackItem>
+                                </Stack>
+                            </PivotItem>
+                        </Pivot>
                     </div>
-                </Drawer>
-            </Row>
+                </Panel>
+            </Stack>
         );
     }
 

@@ -116,9 +116,7 @@ $drowHoverBgColor: #e2e2e2;
     background-color: transparent;
 }
 .nav{
-    width: 95%;
     height: $barHeight;
-    margin: 0 auto;
     line-height: $barHeight;
     
     /* mobile start*/
@@ -167,42 +165,12 @@ $drowHoverBgColor: #e2e2e2;
         text-align: right;
     }
     
-    /* desktop mode */
+    /* desktop mode useful*/
     .desktop-logo{
         position: relative;
-        top: -3px;
+        top: 6px;
     }
-    .desktop-right{
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-align: right;
-        line-height: $barHeight;
-        font-size: 16px;
-        color: #fff;
-        a{
-            color: #fff;
-            text-decoration: none;
-        }
-        img{
-            width: 20px;
-            margin-right: 8px;
-        }
-        /* ? icon style */
-        .question{
-            width: 14px;
-            margin-right: 4px;
-        }
-        .feedback{
-            font-size: 16px;
-            margin: 0 20px;
-        }
-        .version{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px;
-        }
-        .margin-icon{
-            margin-left: 8px;
-        }
-    }
+   
 }
 
 /* public style in nav in threee mode*/

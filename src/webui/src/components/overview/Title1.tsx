@@ -1,5 +1,5 @@
 import * as React from 'react';
-
+import '../../static/style/overviewTitle.scss';
 interface Title1Props {
     text: string;
     icon?: string;
@@ -15,11 +15,9 @@ class Title1 extends React.Component<Title1Props, {}> {
     render(): React.ReactNode {
         const { text, icon, bgcolor } = this.props;
         return (
-            <div>
-                <div className="panelTitle" style={{backgroundColor: bgcolor}}>
-                    <img src={require(`../../static/img/icon/${icon}`)} alt="icon" />
-                    <span>{text}</span>
-                </div>
+            <div className="panelTitle" style={{ backgroundColor: bgcolor }}>
+                <img src={require(`../../static/img/icon/${icon}`)} alt="icon" />
+                <span>{text}</span>
             </div>
         );
     }

@@ -1,13 +1,13 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Row, Col, Input, Modal, Form, Button, Icon } from 'antd';
+import { Stack, StackItem, PrimaryButton, DefaultButton } from 'office-ui-fabric-react';
+import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { FormComponentProps } from 'antd/lib/form';
-const FormItem = Form.Item;
+import { warining, errorBadge, completed } from '../Buttons/Icon';
 import './customized.scss';
 
-interface CustomizeProps extends FormComponentProps {
+interface CustomizeProps {
     visible: boolean;
     copyTrialId: string;
     closeCustomizeModal: () => void;
@@ -21,6 +21,7 @@ interface CustomizeState {
     copyTrialParameter: object; // user click the trial's parameters
     customParameters: object; // customized trial, maybe user change trial's parameters
     customID: number; // submit customized trial succeed, return the new customized trial id
+    changeMap: Map<string, string | number>; // store change key: value
 }
 
 class Customize extends React.Component<CustomizeProps, CustomizeState> {
@@ -34,15 +35,30 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             searchSpace: EXPERIMENT.searchSpace,
             copyTrialParameter: {},
             customParameters: {},
-            customID: NaN
+            customID: NaN,
+            changeMap: new Map
         };
+    }
+
+    getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
+
+        const { name, value } = event.target;
+        const { changeMap } = this.state;
+        this.setState({ changeMap: changeMap.set(name, value) });
+
     }
 
     // [submit click] user add a new trial [submit a trial]
     addNewTrial = (): void => {
-        const { searchSpace, copyTrialParameter } = this.state;
+        const { searchSpace, copyTrialParameter, changeMap } = this.state;
         // get user edited hyperParameter, ps: will change data type if you modify the input val
-        const customized = this.props.form.getFieldsValue();
+        // const customized = this.props.form.getFieldsValue(); // 完整的trial parameter
+        const customized = JSON.parse(JSON.stringify(copyTrialParameter));
+        // changeMap: user changed keys: values
+        changeMap.forEach(function (value, key) {
+            customized[key] = value;
+        });
+
         // true: parameters are wrong
         let flag = false;
         Object.keys(customized).map(item => {
@@ -113,13 +129,13 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
 
     closeSucceedHint = (): void => {
         // also close customized trial modal
-        this.setState(() => ({ isShowSubmitSucceed: false }));
+        this.setState(() => ({ isShowSubmitSucceed: false, changeMap: new Map() }));
         this.props.closeCustomizeModal();
     }
 
     closeFailedHint = (): void => {
         // also close customized trial modal
-        this.setState(() => ({ isShowSubmitFailed: false }));
+        this.setState(() => ({ isShowSubmitFailed: false, changeMap: new Map() }));
         this.props.closeCustomizeModal();
     }
 
@@ -138,180 +154,121 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
             this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
         }
     }
-
+ 
     render(): React.ReactNode {
         const { closeCustomizeModal, visible } = this.props;
-        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
-        const {
-            form: { getFieldDecorator },
-            // form: { getFieldDecorator, getFieldValue },
-        } = this.props;
+        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter, changeMap } = this.state;
+        console.info('chnage', changeMap); // eslint-disable-line
         const warning = 'The parameters you set are not in our search space, this may cause the tuner to crash, Are'
             + ' you sure you want to continue submitting?';
         return (
-            <Row>
-                {/* form: search space */}
-                <Modal
-                    title="Customized trial setting"
-                    visible={visible}
-                    onCancel={closeCustomizeModal}
-                    footer={null}
-                    destroyOnClose={true}
-                    maskClosable={false}
-                    centered={true}
+            <Stack>
+                <Dialog
+                    hidden={!visible} // required field!
+                    dialogContentProps={{
+                        type: DialogType.largeHeader,
+                        title: 'Customized trial setting',
+                        subText: 'Your can chose which columns you want to see in the table.'
+                    }}
+                    modalProps={{
+                        isBlocking: false,
+                        styles: { main: { maxWidth: 450 } }
+                    }}
                 >
-                    {/* search space form */}
-                    <Row className="hyper-box">
-                        <Form>
-                            {
-                                Object.keys(copyTrialParameter).map(item => (
-                                    <Row key={item} className="hyper-form">
-                                        <Col span={9} className="title">{item}</Col>
-                                        <Col span={15} className="inputs">
-                                            <FormItem key={item} style={{ marginBottom: 0 }}>
-                                                {getFieldDecorator(item, {
-                                                    initialValue: copyTrialParameter[item],
-                                                })(
-                                                    <Input />
-                                                )}
-                                            </FormItem>
-                                        </Col>
-                                    </Row>
-                                )
-                                )
-                            }
-                            <Row key="tag" className="hyper-form tag-input">
-                                <Col span={9} className="title">Tag</Col>
-                                <Col span={15} className="inputs">
-                                    <FormItem key="tag" style={{ marginBottom: 0 }}>
-                                        {getFieldDecorator('tag', {
-                                            initialValue: 'Customized',
-                                        })(
-                                            <Input />
-                                        )}
-                                    </FormItem>
-                                </Col>
-                            </Row>
-                        </Form>
-                    </Row>
-                    <Row className="modal-button">
-                        <Button
-                            type="primary"
-                            className="tableButton distance"
-                            onClick={this.addNewTrial}
-                        >
-                            Submit
-                        </Button>
-                        <Button
-                            className="tableButton cancelSty"
-                            onClick={this.props.closeCustomizeModal}
-                        >
-                            Cancel
-                        </Button>
-                    </Row>
-                    {/* control button */}
-                </Modal>
-                {/* clone: prompt succeed or failed */}
-                <Modal
-                    visible={isShowSubmitSucceed}
-                    footer={null}
-                    destroyOnClose={true}
-                    maskClosable={false}
-                    closable={false}
-                    centered={true}
-                >
-                    <Row className="resubmit">
-                        <Row>
-                            <h2 className="title">
-                                <span>
-                                    <Icon type="check-circle" className="color-succ" />
-                                    <b>Submit successfully</b>
-                                </span>
-                            </h2>
-                            <div className="hint">
-                                <span>You can find your customized trial by Trial No.{customID}</span>
-                            </div>
-                        </Row>
-                        <Row className="modal-button">
-                            <Button
-                                className="tableButton cancelSty"
-                                onClick={this.closeSucceedHint}
-                            >
-                                OK
-                            </Button>
-                        </Row>
-                    </Row>
-                </Modal>
-                <Modal
-                    visible={isShowSubmitFailed}
-                    footer={null}
-                    destroyOnClose={true}
-                    maskClosable={false}
-                    closable={false}
-                    centered={true}
-                >
-                    <Row className="resubmit">
-                        <Row>
-                            <h2 className="title">
-                                <span>
-                                    <Icon type="check-circle" className="color-error" />Submit Failed
-                                </span>
-                            </h2>
-                            <div className="hint">
-                                <span>Unknown error.</span>
-                            </div>
-                        </Row>
-                        <Row className="modal-button">
-                            <Button
-                                className="tableButton cancelSty"
-                                onClick={this.closeFailedHint}
-                            >
-                                OK
-                            </Button>
-                        </Row>
-                    </Row>
-                </Modal>
-                {/* hyperParameter not match search space, warning modal */}
-                <Modal
-                    visible={isShowWarning}
-                    footer={null}
-                    destroyOnClose={true}
-                    maskClosable={false}
-                    closable={false}
-                    centered={true}
-                >
-                    <Row className="resubmit">
-                        <Row>
-                            <h2 className="title">
-                                <span>
-                                    <Icon className="color-warn" type="warning" />Warning
-                                </span>
-                            </h2>
-                            <div className="hint">
-                                <span>{warning}</span>
-                            </div>
-                        </Row>
-                        <Row className="modal-button center">
-                            <Button
-                                className="tableButton cancelSty distance"
-                                onClick={this.warningConfirm}
-                            >
-                                Confirm
-                            </Button>
-                            <Button
-                                className="tableButton cancelSty"
-                                onClick={this.warningCancel}
-                            >
-                                Cancel
-                            </Button>
-                        </Row>
-                    </Row>
-                </Modal>
+                    <form className="hyper-box">
+                        {
+                            Object.keys(copyTrialParameter).map(item => (
+                                <Stack horizontal key={item} className="hyper-form">
+                                    <StackItem styles={{ root: { minWidth: 100 } }} className="title">{item}</StackItem>
+                                    <StackItem className="inputs">
+                                        <input
+                                            type="text"
+                                            name={item}
+                                            defaultValue={copyTrialParameter[item]}
+                                            onChange={this.getFinalVal}
+                                        />
+                                    </StackItem>
+                                </Stack>
+                            )
+                            )
+                        }
+                        {/* disable [tag] because we havn't support */}
+                        {/* <Stack key="tag" horizontal className="hyper-form tag-input">
+                            <StackItem grow={9} className="title">Tag</StackItem>
+                            <StackItem grow={15} className="inputs">
+                                <input type="text" value='Customized' />
+                            </StackItem>
+                        </Stack> */}
+                    </form>
+                    <DialogFooter>
+                        <PrimaryButton text="Submit" onClick={this.addNewTrial} />
+                        <DefaultButton text="Cancel" onClick={closeCustomizeModal} />
+                    </DialogFooter>
+                </Dialog>
 
-            </Row>
+                {/* clone: prompt succeed or failed */}
+                <Dialog
+                    hidden={!isShowSubmitSucceed}
+                    onDismiss={this.closeSucceedHint}
+                    dialogContentProps={{
+                        type: DialogType.normal,
+                        title: <div className="icon-color">{completed}<b>Submit successfully</b></div>,
+                        closeButtonAriaLabel: 'Close',
+                        subText: `You can find your customized trial by Trial No.${customID}`
+                    }}
+                    modalProps={{
+                        isBlocking: false,
+                        styles: { main: { minWidth: 500 } },
+                    }}
+                >
+                    <DialogFooter>
+                        <PrimaryButton onClick={this.closeSucceedHint} text="OK" />
+                    </DialogFooter>
+                </Dialog>
+
+                <Dialog
+                    hidden={!isShowSubmitFailed}
+                    onDismiss={this.closeSucceedHint}
+                    dialogContentProps={{
+                        type: DialogType.normal,
+                        title: <div className="icon-error">{errorBadge}Submit Failed</div>,
+                        closeButtonAriaLabel: 'Close',
+                        subText: 'Unknown error.'
+                    }}
+                    modalProps={{
+                        isBlocking: false,
+                        styles: { main: { minWidth: 500 } },
+                    }}
+                >
+                    <DialogFooter>
+                        <PrimaryButton onClick={this.closeFailedHint} text="OK" />
+                    </DialogFooter>
+                </Dialog>
+
+                {/* hyperParameter not match search space, warning modal */}
+                <Dialog
+                    hidden={!isShowWarning}
+                    onDismiss={this.closeSucceedHint}
+                    dialogContentProps={{
+                        type: DialogType.normal,
+                        title: <div className="icon-error">{warining}Warning</div>,
+                        closeButtonAriaLabel: 'Close',
+                        subText: `${warning}`
+                    }}
+                    modalProps={{
+                        isBlocking: false,
+                        styles: { main: { minWidth: 500 } },
+                    }}
+                >
+                    <DialogFooter>
+                        <PrimaryButton onClick={this.warningConfirm} text="Confirm" />
+                        <DefaultButton onClick={this.warningCancel} text="Cancel" />
+                    </DialogFooter>
+                </Dialog>
+            </Stack>
 
         );
     }
 }
 
-export default Form.create<FormComponentProps>()(Customize);
+export default Customize;

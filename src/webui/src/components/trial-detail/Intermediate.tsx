@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Row, Button, Switch } from 'antd';
-import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
+import { Stack, PrimaryButton, Toggle } from 'office-ui-fabric-react';
+import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface'; // eslint-disable-line no-unused-vars
 import ReactEcharts from 'echarts-for-react';
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/title');
+import 'echarts/lib/component/tooltip';
+import 'echarts/lib/component/title';
 
 interface IntermediateState {
     detailSource: Array<TableObj>;
@@ -11,11 +11,9 @@ interface IntermediateState {
     filterSource: Array<TableObj>;
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
-    isFilter: boolean;
+    isFilter?: boolean | undefined;
     length: number;
     clickCounts: number; // user filter intermediate click confirm btn's counts
-    startMediaY: number;
-    endMediaY: number;
 }
 
 interface IntermediateProps {
@@ -26,9 +24,9 @@ interface IntermediateProps {
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
 
     static intervalMediate = 1;
-    public pointInput: HTMLInputElement | null;
-    public minValInput: HTMLInputElement | null;
-    public maxValInput: HTMLInputElement | null;
+    public pointInput!: HTMLInputElement | null;
+    public minValInput!: HTMLInputElement | null;
+    public maxValInput!: HTMLInputElement | null;
 
     constructor(props: IntermediateProps) {
         super(props);
@@ -40,9 +38,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             isLoadconfirmBtn: false,
             isFilter: false,
             length: 100000,
-            clickCounts: 0,
-            startMediaY: 0,
-            endMediaY: 100
+            clickCounts: 0
         };
     }
 
@@ -52,7 +48,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 length: source.length,
                 detailSource: source
             });
-            const { startMediaY, endMediaY } = this.state;
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -68,7 +63,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             const legend: Array<string> = [];
             // max length
             const length = trialIntermediate[0].data.length;
-            const xAxis: number[] = [];
+            const xAxis: Array<number> = [];
             Object.keys(trialIntermediate).map(item => {
                 const temp = trialIntermediate[item];
                 legend.push(temp.name);
@@ -80,14 +75,14 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 tooltip: {
                     trigger: 'item',
                     enterable: true,
-                    position: function (point: number[], data: TooltipForIntermediate): number[] {
+                    position: function (point: Array<number>, data: TooltipForIntermediate): number[] {
                         if (data.dataIndex < length / 2) {
                             return [point[0], 80];
                         } else {
                             return [point[0] - 300, 80];
                         }
                     },
-                    formatter: function (data: TooltipForIntermediate): any {
+                    formatter: function (data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
                         let obj = {};
                         const temp = trialIntermediate.find(key => key.name === trialId);
@@ -116,18 +111,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Metric'
+                    name: 'Metric',
+                    scale: true,
                 },
-                dataZoom: [
-                    {
-                        id: 'dataZoomY',
-                        type: 'inside',
-                        yAxisIndex: [0],
-                        filterMode: 'empty',
-                        start: startMediaY,
-                        end: endMediaY
-                    }
-                ],
                 series: trialIntermediate
             };
             this.setState({
@@ -195,7 +181,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         });
     }
 
-    switchTurn = (checked: boolean): void => {
+    switchTurn = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         this.setState({ isFilter: checked });
         if (checked === false) {
             this.drawIntermediate(this.props.source);
@@ -226,58 +212,57 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         }
     }
 
-    shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState): boolean {
-        const { whichGraph, source } = nextProps;
-        const beforeGraph = this.props.whichGraph;
-        if (whichGraph === '4') {
-            const { isFilter, length, clickCounts } = nextState;
-            const beforeLength = this.state.length;
-            const beforeSource = this.props.source;
-            const beforeClickCounts = this.state.clickCounts;
+    // shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
+    //     const { whichGraph, source } = nextProps;
+    //     const beforeGraph = this.props.whichGraph;
+    //     if (whichGraph === '4') {
+    //         const { isFilter, length, clickCounts } = nextState;
+    //         const beforeLength = this.state.length;
+    //         const beforeSource = this.props.source;
+    //         const beforeClickCounts = this.state.clickCounts;
 
-            if (isFilter !== this.state.isFilter) {
-                return true;
-            }
+    //         if (isFilter !== this.state.isFilter) {
+    //             return true;
+    //         }
 
-            if (clickCounts !== beforeClickCounts) {
-                return true;
-            }
+    //         if (clickCounts !== beforeClickCounts) {
+    //             return true;
+    //         }
 
-            if (isFilter === false) {
-                if (whichGraph !== beforeGraph) {
-                    return true;
-                }
-                if (length !== beforeLength) {
-                    return true;
-                }
-                if (beforeSource.length !== source.length) {
-                    return true;
-                }
-                if (beforeSource[beforeSource.length - 1] !== undefined) {
-                    if (source[source.length - 1].description.intermediate.length !==
-                        beforeSource[beforeSource.length - 1].description.intermediate.length) {
-                        return true;
-                    }
-                    if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                        return true;
-                    }
-                    if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                        return true;
-                    }
-                }
-            }
-        }
+    //         if (isFilter === false) {
+    //             if (whichGraph !== beforeGraph) {
+    //                 return true;
+    //             }
+    //             if (length !== beforeLength) {
+    //                 return true;
+    //             }
+    //             if (beforeSource.length !== source.length) {
+    //                 return true;
+    //             }
+    //             if (beforeSource[beforeSource.length - 1] !== undefined) {
+    //                 if (source[source.length - 1].description.intermediate.length !==
+    //                     beforeSource[beforeSource.length - 1].description.intermediate.length) {
+    //                     return true;
+    //                 }
+    //                 if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
+    //                     return true;
+    //                 }
+    //                 if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
+    //                     return true;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
     render(): React.ReactNode {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
-        const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };
         return (
             <div>
                 {/* style in para.scss */}
-                <Row className="meline intermediate">
+                <Stack horizontal horizontalAlign="end" className="meline intermediate">
                     {
                         isFilter
                             ?
@@ -298,45 +283,29 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                     // placeholder="range"
                                     ref={(input): any => this.maxValInput = input}
                                 />
-                                <Button
-                                    type="primary"
-                                    className="changeBtu tableButton"
+                                <PrimaryButton
+                                    text="Confirm"
                                     onClick={this.filterLines}
                                     disabled={isLoadconfirmBtn}
-                                >
-                                    Confirm
-                                </Button>
+                                />
                             </span>
                             :
                             null
                     }
                     {/* filter message */}
                     <span>Filter</span>
-                    <Switch
-                        defaultChecked={false}
-                        onChange={this.switchTurn}
-                    />
-                </Row>
-                <Row className="intermediate-graph">
+                    <Toggle onChange={this.switchTurn} />
+                </Stack>
+                <div className="intermediate-graph">
                     <ReactEcharts
                         option={interSource}
                         style={{ width: '100%', height: 418, margin: '0 auto' }}
                         notMerge={true} // update now
-                        onEvents={IntermediateEvents}
                     />
                     <div className="yAxis"># Intermediate result</div>
-                </Row>
+                </div>
             </div>
         );
-    }
-
-    private intermediateDataZoom = (e: EventMap): void => {
-        if (e.batch !== undefined) {
-            this.setState(() => ({
-                startMediaY: (e.batch[0].start !== null ? e.batch[0].start : 0),
-                endMediaY: (e.batch[0].end !== null ? e.batch[0].end : 100)
-            }));
-        }
     }
 }
 

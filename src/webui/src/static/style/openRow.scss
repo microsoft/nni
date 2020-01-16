@@ -3,35 +3,11 @@ $color: #0071bc;
 /* bg light grey */
 $bgColor: #f2f2f2;
 .openRowContent{
-    .ant-tabs-vertical.ant-tabs-left .ant-tabs-bar .ant-tabs-tab{
-        text-align: left !important;
-    }
-}
-.openRowContent{
-    .ant-tabs-nav .ant-tabs-tab:hover{
-        color: $color;
-    }
-}
-.openRowContent{
-    margin-top: 15px;
+    min-width: 150px;
+    margin-left: 15px;
     background-color: $bgColor;
-    .card{
-        .ant-tabs-vertical .ant-tabs-bar .ant-tabs-tab{
-            margin: 0;
-            padding: 8px 12px;
-        }
-        .ant-tabs-nav .ant-tabs-tab-active{
-            color: $color;
-            font-weight: 600;
-            background: #dedede;
-            border-left: 3px solid ;
-        }
-        .ant-tabs-tabpane{
-            background: #f2f2f2;
-            padding: 12px 12px 12px 0;
-        }
-    }
 }
+
 .trialLog{
     white-space: normal;
     color: #212121;
@@ -49,9 +25,10 @@ $bgColor: #f2f2f2;
 }
 
 #description{
-    .bgHyper{
-        background-color: #fff;
+    .bgHyper ul{
+        background-color: #fff !important;
         margin-bottom: 12px;
+        font-size: 14px;
     }
     .copy{
         Button{
