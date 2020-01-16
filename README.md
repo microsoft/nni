@@ -88,7 +88,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
            <li><a href="docs/en_US/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/en_US/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
-           <li><a href="examples/trials/efficientnet">EfficientNet</a></li>
+           <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
               <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br/>
           </ul>
         </ul>
