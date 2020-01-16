@@ -98,18 +98,28 @@ class RegularizedMutatorParallel(DistributedDataParallel):
     """
     Parallelize :class:`~RegularizedDartsMutator`.
 
-    This makes ``reset_with_loss`` method parallelized, also allowing ``cut_choies`` and
-    ``export`` to be easily accessible (instead of using ``.module.``).
+    This makes :func:`~RegularizedDartsMutator.reset_with_loss` method parallelized,
+    also allowing :func:`~RegularizedDartsMutator.cut_choices` and :func:`~RegularizedDartsMutator.export`
+    to be easily accessible.
     """
     def reset_with_loss(self):
+        """
+        Parallelized :func:`~RegularizedDartsMutator.reset_with_loss`.
+        """
         result = self.module.reset_with_loss()
         self.callback_queued = False
         return result
 
     def cut_choices(self, *args, **kwargs):
+        """
+        Parallelized :func:`~RegularizedDartsMutator.cut_choices`.
+        """
         self.module.cut_choices(*args, **kwargs)
 
     def export(self, logger):
+        """
+        Parallelized :func:`~RegularizedDartsMutator.export`.
+        """
         return self.module.export(logger)
 
 
