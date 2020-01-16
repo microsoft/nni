@@ -124,7 +124,9 @@ class RegularizedMutatorParallel(DistributedDataParallel):
 
 
 class DartsDiscreteMutator(Mutator):
-
+    """
+    A mutator that applies the final sampling result of a parent mutator on another model to train.
+    """
     def __init__(self, model, parent_mutator):
         """
         Initialization.

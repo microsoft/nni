@@ -29,7 +29,7 @@ class InteractiveKLLoss(nn.Module):
 
 
 class CdartsTrainer(object):
-    def __init__(self, model_small, model_large, criterion, loaders, samplers, logger,
+    def __init__(self, model_small, model_large, criterion, loaders, samplers, logger=None,
                  regular_coeff=5, regular_ratio=0.2, warmup_epochs=2, fix_head=True,
                  epochs=32, steps_per_epoch=None, loss_alpha=2, loss_T=2, distributed=True,
                  log_frequency=10, grad_clip=5.0, interactive_type='kl', output_path='./outputs',
@@ -45,13 +45,14 @@ class CdartsTrainer(object):
         model_large : nn.Module
             PyTorch model to be trained. This is the evaluation network of CDARTS.
         criterion : callable
-            Receives logits and ground truth label, return a loss tensor.
-        loaders : list
-            List of training dataset and test dataset. Will be split for training weights and architecture weights.
-        samplers : list of Dateset Samplers
-            List of training dataset and test dataset samplers.
+            Receives logits and ground truth label, return a loss tensor, e.g., ``nn.CrossEntropyLoss()``.
+        loaders : list of torch.utils.data.DataLoader
+            List of train data and valid data loaders, for training weights and architecture weights respectively.
+        samplers : list of torch.utils.data.Sampler
+            List of train data and valid data samplers. This can be PyTorch standard samplers if not distributed.
+            In distributed mode, sampler needs to have ``set_epoch`` method. Refer to data utils in CDARTS example for details.
         logger : logging.Logger
-            The logging object. It receives the contents for logging.
+            The logger for logging. Will use nni logger by default (if logger is ``None``).
         regular_coeff : float
             The coefficient of regular loss.
         regular_ratio : float
@@ -95,6 +96,8 @@ class CdartsTrainer(object):
         share_module : bool
             ``True`` if sharing the stem and auxiliary heads, else not sharing these modules.
         """
+        if logger is None:
+            logger = logging.getLogger(__name__)
         train_loader, valid_loader = loaders
         train_sampler, valid_sampler = samplers
         self.train_loader = CyclicIterator(train_loader, train_sampler, distributed)
