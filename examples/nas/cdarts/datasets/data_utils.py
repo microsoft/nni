@@ -9,25 +9,32 @@ from torch.utils.data import Sampler
 
 
 class SubsetDistributedSampler(Sampler):
-    """Sampler that restricts data loading to a subset of the dataset.
+    """
+    Sampler that restricts data loading to a subset of the dataset.
 
     It is especially useful in conjunction with
     :class:`torch.nn.parallel.DistributedDataParallel`. In such case, each
     process can pass a DistributedSampler instance as a DataLoader sampler,
     and load a subset of the original dataset that is exclusive to it.
 
-    .. note::
-        Dataset is assumed to be of constant size.
-
-    Arguments:
-        dataset: Dataset used for sampling.
-        num_replicas (optional): Number of processes participating in
-            distributed training.
-        rank (optional): Rank of the current process within num_replicas.
-        shuffle (optional): If true (default), sampler will shuffle the indices
+    Dataset is assumed to be of constant size.
     """
 
     def __init__(self, dataset, indices, num_replicas=None, rank=None, shuffle=True):
+        """
+        Initialization.
+
+        Parameters
+        ----------
+        dataset : torch.utils.data.Dataset
+            Dataset used for sampling.
+        num_replicas : int
+            Number of processes participating in distributed training. Default: World size.
+        rank : int
+            Rank of the current process within num_replicas. Default: Current rank.
+        shuffle : bool
+            If true (default), sampler will shuffle the indices.
+        """
         if num_replicas is None:
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")
@@ -79,10 +86,6 @@ class data_prefetcher():
         self.stream = torch.cuda.Stream()
         self.mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).cuda().view(1, 3, 1, 1)
         self.std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).cuda().view(1, 3, 1, 1)
-        # With Amp, it isn't necessary to manually convert data to half.
-        # if args.fp16:
-        #     self.mean = self.mean.half()
-        #     self.std = self.std.half()
         self.preload()
 
     def preload(self):
@@ -95,10 +98,6 @@ class data_prefetcher():
         with torch.cuda.stream(self.stream):
             self.next_input = self.next_input.cuda(non_blocking=True)
             self.next_target = self.next_target.cuda(non_blocking=True)
-            # With Amp, it isn't necessary to manually convert data to half.
-            # if args.fp16:
-            #     self.next_input = self.next_input.half()
-            # else:
             self.next_input = self.next_input.float()
             self.next_input = self.next_input.sub_(self.mean).div_(self.std)
 
