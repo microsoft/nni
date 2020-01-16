@@ -227,7 +227,8 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
-
+        else:
+            self.register_buffer("bias_mask", None)
         # register user specified buffer
         self.registered_buffers = {}
         for name in self.pruner.buffers:
@@ -321,8 +322,8 @@ class Pruner(Compressor):
                 mask_num = weight_mask.numel()
                 _logger.info('Layer: %s  Sparsity: %.2f', wrapper.name, 1 - mask_sum / mask_num)
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
-                if bias_mask is not None and hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-                    wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
+            if bias_mask is not None:
+                wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
             # save mask to dict
             mask_dict[wrapper.name] = {"weight": weight_mask, "bias": bias_mask}
 
