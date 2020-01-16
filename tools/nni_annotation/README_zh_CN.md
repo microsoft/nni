@@ -4,14 +4,14 @@
 
 为了获得良好的用户体验并减少对以后代码的影响，NNI 设计了通过 Annotation（标记）来使用的语法。 通过 Annotation，只需要在代码中加入一些注释字符串，就能启用 NNI，完全不影响代码原先的执行逻辑。
 
-样例如下：
+示例如下：
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
 ```
 
-此样例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
+此示例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
 
 通过这种方式，不需要修改任何代码，代码既可以直接运行，又可以使用 NNI 来调参。
 
@@ -43,7 +43,7 @@ NNI 支持如下 10 种类型来表示搜索空间：
 - `@nni.variable(nni.lognormal(mu, sigma),name=variable)` 变量值分布的公式为： exp(normal(mu, sigma))
 - `@nni.variable(nni.qlognormal(mu, sigma, q),name=variable)` 变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
 
-样例如下：
+示例如下：
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''

@@ -3,6 +3,7 @@
 
 import csv
 import os
+import sys
 import json
 import time
 import re
@@ -623,22 +624,43 @@ def show_experiment_info():
                           content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
+def set_monitor(auto_exit, time_interval, port=None, pid=None):
+    '''set the experiment monitor engine'''
+    while True:
+        try:
+            if sys.platform == 'win32':
+                os.system('cls')
+            else:
+                os.system('clear')
+            update_experiment()
+            show_experiment_info()
+            if auto_exit:
+                status = get_experiment_status(port)
+                if status in ['DONE', 'ERROR', 'STOPPED']:
+                    print_normal('Experiment status is {0}.'.format(status))
+                    print_normal('Stopping experiment...')
+                    kill_command(pid)
+                    print_normal('Stop experiment success.')
+                    exit(0)
+            time.sleep(time_interval)
+        except KeyboardInterrupt:
+            if auto_exit:
+                print_normal('Stopping experiment...')
+                kill_command(pid)
+                print_normal('Stop experiment success.')
+            else:
+                print_normal('Exiting...')
+            exit(0)
+        except Exception as exception:
+            print_error(exception)
+            exit(1)
+
 def monitor_experiment(args):
     '''monitor the experiment'''
     if args.time <= 0:
         print_error('please input a positive integer as time interval, the unit is second.')
         exit(1)
-    while True:
-        try:
-            os.system('clear')
-            update_experiment()
-            show_experiment_info()
-            time.sleep(args.time)
-        except KeyboardInterrupt:
-            exit(0)
-        except Exception as exception:
-            print_error(exception)
-            exit(1)
+    set_monitor(False, args.time)
 
 def export_trials_data(args):
     '''export experiment metadata to csv

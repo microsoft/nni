@@ -151,18 +151,20 @@ abstract class PAITrainingService implements TrainingService {
 
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail: PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
-        const deferred: Deferred<void> = new Deferred<void>();
         if (trialJobDetail === undefined) {
-            this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
-
-            return Promise.reject();
+            return Promise.reject(new Error(`cancelTrialJob: trial job id ${trialJobId} not found`));
         }
 
         if (this.paiClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
+            return Promise.reject(new Error('PAI Cluster config is not initialized'));
         }
         if (this.paiToken === undefined) {
-            throw new Error('PAI token is not initialized');
+            return Promise.reject(new Error('PAI token is not initialized'));
+        }
+
+        if (trialJobDetail.status === 'UNKNOWN') {
+            trialJobDetail.status = 'USER_CANCELED';
+            return Promise.resolve();
         }
 
         const stopJobRequest: request.Options = {
@@ -179,6 +181,7 @@ abstract class PAITrainingService implements TrainingService {
 
         // Set trialjobDetail's early stopped field, to mark the job's cancellation source
         trialJobDetail.isEarlyStopped = isEarlyStopped;
+        const deferred: Deferred<void> = new Deferred<void>();
 
         request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {

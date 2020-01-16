@@ -246,7 +246,7 @@
 
 * 修复了在某些极端条件下，不能正确存储任务的取消状态。
 * 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
-* 修复 CIFAR-10 样例中的 broken pipe 问题。
+* 修复 CIFAR-10 示例中的 broken pipe 问题。
 * 为本地训练和 NNI 管理器添加单元测试。
 * 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
 * 在 OpenPAI 客户端中支持 Pylon 路径。
@@ -284,7 +284,7 @@
 * [FrameworkController 训练平台](TrainingService/FrameworkControllerMode.md)：支持使用在 Kubernetes 上使用 FrameworkController 运行。 
   * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
   * NNI 为作业定义了统一而简单的规范。
-  * 如何使用 FrameworkController 的 MNIST 样例。
+  * 如何使用 FrameworkController 的 MNIST 示例。
 
 #### 改进用户体验
 
@@ -324,7 +324,7 @@
 ### 新示例
 
 * [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
-* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
+* 使用 PyTorch 的[分布式 MNIST 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 ## 发布 0.4 - 12/6/2018
 
@@ -332,7 +332,7 @@
 
 * [Kubeflow 训练平台](TrainingService/KubeflowMode.md) 
   * 支持 tf-operator
-  * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+  * 使用 Kubeflow 的[分布式 Trial 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
 * [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
 * [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
@@ -372,7 +372,7 @@
 
 ### API 的新功能和更新
 
-* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
+* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的示例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新示例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
 * 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
   
@@ -400,9 +400,9 @@
   docker pull msranni/nni:latest
   ```
 
-* 新的 Trial 样例：[NNI Sklearn 样例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
+* 新的 Trial 示例：[NNI Sklearn 示例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 
-* 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* 新的竞赛示例：[Kaggle Competition TGS Salt](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ### 其它
 
@@ -420,7 +420,7 @@
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
-  * 更新 ga squad 样例与相关文档
+  * 更新 ga squad 示例与相关文档
   * 用户体验改善及 Bug 修复
 
 ## 发布 0.1.0 - 9/10/2018 (首个版本)
