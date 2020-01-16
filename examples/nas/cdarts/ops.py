@@ -31,6 +31,7 @@ class DropPath(nn.Module):
     def __init__(self, p=0.):
         """
         Drop path with probability.
+
         Parameters
         ----------
         p : float
@@ -61,7 +62,7 @@ class PoolWithoutBN(nn.Module):
         elif pool_type.lower() == 'avg':
             self.pool = nn.AvgPool2d(kernel_size, stride, padding, count_include_pad=False)
         else:
-            raise ValueError()
+            raise NotImplementedError("Pool doesn't support pooling type other than max and avg.")
 
     def forward(self, x):
         out = self.pool(x)
