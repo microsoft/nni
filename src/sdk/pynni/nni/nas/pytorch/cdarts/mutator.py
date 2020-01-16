@@ -124,8 +124,7 @@ class DartsDiscreteMutator(Mutator):
         model : nn.Module
             The model to apply the mutator.
         parent_mutator : Mutator
-            The mutator that is used to call ``sample_final()`` method to get the architecture
-            for training.
+            The mutator that provides ``sample_final`` method, that will be called to get the architecture.
         """
         super().__init__(model)
         self.__dict__["parent_mutator"] = parent_mutator  # avoid parameters to be included
