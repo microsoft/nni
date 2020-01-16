@@ -7,7 +7,7 @@ from schema import SchemaError
 from schema import Schema
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
                            FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
-from .common_utils import print_error, print_warning, print_normal
+from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -63,6 +63,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             expand_path(experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        expand_path(experiment_config['trial'], 'paiConfigPath')
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
@@ -94,6 +96,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content,
@@ -269,6 +273,9 @@ def validate_pai_trial_conifg(experiment_config):
             print_warning(warning_information.format('dataDir'))
         if experiment_config.get('trial').get('outputDir'):
             print_warning(warning_information.format('outputDir'))
+    if experiment_config.get('trainingServicePlatform') == 'pai':
+        if experiment_config.get('trial').get('paiConfigPath'):
+            get_yml_content(experiment_config['trial']['paiConfigPath'])
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''

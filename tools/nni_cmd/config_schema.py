@@ -280,7 +280,8 @@ pai_trial_schema = {
         Optional('virtualCluster'): setType('virtualCluster', str),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
-        'paiStoragePlugin': setType('paiStoragePlugin', str)
+        'paiStoragePlugin': setType('paiStoragePlugin', str),
+        Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
     }
 }
 

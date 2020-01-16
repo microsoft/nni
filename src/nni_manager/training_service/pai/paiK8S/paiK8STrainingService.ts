@@ -185,7 +185,16 @@ class PAIK8STrainingService extends PAITrainingService {
             }
         }
 
-        return yaml.safeDump(paiJobConfig);
+        if (this.paiTrialConfig.paiConfigPath) {
+            try {
+                const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+                return yaml.safeDump({...paiJobConfig, ...additionalPAIConfig});
+            } catch (error) {
+                this.log.error(`Loading ${this.paiTrialConfig.paiConfigPath} error: ${error}`);
+            }
+        } else {
+            return yaml.safeDump(paiJobConfig);
+        }
       }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
@@ -254,7 +263,7 @@ class PAIK8STrainingService extends PAITrainingService {
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
-
+        this.log.debug(paiJobConfig);
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
