@@ -1,5 +1,5 @@
 // draw accuracy graph data export interface
-export interface TableObj {
+interface TableObj {
     key: number;
     sequenceId: number;
     id: string;
@@ -12,7 +12,7 @@ export interface TableObj {
     endTime?: number;
 }
 
-export interface TableRecord {
+interface TableRecord {
     key: string;
     sequenceId: number;
     startTime: number;
@@ -26,49 +26,49 @@ export interface TableRecord {
     formattedLatestAccuracy: string; // format (LATEST/FINAL)
 }
 
-export interface SearchSpace {
+interface SearchSpace {
     _value: Array<number | string>;
     _type: string;
 }
 
-export interface FinalType {
+interface FinalType {
     default: string;
 }
 
-export interface ErrorParameter {
+interface ErrorParameter {
     error?: string;
 }
 
-export interface Parameters {
+interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate: Array<number>;
+    intermediate: number[];
     multiProgress?: number;
 }
 
 // trial accuracy
-export interface AccurPoint {
+interface AccurPoint {
     acc: number;
     index: number;
 }
 
-export interface DetailAccurPoint {
+interface DetailAccurPoint {
     acc: number;
     index: number;
     searchSpace: object;
 }
 
-export interface TooltipForIntermediate {
+interface TooltipForIntermediate {
     data: string;
     seriesName: string;
     dataIndex: number;
 }
 
-export interface TooltipForAccuracy {
+interface TooltipForAccuracy {
     data: Array<number | object>;
 }
 
-export interface Dimobj {
+interface Dimobj {
     dim: number;
     name: string;
     max?: number;
@@ -80,21 +80,22 @@ export interface Dimobj {
     axisLabel?: object;
     axisLine?: object;
     nameTextStyle?: object;
+    scale?: boolean;
 }
 
-export interface ParaObj {
+interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
 }
 
-export interface Intermedia {
+interface Intermedia {
     name: string; // id
     type: string;
     data: Array<number | object>; // intermediate data
     hyperPara: object; // each trial hyperpara value
 }
 
-export interface MetricDataRecord {
+interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
     parameterId: string;
@@ -103,7 +104,7 @@ export interface MetricDataRecord {
     data: string;
 }
 
-export interface TrialJobInfo {
+interface TrialJobInfo {
     id: string;
     sequenceId: number;
     status: string;
@@ -115,7 +116,7 @@ export interface TrialJobInfo {
     stderrPath?: string;
 }
 
-export interface ExperimentParams {
+interface ExperimentParams {
     authorName: string;
     experimentName: string;
     description?: string;
@@ -162,7 +163,7 @@ export interface ExperimentParams {
     }[];
 }
 
-export interface ExperimentProfile {
+interface ExperimentProfile {
     params: ExperimentParams;
     id: string;
     execDuration: number;
@@ -173,7 +174,18 @@ export interface ExperimentProfile {
     revision: number;
 }
 
-export interface NNIManagerStatus {
+interface NNIManagerStatus {
     status: string;
     errors: string[];
 }
+
+interface EventMap {
+    [key: string]: () => void;
+}
+
+export {
+    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
+    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
+    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
+    ExperimentProfile, NNIManagerStatus, EventMap
+};

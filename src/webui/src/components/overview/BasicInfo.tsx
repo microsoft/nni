@@ -34,9 +34,6 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                 <Stack.Item grow={100 / 3} className="padItem basic">
                     <p>Log directory</p>
                     <div className="nowrap">
-                        {/* <Tooltip placement="top" title={EXPERIMENT.profile.logDir || ''}>
-                            {EXPERIMENT.profile.logDir || 'unknown'}
-                        </Tooltip> */}
                         {/* need test */}
                         <TooltipHost
                             content={EXPERIMENT.profile.logDir || ''}

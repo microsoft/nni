@@ -5,10 +5,6 @@ import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
 import './App.css';
 
-// interface AppProps {
-//     path: string;
-// }
-
 interface AppState {
     interval: number;
     columnList: string[];
@@ -17,11 +13,9 @@ interface AppState {
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
 }
 
-// class App extends React.Component<AppProps, AppState> {
 class App extends React.Component<{}, AppState> {
-
     private timerId!: number | null;
-    // constructor(props: AppProps) {
+
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -64,19 +58,16 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
-        const reactPropsChildren = React.Children.map(this.props.children, child => {
-            return React.cloneElement(
+        const reactPropsChildren = React.Children.map(this.props.children, child =>
+            React.cloneElement(
                 child as React.ReactElement<any>, {
-                test: 1,
-                interval: interval,
-                columnList: columnList,
-                changeColumn: this.changeColumn,
-                experimentUpdateBroadcast: experimentUpdateBroadcast,
-                trialsUpdateBroadcast: trialsUpdateBroadcast,
-                metricGraphMode: metricGraphMode,
-                changeMetricGraphMode: this.changeMetricGraphMode
+                    interval,
+                    columnList, changeColumn: this.changeColumn,
+                    experimentUpdateBroadcast,
+                    trialsUpdateBroadcast,
+                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
             })
-        });
+        );
 
         return (
             <Stack className="nni" style={{ minHeight: window.innerHeight }}>
@@ -88,7 +79,6 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
-                        {/* {this.props.children} */}
                         {reactPropsChildren}
                     </Stack>
                 </Stack>

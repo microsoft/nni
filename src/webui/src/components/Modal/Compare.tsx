@@ -105,14 +105,14 @@ class Compare extends React.Component<CompareProps, {}> {
 
     // render table column ---
     initColumn = (): React.ReactNode => {
-        const idList: Array<string> = [];
-        const sequenceIdList: Array<number> = [];
-        const durationList: Array<number> = [];
+        const idList: string[] = [];
+        const sequenceIdList: number[] = [];
+        const durationList: number[] = [];
 
         const compareStacks = this.props.compareStacks.map(tableRecord => TRIALS.getTrial(tableRecord.id));
 
         const parameterList: Array<object> = [];
-        let parameterKeys: Array<string> = [];
+        let parameterKeys: string[] = [];
         if (compareStacks.length !== 0) {
             parameterKeys = Object.keys(compareStacks[0].description.parameters);
         }

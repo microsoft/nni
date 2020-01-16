@@ -14,7 +14,6 @@ import '../static/style/logPath.scss';
 
 interface OverviewProps {
     experimentUpdateBroadcast: number;
-    test: number;
     trialsUpdateBroadcast: number;
     metricGraphMode: 'max' | 'min';
     changeMetricGraphMode: (val: 'max' | 'min') => void;

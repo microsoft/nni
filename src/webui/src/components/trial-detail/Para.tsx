@@ -273,6 +273,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         parallelAxis.push({
             dim: i,
             name: 'default metric',
+            scale: true,
             nameTextStyle: {
                 fontWeight: 700
             }
@@ -590,7 +591,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         }
     }
 
-    // shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState) {
+    // shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState): boolean {
 
     //     const { whichGraph } = nextProps;
     //     const beforeGraph = this.props.whichGraph;

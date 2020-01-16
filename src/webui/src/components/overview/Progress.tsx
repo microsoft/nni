@@ -150,7 +150,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
-        // 0-1 1-100 is not support 
+        // support type [0, 1], not 98%
         const bar2Percent = bar2 / EXPERIMENT.profile.params.maxTrialNum;
         const percent = EXPERIMENT.profile.execDuration / EXPERIMENT.profile.params.maxExecDuration;
         const remaining = convertTime(EXPERIMENT.profile.params.maxExecDuration - EXPERIMENT.profile.execDuration);
@@ -158,10 +158,6 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
         const execDuration = convertTime(EXPERIMENT.profile.execDuration);
 
-        // const examplePrimaryButton = {
-        //     children: 'Learn about',
-        //     onClick: this.isShowDrawer
-        // };
         return (
             <Stack className="progress" id="barBack">
                 <Stack className="basic lineBasic">
@@ -172,11 +168,8 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             EXPERIMENT.status === 'ERROR'
                                 ?
                                 <div>
-                                    {/* <div className={styles.buttonArea} ref={this._menuButtonElement}> */}
                                     <div className={styles.buttonArea} ref={(val): any => this._menuButtonElement = val}>
-                                        {/* <DefaultButton onClick={this._onShow} text={isCalloutVisible ? 'Hide callout' : 'Show callout'} /> */}
                                         <IconButton
-                                            // className="iconButtons"
                                             iconProps={{ iconName: 'info' }}
                                             onClick={isCalloutVisible ? this._onDismiss : this._onShow}
                                         />

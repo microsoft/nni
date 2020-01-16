@@ -52,7 +52,6 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
     addNewTrial = (): void => {
         const { searchSpace, copyTrialParameter, changeMap } = this.state;
         // get user edited hyperParameter, ps: will change data type if you modify the input val
-        // const customized = this.props.form.getFieldsValue(); // 完整的trial parameter
         const customized = JSON.parse(JSON.stringify(copyTrialParameter));
         // changeMap: user changed keys: values
         changeMap.forEach(function (value, key) {

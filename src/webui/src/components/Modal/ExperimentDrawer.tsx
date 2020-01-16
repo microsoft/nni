@@ -26,7 +26,6 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
         this.state = {
             experiment: '',
-            // expDrawerHeight: window.innerHeight - 48
             expDrawerHeight: window.innerHeight
         };
     }
@@ -74,7 +73,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     onWindowResize = (): void => {
-        this.setState(() => ({ expDrawerHeight: window.innerHeight - 48 }));
+        this.setState(() => ({ expDrawerHeight: window.innerHeight }));
     }
 
     componentDidMount(): void {
@@ -102,11 +101,9 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
             <Stack className="logDrawer">
                 <Panel
                     isOpen={isVisble}
-                    // isOpen={true}
                     onDismiss={closeExpDrawer}
                     styles={{ root: { height: expDrawerHeight } }}
                 >
-                    {/* 104: tabHeight(40) + tabMarginBottom(16) + buttonHeight(32) + buttonMarginTop(16) */}
                     <Pivot style={{ height: expDrawerHeight - 64, minHeight: 190 }} className="log-tab-body">
                         <PivotItem headerText="Experiment Parameters">
                             <div className="just-for-log">

@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { WEBUIDOC } from '../static/const';
-// import { verticalAlign } from '../static/style/commonSty';
 import {
     Stack, initializeIcons, IconButton,
     StackItem, IContextualMenuProps } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
@@ -11,7 +10,6 @@ import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 
-// 初始化icon
 initializeIcons();
 
 interface NavState {

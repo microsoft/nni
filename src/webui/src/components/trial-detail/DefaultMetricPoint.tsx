@@ -3,7 +3,7 @@ import { Toggle, Stack } from 'office-ui-fabric-react';
 import ReactEcharts from 'echarts-for-react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial'; // eslint-disable-line no-unused-vars
-import { TooltipForAccuracy } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { TooltipForAccuracy, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -30,12 +30,18 @@ interface DefaultPointProps {
 
 interface DefaultPointState {
     bestCurveEnabled?: boolean | undefined;
+    startY: number;  // dataZoomY
+    endY: number;
 }
 
 class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState> {
     constructor(props: DefaultPointProps) {
         super(props);
-        this.state = { bestCurveEnabled: false };
+        this.state = { 
+            bestCurveEnabled: false,
+            startY: 0, // dataZoomY
+            endY: 100
+        };
     }
 
     loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
@@ -46,7 +52,17 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         return nextProps.visible;
     }
 
+    metricDataZoom = (e: EventMap): void => {
+        if (e.batch !== undefined) {
+            this.setState(() => ({
+                startY: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endY: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
+        }
+    }
+
     generateGraphConfig(maxSequenceId: number): any {
+        const { startY, endY } = this.state;
         return {
             grid: {
                 left: '8%',
@@ -65,6 +81,16 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     '</div>'
                 ),
             },
+            dataZoom: [
+                {
+                    id: 'dataZoomY',
+                    type: 'inside',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    start: startY,
+                    end: endY
+                }
+            ],
             xAxis: {
                 name: 'Trial',
                 type: 'category',
@@ -118,6 +144,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     render(): React.ReactNode {
         const graph = this.generateGraph();
         const accNodata = (graph === EmptyGraph ? 'No data' : '');
+        const onEvents = { 'dataZoom': this.metricDataZoom };
 
         return (
             <div>
@@ -140,6 +167,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     }}
                     theme="my_theme"
                     notMerge={true} // update now
+                    onEvents={onEvents}
                 />
                 <div className="showMess">{accNodata}</div>
             </div>

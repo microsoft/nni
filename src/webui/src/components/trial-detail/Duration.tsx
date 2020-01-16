@@ -1,14 +1,14 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
 import { filterDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
 
 interface Runtrial {
-    trialId: Array<string>;
-    trialTime: Array<number>;
+    trialId: string[];
+    trialTime: number[];
 }
 
 interface DurationProps {
@@ -17,6 +17,8 @@ interface DurationProps {
 }
 
 interface DurationState {
+    startDuration: number; // for record data zoom
+    endDuration: number;
     durationSource: {};
 }
 
@@ -26,19 +28,21 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
         super(props);
         this.state = {
+            startDuration: 0, // for record data zoom
+            endDuration: 100,
             durationSource: this.initDuration(this.props.source),
         };
 
     }
 
     initDuration = (source: Array<TableObj>): any => {
-        const trialId: Array<string> = [];
-        const trialTime: Array<number> = [];
+        const trialId: number[] = [];
+        const trialTime: number[] = [];
         const trialJobs = source.filter(filterDuration);
-        Object.keys(trialJobs).map(item => {
-            const temp = trialJobs[item];
-            trialId.push(temp.sequenceId);
-            trialTime.push(temp.duration);
+
+        trialJobs.forEach(item => {
+            trialId.push(item.sequenceId);
+            trialTime.push(item.duration);
         });
         return {
             tooltip: {
@@ -53,19 +57,16 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 left: '1%',
                 right: '4%'
             },
-
-            dataZoom: [{
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                yAxisIndex: 0,
-                orient: 'vertical'
-            }, {
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                xAxisIndex: 0
-            }],
+            dataZoom: [
+                {
+                    id: 'dataZoomY',
+                    type: 'inside',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    start: 0,
+                    end: 100
+                },
+            ],
             xAxis: {
                 name: 'Time',
                 type: 'value',
@@ -83,6 +84,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
     }
 
     getOption = (dataObj: Runtrial): any => {
+        const { startDuration, endDuration } = this.state;
         return {
             tooltip: {
                 trigger: 'axis',
@@ -96,19 +98,16 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 left: '1%',
                 right: '4%'
             },
-
-            dataZoom: [{
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                yAxisIndex: 0,
-                orient: 'vertical'
-            }, {
-                type: 'slider',
-                name: 'trial',
-                filterMode: 'filter',
-                xAxisIndex: 0
-            }],
+            dataZoom: [
+                {
+                    id: 'dataZoomY',
+                    type: 'inside',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    start: startDuration,
+                    end: endDuration
+                },
+            ],
             xAxis: {
                 name: 'Time',
                 type: 'value',
@@ -127,9 +126,9 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
     drawDurationGraph = (source: Array<TableObj>): void => {
         // why this function run two times when props changed?
-        const trialId: Array<string> = [];
-        const trialTime: Array<number> = [];
-        const trialRun: Array<Runtrial> = [];
+        const trialId: string[] = [];
+        const trialTime: number[] = [];
+        const trialRun: Runtrial[] = [];
         const trialJobs = source.filter(filterDuration);
         Object.keys(trialJobs).map(item => {
             const temp = trialJobs[item];
@@ -184,6 +183,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
     render(): React.ReactNode {
         const { durationSource } = this.state;
+        const onEvents = { 'dataZoom': this.durationDataZoom };
         return (
             <div>
                 <ReactEcharts
@@ -191,9 +191,19 @@ class Duration extends React.Component<DurationProps, DurationState> {
                     style={{ width: '95%', height: 412, margin: '0 auto' }}
                     theme="my_theme"
                     notMerge={true} // update now
+                    onEvents={onEvents}
                 />
             </div>
         );
+    }
+
+    private durationDataZoom = (e: EventMap): void => {
+        if (e.batch !== undefined) {
+            this.setState(() => ({
+                startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
+        }
     }
 }
 

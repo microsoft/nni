@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
+import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
-import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface'; // eslint-disable-line no-unused-vars
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
@@ -25,7 +25,6 @@ class TrialManager {
     private batchUpdatedAfterReading: boolean = false;
 
     public async init(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         while (!this.infoInitialized || !this.metricInitialized) {
             await this.update();
         }
