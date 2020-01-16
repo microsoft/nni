@@ -24,3 +24,4 @@ For details, please refer to the following tutorials:
     DARTS <NAS/DARTS>
     P-DARTS <NAS/PDARTS>
     SPOS <NAS/SPOS>
+    CDARTS <NAS/CDARTS>
