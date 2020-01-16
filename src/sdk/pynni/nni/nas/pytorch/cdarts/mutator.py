@@ -41,7 +41,8 @@ class RegularizedDartsMutator(DartsMutator):
         Warnings
         --------
         Though the parameters are set to :math:`-\infty` to be bypassed, they will still receive gradient of 0,
-        which introduced ``nan`` problem when calling ``optimizer.step()``. To solve this issue, 
+        which introduced ``nan`` problem when calling ``optimizer.step()``. To solve this issue, a simple way is to
+        reset nan to :math:`-\infty` each time after the parameters are updated.
         """
         # `cut_choices` is implemented but not used in current implementation of CdartsTrainer
         for mutable in self.mutables:
