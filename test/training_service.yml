@@ -28,6 +28,7 @@ frameworkController:
   maxExecDuration: 15m
   nniManagerIp:
   frameworkcontrollerConfig:
+    serviceAccountName: frameworkbarrier
     storage: azureStorage
     keyVault:
       vaultName:
