@@ -83,7 +83,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     <Stack.Item grow={30} className="overviewBoder cc">
                         <Title1 text="Search space" icon="10.png" />
                         {/* <Stack className="experiment"> */}
-                            <SearchSpace searchSpace={searchSpace} />
+                        <SearchSpace searchSpace={searchSpace} />
                         {/* </Stack> */}
                     </Stack.Item>
                     <Stack.Item grow={40} className="overviewBoder cc">
@@ -128,12 +128,12 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                                 />
                             </Stack>
                         </StackItem>
-                        <StackItem grow={70} styles={{root: {width: 500}}}>
+                        <StackItem grow={70} styles={{ root: { width: 500 } }}>
                             <div id="succeTable"><SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} /></div>
                         </StackItem>
                     </Stack>
                 </Stack>
-            
+
             </div>
         );
     }

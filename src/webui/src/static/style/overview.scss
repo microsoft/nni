@@ -52,3 +52,13 @@
 .link{
     margin-bottom: 10px;
 }
+
+.info{
+    position: relative;
+    top: 15px;
+    left: 10px;
+    span{
+        color: #333;
+        font-size: 14px;
+    }
+}

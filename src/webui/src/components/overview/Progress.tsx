@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, Callout, Link, IconButton, FontWeights, mergeStyleSets, getId, getTheme } from 'office-ui-fabric-react';
+import { Stack, Callout, Link, IconButton, FontWeights, mergeStyleSets, getId, getTheme, StackItem } from 'office-ui-fabric-react';
 import axios from 'axios';
 import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
@@ -7,6 +7,7 @@ import { convertTime } from '../../static/function';
 import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
 import LogDrawer from '../Modal/LogDrawer';
+import MessageInfo from '../Modal/MessageInfo';
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 interface ProgressProps {
@@ -18,7 +19,10 @@ interface ProgressProps {
 
 interface ProgressState {
     isShowLogDrawer: boolean;
-    isCalloutVisible?: boolean; // 
+    isCalloutVisible?: boolean;
+    isShowSucceedInfo: boolean;
+    info: string;
+    typeInfo: string;
 }
 
 const itemStyles: React.CSSProperties = {
@@ -83,18 +87,37 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         super(props);
         this.state = {
             isShowLogDrawer: false,
-            isCalloutVisible: false
+            isCalloutVisible: false,
+            isShowSucceedInfo: false,
+            info: '',
+            typeInfo: 'success'
         };
+    }
+
+    hideSucceedInfo = () => {
+        this.setState(() => ({ isShowSucceedInfo: false }));
+    }
+    /**
+     * info: message content
+     * typeInfo: message type: success | error...
+     * continuousTime: show time, 2000ms 
+     */
+    getMessageInfo = (info: string, typeInfo: string) => {
+        this.setState(() => ({
+            info, typeInfo,
+            isShowSucceedInfo: true
+        }));
+        setTimeout(this.hideSucceedInfo, 2000);
     }
 
     editTrialConcurrency = async (userInput: string): Promise<void> => {
         if (!userInput.match(/^[1-9]\d*$/)) {
-            // message.error('Please enter a positive integer!', 2);
+            this.getMessageInfo('Please enter a positive integer!', 'error');
             return;
         }
         const newConcurrency = parseInt(userInput, 10);
         if (newConcurrency === this.props.concurrency) {
-            // message.info(`Trial concurrency has not changed`, 2);
+            this.getMessageInfo('Trial concurrency has not changed', 'error');
             return;
         }
 
@@ -108,19 +131,19 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 params: { update_type: 'TRIAL_CONCURRENCY' }
             });
             if (res.status === 200) {
-                // message.success(`Successfully updated trial concurrency`);
+                this.getMessageInfo('Successfully updated trial concurrency', 'success');
                 // NOTE: should we do this earlier in favor of poor networks?
                 this.props.changeConcurrency(newConcurrency);
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
-                // message.error(`Failed to update trial concurrency\n${error.response.data.error}`);
+                this.getMessageInfo(`Failed to update trial concurrency\n${error.response.data.error}`, 'error');
             } else if (error.response) {
-                // message.error(`Failed to update trial concurrency\nServer responsed ${error.response.status}`);
+                this.getMessageInfo(`Failed to update trial concurrency\nServer responsed ${error.response.status}`, 'error');
             } else if (error.message) {
-                // message.error(`Failed to update trial concurrency\n${error.message}`);
+                this.getMessageInfo(`Failed to update trial concurrency\n${error.message}`, 'error');
             } else {
-                // message.error(`Failed to update trial concurrency\nUnknown error`);
+                this.getMessageInfo(`Failed to update trial concurrency\nUnknown error`, 'error');
             }
         }
     }
@@ -143,7 +166,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
 
     render(): React.ReactNode {
         const { bestAccuracy } = this.props;
-        const { isShowLogDrawer, isCalloutVisible } = this.state;
+        const { isShowLogDrawer, isCalloutVisible, isShowSucceedInfo, info, typeInfo } = this.state;
 
         const count = TRIALS.countStatus();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -222,9 +245,14 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     bgclass={EXPERIMENT.status}
                     maxString={`Max trial number: ${maxTrialNum}`}
                 />
-                <Stack className="basic colorOfbasic mess">
-                    <p>Best metric</p>
-                    <div>{isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}</div>
+                <Stack className="basic colorOfbasic mess" horizontal>
+                    <StackItem grow={50}>
+                        <p>Best metric</p>
+                        <div>{isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}</div>
+                    </StackItem>
+                    <StackItem>
+                        {isShowSucceedInfo && <MessageInfo className="info" typeInfo={typeInfo} info={info} />}
+                    </StackItem>
                 </Stack>
                 <Stack horizontal horizontalAlign="space-between" className="mess">
                     <span style={itemStyles} className="basic colorOfbasic">

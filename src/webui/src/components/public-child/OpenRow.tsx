@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
+import MessageInfo from '../Modal/MessageInfo';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
 import { Stack, PrimaryButton, Pivot, PivotItem, Dialog, DialogFooter, DefaultButton } from 'office-ui-fabric-react';
@@ -17,6 +18,9 @@ interface OpenRowProps {
 interface OpenRowState {
     isShowFormatModal: boolean;
     formatStr: string;
+    typeInfo: string;
+    info: string;
+    isHidenInfo: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
@@ -25,13 +29,16 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         super(props);
         this.state = {
             isShowFormatModal: false,
-            formatStr: ''
+            formatStr: '',
+            typeInfo: '',
+            info: '',
+            isHidenInfo: true
         };
     }
 
     showFormatModal = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(trial.info.hyperParameters, null, 4);
+        const params = JSON.stringify(trial.description.parameters, null, 4);
         // open modal with format string
         this.setState({ isShowFormatModal: true, formatStr: params });
     }
@@ -41,26 +48,32 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.setState({ isShowFormatModal: false, formatStr: '' });
     }
 
+    hideMessageInfo = () => {
+        this.setState(() => ({ isHidenInfo: true }));
+    }
+    /**
+     * info: message content
+     * typeInfo: message type: success | error...
+     * continuousTime: show time, 2000ms 
+     */
+    getCopyStatus = (info: string, typeInfo: string) => {
+        this.setState(() => ({ info, typeInfo, isHidenInfo: false }));
+        setTimeout(this.hideMessageInfo, 2000);
+    }
+
     copyParams = (): void => {
         // json format
         const { formatStr } = this.state;
         if (copy.default(formatStr)) {
-            alert('succeed');
+            this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
         } else {
-            alert('failed');
+            this.getCopyStatus('Failed !', 'error');
         }
-        // if (copy(formatStr) === true) {
-        //     // message.destroy();
-        //     // message.success('Success copy parameters to clipboard in form of python dict !', 3);
-        // } else {
-        //     // message.destroy();
-        //     // message.error('Failed !', 2);
-        // }
         this.hideFormatModal();
     }
 
     render(): React.ReactNode {
-        const { isShowFormatModal, formatStr } = this.state;
+        const { isShowFormatModal, formatStr, isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
         const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
@@ -85,7 +98,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     <div>Current Phase: {multiProgress}.</div>
                                 </Stack>
                                 :
-                                <div />
+                                null
                         }
                         {
                             trial.info.hyperParameters !== undefined
@@ -100,7 +113,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             data={trial.description.parameters}
                                         />
                                     </Stack>
-                                    <Stack className="copy" styles={{root: {width: 128}}}>
+                                    <Stack className="copy" styles={{ root: { width: 128 } }}>
                                         <PrimaryButton
                                             onClick={this.showFormatModal.bind(this, trial)}
                                             text="Copy as json"
@@ -150,6 +163,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                         </DialogFooter>
                     </Dialog>
                 }
+                {/* copy success | failed message info */}
+                {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
             </Stack >
         );
     }
