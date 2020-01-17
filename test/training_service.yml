@@ -24,7 +24,7 @@ kubeflow:
       image:
   trainingServicePlatform: kubeflow
 
-frameworkController:
+frameworkcontroller:
   maxExecDuration: 15m
   nniManagerIp:
   frameworkcontrollerConfig:
