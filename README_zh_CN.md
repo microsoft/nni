@@ -83,6 +83,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/zh_CN/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
+           <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
               <a href="docs/zh_CN/SupportedFramework_Library.md">更多...</a><br/>
           </ul>
         </ul>
