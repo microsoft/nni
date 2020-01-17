@@ -24,6 +24,31 @@ kubeflow:
       image:
   trainingServicePlatform: kubeflow
 
+frameworkController:
+  maxExecDuration: 15m
+  nniManagerIp:
+  frameworkcontrollerConfig:
+    storage: azureStorage
+    keyVault:
+      vaultName:
+      name:
+    azureStorage:
+      accountName:
+      azureShare:
+  trial:
+    taskRoles:
+      - name: worker
+        taskNum: 1
+        command:
+        gpuNum: 1
+        cpuNum: 1
+        memoryMB: 8192
+        image:
+        frameworkAttemptCompletionPolicy:
+          minFailedTaskCount: 1
+          minSucceededTaskCount: 1
+  trainingServicePlatform: frameworkcontroller
+
 local:
   trainingServicePlatform: local
 pai:
