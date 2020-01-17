@@ -322,13 +322,14 @@ You can use these commands to get more information about the experiment
 
 熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =)：
 
-* 推荐新贡献者先找到标有 ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) 标签的 Issue。这些都比较简单，可以从这些问题开始。
+* We recommend new contributors to start with simple issues: ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
 * [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
 * [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
-* [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
-* [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
-* [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
+* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
+* [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
+* [Implement a new NAS trainer on NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [Customize your own Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
 
