@@ -25,7 +25,7 @@ jobs:
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
-    displayName: 'Install dependencies for integration tests in frameworkController mode'
+    displayName: 'Install dependencies for integration tests in frameworkcontroller mode'
 
   - script: |
       if [ $(build_docker_img) = 'true' ]

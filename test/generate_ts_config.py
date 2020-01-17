@@ -42,7 +42,7 @@ def update_training_service_config(args):
             config[args.ts]['kubeflowConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['worker']['image'] = args.nni_docker_image
-    elif args.ts == 'frameworkController':
+    elif args.ts == 'frameworkcontroller':
         if args.nfs_server is not None:
             config[args.ts]['frameworkcontrollerConfig']['nfs']['server'] = args.nfs_server
         if args.nfs_path is not None:
@@ -84,7 +84,7 @@ def convert_command():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkController'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
