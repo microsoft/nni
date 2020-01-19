@@ -141,10 +141,12 @@ class LayerChoice(Mutable):
         If ``return_mask``, return output tensor and a mask. Otherwise return tensor only.
     key : str
         Key of the input choice.
-    """
 
-    length = None
-    """Number of ops to choose from (`int`)."""
+    Attributes
+    ----------
+    length : int
+        Number of ops to choose from.
+    """
 
     def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)

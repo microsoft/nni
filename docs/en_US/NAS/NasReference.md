@@ -1,5 +1,9 @@
 # NAS Reference
 
+```eval_rst
+.. contents::
+```
+
 ## Mutables
 
 ```eval_rst

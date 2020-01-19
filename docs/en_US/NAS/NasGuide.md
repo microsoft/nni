@@ -1,6 +1,8 @@
 # Guide: Using NAS on NNI
 
 ```eval_rst
+.. contents::
+
 .. Note:: The APIs are in an experimental stage. The current programing interface is subject to change.
 ```
 
