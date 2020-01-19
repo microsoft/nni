@@ -71,7 +71,7 @@ The general purpose of InputChoice is a callable module that receives a list of 
 
 Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea.
 
-`LayerChoice` and `InputChoice` are both **mutable**s. For advanced usage on mutables, see [Mutables](./NasReference.md#mutables). 
+`LayerChoice` and `InputChoice` are both **mutables**. For advanced usage on mutables, see [Mutables](./NasReference.md#mutables). 
 
 ## Use a Search Algorithm
 
