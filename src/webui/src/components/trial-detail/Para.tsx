@@ -622,8 +622,8 @@ class Para extends React.Component<ParaProps, ParaState> {
         const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
         return (
             <div className="parameter">
-                <Stack horizontal className="meline" horizontalAlign="end">
-                    <span>Top</span>
+                <Stack horizontal className="para-filter" horizontalAlign="end">
+                    <span className="para-filter-text">Top</span>
                     <Dropdown
                         selectedKey={selectedItem ? selectedItem.key : undefined}
                         onChange={this.percentNum}
@@ -636,6 +636,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '1', text: '100%' },
                         ]}
                         styles={{ dropdown: { width: 300 } }}
+                        className="para-filter-percent"
                     />
                     <Dropdown
                         placeholder="Select options"

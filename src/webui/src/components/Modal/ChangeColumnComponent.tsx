@@ -50,7 +50,6 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     saveUserSelectColumn = (): void => {
         const { userSelectColumnList } = this.state;
         const { showColumn } = this.props;
-        console.info('showColumn', showColumn); // eslint-disable-line
         // sort by Trial No. | ID | Duration | Start Time | End Time | ...
         const sortColumn: string[] = [];
         /**

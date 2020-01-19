@@ -68,7 +68,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 },
             ],
             xAxis: {
-                name: 'Time',
+                name: 'Time/s',
                 type: 'value',
             },
             yAxis: {
@@ -188,7 +188,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
             <div>
                 <ReactEcharts
                     option={durationSource}
-                    style={{ width: '95%', height: 412, margin: '0 auto' }}
+                    style={{ width: '95%', height: 412, margin: '0 auto', marginTop: 15 }}
                     theme="my_theme"
                     notMerge={true} // update now
                     onEvents={onEvents}

@@ -3,7 +3,8 @@ import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps,
-    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode
+    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode,
+    getTheme, mergeStyleSets, FontWeights, FontSizes
 } from 'office-ui-fabric-react';
 import { completed, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
@@ -28,6 +29,45 @@ require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
+});
+
+// Themed styles for the example.
+const theme = getTheme();
+const contentStyles = mergeStyleSets({
+    container: {
+        display: 'flex',
+        flexFlow: 'column nowrap',
+        alignItems: 'stretch'
+    },
+    header: [
+        theme.fonts.xLargePlus,
+        {
+            flex: '1 1 auto',
+            borderTop: `4px solid ${theme.palette.themePrimary}`,
+            color: theme.palette.neutralPrimary,
+            display: 'flex',
+            fontSize: FontSizes.xLarge,
+            alignItems: 'center',
+            fontWeight: FontWeights.semibold,
+            padding: '12px 12px 14px 24px'
+        }
+    ],
+    body: {
+        flex: '4 4 auto',
+        padding: '0 24px 24px 24px',
+        overflowY: 'hidden',
+        selectors: {
+            p: {
+                margin: '14px 0'
+            },
+            'p:first-child': {
+                marginTop: 0
+            },
+            'p:last-child': {
+                marginBottom: 0
+            }
+        }
+    }
 });
 
 interface TableListProps {
@@ -128,6 +168,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'accuracy',
         fieldName: 'accuracy',
         minWidth: 200,
+        maxWidth: 300,
         isResizable: true,
         data: 'number',
         onColumnClick: this._onColumnClick,
@@ -138,29 +179,32 @@ class TableList extends React.Component<TableListProps, TableListState> {
         name: 'Trial No.',
         key: 'sequenceId',
         fieldName: 'sequenceId',
-        minWidth: 50,
+        minWidth: 80,
+        maxWidth: 120,
         className: 'tableHead',
         data: 'string',
         onColumnClick: this._onColumnClick,
     };
-    
+
     IdColumnConfig: any = {
         name: 'ID',
         key: 'id',
         fieldName: 'id',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'string',
         onColumnClick: this._onColumnClick,
         className: 'tableHead leftTitle'
     };
-    
-    
+
+
     StartTimeColumnConfig: any = {
         name: 'Start Time',
         key: 'startTime',
         fieldName: 'startTime',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'number',
         onColumnClick: this._onColumnClick,
@@ -168,12 +212,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span>{formatTimestamp(record.startTime)}</span>
         )
     };
-    
+
     EndTimeColumnConfig: any = {
         name: 'End Time',
         key: 'endTime',
         fieldName: 'endTime',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'number',
         onColumnClick: this._onColumnClick,
@@ -181,12 +226,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span>{formatTimestamp(record.endTime, '--')}</span>
         )
     };
-    
+
     DurationColumnConfig: any = {
         name: 'Duration',
         key: 'duration',
         fieldName: 'duration',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'number',
         onColumnClick: this._onColumnClick,
@@ -194,13 +240,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span className="durationsty">{convertDuration(record.duration)}</span>
         )
     };
-    
+
     StatusColumnConfig: any = {
         name: 'Status',
         key: 'status',
         fieldName: 'status',
         className: 'tableStatus',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'string',
         onColumnClick: this._onColumnClick,
@@ -208,12 +255,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span className={`${record.status} commonStyle`}>{record.status}</span>
         ),
     };
-    
+
     IntermediateCountColumnConfig: any = {
         name: 'Intermediate result',
         dataIndex: 'intermediateCount',
         fieldName: 'intermediateCount',
         minWidth: 150,
+        maxWidth: 200,
         isResizable: true,
         data: 'number',
         onColumnClick: this._onColumnClick,
@@ -221,7 +269,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span>{`#${record.intermediateCount}`}</span>
         )
     };
-    
+
     showIntermediateModal = async (id: string, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
@@ -360,7 +408,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
     private getSelectedRows = new Selection({
         onSelectionChanged: (): void => {
             this.setState(() => ({ selectRows: this.getSelectedRows.getSelection() }));
-            console.info(this.getSelectedRows.getSelection()); // eslint-disable-line
         }
     });
 
@@ -448,7 +495,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'operation',
                         fieldName: 'operation',
                         minWidth: 120, // TODO: need to test 120
+                        maxWidth: 200,
                         isResizable: true,
+                        className: 'detail-table',
                         onRender: (record: any) => {
                             const trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN') ? false : true;
@@ -459,6 +508,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         title="Intermediate"
                                         onClick={this.showIntermediateModal.bind(this, record.id)}
+                                        styles={{root: {padding: 0, width: '10px !important'}}}
                                     >
                                         {completed}
                                     </PrimaryButton>
@@ -523,7 +573,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const { columnList } = nextProps;
         this.setState({ tableColumns: this.initTableColumnList(columnList) });
 
-
     }
     render(): React.ReactNode {
         const { intermediateKeys, modalIntermediateWidth, modalIntermediateHeight,
@@ -535,7 +584,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
 
         return (
-            <Stack className="tableList">
+            <Stack>
                 <div id="tableList">
                     <DetailsList
                         columns={tableColumns}
@@ -545,45 +594,45 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
                     />
-                    {/* Intermediate Result Modal */}
-                    <Modal
-                        isOpen={modalVisible}
-                        onDismiss={this.hideIntermediateModal}
-                    >
-                        {
-                            intermediateOtherKeys.length > 1
-                                ?
-                                <Stack className="selectKeys" styles={{ root: { width: 800 } }}>
-                                    <Dropdown
-                                        className="select"
-                                        selectedKeys={intermediateKeys}
-                                        onChange={this.selectOtherKeys}
-                                        options={
-                                            intermediateOtherKeys.map((key, item) => {
-                                                return {
-                                                    key: key, text: intermediateOtherKeys[item]
-                                                };
-                                            })
-                                        }
-                                        styles={{ dropdown: { width: 300 } }}
-                                    />
-                                </Stack>
-                                :
-                                <div />
-                        }
-                        <ReactEcharts
-                            option={intermediateOption}
-                            style={{
-                                width: 0.5 * modalIntermediateWidth,
-                                height: 0.7 * modalIntermediateHeight,
-                                padding: 20
-                            }}
-                            theme="my_theme"
-                        />
-
-                    </Modal>
 
                 </div>
+                {/* Intermediate Result Modal */}
+                <Modal
+                    isOpen={modalVisible}
+                    onDismiss={this.hideIntermediateModal}
+                    containerClassName={contentStyles.container}
+                >
+                    {
+                        intermediateOtherKeys.length > 1
+                            ?
+                            <Stack className="selectKeys" styles={{ root: { width: 800 } }}>
+                                <Dropdown
+                                    className="select"
+                                    selectedKeys={intermediateKeys}
+                                    onChange={this.selectOtherKeys}
+                                    options={
+                                        intermediateOtherKeys.map((key, item) => {
+                                            return {
+                                                key: key, text: intermediateOtherKeys[item]
+                                            };
+                                        })
+                                    }
+                                    styles={{ dropdown: { width: 300 } }}
+                                />
+                            </Stack>
+                            :
+                            <div />
+                    }
+                    <ReactEcharts
+                        option={intermediateOption}
+                        style={{
+                            width: 0.5 * modalIntermediateWidth,
+                            height: 0.7 * modalIntermediateHeight,
+                            padding: 20
+                        }}
+                        theme="my_theme"
+                    />
+                </Modal>
                 {/* Add Column Modal */}
                 {
                     isShowColumn &&

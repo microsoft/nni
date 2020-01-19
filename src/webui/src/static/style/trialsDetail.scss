@@ -34,7 +34,7 @@ $bg: #b3b3b3;
 .trial{
     /* graph, title total height */
     width: 100%;
-    height: 478px;
+    height: 500px;
     /* graph all title bg*/
     .ms-FocusZone{
         background-color: $bg;
@@ -71,10 +71,6 @@ $bg: #b3b3b3;
     }
 }
 
-.allList{
-    margin-top: 15px;
-}
-
 .default-metric{
     width: 90%;
     text-align: right;
@@ -88,19 +84,35 @@ $bg: #b3b3b3;
     }
 }
 
-/* for # intermediate in intermediate graph*/
+.detial-title{
+    .ms-Button{
+        i{
+            font-size: 20px;
+        }
+    }
+}
+/* for yAxis # intermediate position in intermediate graph*/
 .intermediate-graph{
     position: relative;
     .yAxis{
         color: #333;
         position: absolute;
-        left: 45%;
-        top: 86%;
+        left: 50%;
+        top: 88%;
+        transform: translate(-50%);
     }
 }
 
-.graphContent{
+#tableList{
+    width: 96%;
     margin: 0 auto;
 }
 
-
+.detail-table{
+    .ms-Button{
+        padding: 0;
+        span{
+            padding: 0;
+        }
+    }
+}

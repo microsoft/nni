@@ -156,8 +156,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
  
     render(): React.ReactNode {
         const { closeCustomizeModal, visible } = this.props;
-        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter, changeMap } = this.state;
-        console.info('chnage', changeMap); // eslint-disable-line
+        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
         const warning = 'The parameters you set are not in our search space, this may cause the tuner to crash, Are'
             + ' you sure you want to continue submitting?';
         return (

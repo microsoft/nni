@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {
-    Stack, Pivot, PivotItem, StackItem, PrimaryButton, Dropdown, IDropdownOption
+    Stack, Pivot, PivotItem, StackItem, Dropdown, IDropdownOption, DefaultButton
 } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { Trial } from '../static/model/trial'; // eslint-disable-line no-unused-vars
+import { Trial } from '../static/model/trial';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -77,7 +77,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
 
     handleTablePageSizeSelect = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
         if (item !== undefined) {
-            console.info(item.text); // eslint-disable-line
             this.setState({ tablePageSize: item.text === 'all' ? -1 : parseInt(item.text, 10) });
         }
     }
@@ -92,7 +91,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             if (this.searchInput !== null) {
                 this.searchInput.value = '';
             }
-            // console.info(item.text); // eslint-disable-line
             this.setState(() => ({ searchType: item.text }));
         }
     }
@@ -117,7 +115,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Pivot defaultSelectedKey={"0"}>
+                    <Pivot defaultSelectedKey={"0"} className="detial-title">
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                         <PivotItem headerText="Default metric" itemIcon="Recent" key="1">
                             <Stack className="graph">
@@ -139,14 +137,13 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
-                        <PivotItem headerText="Duration" itemIcon="Recent" key="3">
+                        <PivotItem headerText="Duration" itemIcon="BarChartHorizontal" key="3">
                             <Duration source={source} whichGraph={whichGraph} />
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
-                        <PivotItem headerText="Intermediate result" itemIcon="Recent" key="4">
-                            <div className="graphContent">
-                                <Intermediate source={source} whichGraph={whichGraph} />
-                            </div>
+                        <PivotItem headerText="Intermediate result" itemIcon="StackedLineChart" key="4">
+                            {/* *why this graph has small footprint? */}
+                            <Intermediate source={source} whichGraph={whichGraph} />
                         </PivotItem>
                     </Pivot>
                 </div>
@@ -155,39 +152,39 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 <Stack horizontal className="allList">
                     <StackItem grow={50}>
                         <Stack horizontal>
-                            <span>Show</span>
+                            <span className="allList-entry">Show</span>
                             <Dropdown
                                 selectedKey={tablePageSize ? tablePageSize.toString() : undefined}
                                 defaultSelectedKeys={['20']}
                                 options={options}
                                 onChange={this.handleTablePageSizeSelect}
-                                styles={{root: {width: 80}}}
+                                styles={{ root: { width: 80, padding: '0 10px' } }}
                             />
-                            <span>entries</span>
+                            <span className="allList-entry">entries</span>
                         </Stack>
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign="end">
-                            <PrimaryButton
+                            <DefaultButton
+                                className="allList-button-gap"
+                                text="Add column"
                                 onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
-                            >
-                                Add column
-                            </PrimaryButton>
-                            <PrimaryButton
+                            />
+                            <DefaultButton
+                                text="Compare"
+                                className="allList-button-gap"
                                 // use child-component tableList's function, the function is in child-component.
                                 onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
-                            >
-                                Compare
-                            </PrimaryButton>
+                            />
                             <Dropdown
                                 selectedKey={searchType}
                                 options={searchOptions}
                                 onChange={this.updateSearchFilterType}
-                                styles={{root: {width: 150}}}
+                                styles={{ root: { width: 150 } }}
                             />
                             <input
                                 type="text"
-                                className="search-input"
+                                className="allList-search-input"
                                 placeholder={`Search by ${this.state.searchType}`}
                                 onChange={this.searchTrial}
                                 style={{ width: 230 }}

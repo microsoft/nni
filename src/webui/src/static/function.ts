@@ -1,7 +1,7 @@
 import * as JSON5 from 'json5';
 import axios from 'axios';
 import { MANAGER_IP } from './const';
-import { MetricDataRecord, FinalType, TableObj } from './interface'; // eslint-disable-line no-unused-vars
+import { MetricDataRecord, FinalType, TableObj } from './interface';
 
 const convertTime = (num: number): string => {
     if (num <= 0) {

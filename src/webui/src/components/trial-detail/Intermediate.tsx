@@ -1,9 +1,13 @@
 import * as React from 'react';
-import { Stack, PrimaryButton, Toggle } from 'office-ui-fabric-react';
-import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { Stack, PrimaryButton, Toggle, IStackTokens } from 'office-ui-fabric-react';
+import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
+
+const stackTokens: IStackTokens = {
+    childrenGap: 20
+};
 
 interface IntermediateState {
     detailSource: Array<TableObj>;
@@ -280,11 +284,11 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         return (
             <div>
                 {/* style in para.scss */}
-                <Stack horizontal horizontalAlign="end" className="meline intermediate">
+                <Stack horizontal horizontalAlign="end" tokens={stackTokens} className="meline intermediate">
                     {
                         isFilter
                             ?
-                            <span style={{ marginRight: 15 }}>
+                            <div>
                                 <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
@@ -306,18 +310,21 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                     onClick={this.filterLines}
                                     disabled={isLoadconfirmBtn}
                                 />
-                            </span>
+                            </div>
                             :
                             null
                     }
                     {/* filter message */}
-                    <span>Filter</span>
-                    <Toggle onChange={this.switchTurn} />
+                    <Stack horizontal className="filter-toggle">
+                        <span>Filter</span>
+                        <Toggle onChange={this.switchTurn} />
+                    </Stack>
+
                 </Stack>
                 <div className="intermediate-graph">
                     <ReactEcharts
                         option={interSource}
-                        style={{ width: '100%', height: 418, margin: '0 auto' }}
+                        style={{ width: '100%', height: 400, margin: '0 auto' }}
                         notMerge={true} // update now
                         onEvents={IntermediateEvents}
                     />
