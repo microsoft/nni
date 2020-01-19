@@ -8,8 +8,6 @@
 
 Modern Neural Architecture Search (NAS) methods usually incorporate [three dimensions][1]: search space, search strategy, and performance estimation strategy. Search space often contains a limited neural network architectures to explore, while search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, search strategy should find the best architecture in the search space and report it to users. After users obtain such "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
 
-
-
 ## Implement a Search Space
 
 Assuming now we've got a baseline model, what should we do to be empowered with NAS? Take [MNIST on PyTorch](https://github.com/pytorch/examples/blob/master/mnist/main.py) as an example, the story looks like this:
@@ -71,7 +69,7 @@ The general purpose of InputChoice is a callable module that receives a list of 
 
 [](){:name='mutable-keys'} Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea.
 
-For advanced usage on `LayerChoice` and `InputChoice` and more details (`MutableScope` and more), see [Mutables](./NasMutables.md). 
+`LayerChoice` and `InputChoice` are both **mutable**s. For advanced usage on mutables, see [Mutables](./NasMutables.md). 
 
 ## Use a Search Algorithm
 

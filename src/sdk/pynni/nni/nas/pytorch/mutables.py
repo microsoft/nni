@@ -19,7 +19,13 @@ class Mutable(nn.Module):
     decisions among different mutables. In mutator's implementation, mutators should use the key to
     distinguish different mutables. Mutables that share the same key should be "similar" to each other.
 
-    Currently the default scope for keys is global.
+    Currently the default scope for keys is global. By default, the keys uses a global counter from 1 to
+    produce unique ids. In case multiple models and defined and the counter needs to rewinded.
+
+    Parameters
+    ----------
+    key : str
+        The key of mutable. 
     """
 
     def __init__(self, key=None):
@@ -101,6 +107,12 @@ class LayerChoice(Mutable):
         self.return_mask = return_mask
 
     def forward(self, *inputs):
+        """
+        Returns
+        -------
+        tuple of tensors
+            Output and selection mask. If ``return_mask`` is ``False``, only output is returned.
+        """
         out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
         if self.return_mask:
             return out, mask
@@ -177,7 +189,7 @@ class InputChoice(Mutable):
 
         Returns
         -------
-        tuple of torch.Tensor and torch.Tensor or torch.Tensor
+        tuple of tensors
         """
         optional_input_list = optional_inputs
         if isinstance(optional_inputs, dict):

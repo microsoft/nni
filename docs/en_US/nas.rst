@@ -20,8 +20,7 @@ For details, please refer to the following tutorials:
 
     Overview <NAS/Overview>
     Guide <NAS/NasGuide>
-    API Reference <NAS/Reference>
-    NAS Interface <NAS/NasInterface>
+    API Reference <NAS/NasReference>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
     P-DARTS <NAS/PDARTS>
