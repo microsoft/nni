@@ -74,7 +74,7 @@ class AverageMeterGroup:
 class AverageMeter:
     """
     Computes and stores the average and current value.
-    
+
     Parameters
     ----------
     name : str
@@ -100,7 +100,7 @@ class AverageMeter:
     def update(self, val, n=1):
         """
         Update with value and weight.
-        
+
         Parameters
         ----------
         val : float or int

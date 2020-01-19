@@ -69,7 +69,7 @@ class Callback:
 class LRSchedulerCallback(Callback):
     """
     Calls scheduler on every epoch ends.
-    
+
     Parameters
     ----------
     scheduler : LRScheduler

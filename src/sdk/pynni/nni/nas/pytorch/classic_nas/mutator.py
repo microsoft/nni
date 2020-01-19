@@ -24,7 +24,7 @@ def get_and_apply_next_architecture(model):
     """
     Wrapper of :class:`~nni.nas.pytorch.classic_nas.mutator.ClassicMutator` to make it more meaningful,
     similar to ``get_next_parameter`` for HPO.
-    
+
     Tt will generate search space based on ``model``.
     If env ``NNI_GEN_SEARCH_SPACE`` exists, this is in dry run mode for
     generating search space for the experiment.
