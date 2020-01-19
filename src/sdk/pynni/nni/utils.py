@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""
-utils.py
-"""
-
 import os
+import functools
 from enum import Enum, unique
+import json_tricks
 
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
+
+to_json = functools.partial(json_tricks.dumps, allow_nan=True)
 
 @unique
 class OptimizeMode(Enum):
