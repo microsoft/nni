@@ -12,11 +12,14 @@ Contents
     :titlesonly:
 
     Overview
-    QuickStart<Tutorial/QuickStart>
-    Tutorials<tutorials>
-    Examples<examples>
-    Reference<reference>
-    FAQ<Tutorial/FAQ>
-    Contribution<contribution>
-    Changelog<Release>
-    Community Sharings<CommunitySharings/community_sharings>
+    Installation <installation>
+    QuickStart <Tutorial/QuickStart>
+    Hyper-parameter Tuning <hyperparameter_tune>
+    Neural Architecture Search <nas>
+    Model Compression <model_compression>
+    Feature Engineering <feature_engineering>
+    References <reference>
+    Community Sharings <CommunitySharings/community_sharings>
+    FAQ <Tutorial/FAQ>
+    How to Contribution <contribution>
+    Changelog <Release>

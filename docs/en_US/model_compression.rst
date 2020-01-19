@@ -13,8 +13,6 @@ On the other hand, users could easily customize their new compression algorithms
 For details, please refer to the following tutorials:
 
 ..  toctree::
-    :maxdepth: 2
-
     Overview <Compressor/Overview>
     Level Pruner <Compressor/Pruner>
     AGP Pruner <Compressor/Pruner>
