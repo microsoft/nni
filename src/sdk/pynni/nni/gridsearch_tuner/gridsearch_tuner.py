@@ -102,6 +102,9 @@ class GridSearchTuner(Tuner):
         """
         Parse type of randint parameter and return a list
         """
+        if param_value[0] >= param_value[1]:
+            raise ValueError("Randint should contain at least 1 candidate, but [%s, %s) contains none.",
+                             param_value[0], param_value[1])
         return np.arange(param_value[0], param_value[1]).tolist()
 
     def _expand_parameters(self, para):

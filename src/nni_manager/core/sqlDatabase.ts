@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs';
+import * as JSON5 from 'json5';
 import * as path from 'path';
 import * as sqlite3 from 'sqlite3';
 import { Deferred } from 'ts-deferred';
@@ -202,10 +203,10 @@ class SqlDB implements Database {
 
     public storeMetricData(trialJobId: string, data: string): Promise<void> {
         const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
-        const json: MetricDataRecord = JSON.parse(data);
-        const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
+        const json: MetricDataRecord = JSON5.parse(data);
+        const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON5.stringify(json.data)];
 
-        this.log.trace(`storeMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`storeMetricData: SQL: ${sql}, args: ${JSON5.stringify(args)}`);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
