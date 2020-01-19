@@ -44,7 +44,7 @@ import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 import { PAIJobRestServer } from '../paiJobRestServer';
 
 const yaml = require('js-yaml');
-const deepmerge = require('deepmerge')
+const deepmerge = require('deepmerge');
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
