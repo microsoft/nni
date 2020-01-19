@@ -47,7 +47,7 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
-# Add mock modules
+# 添加示例模块
 autodoc_mock_imports = ['apex']
 
 # Add any paths that contain templates here, relative to this directory.
