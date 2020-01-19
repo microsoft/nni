@@ -33,6 +33,16 @@ Here are some common dependencies to run the examples. PyTorch needs to be above
 * PyTorch 1.2+
 * git
 
+## Supported Distributed NAS Algorithms
+
+|Name|Brief Introduction of Algorithm|
+|---|---|
+| [SPOS](SPOS.md) | [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) constructs a simplified supernet trained with an uniform path sampling method, and applies an evolutionary algorithm to efficiently search for the best-performing architectures. |
+
+```eval_rst
+.. Note:: SPOS is a two-stage algorithm, whose first stage is one-shot and second stage is distributed, leveraging result of first stage as a checkpoint.
+```
+
 ## Use NNI API
 
 
