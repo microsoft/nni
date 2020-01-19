@@ -190,7 +190,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 return yaml.safeDump({...paiJobConfig, ...additionalPAIConfig});
             } catch (error) {
-                this.log.error(`Loading ${this.paiTrialConfig.paiConfigPath} error: ${error}`);
+                this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
             }
         } else {
             return yaml.safeDump(paiJobConfig);
