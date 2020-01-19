@@ -238,6 +238,18 @@ The complete example of random mutator can be found [here](https://github.com/mi
 
 For advanced usages, e.g., users want to manipulate the way modules in `LayerChoice` are executed, they can inherit `BaseMutator`, and overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the callback implementation of `LayerChoice` and `InputChoice` respectively. Users can still use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. For details, please refer to [reference](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) here to learn more.
 
+```eval_rst
+.. tip::
+    A useful application of random mutator is for debugging. Use
+   
+    .. code-block:: python
+
+        mutator = RandomMutator(model)
+        mutator.reset()
+
+    will immediately set one possible candidate in the search space as the active one.
+```
+
 ### Search with Distribution
 
 Behind the implementation of distributed NAS, is that NNI automatically generate a search space in JSON format from users' code, which looks like the example below:

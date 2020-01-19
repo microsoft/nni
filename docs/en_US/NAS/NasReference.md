@@ -36,6 +36,13 @@
     :members:
 ```
 
+### Random Mutator
+
+```eval_rst
+..  autoclass:: nni.nas.pytorch.random.RandomMutator
+    :members:
+```
+
 ### Utilities
 
 ```eval_rst
