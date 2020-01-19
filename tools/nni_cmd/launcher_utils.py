@@ -275,6 +275,7 @@ def validate_pai_trial_conifg(experiment_config):
             print_warning(warning_information.format('outputDir'))
     if experiment_config.get('trainingServicePlatform') == 'pai':
         if experiment_config.get('trial').get('paiConfigPath'):
+            # validate the file format of paiConfigPath, ensure it is yaml format
             get_yml_content(experiment_config['trial']['paiConfigPath'])
 
 def validate_all_content(experiment_config, config_path):
