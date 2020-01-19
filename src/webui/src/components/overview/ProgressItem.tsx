@@ -22,7 +22,7 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
             <div>
                 <Stack horizontal className={`probar ${bgclass}`}>
                     <div className="name">{who}</div>
-                    <StackItem className="showProgress">
+                    <div className="showProgress" style={{ width: '80%' }}>
                         <ProgressIndicator
                             barHeight={30}
                             percentComplete={percent}
@@ -31,8 +31,8 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
                             <StackItem grow={30}>0</StackItem>
                             <StackItem className="right" grow={70}>{maxString}</StackItem>
                         </Stack>
-                    </StackItem>
-                    <StackItem className="description">{description}</StackItem>
+                    </div>
+                    <div className="description" style={{ width: '20%' }}>{description}</div>
                 </Stack>
                 <br />
             </div>

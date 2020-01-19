@@ -18,23 +18,22 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
 
     render(): React.ReactNode {
         return (
-            <Stack horizontal className="main">
-                <Stack.Item grow={100 / 3} className="padItem basic">
+            <Stack horizontal horizontalAlign="space-between" className="main">
+                <Stack.Item grow={3} className="padItem basic">
                     <p>Name</p>
                     <div>{EXPERIMENT.profile.params.experimentName}</div>
                     <p>ID</p>
                     <div>{EXPERIMENT.profile.id}</div>
                 </Stack.Item>
-                <Stack.Item grow={100 / 3} className="padItem basic">
+                <Stack.Item grow={3} className="padItem basic">
                     <p>Start time</p>
                     <div className="nowrap">{formatTimestamp(EXPERIMENT.profile.startTime)}</div>
                     <p>End time</p>
                     <div className="nowrap">{formatTimestamp(EXPERIMENT.profile.endTime)}</div>
                 </Stack.Item>
-                <Stack.Item grow={100 / 3} className="padItem basic">
+                <Stack.Item  className="padItem basic">
                     <p>Log directory</p>
                     <div className="nowrap">
-                        {/* need test */}
                         <TooltipHost
                             content={EXPERIMENT.profile.logDir || ''}
                             id={this._hostId}

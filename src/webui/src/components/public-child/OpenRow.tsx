@@ -48,7 +48,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.setState({ isShowFormatModal: false, formatStr: '' });
     }
 
-    hideMessageInfo = () => {
+    hideMessageInfo = (): void => {
         this.setState(() => ({ isHidenInfo: true }));
     }
     /**
@@ -56,7 +56,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
      * typeInfo: message type: success | error...
      * continuousTime: show time, 2000ms 
      */
-    getCopyStatus = (info: string, typeInfo: string) => {
+    getCopyStatus = (info: string, typeInfo: string): void => {
         this.setState(() => ({ info, typeInfo, isHidenInfo: false }));
         setTimeout(this.hideMessageInfo, 2000);
     }

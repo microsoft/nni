@@ -94,7 +94,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         };
     }
 
-    hideSucceedInfo = () => {
+    hideSucceedInfo = (): void => {
         this.setState(() => ({ isShowSucceedInfo: false }));
     }
     /**
@@ -102,7 +102,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
      * typeInfo: message type: success | error...
      * continuousTime: show time, 2000ms 
      */
-    getMessageInfo = (info: string, typeInfo: string) => {
+    getMessageInfo = (info: string, typeInfo: string): void => {
         this.setState(() => ({
             info, typeInfo,
             isShowSucceedInfo: true

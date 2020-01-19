@@ -4,7 +4,7 @@ import DefaultMetric from '../public-child/DefaultMetric';
 import Details from './Details';
 import { convertDuration } from '../../static/function';
 import { TRIALS } from '../../static/datamodel';
-// import '../../static/style/succTable.scss';
+import '../../static/style/succTable.scss';
 import '../../static/style/openRow.scss';
 
 interface SuccessTableProps {
@@ -60,7 +60,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 80,
+            minWidth: 60,
             maxWidth: 80,
             data: 'number',
             onColumnClick: this._onColumnClick
@@ -69,13 +69,15 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'id',
             fieldName: 'id',
             minWidth: 80,
+            maxWidth: 150,
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this._onColumnClick
         }, {
             name: 'Duration',
             key: 'duration',
-            minWidth: 140,
+            minWidth: 100,
+            maxWidth: 150,
             fieldName: 'duration',
             data: 'number',
             onColumnClick: this._onColumnClick,
@@ -87,7 +89,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }, {
             name: 'Status',
             key: 'status',
-            minWidth: 150,
+            minWidth: 100,
+            maxWidth: 150,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {
                 return (
@@ -99,6 +102,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'accuracy',
             fieldName: 'accuracy',
             minWidth: 100,
+            maxWidth: 150,
             data: 'number',
             onColumnClick: this._onColumnClick,
             onRender: (item: any): React.ReactNode => {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, StackItem } from 'office-ui-fabric-react';
+import { Stack, IStackTokens } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial'; // eslint-disable-line no-unused-vars
 import Title1 from './overview/Title1';
@@ -60,6 +60,10 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
         const titleMaxbgcolor = (metricGraphMode === 'max' ? '#999' : '#b3b3b3');
         const titleMinbgcolor = (metricGraphMode === 'min' ? '#999' : '#b3b3b3');
+
+        const stackTokens: IStackTokens = {
+            childrenGap: 30,
+        };
         return (
             <div className="overview">
                 {/* status and experiment block */}
@@ -70,7 +74,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
                 <Stack horizontal className="overMessage">
                     {/* status block */}
-                    <Stack.Item grow={30} className="prograph overviewBoder cc">
+                    <Stack.Item styles={{ root: { maxWidth: 440 } }} className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             bestAccuracy={bestAccuracy}
@@ -80,13 +84,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         />
                     </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Stack.Item grow={30} className="overviewBoder cc">
+                    <Stack.Item grow={1} className="overviewBoder">
                         <Title1 text="Search space" icon="10.png" />
-                        {/* <Stack className="experiment"> */}
-                        <SearchSpace searchSpace={searchSpace} />
-                        {/* </Stack> */}
+                        <Stack className="experiment">
+                            <SearchSpace searchSpace={searchSpace} />
+                        </Stack>
                     </Stack.Item>
-                    <Stack.Item grow={40} className="overviewBoder cc">
+                    <Stack.Item grow={1}>
                         <Title1 text="Profile" icon="4.png" />
                         <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
@@ -100,7 +104,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     </Stack.Item>
                 </Stack>
 
-                <Stack className="overGraph">
+                <Stack>
                     <Stack horizontal className="top10bg">
                         <div className="top10Title">
                             <Title1 text="Top10  trials" icon="7.png" />
@@ -118,22 +122,19 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             <Title1 text="Minimal" icon="min.png" bgcolor={titleMinbgcolor} />
                         </div>
                     </Stack>
-                    <Stack horizontal>
-                        <StackItem grow={30} className="overviewBoder">
-                            <Stack className="accuracy">
-                                <Accuracy
-                                    accuracyData={accuracyGraphData}
-                                    accNodata={noDataMessage}
-                                    height={324}
-                                />
-                            </Stack>
-                        </StackItem>
-                        <StackItem grow={70} styles={{ root: { width: 500 } }}>
-                            <div id="succeTable"><SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} /></div>
-                        </StackItem>
+                    <Stack horizontal tokens={stackTokens}>
+                        <div style={{ width: '40%'}}>
+                            <Accuracy
+                                accuracyData={accuracyGraphData}
+                                accNodata={noDataMessage}
+                                height={490}
+                            />
+                        </div>
+                        <div style={{ width: '60%'}}>
+                        <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                        </div>
                     </Stack>
                 </Stack>
-
             </div>
         );
     }

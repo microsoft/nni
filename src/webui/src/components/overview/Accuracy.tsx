@@ -28,7 +28,6 @@ class Accuracy extends React.Component<AccuracyProps, {}> {
                 <ReactEcharts
                     option={accuracyData}
                     style={{
-                        width: '90%',
                         height: height,
                         margin: '0 auto',
                     }}

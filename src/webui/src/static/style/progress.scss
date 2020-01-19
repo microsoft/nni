@@ -8,7 +8,7 @@
   }
 
   .probar {
-    width: 95%;
+    width: 100%;
     height: 34px;
     margin-top: 15px;
 
@@ -18,7 +18,8 @@
     }
     
     .name {
-      width: 120px;
+      width: 178px;
+      box-sizing: border-box;
       line-height: 30px;
       text-align: center;
       color: #fff;
