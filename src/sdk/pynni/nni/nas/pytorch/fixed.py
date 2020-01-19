@@ -10,20 +10,20 @@ from nni.nas.pytorch.mutator import Mutator
 
 
 class FixedArchitecture(Mutator):
+    """
+    Fixed architecture mutator that always selects a certain graph.
+
+    Parameters
+    ----------
+    model : nn.Module
+        A mutable network.
+    fixed_arc : str or dict
+        Path to the architecture checkpoint (a string), or preloaded architecture object (a dict).
+    strict : bool
+        Force everything that appears in ``fixed_arc`` to be used at least once.
+    """
 
     def __init__(self, model, fixed_arc, strict=True):
-        """
-        Initialize a fixed architecture mutator.
-
-        Parameters
-        ----------
-        model : nn.Module
-            A mutable network.
-        fixed_arc : str or dict
-            Path to the architecture checkpoint (a string), or preloaded architecture object (a dict).
-        strict : bool
-            Force everything that appears in `fixed_arc` to be used at least once.
-        """
         super().__init__(model)
         self._fixed_arc = fixed_arc
 
@@ -35,9 +35,15 @@ class FixedArchitecture(Mutator):
             raise RuntimeError("Missing keys in fixed architecture: {}.".format(mutable_keys - fixed_arc_keys))
 
     def sample_search(self):
+        """
+        Always returns the fixed architecture.
+        """
         return self._fixed_arc
 
     def sample_final(self):
+        """
+        Always returns the fixed architecture.
+        """
         return self._fixed_arc
 
 
@@ -66,6 +72,7 @@ def apply_fixed_architecture(model, fixed_arc_path):
     Returns
     -------
     FixedArchitecture
+        Mutator that is responsible for fixes the graph.
     """
 
     if isinstance(fixed_arc_path, str):

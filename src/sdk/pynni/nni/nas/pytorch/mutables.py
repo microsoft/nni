@@ -20,12 +20,18 @@ class Mutable(nn.Module):
     distinguish different mutables. Mutables that share the same key should be "similar" to each other.
 
     Currently the default scope for keys is global. By default, the keys uses a global counter from 1 to
-    produce unique ids. In case multiple models and defined and the counter needs to rewinded.
+    produce unique ids.
 
     Parameters
     ----------
     key : str
-        The key of mutable. 
+        The key of mutable.
+
+    Notes
+    -----
+    The counter is program level, but mutables are model level. In case multiple models are defined, and
+    you want to have `counter` starting from 1 in the second model, it's recommended to assign keys manually
+    instead of using automatic keys.
     """
 
     def __init__(self, key=None):
@@ -57,10 +63,16 @@ class Mutable(nn.Module):
 
     @property
     def key(self):
+        """
+        Read-only property of key.
+        """
         return self._key
 
     @property
     def name(self):
+        """
+        After the search space is parsed, it will be the module name of the mutable.
+        """
         return self._name if hasattr(self, "_name") else "_key"
 
     @name.setter
@@ -81,11 +93,23 @@ class Mutable(nn.Module):
 class MutableScope(Mutable):
     """
     Mutable scope marks a subgraph/submodule to help mutators make better decisions.
-    Mutators get notified when a mutable scope is entered and exited. Mutators can override ``enter_mutable_scope``
-    and ``exit_mutable_scope`` to catch corresponding events, and do status dump or update.
-    MutableScope are also mutables that are listed in the mutables (search space).
-    """
 
+    If not annotated with mutable scope, search space will be flattened as a list. However, some mutators might
+    need to leverage the concept of a "cell". So if a module is defined as a mutable scope, everything in it will
+    look like "sub-search-space" in the scope. Scopes can be nested.
+
+    There are two ways mutators can use mutable scope. One is to traverse the search space as a tree during initialization
+    and reset. The other is to implement `enter_mutable_scope` and `exit_mutable_scope`. They are called before and after
+    the forward method of the class inheriting mutable scope.
+
+    Mutable scopes are also mutables that are listed in the mutator.mutables (search space), but they are not supposed
+    to appear in the dict of choices.
+
+    Parameters
+    ----------
+    key : str
+        Key of mutable scope.
+    """
     def __init__(self, key):
         super().__init__(key=key)
 
@@ -99,6 +123,29 @@ class MutableScope(Mutable):
 
 
 class LayerChoice(Mutable):
+    """
+    Layer choice selects one of the ``op_candidates``, then apply it on inputs and return results.
+    In rare cases, it can also select zero or many.
+
+    Layer choice does not allow itself to be nested.
+
+    Parameters
+    ----------
+    op_candidates : list of nn.Module
+        A module list to be selected from.
+    reduction : str
+        ``mean``, ``concat``, ``sum`` or ``none``. Policy if multiples are selected.
+        If ``none``, a list is returned. ``mean`` returns the average. ``sum`` returns the sum.
+        ``concat`` concatenate the list at dimension 1.
+    return_mask : bool
+        If ``return_mask``, return output tensor and a mask. Otherwise return tensor only.
+    key : str
+        Key of the input choice.
+    """
+
+    length = None
+    """Number of ops to choose from (`int`)."""
+
     def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
@@ -121,42 +168,62 @@ class LayerChoice(Mutable):
 
 class InputChoice(Mutable):
     """
-    Input choice selects `n_chosen` inputs from `choose_from` (contains `n_candidates` keys). For beginners,
-    use `n_candidates` instead of `choose_from` is a safe option. To get the most power out of it, you might want to
-    know about `choose_from`.
+    Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys). For beginners,
+    use ``n_candidates`` instead of ``choose_from`` is a safe option. To get the most power out of it, you might want to
+    know about ``choose_from``.
 
-    The keys in `choose_from` can be keys that appear in past mutables, or ``NO_KEY`` if there are no suitable ones.
+    The keys in ``choose_from`` can be keys that appear in past mutables, or ``NO_KEY`` if there are no suitable ones.
     The keys are designed to be the keys of the sources. To help mutators make better decisions,
     mutators might be interested in how the tensors to choose from come into place. For example, the tensor is the
     output of some operator, some node, some cell, or some module. If this operator happens to be a mutable (e.g.,
     ``LayerChoice`` or ``InputChoice``), it has a key naturally that can be used as a source key. If it's a
-    module/submodule, it needs to be annotated with a key: that's where a ``MutableScope`` is needed.
+    module/submodule, it needs to be annotated with a key: that's where a :class:`MutableScope` is needed.
+
+    In the example below, ``input_choice`` is a 4-choose-any. The first 3 is semantically output of cell1, output of cell2,
+    output of cell3 with respectively. Notice that an extra max pooling is followed by cell1, indicating x1 is not
+    "actually" the direct output of cell1.
+
+    .. code-block:: python
+
+        class Cell(MutableScope):
+            pass
+
+        class Net(nn.Module):
+            def __init__(self):
+                self.cell1 = Cell("cell1")
+                self.cell2 = Cell("cell2")
+                self.op = LayerChoice([conv3x3(), conv5x5()], key="op")
+                self.input_choice = InputChoice(choose_from=["cell1", "cell2", "op", InputChoice.NO_KEY])
+
+            def forward(self, x):
+                x1 = max_pooling(self.cell1(x))
+                x2 = self.cell2(x)
+                x3 = self.op(x)
+                x4 = torch.zeros_like(x)
+                return self.input_choice([x1, x2, x3, x4])
+
+    Parameters
+    ----------
+    n_candidates : int
+        Number of inputs to choose from.
+    choose_from : list of str
+        List of source keys to choose from. At least of one of ``choose_from`` and ``n_candidates`` must be fulfilled.
+        If ``n_candidates`` has a value but ``choose_from`` is None, it will be automatically treated as ``n_candidates``
+        number of empty string.
+    n_chosen : int
+        Recommended inputs to choose. If None, mutator is instructed to select any.
+    reduction : str
+        ``mean``, ``concat``, ``sum`` or ``none``. See :class:`LayerChoice`.
+    return_mask : bool
+        If ``return_mask``, return output tensor and a mask. Otherwise return tensor only.
+    key : str
+        Key of the input choice.
     """
 
     NO_KEY = ""
 
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=None,
                  reduction="sum", return_mask=False, key=None):
-        """
-        Initialization.
-
-        Parameters
-        ----------
-        n_candidates : int
-            Number of inputs to choose from.
-        choose_from : list of str
-            List of source keys to choose from. At least of one of `choose_from` and `n_candidates` must be fulfilled.
-            If `n_candidates` has a value but `choose_from` is None, it will be automatically treated as `n_candidates`
-            number of empty string.
-        n_chosen : int
-            Recommended inputs to choose. If None, mutator is instructed to select any.
-        reduction : str
-            `mean`, `concat`, `sum` or `none`.
-        return_mask : bool
-            If `return_mask`, return output tensor and a mask. Otherwise return tensor only.
-        key : str
-            Key of the input choice.
-        """
         super().__init__(key=key)
         # precondition check
         assert n_candidates is not None or choose_from is not None, "At least one of `n_candidates` and `choose_from`" \
@@ -184,12 +251,13 @@ class InputChoice(Mutable):
         ----------
         optional_inputs : list or dict
             Recommended to be a dict. As a dict, inputs will be converted to a list that follows the order of
-            `choose_from` in initialization. As a list, inputs must follow the semantic order that is the same as
-            `choose_from`.
+            ``choose_from`` in initialization. As a list, inputs must follow the semantic order that is the same as
+            ``choose_from``.
 
         Returns
         -------
         tuple of tensors
+            Output and selection mask. If ``return_mask`` is ``False``, only output is returned.
         """
         optional_input_list = optional_inputs
         if isinstance(optional_inputs, dict):

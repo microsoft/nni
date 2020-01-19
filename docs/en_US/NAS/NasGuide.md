@@ -67,9 +67,9 @@ class Net(nn.Module):
 
 The general purpose of InputChoice is a callable module that receives a list of tensors and output the concatenation/sum/mean of some of them, or `None` if none is selected. As a module, we **need to initialize `InputChoice` in `__init__`**, and use it in `forward`. We will see later that this is to allow search algorithms to identify these choices, and do necessary preparation.
 
-[](){:name='mutable-keys'} Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea.
+Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea.
 
-`LayerChoice` and `InputChoice` are both **mutable**s. For advanced usage on mutables, see [Mutables](./NasMutables.md). 
+`LayerChoice` and `InputChoice` are both **mutable**s. For advanced usage on mutables, see [Mutables](./NasReference.md#mutables). 
 
 ## Use a Search Algorithm
 
@@ -152,7 +152,7 @@ model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-After applying, the model is then fixed and ready for a final training. The model works as a single model, although it might contain more parameters than expected. For deeper reasons and possible workaround, see [Trainers](./NasTrainer.md#fixed).
+After applying, the model is then fixed and ready for a final training. The model works as a single model, although it might contain more parameters than expected. For deeper reasons and possible workaround, see [Trainers](./NasReference.md#retrain).
 
 ## Customize a Search Algorithm
 
@@ -165,10 +165,10 @@ Either way, you are walking into the scope of implementing a new trainer. Basica
 * Initialization
 
 ```python
-
 model = Model()
 mutator = MyMutator(model)
 ```
+
 * Training
 
 ```python
@@ -185,9 +185,9 @@ Mutators are designed to be one-to-one to models. One model needs one mutator an
 
 `mutator.reset()` is the core step. That's where all the choices in the model are finalized until next reset. After the reset, the model can be seen as a traditional model to do forward-pass and backward-pass.
 
-Finally, mutators provide a method called `mutator.export()` that export a dict with architectures to the model. Note that currently this dict this a mapping from [keys of mutables](#mutable-keys) to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
+Finally, mutators provide a method called `mutator.export()` that export a dict with architectures to the model. Note that currently this dict this a mapping from keys of mutables to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
 
-Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasTrainer.md) for details.
+Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md#trainers) for details.
 
 ### Invent New Mutators
 
