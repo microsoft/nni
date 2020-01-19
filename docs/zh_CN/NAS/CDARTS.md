@@ -1,10 +1,10 @@
 # CDARTS
 
-## Introduction
+## 介绍
 
-CDARTS builds a cyclic feedback mechanism between the search and evaluation networks. First, the search network generates an initial topology for evaluation, so that the weights of the evaluation network can be optimized. Second, the architecture topology in the search network is further optimized by the label supervision in classification, as well as the regularization from the evaluation network through feature distillation. Repeating the above cycle results in a joint optimization of the search and evaluation networks, and thus enables the evolution of the topology to fit the final evaluation network.
+CDARTS 在搜索和评估网络之间构建了循环反馈机制。 首先，搜索网络会生成初始结构用于评估，以便优化评估网络的权重。 然后，通过分类中通过的标签，以及评估网络中特征蒸馏的正则化来进一步优化搜索网络中的架构。 重复上述循环来优化搜索和评估网路，从而使结构得到训练，成为最终的评估网络。
 
-In implementation of `CdartsTrainer`, it first instantiates two models and two mutators (one for each). The first model is the so-called "search network", which is mutated with a `RegularizedDartsMutator` -- a mutator with subtle differences with `DartsMutator`. The second model is the "evaluation network", which is mutated with a discrete mutator that leverages the previous search network mutator, to sample a single path each time. Trainers train models and mutators alternatively. Users can refer to [references](#reference) if they are interested in more details on these trainers and mutators.
+在 `CdartsTrainer` 的实现中，首先分别实例化了两个 Model 和 Mutator。 第一个 Model 被称为"搜索网络"，使用 `RegularizedDartsMutator` 来进行变化。它与 `DartsMutator` 稍有差别。 The second model is the "evaluation network", which is mutated with a discrete mutator that leverages the previous search network mutator, to sample a single path each time. Trainers train models and mutators alternatively. Users can refer to [references](#reference) if they are interested in more details on these trainers and mutators.
 
 ## Reproduction Results
 
