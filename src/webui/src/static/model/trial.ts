@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -56,7 +56,7 @@ class Trial implements TableObj {
             // TODO: support intermeidate result is dict
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                return JSON.parse(temp.data);
+                return parseMetrics(temp.data);
             } else {
                 return undefined;
             }
@@ -138,10 +138,10 @@ class Trial implements TableObj {
 
         const mediate: number[] = [ ];
         for (const items of this.intermediateMetrics) {
-            if (typeof JSON.parse(items.data) === 'object') {
-                mediate.push(JSON.parse(items.data).default);
+            if (typeof parseMetrics(items.data) === 'object') {
+                mediate.push(parseMetrics(items.data).default);
             } else {
-                mediate.push(JSON.parse(items.data));
+                mediate.push(parseMetrics(items.data));
             }
         }
         ret.intermediate = mediate;

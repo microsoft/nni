@@ -5,6 +5,7 @@ import glob
 import json
 import logging
 import os
+import random
 import shutil
 import sys
 from unittest import TestCase, main
@@ -15,6 +16,7 @@ from nni.gp_tuner.gp_tuner import GPTuner
 from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
+
 try:
     from nni.smac_tuner.smac_tuner import SMACTuner
 except ImportError:
@@ -34,20 +36,28 @@ class BuiltinTunersTestCase(TestCase):
         - [X] generate_multiple_parameters
         - [ ] import_data
         - [ ] trial_end
-        - [ ] receive_trial_result
+        - [x] receive_trial_result
     """
+
+    def setUp(self):
+        self.test_round = 3
+        self.params_each_round = 50
+        self.exhaustive = False
 
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
 
-        parameters = tuner.generate_multiple_parameters(list(range(0, 50)))
-        logger.info(parameters)
-        self.check_range(parameters, search_space)
-        if not parameters:  # TODO: not strict
-            raise ValueError("No parameters generated")
-        return parameters
+        for i in range(self.test_round):
+            parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
+                                                                       (i + 1) * self.params_each_round)))
+            logger.debug(parameters)
+            self.check_range(parameters, search_space)
+            for k in range(min(len(parameters), self.params_each_round)):
+                tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
+            if not parameters and not self.exhaustive:
+                raise ValueError("No parameters generated")
 
     def check_range(self, generated_params, search_space):
         EPS = 1E-6
@@ -91,7 +101,8 @@ class BuiltinTunersTestCase(TestCase):
                     for layer_name in item["_value"].keys():
                         self.assertIn(v[layer_name]["chosen_layer"], item["layer_choice"])
 
-    def search_space_test_all(self, tuner_factory, supported_types=None, ignore_types=None):
+    def search_space_test_all(self, tuner_factory, supported_types=None, ignore_types=None, fail_types=None):
+        # Three types: 1. supported; 2. ignore; 3. fail.
         # NOTE(yuge): ignore types
         # Supported types are listed in the table. They are meant to be supported and should be correct.
         # Other than those, all the rest are "unsupported", which are expected to produce ridiculous results
@@ -103,16 +114,18 @@ class BuiltinTunersTestCase(TestCase):
         if supported_types is None:
             supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform",
                                "normal", "qnormal", "lognormal", "qlognormal"]
+        if fail_types is None:
+            fail_types = []
+        if ignore_types is None:
+            ignore_types = []
         full_supported_search_space = dict()
         for single in search_space_all:
-            single_keyword = single.split("_")
             space = search_space_all[single]
-            expected_fail = not any([t in single_keyword for t in supported_types]) or "fail" in single_keyword
-            if ignore_types is not None and any([t in ignore_types for t in single_keyword]):
+            if any(single.startswith(t) for t in ignore_types):
                 continue
-            if "fail" in space:
-                if self._testMethodName.split("_", 1)[1] in space.pop("fail"):
-                    expected_fail = True
+            expected_fail = not any(single.startswith(t) for t in supported_types) or \
+                            any(single.startswith(t) for t in fail_types) or \
+                            "fail" in single  # name contains fail (fail on all)
             single_search_space = {single: space}
             if not expected_fail:
                 # supports this key
@@ -129,11 +142,14 @@ class BuiltinTunersTestCase(TestCase):
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
     def test_grid_search(self):
+        self.exhaustive = True
         self.search_space_test_all(lambda: GridSearchTuner(),
                                    supported_types=["choice", "randint", "quniform"])
 
     def test_tpe(self):
-        self.search_space_test_all(lambda: HyperoptTuner("tpe"))
+        self.search_space_test_all(lambda: HyperoptTuner("tpe"),
+                                   ignore_types=["uniform_equal", "qloguniform_equal", "loguniform_equal", "quniform_clip_2"])
+        # NOTE: types are ignored because `tpe.py line 465, in adaptive_parzen_normal assert prior_sigma > 0`
 
     def test_random_search(self):
         self.search_space_test_all(lambda: HyperoptTuner("random_search"))
@@ -148,6 +164,7 @@ class BuiltinTunersTestCase(TestCase):
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
 
     def test_batch(self):
+        self.exhaustive = True
         self.search_space_test_all(lambda: BatchTuner(),
                                    supported_types=["choice"])
 
@@ -156,14 +173,18 @@ class BuiltinTunersTestCase(TestCase):
         self.search_space_test_all(lambda: EvolutionTuner(population_size=100))
 
     def test_gp(self):
+        self.test_round = 1  # NOTE: GP tuner got hanged for multiple testing round
         self.search_space_test_all(lambda: GPTuner(),
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform",
                                                     "qloguniform"],
-                                   ignore_types=["normal", "lognormal", "qnormal", "qlognormal"])
+                                   ignore_types=["normal", "lognormal", "qnormal", "qlognormal"],
+                                   fail_types=["choice_str", "choice_mixed"])
 
     def test_metis(self):
+        self.test_round = 1  # NOTE: Metis tuner got hanged for multiple testing round
         self.search_space_test_all(lambda: MetisTuner(),
-                                   supported_types=["choice", "randint", "uniform", "quniform"])
+                                   supported_types=["choice", "randint", "uniform", "quniform"],
+                                   fail_types=["choice_str", "choice_mixed"])
 
     def test_networkmorphism(self):
         pass

@@ -6,7 +6,7 @@ import { ColumnProps } from 'antd/lib/table';
 const Option = Select.Option;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
-import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
+import { convertDuration, formatTimestamp, intermediateGraphOption, killJob, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
@@ -178,11 +178,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // get intermediate result dict keys array
             let otherkeys: Array<string> = ['default'];
             if (res.data.length !== 0) {
-                otherkeys = Object.keys(JSON.parse(res.data[0].data));
+                otherkeys = Object.keys(parseMetrics(res.data[0].data));
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                const temp = JSON.parse(res.data[item].data);
+                const temp = parseMetrics(res.data[item].data);
                 if (typeof temp === 'object') {
                     intermediateArr.push(temp.default);
                 } else {
@@ -210,7 +210,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         // just watch default key-val
         if (isShowDefault === true) {
             Object.keys(intermediateData).map(item => {
-                const temp = JSON.parse(intermediateData[item].data);
+                const temp = parseMetrics(intermediateData[item].data);
                 if (typeof temp === 'object') {
                     intermediateArr.push(temp[value]);
                 } else {
@@ -219,7 +219,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             });
         } else {
             Object.keys(intermediateData).map(item => {
-                const temp = JSON.parse(intermediateData[item].data);
+                const temp = parseMetrics(intermediateData[item].data);
                 if (typeof temp === 'object') {
                     intermediateArr.push(temp[value]);
                 }
@@ -431,7 +431,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'operation',
                         render: (text: string, record: TableRecord) => {
                             const trialStatus = record.status;
-                            const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
+                            // could kill a job when its status is RUNNING or UNKNOWN
+                            const flag: boolean = (trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN') ? false : true;
                             return (
                                 <Row id="detail-button">
                                     {/* see intermediate result graph */}
