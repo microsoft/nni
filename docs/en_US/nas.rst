@@ -19,6 +19,8 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Overview <NAS/Overview>
+    Guide <NAS/NasGuide>
+    API Reference <NAS/Reference>
     NAS Interface <NAS/NasInterface>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>

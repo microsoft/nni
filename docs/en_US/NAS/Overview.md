@@ -6,11 +6,7 @@ However, it takes great efforts to implement NAS algorithms, and it is hard to r
 
 With this motivation, our ambition is to provide a unified architecture in NNI, to accelerate innovations on NAS, and apply state-of-art algorithms on real world problems faster.
 
-With [the unified interface](./NasInterface.md), there are two different modes for the architecture search. [One](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [The other](./NasInterface.md#classic-distributed-search) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
-
-* [Supported One-shot NAS Algorithms](#supported-one-shot-nas-algorithms)
-* [Classic Distributed NAS with NNI experiment](./NasInterface.md#classic-distributed-search)
-* [NNI NAS Programming Interface](./NasInterface.md)
+With the unified interface, there are two different modes for the architecture search. [One](#supported-one-shot-nas-algorithms) is the so-called one-shot NAS, where a super-net is built based on search space, and using one shot training to generate good-performing child model. [The other](#supported-distributed-nas-algorithms) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
 
 ## Supported One-shot NAS Algorithms
 
@@ -45,6 +41,12 @@ Here are some common dependencies to run the examples. PyTorch needs to be above
 
 ## Use NNI API
 
+The programming interface of designing and searching a model is often demanded in two scenarios.
+
+1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So, it needs an easy way to express the candidate layers or sub-models.
+2. When applying NAS on a neural network, it needs an unified way to express the search space of architectures, so that it doesn't need to update trial code for different searching algorithms.
+
+[Here](./NasGuide.md) is a user guide to get started with using NAS on NNI.
 
 ## Reference and Feedback
 
