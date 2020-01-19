@@ -56,10 +56,10 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 参考 [Windows 上使用 NNI](NniOnWindows.md)。
 
-### More FAQ issues
+### 更多常见问题解答
 
-[NNI Issues with FAQ labels](https://github.com/microsoft/nni/labels/FAQ)
+[标有常见问题标签的 Issue](https://github.com/microsoft/nni/labels/FAQ)
 
-### Help us improve
+### 帮助改进
 
-Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
+在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
