@@ -44,6 +44,7 @@ import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 import { PAIJobRestServer } from '../paiJobRestServer';
 
 const yaml = require('js-yaml');
+const deepmerge = require('deepmerge')
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -188,7 +189,9 @@ class PAIK8STrainingService extends PAITrainingService {
         if (this.paiTrialConfig.paiConfigPath) {
             try {
                 const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                return yaml.safeDump({...paiJobConfig, ...additionalPAIConfig});
+                //deepmerge(x, y), if an element at the same key is present for both x and y, the value from y will appear in the result.
+                //refer: https://github.com/TehShrike/deepmerge
+                return yaml.safeDump(deepmerge(additionalPAIConfig, paiJobConfig));
             } catch (error) {
                 this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
             }
