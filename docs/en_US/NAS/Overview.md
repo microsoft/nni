@@ -35,16 +35,8 @@ Here are some common dependencies to run the examples. PyTorch needs to be above
 
 ## Use NNI API
 
-NOTE, we are trying to support various NAS algorithms with unified programming interface, and it's in very experimental stage. It means the current programing interface may be updated in future.
 
-### Programming interface
-
-The programming interface of designing and searching a model is often demanded in two scenarios.
-
-1. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs  best. So, it needs an easy way to express the candidate layers or sub-models.
-2. When applying NAS on a neural network, it needs an unified way to express the search space of architectures, so that it doesn't need to update trial code for different searching algorithms.
-
-NNI proposed API is [here](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch). And [here](https://github.com/microsoft/nni/tree/master/examples/nas/naive) is an example of NAS implementation, which bases on NNI proposed interface.
+## Reference and Feedback
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012
@@ -52,9 +44,5 @@ NNI proposed API is [here](https://github.com/microsoft/nni/tree/master/src/sdk/
 [4]: https://arxiv.org/abs/1806.10282
 [5]: https://arxiv.org/abs/1703.01041
 
-## **Reference and Feedback**
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub.
