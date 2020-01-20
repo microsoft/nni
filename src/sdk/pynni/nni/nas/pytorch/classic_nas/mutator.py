@@ -68,9 +68,12 @@ class ClassicMutator(Mutator):
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
             if self._chosen_arch is None:
-                # happens if NNI_PLATFORM is intentionally set, e.g., in UT
-                logger.warning("`NNI_PLATFORM` is set but `param` is None. Falling back to standalone mode.")
-                self._chosen_arch = self._standalone_generate_chosen()
+                if trial_env_vars.NNI_PLATFORM == "unittest":
+                    # happens if NNI_PLATFORM is intentionally set, e.g., in UT
+                    logger.warning("`NNI_PLATFORM` is set but `param` is None. Falling back to standalone mode.")
+                    self._chosen_arch = self._standalone_generate_chosen()
+                else:
+                    raise RuntimeError("Chosen architecture is None. This may be a platform error.")
         self.reset()
 
     def _sample_layer_choice(self, mutable, idx, value, search_space_item):
