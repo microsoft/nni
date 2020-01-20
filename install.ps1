@@ -116,6 +116,7 @@ Copy-Item config -Destination .\dist\ -Recurse -Force
 cd ..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
+cmd /c $NNI_YARN analyze
 
 cd ..\..
 

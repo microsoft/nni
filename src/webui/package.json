@@ -71,6 +71,7 @@
     "resolve": "1.10.0",
     "sass-loader": "7.1.0",
     "semver": "6.0.0",
+    "source-map-explorer": "^2.2.2",
     "style-loader": "0.23.1",
     "terser-webpack-plugin": "1.2.3",
     "typescript": "3.4.5",
@@ -81,6 +82,7 @@
     "workbox-webpack-plugin": "4.2.0"
   },
   "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "node scripts/start.js",
     "build": "node scripts/build.js --max_old_space_size=4096",
     "test": "node scripts/test.js",

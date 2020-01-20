@@ -46,6 +46,7 @@ yarn build
 cd $CWD\..\..\src\webui
 yarn
 yarn build
+yarn analyze
 if(Test-Path $CWD\nni){
     Remove-Item $CWD\nni -r -fo
 }
