@@ -4,7 +4,7 @@ import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode,
-    getTheme, mergeStyleSets, FontWeights, FontSizes
+    getTheme, mergeStyleSets, FontWeights, FontSizes, IconButton
 } from 'office-ui-fabric-react';
 import { completed, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
@@ -67,6 +67,18 @@ const contentStyles = mergeStyleSets({
                 marginBottom: 0
             }
         }
+    }
+});
+
+const iconButtonStyles = mergeStyleSets({
+    root: {
+        color: theme.palette.neutralPrimary,
+        marginLeft: 'auto',
+        marginTop: '4px',
+        marginRight: '2px'
+    },
+    rootHovered: {
+        color: theme.palette.neutralDark
     }
 });
 
@@ -508,7 +520,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         title="Intermediate"
                                         onClick={this.showIntermediateModal.bind(this, record.id)}
-                                        styles={{root: {padding: 0, width: '10px !important'}}}
+                                        styles={{ root: { padding: 0, width: '10px !important' } }}
                                     >
                                         {completed}
                                     </PrimaryButton>
@@ -602,6 +614,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     onDismiss={this.hideIntermediateModal}
                     containerClassName={contentStyles.container}
                 >
+                    <div className={contentStyles.header}>
+                        <span>Intermediate result</span>
+                        <IconButton
+                            styles={iconButtonStyles}
+                            iconProps={{ iconName: 'Cancel' }}
+                            ariaLabel="Close popup modal"
+                            onClick={this.hideIntermediateModal as any}
+                        />
+                    </div>
                     {
                         intermediateOtherKeys.length > 1
                             ?
