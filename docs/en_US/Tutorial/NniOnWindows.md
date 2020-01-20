@@ -1,5 +1,5 @@
 # NNI on Windows
-Differ from Linux version, NNI only supports local mode right now. Please comment in [NNI's backlog issue](https://github.com/microsoft/nni/issues/1917) if you have needs on other modes for NNI on Windows.
+Please noted before you start, for Windows, NNI only supports local mode or it work as **NNI Manager Node** of a distributed topology. For more information, please review the **Plan your topology** section of [Installation](Installation.md).
 
 ## System Requirements
 Our test for Windows were majorly made on Windows 10.1809, for any other Windows versions, we'd like to get your (community users') suppport on verification and feedback.
