@@ -1,6 +1,18 @@
-# Installation of NNI
+# Plan your topology
+For different computation needs, NNI supports various out-of-the-box training modes, including: local machine, remote servers, pai, kubeflow and frameworklauncher. User can also customize their own training service in case of need.
 
-Currently we support installation on Linux, Mac and Windows.
+Before starting the installation, you should firstly plan for the topology. For new users, we would always recommend you to start with `local` mode, as it is the simplest topology, all the scripts and computation are happen on one single machine. You only need to install NNI on the machine you will run the training and execute the nni cmdline on that machine. 
+
+But in most cases, you might need more powerful computes on remote servers or the cloud. In the case of using remote servers, you will need to consider `remote` mode or the other training modes NNI supports. As illustrated below, to run trainings on remote servers, you will need to set up a **NNI Manager Node** and a set of **NNI Training Nodes**. The set up are all through the following `pip install` command in the following section.
+
+Note: For Windows, NNI only supports it work as **NNI Manager Node**. Anyone who has interest on support windows as training nodes as well could comment or even provide contributes to the following issue: Support Windows as Remote Training Node [#1973](https://github.com/microsoft/nni/issues/1973).
+
+
+![image](https://user-images.githubusercontent.com/39592018/72716629-82ea5e00-3bad-11ea-8536-b7a21fa22417.png)
+
+# Installation
+
+We support installation on Linux, Mac and Windows.
 
 ## **Installation on Linux & Mac**
 
