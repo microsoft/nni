@@ -194,7 +194,7 @@ class Pruner(Compressor):
         layer._forward = layer.module.forward
 
         def new_forward(*inputs):
-            '''mask = self.calc_mask(layer, config)
+            mask = self.calc_mask(layer, config)
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             mask['weight'].to(device)
             # apply mask to weight
@@ -206,7 +206,7 @@ class Pruner(Compressor):
                 old_bias = layer.module.bias.data
                 mask_bias = mask['bias']
                 mask_bias.to(device)
-                layer.module.bias.data = old_bias.mul(mask_bias)'''
+                layer.module.bias.data = old_bias.mul(mask_bias)
             # calculate forward
             ret = layer._forward(*inputs)
             return ret

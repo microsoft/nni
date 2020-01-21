@@ -49,12 +49,23 @@ class ModelSpeedup:
         """
         """
         graph = self.trace_graph.graph
+        print(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
         input_to_node = dict()
         #build module mapping, from module name to all nodes (as list) under this module scope
         module_to_nodes = dict()
+        # module name to its type
+        module_to_type = dict()
+
+        graph_inputs = list()
+        graph_outputs = list()
+        for _input in graph.inputs():
+            graph_inputs.append(_input.debugName())
+        for output in graph.outputs():
+            graph_outputs.append(output.debugName())
+
         for node in graph.nodes():
             for output in node.outputs():
                 output_name = output.debugName()
@@ -65,7 +76,12 @@ class ModelSpeedup:
             scope_name = node.scopeName() # example: scope_name, 'MyCell/Linear[linear]'
             module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
             module_name = '.'.join(module_name_slices)
-            # TODO: check module_name is not empty
+            # if module_name is empty, it is not a module
+            if module_name == '':
+                continue
+            scope_slice = scope_name.split('/')[-1]
+            module_type = scope_slice.split('[')[0]
+            module_to_type[module_name] = module_type
             if module_name in module_to_nodes:
                 module_to_nodes[module_name].append(node)
             else:
@@ -74,8 +90,6 @@ class ModelSpeedup:
         # build module mapping, from module name to its inputs debugName and outputs debugName,
         module_to_inputs = dict()
         module_to_outputs = dict()
-        # TODO: fullfill modules_type
-        module_to_type = dict()
         for module_name, nodes in module_to_nodes.items():
             inputs = set()
             outputs = set()
@@ -88,10 +102,14 @@ class ModelSpeedup:
             m_outputs = list()
             for output in outputs:
                 # TODO: one input could be the input of multiple nodes
-                if not input_to_node[output] in nodes:
+                if not output in input_to_node and output in graph_outputs:
+                    m_outputs.append(output)
+                elif not input_to_node[output] in nodes:
                     m_outputs.append(output)
             for _input in inputs:
-                if not output_to_node[_input] in nodes:
+                if not _input in output_to_node and _input in graph_inputs:
+                    m_inputs.append(_input)
+                elif not output_to_node[_input] in nodes:
                     m_inputs.append(_input)
             module_to_inputs[module_name] = m_inputs
             module_to_outputs[module_name] = m_outputs
@@ -126,9 +144,13 @@ class ModelSpeedup:
         """
         predecessors = []
         for _input in self.module_to_inputs[module_name]:
-            assert _input in self.input_to_node
-            node = self.input_to_node[_input]
+            assert _input in self.output_to_node
+            node = self.output_to_node[_input]
+            #print("node: ", node)
             scope_name = node.scopeName() # example: scope_name, 'MyCell/Linear[linear]'
+            #print("scope name: ", scope_name)
+            if scope_name == '':
+                continue
             module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
             module_name = '.'.join(module_name_slices)
             if module_name == '':
@@ -140,6 +162,20 @@ class ModelSpeedup:
     def _find_successors(self, module_name):
         """
         """
+        successors = []
+        for output in self.module_to_outputs[module_name]:
+            assert output in self.input_to_node
+            node = self.input_to_node[output]
+            scope_name = node.scopeName()
+            if scope_name == '':
+                continue
+            module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
+            module_name = '.'.join(module_name_slices)
+            if module_name == '':
+                raise RuntimeError("_find_successors: cannot handle non-module node!")
+            else:
+                successors.append(module_name)
+        return successors
 
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """
@@ -152,24 +188,32 @@ class ModelSpeedup:
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.module_to_type[module_name]
+        print("infer_module_mask: {}, module type: {}".format(module_name, m_type))
         if mask is not None:
+            print("mask is not None")
             input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
-            infer_from_inshape[m_type](module_masks, in_shape)
+            print("in_shape is not None")
+            output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
-            infer_from_outshape[m_type](module_masks, out_shape)
+            print("out_shape is not None")
+            input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
+            print("input_cmask is not None")
             predecessors = self._find_predecessors(module_name)
-            for module_name in predecessors:
-                self.infer_module_mask(module_name, out_shape=input_cmask)
+            for _module_name in predecessors:
+                print("input_cmask, module_name: ", _module_name)
+                self.infer_module_mask(_module_name, out_shape=input_cmask)
         if output_cmask:
+            print("output_cmask is not None")
             successors = self._find_successors(module_name)
-            for module_name in successors:
-                self.infer_module_mask(module_name, in_shape=output_cmask)
+            for _module_name in successors:
+                print("output_cmask, module_name: ", _module_name)
+                self.infer_module_mask(_module_name, in_shape=output_cmask)
 
     def infer_modules_masks(self):
         """
         """
-        for module_name, mask in self.masks:
+        for module_name, mask in self.masks.items():
             self.infer_module_mask(module_name, mask=mask)

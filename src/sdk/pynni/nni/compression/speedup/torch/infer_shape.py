@@ -15,6 +15,26 @@ class CoarseMask:
     def add_index_mask(self, dim, index):
         self.mask_index[dim] = index
 
+    @staticmethod
+    def merge_index(index_a, index_b):
+        s = set()
+        for num in index_a:
+            s.add(num)
+        for num in index_b:
+            s.add(num)
+        return torch.tensor(sorted(s))
+
+    def merge(self, cmask):
+        assert isinstance(cmask, CoarseMask)
+        assert len(self.mask_index) == len(cmask.mask_index)
+        for i, index in enumerate(self.mask_index):
+            if index is None:
+                self.mask_index[i] = cmask.mask_index[i]
+            elif cmask.mask_index[i] is not None:
+                self.mask_index[i] = CoarseMask.merge_index(self.mask_index[i],
+                                                            cmask.mask_index[i])
+        return self.mask_index
+
 class ModuleMasks:
     def __init__(self, module_name):
         """
@@ -39,11 +59,19 @@ infer_from_mask = {
     'Conv2d': lambda module_masks, mask: conv2d_mask(module_masks, mask)
 }
 
-infer_from_inshape = {}
+infer_from_inshape = {
+    'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask)
+}
 
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
+
+def relu_inshape(module_masks, mask):
+    """
+    """
+    module_masks
+    return None # return shape of output tensor
 
 def batchnorm2d_mask(module_masks, mask):
     """
@@ -52,7 +80,7 @@ def batchnorm2d_mask(module_masks, mask):
     sum_mask = mask['weight'] + mask['bias']
     nonzero_index = torch.nonzero(sum_mask, as_tuple=True)[0]
     # infer shape of parameters
-    param_cmask = CoarseMask(num_dim=0)
+    param_cmask = CoarseMask(num_dim=1)
     param_cmask.add_index_mask(dim=0, index=nonzero_index)
     module_masks.set_param_masks('weight', param_cmask)
     module_masks.set_param_masks('bias', param_cmask)
@@ -79,8 +107,20 @@ def conv2d_outshape(module_masks, mask):
     assert mask.mask_index[0] is None
     assert mask.mask_index[2] is None
     assert mask.mask_index[3] is None
+
     if module_masks.output_mask is not None:
-        # ...
-        return
-    #...
+        assert isinstance(module_masks.output_mask, CoarseMask)
+        # set shape of output
+        mask = module_masks.output_mask.merge(mask)
+    else:
+        module_masks.output_mask = mask
+    # infer shape of parameters
+    weight_cmask = CoarseMask(num_dim=4)
+    weight_cmask.add_index_mask(dim=0, index=mask.mask_index[1])
+    bias_cmask = CoarseMask(num_dim=1)
+    bias_cmask.add_index_mask(dim=0, index=mask.mask_index[1])
+    module_masks.set_param_masks('weight', weight_cmask)
+    module_masks.set_param_masks('bias', bias_cmask)
+    # input shape is not changed
+    return None # return shape of input tensor
     
