@@ -60,18 +60,37 @@ infer_from_mask = {
 }
 
 infer_from_inshape = {
-    'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask)
+    'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
+    'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask)
 }
 
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
 
+def maxpool2d_inshape(module_masks, mask):
+    """
+    """
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+    assert module_masks.input_mask is None
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
+    return mask
+
 def relu_inshape(module_masks, mask):
     """
     """
-    module_masks
-    return None # return shape of output tensor
+    assert isinstance(mask, CoarseMask)
+    # TODO: double check this assert, is it possible that a module is passed twice
+    assert module_masks.input_mask is None
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
+    return mask # return shape of output tensor
 
 def batchnorm2d_mask(module_masks, mask):
     """
@@ -98,6 +117,14 @@ def batchnorm2d_mask(module_masks, mask):
 def conv2d_mask(module_masks, mask):
     """
     """
+
+def conv2d_inshape(module_masks, mask):
+    """
+    """
+    assert isinstance(mask, CoarseMask)
+    assert module_masks.input_mask is None
+    module_masks.set_input_mask(mask)
+    return None
 
 def conv2d_outshape(module_masks, mask):
     """
