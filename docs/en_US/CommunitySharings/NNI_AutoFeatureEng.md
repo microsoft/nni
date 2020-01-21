@@ -1,13 +1,13 @@
-\#原文(source): [Fresh user experience of NNI: an open source project with highly reasonable design 
+**原文(source)**: [Fresh user experience of NNI: an open source project with highly reasonable design 
 By Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0))
 
-\##01 Overview of AutoML
+## 01 Overview of AutoML
 
 In author's opinion, AutoML is not only about hyperparameter optimization, but
 also a process that can target various stages of the machine learning process,
 including feature engineering, NAS, HPO, etc.
 
-\##02 Overview of NNI
+## 02 Overview of NNI
 
 NNI (Neural Network Intelligence) is an open source AutoML toolkit from
 Microsoft, to help users design and tune machine learning models, neural network
@@ -21,7 +21,7 @@ design is highly reasonable (regardless of the technology innovation degree).
 NNI's AutoFeatureENG basically meets all user requirements of AutoFeatureENG
 with a very reasonable underlying framework design.
 
-\##03 Details of NNI-AutoFeatureENG
+## 03 Details of NNI-AutoFeatureENG
 
 Each new user could do AutoFeatureENG on NNI easily and efficiently:
 
@@ -35,7 +35,7 @@ NNI treats AutoFeatureENG as a two steps task, feature generation exploration
 and feature selection. Feature generation exploration is mainly about feature
 derivation and high-order feature combination.
 
-\##04 Feature Exploration
+## 04 Feature Exploration
 
 For feature derivation, NNI offers many operations which could automatically
 generate new features, which list [as
@@ -86,7 +86,7 @@ one trial.
 
 RECEIVED_PARAMS = nni.get_next_parameter()
 
-\##05 Feature selection
+## 05 Feature selection
 
 To avoid feature explosion and overfitting, feature selection is necessary. In
 the feature selection of NNI-AutoFeatureENG, LightGBM (Light Gradient Boosting
@@ -105,13 +105,13 @@ Regression).
 
 ![image](https://upload-images.jianshu.io/upload_images/20947594-1c23ae3edc07d9e5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-\##06 Summary
+## 06 Summary
 
 NNI's AutoFeatureEng sets a well-established standard, showing us the operation
 procedure, available modules, which is highly convenient to use. However, a
 simple model is probably not enough for good results.
 
-\##Suggestions to NNI
+## Suggestions to NNI
 
 About Exploration: If consider using DNN (like xDeepFM) to extract
 high-order feature would be better.
