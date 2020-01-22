@@ -2,7 +2,7 @@
 
 The article is by a NNI user on Zhihu forum. In the article, Garvin had shared his experience on using NNI for Automatic Feature Engineering. We think this article is very useful for users who are interested in using NNI for feature engineering. With author's permission, we translated the original article into English.  
 
-**原文(source)**: [如何看待微软最新发布的AutoML平台NNI？By Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0))
+**原文(source)**: [如何看待微软最新发布的AutoML平台NNI？By Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0)
 
 ## 01 Overview of AutoML
 
