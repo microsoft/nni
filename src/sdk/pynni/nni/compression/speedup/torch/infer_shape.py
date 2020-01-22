@@ -10,6 +10,7 @@ import torch
 
 class CoarseMask:
     def __init__(self, num_dim):
+        # index existing ones
         self.mask_index = [None for _ in range(num_dim)]
 
     def add_index_mask(self, dim, index):
@@ -62,12 +63,52 @@ infer_from_mask = {
 infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
-    'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask)
+    'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'aten::avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
+    'aten::view': lambda module_masks, mask: view_inshape(module_masks, mask),
+    'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask)
 }
 
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
+
+def linear_inshape(module_masks, mask):
+    """
+    """
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[0] is None
+    assert module_masks.input_mask is None
+    module_masks.set_input_mask(mask)
+    return None
+
+def view_inshape(module_masks, mask):
+    """
+    """
+    # TODO: currently hard code view(N, -1)
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+    assert module_masks.input_mask is None
+    module_masks.set_input_mask(mask)
+    output_cmask = CoarseMask(num_dim=2)
+    # TODO: hard code for this case, %x : Float(64, 512, 1, 1)
+    index = []
+    for loc in mask.mask_index[1]:
+        index.append(loc * 1)
+    output_cmask.mask_index[1] = torch.tensor(index)
+    module_masks.set_output_mask(output_cmask)
+    return output_cmask
+
+
+def size_inshape(module_masks, mask):
+    """
+    """
+    return None
 
 def maxpool2d_inshape(module_masks, mask):
     """
