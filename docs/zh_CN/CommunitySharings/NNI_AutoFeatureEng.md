@@ -21,7 +21,7 @@ NNI（(Neural Network Intelligence）是一个微软的开源 AutoML 工具包�
 
 新用户可以使用 NNI 轻松高效地进行 AutoFeatureENG。 使用是非常简单的，安装下文件中的 require，然后 pip install NNI。
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%201.jpg) NNI把 AutoFeatureENG 拆分成 exploration 和 selection 两个模块。 exploration 主要是特征衍生和交叉，selection 讲的是如何做特征筛选。
+![](https://pic3.zhimg.com/v2-8886eea730cad25f5ac06ef1897cd7e4_r.jpg) NNI把 AutoFeatureENG 拆分成 exploration 和 selection 两个模块。 exploration 主要是特征衍生和交叉，selection 讲的是如何做特征筛选。
 
 ## 04 特征 Exploration
 
@@ -43,7 +43,7 @@ NNI（(Neural Network Intelligence）是一个微软的开源 AutoML 工具包�
 
 具体特征怎么交叉，哪一列和哪一列交叉，每一列特征用什么方式衍生呢？可以通过 **search_space. json** 这个文件控制。
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%202.jpg)
+![](https://pic1.zhimg.com/v2-3c3eeec6eea9821e067412725e5d2317_r.jpg)
 
 图片展示了定义搜索空间的过程。 NNI 为 1 阶运算提供计数编码，并为 2 阶运算提供聚合的统计（min max var mean median nunique）。
 
@@ -62,13 +62,13 @@ Exploration 的目的就是长生出新的特征。 在代码里可以用 **get_
 
 为了避免特征泛滥的情况，避免过拟合，一定要有 Selection 的机制挑选特征。 在 NNI-AutoFeatureENG 的 Selection 中，主要使用了微软开发的梯度提升框架 LightGBM（Light Gradient Boosting Machine）。
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%205.jpg)
+![](https://pic2.zhimg.com/v2-7bf9c6ae1303692101a911def478a172_r.jpg)
 
 了解 xgboost 或者 GBDT 算法同学应该知道，这种树形结构的算法是很容易计算出每个特征对于结果的影响的。 所以使用 lightGBM 可以天然的进行特征筛选。
 
 弊病就是，如果下游是个 *LR*（逻辑回归）这种线性算法，筛选出来的特征是否具备普适性。
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%206.jpg)
+![](https://pic4.zhimg.com/v2-d2f919497b0ed937acad0577f7a8df83_r.jpg)
 
 ## 06 总结
 
