@@ -42,7 +42,7 @@ Currently we support installation on Linux, macOS and Windows.
 
 * Install NNI through source code
 
-  If you are interested on special or latest version, you can install NNI through source code.
+  If you are interested on special or latest code version, you can install NNI through source code.
 
   Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
 
