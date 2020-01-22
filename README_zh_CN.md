@@ -329,7 +329,7 @@ You can use these commands to get more information about the experiment
 * 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
 * [自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/en_US/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#在-nni-上实现新的-nas-trainer)
 * [自定义 Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
