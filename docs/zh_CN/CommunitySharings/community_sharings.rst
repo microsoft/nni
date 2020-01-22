@@ -13,4 +13,4 @@
     超参调优算法的对比<HpoComparision>
     TPE 的并行优化<ParallelizingTpeSearch>
     使用 NNI 自动调优系统 <TuningSystems>
-    NNI review article from Zhihu: - By Garvin Li <NNI_AutoFeatureEng>
+    来自知乎的评论：作者 Garvin Li <NNI_AutoFeatureEng>
