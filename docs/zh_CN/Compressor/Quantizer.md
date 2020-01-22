@@ -44,7 +44,7 @@ quantizer.compress()
 查看示例进一步了解
 
 #### QAT Quantizer 的用户配置
-压缩算法所需的常见配置可在[通用配置](./Overview.md#User-configuration-for-a-compression-algorithm)中找到。
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
 
 此算法所需的配置：
 
@@ -77,7 +77,7 @@ quantizer.compress()
 查看示例进一步了解
 
 #### DoReFa Quantizer 的用户配置
-压缩算法所需的常见配置可在[通用配置](./Overview.md#User-configuration-for-a-compression-algorithm)中找到。
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
 
 此算法所需的配置：
 
@@ -113,7 +113,7 @@ model = quantizer.compress()
 可以查看示例 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 了解更多信息。
 
 #### BNN Quantizer 的用户配置
-压缩算法所需的常见配置可在[通用配置](./Overview.md#User-configuration-for-a-compression-algorithm)中找到。
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
 
 此算法所需的配置：
 
