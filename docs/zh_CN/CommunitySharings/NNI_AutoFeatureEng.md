@@ -1,25 +1,25 @@
 # 来自知乎的评论： <an open source project with highly reasonable design> - 作者 Garvin Li
 
-本文由 NNI 用户在知乎论坛上发表。 在这篇文章中，Garvin 分享了在使用 NNI 进行自动特征工程方面的体验。 我们认为本文对于有兴趣使用 NNI 进行特征工程的用户非常有用。 经作者许可，我们将原始文章摘抄如下。
+本文由 NNI 用户在知乎论坛上发表。 在这篇文章中，Garvin 分享了在使用 NNI 进行自动特征工程方面的体验。 我们认为本文对于有兴趣使用 NNI 进行特征工程的用户非常有用。 经作者许可，将原始文章摘编如下。
 
 **原文**: [如何看待微软最新发布的AutoML平台NNI？作者 Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0)
 
 ## 01 AutoML概述
 
-作者认为 AutoML 不光是调参，应该包含自动特征工程。AutoML 是一个系统化的体系，包括：自动特征工程、自动调参、自动神经网络探索（NAS）等。
+作者认为 AutoML 不光是调参，应该包含自动特征工程。AutoML 是一个系统化的体系，包括：自动特征工程（AutoFeatureEng）、自动调参（AutoTuning）、自动神经网络探索（NAS）等。
 
 ## 02 NNI 概述
 
-NNI (Neural Network Intelligence) is an open source AutoML toolkit from Microsoft, to help users design and tune machine learning models, neural network architectures, or a complex system’s parameters in an efficient and automatic way.
+NNI（(Neural Network Intelligence）是一个微软的开源 AutoML 工具包，通过自动而有效的方法来帮助用户设计并调优机器学习模型，神经网络架构，或复杂系统的参数。
 
-Link:[ https://github.com/Microsoft/nni](https://github.com/Microsoft/nni)
+链接：[ https://github.com/Microsoft/nni](https://github.com/Microsoft/nni)
 
-In general, most of Microsoft tools have one prominent characteristic: the design is highly reasonable (regardless of the technology innovation degree). NNI's AutoFeatureENG basically meets all user requirements of AutoFeatureENG with a very reasonable underlying framework design.
+我目前只学习了自动特征工程这一个模块，总体看微软的工具都有一个比较大的特点，技术可能不一定多新颖，但是设计都非常赞。 NNI 的 AutoFeatureENG 基本包含了用户对于 AutoFeatureENG 的一切幻想。在微软做 PD 应该挺幸福吧，底层的这些个框架的设计都极为合理。
 
-## 03 Details of NNI-AutoFeatureENG
-> The article is following the github project: [https://github.com/SpongebBob/tabular_automl_NNI](https://github.com/SpongebBob/tabular_automl_NNI).
+## 03 细说NNI - AutoFeatureENG
+> 本文使用了此项目： [https://github.com/SpongebBob/tabular_automl_NNI](https://github.com/SpongebBob/tabular_automl_NNI)。
 
-Each new user could do AutoFeatureENG with NNI easily and efficiently. To exploring the AutoFeatureENG capability, downloads following required files, and then run NNI install through pip.
+新用户可以使用 NNI 轻松高效地进行 AutoFeatureENG。 使用是非常简单的，安装下文件中的 require，然后 pip install NNI。
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%201.jpg) NNI treats AutoFeatureENG as a two-steps-task, feature generation exploration and feature selection. Feature generation exploration is mainly about feature derivation and high-order feature combination.
 
