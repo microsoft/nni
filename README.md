@@ -216,7 +216,7 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try latest version, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
+If you want to try latest code, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
 
 For detail system requirements of NNI, please refer to [here](docs/en_US/Tutorial/Installation.md#system-requirements).
 
