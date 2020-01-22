@@ -2,9 +2,9 @@
 
 ## Installation
 
-We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We support Linux macOS and Windows in current stage, Ubuntu 16.04 or higher, macOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
-**Linux and MacOS**
+**Linux and macOS**
 
 ```bash
     python3 -m pip install --upgrade nni
@@ -18,7 +18,7 @@ We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, Mac
 
 Note:
 
-* For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* For Linux and macOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
 * For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
 
@@ -139,7 +139,7 @@ Note, **for Windows, you need to change trial command `python3` to `python`**
 
 All the codes above are already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-**Linux and MacOS**
+**Linux and macOS**
 
 Run the **config.yml** file from your command line to start MNIST experiment.
 
