@@ -80,9 +80,9 @@ NNI 的 AutoFeature 模块是给整个行业制定了一个教科书般的标准
 
 在 Selection 方面可以有更多的智能化方案，比如可以基于下游的算法自动选择 Selection 机制。
 
-总之 NNI 在设计曾给了我一些启发，还是一个挺好的开源项目，推荐给大家~ I suggest researchers leverage it to accelerate the AI research.
+总之 NNI 在设计曾给了我一些启发，还是一个挺好的开源项目，推荐给大家~ 建议 AI 研究人员使用它来加速研究。
 
-Tips: Because the scripts of open source projects are compiled based on gcc7, Mac system may encounter problems of gcc (GNU Compiler Collection). The solution is as follows:
+大家用的时候如果是 Mac 电脑可能会遇到 gcc 的问题，因为开源项目自带的脚本是基于 gcc7 编译的， 可以用下面的方法绕过去：
 
 # brew install libomp
 
