@@ -30,7 +30,7 @@ with a very reasonable underlying framework design.
 
 Each new user could do AutoFeatureENG with NNI easily and efficiently. To exploring the AutoFeatureENG capability, downloads following required files, and then run NNI install through pip.
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%201.jpg)
+![](https://pic3.zhimg.com/v2-8886eea730cad25f5ac06ef1897cd7e4_r.jpg)
 NNI treats AutoFeatureENG as a two-steps-task, feature generation exploration and feature selection. Feature generation exploration is mainly about feature derivation and high-order feature combination.
 
 ## 04 Feature Exploration
@@ -53,7 +53,7 @@ For feature derivation, NNI offers many operations which could automatically gen
 
 Search space could be defined in a **JSON file**: to define how specific features intersect, which two columns intersect and how features generate from corresponding columns.
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%202.jpg)
+![](https://pic1.zhimg.com/v2-3c3eeec6eea9821e067412725e5d2317_r.jpg)
 
 The picture shows us the procedure of defining search space. NNI provides count encoding for 1-order-op, as well as cross count encoding, aggerate statistics (min max var mean median nunique) for 2-order-op. 
 
@@ -73,13 +73,13 @@ The purpose of Exploration is to generate new features. You can use **get_next_p
 
 To avoid feature explosion and overfitting, feature selection is necessary. In the feature selection of NNI-AutoFeatureENG, LightGBM (Light Gradient Boosting Machine), a gradient boosting framework developed by Microsoft, is mainly promoted.
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%205.jpg)
+![](https://pic2.zhimg.com/v2-7bf9c6ae1303692101a911def478a172_r.jpg)
 
 If you have used **XGBoost** or **GBDT**, you would know the algorithm based on tree structure can easily calculate the importance of each feature on results. LightGBM is able to make feature selection naturally.
 
 The issue is that selected features might be applicable to *GBDT* (Gradient Boosting Decision Tree), but not to the linear algorithm like *LR* (Logistic Regression).
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%206.jpg)
+![](https://pic4.zhimg.com/v2-d2f919497b0ed937acad0577f7a8df83_r.jpg)
 
 ## 06 Summary
 
