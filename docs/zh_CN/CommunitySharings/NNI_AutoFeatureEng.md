@@ -1,14 +1,14 @@
-# NNI review article from Zhihu: <an open source project with highly reasonable design> - By Garvin Li
+# 来自知乎的评论： <an open source project with highly reasonable design> - 作者 Garvin Li
 
-The article is by a NNI user on Zhihu forum. In the article, Garvin had shared his experience on using NNI for Automatic Feature Engineering. We think this article is very useful for users who are interested in using NNI for feature engineering. With author's permission, we translated the original article into English.
+本文由 NNI 用户在知乎论坛上发表。 在这篇文章中，Garvin 分享了在使用 NNI 进行自动特征工程方面的体验。 我们认为本文对于有兴趣使用 NNI 进行特征工程的用户非常有用。 经作者许可，我们将原始文章摘抄如下。
 
-**原文(source)**: [如何看待微软最新发布的AutoML平台NNI？By Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0)
+**原文**: [如何看待微软最新发布的AutoML平台NNI？作者 Garvin Li](https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0)
 
-## 01 Overview of AutoML
+## 01 AutoML概述
 
-In author's opinion, AutoML is not only about hyperparameter optimization, but also a process that can target various stages of the machine learning process, including feature engineering, NAS, HPO, etc.
+作者认为 AutoML 不光是调参，应该包含自动特征工程。AutoML 是一个系统化的体系，包括：自动特征工程、自动调参、自动神经网络探索（NAS）等。
 
-## 02 Overview of NNI
+## 02 NNI 概述
 
 NNI (Neural Network Intelligence) is an open source AutoML toolkit from Microsoft, to help users design and tune machine learning models, neural network architectures, or a complex system’s parameters in an efficient and automatic way.
 
