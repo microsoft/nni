@@ -27,60 +27,60 @@ NNI（(Neural Network Intelligence）是一个微软的开源 AutoML 工具包�
 
 对于功能派生，NNI 提供了许多可自动生成新功能的操作，[列表](https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.md)如下：
 
-**count**: Count encoding is based on replacing categories with their counts computed on the train set, also named frequency encoding.
+**count**：传统的统计，统计一些数据的出现频率
 
-**target**: Target encoding is based on encoding categorical variable values with the mean of target variable per value.
+**target**：特征和目标列的一些映射特征
 
-**embedding**: Regard features as sentences, generate vectors using *Word2Vec.*
+**embedding**：把特征看成句子，用 *word2vector* 的方式制作向量
 
-**crosscout**: Count encoding on more than one-dimension, alike CTR (Click Through Rate).
+**crosscount**：特征间除法，有点类似CTR
 
-**aggregete**: Decide the aggregation functions of the features, including min/max/mean/var.
+**aggregete**：特征的 min/max/var/mean
 
-**nunique**: Statistics of the number of unique features.
+**nunique**：统计唯一特征的数量。
 
-**histsta**: Statistics of feature buckets, like histogram statistics.
+**histsta**：特征存储桶的统计信息，如直方图统计信息。
 
-Search space could be defined in a **JSON file**: to define how specific features intersect, which two columns intersect and how features generate from corresponding columns.
+具体特征怎么交叉，哪一列和哪一列交叉，每一列特征用什么方式衍生呢？可以通过 **search_space. json** 这个文件控制。
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%202.jpg)
 
-The picture shows us the procedure of defining search space. NNI provides count encoding for 1-order-op, as well as cross count encoding, aggerate statistics (min max var mean median nunique) for 2-order-op.
+图片展示了定义搜索空间的过程。 NNI 为 1 阶运算提供计数编码，并为 2 阶运算提供聚合的统计（min max var mean median nunique）。
 
-For example, we want to search the features which are a frequency encoding (valuecount) features on columns name {“C1”, ...,” C26”}, in the following way:
+例如，希望以下列方式搜索列名称 {"C1"、"..."，"C26"} 上的频率编码（valuecount）功能的功能：
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%203.jpg)
 
-we can define a cross frequency encoding (value count on cross dims) method on columns {"C1",...,"C26"} x {"C1",...,"C26"} in the following way:
+可以在列 {"C1",...,"C26"} x {"C1",...,"C26"} 上定义交叉频率编码（交叉维度的值计数）方法：
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%204.jpg)
 
-The purpose of Exploration is to generate new features. You can use **get_next_parameter** function to get received feature candidates of one trial.
+Exploration 的目的就是长生出新的特征。 在代码里可以用 **get_next_parameter** 的方式获取 tuning 的参数：
 > RECEIVED_PARAMS = nni.get_next_parameter()
 
-## 05 Feature selection
+## 05 特征 Selection
 
-To avoid feature explosion and overfitting, feature selection is necessary. In the feature selection of NNI-AutoFeatureENG, LightGBM (Light Gradient Boosting Machine), a gradient boosting framework developed by Microsoft, is mainly promoted.
+为了避免特征泛滥的情况，避免过拟合，一定要有 Selection 的机制挑选特征。 在 NNI-AutoFeatureENG 的 Selection 中，主要使用了微软开发的梯度提升框架 LightGBM（Light Gradient Boosting Machine）。
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%205.jpg)
 
-If you have used **XGBoost** or **GBDT**, you would know the algorithm based on tree structure can easily calculate the importance of each feature on results. LightGBM is able to make feature selection naturally.
+了解 xgboost 或者 GBDT 算法同学应该知道，这种树形结构的算法是很容易计算出每个特征对于结果的影响的。 所以使用 lightGBM 可以天然的进行特征筛选。
 
-The issue is that selected features might be applicable to *GBDT* (Gradient Boosting Decision Tree), but not to the linear algorithm like *LR* (Logistic Regression).
+弊病就是，如果下游是个 *LR*（逻辑回归）这种线性算法，筛选出来的特征是否具备普适性。
 
 ![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%206.jpg)
 
-## 06 Summary
+## 06 总结
 
-NNI's AutoFeatureEng sets a well-established standard, showing us the operation procedure, available modules, which is highly convenient to use. However, a simple model is probably not enough for good results.
+NNI 的 AutoFeature 模块是给整个行业制定了一个教科书般的标准，告诉大家这个东西要怎么做，有哪些模块，使用起来非常方便。 但是如果只是基于这样简单的模式，不一定能达到很好的效果。
 
-## Suggestions to NNI
+## 对 NNI 的建议
 
-About Exploration: If consider using DNN (like xDeepFM) to extract high-order feature would be better.
+我觉得在Exploration方面可以引用一些 DNN（如：xDeepFM） 的特征组合方式，提取更高维度的特征。
 
-About Selection: There could be more intelligent options, such as automatic selection system based on downstream models.
+在 Selection 方面可以有更多的智能化方案，比如可以基于下游的算法自动选择 Selection 机制。
 
-Conclusion: NNI could offer users some inspirations of design and it is a good open source project. I suggest researchers leverage it to accelerate the AI research.
+总之 NNI 在设计曾给了我一些启发，还是一个挺好的开源项目，推荐给大家~ I suggest researchers leverage it to accelerate the AI research.
 
 Tips: Because the scripts of open source projects are compiled based on gcc7, Mac system may encounter problems of gcc (GNU Compiler Collection). The solution is as follows:
 
