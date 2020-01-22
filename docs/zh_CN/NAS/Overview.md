@@ -6,10 +6,10 @@
 
 以此为动力，NNI 的目标是提供统一的体系结构，以加速NAS上的创新，并将最新的算法更快地应用于现实世界中的问题上。
 
-通过[统一的接口](./NasInterface.md)，有两种方式进行架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](./NasInterface.md#classic-distributed-search)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
+通过[统一的接口](./NasInterface.md)，有两种方式进行架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](./NasInterface.md#经典分布式搜索)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
 
 * [支持的 One-shot NAS 算法](#supported-one-shot-nas-algorithms)
-* [使用 NNI Experiment 的经典分布式 NAS](./NasInterface.md#classic-distributed-search)
+* [使用 NNI Experiment 的经典分布式 NAS](./NasInterface.md#经典分布式搜索)
 * [NNI NAS 编程接口](./NasInterface.md)
 
 ## 支持的 One-shot NAS 算法
