@@ -1,6 +1,6 @@
 # Run an Experiment on Remote Machines
 
-NNI can run one experiment on multiple remote machines through SSH, called `remote` mode. In this mode, NNI can be started from your computer, and dispatch trials to remote machines in parallel. It's like a lightweight training platform.
+NNI can run one experiment on multiple remote machines through SSH, called `remote` mode. It's like a lightweight training platform. In this mode, NNI can be started from your computer, and dispatch trials to remote machines in parallel.
 
 ## Remote machine requirements
 
