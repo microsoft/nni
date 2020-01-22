@@ -21,11 +21,11 @@ NNI（(Neural Network Intelligence）是一个微软的开源 AutoML 工具包�
 
 新用户可以使用 NNI 轻松高效地进行 AutoFeatureENG。 使用是非常简单的，安装下文件中的 require，然后 pip install NNI。
 
-![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%201.jpg) NNI treats AutoFeatureENG as a two-steps-task, feature generation exploration and feature selection. Feature generation exploration is mainly about feature derivation and high-order feature combination.
+![](https://github.com/JSong-Jia/Pic/blob/master/images/pic%201.jpg) NNI把 AutoFeatureENG 拆分成 exploration 和 selection 两个模块。 exploration 主要是特征衍生和交叉，selection 讲的是如何做特征筛选。
 
-## 04 Feature Exploration
+## 04 特征 Exploration
 
-For feature derivation, NNI offers many operations which could automatically generate new features, which list [as following](https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.md) :
+对于功能派生，NNI 提供了许多可自动生成新功能的操作，[列表](https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.md)如下：
 
 **count**: Count encoding is based on replacing categories with their counts computed on the train set, also named frequency encoding.
 
