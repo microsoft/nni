@@ -167,7 +167,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             </ul>
       </ul>
       </td>
-    </tr> 
+    </tr>
       <tr align="center" valign="bottom">
       </td>
       </tr>
@@ -193,18 +193,18 @@ Within the following table, we summarized the current NNI capabilities, we are g
         <li><a href="docs/en_US/TrainingService/SupportTrainingService.md">Support TrainingService</li>
         <li><a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">Implement TrainingService</a></li>
       </ul>
-      </td>     
-    </tr> 
+      </td>
+    </tr>
   </tbody>
 </table>
 
-## **Install & Verify**
+## **Installation**
 
-**Install through pip**
+### **Install**
 
-* We support Linux, MacOS and Windows (local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.5`.
 
-Linux and MacOS
+Linux or macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -216,65 +216,39 @@ Windows
 python -m pip install --upgrade nni
 ```
 
+If you want to try latest version, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
+
+For detail system requirements of NNI, please refer to [here](docs/en_US/Tutorial/Installation.md#system-requirements).
+
 Note:
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* Currently NNI on Windows support local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md)
+* If there is any privilege issue, add `--user` to install NNI in the user directory.
+* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md).
 
-**Install through source code**
+### **Verify installation**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows (10.1809) in our current stage.
-
-Linux and MacOS
-
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
-
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-    cd nni
-    source install.sh
-```
-
-Windows
-
-* Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
-
-```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-```
-
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Tutorial/Installation.md)
-
-For NNI on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md)
-
-**Verify install**
-
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow 1.x installed** before running it. Note that **currently Tensorflow 2.0 is NOT supported**.
+The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
 * Download the examples via clone the source code.
 
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-```
-
-Linux and MacOS
+  ```bash
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  ```
 
 * Run the MNIST example.
 
-```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
-```
+  Linux or macOS
 
-Windows
+  ```bash
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+  ```
 
-* Run the MNIST example.
+  Windows
 
-```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-```
+  ```bash
+  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+  ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
@@ -371,4 +345,3 @@ We encourage researchers and students leverage these projects to accelerate the 
 ## **License**
 
 The entire codebase is under [MIT license](LICENSE)
-

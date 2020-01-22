@@ -3,13 +3,14 @@
 ## Installation
 
 We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
-#### Linux and MacOS
+
+**Linux and MacOS**
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-#### Windows
+**Windows**
 
 ```bash
     python -m pip install --upgrade nni
@@ -53,7 +54,7 @@ The above code can only try one set of parameters at a time, if we want to tune 
 
 NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
 
-```
+```text
 input: search space, trial code, config file
 output: one optimal hyperparameter configuration
 
@@ -68,7 +69,7 @@ output: one optimal hyperparameter configuration
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes base on your code:
 
-**Three things required to do when using NNI**
+**Three steps to start an experiment**
 
 **Step 1**: Give a `Search Space` file in JSON, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
 
@@ -138,22 +139,25 @@ Note, **for Windows, you need to change trial command `python3` to `python`**
 
 All the codes above are already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-#### Linux and MacOS   
+**Linux and MacOS**
+
 Run the **config.yml** file from your command line to start MNIST experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
-#### Windows   
+
+**Windows**
+
 Run the **config_windows.yml** file from your command line to start MNIST experiment.
 
-**Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+Note, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
     nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
-Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
+Note, `nnictl` is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
@@ -195,7 +199,7 @@ The Web UI urls are: [Your IP]:8080
 
 Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. If you can not open the WebUI link in your terminal, you can refer to [FAQ](FAQ.md).
 
-#### View summary page
+### View summary page
 
 Click the tab "Overview".
 
@@ -207,7 +211,7 @@ Top 10 trials will be listed in the Overview page, you can browse all the trials
 
 ![](../../img/QuickStart2.png)
 
-#### View trials detail page
+### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
