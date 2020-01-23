@@ -107,10 +107,9 @@ You can use these commands to get more information about the experiment
 
 * 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
-<table style="border: none">
-    <th><img src="../../img/webui_overview_page.png" alt="绘图" width="395"/></th>
-    <th><img src="../../img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
-</table>
+![概述](../../img/webui_overview_page.png)
+
+![详细说明](../../img/webui_trialdetail_page.png)
 
 ## 系统需求
 
