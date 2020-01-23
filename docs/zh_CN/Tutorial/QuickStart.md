@@ -2,9 +2,9 @@
 
 ## 安装
 
-We support Linux macOS and Windows in current stage, Ubuntu 16.04 or higher, macOS 10.14.1 and Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，macOS 和 Windows，在 Ubuntu 16.04 或更高版本，macOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-**Linux and macOS**
+**Linux 和 macOS**
 
 ```bash
     python3 -m pip install --upgrade nni
