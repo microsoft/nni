@@ -1,20 +1,22 @@
 # 安装 NNI
 
-当前支持在 Linux，Mac 和 Windows 下安装。
+Currently we support installation on Linux, macOS and Windows.
 
-## **在 Linux 和 Mac 下安装**
+## Install on Linux or macOS
 
-* **通过 pip 命令安装 NNI**
+* Install NNI through pip
     
-    先决条件：`python >= 3.5`
+    Prerequisite: `python 64-bit >= 3.5`
     
     ```bash
     python3 -m pip install --upgrade nni
     ```
 
-* **通过源代码安装 NNI**
+* Install NNI through source code
     
-    先决条件：`python >=3.5`, `git`, `wget`
+    If you are interested on special or latest code version, you can install NNI through source code.
+    
+    Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
     
     ```bash
     git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -22,25 +24,27 @@
     ./install.sh
     ```
 
-* **在 docker 映像中安装 NNI**
+* Use NNI in a docker image
     
     也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
-## **在 Windows 上安装**
+## Install on Windows
 
-推荐使用 Anaconda 或 Miniconda。
+Anaconda or Miniconda is highly recommended to manage multiple Python environments.
 
-* **通过 pip 命令安装 NNI**
+* Install NNI through pip
     
-    先决条件：`python(64-bit) >= 3.5`
+    Prerequisites: `python 64-bit >= 3.5`
     
     ```bash
     python -m pip install --upgrade nni
     ```
 
-* **通过源代码安装 NNI**
+* Install NNI through source code
     
-    先决条件：`python >=3.5`, `git`, `PowerShell`
+    If you are interested on special or latest code version, you can install NNI through source code.
+    
+    Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
     
     ```bash
     git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -48,53 +52,115 @@
     powershell -ExecutionPolicy Bypass -file install.ps1
     ```
 
-## **系统需求**
+## Verify installation
 
-以下是 NNI 在 Linux 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
-|          | 最低配置                                  | 推荐配置                                      |
-| -------- | ------------------------------------- | ----------------------------------------- |
-| **操作系统** | Ubuntu 16.04 或以上版本                    | Ubuntu 16.04 或以上版本                        |
-| **CPU**  | Intel® Core™ i3 或 AMD Phenom™ X3 8650 | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 |
-| **GPU**  | NVIDIA® GeForce® GTX 460              | NVIDIA® GeForce® GTX 660 或更高配置            |
-| **内存**   | 4 GB                                  | 6 GB                                      |
-| **存储**   | 30 GB 可用的磁盘空间                         |                                           |
-| **网络**   | 宽带连接                                  |                                           |
-| **分辨率**  | 1024 x 768 以上                         |                                           |
+* Download the examples via clone the source code.
+    
+    ```bash
+    git clone -b v1.3 https://github.com/Microsoft/nni.git
+    ```
 
-以下是 NNI 在 MacOS 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+* Run the MNIST example.
+    
+    Linux or macOS
+    
+    ```bash
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+    ```
+    
+    Windows
+    
+    ```bash
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+    ```
 
-|          | 最低配置                                               | 推荐配置                     |
-| -------- | -------------------------------------------------- | ------------------------ |
-| **操作系统** | macOS 10.14.1 (最新版本)                               | macOS 10.14.1 (最新版本)     |
-| **CPU**  | Intel® Core™ i5-760 或更高                            | Intel® Core™ i7-4770 或更高 |
-| **GPU**  | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 | AMD Radeon™ R9 M395X 或更高 |
-| **内存**   | 4 GB                                               | 8 GB                     |
-| **存储**   | 70GB 可用空间及 7200 RPM 硬盘                             | 70GB 可用空间 SSD 硬盘         |
-| **网络**   | 宽带连接                                               |                          |
-| **分辨率**  | 1024 x 768 以上                                      |                          |
+* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
-以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
+```text
+INFO: Starting restful server...
+INFO: Successfully started Restful server!
+INFO: Setting local config...
+INFO: Successfully set local config!
+INFO: Starting experiment...
+INFO: Successfully started experiment!
+-----------------------------------------------------------------------
+The experiment id is egchD4qy
+The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
+-----------------------------------------------------------------------
 
-|          | 最低配置                                  | 推荐配置                                      |
-| -------- | ------------------------------------- | ----------------------------------------- |
-| **操作系统** | Windows 10                            | Windows 10                                |
-| **CPU**  | Intel® Core™ i3 或 AMD Phenom™ X3 8650 | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 |
-| **GPU**  | NVIDIA® GeForce® GTX 460              | NVIDIA® GeForce® GTX 660 或更高配置            |
-| **内存**   | 4 GB                                  | 6 GB                                      |
-| **存储**   | 30 GB 可用的磁盘空间                         |                                           |
-| **网络**   | 宽带连接                                  |                                           |
-| **分辨率**  | 1024 x 768 以上                         |                                           |
+You can use these commands to get more information about the experiment
+-----------------------------------------------------------------------
+         commands                       description
 
-## 更多
+1. nnictl experiment show        show the information of experiments
+2. nnictl trial ls               list all of trial jobs
+3. nnictl top                    monitor the status of running experiments
+4. nnictl log stderr             show stderr log content
+5. nnictl log stdout             show stdout log content
+6. nnictl stop                   stop an experiment
+7. nnictl trial kill             kill a trial job by id
+8. nnictl --help                 get help information about nnictl
+-----------------------------------------------------------------------
+```
 
-* [概述](../Overview.md)
-* [使用命令行工具 nnictl](Nnictl.md)
-* [使用 NNIBoard](WebUI.md)
-* [定制搜索空间](SearchSpaceSpec.md)
-* [配置 Experiment](ExperimentConfig.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
-* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
-* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
-* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
+* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+
+<table style="border: none">
+    <th><img src="../../img/webui_overview_page.png" alt="drawing" width="395"/></th>
+    <th><img src="../../img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+</table>
+
+## System requirements
+
+Due to potential programming changes, the minimum system requirements of NNI may change over time.
+
+### Linux
+
+|          | Recommended                                    | Minimum                                |
+| -------- | ---------------------------------------------- | -------------------------------------- |
+| **操作系统** | Ubuntu 16.04 or above                          |                                        |
+| **CPU**  | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**  | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **内存**   | 6 GB RAM                                       | 4 GB RAM                               |
+| **存储**   | 30 GB available hare drive space               |                                        |
+| **网络**   | 宽带连接                                           |                                        |
+| **分辨率**  | 1024 x 768 以上                                  |                                        |
+
+### macOS
+
+|          | Recommended                    | Minimum                                                   |
+| -------- | ------------------------------ | --------------------------------------------------------- |
+| **操作系统** | macOS 10.14.1 or above         |                                                           |
+| **CPU**  | Intel® Core™ i7-4770 or better | Intel® Core™ i5-760 or better                             |
+| **GPU**  | AMD Radeon™ R9 M395X or better | NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better |
+| **内存**   | 8 GB RAM                       | 4 GB RAM                                                  |
+| **存储**   | 70GB available space SSD       | 70GB available space 7200 RPM HDD                         |
+| **网络**   | 宽带连接                           |                                                           |
+| **分辨率**  | 1024 x 768 以上                  |                                                           |
+
+### Windows
+
+|                      | Recommended                                    | Minimum                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Operating System** | Windows 10 1809 or above                       |                                        |
+| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
+| **Storage**          | 30 GB available hare drive space               |                                        |
+| **Internet**         | Boardband internet connection                  |                                        |
+| **Resolution**       | 1024 x 768 minimum display resolution          |                                        |
+
+## Further reading
+
+* [Overview](../Overview.md)
+* [Use command line tool nnictl](Nnictl.md)
+* [Use NNIBoard](WebUI.md)
+* [Define search space](SearchSpaceSpec.md)
+* [Config an experiment](ExperimentConfig.md)
+* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
+* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
