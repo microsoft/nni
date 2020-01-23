@@ -197,9 +197,9 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
 
 ### **安装**
 
-NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.5`.
+NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64-bit >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux or macOS
+Linux 或 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -211,29 +211,29 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try latest code, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
+如果想要尝试最新代码，可通过源代码[安装 NNI](docs/en_US/Tutorial/Installation.md)。
 
-For detail system requirements of NNI, please refer to [here](docs/en_US/Tutorial/Installation.md#system-requirements).
+有关 NNI 的详细系统要求，参考[这里](docs/en_US/Tutorial/Installation.md#system-requirements)。
 
-Note:
+注意：
 
-* If there is any privilege issue, add `--user` to install NNI in the user directory.
-* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md).
+* 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
+* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
 
-### **Verify installation**
+### **验证安装**
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
    
    ```bash
    git clone -b v1.3 https://github.com/Microsoft/nni.git
    ```
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
    
-   Linux or macOS
+   Linux 或 macOS
    
    ```bash
    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
@@ -245,7 +245,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
    ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -274,7 +274,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/en_US/Tutorial/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](docs/zh_CN/Tutorial/WebUI.md)的更多页面。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -283,17 +283,17 @@ You can use these commands to get more information about the experiment
 
 ## **文档**
 
-* To learn about what's NNI, read the [NNI Overview](https://nni.readthedocs.io/en/latest/Overview.html). 
-* To get yourself familiar with how to use NNI, read the [documentation](https://nni.readthedocs.io/en/latest/index.html). 
-* To get started and install NNI on your system, please refer to [Install NNI](docs/en_US/Tutorial/Installation.md).
+* 要了解 NNI，请阅读 [NNI 概述](https://nni.readthedocs.io/zh/latest/Overview.html)。 
+* 要熟悉如何使用 NNI，请阅读[文档](https://nni.readthedocs.io/zh/latest/index.html)。 
+* 要安装 NNI，请参阅[安装 NNI](docs/zh_CN/Tutorial/Installation.md)。
 
 ## **贡献**
 
-This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
+本项目欢迎任何贡献和建议。 大多数贡献都需要你同意参与者许可协议（CLA），来声明你有权，并实际上授予我们有权使用你的贡献。 有关详细信息，请访问 https://cla.microsoft.com。
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
+当你提交拉取请求时，CLA机器人会自动检查你是否需要提供CLA，并修饰这个拉取请求(例如，标签、注释)。 只需要按照机器人提供的说明进行操作即可。 CLA 只需要同意一次，就能应用到所有的代码仓库上。
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the Code of [Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact opencode@microsoft.com with any additional questions or comments.
+该项目采用了 [ Microsoft 开源行为准则 ](https://opensource.microsoft.com/codeofconduct/)。 有关详细信息，请参阅[常见问题解答](https://opensource.microsoft.com/codeofconduct/faq/)，如有任何疑问或意见可联系 opencode@microsoft.com。
 
 After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI developer tutorials to get start:
 
