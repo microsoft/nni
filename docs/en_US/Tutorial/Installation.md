@@ -106,10 +106,9 @@ You can use these commands to get more information about the experiment
 
 * Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
 
-<table style="border: none">
-    <th><img src="../../img/webui_overview_page.png" alt="drawing" width="395"/></th>
-    <th><img src="../../img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
-</table>
+![overview](../../img/webui_overview_page.png)
+
+![detail](../../img/webui_trialdetail_page.png)
 
 ## System requirements
 
