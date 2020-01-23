@@ -107,10 +107,9 @@ You can use these commands to get more information about the experiment
 
 * 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
-<table style="border: none">
-    <th><img src="../../img/webui_overview_page.png" alt="绘图" width="395"/></th>
-    <th><img src="../../img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
-</table>
+![概述](../../img/webui_overview_page.png)
+
+![详细说明](../../img/webui_trialdetail_page.png)
 
 ## 系统需求
 
@@ -132,7 +131,7 @@ You can use these commands to get more information about the experiment
 
 |          | 推荐配置                     | 最低配置                                               |
 | -------- | ------------------------ | -------------------------------------------------- |
-| **操作系统** | macOS 10.14.1或更高版本       |                                                    |
+| **操作系统** | macOS 10.14.1 或更高版本      |                                                    |
 | **CPU**  | Intel® Core™ i7-4770 或更高 | Intel® Core™ i5-760 或更高                            |
 | **GPU**  | AMD Radeon™ R9 M395X 或更高 | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 |
 | **内存**   | 8 GB                     | 4 GB                                               |
