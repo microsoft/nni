@@ -1,22 +1,22 @@
 # 安装 NNI
 
-Currently we support installation on Linux, macOS and Windows.
+当前支持在 Linux，macOS 和 Windows 下安装。
 
-## Install on Linux or macOS
+## 在 Linux 或 macOS 上安装
 
-* Install NNI through pip
+* 通过 pip 命令安装 NNI
     
-    Prerequisite: `python 64-bit >= 3.5`
+    先决条件：`python 64-bit >= 3.5`
     
     ```bash
     python3 -m pip install --upgrade nni
     ```
 
-* Install NNI through source code
+* 通过源代码安装 NNI
     
-    If you are interested on special or latest code version, you can install NNI through source code.
+    如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
     
-    Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
+    先决条件：`python 64-bit >=3.5`, `git`, `wget`
     
     ```bash
     git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -24,27 +24,27 @@ Currently we support installation on Linux, macOS and Windows.
     ./install.sh
     ```
 
-* Use NNI in a docker image
+* 在 Docker 映像中使用 NNI
     
     也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
-## Install on Windows
+## 在 Windows 上安装
 
-Anaconda or Miniconda is highly recommended to manage multiple Python environments.
+强烈建议使用 Anaconda 或 Miniconda 来管理多个 Python 环境。
 
-* Install NNI through pip
+* 通过 pip 命令安装 NNI
     
-    Prerequisites: `python 64-bit >= 3.5`
+    先决条件：`python 64-bit >= 3.5`
     
     ```bash
     python -m pip install --upgrade nni
     ```
 
-* Install NNI through source code
+* 通过源代码安装 NNI
     
-    If you are interested on special or latest code version, you can install NNI through source code.
+    如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
     
-    Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
+    先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
     
     ```bash
     git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -52,19 +52,19 @@ Anaconda or Miniconda is highly recommended to manage multiple Python environmen
     powershell -ExecutionPolicy Bypass -file install.ps1
     ```
 
-## Verify installation
+## 验证安装
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
     
     ```bash
     git clone -b v1.3 https://github.com/Microsoft/nni.git
     ```
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
     
-    Linux or macOS
+    Linux 或 macOS
     
     ```bash
     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
@@ -76,7 +76,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
     nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
     ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -130,37 +130,37 @@ Due to potential programming changes, the minimum system requirements of NNI may
 
 ### macOS
 
-|          | Recommended                    | Minimum                                                   |
-| -------- | ------------------------------ | --------------------------------------------------------- |
-| **操作系统** | macOS 10.14.1 or above         |                                                           |
-| **CPU**  | Intel® Core™ i7-4770 or better | Intel® Core™ i5-760 or better                             |
-| **GPU**  | AMD Radeon™ R9 M395X or better | NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better |
-| **内存**   | 8 GB RAM                       | 4 GB RAM                                                  |
-| **存储**   | 70GB available space SSD       | 70GB available space 7200 RPM HDD                         |
-| **网络**   | 宽带连接                           |                                                           |
-| **分辨率**  | 1024 x 768 以上                  |                                                           |
+|          | Recommended              | 最低配置                                               |
+| -------- | ------------------------ | -------------------------------------------------- |
+| **操作系统** | macOS 10.14.1或更高版本       |                                                    |
+| **CPU**  | Intel® Core™ i7-4770 或更高 | Intel® Core™ i5-760 或更高                            |
+| **GPU**  | AMD Radeon™ R9 M395X 或更高 | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 |
+| **内存**   | 8 GB                     | 4 GB                                               |
+| **存储**   | 70GB 可用空间 SSD 硬盘         | 70GB 可用空间及 7200 RPM 硬盘                             |
+| **网络**   | 宽带连接                     |                                                    |
+| **分辨率**  | 1024 x 768 以上            |                                                    |
 
 ### Windows
 
-|                      | Recommended                                    | Minimum                                |
-| -------------------- | ---------------------------------------------- | -------------------------------------- |
-| **Operating System** | Windows 10 1809 or above                       |                                        |
-| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
-| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
-| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
-| **Storage**          | 30 GB available hare drive space               |                                        |
-| **Internet**         | Boardband internet connection                  |                                        |
-| **Resolution**       | 1024 x 768 minimum display resolution          |                                        |
+|          | 推荐配置                                      | 最低配置                                  |
+| -------- | ----------------------------------------- | ------------------------------------- |
+| **操作系统** | Windows 10 1809 或更高版本                     |                                       |
+| **CPU**  | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
+| **GPU**  | NVIDIA® GeForce® GTX 660 或更高配置            | NVIDIA® GeForce® GTX 460              |
+| **内存**   | 6 GB                                      | 4 GB                                  |
+| **存储**   | 30 GB 可用的磁盘空间                             |                                       |
+| **网络**   | 宽带连接                                      |                                       |
+| **分辨率**  | 1024 x 768 以上                             |                                       |
 
-## Further reading
+## 更多
 
-* [Overview](../Overview.md)
-* [Use command line tool nnictl](Nnictl.md)
-* [Use NNIBoard](WebUI.md)
-* [Define search space](SearchSpaceSpec.md)
-* [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
-* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [概述](../Overview.md)
+* [使用命令行工具 nnictl](Nnictl.md)
+* [使用 NNIBoard](WebUI.md)
+* [定制搜索空间](SearchSpaceSpec.md)
+* [配置 Experiment](ExperimentConfig.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
