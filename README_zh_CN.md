@@ -123,7 +123,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/Overview.md#darts">DARTS</a></li>
               <li><a href="docs/zh_CN/NAS/Overview.md#p-darts">P-DARTS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#cdarts">CDARTS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
