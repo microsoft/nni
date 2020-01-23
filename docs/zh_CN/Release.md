@@ -12,9 +12,9 @@
 
 * [知识蒸馏](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/TrialExample/KDExample.md)算法和使用示例
 * Pruners 
-    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md#3-l2filter-pruner)
-    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md#1-activationapozrankfilterpruner)
-    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md#2-activationmeanrankfilterpruner)
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationmeanrankfilterpruner)
 * [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer)
 
 #### 训练平台
@@ -81,7 +81,7 @@
 ### 主要功能
 
 * 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
-* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/Nnictl.md#view)
+* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/Nnictl.md#view)
 * Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
 * 改进 WEB 界面 
   - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）

@@ -1,20 +1,22 @@
 # Installation of NNI
 
-Currently we support installation on Linux, Mac and Windows.
+Currently we support installation on Linux, macOS and Windows.
 
-## **Installation on Linux & Mac**
+## Install on Linux or macOS
 
-* __Install NNI through pip__
+* Install NNI through pip
 
-  Prerequisite: `python >= 3.5`
+  Prerequisite: `python 64-bit >= 3.5`
 
   ```bash
   python3 -m pip install --upgrade nni
   ```
 
-* __Install NNI through source code__
+* Install NNI through source code
 
-  Prerequisite: `python >=3.5`, `git`, `wget`
+  If you are interested on special or latest code version, you can install NNI through source code.
+
+  Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
 
   ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -22,25 +24,27 @@ Currently we support installation on Linux, Mac and Windows.
   ./install.sh
   ```
 
-* __Install NNI in docker image__
+* Use NNI in a docker image
 
   You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
-## **Installation on Windows**
+## Install on Windows
 
-  Anaconda or Miniconda is highly recommended.
+  Anaconda or Miniconda is highly recommended to manage multiple Python environments.
 
-* __Install NNI through pip__
+* Install NNI through pip
 
-  Prerequisite: `python(64-bit) >= 3.5`
+  Prerequisites: `python 64-bit >= 3.5`
 
   ```bash
   python -m pip install --upgrade nni
   ```
 
-* __Install NNI through source code__
+* Install NNI through source code
 
-  Prerequisite: `python >=3.5`, `git`, `PowerShell`.
+  If you are interested on special or latest code version, you can install NNI through source code.
+
+  Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
 
   ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -48,43 +52,104 @@ Currently we support installation on Linux, Mac and Windows.
   powershell -ExecutionPolicy Bypass -file install.ps1
   ```
 
-## **System requirements**
+## Verify installation
 
-Below are the minimum system requirements for NNI on Linux. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
-||Minimum Requirements|Recommended Specifications|
-|---|---|---|
-|**Operating System**|Ubuntu 16.04 or above|Ubuntu 16.04 or above|
-|**CPU**|Intel® Core™ i3 or AMD Phenom™ X3 8650|Intel® Core™ i5 or AMD Phenom™ II X3 or better|
-|**GPU**|NVIDIA® GeForce® GTX 460|NVIDIA® GeForce® GTX 660 or better|
-|**Memory**|4 GB RAM|6 GB RAM|
-|**Storage**|30 GB available hare drive space|
-|**Internet**|Boardband internet connection|
-|**Resolution**|1024 x 768 minimum display resolution|
+* Download the examples via clone the source code.
 
-Below are the minimum system requirements for NNI on macOS. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+  ```bash
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  ```
 
-||Minimum Requirements|Recommended Specifications|
-|---|---|---|
-|**Operating System**|macOS 10.14.1 (latest version)|macOS 10.14.1 (latest version)|
-|**CPU**|Intel® Core™ i5-760 or better|Intel® Core™ i7-4770 or better|
-|**GPU**|NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better|AMD Radeon™ R9 M395X or better|
-|**Memory**|4 GB RAM|8 GB RAM|
-|**Storage**|70GB available space 7200 RPM HDD|70GB available space SSD|
-|**Internet**|Boardband internet connection|
-|**Resolution**|1024 x 768 minimum display resolution|
+* Run the MNIST example.
 
-Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+  Linux or macOS
 
-||Minimum Requirements|Recommended Specifications|
-|---|---|---|
-|**Operating System**|Windows 10|Windows 10|
-|**CPU**|Intel® Core™ i3 or AMD Phenom™ X3 8650|Intel® Core™ i5 or AMD Phenom™ II X3 or better|
-|**GPU**|NVIDIA® GeForce® GTX 460|NVIDIA® GeForce® GTX 660 or better|
-|**Memory**|4 GB RAM|6 GB RAM|
-|**Storage**|30 GB available hare drive space|
-|**Internet**|Boardband internet connection|
-|**Resolution**|1024 x 768 minimum display resolution|
+  ```bash
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+  ```
+
+  Windows
+
+  ```bash
+  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+  ```
+
+* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+
+```text
+INFO: Starting restful server...
+INFO: Successfully started Restful server!
+INFO: Setting local config...
+INFO: Successfully set local config!
+INFO: Starting experiment...
+INFO: Successfully started experiment!
+-----------------------------------------------------------------------
+The experiment id is egchD4qy
+The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
+-----------------------------------------------------------------------
+
+You can use these commands to get more information about the experiment
+-----------------------------------------------------------------------
+         commands                       description
+1. nnictl experiment show        show the information of experiments
+2. nnictl trial ls               list all of trial jobs
+3. nnictl top                    monitor the status of running experiments
+4. nnictl log stderr             show stderr log content
+5. nnictl log stdout             show stdout log content
+6. nnictl stop                   stop an experiment
+7. nnictl trial kill             kill a trial job by id
+8. nnictl --help                 get help information about nnictl
+-----------------------------------------------------------------------
+```
+
+* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+
+<table style="border: none">
+    <th><img src="../../img/webui_overview_page.png" alt="drawing" width="395"/></th>
+    <th><img src="../../img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+</table>
+
+## System requirements
+
+Due to potential programming changes, the minimum system requirements of NNI may change over time.
+
+### Linux
+
+|                      | Recommended                                    | Minimum                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Operating System** | Ubuntu 16.04 or above                          |
+| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
+| **Storage**          | 30 GB available hare drive space               |
+| **Internet**         | Boardband internet connection                  |
+| **Resolution**       | 1024 x 768 minimum display resolution          |
+
+### macOS
+
+|                      | Recommended                           | Minimum                                                   |
+| -------------------- | ------------------------------------- | --------------------------------------------------------- |
+| **Operating System** | macOS 10.14.1 or above                |
+| **CPU**              | Intel® Core™ i7-4770 or better        | Intel® Core™ i5-760 or better                             |
+| **GPU**              | AMD Radeon™ R9 M395X or better        | NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better |
+| **Memory**           | 8 GB RAM                              | 4 GB RAM                                                  |
+| **Storage**          | 70GB available space SSD              | 70GB available space 7200 RPM HDD                         |
+| **Internet**         | Boardband internet connection         |
+| **Resolution**       | 1024 x 768 minimum display resolution |
+
+### Windows
+
+|                      | Recommended                                    | Minimum                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Operating System** | Windows 10 1809 or above                       |
+| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
+| **Storage**          | 30 GB available hare drive space               |
+| **Internet**         | Boardband internet connection                  |
+| **Resolution**       | 1024 x 768 minimum display resolution          |
 
 ## Further reading
 

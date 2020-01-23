@@ -162,7 +162,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             </ul>
       </ul>
       </td>
-    </tr> 
+    </tr>
       <tr align="center" valign="bottom">
       </td>
       </tr>
@@ -188,18 +188,18 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
         <li><a href="docs/zh_CN/TrainingService/SupportTrainingService.md">支持训练平台</li>
         <li><a href="docs/zh_CN/TrainingService/HowToImplementTrainingService.md">实现训练平台</a></li>
       </ul>
-      </td>     
-    </tr> 
+      </td>
+    </tr>
   </tbody>
 </table>
 
-## **安装和验证**
+## **安装**
 
-**通过 pip 命令安装**
+### **安装**
 
-* 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64-bit >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux 和 macOS
+Linux 或 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -211,65 +211,39 @@ Windows
 python -m pip install --upgrade nni
 ```
 
+如果想要尝试最新代码，可通过源代码[安装 NNI](docs/en_US/Tutorial/Installation.md)。
+
+有关 NNI 的详细系统要求，参考[这里](docs/en_US/Tutorial/Installation.md#system-requirements)。
+
 注意：
 
-* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。
+* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
 
-**通过源代码安装**
+### **验证安装**
 
-* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
-
-Linux 和 MacOS
-
-* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
-
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-    cd nni
-    source install.sh
-```
-
-Windows
-
-* 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
-
-```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-```
-
-参考[安装 NNI](docs/zh_CN/Tutorial/Installation.md) 了解系统需求。
-
-Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
-
-**验证安装**
-
-以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow 1.x**。 注意，**目前不支持 TensorFlow 2.0**。
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
 * 通过克隆源代码下载示例。
-
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-```
-
-Linux 和 MacOS
+   
+   ```bash
+   git clone -b v1.3 https://github.com/Microsoft/nni.git
+   ```
 
 * 运行 MNIST 示例。
-
-```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
-```
-
-Windows
-
-* 运行 MNIST 示例。
-
-```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-```
+   
+   Linux 或 macOS
+   
+   ```bash
+   nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+   ```
+   
+   Windows
+   
+   ```bash
+   nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+   ```
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
@@ -321,11 +295,11 @@ You can use these commands to get more information about the experiment
 
 该项目采用了 [ Microsoft 开源行为准则 ](https://opensource.microsoft.com/codeofconduct/)。 有关详细信息，请参阅[常见问题解答](https://opensource.microsoft.com/codeofconduct/faq/)，如有任何疑问或意见可联系 opencode@microsoft.com。
 
-熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =)：
+熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR：
 
 * 推荐新贡献者先从简单的问题开始：['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)。
-* [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
-* [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
+* [NNI 开发环境安装教程](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
+* [如何调试](docs/en_US/Tutorial/HowToDebug.md)
 * 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
 * [自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/en_US/TrainingService/HowToImplementTrainingService.md)
@@ -345,14 +319,14 @@ You can use these commands to get more information about the experiment
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
 * ### **相关文章**
    
-   * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparision.md)
-   * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparision.md)
-   * [并行化顺序算法：TPE](docs/zh_CN/CommunitySharings/ParallelizingTpeSearch.md)
-   * [使用 NNI 为 SVD 自动调参](docs/zh_CN/CommunitySharings/RecommendersSvd.md)
-   * [使用 NNI 为 SPTAG 自动调参](docs/zh_CN/CommunitySharings/SptagAutoTune.md)
+   * [超参数优化的对比](docs/en_US/CommunitySharings/HpoComparision.md)
+   * [神经网络结构搜索的对比](docs/en_US/CommunitySharings/NasComparision.md)
+   * [并行化顺序算法：TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
+   * [使用 NNI 为 SVD 自动调参](docs/en_US/CommunitySharings/RecommendersSvd.md)
+   * [使用 NNI 为 SPTAG 自动调参](docs/en_US/CommunitySharings/SptagAutoTune.md)
    * [使用 NNI 为 scikit-learn 查找超参](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
    * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
-   * **Blog (中文)** - [NNI 2019 新功能汇总](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
+   * **博客** - [NNI 2019 新功能汇总](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **反馈**
 
