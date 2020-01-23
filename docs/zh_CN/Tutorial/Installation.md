@@ -107,49 +107,50 @@ You can use these commands to get more information about the experiment
 
 * 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
-![概述](../../img/webui_overview_page.png)
-
-![详细说明](../../img/webui_trialdetail_page.png)
+<table style="border: none">
+    <th><img src="../../img/webui_overview_page.png" alt="drawing" width="395"/></th>
+    <th><img src="../../img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+</table>
 
 ## 系统需求
 
-由于程序变更，NNI 的最低配置会有所更改。
+Due to potential programming changes, the minimum system requirements of NNI may change over time.
 
 ### Linux
 
-|          | 推荐配置                                      | 最低配置                                  |
-| -------- | ----------------------------------------- | ------------------------------------- |
-| **操作系统** | Ubuntu 16.04 或以上版本                        |                                       |
-| **CPU**  | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
-| **GPU**  | NVIDIA® GeForce® GTX 660 或更高配置            | NVIDIA® GeForce® GTX 460              |
-| **内存**   | 6 GB                                      | 4 GB                                  |
-| **存储**   | 30 GB 可用的磁盘空间                             |                                       |
-| **网络**   | 宽带连接                                      |                                       |
-| **分辨率**  | 1024 x 768 以上                             |                                       |
+|          | 推荐配置                                           | 最低配置                                   |
+| -------- | ---------------------------------------------- | -------------------------------------- |
+| **操作系统** | Ubuntu 16.04 or above                          |                                        |
+| **CPU**  | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**  | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **内存**   | 6 GB RAM                                       | 4 GB                                   |
+| **存储**   | 30 GB available hare drive space               |                                        |
+| **网络**   | 宽带连接                                           |                                        |
+| **分辨率**  | 1024 x 768 以上                                  |                                        |
 
 ### macOS
 
-|          | 推荐配置                     | 最低配置                                               |
-| -------- | ------------------------ | -------------------------------------------------- |
-| **操作系统** | macOS 10.14.1 或更高版本      |                                                    |
-| **CPU**  | Intel® Core™ i7-4770 或更高 | Intel® Core™ i5-760 或更高                            |
-| **GPU**  | AMD Radeon™ R9 M395X 或更高 | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 |
-| **内存**   | 8 GB                     | 4 GB                                               |
-| **存储**   | 70GB 可用空间 SSD 硬盘         | 70GB 可用空间及 7200 RPM 硬盘                             |
-| **网络**   | 宽带连接                     |                                                    |
-| **分辨率**  | 1024 x 768 以上            |                                                    |
+|          | 推荐配置                           | 最低配置                                                      |
+| -------- | ------------------------------ | --------------------------------------------------------- |
+| **操作系统** | macOS 10.14.1 or above         |                                                           |
+| **CPU**  | Intel® Core™ i7-4770 or better | Intel® Core™ i5-760 or better                             |
+| **GPU**  | AMD Radeon™ R9 M395X or better | NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better |
+| **内存**   | 8 GB RAM                       | 4 GB                                                      |
+| **存储**   | 70GB available space SSD       | 70GB available space 7200 RPM HDD                         |
+| **网络**   | 宽带连接                           |                                                           |
+| **分辨率**  | 1024 x 768 以上                  |                                                           |
 
 ### Windows
 
-|          | 推荐配置                                      | 最低配置                                  |
-| -------- | ----------------------------------------- | ------------------------------------- |
-| **操作系统** | Windows 10 1809 或更高版本                     |                                       |
-| **CPU**  | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
-| **GPU**  | NVIDIA® GeForce® GTX 660 或更高配置            | NVIDIA® GeForce® GTX 460              |
-| **内存**   | 6 GB                                      | 4 GB                                  |
-| **存储**   | 30 GB 可用的磁盘空间                             |                                       |
-| **网络**   | 宽带连接                                      |                                       |
-| **分辨率**  | 1024 x 768 以上                             |                                       |
+|                      | Recommended                                    | Minimum                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Operating System** | Windows 10 1809 or above                       |                                        |
+| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
+| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
+| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
+| **Storage**          | 30 GB available hare drive space               |                                        |
+| **Internet**         | Boardband internet connection                  |                                        |
+| **Resolution**       | 1024 x 768 minimum display resolution          |                                        |
 
 ## 更多
 
