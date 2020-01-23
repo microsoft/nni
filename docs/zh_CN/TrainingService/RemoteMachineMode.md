@@ -1,22 +1,22 @@
-# Run an Experiment on Remote Machines
+# 在远程计算机上运行 Experiment
 
-NNI can run one experiment on multiple remote machines through SSH, called `remote` mode. It's like a lightweight training platform. In this mode, NNI can be started from your computer, and dispatch trials to remote machines in parallel.
+NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称为 `remote` 模式。 这就像一个轻量级的训练平台。 在此模式下，可以从计算机启动 NNI，并将 Trial 并行调度到远程计算机。
 
-## Remote machine requirements
+## 远程计算机的要求
 
-* It only supports Linux as remote machines, and [linux part in system specification](../Tutorial/Installation.md) is same as NNI local mode.
+* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/Installation.md)与 NNI 本机模式相同。
 
-* Follow [installation](../Tutorial/Installation.md) to install NNI on each machine.
+* 根据[安装文章](../Tutorial/Installation.md)，在每台计算机上安装 NNI。
 
-* Make sure remote machines meet environment requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
+* 确保远程计算机满足 Trial 代码的环境要求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
 
-* Make sure remote machines can be accessed through SSH from the machine which runs `nnictl` command. It supports both password and key authentication of SSH. For advanced usages, please refer to [machineList part of configuration](../Tutorial/ExperimentConfig.md).
+* 确保远程计算机能被运行 `nnictl` 命令的计算机通过 SSH 访问。 同时支持 SSH 的密码和密钥验证方法。 有关高级用法，参考[配置](../Tutorial/ExperimentConfig.md)的 machineList 部分。
 
-* Make sure the NNI version on each machine is consistent.
+* 确保每台计算机上的 NNI 版本一致。
 
 ## 运行 Experiment
 
-e.g. there are three machines, which can be logged in with username and password.
+例如，有三台机器，可使用用户名和密码登录。
 
 | IP       | 用户名 | 密码     |
 | -------- | --- | ------ |
