@@ -335,5 +335,3 @@ pruner.compress()
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
 - **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
-
-***
