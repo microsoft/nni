@@ -105,32 +105,32 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
 <table style="border: none">
-    <th><img src="../../img/webui_overview_page.png" alt="drawing" width="395"/></th>
-    <th><img src="../../img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+    <th><img src="../../img/webui_overview_page.png" alt="绘图" width="395"/></th>
+    <th><img src="../../img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
 </table>
 
-## System requirements
+## 系统需求
 
-Due to potential programming changes, the minimum system requirements of NNI may change over time.
+由于程序变更，NNI 的最低配置会有所更改。
 
 ### Linux
 
-|          | Recommended                                    | Minimum                                |
-| -------- | ---------------------------------------------- | -------------------------------------- |
-| **操作系统** | Ubuntu 16.04 or above                          |                                        |
-| **CPU**  | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
-| **GPU**  | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
-| **内存**   | 6 GB RAM                                       | 4 GB RAM                               |
-| **存储**   | 30 GB available hare drive space               |                                        |
-| **网络**   | 宽带连接                                           |                                        |
-| **分辨率**  | 1024 x 768 以上                                  |                                        |
+|          | 推荐配置                                      | 最低配置                                  |
+| -------- | ----------------------------------------- | ------------------------------------- |
+| **操作系统** | Ubuntu 16.04 或以上版本                        |                                       |
+| **CPU**  | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
+| **GPU**  | NVIDIA® GeForce® GTX 660 或更高配置            | NVIDIA® GeForce® GTX 460              |
+| **内存**   | 6 GB                                      | 4 GB                                  |
+| **存储**   | 30 GB 可用的磁盘空间                             |                                       |
+| **网络**   | 宽带连接                                      |                                       |
+| **分辨率**  | 1024 x 768 以上                             |                                       |
 
 ### macOS
 
-|          | Recommended              | 最低配置                                               |
+|          | 推荐配置                     | 最低配置                                               |
 | -------- | ------------------------ | -------------------------------------------------- |
 | **操作系统** | macOS 10.14.1或更高版本       |                                                    |
 | **CPU**  | Intel® Core™ i7-4770 或更高 | Intel® Core™ i5-760 或更高                            |
