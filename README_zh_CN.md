@@ -295,56 +295,56 @@ You can use these commands to get more information about the experiment
 
 该项目采用了 [ Microsoft 开源行为准则 ](https://opensource.microsoft.com/codeofconduct/)。 有关详细信息，请参阅[常见问题解答](https://opensource.microsoft.com/codeofconduct/faq/)，如有任何疑问或意见可联系 opencode@microsoft.com。
 
-After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI developer tutorials to get start:
+熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR：
 
-* We recommend new contributors to start with simple issues: ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
-* [NNI developer environment installation tutorial](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
-* [How to debug](docs/en_US/Tutorial/HowToDebug.md)
-* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
-* [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
-* [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
-* [Implement a new NAS trainer on NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
-* [Customize your own Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
+* 推荐新贡献者先从简单的问题开始：['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)。
+* [NNI 开发环境安装教程](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
+* [如何调试](docs/en_US/Tutorial/HowToDebug.md)
+* 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
+* [自定义 Tuner](docs/en_US/Tuner/CustomizeTuner.md)
+* [实现定制的训练平台](docs/en_US/TrainingService/HowToImplementTrainingService.md)
+* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [自定义 Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
 
-With authors' permission, we listed a set of NNI usage examples and relevant articles.
+经作者许可的一些 NNI 用法示例和相关文档。
 
-* ### **External Repositories**
+* ### **外部代码库**
    
-   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI 
-   * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
-* ### **Relevant Articles**
+   * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
+   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
+   * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md) 
+   * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
+   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
+* ### **相关文章**
    
-   * [Hyper Parameter Optimization Comparison](docs/en_US/CommunitySharings/HpoComparision.md)
-   * [Neural Architecture Search Comparison](docs/en_US/CommunitySharings/NasComparision.md)
-   * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
-   * [Automatically tuning SVD with NNI](docs/en_US/CommunitySharings/RecommendersSvd.md)
-   * [Automatically tuning SPTAG with NNI](docs/en_US/CommunitySharings/SptagAutoTune.md)
-   * [Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
-   * **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) by [@gaocegege](https://github.com/gaocegege) - 总结与分析 section of design and implementation of kubeflow/katib
-   * **Blog (in Chinese)** - [A summary of NNI new capabilities in 2019](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
+   * [超参数优化的对比](docs/en_US/CommunitySharings/HpoComparision.md)
+   * [神经网络结构搜索的对比](docs/en_US/CommunitySharings/NasComparision.md)
+   * [并行化顺序算法：TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
+   * [使用 NNI 为 SVD 自动调参](docs/en_US/CommunitySharings/RecommendersSvd.md)
+   * [使用 NNI 为 SPTAG 自动调参](docs/en_US/CommunitySharings/SptagAutoTune.md)
+   * [使用 NNI 为 scikit-learn 查找超参](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
+   * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
+   * **博客** - [NNI 2019 新功能汇总](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **反馈**
 
-* Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
-* [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
-* Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
+* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
+* [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
+* 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问。
 
 ## 相关项目
 
-Targeting at openness and advancing state-of-art technology, [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) had also released few other open source projects.
+以探索先进技术和开放为目标，[Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) 还发布了一些相关的开源项目。
 
-* [OpenPAI](https://github.com/Microsoft/pai) : an open source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud and hybrid environments in various scale.
-* [FrameworkController](https://github.com/Microsoft/frameworkcontroller) : an open source general-purpose Kubernetes Pod Controller that orchestrate all kinds of applications on Kubernetes by a single controller.
-* [MMdnn](https://github.com/Microsoft/MMdnn) : A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network.
-* [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) is an open source library for large scale vector approximate nearest neighbor search scenario.
+* [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
+* [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
+* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
+* [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) 是用于大规模向量的最近邻搜索场景的开源库。
 
-We encourage researchers and students leverage these projects to accelerate the AI development and research.
+我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
 
 ## **许可协议**
 
-The entire codebase is under [MIT license](LICENSE)
+代码库遵循 [MIT 许可协议](LICENSE)
