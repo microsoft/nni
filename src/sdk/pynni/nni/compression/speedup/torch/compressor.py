@@ -48,6 +48,7 @@ class ModelSpeedup:
             it is used to parse dependencies between modules
         """
         self.bound_model = model
+        self.dummy_input = dummy_input
         self.masks = torch.load(masks_file)
         self.trace_graph = torch.jit.trace(model, dummy_input)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
@@ -344,12 +345,18 @@ class ModelSpeedup:
                 compressed_module = replace_module[m_type](leaf_module, self.inferred_masks[module_name])
                 setattr(super_module, module_name.split('.')[-1], compressed_module)
             elif g_node.type == 'func':
-                ...
+                print("Cannot replace func...")
             else:
                 raise RuntimeError("Unsupported GNode type: {}".format(g_node.type))
 
     def speedup_model(self):
         """
         """
+        self.bound_model(self.dummy_input)
+        print("start to compress")
         self.infer_modules_masks()
         self.replace_compressed_modules()
+        print("finished compressing")
+        for name, module in self.bound_model.named_modules():
+            print(name, module)
+        self.bound_model(self.dummy_input)

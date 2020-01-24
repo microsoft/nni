@@ -6,9 +6,43 @@ from .infer_shape import CoarseMask, ModuleMasks
 
 replace_module = {
     'BatchNorm2d': lambda module, mask: replace_batchnorm2d(module, mask),
-    'Conv2d': lambda module, mask: replace_conv2d(module, mask)
+    'Conv2d': lambda module, mask: replace_conv2d(module, mask),
+    'MaxPool2d': lambda module, mask: no_replace(module, mask),
+    'ReLU': lambda module, mask: no_replace(module, mask),
+    'Linear': lambda module, mask: replace_linear(module, mask)
 }
 
+def no_replace(module, mask):
+    """
+    """
+    return module
+
+def replace_linear(linear, mask):
+    """
+    """
+    assert isinstance(mask, ModuleMasks)
+    assert mask.input_mask is not None
+    assert mask.output_mask is None
+    assert not mask.param_masks
+    index = mask.input_mask.mask_index[-1]
+    print(mask.input_mask.mask_index)
+    in_features = index.size()[0]
+    print('linear: ', in_features)
+    new_linear = torch.nn.Linear(in_features=in_features,
+                                 out_features=linear.out_features,
+                                 bias=linear.bias is not None)
+    print(linear.weight.data.size())
+    print(new_linear.weight.data.size())
+    print(linear.weight.t().size())
+    print(new_linear.weight.t().size())
+    new_linear.weight.data = torch.index_select(linear.weight.data, -1, index.to('cuda:0'))
+    print(new_linear.weight.data.size())
+    if linear.bias is not None:
+        print(linear.bias.data.size())
+        new_linear.bias.data = torch.index_select(linear.bias.data, 0, index.to('cuda:0'))
+        print(new_linear.bias.data.size())
+    print("last print: ", new_linear.weight.t().size())
+    return new_linear
 
 def replace_batchnorm2d(norm, mask):
     """
@@ -53,11 +87,17 @@ def replace_conv2d(conv, mask):
                                kernel_size=conv.kernel_size,
                                stride=conv.stride,
                                padding=conv.padding,
-                               dilation=conv.dilation)
+                               dilation=conv.dilation,
+                               groups=1, # currently only support groups is 1
+                               bias=conv.bias,
+                               padding_mode=conv.padding_mode)
+    #print('weight: ', conv.weight.get_device())
+    #print('bias', conv.bias.get_device())
     tmp_weight_data = tmp_bias_data = None
     if mask.output_mask is not None:
         tmp_weight_data = torch.index_select(conv.weight.data, 0, out_channels_index)
         if conv.bias is not None:
+            print('bias is not None')
             tmp_bias_data = torch.index_select(conv.bias.data, 0, out_channels_index)
     # NOTE: does not support group
     if mask.input_mask is not None:
@@ -66,4 +106,7 @@ def replace_conv2d(conv, mask):
         new_conv.weight.data = tmp_weight_data
     if tmp_bias_data is not None:
         new_conv.bias.data = tmp_bias_data
+    #new_conv.weight.to('cuda:0')
+    #new_conv.bias.to('cuda:0')
+    #print(new_conv.weight.get_device(), new_conv.bias.data, new_conv.bias.get_device())
     return new_conv
