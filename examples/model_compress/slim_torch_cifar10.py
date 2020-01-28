@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
+from nni.compression.speedup.torch import ModelSpeedup
 
 
 def updateBN(model):
@@ -17,6 +18,7 @@ def train(model, device, train_loader, optimizer, sparse_bn=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
+        #print('data: ', data.size())
         optimizer.zero_grad()
         output = model(data)
         loss = F.cross_entropy(output, target)
@@ -73,7 +75,7 @@ def main():
 
     # Train the base VGG-19 model
     print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    epochs = 160
+    epochs = 0
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
     for epoch in range(epochs):
         if epoch in [epochs * 0.5, epochs * 0.75]:
@@ -89,41 +91,48 @@ def main():
     test(model, device, test_loader)
     # top1 = 93.60%
 
-    # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
-    configure_list = [{
-        'sparsity': 0.7,
-        'op_types': ['BatchNorm2d'],
-    }]
+    speedup = True
+    if speedup == True:
+        #print(model)
+        dummy_input = torch.randn(64, 3, 32, 32)
+        m_speedup = ModelSpeedup(model, dummy_input.to(device), 'mask_vgg19_cifar10.pth')
+        m_speedup.speedup_model()
+    else:
+        # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
+        configure_list = [{
+            'sparsity': 0.7,
+            'op_types': ['BatchNorm2d'],
+        }]
 
-    # Prune model and test accuracy without fine tuning.
-    print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
-    pruner = SlimPruner(model, configure_list)
-    model = pruner.compress()
-    test(model, device, test_loader)
-    # top1 = 93.55%
+        # Prune model and test accuracy without fine tuning.
+        print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
+        pruner = SlimPruner(model, configure_list)
+        model = pruner.compress()
+        test(model, device, test_loader)
+        # top1 = 93.55%
 
-    # Fine tune the pruned model for 40 epochs and test accuracy
-    print('=' * 10 + 'Fine tuning' + '=' * 10)
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
-    best_top1 = 0
-    for epoch in range(40):
-        pruner.update_epoch(epoch)
-        print('# Epoch {} #'.format(epoch))
-        train(model, device, train_loader, optimizer_finetune)
-        top1 = test(model, device, test_loader)
-        if top1 > best_top1:
-            best_top1 = top1
-            # Export the best model, 'model_path' stores state_dict of the pruned model,
-            # mask_path stores mask_dict of the pruned model
-            pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
+        # Fine tune the pruned model for 40 epochs and test accuracy
+        print('=' * 10 + 'Fine tuning' + '=' * 10)
+        optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+        best_top1 = 0
+        for epoch in range(4):
+            pruner.update_epoch(epoch)
+            print('# Epoch {} #'.format(epoch))
+            train(model, device, train_loader, optimizer_finetune)
+            top1 = test(model, device, test_loader)
+            if top1 > best_top1:
+                best_top1 = top1
+                # Export the best model, 'model_path' stores state_dict of the pruned model,
+                # mask_path stores mask_dict of the pruned model
+                pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
-    # Test the exported model
-    print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
-    new_model = VGG(depth=19)
-    new_model.to(device)
-    new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
-    test(new_model, device, test_loader)
-    # top1 = 93.74%
+        # Test the exported model
+        print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
+        new_model = VGG(depth=19)
+        new_model.to(device)
+        new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
+        test(new_model, device, test_loader)
+        # top1 = 93.74%
 
 
 if __name__ == '__main__':

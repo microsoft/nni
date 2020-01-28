@@ -51,6 +51,9 @@ class ModelSpeedup:
         self.dummy_input = dummy_input
         self.masks = torch.load(masks_file)
         self.trace_graph = torch.jit.trace(model, dummy_input)
+        #print("masks: ", self.masks)
+        #print(self.trace_graph)
+        #print(self.trace_graph.graph)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
         self.g_nodes = list()
         self.global_count = 0
@@ -124,6 +127,7 @@ class ModelSpeedup:
         """
         """
         graph = self.trace_graph.graph
+        #torch._C._jit_pass_inline(graph)
         print(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
@@ -352,11 +356,11 @@ class ModelSpeedup:
     def speedup_model(self):
         """
         """
-        self.bound_model(self.dummy_input)
+        #self.bound_model(self.dummy_input)
         print("start to compress")
         self.infer_modules_masks()
         self.replace_compressed_modules()
         print("finished compressing")
-        for name, module in self.bound_model.named_modules():
-            print(name, module)
-        self.bound_model(self.dummy_input)
+        #for name, module in self.bound_model.named_modules():
+        #    print(name, module)
+        #self.bound_model(self.dummy_input)
