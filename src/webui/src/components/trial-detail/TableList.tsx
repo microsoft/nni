@@ -456,21 +456,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         name: 'Operation',
                         key: 'operation',
                         fieldName: 'operation',
-                        minWidth: 120, // TODO: need to test 120
+                        minWidth: 160, // TODO: need to test 120
                         maxWidth: 200,
                         isResizable: true,
                         className: 'detail-table',
                         onRender: (record: any) => {
                             const trialStatus = record.status;
                             const flag: boolean = (trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN') ? false : true;
-                            // const flag: boolean = (trialStatus === 'SUCCEEDED') ? false : true;
                             return (
-                                <Stack id="detail-button" horizontal>
+                                <Stack className="detail-button" horizontal>
                                     {/* see intermediate result graph */}
                                     <PrimaryButton
+                                        className="detail-button-operation"
                                         title="Intermediate"
                                         onClick={this.showIntermediateModal.bind(this, record.id)}
-                                        styles={{ root: { padding: 0, width: '10px !important' } }}
                                     >
                                         {completed}
                                     </PrimaryButton>
@@ -478,7 +477,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     {
                                         flag
                                             ?
-                                            <PrimaryButton disabled={true} title="kill">
+                                            <PrimaryButton className="detail-button-operation" disabled={true} title="kill">
                                                 {blocked}
                                             </PrimaryButton>
                                             :
@@ -489,6 +488,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                         supportCustomizedTrial
                                             ?
                                             <PrimaryButton
+                                                className="detail-button-operation"
                                                 title="Customized trial"
                                                 onClick={this.setCustomizedTrial.bind(this, record.id)}
                                                 disabled={disabledAddCustomizedTrial}

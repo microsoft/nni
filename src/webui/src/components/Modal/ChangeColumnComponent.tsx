@@ -123,7 +123,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                     dialogContentProps={{
                         type: DialogType.largeHeader,
                         title: 'Change table column',
-                        subText: 'Your can chose which columns you want to see in the table.'
+                        subText: 'You can chose which columns you want to see in the table.'
                     }}
                     modalProps={{
                         isBlocking: false,

@@ -4,8 +4,9 @@ $color: #0071bc;
 $bgColor: #f2f2f2;
 .openRowContent{
     min-width: 150px;
-    margin-left: 15px;
     background-color: $bgColor;
+    margin: 10px 0 0 45px;
+    padding-bottom: 10px;
 }
 
 .trialLog{
@@ -25,6 +26,7 @@ $bgColor: #f2f2f2;
 }
 
 #description{
+    padding: 0 10px;
     .bgHyper ul{
         background-color: #fff !important;
         margin-bottom: 12px;

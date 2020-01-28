@@ -4,6 +4,7 @@ import {
 } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
+import { tableListIcon } from './Buttons/Icon';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -117,7 +118,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 <div className="trial" id="tabsty">
                     <Pivot defaultSelectedKey={"0"} className="detial-title">
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
-                        <PivotItem headerText="Default metric" itemIcon="Recent" key="1">
+                        <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="1">
                             <Stack className="graph">
                                 <DefaultPoint
                                     trialIds={trialIds}
@@ -127,7 +128,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
-                        <PivotItem headerText="Hyper-parameter" itemIcon="Recent" key="2">
+                        <PivotItem headerText="Hyper-parameter" itemIcon="Equalizer" key="2">
                             <Stack className="graph">
                                 <Para
                                     dataSource={source}
@@ -148,7 +149,10 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     </Pivot>
                 </div>
                 {/* trial table list */}
-                <Title1 text="Trial jobs" icon="6.png" />
+                <Stack horizontal className="panelTitle">
+                    <span style={{ marginRight: 12 }}>{tableListIcon}</span>
+                    <span>Trial jobs</span>
+                </Stack>
                 <Stack horizontal className="allList">
                     <StackItem grow={50}>
                         <Stack horizontal>

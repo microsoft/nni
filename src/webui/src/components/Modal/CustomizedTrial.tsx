@@ -166,7 +166,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                     dialogContentProps={{
                         type: DialogType.largeHeader,
                         title: 'Customized trial setting',
-                        subText: 'Your can chose which columns you want to see in the table.'
+                        subText: 'You can submit a customized trial.'
                     }}
                     modalProps={{
                         isBlocking: false,

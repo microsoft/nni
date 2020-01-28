@@ -13,8 +13,6 @@ const styles = mergeStyleSets({
         verticalAlign: 'top',
         display: 'inline-block',
         textAlign: 'center',
-        margin: '0 100px',
-        minWidth: 130,
         height: 32
     },
     callout: {
@@ -95,7 +93,7 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
         return (
             <div>
                 <div className={styles.buttonArea} ref={(menuButton): any => (this._menuButtonElement = menuButton)}>
-                    <PrimaryButton onClick={this.openPromot} title="kill">{blocked}</PrimaryButton>
+                    <PrimaryButton className="detail-button-operation" onClick={this.openPromot} title="kill">{blocked}</PrimaryButton>
                 </div>
                 {isCalloutVisible ? (
                     <div>

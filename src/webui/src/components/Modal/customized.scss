@@ -74,6 +74,13 @@
         color: red;
     }
 }
+.icon-color, .icon-error{
+    i{
+        margin-right: 10px;
+        position: relative;
+        top: 5px;
+    }
+}
 .ms-Dialog-subText{
     color: #333;
 }

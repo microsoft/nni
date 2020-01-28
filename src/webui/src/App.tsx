@@ -3,7 +3,7 @@ import { Stack } from 'office-ui-fabric-react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
-import './App.css';
+import './App.scss';
 
 interface AppState {
     interval: number;

@@ -8,5 +8,6 @@ const errorBadge = <Icon iconName='ErrorBadge' />
 const completed = <Icon iconName='Completed' />
 const blocked = <Icon iconName='StatusCircleBlock' />
 const copy = <Icon iconName='Copy' />
+const tableListIcon = <Icon iconName='BulletedList' />
 
-export { infoIcon, warining, errorBadge, completed, blocked, copy };
+export { infoIcon, warining, errorBadge, completed, blocked, copy, tableListIcon };
