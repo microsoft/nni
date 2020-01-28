@@ -51,7 +51,9 @@ class ModelSpeedup:
         self.dummy_input = dummy_input
         ori_masks = torch.load(masks_file)
         self.masks = {'feature.1': ori_masks['feature.1']}
+        model.eval()
         self.trace_graph = torch.jit.trace(model, dummy_input)
+        model.train()
         #print("masks: ", self.masks)
         #print(self.trace_graph)
         #print(self.trace_graph.graph)

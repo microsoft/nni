@@ -201,12 +201,14 @@ class Pruner(Compressor):
             old_weight = layer.module.weight.data
             mask_weight = mask['weight']
             layer.module.weight.data = old_weight.mul(mask_weight)
+            #print('instrument weight: ', layer.module.weight.data)
             # apply mask to bias
             if mask.__contains__('bias') and hasattr(layer.module, 'bias') and layer.module.bias is not None:
                 old_bias = layer.module.bias.data
                 mask_bias = mask['bias']
                 mask_bias.to(device)
                 layer.module.bias.data = old_bias.mul(mask_bias)
+                #print('instrument bias: ', layer.module.bias.data)
             # calculate forward
             ret = layer._forward(*inputs)
             return ret

@@ -8,6 +8,7 @@ from models.cifar10.vgg import VGG
 from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
+torch.manual_seed(0)
 
 def updateBN(model):
     for m in model.modules():
@@ -84,13 +85,14 @@ def main():
                 param_group['lr'] *= 0.1
         train(model, device, train_loader, optimizer, True)
         test(model, device, test_loader)
-    torch.save(model.state_dict(), 'vgg19_cifar10.pth')
+    #torch.save(model.state_dict(), 'vgg19_cifar10.pth')
 
     # Test base model accuracy
     print('=' * 10 + 'Test the original model' + '=' * 10)
-    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
-    test(model, device, test_loader)
+    #model.load_state_dict(torch.load('vgg19_cifar10.pth'))
+    #test(model, device, test_loader)
     # top1 = 93.60%
+    model.train()
 
     speedup = True
     mask_flag = True
@@ -99,13 +101,15 @@ def main():
         if mask_flag:
             apply_compression_results(model, 'mask_vgg19_cifar10.pth')
             out = model(dummy_input.to(device))
-            print(out.size(), out)
+            #print(out.size(), out)
             return
         else:
+            #print("model before: ", model)
             m_speedup = ModelSpeedup(model, dummy_input.to(device), 'mask_vgg19_cifar10.pth')
             m_speedup.speedup_model()
+            #print("model after: ", model)
             out = model(dummy_input.to(device))
-            print(out.size(), out)
+            #print(out.size(), out)
             return
     else:
         # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
