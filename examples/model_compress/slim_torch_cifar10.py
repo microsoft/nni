@@ -6,6 +6,7 @@ from torchvision import datasets, transforms
 from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
 from nni.compression.speedup.torch import ModelSpeedup
+from nni.compression.torch import apply_compression_results
 
 
 def updateBN(model):
@@ -92,11 +93,20 @@ def main():
     # top1 = 93.60%
 
     speedup = True
+    mask_flag = True
     if speedup == True:
-        #print(model)
-        dummy_input = torch.randn(64, 3, 32, 32)
-        m_speedup = ModelSpeedup(model, dummy_input.to(device), 'mask_vgg19_cifar10.pth')
-        m_speedup.speedup_model()
+        dummy_input = torch.ones([64, 3, 32, 32])
+        if mask_flag:
+            apply_compression_results(model, 'mask_vgg19_cifar10.pth')
+            out = model(dummy_input.to(device))
+            print(out.size(), out)
+            return
+        else:
+            m_speedup = ModelSpeedup(model, dummy_input.to(device), 'mask_vgg19_cifar10.pth')
+            m_speedup.speedup_model()
+            out = model(dummy_input.to(device))
+            print(out.size(), out)
+            return
     else:
         # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
         configure_list = [{

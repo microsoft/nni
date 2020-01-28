@@ -25,23 +25,25 @@ def replace_linear(linear, mask):
     assert mask.output_mask is None
     assert not mask.param_masks
     index = mask.input_mask.mask_index[-1]
-    print(mask.input_mask.mask_index)
+    #print(mask.input_mask.mask_index)
     in_features = index.size()[0]
-    print('linear: ', in_features)
+    #print('linear: ', in_features)
     new_linear = torch.nn.Linear(in_features=in_features,
                                  out_features=linear.out_features,
                                  bias=linear.bias is not None)
-    print(linear.weight.data.size())
-    print(new_linear.weight.data.size())
-    print(linear.weight.t().size())
-    print(new_linear.weight.t().size())
+    new_linear.to(linear.weight.device)
+    #print(linear.weight.data.size())
+    #print(new_linear.weight.data.size())
+    #print(linear.weight.t().size())
+    #print(new_linear.weight.t().size())
     new_linear.weight.data = torch.index_select(linear.weight.data, -1, index.to('cuda:0'))
-    print(new_linear.weight.data.size())
+    #print(new_linear.weight.data.size())
     if linear.bias is not None:
-        print(linear.bias.data.size())
-        new_linear.bias.data = torch.index_select(linear.bias.data, 0, index.to('cuda:0'))
-        print(new_linear.bias.data.size())
-    print("last print: ", new_linear.weight.t().size())
+        #print(linear.bias.data.size())
+        #new_linear.bias.data = torch.index_select(linear.bias.data, 0, index.to('cuda:0'))
+        new_linear.bias.data.copy_(linear.bias.data)
+        #print(new_linear.bias.data.size())
+    #print("last print: ", new_linear.weight.t().size())
     return new_linear
 
 def replace_batchnorm2d(norm, mask):
