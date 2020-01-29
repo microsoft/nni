@@ -49,11 +49,15 @@ class ModelSpeedup:
         """
         self.bound_model = model
         self.dummy_input = dummy_input
-        ori_masks = torch.load(masks_file)
-        self.masks = {'feature.1': ori_masks['feature.1']}
-        model.eval()
+        self.masks = torch.load(masks_file)
+        #ori_masks = torch.load(masks_file)
+        #self.masks = {'feature.1': ori_masks['feature.1']}
+        self.is_training = model.training
+        if self.is_training:
+            model.eval()
         self.trace_graph = torch.jit.trace(model, dummy_input)
-        model.train()
+        if self.is_training:
+            model.train()
         #print("masks: ", self.masks)
         #print(self.trace_graph)
         #print(self.trace_graph.graph)
@@ -367,3 +371,7 @@ class ModelSpeedup:
         #for name, module in self.bound_model.named_modules():
         #    print(name, module)
         #self.bound_model(self.dummy_input)
+        if self.is_training:
+            self.bound_model.train()
+        else:
+            self.bound_model.eval()

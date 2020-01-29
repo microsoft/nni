@@ -61,6 +61,7 @@ def model_speedup(model):
     new_norm.weight.data = torch.index_select(norm.weight.data, 0, index)
     new_norm.bias.data = torch.index_select(norm.bias.data, 0, index)
     if norm.track_running_stats:
+        print('*'*30, norm.track_running_stats)
         new_norm.running_mean.data = torch.index_select(norm.running_mean.data, 0, index)
         new_norm.running_var.data = torch.index_select(norm.running_var.data, 0, index)
     setattr(model, 'bn', new_norm)
@@ -87,15 +88,22 @@ def model_speedup(model):
 
 if __name__ == '__main__':
     n = Net()
-    n.train()
+    n.eval()
+    bn = getattr(n, 'bn')
+    print('bn track_running_stats: ', bn.track_running_stats)
+    print('bn running mean: ', bn.running_mean)
+    print('bn running var: ', bn.running_var)
+    print('bn momentum: ', bn.momentum)
     dummy_input = torch.randn(6, 4, 16, 16)
     mask_flag = True
     if mask_flag:
         add_masks(n)
+        #print('abc')
     else:
         conv = getattr(n, 'conv')
         #print('conv before: ', conv.weight.data.size(), conv.weight.data)
         model_speedup(n)
+        n.eval()
         bn = getattr(n, 'bn')
         #print('bn: ', bn.weight.data)
         conv = getattr(n, 'conv')

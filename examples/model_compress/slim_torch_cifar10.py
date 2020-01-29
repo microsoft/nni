@@ -92,16 +92,16 @@ def main():
     #model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     #test(model, device, test_loader)
     # top1 = 93.60%
-    model.train()
+    model.eval()
 
     speedup = True
-    mask_flag = True
+    mask_flag = False
     if speedup == True:
-        dummy_input = torch.ones([64, 3, 32, 32])
+        dummy_input = torch.randn(64, 3, 32, 32)
         if mask_flag:
             apply_compression_results(model, 'mask_vgg19_cifar10.pth')
             out = model(dummy_input.to(device))
-            #print(out.size(), out)
+            print(out.size(), out)
             return
         else:
             #print("model before: ", model)
@@ -109,7 +109,7 @@ def main():
             m_speedup.speedup_model()
             #print("model after: ", model)
             out = model(dummy_input.to(device))
-            #print(out.size(), out)
+            print(out.size(), out)
             return
     else:
         # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
