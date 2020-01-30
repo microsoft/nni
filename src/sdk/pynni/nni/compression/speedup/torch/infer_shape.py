@@ -62,8 +62,10 @@ infer_from_mask = {
 
 infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
@@ -158,6 +160,54 @@ def batchnorm2d_mask(module_masks, mask):
 def conv2d_mask(module_masks, mask):
     """
     """
+    def convert_to_coarse_mask(mask):
+        assert 'weight' in mask
+        assert isinstance(mask['weight'], torch.Tensor)
+        cmask = None
+        weight_mask = mask['weight']
+        shape = weight_mask.size()
+        ones = torch.ones(shape[1:])
+        zeros = torch.zeros(shape[1:])
+        index = []
+        for i in range(shape[0]):
+            if torch.all(torch.eq(weight_mask[i], ones)):
+                index.append(i)
+            elif torch.all(torch.eq(weight_mask[i], zeros)):
+                continue
+            else:
+                index = None
+                break
+        if index is None:
+            return None, None, None
+        else:
+            index = torch.LongTensor(index)
+            weight_cmask = CoarseMask(num_dim=4)
+            weight_cmask.add_index_mask(dim=0, index=index)
+            bias_cmask = None
+            if 'bias' in mask:
+                bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
+                assert torch.all(torch.eq(index, bias_index))
+                bias_cmask = CoarseMask(num_dim=1)
+                bias_cmask.add_index_mask(dim=0, index=bias_index)
+            return index, weight_cmask, bias_cmask
+    index, weight_cmask, bias_cmask = convert_to_coarse_mask(mask)
+    if index is None:
+        # TODO: fine grained mask speedup
+        return None, None
+    # deal with coarse grain mask
+    if 'weight' in module_masks.param_masks:
+        module_masks.param_masks['weight'].merge(weight_cmask)
+        module_masks.param_masks['bias'].merge(bias_cmask)
+    else:
+        module_masks.set_param_masks('weight', weight_cmask)
+        module_masks.set_param_masks('bias', bias_cmask)
+    output_cmask = CoarseMask(num_dim=4)
+    output_cmask.add_index_mask(dim=1, index=index)
+    if module_masks.output_mask is None:
+        module_masks.set_output_mask(output_cmask)
+    else:
+        module_masks.output_mask.merge(output_cmask)
+    return None, module_masks.output_mask
 
 def conv2d_inshape(module_masks, mask):
     """

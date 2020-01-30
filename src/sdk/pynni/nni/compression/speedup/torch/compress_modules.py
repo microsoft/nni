@@ -36,7 +36,7 @@ def replace_linear(linear, mask):
     #print(new_linear.weight.data.size())
     #print(linear.weight.t().size())
     #print(new_linear.weight.t().size())
-    new_linear.weight.data = torch.index_select(linear.weight.data, -1, index.to('cuda:0'))
+    new_linear.weight.data = torch.index_select(linear.weight.data, -1, index.to(linear.weight.device))
     #print(new_linear.weight.data.size())
     if linear.bias is not None:
         #print(linear.bias.data.size())

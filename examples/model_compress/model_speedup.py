@@ -8,7 +8,7 @@ from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
 torch.manual_seed(0)
-use_mask = True
+use_mask = False
 
 def fpgm_speedup(masks_file, model_checkpoint):
     from fpgm_torch_mnist import Mnist
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         slim_speedup(args.masks_file, args.model_checkpoint)
     elif args.example_name == 'fpgm':
         if args.masks_file is None:
-            args.masks_file = ''
+            args.masks_file = 'mask.pth'
         fpgm_speedup(args.masks_file, args.model_checkpoint)
     else:
         raise ValueError('unsupported example_name: {}'.format(args.example_name))
