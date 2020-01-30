@@ -7,7 +7,6 @@ import { Trial } from '../static/model/trial';
 import { tableListIcon } from './Buttons/Icon';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
-import Title1 from './overview/Title1';
 import Para from './trial-detail/Para';
 import Intermediate from './trial-detail/Intermediate';
 import TableList from './trial-detail/TableList';

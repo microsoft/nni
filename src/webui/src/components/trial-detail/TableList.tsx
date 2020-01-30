@@ -320,6 +320,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>): void => {
         this.setState({ selectRows: selectedRows, selectedRowKeys: selected });
     }
+
     // open Compare-modal
     compareBtn = (): void => {
 
@@ -330,8 +331,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             this.setState({ isShowCompareModal: true });
         }
     }
+
     // close Compare-modal
-    private hideCompareModal = (): void => {
+    hideCompareModal = (): void => {
         // close modal. clear select rows data, clear selected track
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
@@ -592,7 +594,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 />
                             </Stack>
                             :
-                            <div />
+                            null
                     }
                     <ReactEcharts
                         option={intermediateOption}
@@ -607,7 +609,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 {/* Add Column Modal */}
                 {
                     isShowColumn &&
-                    // true && 
                     <ChangeColumnComponent
                         hideShowColumnDialog={this.hideShowColumnModal}
                         isHideDialog={!isShowColumn}
@@ -616,7 +617,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         changeColumn={this.props.changeColumn}
                     />
                 }
-
                 {/* compare trials based message */}
                 {isShowCompareModal && <Compare compareStacks={selectRows} cancelFunc={this.hideCompareModal} />}
                 {/* clone trial parameters and could submit a customized trial */}

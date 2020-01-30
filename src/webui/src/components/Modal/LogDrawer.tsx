@@ -72,6 +72,14 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
     }
 
+    // getSpecificKey = (item?: any, ev?: React.MouseEvent<HTMLElement>): void => {
+    //     console.info('item', item); //eslint-disable-line
+    //     if('key' in item!){
+    //         console.info(item!.key); // eslint-disable-line
+    //         // this.setState(ActivityItem);
+    //     }
+    // }
+
     async componentDidMount(): Promise<void> {
         this.refresh();
         window.addEventListener('resize', this.setLogDrawerHeight);
@@ -83,29 +91,29 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     }
 
     render(): React.ReactNode {
-        const { closeDrawer } = this.props;
+        const { closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
 
         return (
             <Stack>
                 <Panel
                     isOpen={true}
-                    onDismiss={closeDrawer}
-                    closeButtonAriaLabel="Close"
-                    // onRenderFooterContent={onRenderFooterContent}
+                    hasCloseButton={false}
                     isFooterAtBottom={true}
                 >
                     <div className="log-tab-body">
                         <Pivot
-                            // onLinkClick
-                            style={{ height: logDrawerHeight, minHeight: 190 }}
+                            // onLinkClick={this.getSpecificKey}
+                            selectedKey={activeTab}
+                            style={{ minHeight: 190, paddingTop: '16px' }}
                         >
                             {/* <PivotItem headerText={this.dispatcherHTML()} key="dispatcher" onLinkClick> */}
                             <PivotItem headerText="Dispatcher Log" key="dispatcher">
                                 <MonacoHTML
                                     content={dispatcherLogStr || 'Loading...'}
                                     loading={isLoading}
-                                    height={logDrawerHeight - 104}
+                                    // paddingTop[16] + tab[44] + button[32]
+                                    height={logDrawerHeight - 92}
                                 />
                                 <Stack horizontal className="buttons">
                                     <StackItem grow={12} className="download">
@@ -121,7 +129,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                 <MonacoHTML
                                     content={nniManagerLogStr || 'Loading...'}
                                     loading={isLoading}
-                                    height={logDrawerHeight - 104}
+                                    height={logDrawerHeight - 92}
                                 />
                                 <Stack horizontal className="buttons">
                                     <StackItem grow={12} className="download">

@@ -1,185 +1,52 @@
 $barHeight: 56px;
-/* drowdown and select default bgcolor */
-$drowBgColor: #f2f2f2;
-/* drowdown and select hover bgcolor */
-$drowHoverBgColor: #e2e2e2;
 
-/* refresh button */
-.fresh{
-    border: none;
-    color: #fff;
-    font-size: 16px;
-    padding: 0 8px;
-}
-.fresh:hover{
-    color: #fff;
-    background-color: #006cb5;
-}
-
-.dropdown{
-    /* make dropdown content box position in blue bar bottom */
-    padding-bottom: 14px;
-    .down-icon{
-        font-size: 20px !important;
-        padding-right: 6px;
-    }
-}
-
-.interval{
-    display: inline-block;
-    font-size: 16px;
-    color: #fff;
-    .ant-form{
-        display: inline-block;
-    }
-    form .ant-select{
-        width: 166px;
-    }
-    .ant-select-selection{
-        background-color: transparent;
-        border: none;
+.navOptions{
+    .ms-Button-icon{
         color: #fff;
-        outline: none;
-        font-size: 16px;
-    }
-    .ant-select-arrow{
-        color: #fff;
-    }
-    
-    .fresh{
-        margin-right: 10px;
-    }
-    .ant-btn-ghost{
-        padding: 0 10px;
-
-    }
-    .ant-btn-ghost[disabled]{
-        background-color: #005b98;
-        color: #fff;
-    }
-    
-}
-/* set select bgcolor */
-.ant-select-dropdown-menu{
-    background-color: $drowBgColor;
-}
-.ant-select-dropdown-menu-item:hover{
-    background-color: $drowHoverBgColor;
-}
-.ant-select-dropdown-menu-item-active{
-    background-color: transparent;
-}
-/* set dropdown bgcolor */
-.ant-dropdown{
-    .ant-dropdown-menu{
-        padding: 0;
-        background-color: $drowBgColor;
-        border-radius: 0;
-        .ant-dropdown-menu-item{
-            font-size: 16px;
+        &:hover{
+            color: #fff;
         }
-        .ant-dropdown-menu-item:hover, .ant-dropdown-menu-submenu:hover{
-            background-color: $drowHoverBgColor;
+    }
+    .ms-Button--commandBar{
+        background-color: #0071bc;
+        user-select: none;
+        &:hover, &:active{
+            color: #fff;
+            .ms-Button-icon{
+                color: #fff;
+            }
+        }
+        .ms-Button-textContainer{
+            color: #fff;
+        }
+        .ms-Button-menuIcon{
+            color: #fff;
+            background-color: transparent;
         }
     }
 }
 
-.ant-dropdown-menu-sub{
-    padding: 0;
-    background-color: $drowBgColor;
-    border-radius: 0;
-    .ant-dropdown-menu-item:hover{
-        background-color: $drowHoverBgColor;
-    }
-}
-
-.menu-list{
-    position: relative;
-    top: 13px;
-}
-
-
-.ant-dropdown{
-    .menuModal{
-        position: relative;
-        top: 12px;
-    }
-}
-.ant-select-selection-selected-value{
-    font-size: 16px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.ant-dropdown-menu-submenu-title{
-    font-size: 16px;
-}
-.ant-dropdown-menu-item:hover, .ant-dropdown-menu-submenu-title:hover{
-    background-color: transparent;
-}
 .nav{
     height: $barHeight;
     line-height: $barHeight;
-    
-    /* mobile start*/
-    .left{
-        text-align: left;
-        /* more menu */
-        font-size: 18px;
-        color: #fff;
-        a, a:visited{
-            color: #fff;
-            text-decoration: none;
-        }
-        .more-mobile{
-            margin-right: 10%;
-            font-size: 22px;
-            position: relative;
-            top: 1px;
-        }
-        .more-mobile:hover{
-            cursor: pointer;
-        }
-    }
-    .center{
-        text-align: center;
-        img{
-            height: 38px;
-        }
-    }
-    .right{
-        text-align: right;
-        button{
-            margin-top: 12px;
-        }
-    }
-    /* mobile end */
-
-    /* tabelt mode */
-    .tabelt-left{
-        height: $barHeight;
-        .tabelt-img img{
-            position: relative;
-            top: -5px;
-        }
-    }
-    .tabelt-right{
-        text-align: right;
-    }
     
     /* desktop mode useful*/
     .desktop-logo{
         position: relative;
         top: 6px;
     }
-   
-}
 
-/* public style in nav in threee mode*/
-.more{
-    color: #fff;
-    font-size: 24px;
-}
-.more:hover{
-    cursor: pointer;
+    &-refresh{
+        position: relative;
+        display: flex;
+    }
+    &-refresh-num{
+        position: absolute;
+        top: -10px;
+        left: 18px;
+        color: #fff;
+        font-size: 12px;
+    }
 }
 
 /* overview and detail tabs common style */
@@ -200,7 +67,4 @@ a.common-tabs{
 .left-right-margin{
     margin-left: 20px;
     margin-right: 20px;
-}
-.left-margin{
-    margin-left: 20px;
 }

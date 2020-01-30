@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Stack, Modal } from 'office-ui-fabric-react';
+import { Stack, Modal, IconButton } from 'office-ui-fabric-react';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
+import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/compare.scss';
 import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface'; // eslint-disable-line no-unused-vars
 
@@ -128,7 +129,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 ? true : false;
         }
         return (
-            <table className="compare">
+            <table className="compare-modal-table">
                 <tbody>
                     <tr>
                         <td className="column">Id</td>
@@ -205,16 +206,26 @@ class Compare extends React.Component<CompareProps, {}> {
 
         return (
             <Modal
-                // title="Compare trials"
                 isOpen={true}
-                onDismiss={cancelFunc}
-                // styles={{ root: { width: '90%' } }}
+                containerClassName={contentStyles.container}
+                className="compare-modal"
             >
-                <Stack className="compare-intermediate">
-                    {this.intermediate()}
-                    <Stack className="compare-yAxis"># Intermediate result</Stack>
-                </Stack>
-                <Stack>{this.initColumn()}</Stack>
+                <div>
+                    <div className={contentStyles.header}>
+                        <span>Compare trials</span>
+                        <IconButton
+                            styles={iconButtonStyles}
+                            iconProps={{ iconName: 'Cancel' }}
+                            ariaLabel="Close popup modal"
+                            onClick={cancelFunc}
+                        />
+                    </div>
+                    <Stack className="compare-modal-intermediate">
+                        {this.intermediate()}
+                        <Stack className="compare-yAxis"># Intermediate result</Stack>
+                    </Stack>
+                    <Stack>{this.initColumn()}</Stack>
+                </div>
             </Modal>
         );
     }

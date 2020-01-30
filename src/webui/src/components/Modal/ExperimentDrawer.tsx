@@ -101,15 +101,16 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
             <Stack className="logDrawer">
                 <Panel
                     isOpen={isVisble}
-                    onDismiss={closeExpDrawer}
-                    styles={{ root: { height: expDrawerHeight } }}
+                    hasCloseButton={false}
+                    styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
-                    <Pivot style={{ height: expDrawerHeight - 64, minHeight: 190 }} className="log-tab-body">
+                    <Pivot style={{ minHeight: 190 }} className="log-tab-body">
                         <PivotItem headerText="Experiment Parameters">
                             <div className="just-for-log">
                                 <MonacoEditor
                                     width="100%"
-                                    height={expDrawerHeight - 144}
+                                    // 92 + marginTop[16]
+                                    height={expDrawerHeight - 108}
                                     language="json"
                                     value={experiment}
                                     options={DRAWEROPTION}
