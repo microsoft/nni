@@ -25,9 +25,9 @@ def replace_linear(linear, mask):
     assert mask.output_mask is None
     assert not mask.param_masks
     index = mask.input_mask.mask_index[-1]
-    #print(mask.input_mask.mask_index)
+    print(mask.input_mask.mask_index)
     in_features = index.size()[0]
-    #print('linear: ', in_features)
+    print('linear: ', in_features)
     new_linear = torch.nn.Linear(in_features=in_features,
                                  out_features=linear.out_features,
                                  bias=linear.bias is not None)

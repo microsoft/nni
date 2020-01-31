@@ -8,7 +8,7 @@ from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
 torch.manual_seed(0)
-use_mask = False
+use_mask = True
 
 def fpgm_speedup(masks_file, model_checkpoint):
     from fpgm_torch_mnist import Mnist

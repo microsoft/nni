@@ -196,6 +196,7 @@ class Pruner(Compressor):
         def new_forward(*inputs):
             mask = self.calc_mask(layer, config)
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            #device = torch.device("cpu")
             mask['weight'].to(device)
             # apply mask to weight
             old_weight = layer.module.weight.data

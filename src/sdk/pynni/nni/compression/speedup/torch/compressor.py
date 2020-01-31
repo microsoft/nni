@@ -26,6 +26,7 @@ class GNode:
         self.inputs = inputs
         self.outputs = outputs
         self.nodes = nodes
+        self.auxiliary = None # store supplementary information for different op types
 
 class ModelSpeedup:
     """
@@ -130,6 +131,20 @@ class ModelSpeedup:
         print('v' * 30)
         return g_node
 
+    def _extract_shape_info(self, node):
+        """
+        """
+        t_input = None
+        for _input in node.inputs():
+            t_input = _input
+            break
+        t_output = node.output()
+        assert isinstance(t_input.type(), torch._C.TensorType)
+        assert isinstance(t_output.type(), torch._C.TensorType)
+        in_shape = t_input.type().sizes()
+        out_shape = t_output.type().sizes()
+        return {'in_shape': in_shape, 'out_shape': out_shape}
+
     def _build_graph(self):
         """
         """
@@ -158,6 +173,7 @@ class ModelSpeedup:
         #print("graph_outputs: ", graph_outputs)
 
         for node in graph.nodes():
+            # populate output_to_node and input_to_node
             for output in node.outputs():
                 output_name = output.debugName()
                 output_to_node[output_name] = node
@@ -236,6 +252,9 @@ class ModelSpeedup:
             for node in non_prim_nodes:
                 g_node = self._expand_non_prim_node(node, nodes, input_to_node, output_to_node)
                 self.g_nodes.append(g_node)
+                # get shape infor for view (aten::view) func
+                if g_node.op_type == 'aten::view':
+                    g_node.auxiliary = self._extract_shape_info(node)
 
         # build index for g_nodes
         name_to_gnode, input_to_gnode, output_to_gnode = self._build_index_for_gnodes(self.g_nodes)
@@ -305,17 +324,22 @@ class ModelSpeedup:
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.name_to_gnode[module_name].op_type
-        if m_type == 'VGG':
-            print("VGG module name: ", module_name)
-            for node in self.name_to_gnode[module_name].nodes:
-                print(node)
+        #if m_type == 'VGG':
+        #    print("VGG module name: ", module_name)
+        #    for node in self.name_to_gnode[module_name].nodes:
+        #        print(node)
         print("infer_module_mask: {}, module type: {}".format(module_name, m_type))
         if mask is not None:
             print("mask is not None")
             input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
             print("in_shape is not None")
-            output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
+            if m_type == 'aten::view':
+                output_cmask = infer_from_inshape[m_type](module_masks,
+                                                          in_shape,
+                                                          self.name_to_gnode[module_name].auxiliary)
+            else:
+                output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
             print("out_shape is not None")
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)

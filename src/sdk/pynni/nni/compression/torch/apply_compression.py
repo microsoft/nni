@@ -40,7 +40,7 @@ class ApplyCompression(Pruner):
         op_names = []
         for module_name in self.masks:
             op_names.append(module_name)
-        return [{'sparsity': 1, 'op_types': ['BatchNorm2d'], 'op_names': op_names}]
+        return [{'sparsity': 1, 'op_types': ['default', 'BatchNorm2d'], 'op_names': op_names}]
 
     def calc_mask(self, layer, config):
         """

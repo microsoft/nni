@@ -69,7 +69,7 @@ infer_from_inshape = {
     'aten::avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
-    'aten::view': lambda module_masks, mask: view_inshape(module_masks, mask),
+    'aten::view': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
     'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask)
 }
 
@@ -86,10 +86,17 @@ def linear_inshape(module_masks, mask):
     module_masks.set_input_mask(mask)
     return None
 
-def view_inshape(module_masks, mask):
+def view_inshape(module_masks, mask, shape):
     """
+    TODO: consider replace tensor.view with nn.Flatten, because tensor.view is not
+    included in module, thus, cannot be replaced by our framework.
     """
-    # TODO: currently hard code view(N, -1)
+    # NOTE: the case constrained by the following four asserts
+    assert shape['in_shape'][0] == shape['out_shape'][0]
+    assert len(shape['in_shape']) == 4
+    assert len(shape['out_shape']) == 2
+    assert shape['out_shape'][1] == shape['in_shape'][1]*shape['in_shape'][2]*shape['in_shape'][3]
+
     assert isinstance(mask, CoarseMask)
     assert mask.mask_index[1] is not None
     assert mask.mask_index[0] is None
@@ -98,11 +105,11 @@ def view_inshape(module_masks, mask):
     assert module_masks.input_mask is None
     module_masks.set_input_mask(mask)
     output_cmask = CoarseMask(num_dim=2)
-    # TODO: hard code for this case, %x : Float(64, 512, 1, 1)
     index = []
+    step_size = shape['in_shape'][2] * shape['in_shape'][3]
     for loc in mask.mask_index[1]:
-        index.append(loc * 1)
-    output_cmask.mask_index[1] = torch.tensor(index)
+        index.extend([loc * step_size + i for i in range(step_size)])
+    output_cmask.add_index_mask(dim=1, index=torch.tensor(index))
     module_masks.set_output_mask(output_cmask)
     return output_cmask
 
