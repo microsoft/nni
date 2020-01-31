@@ -47,5 +47,5 @@ class ApplyCompression(Pruner):
         """
         assert layer.name in self.masks
         #print('calc_mask: ', layer.name, self.masks[layer.name])
-        print('calc_mask: ', layer.name, layer.type)
+        #print('calc_mask: ', layer.name, layer.type)
         return self.masks[layer.name]
