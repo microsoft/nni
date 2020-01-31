@@ -70,12 +70,29 @@ infer_from_inshape = {
     'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
     'aten::view': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
-    'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask)
+    'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask),
+    'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask)
 }
 
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
+
+def batchnorm2d_inshape(module_masks, mask):
+    """
+    """
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
+    weight_cmask = CoarseMask(num_dim=1)
+    weight_cmask.add_index_mask(dim=0, index=mask.mask_index[1])
+    module_masks.set_param_masks('weight', weight_cmask)
+    module_masks.set_param_masks('bias', weight_cmask)
+    return mask
 
 def linear_inshape(module_masks, mask):
     """
@@ -173,8 +190,8 @@ def conv2d_mask(module_masks, mask):
         cmask = None
         weight_mask = mask['weight']
         shape = weight_mask.size()
-        ones = torch.ones(shape[1:])
-        zeros = torch.zeros(shape[1:])
+        ones = torch.ones(shape[1:]).to(weight_mask.device)
+        zeros = torch.zeros(shape[1:]).to(weight_mask.device)
         index = []
         for i in range(shape[0]):
             if torch.all(torch.eq(weight_mask[i], ones)):
@@ -187,7 +204,7 @@ def conv2d_mask(module_masks, mask):
         if index is None:
             return None, None, None
         else:
-            index = torch.LongTensor(index)
+            index = torch.LongTensor(index).to(weight_mask.device)
             weight_cmask = CoarseMask(num_dim=4)
             weight_cmask.add_index_mask(dim=0, index=index)
             bias_cmask = None

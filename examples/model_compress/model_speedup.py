@@ -9,7 +9,7 @@ from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
 torch.manual_seed(0)
-use_mask = True
+use_mask = False
 
 def l1filter_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
@@ -39,10 +39,10 @@ def l1filter_speedup(masks_file, model_checkpoint):
         apply_compression_results(model, masks_file)
         dummy_input = dummy_input.to(device)
         start = time.time()
-        for _ in range(100):
+        for _ in range(1):
             out = model(dummy_input)
-        #print(out.size(), out)
-        print('mask elapsed time: ', time.time() - start)
+        print(out.size(), out)
+        #print('mask elapsed time: ', time.time() - start)
         return
     else:
         #print("model before: ", model)
@@ -51,10 +51,10 @@ def l1filter_speedup(masks_file, model_checkpoint):
         #print("model after: ", model)
         dummy_input = dummy_input.to(device)
         start = time.time()
-        for _ in range(100):
+        for _ in range(1):
             out = model(dummy_input)
-        #print(out.size(), out)
-        print('speedup elapsed time: ', time.time() - start)
+        print(out.size(), out)
+        #print('speedup elapsed time: ', time.time() - start)
         return
 
 def fpgm_speedup(masks_file, model_checkpoint):
@@ -141,7 +141,7 @@ def slim_speedup(masks_file, model_checkpoint):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="fpgm", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="l1filter", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     parser.add_argument("--model_checkpoint", type=str, default=None, help="the path of checkpointed model")
     args = parser.parse_args()
