@@ -39,10 +39,10 @@ def l1filter_speedup(masks_file, model_checkpoint):
         apply_compression_results(model, masks_file)
         dummy_input = dummy_input.to(device)
         start = time.time()
-        for _ in range(1):
+        for _ in range(32):
             out = model(dummy_input)
-        print(out.size(), out)
-        #print('mask elapsed time: ', time.time() - start)
+        #print(out.size(), out)
+        print('mask elapsed time: ', time.time() - start)
         return
     else:
         #print("model before: ", model)
@@ -51,10 +51,10 @@ def l1filter_speedup(masks_file, model_checkpoint):
         #print("model after: ", model)
         dummy_input = dummy_input.to(device)
         start = time.time()
-        for _ in range(1):
+        for _ in range(32):
             out = model(dummy_input)
-        print(out.size(), out)
-        #print('speedup elapsed time: ', time.time() - start)
+        #print(out.size(), out)
+        print('speedup elapsed time: ', time.time() - start)
         return
 
 def fpgm_speedup(masks_file, model_checkpoint):
