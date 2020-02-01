@@ -263,7 +263,7 @@ class Pruner(Compressor):
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
