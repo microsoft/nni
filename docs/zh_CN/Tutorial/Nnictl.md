@@ -49,6 +49,7 @@ nnictl 支持的命令：
   | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
   | --port, -p   | False |     | RESTful 服务的端口          |
   | --debug, -d  | False |     | 设置为调试模式                |
+  | --watch, -w  | False |     | 启动为监视模式                |
 
 * 示例
   
@@ -97,6 +98,7 @@ nnictl 支持的命令：
   | id          | True  |     | 要恢复的 Experiment 标识               |
   | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
   | --debug, -d | False |     | 设置为调试模式                          |
+  | --watch, -w | False |     | 启动为监视模式                          |
 
 * 示例
   

@@ -1,0 +1,18 @@
+authorName: unknown
+experimentName: example_efficient_net
+trialConcurrency: 4
+maxExecDuration: 99999d
+maxTrialNum: 100
+trainingServicePlatform: local
+searchSpacePath: search_net.json
+useAnnotation: false
+tuner:
+  codeDir: .
+  classFileName: tuner.py
+  className: FixedProductTuner
+  classArgs:
+    product: 2
+trial:
+  codeDir: EfficientNet-PyTorch
+  command: python main.py /data/imagenet -j 12 -a efficientnet --batch-size 48 --lr 0.048 --wd 1e-5 --epochs 5 --request-from-nni
+  gpuNum: 1
