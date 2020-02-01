@@ -208,7 +208,7 @@ def conv2d_mask(module_masks, mask):
             weight_cmask = CoarseMask(num_dim=4)
             weight_cmask.add_index_mask(dim=0, index=index)
             bias_cmask = None
-            if 'bias' in mask:
+            if 'bias' in mask and mask['bias'] is not None:
                 bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
                 assert torch.all(torch.eq(index, bias_index))
                 bias_cmask = CoarseMask(num_dim=1)

@@ -9,7 +9,53 @@ from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
 torch.manual_seed(0)
-use_mask = False
+use_mask = True
+
+def apoz_speedup(masks_file, model_checkpoint):
+    device = torch.device('cuda')
+    train_loader = torch.utils.data.DataLoader(
+        datasets.CIFAR10('./data.cifar10', train=True, download=True,
+                         transform=transforms.Compose([
+                             transforms.Pad(4),
+                             transforms.RandomCrop(32),
+                             transforms.RandomHorizontalFlip(),
+                             transforms.ToTensor(),
+                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+                         ])),
+        batch_size=64, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        ])),
+        batch_size=200, shuffle=False)
+
+    model = VGG(depth=16)
+    model.to(device)
+    model.eval()
+
+    dummy_input = torch.randn(64, 3, 32, 32)
+    if use_mask:
+        apply_compression_results(model, masks_file)
+        dummy_input = dummy_input.to(device)
+        start = time.time()
+        for _ in range(32):
+            out = model(dummy_input)
+        #print(out.size(), out)
+        print('mask elapsed time: ', time.time() - start)
+        return
+    else:
+        #print("model before: ", model)
+        m_speedup = ModelSpeedup(model, dummy_input.to(device), masks_file)
+        m_speedup.speedup_model()
+        #print("model after: ", model)
+        dummy_input = dummy_input.to(device)
+        start = time.time()
+        for _ in range(32):
+            out = model(dummy_input)
+        #print(out.size(), out)
+        print('speedup elapsed time: ', time.time() - start)
+        return
 
 def l1filter_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
@@ -141,7 +187,7 @@ def slim_speedup(masks_file, model_checkpoint):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="l1filter", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="apoz", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     parser.add_argument("--model_checkpoint", type=str, default=None, help="the path of checkpointed model")
     args = parser.parse_args()
@@ -158,5 +204,9 @@ if __name__ == '__main__':
         if args.masks_file is None:
             args.masks_file = 'mask_vgg16_cifar10.pth'
         l1filter_speedup(args.masks_file, args.model_checkpoint)
+    elif args.example_name == 'apoz':
+        if args.masks_file is None:
+            args.masks_file = 'mask_vgg16_cifar10.pth'
+        apoz_speedup(args.masks_file, args.model_checkpoint)
     else:
         raise ValueError('unsupported example_name: {}'.format(args.example_name))
