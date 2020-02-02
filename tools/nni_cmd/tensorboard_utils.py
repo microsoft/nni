@@ -38,7 +38,7 @@ def copy_data_from_remote(args, nni_config, trial_content, path_list, host_list,
     local_path_list = []
     for machine in machine_list:
         machine_dict[machine['ip']] = {'port': machine['port'], 'passwd': machine['passwd'], 'username': machine['username'],
-                                       'sshKeyPath': machine.get('sshKeyPath'), 'passphrase': machine.get('sshKeyPath')}
+                                       'sshKeyPath': machine.get('sshKeyPath'), 'passphrase': machine.get('passphrase')}
     for index, host in enumerate(host_list):
         local_path = os.path.join(temp_nni_path, trial_content[index].get('id'))
         local_path_list.append(local_path)
