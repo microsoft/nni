@@ -36,8 +36,8 @@ def create_ssh_sftp_client(host_ip, port, username, password, ssh_key_path, pass
         paramiko = check_environment()
         conn = paramiko.Transport(host_ip, port)
         if ssh_key_path is not None:
-            ssh_key = paramiko.from_private_key_file(ssh_key_path, password=passphrase)
-            conn.connect(username=username, password=password, pkey=ssh_key)
+            ssh_key = paramiko.RSAKey.from_private_key_file(ssh_key_path, password=passphrase)
+            conn.connect(username=username, pkey=ssh_key)
         else:
             conn.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(conn)
