@@ -365,9 +365,7 @@ class LotteryTicketPruner(Pruner):
             mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
             # TODO: directly use weight_mask is not good
             module_wrapper.weight_mask.copy_(mask['weight'])
-            # TODO: support bias mask
-            if 'bias' in mask:
-                module_wrapper.bias_mask.copy_(mask['bias'])
+            # there is no mask for bias
 
         # reinit weights back to original after new masks are generated
         if self.reset_weights:

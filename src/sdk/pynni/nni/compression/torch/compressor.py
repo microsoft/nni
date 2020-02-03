@@ -295,7 +295,7 @@ class Pruner(Compressor):
         """
         _logger.info("compressing module %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
-        # TODO: check weight exists
+        assert hasattr(layer.module, 'weight')
         wrapper.to(layer.module.weight.device)
         return wrapper
 
