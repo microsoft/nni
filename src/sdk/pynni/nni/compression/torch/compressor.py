@@ -86,7 +86,7 @@ class Compressor:
         """
         if self.modules_wrapper is not None:
             # already compressed
-            return
+            return self.bound_model
         else:
             self.modules_wrapper = []
 

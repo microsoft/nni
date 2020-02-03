@@ -32,7 +32,7 @@ class ActivationRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.register_buffer("if_calculated", torch.tensor(False)) # pylint: disable=not-callable
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
         self.statistics_batch_num = statistics_batch_num
         self.collected_activation = {}
         self.hooks = {}
@@ -48,16 +48,23 @@ class ActivationRankFilterPruner(Pruner):
         """
         Compress the model, register a hook for collecting activations.
         """
+        if self.modules_wrapper is not None:
+            # already compressed
+            return self.bound_model
+        else:
+            self.modules_wrapper = []
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            self._instrument_layer(layer, config)
-            self.collected_activation[layer.name] = []
+            wrapper = self._wrap_modules(layer, config)
+            self.modules_wrapper.append(wrapper)
+            self.collected_activation[wrapper.name] = []
 
             def _hook(module_, input_, output, name=layer.name):
                 if len(self.collected_activation[name]) < self.statistics_batch_num:
                     self.collected_activation[name].append(self.activation(output.detach().cpu()))
 
-            layer.module.register_forward_hook(_hook)
+            # wrapper.module.register_forward_hook(_hook)
+        self._wrap_model()
         return self.bound_model
 
     def get_mask(self, base_mask, activations, num_prune):
@@ -103,7 +110,7 @@ class ActivationRankFilterPruner(Pruner):
             mask = self.get_mask(mask, self.collected_activation[layer.name], num_prune)
         finally:
             if len(self.collected_activation[layer.name]) == self.statistics_batch_num:
-                if_calculated.copy_(torch.tensor(True)) # pylint: disable=not-callable
+                if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
 

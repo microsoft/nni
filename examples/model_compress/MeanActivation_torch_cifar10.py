@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import L1FilterPruner
+from nni.compression.torch import ActivationMeanRankFilterPruner
 from models.cifar10.vgg import VGG
 
 
@@ -96,7 +96,7 @@ def main():
 
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = L1FilterPruner(model, configure_list)
+    pruner = ActivationMeanRankFilterPruner(model, configure_list)
     model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
