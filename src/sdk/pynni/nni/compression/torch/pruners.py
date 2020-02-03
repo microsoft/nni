@@ -247,7 +247,7 @@ class LotteryTicketPruner(Pruner):
     5. Repeat step 2, 3, and 4.
     """
 
-    def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=False):
+    def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=True):
         """
         Parameters
         ----------
@@ -290,19 +290,6 @@ class LotteryTicketPruner(Pruner):
             prune_iterations = config['prune_iterations']
         return prune_iterations
 
-    '''def _print_masks(self, print_mask=False):
-        torch.set_printoptions(threshold=1000)
-        for op_name in self.mask_dict.keys():
-            mask = self.mask_dict[op_name]
-            print('op name: ', op_name)
-            if print_mask:
-                print('mask: ', mask)
-            # calculate current sparsity
-            mask_num = mask['weight'].sum().item()
-            mask_size = mask['weight'].numel()
-            print('sparsity: ', 1 - mask_num / mask_size)
-        torch.set_printoptions(profile='default')'''
-
     def _calc_sparsity(self, sparsity):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)
         curr_keep_ratio = keep_ratio_once ** self.curr_prune_iteration
@@ -313,9 +300,6 @@ class LotteryTicketPruner(Pruner):
             mask = torch.ones(weight.shape).type_as(weight)
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            #assert self.mask_dict.get(op_name) is not None
-            #curr_mask = self.mask_dict.get(op_name)
-            #w_abs = weight.abs() * curr_mask['weight']
             w_abs = weight.abs() * curr_w_mask
             k = int(w_abs.numel() * curr_sparsity)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
@@ -332,15 +316,16 @@ class LotteryTicketPruner(Pruner):
             The layer to be pruned
         config : dict
             Pruning configurations for this weight
+        kwargs : dict
+            Auxiliary information
 
         Returns
         -------
         tensor
-            The mask for this weight
+            The mask for this weight, it is ```None``` because this pruner
+            calculates and assigns masks in ```prune_iteration_start```,
+            no need to do anything in this function.
         """
-        #assert self.mask_dict.get(layer.name) is not None, 'Please call iteration_start before training'
-        #mask = self.mask_dict[layer.name]
-        #return mask
         return None
 
     def get_prune_iterations(self):
@@ -378,18 +363,16 @@ class LotteryTicketPruner(Pruner):
 
             sparsity = config.get('sparsity')
             mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
-            #self.mask_dict.update({layer.name: mask})
             # TODO: directly use weight_mask is not good
             module_wrapper.weight_mask.copy_(mask['weight'])
             # TODO: support bias mask
             if 'bias' in mask:
                 module_wrapper.bias_mask.copy_(mask['bias'])
-        #self._print_masks()
 
         # reinit weights back to original after new masks are generated
-        # TODO: should provide api for model save/load
         if self.reset_weights:
-            self._model.load_state_dict(self._model_state)
+            # should use this member function to reset model weights
+            self.load_model_state_dict(self._model_state)
             self._optimizer.load_state_dict(self._optimizer_state)
             if self._lr_scheduler is not None:
                 self._lr_scheduler.load_state_dict(self._scheduler_state)
