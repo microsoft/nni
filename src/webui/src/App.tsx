@@ -73,7 +73,7 @@ class App extends React.Component<{}, AppState> {
             <Stack className="nni" style={{ minHeight: window.innerHeight }}>
                 <div className="header">
                     <div className="headerCon">
-                        <NavCon changeInterval={this.changeInterval}/>
+                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh}/>
                     </div>
                 </div>
                 <Stack className="contentBox">
@@ -106,7 +106,7 @@ class App extends React.Component<{}, AppState> {
         }
     }
 
-    private async lastRefresh(): Promise<void> {
+    public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));

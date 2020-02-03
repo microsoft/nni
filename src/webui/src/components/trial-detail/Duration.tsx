@@ -55,7 +55,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 bottom: '3%',
                 containLabel: true,
                 left: '1%',
-                right: '4%'
+                right: '5%'
             },
             dataZoom: [
                 {
@@ -72,7 +72,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 type: 'value',
             },
             yAxis: {
-                name: 'Trial',
+                name: 'Trial No.',
                 type: 'category',
                 data: trialId
             },

@@ -72,14 +72,6 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
     }
 
-    // getSpecificKey = (item?: any, ev?: React.MouseEvent<HTMLElement>): void => {
-    //     console.info('item', item); //eslint-disable-line
-    //     if('key' in item!){
-    //         console.info(item!.key); // eslint-disable-line
-    //         // this.setState(ActivityItem);
-    //     }
-    // }
-
     async componentDidMount(): Promise<void> {
         this.refresh();
         window.addEventListener('resize', this.setLogDrawerHeight);
@@ -103,7 +95,6 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                 >
                     <div className="log-tab-body">
                         <Pivot
-                            // onLinkClick={this.getSpecificKey}
                             selectedKey={activeTab}
                             style={{ minHeight: 190, paddingTop: '16px' }}
                         >

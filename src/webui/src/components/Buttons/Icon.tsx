@@ -12,7 +12,11 @@ const tableListIcon = <Icon iconName='BulletedList' />
 const downLoadIcon = { iconName: 'Download' };
 const infoIconAbout = { iconName: 'info' };
 const timeIcon = { iconName: 'ReminderTime' };
+const disableUpdates = { iconName: 'DisableUpdates' };
+const requency = { iconName: 'Timer' }; 
+const closeTimer = { iconName: 'Blocked2' };
 
 export { infoIcon, warining, errorBadge, completed, blocked,
-    infoIconAbout, copy, tableListIcon, downLoadIcon, timeIcon
+    infoIconAbout, copy, tableListIcon, downLoadIcon, timeIcon,
+    disableUpdates, requency, closeTimer
 };

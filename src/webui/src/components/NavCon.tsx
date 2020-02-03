@@ -7,7 +7,10 @@ import {
 } from 'office-ui-fabric-react';
 import LogDrawer from './Modal/LogDrawer';
 import ExperimentDrawer from './Modal/ExperimentDrawer';
-import { downLoadIcon, infoIconAbout, timeIcon } from './Buttons/Icon';
+import {
+    downLoadIcon, infoIconAbout,
+    timeIcon, disableUpdates, requency, closeTimer
+} from './Buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
@@ -30,10 +33,12 @@ interface NavState {
     isvisibleLogDrawer: boolean;
     isvisibleExperimentDrawer: boolean;
     refreshText: string;
+    refreshFrequency: number | string;
 }
 
 interface NavProps {
     changeInterval: (value: number) => void;
+    refreshFunction: () => void;
 }
 
 class NavCon extends React.Component<NavProps, NavState> {
@@ -47,7 +52,8 @@ class NavCon extends React.Component<NavProps, NavState> {
             isdisabledFresh: false,
             isvisibleLogDrawer: false, // download button (nnimanager·dispatcher) click -> drawer
             isvisibleExperimentDrawer: false,
-            refreshText: 'Auto Refresh'
+            refreshText: 'Auto refresh',
+            refreshFrequency: 10
         };
     }
 
@@ -59,15 +65,6 @@ class NavCon extends React.Component<NavProps, NavState> {
     // to see & download dispatcher | nnimanager log
     showDispatcherLog = (): void => {
         this.setState({ isvisibleLogDrawer: true });
-    }
-
-    // refresh current page
-    fresh = (event: React.SyntheticEvent<EventTarget>): void => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.setState({ isdisabledFresh: true }, () => {
-            setTimeout(() => { this.setState({ isdisabledFresh: false }); }, 1000);
-        });
     }
 
     // close log drawer (nnimanager.dispatcher)
@@ -102,8 +99,11 @@ class NavCon extends React.Component<NavProps, NavState> {
     }
 
     getInterval = (num: number): void => {
-        this.props.changeInterval(num);
-        console.info(num); // eslint-disable-line
+        this.props.changeInterval(num); // notice parent component
+        this.setState(() => ({
+            refreshFrequency: num === 0 ? '' : num,
+            refreshText: num === 0 ? 'Disable auto' : 'Auto refresh'
+        }));
     }
 
     componentDidMount(): void {
@@ -111,7 +111,8 @@ class NavCon extends React.Component<NavProps, NavState> {
     }
 
     render(): React.ReactNode {
-        const { isvisibleLogDrawer, isvisibleExperimentDrawer, version, refreshText } = this.state;
+        const { isvisibleLogDrawer, isvisibleExperimentDrawer, version,
+            refreshText, refreshFrequency } = this.state;
         const aboutProps: IContextualMenuProps = {
             items: [
                 {
@@ -141,21 +142,21 @@ class NavCon extends React.Component<NavProps, NavState> {
                     <span>{DETAILTABS}</span>
                 </StackItem>
                 <StackItem grow={70} className="navOptions">
-                    {/* TODO: min width 根据实际的最小宽度来定 */}
                     <Stack horizontal horizontalAlign="end" tokens={stackTokens} styles={stackStyle}>
                         {/* refresh button danyi*/}
-                        <CommandBarButton
+                        {/* TODO: fix bug */}
+                        {/* <CommandBarButton
                             iconProps={{ iconName: 'sync' }}
                             text="Refresh"
-                            onClick={this.fresh}
-                        />
+                            onClick={this.props.refreshFunction}
+                        /> */}
                         <div className="nav-refresh">
                             <CommandBarButton
-                                iconProps={timeIcon}
+                                iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
                                 text={refreshText}
                                 menuProps={this.refreshProps}
                             />
-                            <div className="nav-refresh-num">10</div>
+                            <div className="nav-refresh-num">{refreshFrequency}</div>
                         </div>
                         <CommandBarButton
                             iconProps={downLoadIcon}
@@ -200,32 +201,32 @@ class NavCon extends React.Component<NavProps, NavState> {
             {
                 key: 'disableRefresh',
                 text: 'Disable auto refresh',
-                iconProps: { iconName: 'Mail' },
+                iconProps: closeTimer,
                 onClick: this.getInterval.bind(this, 0)
             },
             {
                 key: 'refresh10',
                 text: 'Refresh every 10s',
-                iconProps: { iconName: 'Calendar' },
+                iconProps: requency,
                 onClick: this.getInterval.bind(this, 10)
             },
             {
                 key: 'refresh20',
                 text: 'Refresh every 20s',
-                iconProps: { iconName: 'Calendar' },
+                iconProps: requency,
                 onClick: this.getInterval.bind(this, 20)
             },
             {
                 key: 'refresh30',
                 text: 'Refresh every 30s',
-                iconProps: { iconName: 'Calendar' },
+                iconProps: requency,
                 onClick: this.getInterval.bind(this, 30)
             },
 
             {
                 key: 'refresh60',
                 text: 'Refresh every 1min',
-                iconProps: { iconName: 'Calendar' },
+                iconProps: requency,
                 onClick: this.getInterval.bind(this, 60)
             },
 

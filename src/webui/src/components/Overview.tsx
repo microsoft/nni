@@ -91,7 +91,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         </Stack>
                     </Stack.Item>
                     <Stack.Item grow={1}>
-                        <Title1 text="Profile" icon="4.png" />
+                        <Title1 text="Config" icon="4.png" />
                         <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
