@@ -11,7 +11,7 @@ from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
 from .common import multi_thread_enabled, multi_phase_enabled
 from .env_vars import dispatcher_env_vars
-from .utils import MetricType
+from .utils import MetricType, to_json
 
 _logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
         ret['parameter_index'] = parameter_index
     else:
         ret['parameter_index'] = 0
-    return json_tricks.dumps(ret)
+    return to_json(ret)
 
 
 class MsgDispatcher(MsgDispatcherBase):

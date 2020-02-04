@@ -22,4 +22,6 @@ NAS 算法
     NAS 接口 <NAS/NasInterface>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
-    P-DARTS <NAS/Overview>
+    P-DARTS <NAS/PDARTS>
+    SPOS <NAS/SPOS>
+    CDARTS <NAS/CDARTS>
