@@ -12,7 +12,7 @@ from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.enas import EnasMutator
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.random import RandomMutator
-from nni.nas.pytorch.utils import reset_global_mutable_counting
+from nni.nas.pytorch.utils import _reset_global_mutable_counting
 
 
 class NasTestCase(TestCase):
@@ -53,7 +53,7 @@ class NasTestCase(TestCase):
     def default_mutator_test_pipeline(self, mutator_cls):
         for model_cls in self.default_cls:
             for cuda_test in self.cuda_test:
-                reset_global_mutable_counting()
+                _reset_global_mutable_counting()
                 model = model_cls(self)
                 mutator = mutator_cls(model)
                 if cuda_test:
@@ -62,7 +62,7 @@ class NasTestCase(TestCase):
                     if cuda_test > 1:
                         model = nn.DataParallel(model)
                 self.iterative_sample_and_forward(model, mutator, use_cuda=cuda_test)
-                reset_global_mutable_counting()
+                _reset_global_mutable_counting()
                 model_fixed = model_cls(self)
                 if cuda_test:
                     model_fixed.cuda()

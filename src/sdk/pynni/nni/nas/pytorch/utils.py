@@ -17,7 +17,7 @@ def global_mutable_counting():
     return _counter
 
 
-def reset_global_mutable_counting():
+def _reset_global_mutable_counting():
     """
     Reset the global mutable counting to count from 1. Useful when defining multiple models with default keys.
     """
