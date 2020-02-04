@@ -407,20 +407,22 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-    Optional('machineList'):[Or({
-        'ip': setType('ip', str),
-        Optional('port'): setNumberRange('port', int, 1, 65535),
-        'username': setType('username', str),
-        'passwd': setType('passwd', str),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-        Optional('useActiveGpu'): setType('useActiveGpu', bool)
-        }, {
+    Optional('machineList'):[Or(
+        {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
             'username': setType('username', str),
             'sshKeyPath': setPathCheck('sshKeyPath'),
             Optional('passphrase'): setType('passphrase', str),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+            Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        },
+        {
+            'ip': setType('ip', str),
+            Optional('port'): setNumberRange('port', int, 1, 65535),
+            'username': setType('username', str),
+            'passwd': setType('passwd', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool)
