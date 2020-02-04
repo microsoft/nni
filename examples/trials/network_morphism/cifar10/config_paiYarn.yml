@@ -30,7 +30,7 @@ trial:
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
-paiConfig:
+paiYarnConfig:
   #The username to login pai
   userName: username
   #The password to login pai
