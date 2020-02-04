@@ -4,7 +4,7 @@ trialConcurrency: 20
 maxExecDuration: 2400h
 maxTrialNum: 20000
 #choice: local, remote
-trainingServicePlatform: pai
+trainingServicePlatform: paiYarn
 #choice: true, false
 useAnnotation: true
 multiPhase: false
@@ -25,10 +25,7 @@ trial:
   memoryMB: 8196
   image: msranni/nni:latest
   virtualCluster: nni
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
-  paiStoragePlugin: team_wise
-paiConfig:
+paiYarnConfig:
   userName: your_account
-  token: your_token
+  passwd: your_passwd
   host: 0.0.0.0

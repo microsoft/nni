@@ -1,31 +1,24 @@
 authorName: default
-experimentName: example_FashionMNIST-network-morphism
+experimentName: example_mnist-keras
 trialConcurrency: 1
-maxExecDuration: 24h
+maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: pai
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
   #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: NetworkMorphism
+  builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    # for now, this tuner only supports cv domain
-    task: cv
-    #input image width
-    input_width: 28
-    #input image channel
-    input_channel: 1
-    #number of classes
-    n_output_node: 10
 trial:
-  command: python3 FashionMNIST_keras.py
+  command: python3 mnist-keras.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai
