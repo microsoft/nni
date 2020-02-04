@@ -34,6 +34,6 @@ paiConfig:
   #The username to login pai
   userName: username
   #The password to login pai
-  passwd: password
+  passWord: password
   #The host of restful server of pai
   host: 10.10.10.10
