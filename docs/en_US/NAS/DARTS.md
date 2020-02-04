@@ -46,3 +46,7 @@ python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
 ..  autoclass:: nni.nas.pytorch.darts.DartsMutator
     :members:
 ```
+
+## Limitations
+
+* DARTS doesn't support DataParallel and needs to be customized in order to support DistributedDataParallel.
