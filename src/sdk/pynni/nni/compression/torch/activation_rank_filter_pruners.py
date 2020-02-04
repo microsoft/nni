@@ -57,13 +57,13 @@ class ActivationRankFilterPruner(Pruner):
         for layer, config in modules_to_compress:
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper.append(wrapper)
-            self.collected_activation[wrapper.name] = []
+            self.collected_activation[layer.name] = []
 
             def _hook(module_, input_, output, name=layer.name):
                 if len(self.collected_activation[name]) < self.statistics_batch_num:
                     self.collected_activation[name].append(self.activation(output.detach().cpu()))
 
-            # wrapper.module.register_forward_hook(_hook)
+            wrapper.module.register_forward_hook(_hook)
         self._wrap_model()
         return self.bound_model
 
