@@ -1,13 +1,12 @@
 authorName: default
-experimentName: example_pytorch_cifar10
+experimentName: example_mnist
 trialConcurrency: 1
-maxExecDuration: 100h
+maxExecDuration: 1h
 maxTrialNum: 10
 #choice: local, remote, pai
-trainingServicePlatform: pai
-searchSpacePath: search_space.json
+trainingServicePlatform: paiYarn
 #choice: true, false
-useAnnotation: false
+useAnnotation: true
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
   #SMAC (SMAC should be installed through nnictl)
@@ -16,14 +15,14 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python3 main.py
+  command: python3 mnist.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
-paiConfig:
+paiYarnConfig:
   #The username to login pai
   userName: username
   #The password to login pai

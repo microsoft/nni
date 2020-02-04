@@ -3,7 +3,7 @@ experimentName: example_efficient_net
 trialConcurrency: 8
 maxExecDuration: 48h
 maxTrialNum: 100
-trainingServicePlatform: pai
+trainingServicePlatform: paiYarn
 searchSpacePath: search_net.json
 useAnnotation: false
 tuner:
@@ -22,7 +22,7 @@ trial:
   virtualCluster: nni
   image: msranni/nni:latest
 nniManagerIp: <nni_manager_ip>
-paiConfig:
+paiYarnConfig:
   userName: <username>
   passWord: <password>
   host: <host>

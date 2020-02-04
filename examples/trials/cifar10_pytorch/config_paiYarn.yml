@@ -1,29 +1,29 @@
 authorName: default
-experimentName: example_ga_squad
+experimentName: example_pytorch_cifar10
 trialConcurrency: 1
-maxExecDuration: 1h
+maxExecDuration: 100h
 maxTrialNum: 10
 #choice: local, remote, pai
-trainingServicePlatform: pai
+trainingServicePlatform: paiYarn
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
-#Your nni_manager ip
-nniManagerIp: 10.10.10.10
 tuner:
-  codeDir: ../../tuners/ga_customer_tuner
-  classFileName: customer_tuner.py
-  className: CustomerTuner
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
   classArgs:
+    #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: chmod +x ./download.sh && ./download.sh && python3 trial.py
+  command: python3 main.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 1
   cpuNum: 1
-  memoryMB: 32869
+  memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
-paiConfig:
+paiYarnConfig:
   #The username to login pai
   userName: username
   #The password to login pai
