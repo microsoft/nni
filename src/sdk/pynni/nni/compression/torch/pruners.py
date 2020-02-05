@@ -187,7 +187,6 @@ class SlimPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
@@ -198,8 +197,9 @@ class SlimPruner(Pruner):
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
+        self.register_buffer("if_calculated", torch.tensor(False)) # pylint: disable=not-callable
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
@@ -209,6 +209,8 @@ class SlimPruner(Pruner):
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
+        kwargs: dict
+            buffers registered in __init__ function
         Returns
         -------
         dict
@@ -216,27 +218,21 @@ class SlimPruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
         op_type = layer.type
+        if_calculated = kwargs["if_calculated"]
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+        if if_calculated:
+            return None
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
-        try:
-            filters = weight.size(0)
-            num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1:
-                return mask
+        filters = weight.size(0)
+        num_prune = int(filters * config.get('sparsity'))
+        if filters >= 2 and num_prune >= 1:
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
-        finally:
-            self.mask_dict.update({layer.name: mask})
-            self.mask_calculated_ops.add(layer.name)
-
+        if_calculated.copy_(torch.tensor(True)) # pylint: disable=not-callable
         return mask
 
 class LotteryTicketPruner(Pruner):
