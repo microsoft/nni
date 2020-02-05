@@ -32,7 +32,7 @@ def test():
     #       [1,1,1,1,1,1,1,1,1,1]]
 
     assessor = MedianstopAssessor(FLAGS.optimize_mode, FLAGS.start_step)
-    for i in range(len(lcs):
+    for i in range(len(lcs)):
         #lc = []
         to_complete = True
         for k in range(FLAGS.start_step):
