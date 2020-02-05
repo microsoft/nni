@@ -12,6 +12,21 @@ _logger = logging.getLogger(__name__)
 
 
 def get_module_by_name(model, module_name):
+    """
+    Get a module specified by its module name
+
+    Parameters
+    ----------
+    model : pytorch model
+        the pytorch model from which to get its module
+    module_name : str
+        the name of the required module
+
+    Returns
+    -------
+    module, module
+        the parent module of the required module, the required module
+    """
     name_list = module_name.split(".")
     for name in name_list[:-1]:
         model = getattr(model, name)
@@ -19,57 +34,87 @@ def get_module_by_name(model, module_name):
     return model, leaf_module
 
 class GNode:
+    """
+    It is used to represent a node in model graph, in this graph a module is a node,
+    a function out of module (in ```forward``` function) could also be a node.
+    """
     def __init__(self, node_name, node_type, op_type, inputs, outputs, nodes):
-        self.name = node_name # module name if is module, scope name + seq if is func
-        self.type = node_type # module or func
+        """
+        Parameters
+        ----------
+        node_name : str
+            It is module name if the node is a module, it is ```scope_name.node_kind.seq``` if it is a func
+        node_type : str
+            It only has two options: `module` or `func`
+        op_type : str
+            The operation type of the module or func
+        inputs : list of str
+            All the inputs of this node, each element is debugName of one input
+        outputs : list of str
+            All the outputs of this node, each element is debugName of one output
+        nodes : list of node
+            All the trace graph nodes included in this module or func
+        """
+        self.name = node_name
+        self.type = node_type
         self.op_type = op_type
         self.inputs = inputs
         self.outputs = outputs
         self.nodes = nodes
-        self.auxiliary = None # store supplementary information for different op types
+        # store supplementary information for different op types
+        # for example, for ```view``` it stores the shape of its input and output
+        self.auxiliary = None
 
 class ModelSpeedup:
     """
-    Abstract base PyTorch ModelSpeedup
+    This class is to speedup the model with provided weight mask
     """
 
     def __init__(self, model, dummy_input, masks_file):
         """
-        Record necessary info in class members
-
         Parameters
         ----------
         model : pytorch model
-            the model user wants to compress
-        masks : dict
-            the generated masks for modules,
-            key is module name,
-            value is a dict including key `weight`, or also key `bias`
-        onnx_graph : xxx
-            it is used to parse dependencies between modules
+            The model user wants to speed up
+        dummy_input : pytorch tensor
+            The dummy input for ```jit.trace```, users should put it on right device before pass in
+        masks_file : str
+            The path of user provided mask file
         """
         self.bound_model = model
         self.dummy_input = dummy_input
         self.masks = torch.load(masks_file)
-        #ori_masks = torch.load(masks_file)
-        #self.masks = {'feature.1': ori_masks['feature.1']}
         self.is_training = model.training
+        # to obtain forward graph, model should be in ```eval``` mode
         if self.is_training:
             model.eval()
         self.trace_graph = torch.jit.trace(model, dummy_input)
         if self.is_training:
             model.train()
-        #print("masks: ", self.masks)
-        #print(self.trace_graph)
-        #print(self.trace_graph.graph)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
         self.g_nodes = list()
         self.global_count = 0
         self.name_to_gnode, self.input_to_gnode, self.output_to_gnode = self._build_graph()
-        #self.replaced_modules = dict()
 
     def _build_index_for_gnodes(self, g_nodes):
         """
+        Build indexes for quick search
+
+        Parameters
+        ----------
+        g_nodes : list of GNode
+            All the g_node in processed model graph
+
+        Returns
+        -------
+        dict
+            use name to index g_nodes, key: node name, value: g_node
+        dict
+            use input (its name) to index g_nodes,
+            key: input, value: list of g_nodes that take this input
+        dict
+            use output (its name) to index g_nodes,
+            key: output, value: g_node that generates this output
         """
         name_to_gnode = dict()
         input_to_gnode = dict()
@@ -82,23 +127,38 @@ class ModelSpeedup:
                 else:
                     input_to_gnode[_input] = [node]
             for output in node.outputs:
-                if output in output_to_gnode:
-                    print("output: ", output)
-                    print("gnode: ", output_to_gnode[output].name)
-                assert not output in output_to_gnode, "One output cannot be generated by multiple nodes"
+                assert not output in output_to_gnode, \
+                    "One output cannot be generated by multiple nodes"
                 output_to_gnode[output] = node
         return name_to_gnode, input_to_gnode, output_to_gnode
 
     def _expand_non_prim_node(self, node, nodes, input_to_node, output_to_node):
         """
+        For trace graph nodes, some nodes are not in modules, these nodes are usually generated by
+        the functions directly called in module ```forward```. For such nodes, some of them are
+        trivial op which are label by ```prim::```, some of them are not such ops which is call
+        non-prim ops. This function is to merge neighbor prim ops to a non-prim op, to construct
+        a GNode.
+
+        Parameters
+        ----------
+        node : trace graph node
+            The non-prim node to expand
+        nodes : list of trace graph node
+            All the trace graph nodes within the same scope as the non-prim node
+        input_to_node : dict
+            key: input name, value: a node that uses this input
+        output_to_node : dict
+            key: output name, value: a node that generates this output
+
+        Returns
+        -------
+        GNode
+            the expanded non-prim node in GNode format
         """
-        #print('^=' * 30)
-        #for n in nodes:
-        #    print(n)
-        #print('v=' * 30)
         # TODO: scope name could be empty
         node_name = '.'.join([node.scopeName(), node.kind(), str(self.global_count)])
-        print('node_name: ', node_name)
+        #print('node_name: ', node_name)
         self.global_count += 1
         op_type = node.kind()
 
@@ -110,11 +170,10 @@ class ModelSpeedup:
         while not node_queue.empty():
             curr_node = node_queue.get()
             for _input in curr_node.inputs():
-                print('_input: ', _input)
                 input_name = _input.debugName()
                 if input_name in output_to_node and output_to_node[input_name] in nodes:
                         predecessor_node = output_to_node[input_name]
-                        print("predecessor_node: ", predecessor_node)
+                        #print("predecessor_node: ", predecessor_node)
                         if predecessor_node.kind().startswith('prim::'):
                             node_group.append(predecessor_node)
                             node_queue.put(predecessor_node)
@@ -125,14 +184,21 @@ class ModelSpeedup:
         for output in node.outputs():
             outputs.append(output.debugName())
         g_node = GNode(node_name, 'func', op_type, inputs, outputs, node_group)
-        print('^' * 30)
-        for n in g_node.nodes:
-            print(n)
-        print('v' * 30)
         return g_node
 
     def _extract_shape_info(self, node):
         """
+        Extract the shape information of ```aten::view``` node
+
+        Parameters
+        ----------
+        node : trace graph node
+            It should be ```aten::view``` node
+
+        Returns
+        -------
+        dict
+            Include shape of input tensor and shape of output tensor
         """
         t_input = None
         for _input in node.inputs():
@@ -147,10 +213,25 @@ class ModelSpeedup:
 
     def _build_graph(self):
         """
+        Build graph using our defined format from jit trace.
+        There are basically three steps: first, construct necessary information (data structures),
+        second, extract all the modules to convert to GNode, Third, extract all functions to convert
+        to GNode.
+
+        Returns
+        -------
+        dict
+            use name to index g_nodes, key: node name, value: g_node
+        dict
+            use input (its name) to index g_nodes,
+            key: input, value: list of g_nodes that take this input
+        dict
+            use output (its name) to index g_nodes,
+            key: output, value: g_node that generates this output
         """
         graph = self.trace_graph.graph
-        #torch._C._jit_pass_inline(graph)
-        print(graph)
+        # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
+        #print(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
@@ -169,9 +250,6 @@ class ModelSpeedup:
         for output in graph.outputs():
             graph_outputs.append(output.debugName())
 
-        #print("graph_inputs: ", graph_inputs)
-        #print("graph_outputs: ", graph_outputs)
-
         for node in graph.nodes():
             # populate output_to_node and input_to_node
             for output in node.outputs():
@@ -188,7 +266,6 @@ class ModelSpeedup:
                 if scope_name == '':
                     continue
                 else:
-                    # TODO: there might be more than one funcs in scope_name
                     if scope_name in func_to_nodes:
                         func_to_nodes[scope_name].append(node)
                     else:
@@ -202,15 +279,7 @@ class ModelSpeedup:
                 else:
                     module_to_nodes[module_name] = [node]
 
-        print('xx' * 30)
-        for k in output_to_node:
-            print(k)
-        print('yy' * 30)
-
-        # for each module, find its inputs and outputs
-        # build module mapping, from module name to its inputs debugName and outputs debugName,
-        #module_to_inputs = dict()
-        #module_to_outputs = dict()
+        # construct GNode from module
         for module_name, nodes in module_to_nodes.items():
             inputs = set()
             outputs = set()
@@ -232,8 +301,6 @@ class ModelSpeedup:
                     m_inputs.append(_input)
                 elif not output_to_node[_input] in nodes:
                     m_inputs.append(_input)
-            #module_to_inputs[module_name] = m_inputs
-            #module_to_outputs[module_name] = m_outputs
             print("module node_name: ", module_name)
             if module_name == '':
                 for n in nodes:
@@ -259,34 +326,21 @@ class ModelSpeedup:
         # build index for g_nodes
         name_to_gnode, input_to_gnode, output_to_gnode = self._build_index_for_gnodes(self.g_nodes)
 
-        return name_to_gnode, input_to_gnode, output_to_gnode #output_to_node, input_to_node
-
-    '''def _do_module_replace(self, module_name, mask=None, in_shape=None, out_shape=None):
-        """
-        """
-        assert not module_name in self.replaced_modules
-        input_cmask = output_cmask = None
-        assert module_name in self.module_inputs, "module does not exist in trace graph"
-        if mask is not None:
-            assert in_shape is None and out_shape is None
-            super_module, leaf_module = get_module_by_name(self.bound_model, module_name)
-            m_type = self.module_to_type[module_name]
-            compressed_module, input_cmask, output_cmask = cms[m_type](leaf_module, mask)
-            setattr(super_module, module_name, compressed_module)
-
-        if in_shape is not None:
-            assert not module_name in self.masks
-            super_module, leaf_module = get_module_by_name(self.bound_model, module_name)
-            m_type = self.module_to_type[module_name]
-            compressed_module, input_cmask, output_cmask = cms_input[m_type](leaf_module, in_shape)
-
-        if out_shape is not None:
-            assert not module_name in self.masks
-            #...
-        return input_cmask, output_cmask'''
+        return name_to_gnode, input_to_gnode, output_to_gnode
 
     def _find_predecessors(self, module_name):
         """
+        Find predecessor GNode of the given GNode
+
+        Parameters
+        ----------
+        module_name : str
+            The name of the GNode
+
+        Returns
+        -------
+        list
+            a list of GNodes who are the given GNode's predecessor
         """
         predecessors = []
         for _input in self.name_to_gnode[module_name].inputs:
@@ -302,6 +356,17 @@ class ModelSpeedup:
 
     def _find_successors(self, module_name):
         """
+        Find successor GNodes of the given GNode
+
+        Parameters
+        ----------
+        module_name : str
+            The name of the GNode
+
+        Returns
+        -------
+        list
+            a list of GNodes who are the given GNode's successor
         """
         successors = []
         for output in self.name_to_gnode[module_name].outputs:
@@ -315,6 +380,16 @@ class ModelSpeedup:
 
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """
+        Parameters
+        ----------
+        module_name : str
+            The name of the GNode
+        mask : tensor of mask or ModuleMasks
+            Mask of the weights in this GNode (i.e., module)
+        in_shape : ModuleMasks
+            Input shape of this GNode
+        out_shape : ModuleMasks
+            Output shape of this GNode
         """
         input_cmask = output_cmask = None
         if module_name in self.inferred_masks:
@@ -324,10 +399,6 @@ class ModelSpeedup:
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.name_to_gnode[module_name].op_type
-        #if m_type == 'VGG':
-        #    print("VGG module name: ", module_name)
-        #    for node in self.name_to_gnode[module_name].nodes:
-        #        print(node)
         print("infer_module_mask: {}, module type: {}".format(module_name, m_type))
         if mask is not None:
             print("mask is not None")
@@ -359,19 +430,17 @@ class ModelSpeedup:
 
     def infer_modules_masks(self):
         """
+        Do mask and shape inference
         """
         for module_name, mask in self.masks.items():
             self.infer_module_mask(module_name, mask=mask)
 
     def replace_compressed_modules(self):
         """
+        Replace all the modules that are compressed
         """
         print('*' * 30)
         for module_name in self.inferred_masks:
-            #module_masks = self.inferred_masks[module_name]
-            #print(module_masks.param_masks)
-            #print(module_masks.input_mask)
-            #print(module_masks.output_mask)
             g_node = self.name_to_gnode[module_name]
             print(module_name, g_node.op_type)
             if g_node.type == 'module':
@@ -386,15 +455,14 @@ class ModelSpeedup:
 
     def speedup_model(self):
         """
+        There are basically two steps: first, do mask/shape inference,
+        second, replace modules
         """
-        #self.bound_model(self.dummy_input)
         print("start to compress")
         self.infer_modules_masks()
         self.replace_compressed_modules()
         print("finished compressing")
-        #for name, module in self.bound_model.named_modules():
-        #    print(name, module)
-        #self.bound_model(self.dummy_input)
+        # resume the model mode to that before the model is speed up
         if self.is_training:
             self.bound_model.train()
         else:
