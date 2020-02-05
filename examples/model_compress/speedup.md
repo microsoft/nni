@@ -1,5 +1,7 @@
 # Speedup Results
 
+This code only works on torch 1.3.1 and torchvision 0.4.2
+
 ## slim pruner example
 
 on one V100 GPU,
