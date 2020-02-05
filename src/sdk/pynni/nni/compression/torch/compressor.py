@@ -41,6 +41,7 @@ class Compressor:
         self.modules_to_compress = None
         self.modules_wrapper = None
         self.buffers = {}
+        self.is_wrapped = False
 
     def detect_modules_to_compress(self):
         """
@@ -63,6 +64,7 @@ class Compressor:
         """
         for wrapper in reversed(self.get_modules_wrapper()):
             _setattr(self.bound_model, wrapper.name, wrapper)
+        self.is_wrapped = True
 
     def _unwrap_model(self):
         """
@@ -71,6 +73,7 @@ class Compressor:
         """
         for wrapper in self.get_modules_wrapper():
             _setattr(self.bound_model, wrapper.name, wrapper.module)
+        self.is_wrapped = False
 
     def compress(self):
         """
@@ -263,7 +266,7 @@ class Pruner(Compressor):
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -291,9 +294,12 @@ class Pruner(Compressor):
             the configuration for generating the mask
         """
         _logger.info("compressing module %s.", layer.name)
-        return PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+        wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+        assert hasattr(layer.module, 'weight')
+        wrapper.to(layer.module.weight.device)
+        return wrapper
 
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
@@ -307,6 +313,9 @@ class Pruner(Compressor):
             (optional) path to save onnx model
         input_shape : list or tuple
             input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
         """
         # if self.detect_modules_to_compress() and not self.mask_dict:
         #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
@@ -335,12 +344,29 @@ class Pruner(Compressor):
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
+            if device is None:
+                device = torch.device('cpu')
             input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data, onnx_path)
+            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         self._wrap_model()
 
+    def load_model_state_dict(self, model_state):
+        """
+        Load the state dict saved from unwrapped model.
+
+        Parameters:
+        -----------
+        model_state : dict
+            state dict saved from unwrapped model
+        """
+        if self.is_wrapped:
+            self._unwrap_model()
+            self.bound_model.load_state_dict(model_state)
+            self._wrap_model()
+        else:
+            self.bound_model.load_state_dict(model_state)
 
 class QuantizerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, quantizer):

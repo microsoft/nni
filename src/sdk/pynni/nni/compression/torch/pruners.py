@@ -290,38 +290,23 @@ class LotteryTicketPruner(Pruner):
             prune_iterations = config['prune_iterations']
         return prune_iterations
 
-    def _print_masks(self, print_mask=False):
-        torch.set_printoptions(threshold=1000)
-        for op_name in self.mask_dict.keys():
-            mask = self.mask_dict[op_name]
-            print('op name: ', op_name)
-            if print_mask:
-                print('mask: ', mask)
-            # calculate current sparsity
-            mask_num = mask['weight'].sum().item()
-            mask_size = mask['weight'].numel()
-            print('sparsity: ', 1 - mask_num / mask_size)
-        torch.set_printoptions(profile='default')
-
     def _calc_sparsity(self, sparsity):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)
         curr_keep_ratio = keep_ratio_once ** self.curr_prune_iteration
         return max(1 - curr_keep_ratio, 0)
 
-    def _calc_mask(self, weight, sparsity, op_name):
+    def _calc_mask(self, weight, sparsity, curr_w_mask):
         if self.curr_prune_iteration == 0:
             mask = torch.ones(weight.shape).type_as(weight)
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            assert self.mask_dict.get(op_name) is not None
-            curr_mask = self.mask_dict.get(op_name)
-            w_abs = weight.abs() * curr_mask['weight']
+            w_abs = weight.abs() * curr_w_mask
             k = int(w_abs.numel() * curr_sparsity)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
         return {'weight': mask}
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Generate mask for the given ``weight``.
 
@@ -331,15 +316,17 @@ class LotteryTicketPruner(Pruner):
             The layer to be pruned
         config : dict
             Pruning configurations for this weight
+        kwargs : dict
+            Auxiliary information
 
         Returns
         -------
         tensor
-            The mask for this weight
+            The mask for this weight, it is ```None``` because this pruner
+            calculates and assigns masks in ```prune_iteration_start```,
+            no need to do anything in this function.
         """
-        assert self.mask_dict.get(layer.name) is not None, 'Please call iteration_start before training'
-        mask = self.mask_dict[layer.name]
-        return mask
+        return None
 
     def get_prune_iterations(self):
         """
@@ -364,16 +351,26 @@ class LotteryTicketPruner(Pruner):
             self.curr_prune_iteration += 1
         assert self.curr_prune_iteration < self.prune_iterations + 1, 'Exceed the configured prune_iterations'
 
+        modules_wrapper = self.get_modules_wrapper()
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
+            module_wrapper = None
+            for wrapper in modules_wrapper:
+                if wrapper.name == layer.name:
+                    module_wrapper = wrapper
+                    break
+            assert module_wrapper is not None
+
             sparsity = config.get('sparsity')
-            mask = self._calc_mask(layer.module.weight.data, sparsity, layer.name)
-            self.mask_dict.update({layer.name: mask})
-        self._print_masks()
+            mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
+            # TODO: directly use weight_mask is not good
+            module_wrapper.weight_mask.copy_(mask['weight'])
+            # there is no mask for bias
 
         # reinit weights back to original after new masks are generated
         if self.reset_weights:
-            self._model.load_state_dict(self._model_state)
+            # should use this member function to reset model weights
+            self.load_model_state_dict(self._model_state)
             self._optimizer.load_state_dict(self._optimizer_state)
             if self._lr_scheduler is not None:
                 self._lr_scheduler.load_state_dict(self._scheduler_state)
