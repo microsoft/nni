@@ -75,7 +75,9 @@ class DartsMutator(Mutator):
                     selected_multihot = []
                     for i, src_key in enumerate(mutable.choose_from):
                         if i not in topk_edge_indices and src_key in result:
-                            result[src_key] = torch.zeros_like(result[src_key])  # clear this choice to optimize calc graph
+                            # If an edge is never selected, there is no need to calculate any op on this edge.
+                            # This is to eliminate redundant calculation.
+                            result[src_key] = torch.zeros_like(result[src_key])
                         selected_multihot.append(i in topk_edge_indices)
                     result[mutable.key] = torch.tensor(selected_multihot, dtype=torch.bool, device=self.device())  # pylint: disable=not-callable
                 else:
