@@ -69,7 +69,7 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(traindataset, batch_size=60, shuffle=True, num_workers=10, drop_last=False)
     test_loader = torch.utils.data.DataLoader(testdataset, batch_size=60, shuffle=False, num_workers=10, drop_last=True)
 
-    device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = fc1()
     
     criterion = nn.CrossEntropyLoss()
