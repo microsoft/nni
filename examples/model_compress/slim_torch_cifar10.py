@@ -6,8 +6,6 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
-from nni.compression.speedup.torch import ModelSpeedup
-from nni.compression.torch import apply_compression_results
 
 def updateBN(model):
     for m in model.modules():
@@ -19,7 +17,6 @@ def train(model, device, train_loader, optimizer, sparse_bn=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
-        #print('data: ', data.size())
         optimizer.zero_grad()
         output = model(data)
         loss = F.cross_entropy(output, target)
@@ -96,10 +93,9 @@ def main():
 
     # Test base model accuracy
     print('=' * 10 + 'Test the original model' + '=' * 10)
-    #model.load_state_dict(torch.load('vgg19_cifar10.pth'))
-    #test(model, device, test_loader)
+    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
+    test(model, device, test_loader)
     # top1 = 93.60%
-    model.eval()
 
     # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
     configure_list = [{
