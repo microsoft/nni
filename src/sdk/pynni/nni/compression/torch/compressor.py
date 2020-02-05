@@ -299,7 +299,7 @@ class Pruner(Compressor):
         wrapper.to(layer.module.weight.device)
         return wrapper
 
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None):
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
@@ -313,6 +313,9 @@ class Pruner(Compressor):
             (optional) path to save onnx model
         input_shape : list or tuple
             input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
         """
         # if self.detect_modules_to_compress() and not self.mask_dict:
         #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
@@ -341,8 +344,10 @@ class Pruner(Compressor):
         if onnx_path is not None:
             assert input_shape is not None, 'input_shape must be specified to export onnx model'
             # input info needed
+            if device is None:
+                device = torch.device('cpu')
             input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data, onnx_path)
+            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         self._wrap_model()
