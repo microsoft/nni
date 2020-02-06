@@ -84,7 +84,7 @@ class AGP_Pruner(Pruner):
 
         super().__init__(model, config_list)
         self.now_epoch = 0
-        self.register_buffer("if_calculated", torch.tensor(0))
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
     def calc_mask(self, layer, config, **kwargs):
         """
@@ -123,7 +123,7 @@ class AGP_Pruner(Pruner):
         w_abs = weight.abs()
         threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
         new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
-        if_calculated.copy_(torch.tensor(1))
+        if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
 
         return new_mask
 
@@ -171,7 +171,7 @@ class AGP_Pruner(Pruner):
         if epoch > 0:
             self.now_epoch = epoch
             for wrapper in self.get_modules_wrapper():
-                wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0))
+                wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0)) # pylint: disable=not-callable
 
 class SlimPruner(Pruner):
     """

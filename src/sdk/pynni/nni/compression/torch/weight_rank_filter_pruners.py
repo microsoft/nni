@@ -27,7 +27,7 @@ class WeightRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.register_buffer("if_calculated", torch.tensor(0))
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
     def get_mask(self, base_mask, weight, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
@@ -69,7 +69,7 @@ class WeightRankFilterPruner(Pruner):
                 return mask
             mask = self.get_mask(mask, weight, num_prune)
         finally:
-            if_calculated.copy_(torch.tensor(1))
+            if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
 
@@ -258,4 +258,4 @@ class FPGMPruner(WeightRankFilterPruner):
 
     def update_epoch(self, epoch):
         for wrapper in self.get_modules_wrapper():
-            wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0))
+            wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0)) # pylint: disable=not-callable
