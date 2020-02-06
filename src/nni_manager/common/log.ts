@@ -4,13 +4,11 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { Writable } from 'stream';
 import { WritableStreamBuffer } from 'stream-buffers';
 import { format } from 'util';
 import * as component from '../common/component';
 import { getExperimentStartupInfo, isReadonly } from './experimentStartupInfo';
-import { getLogDir } from './utils';
 
 const FATAL: number = 1;
 const ERROR: number = 2;
@@ -55,24 +53,21 @@ class BufferSerialEmitter {
 
 @component.Singleton
 class Logger {
-    private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     private level: number = INFO;
-    private bufferSerialEmitter: BufferSerialEmitter;
-    private writable: Writable;
+    private bufferSerialEmitter?: BufferSerialEmitter;
+    private writable?: Writable;
     private readonly: boolean = false;
-    private foreground: boolean = false;
 
-    constructor(foreground: boolean, fileName?: string) {
+    constructor(fileName?: string) {
         let logFile: string | undefined = fileName;
-        if (logFile === undefined) {
-            logFile = this.DEFAULT_LOGFILE;
+        if (logFile) {
+            this.writable = fs.createWriteStream(logFile, {
+                flags: 'a+',
+                encoding: 'utf8',
+                autoClose: true
+            });
+            this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
         }
-        this.writable = fs.createWriteStream(logFile, {
-            flags: 'a+',
-            encoding: 'utf8',
-            autoClose: true
-        });
-        this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
 
         const logLevelName: string = getExperimentStartupInfo()
                                     .getLogLevel();
@@ -82,11 +77,12 @@ class Logger {
         }
 
         this.readonly = isReadonly();
-        this.foreground = foreground;
     }
 
     public close(): void {
-        this.writable.destroy();
+        if (this.writable) {
+            this.writable.destroy();
+        }
     }
 
     public trace(...param: any[]): void {
@@ -130,14 +126,15 @@ class Logger {
      */
     private log(level: string, param: any[]): void {
         if (!this.readonly) {
-            const buffer: WritableStreamBuffer = new WritableStreamBuffer();
             const logContent = `[${(new Date()).toLocaleString()}] ${level} ${format(param)}\n`;
-            buffer.write(logContent);
-            buffer.end();
-            if (this.foreground) {
+            if (this.writable && this.bufferSerialEmitter) {
+                const buffer: WritableStreamBuffer = new WritableStreamBuffer();
+                buffer.write(logContent);
+                buffer.end();
+                this.bufferSerialEmitter.feed(buffer.getContents());
+            } else {
                 console.log(logContent);
             }
-            this.bufferSerialEmitter.feed(buffer.getContents());
         }
     }
 }

@@ -6,6 +6,7 @@
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
@@ -71,8 +72,14 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
+    if (foreground) {
+        logFileName = undefined;
+    } else if (logFileName === undefined) {
+        logFileName = DEFAULT_LOGFILE;
+    }
     Container.bind(Logger).provider({
-        get: (): Logger => new Logger(foreground, logFileName)
+        get: (): Logger => new Logger(logFileName)
     });
     const ds: DataStore = component.get(DataStore);
 
