@@ -59,7 +59,7 @@ class Logger {
     private readonly: boolean = false;
 
     constructor(fileName?: string) {
-        let logFile: string | undefined = fileName;
+        const logFile: string | undefined = fileName;
         if (logFile) {
             this.writable = fs.createWriteStream(logFile, {
                 flags: 'a+',
