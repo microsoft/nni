@@ -246,7 +246,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
         # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            if mask is not None:
+            if mask is not None and 'bias' in mask:
                 self.bias_mask.copy_(mask['bias'])
             self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
@@ -565,4 +565,3 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
-    
