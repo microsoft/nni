@@ -380,6 +380,16 @@ class ModelSpeedup:
 
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """
+        Infer input shape / output shape based on the module's weight mask / input shape / output shape.
+        
+        For a module:
+            Infer its input and output shape from its weight mask
+            Infer its output shape from its input shape
+            Infer its input shape from its output shape
+
+        If its input shape is changed, continue infering its predecessors
+        If its output shape is changed, continue infering its successors
+
         Parameters
         ----------
         module_name : str
@@ -401,10 +411,10 @@ class ModelSpeedup:
         m_type = self.name_to_gnode[module_name].op_type
         print("infer_module_mask: {}, module type: {}".format(module_name, m_type))
         if mask is not None:
-            print("mask is not None")
+            #print("mask is not None")
             input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
-            print("in_shape is not None")
+            #print("in_shape is not None")
             if m_type == 'aten::view':
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
@@ -412,17 +422,17 @@ class ModelSpeedup:
             else:
                 output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
-            print("out_shape is not None")
+            #print("out_shape is not None")
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
-            print("input_cmask is not None")
+            #print("input_cmask is not None")
             predecessors = self._find_predecessors(module_name)
             for _module_name in predecessors:
                 print("input_cmask, module_name: ", _module_name)
                 self.infer_module_mask(_module_name, out_shape=input_cmask)
         if output_cmask:
-            print("output_cmask is not None")
+            #print("output_cmask is not None")
             successors = self._find_successors(module_name)
             for _module_name in successors:
                 print("output_cmask, module_name: ", _module_name)
@@ -430,16 +440,20 @@ class ModelSpeedup:
 
     def infer_modules_masks(self):
         """
-        Do mask and shape inference
+        Do shape inference of involved modules, including the shape of weights, inputs, output
         """
         for module_name, mask in self.masks.items():
             self.infer_module_mask(module_name, mask=mask)
 
     def replace_compressed_modules(self):
         """
-        Replace all the modules that are compressed
+        Replace all the modules that have changed (weights/inputs/output) shape.
+        The new module is created using the same arguments of the to-be-replaced module,
+        and correctly inherits its weights.
+
+        NOTE: ```func``` type cannot be replaced as it is not a module, thus, one limitation
+        is that ```func``` should be not required to be replaced.
         """
-        print('*' * 30)
         for module_name in self.inferred_masks:
             g_node = self.name_to_gnode[module_name]
             print(module_name, g_node.op_type)
@@ -449,19 +463,20 @@ class ModelSpeedup:
                 compressed_module = replace_module[m_type](leaf_module, self.inferred_masks[module_name])
                 setattr(super_module, module_name.split('.')[-1], compressed_module)
             elif g_node.type == 'func':
-                print("Cannot replace func...")
+                print("Warning: Cannot replace func...")
             else:
                 raise RuntimeError("Unsupported GNode type: {}".format(g_node.type))
 
     def speedup_model(self):
         """
-        There are basically two steps: first, do mask/shape inference,
+        There are basically two steps:
+        first, do mask/shape inference,
         second, replace modules
         """
-        print("start to compress")
+        #print("start to compress")
         self.infer_modules_masks()
         self.replace_compressed_modules()
-        print("finished compressing")
+        #print("finished compressing")
         # resume the model mode to that before the model is speed up
         if self.is_training:
             self.bound_model.train()
