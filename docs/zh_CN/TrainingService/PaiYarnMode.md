@@ -102,7 +102,7 @@ paiYarnConfig:
 ```
 nnictl create --config exp_paiYarn.yml
 ```
-来在 paiYarn 模式下启动 Experiment。 NNI 会为每个 Trial 创建 OpenPAIYarn 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAIYarn 集群的网站中看到 NNI 创建的作业，例如： ![](../../img/nni_paiYarn_joblist.jpg)
+来在 paiYarn 模式下启动 Experiment。 NNI 会为每个 Trial 创建 OpenPAIYarn 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAIYarn 集群的网站中看到 NNI 创建的作业，例如： ![](../../img/nni_pai_joblist.jpg)
 
 注意：paiYarn 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的 Trial 作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
