@@ -35,7 +35,7 @@ def test():
     for i in range(len(lcs)):
         #lc = []
         to_complete = True
-        for k in range(FLAGS.start_step):
+        for k in range(len(lcs[0])):
             #d = random.randint(i*100+0, i*100+100)
             #lc.append(d)
             ret = assessor.assess_trial(i, lcs[i][:k+1])
