@@ -48,12 +48,12 @@ Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if y
 
 Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 * cpuNum
-    * Required key. Should be positive number based on your trial program's CPU  requirement
+    * Optional key. Should be positive number based on your trial program's CPU  requirement. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
 * memoryMB
-    * Required key. Should be positive number based on your trial program's memory requirement
+    * Optional key. Should be positive number based on your trial program's memory requirement. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
 * image
-    * Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
+    * Optional key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
+    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
 * virtualCluster
     * Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
 * nniManagerNFSMountPath
@@ -61,7 +61,9 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
 * containerNFSMountPath
     * Required key. Set the mount path in your container used in PAI.
 * paiStoragePlugin
-    * Required key. Set the storage plugin name used in PAI.
+    * Optional key. Set the storage plugin name used in PAI. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+* paiConfigPath
+    * Optional key. Set the file path of pai job configuration, the file is in yaml format.
 
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
