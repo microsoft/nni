@@ -13,17 +13,17 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: pai
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -40,7 +40,7 @@ trial:
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
   paiStoragePlugin: team_wise
-# Configuration to access OpenPAI Cluster
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
   token: your_pai_token
@@ -52,12 +52,12 @@ paiConfig:
 与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 需要额外的配置：
 
 * cpuNum 
-    * Optional key. Should be positive number based on your trial program's CPU requirement. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+    * 可选。 Trial 程序的 CPU 需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * memoryMB 
-    * Optional key. Should be positive number based on your trial program's memory requirement. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+    * 可选。 Trial 程序的内存需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * image 
-    * Optional key. 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
-    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。 If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+    * 可选。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
+    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * virtualCluster 
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
 * nniManagerNFSMountPath 
@@ -65,9 +65,9 @@ paiConfig:
 * containerNFSMountPath 
     * 必填。 在 OpenPAI 的容器中设置挂载路径。
 * paiStoragePlugin 
-    * Optional key. 设置 PAI 中使用的存储插件的名称。 If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+    * 可选。 设置 PAI 中使用的存储插件的名称。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * paiConfigPath 
-    * Optional key. Set the file path of pai job configuration, the file is in yaml format.
+    * 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
