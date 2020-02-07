@@ -6,7 +6,7 @@
 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 ## 运行 Experiment
-以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist-tfv1` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
@@ -22,14 +22,14 @@ trainingServicePlatform: paiYarn
 # 搜索空间文件
 searchSpacePath: search_space.json
 # 可选项: true, false
-useAnnotation: true
+useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196

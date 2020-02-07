@@ -7,7 +7,7 @@ from schema import SchemaError
 from schema import Schema
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
                            FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
-from .common_utils import print_error, print_warning, print_normal
+from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -63,6 +63,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             expand_path(experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        expand_path(experiment_config['trial'], 'paiConfigPath')
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
@@ -94,6 +96,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content,
@@ -254,6 +258,45 @@ def validate_machine_list(experiment_config):
         print_error('Please set machineList!')
         exit(1)
 
+def validate_pai_config_path(experiment_config):
+    '''validate paiConfigPath field'''
+    if experiment_config.get('trainingServicePlatform') == 'pai':
+        if experiment_config.get('trial', {}).get('paiConfigPath'):
+            # validate the file format of paiConfigPath, ensure it is yaml format
+            pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
+            if experiment_config['trial'].get('image') is None:
+                if pai_config.get('prerequisites', [{}])[0].get('uri') is None:
+                    print_error('Please set image field, or set image uri in your own paiConfig!')
+                    exit(1)
+                experiment_config['trial']['image'] = pai_config['prerequisites'][0]['uri']
+            if experiment_config['trial'].get('gpuNum') is None:
+                if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('gpu') is None:
+                    print_error('Please set gpuNum field, or set resourcePerInstance gpu in your own paiConfig!')
+                    exit(1)
+                experiment_config['trial']['gpuNum'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['gpu']
+            if experiment_config['trial'].get('cpuNum') is None:
+                if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('cpu') is None:
+                    print_error('Please set cpuNum field, or set resourcePerInstance cpu in your own paiConfig!')
+                    exit(1)
+                experiment_config['trial']['cpuNum'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['cpu']
+            if experiment_config['trial'].get('memoryMB') is None:
+                if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('memoryMB', {}) is None:
+                    print_error('Please set memoryMB field, or set resourcePerInstance memoryMB in your own paiConfig!')
+                    exit(1)
+                experiment_config['trial']['memoryMB'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['memoryMB']
+            if experiment_config['trial'].get('paiStoragePlugin') is None:
+                if pai_config.get('extras', {}).get('com.microsoft.pai.runtimeplugin', [{}])[0].get('plugin') is None:
+                    print_error('Please set paiStoragePlugin field, or set plugin in your own paiConfig!')
+                    exit(1)
+                experiment_config['trial']['paiStoragePlugin'] = pai_config['extras']['com.microsoft.pai.runtimeplugin'][0]['plugin']
+        else:
+            pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin']
+            for trial_field in pai_trial_fields_required_list:
+                if experiment_config['trial'].get(trial_field) is None:
+                    print_error('Please set {0} in trial configuration,\
+                                or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
+                    exit(1)
+
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
     if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
@@ -269,6 +312,7 @@ def validate_pai_trial_conifg(experiment_config):
             print_warning(warning_information.format('dataDir'))
         if experiment_config.get('trial').get('outputDir'):
             print_warning(warning_information.format('outputDir'))
+        validate_pai_config_path(experiment_config)
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
