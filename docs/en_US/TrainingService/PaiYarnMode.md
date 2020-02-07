@@ -6,7 +6,7 @@ The original `pai` mode is modificated to `paiYarn` mode, which is a distributed
 Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
+Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's content is like:
 
 ```yaml
 authorName: your_name
@@ -22,14 +22,14 @@ trainingServicePlatform: paiYarn
 # search space file
 searchSpacePath: search_space.json
 # choice: true, false
-useAnnotation: true
+useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196

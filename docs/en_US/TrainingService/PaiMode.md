@@ -37,6 +37,7 @@ trial:
   virtualCluster: default
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
+  paiStoragePlugin: team_wise
 # Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
