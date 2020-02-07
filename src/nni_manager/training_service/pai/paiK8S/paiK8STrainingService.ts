@@ -44,6 +44,7 @@ import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 import { PAIJobRestServer } from '../paiJobRestServer';
 
 const yaml = require('js-yaml');
+const deepmerge = require('deepmerge');
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -189,7 +190,19 @@ class PAIK8STrainingService extends PAITrainingService {
             }
         }
 
-        return yaml.safeDump(paiJobConfig);
+        if (this.paiTrialConfig.paiConfigPath) {
+            try {
+                const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+                //deepmerge(x, y), if an element at the same key is present for both x and y, the value from y will appear in the result.
+                //refer: https://github.com/TehShrike/deepmerge
+                const overwriteMerge = (destinationArray: any, sourceArray: any, options: any) => sourceArray;
+                return yaml.safeDump(deepmerge(additionalPAIConfig, paiJobConfig, { arrayMerge: overwriteMerge }));
+            } catch (error) {
+                this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
+            }
+        } else {
+            return yaml.safeDump(paiJobConfig);
+        }
       }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
@@ -258,7 +271,7 @@ class PAIK8STrainingService extends PAITrainingService {
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
-
+        this.log.debug(paiJobConfig);
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
