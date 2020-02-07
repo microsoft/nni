@@ -1,10 +1,10 @@
 authorName: default
-experimentName: example_FashionMNIST-network-morphism
+experimentName: example_cifar10-network-morphism
 trialConcurrency: 1
 maxExecDuration: 24h
 maxTrialNum: 10
 #choice: local, remote, pai
-trainingServicePlatform: pai
+trainingServicePlatform: paiYarn
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -17,26 +17,23 @@ tuner:
     # for now, this tuner only supports cv domain
     task: cv
     #input image width
-    input_width: 28
+    input_width: 32
     #input image channel
-    input_channel: 1
+    input_channel: 3
     #number of classes
     n_output_node: 10
 trial:
-  command: python3 FashionMNIST_keras.py
+  command: python3 cifar10_keras.py
   codeDir: .
   gpuNum: 1
   cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
-  paiStoragePlugin: team_wise
-paiConfig:
+paiYarnConfig:
   #The username to login pai
   userName: username
-  #The token to login pai
-  token: token
+  #The password to login pai
+  passWord: password
   #The host of restful server of pai
   host: 10.10.10.10
