@@ -6,22 +6,22 @@
 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 ## 运行 Experiment
-Use `examples/trials/mnist-tfv1` as an example. NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist-tfv1` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai, paiYarn
+# 可选项: local, remote, pai, paiYarn
 trainingServicePlatform: paiYarn
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
@@ -34,7 +34,7 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# Configuration to access OpenpaiYarn Cluster
+# 配置访问的 OpenpaiYarn 集群
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
