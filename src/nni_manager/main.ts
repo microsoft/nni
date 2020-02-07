@@ -6,6 +6,7 @@
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
@@ -34,7 +35,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
-async function initContainer(platformMode: string, logFileName?: string): Promise<void> {
+async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
@@ -71,6 +72,12 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
+    if (foreground) {
+        logFileName = undefined;
+    } else if (logFileName === undefined) {
+        logFileName = DEFAULT_LOGFILE;
+    }
     Container.bind(Logger).provider({
         get: (): Logger => new Logger(logFileName)
     });
@@ -81,7 +88,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -89,6 +96,14 @@ if (!strPort || strPort.length === 0) {
     usage();
     process.exit(1);
 }
+
+const foregroundArg: string = parseArg(['--foreground', '-f']);
+if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+    console.log(`FATAL: foreground property should only be true or false`);
+    usage();
+    process.exit(1);
+}
+const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
 
 const port: number = parseInt(strPort, 10);
 
@@ -138,7 +153,7 @@ initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 mkDirP(getLogDir())
     .then(async () => {
     try {
-        await initContainer(mode);
+        await initContainer(foreground, mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
         const log: Logger = getLogger();
@@ -161,6 +176,15 @@ function getStopSignal(): any {
         return 'SIGTERM';
     }
 }
+
+function getCtrlCSignal(): any {
+    return 'SIGINT';
+}
+
+process.on(getCtrlCSignal(), async () => {
+    const log: Logger = getLogger();
+    log.info(`Get SIGINT signal!`);
+});
 
 process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();
