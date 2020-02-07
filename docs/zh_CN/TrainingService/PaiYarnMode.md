@@ -6,35 +6,35 @@
 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 ## 运行 Experiment
-以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
+Use `examples/trials/mnist-tfv1` as an example. NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# 并发运行的 Trial 数量
+# how many trials could be concurrently running
 trialConcurrency: 2
-# Experiment 的最长持续运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
-# 空表示一直运行
+# empty means never stop
 maxTrialNum: 100
-# 可选项: local, remote, pai, paiYarn
+# choice: local, remote, pai, paiYarn
 trainingServicePlatform: paiYarn
-# 搜索空间文件
+# search space file
 searchSpacePath: search_space.json
-# 可选项: true, false
-useAnnotation: true
+# choice: true, false
+useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# 配置访问的 OpenpaiYarn 集群
+# Configuration to access OpenpaiYarn Cluster
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
