@@ -27,5 +27,5 @@ trial:
   virtualCluster: nni
 paiYarnConfig:
   userName: your_account
-  passwd: your_passwd
+  passWord: your_passwd
   host: 0.0.0.0
