@@ -3,7 +3,33 @@
 NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
 ## Setup environment
-Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
+Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).  
+Step 2. Get PAI token.   
+Click `My profile` button in the top-right side of PAI's webprotal.
+![](../../img/pai_token_button.jpg)
+Find the token management region, copy one of the token as your account token.
+![](../../img/pai_token_profile.jpg)  
+Step 3. Mount NFS storage to local machine.  
+  Click `Submit job` button in PAI's webportal.
+![](../../img/pai_job_submission_page.jpg)  
+   Find the data management region in job submission page.
+![](../../img/pai_data_management_page.jpg)  
+The `DEFAULT_STORAGE`field is the path to be mounted in PAI's container when a job is started. The `Preview container paths` is the NFS host and path that PAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the PAI's NFS storage.  
+For example, use the following command:
+```
+sudo mount nfs://gcr-openpai-infra02:/pai/data /local/mnt
+```
+Then the `/data` folder in container will be mounted to `/local/mnt` folder in your local machine.  
+You could use the following configuration in your NNI's config file:
+```
+  nniManagerNFSMountPath: /local/mnt
+  containerNFSMountPath: /data
+```
+Step 4. Get PAI's storage plugin name.
+Contact PAI's admin, and get the PAI's storage plugin name for NFS storage. The default storage name is `teamwise_storage`, the configuration in NNI's config file is in following value:
+```
+paiStoragePlugin: teamwise_storage
+```
 
 ## Run an experiment
 Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
