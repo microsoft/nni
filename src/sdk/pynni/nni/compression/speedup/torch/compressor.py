@@ -370,9 +370,7 @@ class ModelSpeedup:
         """
         successors = []
         for output in self.name_to_gnode[module_name].outputs:
-            if not output in self.input_to_gnode:
-                print(output)
-            assert output in self.input_to_gnode
+            assert output in self.input_to_gnode, "No gnode with input {}".format(output)
             g_nodes = self.input_to_gnode[output]
             for g_node in g_nodes:
                 successors.append(g_node.name)

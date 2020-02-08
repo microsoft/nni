@@ -73,7 +73,8 @@ class CoarseMask:
             The member variable ```mask_index```
         """
         assert isinstance(cmask, CoarseMask)
-        assert len(self.mask_index) == len(cmask.mask_index)
+        assert len(self.mask_index) == len(cmask.mask_index), \
+            "Only masks with the same number of dimensions can be merged"
         for i, index in enumerate(self.mask_index):
             if index is None:
                 self.mask_index[i] = cmask.mask_index[i]
@@ -302,7 +303,7 @@ def relu_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     # TODO: double check this assert, is it possible that a module is passed twice
-    assert module_masks.input_mask is None
+    assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return mask
@@ -395,7 +396,8 @@ def conv2d_mask(module_masks, mask):
             bias_cmask = None
             if 'bias' in mask and mask['bias'] is not None:
                 bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
-                assert torch.all(torch.eq(index, bias_index))
+                assert torch.all(torch.eq(index, bias_index)), \
+                    "bias mask should be consistent with weight mask"
                 bias_cmask = CoarseMask(num_dim=1)
                 bias_cmask.add_index_mask(dim=0, index=bias_index)
             return index, weight_cmask, bias_cmask

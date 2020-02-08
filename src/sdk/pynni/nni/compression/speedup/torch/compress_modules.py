@@ -125,7 +125,7 @@ def replace_conv2d(conv, mask):
     if mask.input_mask is not None:
         tmp_weight_data = torch.index_select(conv.weight.data if tmp_weight_data is None else tmp_weight_data,
                                              1, in_channels_index)
-    assert tmp_weight_data is not None
+    assert tmp_weight_data is not None, "Conv2d weight should be updated based on masks"
     new_conv.weight.data.copy_(tmp_weight_data)
     if conv.bias is not None:
         print('final conv.bias is not None')

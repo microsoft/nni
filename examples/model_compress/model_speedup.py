@@ -13,23 +13,6 @@ use_mask = False
 
 def apoz_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
-    train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=True, download=True,
-                         transform=transforms.Compose([
-                             transforms.Pad(4),
-                             transforms.RandomCrop(32),
-                             transforms.RandomHorizontalFlip(),
-                             transforms.ToTensor(),
-                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-                         ])),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-        ])),
-        batch_size=200, shuffle=False)
-
     model = VGG(depth=16)
     model.to(device)
     model.eval()
@@ -59,23 +42,6 @@ def apoz_speedup(masks_file, model_checkpoint):
 
 def l1filter_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
-    train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=True, download=True,
-                         transform=transforms.Compose([
-                             transforms.Pad(4),
-                             transforms.RandomCrop(32),
-                             transforms.RandomHorizontalFlip(),
-                             transforms.ToTensor(),
-                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-                         ])),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-        ])),
-        batch_size=200, shuffle=False)
-
     model = VGG(depth=16)
     model.to(device)
     model.eval()
@@ -106,14 +72,6 @@ def l1filter_speedup(masks_file, model_checkpoint):
 def fpgm_speedup(masks_file, model_checkpoint):
     from fpgm_torch_mnist import Mnist
     device = torch.device('cpu')
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=True, download=True, transform=trans),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=False, transform=trans),
-        batch_size=1000, shuffle=True)
-
     model = Mnist()
     model.to(device)
     model.print_conv_filter_sparsity()
@@ -141,23 +99,6 @@ def fpgm_speedup(masks_file, model_checkpoint):
 
 def slim_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
-    train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=True, download=True,
-                         transform=transforms.Compose([
-                             transforms.Pad(4),
-                             transforms.RandomCrop(32),
-                             transforms.RandomHorizontalFlip(),
-                             transforms.ToTensor(),
-                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-                         ])),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-        ])),
-        batch_size=200, shuffle=False)
-
     model = VGG(depth=19)
     model.to(device)
     model.eval()
