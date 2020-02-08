@@ -4,12 +4,12 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 设置环境
 
-Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
+步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
-Step 2. Get PAI token.  
-Click `My profile` button in the top-right side of PAI's webprotal. ![](../../img/pai_token_button.jpg) Find the token management region, copy one of the token as your account token. ![](../../img/pai_token_profile.jpg)
+步骤 2. 获取 OpenPAI 的令牌。  
+点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_token_button.jpg) 找到 token management，复制当前账号的令牌。 ![](../../img/pai_token_profile.jpg)
 
-Step 3. Mount NFS storage to local machine.  
+步骤 3. Mount NFS storage to local machine.  
 Click `Submit job` button in PAI's webportal. ![](../../img/pai_job_submission_page.jpg)  
 Find the data management region in job submission page. ![](../../img/pai_data_management_page.jpg)  
 The `DEFAULT_STORAGE`field is the path to be mounted in PAI's container when a job is started. The `Preview container paths` is the NFS host and path that PAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the PAI's NFS storage.  
