@@ -4,7 +4,31 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 设置环境
 
-参考[指南](../Tutorial/QuickStart.md)安装 NNI。
+步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
+
+步骤 2. 获取 OpenPAI 的令牌。  
+点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_token_button.jpg) 找到 token management，复制当前账号的令牌。 ![](../../img/pai_token_profile.jpg)
+
+步骤 3. 将 NFS 存储挂载到本机。  
+点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
+在作业提交页面找到数据管理区域。 ![](../../img/pai_data_management_page.jpg)  
+`DEFAULT_STORAGE` 字段是在作业运行起来后，OpenPAI 容器中挂载的路径。 `Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
+例如，使用下列命令：
+
+    sudo mount nfs://gcr-openpai-infra02:/pai/data /local/mnt
+    
+
+然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
+然后在 NNI 的配置文件中如下配置：
+
+    nniManagerNFSMountPath: /local/mnt
+    containerNFSMountPath: /data
+    
+
+步骤 4. 获取 OpenPAI 存储插件名称。 联系 OpenPAI 管理员，获得 NFS 存储插件的名称。 默认存储的名称是 `teamwise_storage`，NNI 配置文件中的配置如下：
+
+    paiStoragePlugin: teamwise_storage
+    
 
 ## 运行 Experiment
 
