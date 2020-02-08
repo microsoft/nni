@@ -1,5 +1,5 @@
 ##########################
-Neural Architecture search
+Neural Architecture Search
 ##########################
 
 Automatic neural architecture search is taking an increasingly important role on finding better models.
