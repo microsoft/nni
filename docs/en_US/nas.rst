@@ -17,7 +17,8 @@ For details, please refer to the following tutorials:
 
 ..  toctree::
     Overview <NAS/Overview>
-    NAS Interface <NAS/NasInterface>
+    Guide <NAS/NasGuide>
+    API Reference <NAS/NasReference>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
     P-DARTS <NAS/PDARTS>
