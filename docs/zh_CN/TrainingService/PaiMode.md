@@ -9,23 +9,23 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 步骤 2. 获取 OpenPAI 的令牌。  
 点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_token_button.jpg) 找到 token management，复制当前账号的令牌。 ![](../../img/pai_token_profile.jpg)
 
-步骤 3. Mount NFS storage to local machine.  
-Click `Submit job` button in PAI's webportal. ![](../../img/pai_job_submission_page.jpg)  
-Find the data management region in job submission page. ![](../../img/pai_data_management_page.jpg)  
-The `DEFAULT_STORAGE`field is the path to be mounted in PAI's container when a job is started. The `Preview container paths` is the NFS host and path that PAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the PAI's NFS storage.  
-For example, use the following command:
+步骤 3. 将 NFS 存储挂载到本机。  
+点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
+在作业提交页面找到数据管理区域。 ![](../../img/pai_data_management_page.jpg)  
+`DEFAULT_STORAGE` 字段是在作业运行起来后，OpenPAI 容器中挂载的路径。 `Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
+例如，使用下列命令：
 
     sudo mount nfs://gcr-openpai-infra02:/pai/data /local/mnt
     
 
-Then the `/data` folder in container will be mounted to `/local/mnt` folder in your local machine.  
-You could use the following configuration in your NNI's config file:
+然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
+然后在 NNI 的配置文件中如下配置：
 
     nniManagerNFSMountPath: /local/mnt
     containerNFSMountPath: /data
     
 
-Step 4. Get PAI's storage plugin name. Contact PAI's admin, and get the PAI's storage plugin name for NFS storage. The default storage name is `teamwise_storage`, the configuration in NNI's config file is in following value:
+步骤 4. 获取 OpenPAI 存储插件名称。 联系 OpenPAI 管理员，获得 NFS 存储插件的名称。 The default storage name is `teamwise_storage`, the configuration in NNI's config file is in following value:
 
     paiStoragePlugin: teamwise_storage
     
