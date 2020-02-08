@@ -2,9 +2,6 @@
 Neural Network Intelligence
 ###########################
 
-********
-Contents
-********
 
 ..  toctree::
     :caption: Table of Contents
@@ -14,7 +11,7 @@ Contents
     Overview
     Installation <installation>
     QuickStart <Tutorial/QuickStart>
-    Hyper-parameter Tuning <hyperparameter_tune>
+    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
     Neural Architecture Search <nas>
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
