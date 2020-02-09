@@ -2,6 +2,8 @@ References
 ==================
 
 ..  toctree::
+    :maxdepth: 2
+
     nnictl Commands <Tutorial/Nnictl>
     Experiment Configuration <Tutorial/ExperimentConfig>
     Search Space <Tutorial/SearchSpaceSpec>
