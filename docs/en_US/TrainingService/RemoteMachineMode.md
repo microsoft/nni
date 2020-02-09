@@ -4,9 +4,9 @@ NNI can run one experiment on multiple remote machines through SSH, called `remo
 
 ## Remote machine requirements
 
-* It only supports Linux as remote machines, and [linux part in system specification](../Tutorial/Installation.md) is same as NNI local mode.
+* It only supports Linux as remote machines, and [linux part in system specification](../Tutorial/InstallationLinux.md) is same as NNI local mode.
 
-* Follow [installation](../Tutorial/Installation.md) to install NNI on each machine.
+* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on each machine.
 
 * Make sure remote machines meet environment requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
 
