@@ -1,5 +1,44 @@
 # 更改日志
 
+## 发布 1.3 - 12/30/2019
+
+### 主要功能
+
+#### 支持神经网络架构搜索算法
+
+* [单路径一次性](https://github.com/microsoft/nni/tree/v1.3/examples/nas/spos/)算法和示例
+
+#### 模型压缩算法支持
+
+* [知识蒸馏](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/TrialExample/KDExample.md)算法和使用示例
+* Pruners 
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer)
+
+#### 训练平台
+
+* OpenPAI 的 NFS 支持
+    
+    从 OpenPAI v0.11开始，HDFS 不再用作默认存储，可将 NFS、AzureBlob 或其他存储用作默认存储。 在本次版本中，NNI 扩展了对 OpenPAI 最近改动的支持，可与 OpenPAI v0.11 及后续版本的默认存储集成。
+
+* Kubeflow 更新适配
+    
+    适配 Kubeflow 0.7 对 tf-operator 的新支持。
+
+### 工程（代码和生成自动化）
+
+* 启用 [ESLint](https://eslint.org/) 静态代码分析。
+
+### 小改动和 Bug 修复
+
+* 正确识别内置 Tuner 和定制 Tuner
+* Dispatcher 基类的日志
+* 修复有时 Tuner、Assessor 的失败会终止 Experiment 的 Bug。
+* 修复本机作为远程计算机的[问题](https://github.com/microsoft/nni/issues/1852)
+* SMAC Tuner 中 Trial 配置的去重 [ticket](https://github.com/microsoft/nni/issues/1364)
+
 ## 发布 1.2 - 12/02/2019
 
 ### 主要功能
@@ -30,7 +69,7 @@
 - 文档 
   - 改进了 NNI API 文档，增加了更多的 docstring。
 
-### 修复的 Bug
+### Bug 修复
 
 - 修复当失败的 Trial 没有指标时，表格的排序问题。 -Issue #1773
 - 页面切换时，保留选择的（最大、最小）状态。 -PR#1710
@@ -42,14 +81,14 @@
 ### 主要功能
 
 * 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
-* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/Nnictl.md#view)
+* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/Nnictl.md#view)
 * Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
 * 改进 WEB 界面 
   - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）
   - 优化大型 Experiment 的显示性能
 - 更多示例 
   - [EfficientNet PyTorch 示例](https://github.com/ultmaster/EfficientNet-PyTorch)
-  - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README_zh_CN.md)
+  - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
 - [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或更多贡献
 
 ### 修复的 Bug
@@ -62,26 +101,28 @@
 ### 主要功能
 
 * Tuners 和 Assessors
-  
-    - 支持自动特征生成和选择 -Issue#877 -PR #1387 + 提供自动特征接口 + 基于 Beam 搜索的 Tuner + [添加 Pakdd 示例](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
-    - 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
-    - 为 hyperband 支持多阶段 -PR #1257
-- 训练平台
-  
-    -      支持私有 Docker Registry -PR #755
-        
     
-    * 改进
-    * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
-    * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
-    * 优化 NAS 搜索空间 -PR #1393 
+    - 支持自动特征生成和选择 -Issue#877 -PR #1387 
+        + 提供自动特征接口
+        + 基于 Beam 搜索的 Tuner
+        + [增加 Pakdd 示例](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
+    + 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
+    + 为 hyperband 支持多阶段 -PR #1257
++ 训练平台
+    
+    - 支持私有 Docker Registry -PR #755
+        
+        * 改进
+        * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
+        * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
+        * 优化 NAS 搜索空间 -PR #1393 
          + 使用 _type 统一 NAS 搜索空间 -- "mutable_type"e
          + 更新随机搜索 Tuner
-    + 将 gpuNum 设为可选 -Issue #1365
-    + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
-    + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
+        + 将 gpuNum 设为可选 -Issue #1365
+        + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
+        + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
 + Web 门户和用户体验
-  
+    
     - 在 Web 界面的搜索过程中显示最好指标的曲线 -Issue #1218
     - 在多阶段 Experiment 中，显示参数列表的当前值 -Issue1210 -PR #1348
     - 在 AddColumn 中增加 "Intermediate count" 选项。 -Issue #1210
@@ -90,12 +131,13 @@
     - 在命令行中为 nnictl 命令增加详细文档的连接 -Issue #1260
     - 用户体验改进：显示 Error 日志 -Issue #1173
 - 文档
-  
+    
     - 更新文档结构 -Issue #1231
-    - [多阶段文档的改进](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + 增加配置示例
-    - [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
+    - [多阶段文档的改进](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 
+        + 添加配置示例
+    + [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
 
-### 修复的 Bug
+### Bug 修复
 
 * (Bug 修复)修复 0.9 版本中的链接 -Issue #1236
 * (Bug 修复)自动完成脚本
@@ -116,20 +158,22 @@
 
 ### 主要功能
 
-* 通用 NAS 编程接口 
+* 生成 NAS 编程接口 
     * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
 * 支持多阶段 Experiment
-  
+    
     * 为多阶段 Experiment 增加新的训练平台：pai 模式从 v0.9 开始支持多阶段 Experiment。
-    * 为以下内置 Tuner 增加多阶段的功能： 
-      * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
-  
-    有关详细信息，参考[实现多阶段的 Tuner](AdvancedFeature/MultiPhase.md)。
+    *     为以下内置 Tuner 增加多阶段的功能： 
+            
+        
+        * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
+        
+        有关详细信息，参考[实现多阶段的 Tuner](AdvancedFeature/MultiPhase.md)。
 
 * Web 界面
-  
+    
     * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
     * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](Tutorial/WebUI.md)
     * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
@@ -158,7 +202,7 @@
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * 支持 Kubeflow v1beta2 操作符 
   * 支持 Kubeflow TFJob/PyTorchJob v1beta2
-* [通用 NAS 编程接口](AdvancedFeature/GeneralNasInterfaces.md) 
+* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/zh_CN/GeneralNasInterfaces.md) 
   * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
   * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
   * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
@@ -274,10 +318,10 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](Assessor/CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
-* 进一步支持 [Weight Sharing（权重共享）](AdvancedFeature/AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
+* [权重共享的](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md)高级支持：为 NAS Tuner 提供权重共享，当前支持 NFS。
 
 #### 改进训练平台
 
@@ -361,12 +405,12 @@
 ### NNICTL 的新功能和更新
 
 * 支持同时运行多个 Experiment。
-  
+    
     在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
-  
-  ```bash
-  nnictl create --port 8081 --config <config file path>
-  ```
+    
+    ```bash
+    nnictl create --port 8081 --config <config file path>
+    ```
 
 * 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Tutorial/Nnictl.md) 查看完整帮助。
 
@@ -375,15 +419,15 @@
 * <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的示例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新示例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
 * 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
-  
-  ```bash
-  git clone -b v0.3 https://github.com/microsoft/nni.git
-  ```
+    
+    ```bash
+    git clone -b v0.3 https://github.com/microsoft/nni.git
+    ```
 
 * **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
-  
+    
     可用类型：
-  
+    
   * int
   * float
   * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
@@ -394,11 +438,11 @@
 
 ### 新示例
 
-* 公共的 NNI Docker 映像：
-  
-  ```bash
-  docker pull msranni/nni:latest
-  ```
+* 公开的 NNI Docker 映像：
+    
+    ```bash
+    docker pull msranni/nni:latest
+    ```
 
 * 新的 Trial 示例：[NNI Sklearn 示例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 

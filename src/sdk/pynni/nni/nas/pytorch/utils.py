@@ -20,6 +20,14 @@ def global_mutable_counting():
     return _counter
 
 
+def _reset_global_mutable_counting():
+    """
+    Reset the global mutable counting to count from 1. Useful when defining multiple models with default keys.
+    """
+    global _counter
+    _counter = 0
+
+
 def to_device(obj, device):
     """
     Move a tensor, tuple, list, or dict onto device.
