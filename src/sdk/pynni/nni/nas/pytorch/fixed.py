@@ -58,16 +58,16 @@ def _encode_tensor(data):
     return data
 
 
-def apply_fixed_architecture(model, fixed_arc_path):
+def apply_fixed_architecture(model, fixed_arc):
     """
-    Load architecture from `fixed_arc_path` and apply to model.
+    Load architecture from `fixed_arc` and apply to model.
 
     Parameters
     ----------
     model : torch.nn.Module
         Model with mutables.
-    fixed_arc_path : str
-        Path to the JSON that stores the architecture.
+    fixed_arc : str or dict
+        Path to the JSON that stores the architecture, or dict that stores the exported architecture.
 
     Returns
     -------
@@ -75,8 +75,8 @@ def apply_fixed_architecture(model, fixed_arc_path):
         Mutator that is responsible for fixes the graph.
     """
 
-    if isinstance(fixed_arc_path, str):
-        with open(fixed_arc_path, "r") as f:
+    if isinstance(fixed_arc, str):
+        with open(fixed_arc) as f:
             fixed_arc = json.load(f)
     fixed_arc = _encode_tensor(fixed_arc)
     architecture = FixedArchitecture(model, fixed_arc)

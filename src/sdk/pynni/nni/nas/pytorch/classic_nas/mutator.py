@@ -68,6 +68,13 @@ class ClassicMutator(Mutator):
         else:
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
+            if self._chosen_arch is None:
+                if trial_env_vars.NNI_PLATFORM == "unittest":
+                    # happens if NNI_PLATFORM is intentionally set, e.g., in UT
+                    logger.warning("`NNI_PLATFORM` is set but `param` is None. Falling back to standalone mode.")
+                    self._chosen_arch = self._standalone_generate_chosen()
+                else:
+                    raise RuntimeError("Chosen architecture is None. This may be a platform error.")
         self.reset()
 
     def _sample_layer_choice(self, mutable, idx, value, search_space_item):
@@ -169,6 +176,8 @@ class ClassicMutator(Mutator):
             elif val["_type"] == INPUT_CHOICE:
                 choices = val["_value"]["candidates"]
                 n_chosen = val["_value"]["n_chosen"]
+                if n_chosen is None:
+                    n_chosen = len(choices)
                 chosen_arch[key] = {"_value": choices[:n_chosen], "_idx": list(range(n_chosen))}
             else:
                 raise ValueError("Unknown key '%s' and value '%s'." % (key, val))
