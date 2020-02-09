@@ -1,12 +1,3 @@
-.close {
-  button,
-  button:active,
-  button:hover {
-    background-color: #212121;
-    color: #fff;
-    border: none;
-  }
-}
 .download {
   button,
   button:active,
@@ -21,17 +12,12 @@
     margin-left: 10px;
     display: none;
   }
-  /* log manager|dispatcher log tab */
-  .ms-Pivot-link{
-    color: #fff;
-    background-color: #333;
-  }
 }
 
 /* office-fabric-ui */
 .ms-Panel-main {
   width: 55%;
-  background: #333;
+  background: #fff;
 }
 
 /* log drawer download & close button's row */

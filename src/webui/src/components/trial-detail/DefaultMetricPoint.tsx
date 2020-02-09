@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Toggle, Stack } from 'office-ui-fabric-react';
 import ReactEcharts from 'echarts-for-react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { Trial } from '../../static/model/trial'; // eslint-disable-line no-unused-vars
-import { TooltipForAccuracy, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { Trial } from '../../static/model/trial';
+import { TooltipForAccuracy, EventMap } from '../../static/interface';
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -37,7 +37,7 @@ interface DefaultPointState {
 class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState> {
     constructor(props: DefaultPointProps) {
         super(props);
-        this.state = { 
+        this.state = {
             bestCurveEnabled: false,
             startY: 0, // dataZoomY
             endY: 100
@@ -70,7 +70,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: Array<number>, data: TooltipForAccuracy): number[] => (
+                position: (point: number[], data: TooltipForAccuracy): number[] => (
                     [(data.data[0] < maxSequenceId ? point[0] : (point[0] - 300)), 80]
                 ),
                 formatter: (data: TooltipForAccuracy): React.ReactNode => (
@@ -148,28 +148,26 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
         return (
             <div>
-                <div className="default-metric">
-                    <Stack horizontalAlign="end">
-                        {/* <span className="bold">Optimization curve</span>
-                        <Switch defaultChecked={false} onChange={this.loadDefault} /> */}
-                        <Toggle label="Optimization curve"
-                            inlineLabel
-                            onChange={this.loadDefault}
-                        />
-                    </Stack>
+                <Stack horizontalAlign="end" className="default-metric">
+                    <Toggle label="Optimization curve"
+                        inlineLabel
+                        onChange={this.loadDefault}
+                    />
+                </Stack>
+                <div className="default-metric-graph">
+                    <ReactEcharts
+                        option={graph}
+                        style={{
+                            width: '100%',
+                            height: 402,
+                            margin: '0 auto',
+                        }}
+                        theme="my_theme"
+                        notMerge={true} // update now
+                        onEvents={onEvents}
+                    />
+                    <div className="default-metric-noData">{accNodata}</div>
                 </div>
-                <ReactEcharts
-                    option={graph}
-                    style={{
-                        width: '100%',
-                        height: 402,
-                        margin: '0 auto',
-                    }}
-                    theme="my_theme"
-                    notMerge={true} // update now
-                    onEvents={onEvents}
-                />
-                <div className="showMess">{accNodata}</div>
             </div>
         );
     }

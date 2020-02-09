@@ -231,52 +231,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         }
     }
 
-    // will add it later. [graph is not render when add this component]
-    // shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
-    //     const { whichGraph, source } = nextProps;
-    //     const beforeGraph = this.props.whichGraph;
-    //     if (whichGraph === '4') {
-    //         const { isFilter, length, clickCounts } = nextState;
-    //         const beforeLength = this.state.length;
-    //         const beforeSource = this.props.source;
-    //         const beforeClickCounts = this.state.clickCounts;
-
-    //         if (isFilter !== this.state.isFilter) {
-    //             return true;
-    //         }
-
-    //         if (clickCounts !== beforeClickCounts) {
-    //             return true;
-    //         }
-
-    //         if (isFilter === false) {
-    //             if (whichGraph !== beforeGraph) {
-    //                 return true;
-    //             }
-    //             if (length !== beforeLength) {
-    //                 return true;
-    //             }
-    //             if (beforeSource.length !== source.length) {
-    //                 return true;
-    //             }
-    //             if (beforeSource[beforeSource.length - 1] !== undefined) {
-    //                 if (source[source.length - 1].description.intermediate.length !==
-    //                     beforeSource[beforeSource.length - 1].description.intermediate.length) {
-    //                     return true;
-    //                 }
-    //                 if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-    //                     return true;
-    //                 }
-    //                 if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-    //                     return true;
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     return false;
-    // }
-
     render(): React.ReactNode {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
         const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };

@@ -3,13 +3,27 @@ $bg: #b3b3b3;
     .ms-Pivot{
         .ms-Button{
             padding: 0;
+            /* reset fabric style */
+            margin-right: 0;
             border-right: 2px solid #fff;
+            transition: 0.3s;
 
             &:hover{
                 background-color: $bg;
             }
             .ms-Button-flexContainer{
                 background-color: $bg;
+            }
+        }
+
+        .ms-Pivot-link::before{
+            height: 0;
+        }
+        
+        .is-selected{
+            background: #999;
+            &:hover{
+                background: #999;
             }
         }
     }
@@ -25,10 +39,6 @@ $bg: #b3b3b3;
         font-weight: 600;
     }
 
-    /*.is-selected{
-        background-color: red !important;
-        border: none !important;
-    }*/
 }
 
 .trial{
@@ -75,12 +85,16 @@ $bg: #b3b3b3;
     width: 90%;
     text-align: right;
     margin-top: 15px;
-    .position{
+
+    &-graph{
+        position: relative;
+    }
+
+    &-noData{
+        position: absolute;
+        left: 48%;
+        top: 30%;
         color: #333;
-        .bold{
-                font-weight: 600;
-                margin-right: 10px;
-            }
     }
 }
 
@@ -111,6 +125,8 @@ $bg: #b3b3b3;
 .detail-table{
     .ms-Button{
         padding: 0;
+        height: 26px;
+        margin-top: -2px;
         span{
             padding: 0;
         }

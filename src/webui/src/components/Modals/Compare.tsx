@@ -23,7 +23,7 @@ class Compare extends React.Component<CompareProps, {}> {
     intermediate = (): React.ReactNode => {
         const { compareStacks } = this.props;
         const trialIntermediate: Array<Intermedia> = [];
-        const idsList: Array<string> = [];
+        const idsList: string[] = [];
         compareStacks.forEach(element => {
             const trial = TRIALS.getTrial(element.id);
             trialIntermediate.push({
@@ -36,10 +36,10 @@ class Compare extends React.Component<CompareProps, {}> {
         });
         // find max intermediate number
         trialIntermediate.sort((a, b) => { return (b.data.length - a.data.length); });
-        const legend: Array<string> = [];
+        const legend: string[] = [];
         // max length
         const length = trialIntermediate[0] !== undefined ? trialIntermediate[0].data.length : 0;
-        const xAxis: Array<number> = [];
+        const xAxis: number[] = [];
         trialIntermediate.forEach(element => {
             legend.push(element.name);
         });
@@ -50,7 +50,7 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: function (point: Array<number>, data: TooltipForIntermediate): number[] {
+                position: function (point: number[], data: TooltipForIntermediate): number[] {
                     if (data.dataIndex < length / 2) {
                         return [point[0], 80];
                     } else {

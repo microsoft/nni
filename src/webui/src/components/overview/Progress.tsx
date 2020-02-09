@@ -6,8 +6,8 @@ import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { convertTime } from '../../static/function';
 import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
-import LogDrawer from '../Modal/LogDrawer';
-import MessageInfo from '../Modal/MessageInfo';
+import LogDrawer from '../Modals/LogDrawer';
+import MessageInfo from '../Modals/MessageInfo';
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 interface ProgressProps {
@@ -35,9 +35,9 @@ const styles = mergeStyleSets({
         verticalAlign: 'top',
         display: 'inline-block',
         textAlign: 'center',
-        margin: '0 100px',
-        minWidth: 130,
-        height: 32
+        // margin: '0 100px',
+        minWidth: 30,
+        height: 30
     },
     callout: {
         maxWidth: 300
@@ -97,6 +97,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
     hideSucceedInfo = (): void => {
         this.setState(() => ({ isShowSucceedInfo: false }));
     }
+    
     /**
      * info: message content
      * typeInfo: message type: success | error...
@@ -186,7 +187,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 <Stack className="basic lineBasic">
                     <p>Status</p>
                     <Stack horizontal className="status">
-                        <span className={EXPERIMENT.status}>{EXPERIMENT.status}</span>
+                        <span className={`${EXPERIMENT.status} status-text`}>{EXPERIMENT.status}</span>
                         {
                             EXPERIMENT.status === 'ERROR'
                                 ?
@@ -209,9 +210,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             setInitialFocus={true}
                                         >
                                             <div className={styles.header}>
-                                                <p className={styles.title} id={this._labelId}>
-                                                    All of your favorite people
-                                                </p>
+                                                <p className={styles.title} id={this._labelId}>Error</p>
                                             </div>
                                             <div className={styles.inner}>
                                                 <p className={styles.subtext} id={this._descriptionId}>

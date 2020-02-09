@@ -14,8 +14,8 @@ interface ParaState {
     // paraSource: Array<TableObj>;
     option: object;
     paraBack: ParaObj;
-    dimName: Array<string>;
-    swapAxisArr: Array<string>;
+    dimName: string[];
+    swapAxisArr: string[];
     percent: number;
     paraNodata: string;
     max: number; // graph color bar limit
@@ -218,7 +218,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         } else {
             for (i; i < dimName.length; i++) {
                 const searchKey = searchRange[dimName[i]];
-                const data: Array<string> = [];
+                const data: string[] = [];
                 let j = 0;
                 switch (searchKey._type) {
                     case 'choice':
@@ -590,33 +590,6 @@ class Para extends React.Component<ParaProps, ParaState> {
             this.hyperParaPic(dataSource, expSearchSpace);
         }
     }
-
-    // shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState): boolean {
-
-    //     const { whichGraph } = nextProps;
-    //     const beforeGraph = this.props.whichGraph;
-    //     if (whichGraph === '2') {
-    //         if (whichGraph !== beforeGraph) {
-    //             return true;
-    //         }
-
-    //         const { sutrialCount, clickCounts, succeedRenderCount } = nextState;
-    //         const beforeCount = this.state.sutrialCount;
-    //         const beforeClickCount = this.state.clickCounts;
-    //         const beforeRealRenderCount = this.state.succeedRenderCount;
-    //         if (sutrialCount !== beforeCount) {
-    //             return true;
-    //         }
-    //         if (succeedRenderCount !== beforeRealRenderCount) {
-    //             return true;
-    //         }
-
-    //         if (clickCounts !== beforeClickCount) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
 
     render(): React.ReactNode {
         const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;

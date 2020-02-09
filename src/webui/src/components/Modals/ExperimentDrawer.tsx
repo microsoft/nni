@@ -2,7 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { downFile } from '../../static/function';
 import {
-    Stack, PrimaryButton, Panel, StackItem, Pivot, PivotItem
+    Stack, PrimaryButton, DefaultButton, Panel, StackItem, Pivot, PivotItem
 } from 'office-ui-fabric-react';
 import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
@@ -124,7 +124,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                                     />
                                 </StackItem>
                                 <StackItem grow={50} className="close">
-                                    <PrimaryButton
+                                    <DefaultButton
                                         text="Close"
                                         onClick={closeExpDrawer}
                                     />

@@ -1,6 +1,4 @@
-import {
-    getTheme, mergeStyleSets, FontWeights, FontSizes
-} from 'office-ui-fabric-react';
+import { getTheme, mergeStyleSets, FontWeights, FontSizes } from 'office-ui-fabric-react';
 // Themed styles for the example.
 const theme = getTheme();
 const contentStyles = mergeStyleSets({

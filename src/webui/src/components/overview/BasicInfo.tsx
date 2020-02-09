@@ -35,11 +35,13 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                     <p>Log directory</p>
                     <div className="nowrap">
                         <TooltipHost
-                            content={EXPERIMENT.profile.logDir || ''}
+                            // Tooltip message content 
+                            content={EXPERIMENT.profile.logDir || 'unknown'}
                             id={this._hostId}
                             calloutProps={{ gapSpace: 0 }}
                             styles={{ root: { display: 'inline-block' } }}
                         >
+                            {/* show logDir */}
                             {EXPERIMENT.profile.logDir || 'unknown'}
                         </TooltipHost>
                     </div>

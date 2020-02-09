@@ -2,11 +2,17 @@
 $color: #0071bc;
 /* bg light grey */
 $bgColor: #f2f2f2;
-.openRowContent{
-    min-width: 150px;
+.openRow{
+    width: 100%;
     background-color: $bgColor;
-    margin: 10px 0 0 45px;
-    padding-bottom: 10px;
+    margin-bottom: 10px;
+
+    &Content{
+        width: 91%;
+        margin: 0 auto;
+        min-height: 150px;
+        padding-bottom: 10px;
+    }
 }
 
 .trialLog{
@@ -14,12 +20,7 @@ $bgColor: #f2f2f2;
     color: #212121;
 }
 #trialLogContent{
-    .ant-input-disabled{
-        color: #212121;
-        background-color: #fff;
-        cursor: pointer;
-        border: none;
-    }
+
     .logcontent{
         height: 100%;
     }
@@ -29,10 +30,11 @@ $bgColor: #f2f2f2;
     padding: 0 10px;
     .bgHyper ul{
         background-color: #fff !important;
-        margin-bottom: 12px;
+        padding: 3px 0 5px 0 !important;
         font-size: 14px;
     }
     .copy{
+        margin-top: 3px;
         Button{
             background-color: #ccc;
             color: #191919;

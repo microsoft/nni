@@ -74,7 +74,10 @@ class Duration extends React.Component<DurationProps, DurationState> {
             yAxis: {
                 name: 'Trial No.',
                 type: 'category',
-                data: trialId
+                data: trialId,
+                nameTextStyle: {
+                    padding: [0, 0, 0, 30]
+                }
             },
             series: [{
                 type: 'bar',
@@ -96,7 +99,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 bottom: '3%',
                 containLabel: true,
                 left: '1%',
-                right: '4%'
+                right: '5%'
             },
             dataZoom: [
                 {
@@ -115,7 +118,10 @@ class Duration extends React.Component<DurationProps, DurationState> {
             yAxis: {
                 name: 'Trial',
                 type: 'category',
-                data: dataObj.trialId
+                data: dataObj.trialId,
+                nameTextStyle: {
+                    padding: [0, 0, 0, 30]
+                }
             },
             series: [{
                 type: 'bar',
@@ -188,7 +194,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
             <div>
                 <ReactEcharts
                     option={durationSource}
-                    style={{ width: '95%', height: 412, margin: '0 auto', marginTop: 15 }}
+                    style={{ width: '94%', height: 412, margin: '0 auto', marginTop: 15 }}
                     theme="my_theme"
                     notMerge={true} // update now
                     onEvents={onEvents}

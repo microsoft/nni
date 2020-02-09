@@ -117,15 +117,14 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
     })
         .then(res => {
             if (res.status === 200) {
-                // message.destroy();
-                // message.success('Cancel the job successfully');
+                // TODO: use Message.txt to tooltip
+                alert('Cancel the job successfully');
                 // render the table
                 if (updateList) {
                     updateList();  // FIXME
                 }
             } else {
                 alert('fail to cancel the job');
-                // message.error('fail to cancel the job');
             }
         })
         .catch(error => {

@@ -5,8 +5,8 @@ import {
     Stack, initializeIcons, StackItem, CommandBarButton,
     IContextualMenuProps, IStackTokens, IStackStyles
 } from 'office-ui-fabric-react';
-import LogDrawer from './Modal/LogDrawer';
-import ExperimentDrawer from './Modal/ExperimentDrawer';
+import LogDrawer from './Modals/LogDrawer';
+import ExperimentDrawer from './Modals/ExperimentDrawer';
 import {
     downLoadIcon, infoIconAbout,
     timeIcon, disableUpdates, requency, closeTimer
@@ -97,6 +97,12 @@ class NavCon extends React.Component<NavProps, NavState> {
     openDocs = (): void => {
         window.open(WEBUIDOC);
     }
+    
+    openGithubNNI = (): void => {
+        const {version} = this.state;
+        const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
+        window.open(nniLink);
+    }
 
     getInterval = (num: number): void => {
         this.props.changeInterval(num); // notice parent component
@@ -131,6 +137,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                     key: 'version',
                     text: `Version ${version}`,
                     iconProps: { iconName: 'VerifiedBrand' },
+                    onClick: this.openGithubNNI
                 }
             ]
         };

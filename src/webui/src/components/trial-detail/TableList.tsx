@@ -2,19 +2,19 @@ import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
-    Stack, Dropdown, DetailsList, IDetailsListProps,
+    Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton
 } from 'office-ui-fabric-react';
-import { completed, blocked, copy } from '../Buttons/Icon';
+import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord } from '../../static/interface';
 import Details from '../overview/Details';
-import ChangeColumnComponent from '../Modal/ChangeColumnComponent';
-import Compare from '../Modal/Compare';
-import KillJob from '../Modal/Killjob';
-import Customize from '../Modal/CustomizedTrial';
+import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
+import Compare from '../Modals/Compare';
+import KillJob from '../Modals/Killjob';
+import Customize from '../Modals/CustomizedTrial';
 import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
@@ -35,8 +35,8 @@ echarts.registerTheme('my_theme', {
 interface TableListProps {
     pageSize: number;
     tableSource: Array<TableRecord>;
-    columnList: Array<string>; // user select columnKeys
-    changeColumn: (val: Array<string>) => void;
+    columnList: string[]; // user select columnKeys
+    changeColumn: (val: string[]) => void;
     trialsUpdateBroadcast: number;
 }
 
@@ -50,7 +50,7 @@ interface TableListState {
     selectedRowKeys: string[] | number[];
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
     intermediateId: string;
-    intermediateOtherKeys: Array<string>;
+    intermediateOtherKeys: string[];
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
     isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
@@ -379,17 +379,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
     private getAllColumnKeys = (): string[] => {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         // parameter as table column
-        const parameterStr: Array<string> = [];
+        const parameterStr: string[] = [];
         if (tableSource.length > 0) {
             const trialMess = TRIALS.getTrial(tableSource[0].id);
             const trial = trialMess.description.parameters;
-            const parameterColumn: Array<string> = Object.keys(trial);
+            const parameterColumn: string[] = Object.keys(trial);
             parameterColumn.forEach(value => {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        let showTitle = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
-        showTitle = COLUMNPro.concat(parameterStr);
+        let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
+        allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
@@ -400,18 +400,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     const item = Object.keys(temp);
                     // item: ['default', 'other-keys', 'maybe loss']
                     if (item.length > 1) {
-                        const want: Array<string> = [];
+                        const want: string[] = [];
                         item.forEach(value => {
                             if (value !== 'default') {
                                 want.push(value);
                             }
                         });
-                        showTitle = COLUMNPro.concat(want);
+                        allColumnList = COLUMNPro.concat(want);
                     }
                 }
             }
         }
-        return showTitle;
+        return allColumnList;
     }
 
     // get IColumn[]
@@ -458,7 +458,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         name: 'Operation',
                         key: 'operation',
                         fieldName: 'operation',
-                        minWidth: 160, // TODO: need to test 120
+                        minWidth: 160,
                         maxWidth: 200,
                         isResizable: true,
                         className: 'detail-table',
@@ -473,7 +473,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                         title="Intermediate"
                                         onClick={this.showIntermediateModal.bind(this, record.id)}
                                     >
-                                        {completed}
+                                        {LineChart}
                                     </PrimaryButton>
                                     {/* kill job */}
                                     {
@@ -554,7 +554,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         columns={tableColumns}
                         items={tableSource}
                         setKey="set"
+                        compact={true}
                         onRenderRow={this._onRenderRow}
+                        layoutMode={DetailsListLayoutMode.justified}
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
                     />

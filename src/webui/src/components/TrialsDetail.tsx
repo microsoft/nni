@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-    Stack, Pivot, PivotItem, StackItem, Dropdown, IDropdownOption, DefaultButton
+    Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultButton
 } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
@@ -100,12 +100,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
         const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
-        const options = [
-            { key: '20', text: '20' },
-            { key: '50', text: '50' },
-            { key: '100', text: '100' },
-            { key: 'all', text: 'all' },
-        ];
         const searchOptions = [
             { key: 'Id', text: 'Id' },
             { key: 'Trial No.', text: 'Trial No.' },
@@ -154,30 +148,19 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 </Stack>
                 <Stack horizontal className="allList">
                     <StackItem grow={50}>
-                        <Stack horizontal>
-                            <span className="allList-entry">Show</span>
-                            <Dropdown
-                                selectedKey={tablePageSize ? tablePageSize.toString() : undefined}
-                                defaultSelectedKeys={['20']}
-                                options={options}
-                                onChange={this.handleTablePageSizeSelect}
-                                styles={{ root: { width: 80, padding: '0 10px' } }}
-                            />
-                            <span className="allList-entry">entries</span>
-                        </Stack>
+                        <DefaultButton
+                            text="Compare"
+                            className="allList-compare"
+                            // use child-component tableList's function, the function is in child-component.
+                            onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
+                        />
                     </StackItem>
                     <StackItem grow={50}>
-                        <Stack horizontal horizontalAlign="end">
+                        <Stack horizontal horizontalAlign="end" className="allList">
                             <DefaultButton
                                 className="allList-button-gap"
                                 text="Add column"
                                 onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
-                            />
-                            <DefaultButton
-                                text="Compare"
-                                className="allList-button-gap"
-                                // use child-component tableList's function, the function is in child-component.
-                                onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
                             />
                             <Dropdown
                                 selectedKey={searchType}
@@ -194,6 +177,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                                 ref={(text): any => (this.searchInput) = text}
                             />
                         </Stack>
+
                     </StackItem>
                 </Stack>
                 <TableList

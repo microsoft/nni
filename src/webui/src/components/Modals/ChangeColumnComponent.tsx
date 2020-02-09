@@ -11,7 +11,7 @@ interface ChangeColumnProps {
     isHideDialog: boolean;
     showColumn: string[]; // all column List
     selectedColumn: string[]; // user selected column list
-    changeColumn: (val: Array<string>) => void;
+    changeColumn: (val: string[]) => void;
     hideShowColumnDialog: () => void;
 }
 
@@ -54,6 +54,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         const sortColumn: string[] = [];
         /**
          * 
+         * TODO: use this function to refactor sort column
          * search space might orderless
             showColumn.map(item => {
                 userSelectColumnList.map(key => {
@@ -86,7 +87,6 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
             sortColumn.push(OPERATION);
         }
         this.props.changeColumn(sortColumn);
-        // this.props.ccc(sortColumn);
         this.hideDialog(); // hide dialog
     }
 

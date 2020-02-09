@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, IStackTokens } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { Trial } from '../static/model/trial'; // eslint-disable-line no-unused-vars
+import { Trial } from '../static/model/trial';
 import Title1 from './overview/Title1';
 import SuccessTable from './overview/SuccessTable';
 import Progressed from './overview/Progress';
@@ -84,13 +84,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         />
                     </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Stack.Item grow={1} className="overviewBoder">
+                    <Stack.Item styles={{root: {width: 400}}} className="overviewBoder">
                         <Title1 text="Search space" icon="10.png" />
                         <Stack className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Stack>
                     </Stack.Item>
-                    <Stack.Item grow={1}>
+                    <Stack.Item styles={{root: {width: 400}}}>
                         <Title1 text="Config" icon="4.png" />
                         <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
@@ -106,20 +106,17 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
                 <Stack>
                     <Stack horizontal className="top10bg">
-                        <div className="top10Title">
-                            <Title1 text="Top10  trials" icon="7.png" />
-                        </div>
                         <div
                             className="title"
                             onClick={this.clickMaxTop}
                         >
-                            <Title1 text="Maximal" icon="max.png" bgcolor={titleMaxbgcolor} />
+                            <Title1 text="Top10 Maximal trials" icon="max.png" bgcolor={titleMaxbgcolor} />
                         </div>
                         <div
                             className="title minTitle"
                             onClick={this.clickMinTop}
                         >
-                            <Title1 text="Minimal" icon="min.png" bgcolor={titleMinbgcolor} />
+                            <Title1 text="Top10 Minimal trials" icon="min.png" bgcolor={titleMinbgcolor} />
                         </div>
                     </Stack>
                     <Stack horizontal tokens={stackTokens}>
@@ -127,7 +124,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             <Accuracy
                                 accuracyData={accuracyGraphData}
                                 accNodata={noDataMessage}
-                                height={490}
+                                height={404}
                             />
                         </div>
                         <div style={{ width: '60%'}}>

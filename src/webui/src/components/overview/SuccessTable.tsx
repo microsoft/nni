@@ -122,7 +122,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     columns={columns}
                     items={source}
                     setKey="set"
+                    compact={true}
                     onRenderRow={this._onRenderRow}
+                    selectionMode={0} // close selector function
                 />
             </div>
         );
