@@ -32,7 +32,7 @@ class ActivationRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
         self.statistics_batch_num = statistics_batch_num
         self.collected_activation = {}
         self.hooks = {}
@@ -48,22 +48,29 @@ class ActivationRankFilterPruner(Pruner):
         """
         Compress the model, register a hook for collecting activations.
         """
+        if self.modules_wrapper is not None:
+            # already compressed
+            return self.bound_model
+        else:
+            self.modules_wrapper = []
         modules_to_compress = self.detect_modules_to_compress()
         for layer, config in modules_to_compress:
-            self._instrument_layer(layer, config)
+            wrapper = self._wrap_modules(layer, config)
+            self.modules_wrapper.append(wrapper)
             self.collected_activation[layer.name] = []
 
             def _hook(module_, input_, output, name=layer.name):
                 if len(self.collected_activation[name]) < self.statistics_batch_num:
                     self.collected_activation[name].append(self.activation(output.detach().cpu()))
 
-            layer.module.register_forward_hook(_hook)
+            wrapper.module.register_forward_hook(_hook)
+        self._wrap_model()
         return self.bound_model
 
     def get_mask(self, base_mask, activations, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion which is calculated from the activation are masked.
@@ -82,14 +89,13 @@ class ActivationRankFilterPruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
         op_type = layer.type
         assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
         assert op_type in ['Conv2d'], "only support Conv2d"
         assert op_type in config.get('op_types')
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+        if_calculated = kwargs["if_calculated"]
+        if if_calculated:
+            return None
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
         if hasattr(layer.module, 'bias') and layer.module.bias is not None:
             mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
@@ -104,8 +110,7 @@ class ActivationRankFilterPruner(Pruner):
             mask = self.get_mask(mask, self.collected_activation[layer.name], num_prune)
         finally:
             if len(self.collected_activation[layer.name]) == self.statistics_batch_num:
-                self.mask_dict.update({op_name: mask})
-                self.mask_calculated_ops.add(op_name)
+                if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
 
