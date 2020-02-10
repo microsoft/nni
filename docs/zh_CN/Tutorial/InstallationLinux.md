@@ -1,30 +1,30 @@
-# Install on Linux & Mac
+# 在 Linux 和 Mac 下安装
 
-## Installation
+## 安装
 
-Installation on Linux and macOS follow the same instruction below.
+在 Linux 和 macOS 上安装，遵循以下相同的说明。
 
-### Install NNI through pip
+### 通过 pip 命令安装 NNI
 
-Prerequisite: `python 64-bit >= 3.5`
+先决条件：`python 64-bit >= 3.5`
 
     bash
       python3 -m pip install --upgrade nni
 
-### Install NNI through source code
+### 通过源代码安装 NNI
 
-If you are interested on special or latest code version, you can install NNI through source code.
+如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
 
-Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
+先决条件：`python 64-bit >=3.5`, `git`, `wget`
 
     bash
       git clone -b v1.3 https://github.com/Microsoft/nni.git
       cd nni
       ./install.sh
 
-### Use NNI in a docker image
+### 在 Docker 映像中使用 NNI
 
-You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+也可将 NNI 安装到 docker 映像中。 Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## Verify installation
 
