@@ -1,7 +1,7 @@
 # list of commands/arguments
 __nnictl_cmds="create resume view update stop trial experiment platform import export webui config log package tensorboard top"
-__nnictl_create_cmds="--config --port --debug"
-__nnictl_resume_cmds="--port --debug"
+__nnictl_create_cmds="--config --port --debug --watch"
+__nnictl_resume_cmds="--port --debug --watch"
 __nnictl_view_cmds="--port"
 __nnictl_update_cmds="searchspace concurrency duration trialnum"
 __nnictl_update_searchspace_cmds="--filename"

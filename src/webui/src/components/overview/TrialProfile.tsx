@@ -14,13 +14,12 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         super(props);
     }
 
-    render() {
+    render(): React.ReactNode {
         const blacklist = [
             'id', 'logDir', 'startTime', 'endTime',
             'experimentName', 'searchSpace', 'trainingServicePlatform'
         ];
-        // tslint:disable-next-line:no-any
-        const filter = (key: string, val: any) => {
+        const filter = (key: string, val: any): any => {
             if (key === 'trialConcurrency') {
                 return this.props.concurrency;
             }
@@ -28,7 +27,6 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         };
         const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
 
-        // FIXME: highlight not working?
         return (
             <div className="profile">
                 <MonacoEditor

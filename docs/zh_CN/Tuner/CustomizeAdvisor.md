@@ -16,7 +16,7 @@ class CustomizedAdvisor(MsgDispatcherBase):
         ...
 ```
 
-**2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**。 [此文档](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase)可帮助理解 `MsgDispatcherBase`。
+**2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法**。 [此文档](https://nni.readthedocs.io/zh/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase)可帮助理解 `MsgDispatcherBase`。
 
 **3. 在 Experiment 的 YAML 文件中配置好自定义的 Advisor。**
 
@@ -33,6 +33,8 @@ advisor:
     arg1: value1
 ```
 
+**注意：**Advisor 的工作目录是`<home>/nni/experiments/<experiment_id>/log` 可从环境变量 `NNI_LOG_DIRECTORY` 中获取。
+
 ## 示例
 
-[参考示例](../../../examples/tuners/mnist_keras_customized_advisor)。
+参考[示例](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor)。

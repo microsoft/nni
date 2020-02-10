@@ -1,6 +1,6 @@
 # 在阅读理解上使用自动模型架构搜索
 
-该样例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
+该示例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
 
 ## 搜索空间
 
@@ -20,9 +20,9 @@
 
 另一个时间更快，性能更好的版本正在开发中。 很快将发布。
 
-# 如何运行此样例？
+# 如何运行此示例？
 
-## 在本机或远程上运行此样例
+## 在本机或远程上运行此示例
 
 ### 使用下载脚本来下载数据
 
@@ -82,7 +82,7 @@
     nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
     
 
-## 在 OpenPAI 上运行此样例
+## 在 OpenPAI 上运行此示例
 
 根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本 Experiment 需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
 
@@ -113,22 +113,18 @@
       gpuNum: 0
       cpuNum: 1
       memoryMB: 32869
-      #在 OpenPAI 上运行 NNI 任务的 Docker 映像
+      # 在 OpenPAI 上运行 NNI 的 Docker 映像
       image: msranni/nni:latest
-      #在 OpenPAI 的 hdfs 目录上存储数据的目录，如：'hdfs://host:port/directory'
-      dataDir: hdfs://10.10.10.10:9000/username/nni
-      #在 OpenPAI 的 hdfs 目录上存储输出的目录，如：'hdfs://host:port/directory'
-      outputDir: hdfs://10.10.10.10:9000/username/nni
     paiConfig:
-      #登录 OpenPAI 的用户名
+      # 登录 OpenPAI 的用户名
       userName: username
-      #登录 OpenPAI 的密码
+      # 登录 OpenPAI 的密码
       passWord: password
-      # OpenPAI 的 RESTful 服务器地址
+      # OpenPAI 的 RestFUL 服务器地址
       host: 10.10.10.10
     
 
-将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `dataDir`, `outputDir`, `userName`, `passWord` 和 `host`。
+将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `userName`, `passWord` 和 `host`.
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
@@ -143,7 +139,7 @@
 
 ## 实现方法
 
-基于进化算法架构的问答和其它样例一样，有两个部分：Trial 和 Tuner。
+基于进化算法架构的问答和其它示例一样，有两个部分：Trial 和 Tuner。
 
 ### Trial
 
@@ -249,7 +245,7 @@ Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此
 
 ## 模型配置格式
 
-这是模型配置的样例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
+这是模型配置的示例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
 
     {
         "max_layer_num": 50,

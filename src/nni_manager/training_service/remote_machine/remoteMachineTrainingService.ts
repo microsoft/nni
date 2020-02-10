@@ -277,6 +277,12 @@ class RemoteMachineTrainingService implements TrainingService {
                 throw new Error(`Invalid job id ${trialJobId}, cannot find ssh client`);
             }
 
+            if (trialJob.status === 'UNKNOWN') {
+                this.releaseTrialSSHClient(trialJob);
+                trialJob.status = 'USER_CANCELED';
+                return
+            }
+
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
                 // Mark the toEarlyStop tag here
@@ -442,7 +448,7 @@ class RemoteMachineTrainingService implements TrainingService {
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
                     `tail -n 1 ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
-                if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
+                if (cmdresult !== undefined && cmdresult.stdout !== undefined && cmdresult.stdout.length > 0) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
                     if (rmMeta.gpuSummary.gpuCount === 0) {
                         this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);

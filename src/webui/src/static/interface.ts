@@ -1,6 +1,4 @@
-// tslint:disable:no-any
-
-// draw accuracy graph data interface
+// draw accuracy graph data export interface
 interface TableObj {
     key: number;
     sequenceId: number;
@@ -44,7 +42,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate: Array<number>;
+    intermediate: number[];
     multiProgress?: number;
 }
 
@@ -186,8 +184,8 @@ interface EventMap {
 }
 
 export {
-    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
-    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
-    TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
-    NNIManagerStatus, EventMap
+    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
+    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
+    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
+    ExperimentProfile, NNIManagerStatus, EventMap
 };

@@ -41,6 +41,7 @@ class Experiment {
         if (!this.profileField) {
             throw Error('Experiment profile not initialized');
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.profileField!;
     }
 
@@ -73,13 +74,16 @@ class Experiment {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.statusField!.status;
     }
 
     get error(): string {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.statusField!.errors[0] || '';
     }
 }

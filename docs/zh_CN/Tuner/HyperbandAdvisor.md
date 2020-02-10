@@ -6,7 +6,7 @@
 
 ## 2. 实现并行
 
-首先，此样例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于 Tuner 和Assessor。 这种实现方法下，Hyperband 集成了 Tuner 和 Assessor 两者的功能，因而将它叫做 Advisor。
+首先，此示例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于 Tuner 和Assessor。 这种实现方法下，Hyperband 集成了 Tuner 和 Assessor 两者的功能，因而将它叫做 Advisor。
 
 其次，本实现完全利用了 Hyperband 内部的并行性。 具体来说，下一个分组不会严格的在当前分组结束后再运行，只要有资源，就可以开始运行新的分组。
 
@@ -30,11 +30,11 @@
 
 对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
-`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 参考样例 `examples/trials/mnist-advisor/` ，了解详细信息。
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 参考示例 `examples/trials/mnist-advisor/` ，了解详细信息。
 
 `eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的资源来运行。
 
-下面是 `R=81` 且 `eta=3` 时的样例：
+下面是 `R=81` 且 `eta=3` 时的示例：
 
 |   | s=4  | s=3  | s=2  | s=1  | s=0  |
 | - | ---- | ---- | ---- | ---- | ---- |

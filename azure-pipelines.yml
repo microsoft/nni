@@ -21,13 +21,17 @@ jobs:
       set -e
       cd src/nni_manager
       yarn eslint
+      # uncomment following 2 lines to enable webui eslint
+      cd ../webui
+      yarn eslint
     displayName: 'Run eslint'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install torch==1.2.0 --user
+      python3 -m pip install torchvision==0.4.0 --user
       python3 -m pip install tensorflow==1.13.1 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install gym onnx --user
+      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 --user
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
@@ -43,7 +47,7 @@ jobs:
     displayName: 'Run pylint'
   - script: |
       python3 -m pip install flake8 --user
-      EXCLUDES=./src/nni_manager/,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
+      EXCLUDES=./src/nni_manager/,./src/webui,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
       python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
@@ -66,6 +70,10 @@ jobs:
       cd test
       python3 cli_test.py
     displayName: 'nnicli test'
+  - script: |
+      cd docs/en_US/
+      sphinx-build -M html . _build -W
+    displayName: 'Sphinx Documentation Build check'
 
 - job: 'basic_test_pr_macOS'
   pool:
@@ -83,8 +91,8 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install torch==1.2.0 --user
+      python3 -m pip install torchvision==0.4.0 --user
       python3 -m pip install tensorflow==1.13.1 --user
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
       brew install swig@3
@@ -123,7 +131,7 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+      python -m pip install torch===1.2.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install torchvision --user
       python -m pip install tensorflow==1.13.1 --user
     displayName: 'Install dependencies'

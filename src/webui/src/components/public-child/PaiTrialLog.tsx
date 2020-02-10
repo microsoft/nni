@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Row } from 'antd';
 import { DOWNLOAD_IP } from '../../static/const';
 import PaiTrialChild from './PaiTrialChild';
 import LogPathChild from './LogPathChild';
@@ -17,7 +16,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
 
     }
 
-    render() {
+    render(): React.ReactNode {
         const { logStr, id, logCollection } = this.props;
         const isTwopath = logStr.indexOf(',') !== -1
             ?
@@ -30,22 +29,23 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                     {
                         isTwopath
                             ?
-                            <Row>
+                            <div>
                                 {
                                     logCollection
                                         ?
-                                        <Row>
+                                        <div>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href={`${DOWNLOAD_IP}/trial_${id}.log`}
                                                 style={{ marginRight: 10 }}
                                             >
                                                 Trial stdout
                                             </a>
-                                            <a target="_blank" href={logStr.split(',')[1]}>hdfsLog</a>
-                                        </Row>
+                                            <a target="_blank" rel="noopener noreferrer" href={logStr.split(',')[1]}>hdfsLog</a>
+                                        </div>
                                         :
-                                        <Row>
+                                        <div>
                                             <LogPathChild
                                                 eachLogpath={logStr.split(',')[0]}
                                                 logName="Trial stdout:"
@@ -54,9 +54,9 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                                 eachLogpath={logStr.split(',')[1]}
                                                 logName="Log on HDFS:"
                                             />
-                                        </Row>
+                                        </div>
                                 }
-                            </Row>
+                            </div>
                             :
                             <PaiTrialChild
                                 logString={logStr}

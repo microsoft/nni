@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 from .compressor import LayerInfo, Compressor, Pruner, Quantizer
-from .builtin_pruners import *
-from .builtin_quantizers import *
-from .lottery_ticket import LotteryTicketPruner
+from .pruners import *
+from .weight_rank_filter_pruners import *
+from .activation_rank_filter_pruners import *
+from .quantizers import *
+from .apply_compression import apply_compression_results

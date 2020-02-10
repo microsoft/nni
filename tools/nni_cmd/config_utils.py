@@ -76,7 +76,7 @@ class Experiments:
 
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
-        if id in self.experiments:
+        if expId in self.experiments:
             self.experiments.pop(expId)
         self.write_file()
 

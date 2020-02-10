@@ -41,11 +41,8 @@ class Mutator(BaseMutator):
 
     def reset(self):
         """
-        Reset the mutator by call the `sample_search` to resample (for search).
-
-        Returns
-        -------
-        None
+        Reset the mutator by call the `sample_search` to resample (for search). Stores the result in a local
+        variable so that `on_forward_layer_choice` and `on_forward_input_choice` can use the decision directly.
         """
         self._cache = self.sample_search()
 
@@ -56,25 +53,28 @@ class Mutator(BaseMutator):
         Returns
         -------
         dict
+            A mapping from key of mutables to decisions.
         """
         return self.sample_final()
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
-        On default, this method calls :meth:`on_calc_layer_choice_mask` to get a mask on how to choose between layers
-        (either by switch or by weights), then it will reduce the list of all tensor outputs with the policy specified
-        in `mutable.reduction`. It will also cache the mask with corresponding `mutable.key`.
+        On default, this method retrieves the decision obtained previously, and select certain operations.
+        Only operations with non-zero weight will be executed. The results will be added to a list.
+        Then it will reduce the list of all tensor outputs with the policy specified in `mutable.reduction`.
 
         Parameters
         ----------
         mutable : LayerChoice
+            Layer choice module.
         inputs : list of torch.Tensor
+            Inputs
 
         Returns
         -------
         tuple of torch.Tensor and torch.Tensor
+            Output and mask.
         """
-
         def _map_fn(op, *inputs):
             return op(*inputs)
 
@@ -86,20 +86,20 @@ class Mutator(BaseMutator):
 
     def on_forward_input_choice(self, mutable, tensor_list):
         """
-        On default, this method calls :meth:`on_calc_input_choice_mask` with `tags`
-        to get a mask on how to choose between inputs (either by switch or by weights), then it will reduce
-        the list of all tensor outputs with the policy specified in `mutable.reduction`. It will also cache the
-        mask with corresponding `mutable.key`.
+        On default, this method retrieves the decision obtained previously, and select certain tensors.
+        Then it will reduce the list of all tensor outputs with the policy specified in `mutable.reduction`.
 
         Parameters
         ----------
         mutable : InputChoice
+            Input choice module.
         tensor_list : list of torch.Tensor
-        tags : list of string
+            Tensor list to apply the decision on.
 
         Returns
         -------
         tuple of torch.Tensor and torch.Tensor
+            Output and mask.
         """
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \

@@ -2,7 +2,7 @@
 
 **Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 样例。
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 示例。
 
 <a name="nni-api"></a>
 
@@ -10,7 +10,7 @@
 
 ### 第一步：准备搜索空间参数文件。
 
-样例如下：
+示例如下：
 
 ```json
 {
@@ -132,13 +132,31 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
+## 用于调试的独立模式
+
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
+
+```python
+＃注意：请为 Trial 代码中的超参分配默认值
+nni.get_next_parameter＃返回 {}
+nni.report_final_result＃已在 stdout 上打印日志，但不报告
+nni.report_intermediate_result＃已在 stdout 上打印日志，但不报告
+nni.get_experiment_id＃返回 "STANDALONE"
+nni.get_trial_id＃返回 "STANDALONE"
+nni.get_sequence_id＃返回 0
+```
+
+可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 Trial 代码会使用默认超参成功运行。
+
+更多调试的信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
+
 ## Trial 存放在什么地方？
 
 ### 本机模式
 
 每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
+如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件示例：
 
 ```bash
 #!/bin/bash
@@ -162,9 +180,9 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 <a name="more-examples"></a>
 
-## 更多 Trial 的样例
+## 更多 Trial 的示例
 
-* [MNIST 样例](MnistExamples.md)
+* [MNIST 示例](MnistExamples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](Cifar10Examples.md)
 * [如何在 NNI 调优 SciKit-learn 的参数](SklearnExamples.md)
 * [在阅读理解上使用自动模型架构搜索。](SquadEvolutionExamples.md)

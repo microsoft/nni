@@ -14,11 +14,11 @@ def update_training_service_config(args):
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
     if args.ts == 'pai':
         if args.pai_user is not None:
-            config[args.ts]['paiConfig']['userName'] = args.pai_user
+            config[args.ts]['paiYarnConfig']['userName'] = args.pai_user
         if args.pai_pwd is not None:
-            config[args.ts]['paiConfig']['passWord'] = args.pai_pwd
+            config[args.ts]['paiYarnConfig']['passWord'] = args.pai_pwd
         if args.pai_host is not None:
-            config[args.ts]['paiConfig']['host'] = args.pai_host
+            config[args.ts]['paiYarnConfig']['host'] = args.pai_host
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.data_dir is not None:
@@ -42,6 +42,21 @@ def update_training_service_config(args):
             config[args.ts]['kubeflowConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['worker']['image'] = args.nni_docker_image
+    elif args.ts == 'frameworkcontroller':
+        if args.nfs_server is not None:
+            config[args.ts]['frameworkcontrollerConfig']['nfs']['server'] = args.nfs_server
+        if args.nfs_path is not None:
+            config[args.ts]['frameworkcontrollerConfig']['nfs']['path'] = args.nfs_path
+        if args.keyvault_vaultname is not None:
+            config[args.ts]['frameworkcontrollerConfig']['keyVault']['vaultName'] = args.keyvault_vaultname
+        if args.keyvault_name is not None:
+            config[args.ts]['frameworkcontrollerConfig']['keyVault']['name'] = args.keyvault_name
+        if args.azs_account is not None:
+            config[args.ts]['frameworkcontrollerConfig']['azureStorage']['accountName'] = args.azs_account
+        if args.azs_share is not None:
+            config[args.ts]['frameworkcontrollerConfig']['azureStorage']['azureShare'] = args.azs_share
+        if args.nni_docker_image is not None:
+            config[args.ts]['trial']['taskRoles'][0]['image'] = args.nni_docker_image
     elif args.ts == 'remote':
         if args.remote_user is not None:
             config[args.ts]['machineList'][0]['username'] = args.remote_user
@@ -69,7 +84,7 @@ def convert_command():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
@@ -79,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", type=str)
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
-    # args for kubeflow
+    # args for kubeflow and frameworkController
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
     parser.add_argument("--keyvault_vaultname", type=str)

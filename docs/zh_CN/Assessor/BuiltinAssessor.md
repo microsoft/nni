@@ -13,9 +13,9 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 As
 
 ## 用法
 
-要使用 NNI 内置的 Assessor，需要在 `config.yml` 文件中添加 **builtinAssessorName** 和 **classArgs**。 这一节会介绍推荐的场景、参数等详细用法以及样例。
+要使用 NNI 内置的 Assessor，需要在 `config.yml` 文件中添加 **builtinAssessorName** 和 **classArgs**。 这一节会介绍推荐的场景、参数等详细用法以及示例。
 
-注意：参考样例中的格式来创建新的 `config.yml` 文件。
+注意：参考示例中的格式来创建新的 `config.yml` 文件。
 
 <a name="MedianStop"></a>
 
@@ -32,7 +32,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 As
 * **optimize_mode** (*maximize 或 minimize, 可选, 默认值为 maximize*) - 如果为 'maximize', Assessor 会在结果小于期望值时**终止** Trial。 如果为 'minimize'，Assessor 会在结果大于期望值时**终止** Trial。
 * **start_step** (*int, 可选, 默认值为 0*) - 只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
 
-**使用样例：**
+**使用示例：**
 
 ```yaml
 # config.yml
@@ -63,7 +63,7 @@ assessor:
 * **threshold** (*float, 可选, 默认值为 0.95*) - 用来确定提前终止较差结果的阈值。 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
 * **gap** (*int, 可选, 默认值为 1*) - Assessor 两次评估之间的间隔次数。 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
 
-**使用样例：**
+**使用示例：**
 
 ```yaml
 # config.yml

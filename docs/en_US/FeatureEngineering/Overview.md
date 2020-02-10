@@ -1,4 +1,4 @@
-# FeatureEngineering
+# Feature Engineering with NNI
 
 We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
 
@@ -7,7 +7,7 @@ For now, we support the following feature selector:
 - [GBDTSelector](./GBDTSelector.md)
 
 
-# How to use?
+## How to use?
 
 ```python
 from nni.feature_engineering.gradient_selector import GradientFeatureSelector
@@ -30,7 +30,7 @@ print(fgs.get_selected_features(...))
 
 When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it. 
 
-# How to customize?
+## How to customize?
 
 NNI provides _state-of-the-art_ feature selector algorithm in the builtin-selector. NNI also supports to build a feature selector by yourself.
 
@@ -239,7 +239,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
-# Benchmark
+## Benchmark
 
 `Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
@@ -256,3 +256,10 @@ The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw
 )
 
 The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.
+
+## Reference and Feedback
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);

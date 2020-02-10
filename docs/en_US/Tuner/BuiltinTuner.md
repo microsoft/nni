@@ -1,6 +1,6 @@
-# Built-in Tuners
+# Built-in Tuners for Hyperparameter Tuning
 
-NNI provides state-of-the-art tuning algorithm as our built-in tuners and makes them easy to use. Below is the brief summary of NNI currently built-in tuners:
+NNI provides state-of-the-art tuning algorithms as our built-in tuners and makes them easy to use. Below is the brief summary of NNI currently built-in tuners:
 
 Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each tuner. Here is an [article](../CommunitySharings/HpoComparision.md) about the comparison of different Tuners on several problems.
 
@@ -160,6 +160,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 **Requirement of classArgs**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for relatively large search space.
 
 **Usage example**
 
@@ -452,3 +453,9 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
+## **Reference and Feedback**
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);

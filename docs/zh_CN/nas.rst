@@ -1,6 +1,6 @@
-#################
+##############
 NAS 算法
-#################
+##############
 
 自动化的神经网络架构（NAS）搜索在寻找更好的模型方面发挥着越来越重要的作用。
 最近的研究工作证明了自动化 NAS 的可行性，并发现了一些超越手动设计和调整的模型。
@@ -20,6 +20,8 @@ NAS 算法
 
     概述 <NAS/Overview>
     NAS 接口 <NAS/NasInterface>
-    ENAS <NAS/Overview>
-    DARTS <NAS/Overview>
-    P-DARTS <NAS/Overview>
+    ENAS <NAS/ENAS>
+    DARTS <NAS/DARTS>
+    P-DARTS <NAS/PDARTS>
+    SPOS <NAS/SPOS>
+    CDARTS <NAS/CDARTS>

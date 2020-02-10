@@ -49,25 +49,26 @@ nnictl 支持的命令：
   | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
   | --port, -p   | False |     | RESTful 服务的端口          |
   | --debug, -d  | False |     | 设置为调试模式                |
+  | --watch, -w  | False |     | 启动为监视模式                |
 
-* 样例
+* 示例
   
   > 在默认端口 8080 上创建一个新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment，并启用调试模式
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
   ```
 
 注意：
@@ -97,8 +98,9 @@ nnictl 支持的命令：
   | id          | True  |     | 要恢复的 Experiment 标识               |
   | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
   | --debug, -d | False |     | 设置为调试模式                          |
+  | --watch, -w | False |     | 启动为监视模式                          |
 
-* 样例
+* 示例
   
   > 在指定的端口 8088 上恢复 Experiment
   
@@ -216,10 +218,10 @@ nnictl 支持的命令：
   
   * 示例
     
-    `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
+    `使用 'examples/trials/mnist-tfv1/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
-    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
     ```
 
 * **nnictl update concurrency**
@@ -241,7 +243,7 @@ nnictl 支持的命令：
   | id          | False |     | 需要设置的 Experiment 的 ID |
   | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
-  * 样例
+  * 示例
     
     > 更新 Experiment 的并发数量
     
@@ -499,7 +501,7 @@ nnictl 支持的命令：
   
   * 详细说明
     
-    NNI 支持导入用户的数据，确保数据格式正确。 样例如下：
+    NNI 支持导入用户的数据，确保数据格式正确。 示例如下：
     
     ```json
     [

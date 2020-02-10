@@ -11,7 +11,6 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.nas_utils import rewrite_nas_space
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
@@ -119,6 +118,8 @@ def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
                           vals[NodeType.VALUE],
                           out_y,
                           name=name + '[%d]' % _index)
+            if _type == 'randint':
+                out_y[name] -= in_x[NodeType.VALUE][0]
         else:
             for key in in_x.keys():
                 json2vals(in_x[key], vals[key], out_y,
@@ -226,7 +227,6 @@ class HyperoptTuner(Tuner):
             return hp.anneal.suggest
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
-    @rewrite_nas_space
     def update_search_space(self, search_space):
         """
         Update search space definition in tuner by search_space in parameters.
