@@ -24,25 +24,25 @@
 
 ### 在 Docker 映像中使用 NNI
 
-也可将 NNI 安装到 docker 映像中。 Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
-## Verify installation
+## 验证安装
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
     
     ```bash
     git clone -b v1.3 https://github.com/Microsoft/nni.git
     ```
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
     
     ```bash
     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
     ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -71,15 +71,15 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
-![overview](../../img/webui_overview_page.png)
+![概述](../../img/webui_overview_page.png)
 
-![detail](../../img/webui_trialdetail_page.png)
+![详细说明](../../img/webui_trialdetail_page.png)
 
-## System requirements
+## 系统需求
 
-Due to potential programming changes, the minimum system requirements of NNI may change over time.
+由于程序变更，NNI 的最低配置会有所更改。
 
 ### Linux
 
@@ -105,15 +105,15 @@ Due to potential programming changes, the minimum system requirements of NNI may
 | **网络**   | 宽带连接                     |                                                    |
 | **分辨率**  | 1024 x 768 以上            |                                                    |
 
-## Further reading
+## 更多
 
-* [Overview](../Overview.md)
-* [Use command line tool nnictl](Nnictl.md)
-* [Use NNIBoard](WebUI.md)
-* [Define search space](SearchSpaceSpec.md)
-* [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
-* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [概述](../Overview.md)
+* [使用命令行工具 nnictl](Nnictl.md)
+* [使用 NNIBoard](WebUI.md)
+* [定制搜索空间](SearchSpaceSpec.md)
+* [配置 Experiment](ExperimentConfig.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
