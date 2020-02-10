@@ -27,9 +27,9 @@ class LevelPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Calculate the mask of given layer
         Parameters
@@ -45,8 +45,9 @@ class LevelPruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
-        if op_name not in self.mask_calculated_ops:
+        if_calculated = kwargs["if_calculated"]
+
+        if not if_calculated:
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
@@ -54,12 +55,10 @@ class LevelPruner(Pruner):
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             mask_weight = torch.gt(w_abs, threshold).type_as(weight)
             mask = {'weight': mask_weight}
-            self.mask_dict.update({op_name: mask})
-            self.mask_calculated_ops.add(op_name)
+            if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
+            return mask
         else:
-            assert op_name in self.mask_dict, "op_name not in the mask_dict"
-            mask = self.mask_dict[op_name]
-        return mask
+            return None
 
 
 class AGP_Pruner(Pruner):
@@ -197,7 +196,7 @@ class SlimPruner(Pruner):
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
-        self.register_buffer("if_calculated", torch.tensor(False)) # pylint: disable=not-callable
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
     def calc_mask(self, layer, config, **kwargs):
         """
@@ -232,7 +231,7 @@ class SlimPruner(Pruner):
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
-        if_calculated.copy_(torch.tensor(True)) # pylint: disable=not-callable
+        if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
 class LotteryTicketPruner(Pruner):
