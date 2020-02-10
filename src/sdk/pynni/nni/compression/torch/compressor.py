@@ -236,7 +236,6 @@ class PrunerModuleWrapper(torch.nn.Module):
             self.register_buffer("bias_mask", None)
         self.registered_buffers['bias_mask'] = self.bias_mask
         # register user specified buffer
-        self.registered_buffers = {}
         for name in self.pruner.buffers:
             self.register_buffer(name, self.pruner.buffers[name].clone())
             self.registered_buffers[name] = getattr(self, name)
