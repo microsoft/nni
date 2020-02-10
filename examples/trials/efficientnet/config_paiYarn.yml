@@ -1,0 +1,28 @@
+authorName: unknown
+experimentName: example_efficient_net
+trialConcurrency: 8
+maxExecDuration: 48h
+maxTrialNum: 100
+trainingServicePlatform: paiYarn
+searchSpacePath: search_net.json
+useAnnotation: false
+tuner:
+  codeDir: .
+  classFileName: tuner.py
+  className: FixedProductTuner
+  classArgs:
+    product: 2
+trial:
+  codeDir: EfficientNet-PyTorch
+  command: sh train_imagenet.sh
+  cpuNum: 4
+  memoryMB: 25000
+  shmMB: 25000
+  gpuNum: 1
+  virtualCluster: nni
+  image: msranni/nni:latest
+nniManagerIp: <nni_manager_ip>
+paiYarnConfig:
+  userName: <username>
+  passWord: <password>
+  host: <host>

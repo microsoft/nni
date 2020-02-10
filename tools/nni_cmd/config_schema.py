@@ -271,16 +271,17 @@ pai_yarn_config_schema = {
 
 pai_trial_schema = {
     'trial':{
-        'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
-        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
-        'memoryMB': setType('memoryMB', int),
-        'image': setType('image', str),
-        Optional('virtualCluster'): setType('virtualCluster', str),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
-        'paiStoragePlugin': setType('paiStoragePlugin', str)
+        'command': setType('command', str),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memoryMB'): setType('memoryMB', int),
+        Optional('image'): setType('image', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('paiStoragePlugin'): setType('paiStoragePlugin', str),
+        Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
     }
 }
 
