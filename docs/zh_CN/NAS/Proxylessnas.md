@@ -1,8 +1,8 @@
-# ProxylessNAS on NNI
+# NNI 上的 ProxylessNAS
 
-## Introduction
+## 介绍
 
-The paper [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) removes proxy, it directly learns the architectures for large-scale target tasks and target hardware platforms. They address high memory consumption issue of differentiable NAS and reduce the computational cost to the same level of regular training while still allowing a large candidate set. Please refer to the paper for the details.
+论文 [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) 去掉了代理，直接从大规模目标任务和目标硬件平台上学习架构。 They address high memory consumption issue of differentiable NAS and reduce the computational cost to the same level of regular training while still allowing a large candidate set. Please refer to the paper for the details.
 
 ## Usage
 
