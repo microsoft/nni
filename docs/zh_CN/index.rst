@@ -9,14 +9,14 @@ Neural Network Intelligence
     :titlesonly:
 
     概述<Overview>
-    Installation <installation>
-    QuickStart <Tutorial/QuickStart>
-    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
-    Neural Architecture Search <nas>
-    Model Compression <model_compression>
-    Feature Engineering <feature_engineering>
-    References <reference>
-    Community Sharings <CommunitySharings/community_sharings>
-    FAQ <Tutorial/FAQ>
-    How to Contribution <contribution>
-    Changelog <Release>
+    安装 <installation>
+    入门<Tutorial/QuickStart>
+    自动（超参数）调优 <hyperparameter_tune>
+    神经网络架构搜索<nas>
+    模型压缩<model_compression>
+    特征工程<feature_engineering>
+    参考<reference>
+    社区分享 <CommunitySharings/community_sharings>
+    常见问题 <Tutorial/FAQ>
+    如何贡献 <contribution>
+    更改日志 <Release>
