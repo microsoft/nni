@@ -6,9 +6,9 @@
 
 剪枝算法通常都用权重掩码来模拟实际的剪枝。 掩码可以用来检查某个剪枝（或稀疏）算法的模型性能，但还没有真正加速。 模型加速才是模型剪枝的最终目标。因此提供了此工具，来帮助基于用户提供的掩码（掩码来自于剪枝算法），将已有模型转换成小模型。
 
-有两种剪枝算法。 一种是细粒度的剪枝，不改变权重形状，和输入输出的张量。 稀疏内核会被用来加速细粒度剪枝的层。 另一类是粗粒度的剪枝（例如，通道），通常，权重形状，输入输出张量会有所改变。 To speed up this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one. Since the support of sparse kernels in community is limited, we only support the speedup of coarse-grained pruning and leave the support of fine-grained pruning in future.
+有两种剪枝算法。 一种是细粒度的剪枝，不改变权重形状，和输入输出的张量。 稀疏内核会被用来加速细粒度剪枝的层。 另一类是粗粒度的剪枝（例如，通道），通常，权重形状，输入输出张量会有所改变。 要加速这类剪枝算法，不需要使用系数内核，只需要用更小的层来替换。 由于开源社区中对稀疏内核的支持还比较有限，当前仅支持粗粒度剪枝，会在将来再支持细粒度的剪枝算法。
 
-## Design and Implementation
+## 设计和实现
 
 To speed up a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask, or replaced with sparse kernel for fine-grained mask. Coarse-grained mask usually changes the shape of weights or input/output tensors, thus, we should do shape inference to check are there other unpruned layers should be replaced as well due to shape change. Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced; second, replace the modules. The first step requires topology (i.e., connections) of the model, we use `jit.trace` to obtain the model grpah for PyTorch.
 
