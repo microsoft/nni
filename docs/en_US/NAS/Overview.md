@@ -39,26 +39,6 @@ Here are some common dependencies to run the examples. PyTorch needs to be above
 .. Note:: SPOS is a two-stage algorithm, whose first stage is one-shot and second stage is distributed, leveraging result of first stage as a checkpoint.
 ```
 
-### ProxylessNAS
-
-The paper [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) removes proxy, it directly learns the architectures for large-scale target tasks and target hardware platforms. It addresses high memory consumption issue of differentiable NAS and reduces the computational cost to the same level of regular training while still allowing a large candidate set.
-
-#### Usage
-
-```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
-git clone https://github.com/Microsoft/nni.git
-
-# search the best architecture
-cd examples/nas/proxylessnas
-python3 main.py
-
-# train the best architecture after you get the best architecture
-python3 main.py --train_mode='retrain' --exported_arch_path='your_arch_path'
-```
-
-Please refer to [here](Proxylessnas.md) for detailed usage and implementation of ProxylessNAS on NNI.
-
 ## Use NNI API
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
