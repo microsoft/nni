@@ -4,9 +4,9 @@
 ..  toctree::
     :maxdepth: 2
 
-    nnictl Commands <Tutorial/Nnictl>
-    Experiment Configuration <Tutorial/ExperimentConfig>
+    nnictl 命令 <Tutorial/Nnictl>
+    Experiment 配置 <Tutorial/ExperimentConfig>
     搜索空间<Tutorial/SearchSpaceSpec>
-    NNI Annotation <Tutorial/AnnotationSpec>
-    SDK API References <sdk_reference>
-    Supported Framework Library <SupportedFramework_Library>
+    NNI Annotation<Tutorial/AnnotationSpec>
+    SDK API 参考 <sdk_reference>
+    支持的框架和库 <SupportedFramework_Library>
