@@ -1,9 +1,9 @@
-Advanced Features
+高级功能
 =================
 
 ..  toctree::
-    Enable Multi-phase <AdvancedFeature/MultiPhase>
-    Write a New Tuner <Tuner/CustomizeTuner>
-    Write a New Assessor <Assessor/CustomizeAssessor>
-    Write a New Advisor <Tuner/CustomizeAdvisor>
-    Write a New Training Service <TrainingService/HowToImplementTrainingService>
+    启用多阶段 <AdvancedFeature/MultiPhase>
+    编写新的 Tuner <Tuner/CustomizeTuner>
+    编写新的 Assessor <Assessor/CustomizeAssessor>
+    编写新的 Advisor <Tuner/CustomizeAdvisor>
+    编写新的训练平台 <TrainingService/HowToImplementTrainingService>
