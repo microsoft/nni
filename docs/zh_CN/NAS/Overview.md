@@ -6,7 +6,7 @@
 
 以此为动力，NNI 的目标是提供统一的体系结构，以加速NAS上的创新，并将最新的算法更快地应用于现实世界中的问题上。
 
-通过统一的接口，有两种方法来使用神经网络架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [The other](#supported-distributed-nas-algorithms) is the traditional searching approach, where each child model in search space runs as an independent trial, the performance result is sent to tuner and the tuner generates new child model.
+通过统一的接口，有两种方法来使用神经网络架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [第二种](#支持的分布式-nas-算法)是传统的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行，将性能结果发给 Tuner，由 Tuner 来生成新的子模型。
 
 ## 支持的 One-shot NAS 算法
 
@@ -30,26 +30,26 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 * PyTorch 1.2+
 * git
 
-## Supported Distributed NAS Algorithms
+## 支持的分布式 NAS 算法
 
-| Name            | Brief Introduction of Algorithm                                                                                                                                                                                                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [SPOS](SPOS.md) | [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) constructs a simplified supernet trained with an uniform path sampling method, and applies an evolutionary algorithm to efficiently search for the best-performing architectures. |
+| 名称              | 算法简介                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [SPOS](SPOS.md) | 论文 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。 |
 
 ```eval_rst
-.. Note:: SPOS is a two-stage algorithm, whose first stage is one-shot and second stage is distributed, leveraging result of first stage as a checkpoint.
+.. 注意：SPOS 是一种两阶段算法，第一阶段是 one-shot，第二阶段是分布式的，利用第一阶段的结果作为检查点。
 ```
 
-## Use NNI API
+## 使用 NNI API
 
-The programming interface of designing and searching a model is often demanded in two scenarios.
+在两种场景下需要用于设计和搜索模型的编程接口。
 
 1. 在设计神经网络时，可能在层、子模型或连接上有多种选择，并且无法确定是其中一种或某些的组合的结果最好。 因此，需要简单的方法来表达候选的层或子模型。
 2. 在神经网络上应用 NAS 时，需要统一的方式来表达架构的搜索空间，这样不必为不同的搜索算法来更改代码。
 
-[Here](./NasGuide.md) is a user guide to get started with using NAS on NNI.
+[这里](./NasGuide.md)是在 NNI 上开始使用 NAS 的用户指南。
 
-## Reference and Feedback
+## 参考和反馈
 
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub.
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)。
