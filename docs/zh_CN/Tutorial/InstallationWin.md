@@ -80,60 +80,60 @@ You can use these commands to get more information about the experiment
 
 以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
 
-|                | 推荐配置                                      | 最低配置                                  |
-| -------------- | ----------------------------------------- | ------------------------------------- |
-| **操作系统**       | Windows 10 1809 或更高版本                     |                                       |
-| **CPU**        | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
-| **GPU**        | NVIDIA® GeForce® GTX 660 or better        | NVIDIA® GeForce® GTX 460              |
-| **Memory**     | 6 GB RAM                                  | 4 GB RAM                              |
-| **Storage**    | 30 GB available hare drive space          |                                       |
-| **Internet**   | Boardband internet connection             |                                       |
-| **Resolution** | 1024 x 768 minimum display resolution     |                                       |
+|          | 推荐配置                                      | 最低配置                                  |
+| -------- | ----------------------------------------- | ------------------------------------- |
+| **操作系统** | Windows 10 1809 或更高版本                     |                                       |
+| **CPU**  | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
+| **GPU**  | NVIDIA® GeForce® GTX 660 或更高配置            | NVIDIA® GeForce® GTX 460              |
+| **内存**   | 6 GB                                      | 4 GB                                  |
+| **存储**   | 30 GB 可用的磁盘空间                             |                                       |
+| **网络**   | 宽带连接                                      |                                       |
+| **分辨率**  | 1024 x 768 以上                             |                                       |
 
-## FAQ
+## 常见问答
 
-### simplejson failed when installing NNI
+### 安装 NNI 时出现 simplejson 错误
 
-Make sure C++ 14.0 compiler installed.
+确保安装了 C++ 14.0 编译器。
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### Trial failed with missing DLL in command line or PowerShell
+### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
 > ImportError: DLL load failed
 
-### Trial failed on webUI
+### Web 界面上的 Trial 错误
 
-Please check the trial log file stderr for more details.
+检查 Trial 日志文件来了解详情。
 
-If there is a stderr file, please check out. Two possible cases are as follows:
+如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
-* forget to change the trial command `python3` into `python` in each experiment YAML.
-* forget to install experiment dependencies such as TensorFlow, Keras and so on.
+* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
+* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
-### Fail to use BOHB on Windows
-Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
+### 无法在 Windows 上使用 BOHB
+确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
 
-### Not supported tuner on Windows
-SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
+### Windows 上不支持的 Tuner
+当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
-### Use a Windows server as a remote worker
-Currently you can't.
+### 将 Windows 服务器用作远程服务器
+目前不支持。
 
-Note:
+注意：
 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
 
 
-## Further reading
+## 更多
 
-* [Overview](../Overview.md)
-* [Use command line tool nnictl](Nnictl.md)
-* [Use NNIBoard](WebUI.md)
-* [Define search space](SearchSpaceSpec.md)
-* [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
-* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [概述](../Overview.md)
+* [使用命令行工具 nnictl](Nnictl.md)
+* [使用 NNIBoard](WebUI.md)
+* [定制搜索空间](SearchSpaceSpec.md)
+* [配置 Experiment](ExperimentConfig.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
