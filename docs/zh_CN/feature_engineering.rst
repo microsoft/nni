@@ -2,7 +2,7 @@
 特征工程
 ###################
 
-We are glad to introduce Feature Engineering toolkit on top of NNI,
+很高兴在 NNI 上引入了特征工程工具包，
 其仍处于试验阶段，会根据使用反馈来演化。
 诚挚邀请您使用、反馈，或更多贡献。
 
