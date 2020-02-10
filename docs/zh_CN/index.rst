@@ -2,9 +2,6 @@
 Neural Network Intelligence
 ###########################
 
-********
-内容
-********
 
 ..  toctree::
     :caption: 目录
@@ -12,11 +9,14 @@ Neural Network Intelligence
     :titlesonly:
 
     概述<Overview>
-    入门<Tutorial/QuickStart>
-    教程<tutorials>
-    示例<examples>
-    参考<reference>
-    FAQ<Tutorial/FAQ>
-    贡献<contribution>
-    更改日志<Release>
-    社区分享<CommunitySharings/community_sharings>
+    Installation <installation>
+    QuickStart <Tutorial/QuickStart>
+    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
+    Neural Architecture Search <nas>
+    Model Compression <model_compression>
+    Feature Engineering <feature_engineering>
+    References <reference>
+    Community Sharings <CommunitySharings/community_sharings>
+    FAQ <Tutorial/FAQ>
+    How to Contribution <contribution>
+    Changelog <Release>
