@@ -20,21 +20,21 @@ jobs:
     displayName: 'Install dependencies for integration tests in remote mode'
   - task: CopyFilesOverSSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       sourceFolder: deployment/pypi/dist/
       targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
       overwrite: true
     displayName: 'Copy dist files to remote machine'
   - task: CopyFilesOverSSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       sourceFolder: test
       targetFolder: /tmp/nnitest/$(Build.BuildId)/test
       overwrite: true
     displayName: 'Copy test files to remote machine'
   - task: SSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
