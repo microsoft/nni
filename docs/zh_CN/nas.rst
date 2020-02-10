@@ -24,4 +24,5 @@
     P-DARTS <NAS/PDARTS>
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
+    ProxylessNAS <NAS/Proxylessnas>
     API 参考 <NAS/NasReference>
