@@ -225,15 +225,17 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
+        self.registered_buffers = {}
 
         # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
+        self.registered_buffers['weight_mask'] = self.weight_mask
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
         else:
             self.register_buffer("bias_mask", None)
+        self.registered_buffers['bias_mask'] = self.bias_mask
         # register user specified buffer
-        self.registered_buffers = {}
         for name in self.pruner.buffers:
             self.register_buffer(name, self.pruner.buffers[name].clone())
             self.registered_buffers[name] = getattr(self, name)
