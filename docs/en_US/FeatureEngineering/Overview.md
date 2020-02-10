@@ -10,7 +10,7 @@ For now, we support the following feature selector:
 ## How to use?
 
 ```python
-from nni.feature_engineering.gradient_selector import GradientFeatureSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # load data
@@ -18,7 +18,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # initlize a selector
-fgs = GradientFeatureSelector(...)
+fgs = FeatureGradientSelector(...)
 # fit data
 fgs.fit(X_train, y_train)
 # get improtant features
@@ -28,7 +28,7 @@ print(fgs.get_selected_features(...))
 ...
 ```
 
-When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it. 
+When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it.
 
 ## How to customize?
 
@@ -77,7 +77,7 @@ class CustomizedSelector(FeatureSelector):
         self.X = X
         self.y = y
         ...
-    
+
     def get_selected_features(self):
         """
         Get important feature
@@ -95,7 +95,7 @@ class CustomizedSelector(FeatureSelector):
 
 **3. Integrate with Sklearn**
 
-`sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. 
+`sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow.
 The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of the pipeline.
 
 1. Inherit the calss _sklearn.base.BaseEstimator_
@@ -114,7 +114,7 @@ from nni.feature_engineering.feature_selector import FeatureSelector
 class CustomizedSelector(FeatureSelector, BaseEstimator):
     def __init__(self, ...):
     ...
-    
+
     def get_params(self, ...):
         """
         Get parameters for this estimator.
@@ -123,7 +123,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         params = {key: val for (key, val) in params.items()
         if not key.endswith('_')}
         return params
-    
+
     def set_params(self, **params):
         """
         Set the parameters of this estimator.
@@ -145,7 +145,7 @@ from nni.feature_engineering.feature_selector import FeatureSelector
 class CustomizedSelector(FeatureSelector, BaseEstimator):
     def __init__(self, ...):
         ...
-    
+
     def get_params(self, ...):
         """
         Get parameters for this estimator.
@@ -154,7 +154,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         params = {key: val for (key, val) in params.items()
         if not key.endswith('_')}
         return params
-        
+
         def set_params(self, **params):
         """
         Set the parameters of this estimator.
@@ -183,7 +183,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         """
         ...
         return mask
-    
+
 
     def transform(self, X):
         """Reduce X to the selected features.
@@ -243,7 +243,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 `Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
-| Dataset | All Features + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | #Train | #Feature | 
+| Dataset | All Features + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | #Train | #Feature |
 | ----------- | ------ | ------ | ------- | ------- | -------- |
 | colon-cancer | 0.7547, 890ms, 348MiB | 0.7368, 363ms, 286MiB | 0.7223, 171ms, 1171 MiB | 62 | 2,000 |
 | gisette | 0.9725, 215ms, 584MiB | 0.89416, 446ms, 397MiB | 0.9792, 911ms, 234MiB | 6,000 | 5,000 |
