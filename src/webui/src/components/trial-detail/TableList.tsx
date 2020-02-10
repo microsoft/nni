@@ -67,7 +67,7 @@ interface TableListState {
 class TableList extends React.Component<TableListProps, TableListState> {
 
     public intervalTrialLog = 10;
-    public _trialId!: string;
+    public trialId!: string;
 
     constructor(props: TableListProps) {
         super(props);
@@ -97,7 +97,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     // sort for table column
-    _onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { tableColumns } = this.state;
         const { tableSource } = this.props;
         const newColumns: IColumn[] = tableColumns.slice();
@@ -112,14 +112,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this._copyAndSort(tableSource, currColumn.fieldName!, currColumn.isSortedDescending);
+        const newItems = this.copyAndSort(tableSource, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             tableColumns: newColumns,
             tableSourceForSort: newItems
         });
     };
 
-    private _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
         const key = columnKey as keyof T;
         return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
     }
@@ -133,7 +133,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 300,
         isResizable: true,
         data: 'number',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (item): React.ReactNode => <div>{item.formattedLatestAccuracy}</div>
     };
 
@@ -145,7 +145,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 120,
         className: 'tableHead',
         data: 'string',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
     };
 
     IdColumnConfig: any = {
@@ -156,7 +156,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'string',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         className: 'tableHead leftTitle'
     };
 
@@ -169,7 +169,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'number',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (record): React.ReactNode => (
             <span>{formatTimestamp(record.startTime)}</span>
         )
@@ -183,7 +183,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'number',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (record): React.ReactNode => (
             <span>{formatTimestamp(record.endTime, '--')}</span>
         )
@@ -197,7 +197,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'number',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (record): React.ReactNode => (
             <span className="durationsty">{convertDuration(record.duration)}</span>
         )
@@ -212,7 +212,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'string',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (record): React.ReactNode => (
             <span className={`${record.status} commonStyle`}>{record.status}</span>
         ),
@@ -226,7 +226,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         maxWidth: 200,
         isResizable: true,
         data: 'number',
-        onColumnClick: this._onColumnClick,
+        onColumnClick: this.onColumnClick,
         onRender: (record): React.ReactNode => (
             <span>{`#${record.intermediateCount}`}</span>
         )
@@ -362,7 +362,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }));
     }
 
-    private _onRenderRow: IDetailsListProps['onRenderRow'] = props => {
+    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
         if (props) {
             return <Details detailsProps={props} />;
         }
@@ -555,7 +555,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         items={tableSource}
                         setKey="set"
                         compact={true}
-                        onRenderRow={this._onRenderRow}
+                        onRenderRow={this.onRenderRow}
                         layoutMode={DetailsListLayoutMode.justified}
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}

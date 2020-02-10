@@ -80,9 +80,9 @@ const styles = mergeStyleSets({
 });
 
 class Progressed extends React.Component<ProgressProps, ProgressState> {
-    private _menuButtonElement!: HTMLDivElement | null;
-    private _labelId: string = getId('callout-label');
-    private _descriptionId: string = getId('callout-description');
+    private menuButtonElement!: HTMLDivElement | null;
+    private labelId: string = getId('callout-label');
+    private descriptionId: string = getId('callout-description');
     constructor(props: ProgressProps) {
         super(props);
         this.state = {
@@ -103,7 +103,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
      * typeInfo: message type: success | error...
      * continuousTime: show time, 2000ms 
      */
-    getMessageInfo = (info: string, typeInfo: string): void => {
+    showMessageInfo = (info: string, typeInfo: string): void => {
         this.setState(() => ({
             info, typeInfo,
             isShowSucceedInfo: true
@@ -113,12 +113,12 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
 
     editTrialConcurrency = async (userInput: string): Promise<void> => {
         if (!userInput.match(/^[1-9]\d*$/)) {
-            this.getMessageInfo('Please enter a positive integer!', 'error');
+            this.showMessageInfo('Please enter a positive integer!', 'error');
             return;
         }
         const newConcurrency = parseInt(userInput, 10);
         if (newConcurrency === this.props.concurrency) {
-            this.getMessageInfo('Trial concurrency has not changed', 'error');
+            this.showMessageInfo('Trial concurrency has not changed', 'error');
             return;
         }
 
@@ -132,19 +132,19 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                 params: { update_type: 'TRIAL_CONCURRENCY' }
             });
             if (res.status === 200) {
-                this.getMessageInfo('Successfully updated trial concurrency', 'success');
+                this.showMessageInfo('Successfully updated trial concurrency', 'success');
                 // NOTE: should we do this earlier in favor of poor networks?
                 this.props.changeConcurrency(newConcurrency);
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
-                this.getMessageInfo(`Failed to update trial concurrency\n${error.response.data.error}`, 'error');
+                this.showMessageInfo(`Failed to update trial concurrency\n${error.response.data.error}`, 'error');
             } else if (error.response) {
-                this.getMessageInfo(`Failed to update trial concurrency\nServer responsed ${error.response.status}`, 'error');
+                this.showMessageInfo(`Failed to update trial concurrency\nServer responsed ${error.response.status}`, 'error');
             } else if (error.message) {
-                this.getMessageInfo(`Failed to update trial concurrency\n${error.message}`, 'error');
+                this.showMessageInfo(`Failed to update trial concurrency\n${error.message}`, 'error');
             } else {
-                this.getMessageInfo(`Failed to update trial concurrency\nUnknown error`, 'error');
+                this.showMessageInfo(`Failed to update trial concurrency\nUnknown error`, 'error');
             }
         }
     }
@@ -157,11 +157,11 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         this.setState({ isShowLogDrawer: false });
     }
 
-    _onDismiss = (): void => {
+    onDismiss = (): void => {
         this.setState({ isCalloutVisible: false });
     }
 
-    _onShow = (): void => {
+    onShow = (): void => {
         this.setState({ isCalloutVisible: true });
     }
 
@@ -192,28 +192,28 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             EXPERIMENT.status === 'ERROR'
                                 ?
                                 <div>
-                                    <div className={styles.buttonArea} ref={(val): any => this._menuButtonElement = val}>
+                                    <div className={styles.buttonArea} ref={(val): any => this.menuButtonElement = val}>
                                         <IconButton
                                             iconProps={{ iconName: 'info' }}
-                                            onClick={isCalloutVisible ? this._onDismiss : this._onShow}
+                                            onClick={isCalloutVisible ? this.onDismiss : this.onShow}
                                         />
                                     </div>
                                     {isCalloutVisible && (
                                         <Callout
                                             className={styles.callout}
-                                            ariaLabelledBy={this._labelId}
-                                            ariaDescribedBy={this._descriptionId}
+                                            ariaLabelledBy={this.labelId}
+                                            ariaDescribedBy={this.descriptionId}
                                             role="alertdialog"
                                             gapSpace={0}
-                                            target={this._menuButtonElement}
-                                            onDismiss={this._onDismiss}
+                                            target={this.menuButtonElement}
+                                            onDismiss={this.onDismiss}
                                             setInitialFocus={true}
                                         >
                                             <div className={styles.header}>
-                                                <p className={styles.title} id={this._labelId}>Error</p>
+                                                <p className={styles.title} id={this.labelId}>Error</p>
                                             </div>
                                             <div className={styles.inner}>
-                                                <p className={styles.subtext} id={this._descriptionId}>
+                                                <p className={styles.subtext} id={this.descriptionId}>
                                                     {EXPERIMENT.error}
                                                 </p>
                                                 <div className={styles.actions}>

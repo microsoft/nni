@@ -28,10 +28,10 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     }
 
     makeChangeHandler = (label: string): any => {
-        return (ev: any, checked: boolean): void => this._onCheckboxChange(ev, label, checked);
+        return (ev: any, checked: boolean): void => this.onCheckboxChange(ev, label, checked);
     }
 
-    _onCheckboxChange = (ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined, label: string, val?: boolean, ): void => {
+    onCheckboxChange = (ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined, label: string, val?: boolean, ): void => {
         const source: string[] = JSON.parse(JSON.stringify(this.state.userSelectColumnList));
         if (val === true) {
             if (!source.includes(label)) {

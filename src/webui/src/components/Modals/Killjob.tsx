@@ -64,17 +64,17 @@ interface KillJobProps {
 
 class KillJob extends React.Component<KillJobProps, KillJobState> {
 
-    private _menuButtonElement!: HTMLElement | null;
+    private menuButtonElement!: HTMLElement | null;
     constructor(props: KillJobProps) {
         super(props);
         this.state = { isCalloutVisible: false };
     }
 
-    _onDismiss = (): void => {
+    onDismiss = (): void => {
         this.setState(() => ({ isCalloutVisible: false }));
     }
 
-    _onKill = (): void => {
+    onKill = (): void => {
         this.setState({ isCalloutVisible: false }, () => {
             const { trial } = this.props;
             killJob(trial.key, trial.id, trial.status);
@@ -92,7 +92,7 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
         const prompString = 'Are you sure to cancel this trial?';
         return (
             <div>
-                <div className={styles.buttonArea} ref={(menuButton): any => (this._menuButtonElement = menuButton)}>
+                <div className={styles.buttonArea} ref={(menuButton): any => (this.menuButtonElement = menuButton)}>
                     <PrimaryButton className="detail-button-operation" onClick={this.openPromot} title="kill">{blocked}</PrimaryButton>
                 </div>
                 {isCalloutVisible ? (
@@ -101,8 +101,8 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
                             role="alertdialog"
                             className={styles.callout}
                             gapSpace={0}
-                            target={this._menuButtonElement}
-                            onDismiss={this._onDismiss}
+                            target={this.menuButtonElement}
+                            onDismiss={this.onDismiss}
                             setInitialFocus={true}
                         >
                             <div className={styles.header}>
@@ -115,8 +115,8 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
                             </div>
                             <FocusZone>
                                 <Stack className={styles.buttons} gap={8} horizontal>
-                                    <DefaultButton onClick={this._onDismiss}>No</DefaultButton>
-                                    <PrimaryButton onClick={this._onKill}>Yes</PrimaryButton>
+                                    <DefaultButton onClick={this.onDismiss}>No</DefaultButton>
+                                    <PrimaryButton onClick={this.onKill}>Yes</PrimaryButton>
                                 </Stack>
                             </FocusZone>
                         </FocusTrapCallout>

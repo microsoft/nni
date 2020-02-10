@@ -22,14 +22,14 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         this.state = { columns: this.columns, source: TRIALS.table(this.props.trialIds) };
     }
 
-    private _onRenderRow: IDetailsListProps['onRenderRow'] = props => {
+    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
         if (props) {
             return <Details detailsProps={props} />;
         }
         return null;
     };
 
-    _onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { columns, source } = this.state;
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
@@ -43,14 +43,14 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             }
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this._copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        const newItems = this.copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             columns: newColumns,
             source: newItems
         });
     };
 
-    private _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
         const key = columnKey as keyof T;
         return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
     }
@@ -63,7 +63,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             minWidth: 60,
             maxWidth: 80,
             data: 'number',
-            onColumnClick: this._onColumnClick
+            onColumnClick: this.onColumnClick
         }, {
             name: 'ID',
             key: 'id',
@@ -72,7 +72,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             maxWidth: 150,
             className: 'tableHead leftTitle',
             data: 'string',
-            onColumnClick: this._onColumnClick
+            onColumnClick: this.onColumnClick
         }, {
             name: 'Duration',
             key: 'duration',
@@ -80,7 +80,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             maxWidth: 150,
             fieldName: 'duration',
             data: 'number',
-            onColumnClick: this._onColumnClick,
+            onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => {
                 return (
                     <div className="durationsty"><div>{convertDuration(item.duration)}</div></div>
@@ -104,7 +104,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             minWidth: 100,
             maxWidth: 150,
             data: 'number',
-            onColumnClick: this._onColumnClick,
+            onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => {
                 return (
                     <DefaultMetric trialId={item.id} />
@@ -123,7 +123,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     items={source}
                     setKey="set"
                     compact={true}
-                    onRenderRow={this._onRenderRow}
+                    onRenderRow={this.onRenderRow}
                     selectionMode={0} // close selector function
                 />
             </div>
