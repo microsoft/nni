@@ -40,11 +40,11 @@ jobs:
     displayName: 'Start docker'
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: remote_ci_private_key
+      secureFile: $(remote_private_key)
   - script: |
-      cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
+      cp $(Agent.TempDirectory)/$(remote_private_key) test/id_rsa
       chmod 600 test/id_rsa
-      scp -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
+      scp -P $(remote_port) -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
       cat test/port
     displayName: 'Get docker port'
   - script: |
