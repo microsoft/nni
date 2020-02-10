@@ -20,7 +20,7 @@
 
 * 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
-* 参考[安装 NNI](Installation.md)，来了解`系统需求`。
+* For the `system requirements` of NNI, please refer to [Install NNI on Linux&Mac](InstallationLinux.md) or [Windows](InstallationWin.md)
 
 ## MNIST 上的 "Hello World"
 
