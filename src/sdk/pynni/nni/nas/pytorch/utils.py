@@ -12,6 +12,9 @@ _logger = logging.getLogger(__name__)
 
 
 def global_mutable_counting():
+    """
+    A program level counter starting from 1.
+    """
     global _counter
     _counter += 1
     return _counter
@@ -26,6 +29,9 @@ def _reset_global_mutable_counting():
 
 
 def to_device(obj, device):
+    """
+    Move a tensor, tuple, list, or dict onto device.
+    """
     if torch.is_tensor(obj):
         return obj.to(device)
     if isinstance(obj, tuple):
@@ -40,12 +46,18 @@ def to_device(obj, device):
 
 
 class AverageMeterGroup:
-    """Average meter group for multiple average meters"""
+    """
+    Average meter group for multiple average meters.
+    """
 
     def __init__(self):
         self.meters = OrderedDict()
 
     def update(self, data):
+        """
+        Update the meter group with a dict of metrics.
+        Non-exist average meters will be automatically created.
+        """
         for k, v in data.items():
             if k not in self.meters:
                 self.meters[k] = AverageMeter(k, ":4f")
@@ -61,34 +73,49 @@ class AverageMeterGroup:
         return "  ".join(str(v) for v in self.meters.values())
 
     def summary(self):
+        """
+        Return a summary string of group data.
+        """
         return "  ".join(v.summary() for v in self.meters.values())
 
 
 class AverageMeter:
-    """Computes and stores the average and current value"""
+    """
+    Computes and stores the average and current value.
+
+    Parameters
+    ----------
+    name : str
+        Name to display.
+    fmt : str
+        Format string to print the values.
+    """
 
     def __init__(self, name, fmt=':f'):
-        """
-        Initialization of AverageMeter
-
-        Parameters
-        ----------
-        name : str
-            Name to display.
-        fmt : str
-            Format string to print the values.
-        """
         self.name = name
         self.fmt = fmt
         self.reset()
 
     def reset(self):
+        """
+        Reset the meter.
+        """
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        """
+        Update with value and weight.
+
+        Parameters
+        ----------
+        val : float or int
+            The new value to be accounted in.
+        n : int
+            The weight of the new value.
+        """
         if not isinstance(val, float) and not isinstance(val, int):
             _logger.warning("Values passed to AverageMeter must be number, not %s.", type(val))
         self.val = val
@@ -112,6 +139,11 @@ class StructuredMutableTreeNode:
     This tree can be seen as a "flattened" version of the module tree. Since nested mutable entity is not supported yet,
     the following must be true: each subtree corresponds to a ``MutableScope`` and each leaf corresponds to a
     ``Mutable`` (other than ``MutableScope``).
+
+    Parameters
+    ----------
+    mutable : nni.nas.pytorch.mutables.Mutable
+        The mutable that current node is linked with.
     """
 
     def __init__(self, mutable):
@@ -119,10 +151,16 @@ class StructuredMutableTreeNode:
         self.children = []
 
     def add_child(self, mutable):
+        """
+        Add a tree node to the children list of current node.
+        """
         self.children.append(StructuredMutableTreeNode(mutable))
         return self.children[-1]
 
     def type(self):
+        """
+        Return the ``type`` of mutable content.
+        """
         return type(self.mutable)
 
     def __iter__(self):

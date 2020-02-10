@@ -10,27 +10,29 @@ _logger = logging.getLogger(__name__)
 
 
 class SPOSSupernetTrainingMutator(RandomMutator):
+    """
+    A random mutator with flops limit.
+
+    Parameters
+    ----------
+    model : nn.Module
+        PyTorch model.
+    flops_func : callable
+        Callable that takes a candidate from `sample_search` and returns its candidate. When `flops_func`
+        is None, functions related to flops will be deactivated.
+    flops_lb : number
+        Lower bound of flops.
+    flops_ub : number
+        Upper bound of flops.
+    flops_bin_num : number
+        Number of bins divided for the interval of flops to ensure the uniformity. Bigger number will be more
+        uniform, but the sampling will be slower.
+    flops_sample_timeout : int
+        Maximum number of attempts to sample before giving up and use a random candidate.
+    """
     def __init__(self, model, flops_func=None, flops_lb=None, flops_ub=None,
                  flops_bin_num=7, flops_sample_timeout=500):
-        """
 
-        Parameters
-        ----------
-        model : nn.Module
-            PyTorch model.
-        flops_func : callable
-            Callable that takes a candidate from `sample_search` and returns its candidate. When `flops_func`
-            is None, functions related to flops will be deactivated.
-        flops_lb : number
-            Lower bound of flops.
-        flops_ub : number
-            Upper bound of flops.
-        flops_bin_num : number
-            Number of bins divided for the interval of flops to ensure the uniformity. Bigger number will be more
-            uniform, but the sampling will be slower.
-        flops_sample_timeout : int
-            Maximum number of attempts to sample before giving up and use a random candidate.
-        """
         super().__init__(model)
         self._flops_func = flops_func
         if self._flops_func is not None:

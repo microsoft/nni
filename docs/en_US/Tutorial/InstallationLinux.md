@@ -1,10 +1,10 @@
-# Installation of NNI
+# Install on Linux & Mac
 
-Currently we support installation on Linux, macOS and Windows.
+## Installation
 
-## Install on Linux or macOS
+Installation on Linux and macOS follow the same instruction below.
 
-* Install NNI through pip
+### Install NNI through pip
 
   Prerequisite: `python 64-bit >= 3.5`
 
@@ -12,45 +12,21 @@ Currently we support installation on Linux, macOS and Windows.
   python3 -m pip install --upgrade nni
   ```
 
-* Install NNI through source code
+### Install NNI through source code
 
   If you are interested on special or latest code version, you can install NNI through source code.
 
   Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
 
   ```bash
-  git clone -b v0.8 https://github.com/Microsoft/nni.git
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
 
-* Use NNI in a docker image
+### Use NNI in a docker image
 
   You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
-
-## Install on Windows
-
-  Anaconda or Miniconda is highly recommended to manage multiple Python environments.
-
-* Install NNI through pip
-
-  Prerequisites: `python 64-bit >= 3.5`
-
-  ```bash
-  python -m pip install --upgrade nni
-  ```
-
-* Install NNI through source code
-
-  If you are interested on special or latest code version, you can install NNI through source code.
-
-  Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
-
-  ```bash
-  git clone -b v0.8 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-  ```
 
 ## Verify installation
 
@@ -64,16 +40,8 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 
 * Run the MNIST example.
 
-  Linux or macOS
-
   ```bash
   nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
-  ```
-
-  Windows
-
-  ```bash
-  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
   ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
@@ -137,18 +105,6 @@ Due to potential programming changes, the minimum system requirements of NNI may
 | **Storage**          | 70GB available space SSD              | 70GB available space 7200 RPM HDD                         |
 | **Internet**         | Boardband internet connection         |
 | **Resolution**       | 1024 x 768 minimum display resolution |
-
-### Windows
-
-|                      | Recommended                                    | Minimum                                |
-| -------------------- | ---------------------------------------------- | -------------------------------------- |
-| **Operating System** | Windows 10 1809 or above                       |
-| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
-| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
-| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
-| **Storage**          | 30 GB available hare drive space               |
-| **Internet**         | Boardband internet connection                  |
-| **Resolution**       | 1024 x 768 minimum display resolution          |
 
 ## Further reading
 
