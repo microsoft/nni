@@ -29,6 +29,12 @@ def gen_new_config(config_file, training_service='local'):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
+    
+    if training_service == 'frameworkcontroller':
+        it_config[training_service]['trial']['taskRoles'][0]['command'] = config['trial']['command']
+        config['trial'].pop('command')
+        if 'gpuNum' in config['trial']:
+            config['trial'].pop('gpuNum')
 
     deep_update(config, it_config['all'])
     deep_update(config, it_config[training_service])
@@ -106,7 +112,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
-    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow'], default='local')
+    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
     args = parser.parse_args()
