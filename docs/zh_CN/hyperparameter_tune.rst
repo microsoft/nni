@@ -24,4 +24,4 @@ NNI 具有高扩展性，高级用户可以定制自己的 Tuner、 Assessor，�
     示例 <examples>
     Web 界面 <Tutorial/WebUI>
     如何调试 <Tutorial/HowToDebug>
-    Advanced <hpo_advanced>
+    高级 <hpo_advanced>
