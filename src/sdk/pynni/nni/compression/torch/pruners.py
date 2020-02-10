@@ -83,17 +83,20 @@ class AGP_Pruner(Pruner):
 
         super().__init__(model, config_list)
         self.now_epoch = 0
-        self.if_init_list = {}
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
-        Calculate the mask of given layer
+        Calculate the mask of given layer.
+        Scale factors with the smallest absolute value in the BN layer are masked.
         Parameters
         ----------
         layer : LayerInfo
             the layer to instrument the compression operation
         config : dict
             layer's pruning config
+        kwargs: dict
+            buffers registered in __init__ function
         Returns
         -------
         dict
@@ -101,24 +104,26 @@ class AGP_Pruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
-                and (self.now_epoch - start_epoch) % freq == 0:
-            mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
-            target_sparsity = self.compute_target_sparsity(config)
-            k = int(weight.numel() * target_sparsity)
-            if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
-                return mask
-            # if we want to generate new mask, we should update weigth first
-            w_abs = weight.abs() * mask
-            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-            new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
-            self.mask_dict.update({op_name: new_mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            new_mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
+
+        if_calculated = kwargs["if_calculated"]
+        if if_calculated:
+            return None
+        if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
+            return None
+
+        mask = {'weight': torch.ones(weight.shape).type_as(weight)}
+        target_sparsity = self.compute_target_sparsity(config)
+        k = int(weight.numel() * target_sparsity)
+        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
+            return mask
+        # if we want to generate new mask, we should update weigth first
+        w_abs = weight.abs()
+        threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
+        new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
+        if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
+
         return new_mask
 
     def compute_target_sparsity(self, config):
@@ -164,9 +169,8 @@ class AGP_Pruner(Pruner):
 
         if epoch > 0:
             self.now_epoch = epoch
-            for k in self.if_init_list.keys():
-                self.if_init_list[k] = True
-
+            for wrapper in self.get_modules_wrapper():
+                wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0)) # pylint: disable=not-callable
 
 class SlimPruner(Pruner):
     """
