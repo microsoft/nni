@@ -1,5 +1,10 @@
 内置 Tuner
-==================
+==============
+
+NNI provides an easy way to adopt an approach to set up parameter tuning algorithms, we call them **Tuner**.
+
+Tuner receives metrics from `Trial` to evaluate the performance of a specific parameters/architecture configures. And tuner sends next hyper-parameter or architecture configure to Trial.
+
 
 ..  toctree::
     :maxdepth: 1
