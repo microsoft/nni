@@ -10,17 +10,17 @@
 
 ## 设计和实现
 
-To speed up a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask, or replaced with sparse kernel for fine-grained mask. Coarse-grained mask usually changes the shape of weights or input/output tensors, thus, we should do shape inference to check are there other unpruned layers should be replaced as well due to shape change. Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced; second, replace the modules. The first step requires topology (i.e., connections) of the model, we use `jit.trace` to obtain the model grpah for PyTorch.
+为了加速模型，被剪枝的层应该被替换掉，要么为粗粒度掩码使用较小的层，要么用稀疏内核来替换细粒度的掩码。 粗粒度掩码通常会改变权重的形状，或输入输出张量，因此，应该通过形状推断，来检查是否其它未被剪枝的层由于形状变化而需要改变形状。 因此，在设计中，主要有两个步骤：第一，做形状推理，找出所有应该替换的模块；第二，替换模块。 第一步需要模型的拓扑（即连接），我们使用了 `jit.trace` 来获取 PyTorch 的模型图。
 
-For each module, we should prepare four functions, three for shape inference and one for module replacement. The three shape inference functions are: given weight shape infer input/output shape, given input shape infer weight/output shape, given output shape infer weight/input shape. The module replacement function returns a newly created module which is smaller.
+对于每个模块，要准备四个函数，三个用于形状推理，一个用于模块替换。 三个形状推理函数是：给定权重形状推断输入/输出形状，给定输入形状推断权重/输出形状，给定输出形状推断权重/输入形状。 模块替换功能返回一个较小的新创建的模块。
 
-## Usage
+## 用法
 
 ```python
 from nni.compression.speedup.torch import ModelSpeedup
-# model: the model you want to speed up
-# dummy_input: dummy input of the model, given to `jit.trace`
-# masks_file: the mask file created by pruning algorithms
+# model: 要加速的模型
+# dummy_input: 模型的示输入，传给 `jit.trace`
+# masks_file: 剪枝算法创建的掩码文件
 m_speedup = ModelSpeedup(model, dummy_input.to(device), masks_file)
 m_speedup.speedup_model()
 dummy_input = dummy_input.to(device)
@@ -28,11 +28,11 @@ start = time.time()
 out = model(dummy_input)
 print('elapsed time: ', time.time() - start)
 ```
-For complete examples please refer to [the code](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)
+完整示例参考[这里](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)
 
-NOTE: The current implementation only works on torch 1.3.1 and torchvision 0.4.2
+注意：当前实现仅用于 torch 1.3.1 和 torchvision 0.4.2
 
-## Limitations
+## 局限性
 
 Since every module requires four functions for shape inference and module replacement, this is a large amount of work, we only implemented the ones that are required by the examples. If you want to speed up your own model which cannot supported by the current implementation, you are welcome to contribute.
 
