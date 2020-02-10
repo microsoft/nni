@@ -1,7 +1,8 @@
+###################
 特征工程
-===================
+###################
 
-很高兴的宣布 NNI 的特征工程包 Alpha 版本发布了。
+We are glad to introduce Feature Engineering toolkit on top of NNI,
 其仍处于试验阶段，会根据使用反馈来演化。
 诚挚邀请您使用、反馈，或更多贡献。
 
