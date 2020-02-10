@@ -16,14 +16,30 @@
   z-index: 1000;
 }
 
+.headerCon{
+  width: 90%;
+  margin: 0 auto;
+}
 .contentBox{
   width: 100%;
 }
 .content{
-  width: 86%;
+  width: 89%;
   min-width: 1024px;
   margin: 0 auto;
   margin-top: 74px;
   margin-bottom: 30px;
   background: #fff;
+}
+
+/* office-fabric-ui */
+.ms-Pivot-linkContent{
+  height: 44px;
+}
+
+.ms-Callout-main{
+  p{
+    font-weight: 500;
+    color: #333;
+  }
 }

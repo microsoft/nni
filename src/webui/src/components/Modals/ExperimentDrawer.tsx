@@ -1,10 +1,11 @@
 import * as React from 'react';
 import axios from 'axios';
 import { downFile } from '../../static/function';
-import { Drawer, Tabs, Row, Col, Button } from 'antd';
+import {
+    Stack, PrimaryButton, DefaultButton, Panel, StackItem, Pivot, PivotItem
+} from 'office-ui-fabric-react';
 import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
-const { TabPane } = Tabs;
 import '../../static/style/logDrawer.scss';
 
 interface ExpDrawerProps {
@@ -19,13 +20,13 @@ interface ExpDrawerState {
 
 class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
-    public _isCompareMount: boolean;
+    public _isCompareMount!: boolean;
     constructor(props: ExpDrawerProps) {
         super(props);
 
         this.state = {
             experiment: '',
-            expDrawerHeight: window.innerHeight - 48
+            expDrawerHeight: window.innerHeight
         };
     }
 
@@ -72,7 +73,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     onWindowResize = (): void => {
-        this.setState(() => ({expDrawerHeight: window.innerHeight - 48}));
+        this.setState(() => ({ expDrawerHeight: window.innerHeight }));
     }
 
     componentDidMount(): void {
@@ -97,53 +98,42 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         const { isVisble, closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
         return (
-            <Row className="logDrawer">
-                <Drawer
-                    // title="Log Message"
-                    placement="right"
-                    closable={false}
-                    destroyOnClose={true}
-                    onClose={closeExpDrawer}
-                    visible={isVisble}
-                    width="54%"
-                    height={expDrawerHeight}
+            <Stack className="logDrawer">
+                <Panel
+                    isOpen={isVisble}
+                    hasCloseButton={false}
+                    styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
-                    {/* 104: tabHeight(40) + tabMarginBottom(16) + buttonHeight(32) + buttonMarginTop(16) */}
-                    <div className="card-container log-tab-body">
-                        <Tabs type="card" style={{ height: expDrawerHeight, minHeight: 190 }}>
-                            <TabPane tab="Experiment Parameters" key="Experiment">
-                                <div className="just-for-log">
-                                    <MonacoEditor
-                                        width="100%"
-                                        height={expDrawerHeight - 104}
-                                        language="json"
-                                        value={experiment}
-                                        options={DRAWEROPTION}
+                    <Pivot style={{ minHeight: 190 }} className="log-tab-body">
+                        <PivotItem headerText="Experiment Parameters">
+                            <div className="just-for-log">
+                                <MonacoEditor
+                                    width="100%"
+                                    // 92 + marginTop[16]
+                                    height={expDrawerHeight - 108}
+                                    language="json"
+                                    value={experiment}
+                                    options={DRAWEROPTION}
+                                />
+                            </div>
+                            <Stack horizontal className="buttons">
+                                <StackItem grow={50} className="download">
+                                    <PrimaryButton
+                                        text="Download"
+                                        onClick={this.downExperimentParameters}
                                     />
-                                </div>
-                                <Row className="buttons">
-                                    <Col span={12}  className="download">
-                                        <Button
-                                            type="primary"
-                                            onClick={this.downExperimentParameters}
-                                        >
-                                            Download
-                                        </Button>
-                                    </Col>
-                                    <Col span={12} className="close">
-                                        <Button
-                                            type="default"
-                                            onClick={closeExpDrawer}
-                                        >
-                                            Close
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </TabPane>
-                        </Tabs>
-                    </div>
-                </Drawer>
-            </Row>
+                                </StackItem>
+                                <StackItem grow={50} className="close">
+                                    <DefaultButton
+                                        text="Close"
+                                        onClick={closeExpDrawer}
+                                    />
+                                </StackItem>
+                            </Stack>
+                        </PivotItem>
+                    </Pivot>
+                </Panel>
+            </Stack>
         );
     }
 }
