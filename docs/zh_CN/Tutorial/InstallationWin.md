@@ -1,22 +1,22 @@
-# Install on Windows
+# 在 Windows 上安装
 
-## Installation
+## 安装
 
-Anaconda or Miniconda is highly recommended to manage multiple Python environments.
+强烈建议使用 Anaconda 或 Miniconda 来管理多个 Python 环境。
 
-### Install NNI through pip
+### 通过 pip 命令安装 NNI
 
-  Prerequisites: `python 64-bit >= 3.5`
+  先决条件：`python 64-bit >= 3.5`
 
   ```bash
   python -m pip install --upgrade nni
   ```
 
-### Install NNI through source code
+### 通过源代码安装 NNI
 
-  If you are interested on special or latest code version, you can install NNI through source code.
+  如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
 
-  Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
+  先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
 
   ```bash
   git clone -b v1.3 https://github.com/Microsoft/nni.git
@@ -24,25 +24,25 @@ Anaconda or Miniconda is highly recommended to manage multiple Python environmen
   powershell -ExecutionPolicy Bypass -file install.ps1
   ```
 
-## Verify installation
+## 验证安装
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 **TensorFlow 1.x**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
 
   ```bash
   git clone -b v1.3 https://github.com/Microsoft/nni.git
   ```
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
 
   ```bash
   nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
   ```
 
-  Note: for other examples you need to change trial command `python3` to `python` in each example YAML, if python3 is called through `python` on your machine.
+  注意：在其它示例中，如果 Python3 是通过 `python` 命令启动，需要将每个示例 YAML 文件的 Trial 命令中的 `python3` 改为 `python`。
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -70,25 +70,25 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
-![overview](../../img/webui_overview_page.png)
+![概述](../../img/webui_overview_page.png)
 
-![detail](../../img/webui_trialdetail_page.png)
+![详细说明](../../img/webui_trialdetail_page.png)
 
-## System requirements
+## 系统需求
 
-Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
 
-|                      | Recommended                                    | Minimum                                |
-| -------------------- | ---------------------------------------------- | -------------------------------------- |
-| **Operating System** | Windows 10 1809 or above                       |                                        |
-| **CPU**              | Intel® Core™ i5 or AMD Phenom™ II X3 or better | Intel® Core™ i3 or AMD Phenom™ X3 8650 |
-| **GPU**              | NVIDIA® GeForce® GTX 660 or better             | NVIDIA® GeForce® GTX 460               |
-| **Memory**           | 6 GB RAM                                       | 4 GB RAM                               |
-| **Storage**          | 30 GB available hare drive space               |                                        |
-| **Internet**         | Boardband internet connection                  |                                        |
-| **Resolution**       | 1024 x 768 minimum display resolution          |                                        |
+|                | 推荐配置                                      | 最低配置                                  |
+| -------------- | ----------------------------------------- | ------------------------------------- |
+| **操作系统**       | Windows 10 1809 或更高版本                     |                                       |
+| **CPU**        | Intel® Core™ i5 或 AMD Phenom™ II X3 或更高配置 | Intel® Core™ i3 或 AMD Phenom™ X3 8650 |
+| **GPU**        | NVIDIA® GeForce® GTX 660 or better        | NVIDIA® GeForce® GTX 460              |
+| **Memory**     | 6 GB RAM                                  | 4 GB RAM                              |
+| **Storage**    | 30 GB available hare drive space          |                                       |
+| **Internet**   | Boardband internet connection             |                                       |
+| **Resolution** | 1024 x 768 minimum display resolution     |                                       |
 
 ## FAQ
 
