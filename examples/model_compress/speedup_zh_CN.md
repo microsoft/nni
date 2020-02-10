@@ -34,63 +34,63 @@ print('elapsed time: ', time.time() - start)
 
 ## 局限性
 
-Since every module requires four functions for shape inference and module replacement, this is a large amount of work, we only implemented the ones that are required by the examples. If you want to speed up your own model which cannot supported by the current implementation, you are welcome to contribute.
+由于每个模块需要 4 个函数用于形状推理和模块替换，因此工作量较大，当前仅实现了示例所需的函数。 如果要加速自己的模型，但当前不支持，欢迎贡献。
 
-For PyTorch we can only replace modules, if functions in `forward` should be replaced, our current implementation does not work. One workaround is make the function a PyTorch module.
+对于 PyTorch，仅提供了替换模块，如果是在 `forward` 中的函数，当前不支持。 一种解决方案是将函数变为 PyTorch 模块。
 
-## Speedup Results of Examples
+## 示例的加速结果
 
-The code of these experiments can be found [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py).
+实验代码可在[这里](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)找到。
 
-### slim pruner example
+### slim Pruner 示例
 
-on one V100 GPU, input tensor: `torch.randn(64, 3, 32, 32)`
+在一块 V100 GPU 上， 输入张量：`torch.randn(64, 3, 32, 32)`
 
-| Times | Mask Latency | Speedup Latency |
-| ----- | ------------ | --------------- |
-| 1     | 0.01197      | 0.005107        |
-| 2     | 0.02019      | 0.008769        |
-| 4     | 0.02733      | 0.014809        |
-| 8     | 0.04310      | 0.027441        |
-| 16    | 0.07731      | 0.05008         |
-| 32    | 0.14464      | 0.10027         |
+| 次数 | 掩码时延    | 加速后的时延   |
+| -- | ------- | -------- |
+| 1  | 0.01197 | 0.005107 |
+| 2  | 0.02019 | 0.008769 |
+| 4  | 0.02733 | 0.014809 |
+| 8  | 0.04310 | 0.027441 |
+| 16 | 0.07731 | 0.05008  |
+| 32 | 0.14464 | 0.10027  |
 
-### fpgm pruner example
+### fpgm Pruner 示例
 
-on cpu, input tensor: `torch.randn(64, 1, 28, 28)`, too large variance
+在 CPU 上， 输入张量：`torch.randn(64, 1, 28, 28)`, 方差较大
 
-| Times | Mask Latency | Speedup Latency |
-| ----- | ------------ | --------------- |
-| 1     | 0.01383      | 0.01839         |
-| 2     | 0.01167      | 0.003558        |
-| 4     | 0.01636      | 0.01088         |
-| 40    | 0.14412      | 0.08268         |
-| 40    | 1.29385      | 0.14408         |
-| 40    | 0.41035      | 0.46162         |
-| 400   | 6.29020      | 5.82143         |
+| 次数  | 掩码时延    | 加速后的时延   |
+| --- | ------- | -------- |
+| 1   | 0.01383 | 0.01839  |
+| 2   | 0.01167 | 0.003558 |
+| 4   | 0.01636 | 0.01088  |
+| 40  | 0.14412 | 0.08268  |
+| 40  | 1.29385 | 0.14408  |
+| 40  | 0.41035 | 0.46162  |
+| 400 | 6.29020 | 5.82143  |
 
-### l1filter pruner example
+### l1filter Pruner 示例
 
-on one V100 GPU, input tensor: `torch.randn(64, 3, 32, 32)`
+在一块 V100 GPU 上， 输入张量：`torch.randn(64, 3, 32, 32)`
 
-| Times | Mask Latency | Speedup Latency |
-| ----- | ------------ | --------------- |
-| 1     | 0.01026      | 0.003677        |
-| 2     | 0.01657      | 0.008161        |
-| 4     | 0.02458      | 0.020018        |
-| 8     | 0.03498      | 0.025504        |
-| 16    | 0.06757      | 0.047523        |
-| 32    | 0.10487      | 0.086442        |
+| 次数 | 掩码时延    | 加速后的时延   |
+| -- | ------- | -------- |
+| 1  | 0.01026 | 0.003677 |
+| 2  | 0.01657 | 0.008161 |
+| 4  | 0.02458 | 0.020018 |
+| 8  | 0.03498 | 0.025504 |
+| 16 | 0.06757 | 0.047523 |
+| 32 | 0.10487 | 0.086442 |
 
-### APoZ pruner example
+### APoZ Pruner 示例
 
-on one V100 GPU, input tensor: `torch.randn(64, 3, 32, 32)`
+在一块 V100 GPU 上， 输入张量：`torch.randn(64, 3, 32, 32)`
 
-| Times | Mask Latency | Speedup Latency |
-| ----- | ------------ | --------------- |
-| 1     | 0.01389      | 0.004208        |
-| 2     | 0.01628      | 0.008310        |
-| 4     | 0.02521      | 0.014008        |
-| 8     | 0.03386      | 0.023923        |
-| 16    | 0.06042      | 0.046183        |
-| 32    | 0.12421      | 0.087113        |
+| 次数 | 掩码时延    | 加速后的时延   |
+| -- | ------- | -------- |
+| 1  | 0.01389 | 0.004208 |
+| 2  | 0.01628 | 0.008310 |
+| 4  | 0.02521 | 0.014008 |
+| 8  | 0.03386 | 0.023923 |
+| 16 | 0.06042 | 0.046183 |
+| 32 | 0.12421 | 0.087113 |
