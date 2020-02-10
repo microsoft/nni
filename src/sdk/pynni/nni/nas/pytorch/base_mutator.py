@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 class BaseMutator(nn.Module):
     """
     A mutator is responsible for mutating a graph by obtaining the search space from the network and implementing
-    callbacks that are called in ``forward`` in Mutables.
+    callbacks that are called in ``forward`` in mutables.
+
+    Parameters
+    ----------
+    model : nn.Module
+        PyTorch model to apply mutator on.
     """
 
     def __init__(self, model):
@@ -52,9 +57,19 @@ class BaseMutator(nn.Module):
 
     @property
     def mutables(self):
+        """
+        A generator of all modules inheriting :class:`~nni.nas.pytorch.mutables.Mutable`.
+        Modules are yielded in the order that they are defined in ``__init__``.
+        For mutables with their keys appearing multiple times, only the first one will appear.
+        """
         return self._structured_mutables
 
     def forward(self, *inputs):
+        """
+        Warnings
+        --------
+        Don't call forward of a mutator.
+        """
         raise RuntimeError("Forward is undefined for mutators.")
 
     def __setattr__(self, name, value):
@@ -70,6 +85,7 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable_scope : MutableScope
+            The mutable scope that is entered.
         """
         pass
 
@@ -80,6 +96,7 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable_scope : MutableScope
+            The mutable scope that is exited.
         """
         pass
 
@@ -90,12 +107,14 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable : LayerChoice
+            Module whose forward is called.
         inputs : list of torch.Tensor
+            The arguments of its forward function.
 
         Returns
         -------
         tuple of torch.Tensor and torch.Tensor
-            output tensor and mask
+            Output tensor and mask.
         """
         raise NotImplementedError
 
@@ -106,12 +125,14 @@ class BaseMutator(nn.Module):
         Parameters
         ----------
         mutable : InputChoice
+            Mutable that is called.
         tensor_list : list of torch.Tensor
+            The arguments mutable is called with.
 
         Returns
         -------
         tuple of torch.Tensor and torch.Tensor
-            output tensor and mask
+            Output tensor and mask.
         """
         raise NotImplementedError
 
@@ -123,5 +144,6 @@ class BaseMutator(nn.Module):
         Returns
         -------
         dict
+            Mappings from mutable keys to decisions.
         """
         raise NotImplementedError

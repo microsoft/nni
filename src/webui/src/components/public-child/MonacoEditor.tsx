@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Spin } from 'antd';
+import { Spinner } from 'office-ui-fabric-react';
 import { DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
 
@@ -11,7 +11,7 @@ interface MonacoEditorProps {
 
 class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
 
-    public _isMonacoMount: boolean;
+    public _isMonacoMount!: boolean;
 
     constructor(props: MonacoEditorProps) {
         super(props);
@@ -25,23 +25,37 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
         this._isMonacoMount = false;
     }
 
-    render(): React.ReactNode{
+    render(): React.ReactNode {
         const { content, loading, height } = this.props;
         return (
             <div className="just-for-log">
-                <Spin
-                    // tip="Loading..."
-                    style={{ width: '100%', height: height }}
-                    spinning={loading}
-                >
-                    <MonacoEditor
-                        width="100%"
-                        height={height}
-                        language="json"
-                        value={content}
-                        options={DRAWEROPTION}
-                    />
-                </Spin>
+                {
+                    loading
+                        ?
+                        <Spinner
+                            label="Wait, wait..."
+                            ariaLive="assertive"
+                            labelPosition="right"
+                            styles={{ root: { width: '100%', height: height } }}
+                        >
+                            <MonacoEditor
+                                width="100%"
+                                height={height}
+                                language="json"
+                                value={content}
+                                options={DRAWEROPTION}
+                            />
+                        </Spinner>
+                        :
+                        <MonacoEditor
+                            width="100%"
+                            height={height}
+                            language="json"
+                            value={content}
+                            options={DRAWEROPTION}
+                        />
+                }
+
             </div>
         );
     }

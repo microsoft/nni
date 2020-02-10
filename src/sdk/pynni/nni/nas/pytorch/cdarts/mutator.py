@@ -127,18 +127,15 @@ class RegularizedMutatorParallel(DistributedDataParallel):
 class DartsDiscreteMutator(Mutator):
     """
     A mutator that applies the final sampling result of a parent mutator on another model to train.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The model to apply the mutator.
+    parent_mutator : Mutator
+        The mutator that provides ``sample_final`` method, that will be called to get the architecture.
     """
     def __init__(self, model, parent_mutator):
-        """
-        Initialization.
-
-        Parameters
-        ----------
-        model : nn.Module
-            The model to apply the mutator.
-        parent_mutator : Mutator
-            The mutator that provides ``sample_final`` method, that will be called to get the architecture.
-        """
         super().__init__(model)
         self.__dict__["parent_mutator"] = parent_mutator  # avoid parameters to be included
 
