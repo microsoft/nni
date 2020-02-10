@@ -93,17 +93,11 @@ By default, it will use `architecture_final.json`. This architecture is provided
 ..  autoclass:: nni.nas.pytorch.spos.SPOSEvolution
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainer
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainingMutator
     :members:
-
-    .. automethod:: __init__
 ```
 
 ## Known Limitations
