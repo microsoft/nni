@@ -2,11 +2,11 @@
 
 ## 介绍
 
-论文 [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) 去掉了代理，直接从大规模目标任务和目标硬件平台上学习架构。 They address high memory consumption issue of differentiable NAS and reduce the computational cost to the same level of regular training while still allowing a large candidate set. Please refer to the paper for the details.
+论文 [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/pdf/1812.00332.pdf) 去掉了代理，直接从大规模目标任务和目标硬件平台上学习架构。 它解决了可微分 NAS 大量内存消耗的问题，从而将计算成本较低到普通训练的水平，同时仍然能使用大规模的候选集。 参考论文了解详情。
 
-## Usage
+## 用法
 
-To use ProxylessNAS training/searching approach, users need to specify search space in their model using [NNI NAS interface](NasGuide.md), e.g., `LayerChoice`, `InputChoice`. After defining and instantiating the model, the following work can be leaved to ProxylessNasTrainer by instantiating the trainer and passing the model to it.
+要使用 ProxylessNAS 训练、搜索方法，用户要在模型中使用 [NNI NAS interface](NasGuide.md) 来指定搜索空间，例如，`LayerChoice`，`InputChoice`。 定义并实例化模型，然后实例化 ProxylessNasTrainer，并将模型传入，剩下的工作由 Trainer 来完成。
 ```python
 trainer = ProxylessNasTrainer(model,
                               model_optim=optimizer,
@@ -19,13 +19,13 @@ trainer = ProxylessNasTrainer(model,
 trainer.train()
 trainer.export(args.arch_path)
 ```
-The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas).
+[此处](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas)是完整示例。
 
-**Input arguments of ProxylessNasTrainer**
+**ProxylessNasTrainer 的输入参数**
 
-* **model** (*PyTorch model, required*) - The model that users want to tune/search. It has mutables to specify search space.
-* **model_optim** (*PyTorch optimizer, required*) - The optimizer users want to train the model.
-* **device** (*device, required*) - The devices that users provide to do the train/search. The trainer applies data parallel on the model for users.
+* **model** (*PyTorch 模型, 必需*) - 需要调优、搜索的模型。 它具有可变项以指定搜索空间。
+* **model_optim** (*PyTorch 优化器, 必需*) - 训练模型所需要的优化器。
+* **device** (*device, 必需*) - 用于训练、搜索的 device。 Trainer 会使用数据并行化。
 * **train_loader** (*PyTorch data loader, required*) - The data loader for training set.
 * **valid_loader** (*PyTorch data loader, required*) - The data loader for validation set.
 * **label_smoothing** (*float, optional, default = 0.1*) - The degree of label smoothing.
