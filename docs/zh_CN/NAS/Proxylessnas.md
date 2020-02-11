@@ -50,13 +50,13 @@ trainer.export(args.arch_path)
 
 NNI 上的实现基于[官方实现](https://github.com/mit-han-lab/ProxylessNAS)。 官方实现支持两种搜索方法：梯度下降和强化学习，还支持不同的硬件，包括 'mobile', 'cpu', 'gpu8', 'flops'。 在当前的 NNI 实现中，支持梯度下降训练方法，不支持不同的硬件。 完整支持正在进行中。
 
-下面将介绍实现的细节。 像 NNI 上其它 one-shot NAS 算法一样，ProxylessNAS 由两部分组成：*搜索空间* 和 *训练方法*。 For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in [example code](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas) using [NNI NAS interface](NasGuide.md), and put the training approach in [SDK](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/proxylessnas).
+下面将介绍实现的细节。 像 NNI 上其它 one-shot NAS 算法一样，ProxylessNAS 由两部分组成：*搜索空间* 和 *训练方法*。 为了用户能灵活的定义自己的搜索空间，并使用内置的 ProxylessNAS 训练方法，将使用 [NNI NAS 接口](NasGuide.md)定制的搜索空间放在了[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas)中，并将搜索方法放在了 [SDK](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/proxylessnas) 中。
 
 ![](../../img/proxylessnas.png)
 
-ProxylessNAS training approach is composed of ProxylessNasMutator and ProxylessNasTrainer. ProxylessNasMutator instantiates MixedOp for each mutable (i.e., LayerChoice), and manage architecture weights in MixedOp. **For DataParallel**, architecture weights should be included in user model. Specifically, in ProxylessNAS implementation, we add MixedOp to the corresponding mutable (i.e., LayerChoice) as a member variable. The mutator also exposes two member functions, i.e., `arch_requires_grad`, `arch_disable_grad`, for the trainer to control the training of architecture weights.
+ProxylessNAS 搜索方法由 ProxylessNasMutator 和 ProxylessNasTrainer 组成。 ProxylessNasMutator 为每个可变量初始化了 MixedOp (即, LayerChoice)，并会在 MixedOp 中管理架构权重。 **对于数据并行化**，架构权重会在用户模型中。 具体地说，在 ProxylessNAS 视线中，为可变变量 (即, LayerChoice) 添加了 MixedOp 作为成员变量。 Mutator 也公开了两个成员函数：`arch_requires_grad` 和 `arch_disable_grad`，用于 Trainer 来控制架构权重的训练。
 
-ProxylessNasMutator also implements the forward logic of the mutables (i.e., LayerChoice).
+ProxylessNasMutator 还实现了可变量的前向逻辑 (即, LayerChoice)。
 
 ## 重现结果
 
