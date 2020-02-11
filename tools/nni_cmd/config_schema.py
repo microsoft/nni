@@ -271,16 +271,17 @@ pai_yarn_config_schema = {
 
 pai_trial_schema = {
     'trial':{
-        'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
-        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
-        'cpuNum': setNumberRange('cpuNum', int, 0, 99999),
-        'memoryMB': setType('memoryMB', int),
-        'image': setType('image', str),
-        Optional('virtualCluster'): setType('virtualCluster', str),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
-        'paiStoragePlugin': setType('paiStoragePlugin', str)
+        'command': setType('command', str),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memoryMB'): setType('memoryMB', int),
+        Optional('image'): setType('image', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('paiStoragePlugin'): setType('paiStoragePlugin', str),
+        Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
     }
 }
 
@@ -407,20 +408,22 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-    Optional('machineList'):[Or({
-        'ip': setType('ip', str),
-        Optional('port'): setNumberRange('port', int, 1, 65535),
-        'username': setType('username', str),
-        'passwd': setType('passwd', str),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-        Optional('useActiveGpu'): setType('useActiveGpu', bool)
-        }, {
+    Optional('machineList'):[Or(
+        {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
             'username': setType('username', str),
             'sshKeyPath': setPathCheck('sshKeyPath'),
             Optional('passphrase'): setType('passphrase', str),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+            Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        },
+        {
+            'ip': setType('ip', str),
+            Optional('port'): setNumberRange('port', int, 1, 65535),
+            'username': setType('username', str),
+            'passwd': setType('passwd', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool)

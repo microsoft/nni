@@ -30,12 +30,16 @@ def copy_remote_directory_to_local(sftp, remote_path, local_path):
     except Exception:
         pass
 
-def create_ssh_sftp_client(host_ip, port, username, password):
+def create_ssh_sftp_client(host_ip, port, username, password, ssh_key_path, passphrase):
     '''create ssh client'''
     try:
         paramiko = check_environment()
         conn = paramiko.Transport(host_ip, port)
-        conn.connect(username=username, password=password)
+        if ssh_key_path is not None:
+            ssh_key = paramiko.RSAKey.from_private_key_file(ssh_key_path, password=passphrase)
+            conn.connect(username=username, pkey=ssh_key)
+        else:
+            conn.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(conn)
         return sftp
     except Exception as exception:
