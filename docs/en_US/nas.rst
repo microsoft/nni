@@ -24,4 +24,5 @@ For details, please refer to the following tutorials:
     P-DARTS <NAS/PDARTS>
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
+    ProxylessNAS <NAS/Proxylessnas>
     API Reference <NAS/NasReference>
