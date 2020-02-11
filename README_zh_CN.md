@@ -4,7 +4,7 @@
 
 * * *
 
-[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=latest)](https://nni.readthedocs.io/zh/latest/?badge=latest)
+[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration-test-local?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=17&branchName=master) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=latest)](https://nni.readthedocs.io/zh/latest/?badge=latest)
 
 [English](README.md)
 
@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **NNI v1.2 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI v1.3 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -83,6 +83,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/zh_CN/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
+           <li><a href="docs/zh_CN/TrialExample/EfficientNet.md">EfficientNet</a></li>
               <a href="docs/zh_CN/SupportedFramework_Library.md">更多...</a><br/>
           </ul>
         </ul>
@@ -121,6 +122,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/Overview.md#enas">ENAS</a></li>
               <li><a href="docs/zh_CN/NAS/Overview.md#darts">DARTS</a></li>
               <li><a href="docs/zh_CN/NAS/Overview.md#p-darts">P-DARTS</a></li>
+              <li><a href="docs/zh_CN/NAS/Overview.md#cdarts">CDARTS</a></li>
               <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
@@ -160,7 +162,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             </ul>
       </ul>
       </td>
-    </tr> 
+    </tr>
       <tr align="center" valign="bottom">
       </td>
       </tr>
@@ -186,18 +188,18 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
         <li><a href="docs/zh_CN/TrainingService/SupportTrainingService.md">支持训练平台</li>
         <li><a href="docs/zh_CN/TrainingService/HowToImplementTrainingService.md">实现训练平台</a></li>
       </ul>
-      </td>     
-    </tr> 
+      </td>
+    </tr>
   </tbody>
 </table>
 
-## **安装和验证**
+## **安装**
 
-**通过 pip 命令安装**
+### **安装**
 
-* 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64-bit >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux 和 macOS
+Linux 或 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -209,65 +211,39 @@ Windows
 python -m pip install --upgrade nni
 ```
 
+如果想要尝试最新代码，可通过源代码[安装 NNI](docs/zh_CN/Tutorial/Installation.md)。
+
+有关 NNI 的详细系统要求，参考[这里](docs/zh_CN/Tutorial/Installation.md#system-requirements)。
+
 注意：
 
-* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。
+* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
 
-**通过源代码安装**
+### **验证安装**
 
-* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
-
-Linux 和 MacOS
-
-* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
-
-```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
-    cd nni
-    source install.sh
-```
-
-Windows
-
-* 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
-
-```bash
-  git clone -b v1.2 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-```
-
-参考[安装 NNI](docs/zh_CN/Tutorial/Installation.md) 了解系统需求。
-
-Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
-
-**验证安装**
-
-以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow 1.x**。 注意，**目前不支持 TensorFlow 2.0**。
+以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
 * 通过克隆源代码下载示例。
-
-```bash
-    git clone -b v1.2 https://github.com/Microsoft/nni.git
-```
-
-Linux 和 MacOS
+   
+   ```bash
+   git clone -b v1.3 https://github.com/Microsoft/nni.git
+   ```
 
 * 运行 MNIST 示例。
-
-```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
-```
-
-Windows
-
-* 运行 MNIST 示例。
-
-```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-```
+   
+   Linux 或 macOS
+   
+   ```bash
+   nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+   ```
+   
+   Windows
+   
+   ```bash
+   nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+   ```
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
@@ -319,14 +295,15 @@ You can use these commands to get more information about the experiment
 
 该项目采用了 [ Microsoft 开源行为准则 ](https://opensource.microsoft.com/codeofconduct/)。 有关详细信息，请参阅[常见问题解答](https://opensource.microsoft.com/codeofconduct/faq/)，如有任何疑问或意见可联系 opencode@microsoft.com。
 
-熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =)：
+熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR：
 
-* 推荐新贡献者先找到标有 ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) 标签的 Issue。这些都比较简单，可以从这些问题开始。
+* 推荐新贡献者先从简单的问题开始：['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)。
 * [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
 * [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
+* 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
@@ -349,6 +326,7 @@ You can use these commands to get more information about the experiment
    * [使用 NNI 为 SPTAG 自动调参](docs/zh_CN/CommunitySharings/SptagAutoTune.md)
    * [使用 NNI 为 scikit-learn 查找超参](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
    * **博客** - [AutoML 工具（Advisor，NNI 与 Google Vizier）的对比](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) 作者：[@gaocegege](https://github.com/gaocegege) - kubeflow/katib 的设计与实现的总结与分析章节
+   * **博客** - [NNI 2019 新功能汇总](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **反馈**
 

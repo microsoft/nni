@@ -277,6 +277,12 @@ class RemoteMachineTrainingService implements TrainingService {
                 throw new Error(`Invalid job id ${trialJobId}, cannot find ssh client`);
             }
 
+            if (trialJob.status === 'UNKNOWN') {
+                this.releaseTrialSSHClient(trialJob);
+                trialJob.status = 'USER_CANCELED';
+                return
+            }
+
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
                 // Mark the toEarlyStop tag here

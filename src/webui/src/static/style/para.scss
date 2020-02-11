@@ -1,6 +1,19 @@
-
 .parameter{
     height: 100%;
+}
+
+.para-filter{
+    width: 97%;
+    margin-top: 15px;
+
+    &-text{
+        line-height: 32px;
+        margin-right: 10px;
+    }
+
+    &-percent{
+        margin-right: 10px;
+    }
 }
 
 .meline{
@@ -27,16 +40,14 @@
 
 /* Intermediate Result Style */
 .intermediate{
-    width: 90%;
-    text-align: right;
+    width: 95%;
    /* border: 1px solid blue; */
     input{
         width: 64px;
-        height: 32px;
+        height: 26px;
         padding-left: 8px;
     }
     .strange{
-        margin-top: 2px;
         margin-right: 15px;
     }
     .hyphen{
@@ -45,5 +56,8 @@
     }
     .filter-x{
         margin-left: 15px;
+    }
+    .filter-toggle{
+        line-height: 32px;
     }
 }

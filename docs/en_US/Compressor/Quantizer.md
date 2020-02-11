@@ -5,11 +5,9 @@ Quantizer on NNI Compressor
 We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
 
 ### Usage
-tensorflow
-```python nni.compression.tensorflow.NaiveQuantizer(model_graph).compress()
-```
 pytorch
-```python nni.compression.torch.NaiveQuantizer(model).compress()
+```python 
+model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***

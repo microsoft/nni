@@ -25,7 +25,10 @@ trial:
   memoryMB: 8196
   image: msranni/nni:latest
   virtualCluster: nni
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+  paiStoragePlugin: team_wise
 paiConfig:
   userName: your_account
-  passWord: your_pwd
+  token: your_token
   host: 0.0.0.0

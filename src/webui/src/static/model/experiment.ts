@@ -79,6 +79,7 @@ class Experiment {
     }
 
     get error(): string {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
         }

@@ -18,7 +18,6 @@ class SearchSpace extends React.Component<SearchspaceProps, {}> {
         return (
             <div className="searchSpace">
                 <MonacoEditor
-                    width="100%"
                     height="361"
                     language="json"
                     theme="vs-light"

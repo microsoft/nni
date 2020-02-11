@@ -69,7 +69,7 @@
       - [password](#password)
       - [token](#token)
       - [host](#host)
-  - [样例](#examples) 
+  - [示例](#examples) 
     - [本机模式](#local-mode)
     - [远程模式](#remote-mode)
     - [PAI 模式](#pai-mode)
@@ -661,9 +661,9 @@ OpenPAI 帐户的密码。
 
 #### token
 
-如果使用 token 身份验证，则需要。 字符串。
+如果使用令牌（token）身份验证，则需要。 字符串。
 
-可以从 OpenPAI 门户检索的个人访问 token。
+可以从 OpenPAI 门户检索的个人访问令牌。
 
 #### host
 

@@ -1,5 +1,5 @@
+import * as JSON5 from 'json5';
 import axios from 'axios';
-import { message } from 'antd';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj } from './interface';
 
@@ -24,7 +24,7 @@ const convertDuration = (num: number): string => {
     const hour = Math.floor(num / 3600);
     const minute = Math.floor(num / 60 % 60);
     const second = Math.floor(num % 60);
-    const result = [ ];
+    const result: string[] = [];
     if (hour > 0) {
         result.push(`${hour}h`);
     }
@@ -58,7 +58,7 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
 };
 
 // get final result value // acc obj
-const getFinal = (final?: MetricDataRecord[]): any => {
+const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
     let showDefault: FinalType;
     if (final) {
         showDefault = JSON.parse(final[final.length - 1].data);
@@ -117,33 +117,35 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
     })
         .then(res => {
             if (res.status === 200) {
-                message.destroy();
-                message.success('Cancel the job successfully');
+                // TODO: use Message.txt to tooltip
+                alert('Cancel the job successfully');
                 // render the table
                 if (updateList) {
                     updateList();  // FIXME
                 }
             } else {
-                message.error('fail to cancel the job');
+                alert('fail to cancel the job');
             }
         })
         .catch(error => {
             if (error.response.status === 500) {
                 if (error.response.data.error) {
-                    message.error(error.response.data.error);
+                    alert(123);
+                    // message.error(error.response.data.error);
                 } else {
-                    message.error('500 error, fail to cancel the job');
+                    alert(234);
+                    // message.error('500 error, fail to cancel the job');
                 }
             }
         });
 };
 
-const filterByStatus = (item: TableObj): any => {
+const filterByStatus = (item: TableObj): boolean => {
     return item.status === 'SUCCEEDED';
 };
 
 // a waittiong trial may havn't start time 
-const filterDuration = (item: TableObj): any => {
+const filterDuration = (item: TableObj): boolean => {
     return item.status !== 'WAITING';
 };
 
@@ -169,12 +171,24 @@ const downFile = (content: string, fileName: string): void => {
     }
 };
 
-function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): string {
+// function formatTimestamp(timestamp?: number, placeholder?: string = 'N/A'): string {
+function formatTimestamp(timestamp?: number, placeholder?: string): string {
+    if (placeholder === undefined) {
+        placeholder = 'N/A';
+    }
     return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
 }
 
+function parseMetrics(metricData: string): any {
+    if (metricData.includes('NaN')) {
+        return JSON5.parse(metricData)
+    } else {
+        return JSON.parse(metricData)
+    }
+}
+
 function metricAccuracy(metric: MetricDataRecord): number {
-    const data = JSON.parse(metric.data);
+    const data = parseMetrics(metric.data);
     return typeof data === 'number' ? data : NaN;
 }
 
@@ -186,5 +200,5 @@ function formatAccuracy(accuracy: number): string {
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy
+    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics
 };

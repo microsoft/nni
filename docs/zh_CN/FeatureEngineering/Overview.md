@@ -1,13 +1,13 @@
-# 特征工程
+# NNI 中的特征工程
 
-我们很高兴的宣布，基于 NNI 的特征工程工具发布了 Alpha 版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
+我们很高兴的宣布，基于 NNI 的特征工程工具发布了试用版本。该版本仍处于试验阶段，根据使用反馈会进行改进。 诚挚邀请您使用、反馈，或更多贡献。
 
 当前支持以下特征选择器：
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
 
-# 如何使用
+## 如何使用
 
 ```python
 from nni.feature_engineering.gradient_selector import GradientFeatureSelector
@@ -30,7 +30,7 @@ print(fgs.get_selected_features(...))
 
 使用内置 Selector 时，需要 `import` 对应的特征选择器，并 `initialize`。 可在 Selector 中调用 `fit` 函数来传入数据。 之后，可通过 `get_seleteced_features` 来获得重要的特征。 不同 Selector 的函数参数可能不同，在使用前需要先检查文档。
 
-# 如何定制
+## 如何定制？
 
 NNI 内置了_最先进的_特征工程算法的 Selector。 NNI 也支持定制自己的特征 Selector。
 
@@ -238,7 +238,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
-# 基准测试
+## 基准测试
 
 `Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。 对于 GradientFeatureSelector，仅使用了前 20 个特征。 下列指标是在给定测试数据和标签上的平均精度。
 
@@ -254,3 +254,10 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
 
 代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
+
+## 参考和反馈
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[神经网络结构搜索的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
+* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Overview.md)；
+* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/BuiltinTuner.md)；

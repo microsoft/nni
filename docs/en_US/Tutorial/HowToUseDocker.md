@@ -35,7 +35,7 @@ Note:
 
 If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment.
 
-If you start your own docker image, you may need to install NNI package first, please [refer](Installation.md).
+If you start your own docker image, you may need to install NNI package first, please refer to [NNI installation](InstallationLinux.md).
 
 If you want to run NNI's offical examples, you may need to clone NNI repo in github using
 ```

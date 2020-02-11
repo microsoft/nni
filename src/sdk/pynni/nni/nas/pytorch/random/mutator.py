@@ -6,7 +6,15 @@ from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 
 
 class RandomMutator(Mutator):
+    """
+    Random mutator that samples a random candidate in the search space each time ``reset()``.
+    It uses random function in PyTorch, so users can set seed in PyTorch to ensure deterministic behavior.
+    """
+
     def sample_search(self):
+        """
+        Sample a random candidate.
+        """
         result = dict()
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
@@ -22,4 +30,7 @@ class RandomMutator(Mutator):
         return result
 
     def sample_final(self):
+        """
+        Same as :meth:`sample_search`.
+        """
         return self.sample_search()

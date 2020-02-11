@@ -1,9 +1,10 @@
 import math
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import L1FilterPruner
+from nni.compression.torch import ActivationMeanRankFilterPruner
 from models.cifar10.vgg import VGG
 
 
@@ -40,6 +41,12 @@ def test(model, device, test_loader):
 
 
 def main():
+    parser = argparse.ArgumentParser("multiple gpu with pruning")
+    parser.add_argument("--epochs", type=int, default=160)
+    parser.add_argument("--retrain", default=False, action="store_true")
+    parser.add_argument("--parallel", default=False, action="store_true")
+
+    args = parser.parse_args()
     torch.manual_seed(0)
     device = torch.device('cuda')
     train_loader = torch.utils.data.DataLoader(
@@ -63,14 +70,15 @@ def main():
     model.to(device)
 
     # Train the base VGG-16 model
-    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
-    for epoch in range(160):
-        train(model, device, train_loader, optimizer)
-        test(model, device, test_loader)
-        lr_scheduler.step(epoch)
-    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
+    if args.retrain:
+        print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
+        for epoch in range(args.epochs):
+            train(model, device, train_loader, optimizer)
+            test(model, device, test_loader)
+            lr_scheduler.step(epoch)
+        torch.save(model.state_dict(), 'vgg16_cifar10.pth')
 
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
@@ -88,8 +96,16 @@ def main():
 
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = L1FilterPruner(model, configure_list)
+    pruner = ActivationMeanRankFilterPruner(model, configure_list)
     model = pruner.compress()
+    if args.parallel:
+        if torch.cuda.device_count() > 1:
+            print("use {} gpus for pruning".format(torch.cuda.device_count()))
+            model = nn.DataParallel(model)
+        else:
+            print("only detect 1 gpu, fall back")
+
+    model.to(device)
     test(model, device, test_loader)
     # top1 = 88.19%
 

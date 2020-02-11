@@ -31,11 +31,11 @@ def test():
     #       [1,1,1,1,1,1,1,1,1,1],
     #       [1,1,1,1,1,1,1,1,1,1]]
 
-    assessor = MedianstopAssessor(FLAGS.start_step, FLAGS.optimize_mode)
-    for i in range(4):
+    assessor = MedianstopAssessor(FLAGS.optimize_mode, FLAGS.start_step)
+    for i in range(len(lcs)):
         #lc = []
         to_complete = True
-        for k in range(10):
+        for k in range(len(lcs[0])):
             #d = random.randint(i*100+0, i*100+100)
             #lc.append(d)
             ret = assessor.assess_trial(i, lcs[i][:k+1])
