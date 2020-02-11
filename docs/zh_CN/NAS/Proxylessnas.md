@@ -42,15 +42,15 @@ trainer.export(args.arch_path)
 * **warmup_epochs** (*int, 可选, 默认为 25*) - 热身的 Epoch 数量。
 * **arch_valid_frequency** (*int, 可选, 默认为 = 1*) - 输出验证集结果的频率。
 * **load_ckpt** (*bool, 可选, 默认为 False*) - 是否加载检查点。
-* **ckpt_path** (*str, optional, default = None*) - checkpoint path, if load_ckpt is True, ckpt_path cannot be None.
-* **arch_path** (*str, optional, default = None*) - The path to store chosen architecture.
+* **ckpt_path** (*str, 可选, 默认为 None*) - 检查点路径。如果 load_ckpt 为 True，ckpt_path 不能为 None。
+* **arch_path** (*str, 可选, 默认为 None*) - 选择架构的路径。
 
 
-## Implementation
+## 实现
 
-The implementation on NNI is based on the [offical implementation](https://github.com/mit-han-lab/ProxylessNAS). The official implementation supports two training approaches: gradient descent and RL based, and support different targeted hardware, including 'mobile', 'cpu', 'gpu8', 'flops'. In our current implementation on NNI, gradient descent training approach is supported, but has not supported different hardwares. The complete support is ongoing.
+NNI 上的实现基于[官方实现](https://github.com/mit-han-lab/ProxylessNAS)。 官方实现支持两种搜索方法：梯度下降和强化学习，还支持不同的硬件，包括 'mobile', 'cpu', 'gpu8', 'flops'。 在当前的 NNI 实现中，支持梯度下降训练方法，不支持不同的硬件。 完整支持正在进行中。
 
-Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in [example code](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas) using [NNI NAS interface](NasGuide.md), and put the training approach in [SDK](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/proxylessnas).
+下面将介绍实现的细节。 像 NNI 上其它 one-shot NAS 算法一样，ProxylessNAS 由两部分组成：*搜索空间* 和 *训练方法*。 For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in [example code](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas) using [NNI NAS interface](NasGuide.md), and put the training approach in [SDK](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/proxylessnas).
 
 ![](../../img/proxylessnas.png)
 
@@ -58,6 +58,6 @@ ProxylessNAS training approach is composed of ProxylessNasMutator and ProxylessN
 
 ProxylessNasMutator also implements the forward logic of the mutables (i.e., LayerChoice).
 
-## Reproduce Results
+## 重现结果
 
-Ongoing...
+进行中...
