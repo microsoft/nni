@@ -44,12 +44,12 @@ nnictl 支持的命令：
 
 * 选项
   
-  | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
-  | ------------ | ----- | --- | ---------------------- |
-  | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
-  | --port, -p   | False |     | RESTful 服务的端口          |
-  | --debug, -d  | False |     | 设置为调试模式                |
-  | --watch, -w  | False |     | 启动为监视模式                |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                     |
+  | ---------------- | ----- | --- | ---------------------- |
+  | --config, -c     | True  |     | Experiment 的 YAML 配置文件 |
+  | --port, -p       | False |     | RESTful 服务的端口          |
+  | --debug, -d      | False |     | 设置为调试模式                |
+  | --foreground, -f | False |     | 设为前台运行模式，将日志输出到终端      |
 
 * 示例
   
@@ -93,12 +93,12 @@ nnictl 支持的命令：
 
 * 选项
   
-  | 参数及缩写       | 是否必需  | 默认值 | 说明                               |
-  | ----------- | ----- | --- | -------------------------------- |
-  | id          | True  |     | 要恢复的 Experiment 标识               |
-  | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
-  | --debug, -d | False |     | 设置为调试模式                          |
-  | --watch, -w | False |     | 启动为监视模式                          |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                               |
+  | ---------------- | ----- | --- | -------------------------------- |
+  | id               | True  |     | 要恢复的 Experiment 标识               |
+  | --port, -p       | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
+  | --debug, -d      | False |     | 设置为调试模式                          |
+  | --foreground, -f | False |     | 设为前台运行模式，将日志输出到终端                |
 
 * 示例
   

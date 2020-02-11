@@ -32,73 +32,73 @@ class InteractiveKLLoss(nn.Module):
 
 
 class CdartsTrainer(object):
+    """
+    CDARTS trainer.
+
+    Parameters
+    ----------
+    model_small : nn.Module
+        PyTorch model to be trained. This is the search network of CDARTS.
+    model_large : nn.Module
+        PyTorch model to be trained. This is the evaluation network of CDARTS.
+    criterion : callable
+        Receives logits and ground truth label, return a loss tensor, e.g., ``nn.CrossEntropyLoss()``.
+    loaders : list of torch.utils.data.DataLoader
+        List of train data and valid data loaders, for training weights and architecture weights respectively.
+    samplers : list of torch.utils.data.Sampler
+        List of train data and valid data samplers. This can be PyTorch standard samplers if not distributed.
+        In distributed mode, sampler needs to have ``set_epoch`` method. Refer to data utils in CDARTS example for details.
+    logger : logging.Logger
+        The logger for logging. Will use nni logger by default (if logger is ``None``).
+    regular_coeff : float
+        The coefficient of regular loss.
+    regular_ratio : float
+        The ratio of regular loss.
+    warmup_epochs : int
+        The epochs to warmup the search network
+    fix_head : bool
+        ``True`` if fixing the paramters of auxiliary heads, else unfix the paramters of auxiliary heads.
+    epochs : int
+        Number of epochs planned for training.
+    steps_per_epoch : int
+        Steps of one epoch.
+    loss_alpha : float
+        The loss coefficient.
+    loss_T : float
+        The loss coefficient.
+    distributed : bool
+        ``True`` if using distributed training, else non-distributed training.
+    log_frequency : int
+        Step count per logging.
+    grad_clip : float
+        Gradient clipping for weights.
+    interactive_type : string
+        ``kl`` or ``smoothl1``.
+    output_path : string
+        Log storage path.
+    w_lr : float
+        Learning rate of the search network parameters.
+    w_momentum : float
+        Momentum of the search and the evaluation network.
+    w_weight_decay : float
+        The weight decay the search and the evaluation network parameters.
+    alpha_lr : float
+        Learning rate of the architecture parameters.
+    alpha_weight_decay : float
+        The weight decay the architecture parameters.
+    nasnet_lr : float
+        Learning rate of the evaluation network parameters.
+    local_rank : int
+        The number of thread.
+    share_module : bool
+        ``True`` if sharing the stem and auxiliary heads, else not sharing these modules.
+    """
     def __init__(self, model_small, model_large, criterion, loaders, samplers, logger=None,
                  regular_coeff=5, regular_ratio=0.2, warmup_epochs=2, fix_head=True,
                  epochs=32, steps_per_epoch=None, loss_alpha=2, loss_T=2, distributed=True,
                  log_frequency=10, grad_clip=5.0, interactive_type='kl', output_path='./outputs',
                  w_lr=0.2, w_momentum=0.9, w_weight_decay=3e-4, alpha_lr=0.2, alpha_weight_decay=1e-4,
                  nasnet_lr=0.2, local_rank=0, share_module=True):
-        """
-        Initialize a CdartsTrainer.
-
-        Parameters
-        ----------
-        model_small : nn.Module
-            PyTorch model to be trained. This is the search network of CDARTS.
-        model_large : nn.Module
-            PyTorch model to be trained. This is the evaluation network of CDARTS.
-        criterion : callable
-            Receives logits and ground truth label, return a loss tensor, e.g., ``nn.CrossEntropyLoss()``.
-        loaders : list of torch.utils.data.DataLoader
-            List of train data and valid data loaders, for training weights and architecture weights respectively.
-        samplers : list of torch.utils.data.Sampler
-            List of train data and valid data samplers. This can be PyTorch standard samplers if not distributed.
-            In distributed mode, sampler needs to have ``set_epoch`` method. Refer to data utils in CDARTS example for details.
-        logger : logging.Logger
-            The logger for logging. Will use nni logger by default (if logger is ``None``).
-        regular_coeff : float
-            The coefficient of regular loss.
-        regular_ratio : float
-            The ratio of regular loss.
-        warmup_epochs : int
-            The epochs to warmup the search network
-        fix_head : bool
-            ``True`` if fixing the paramters of auxiliary heads, else unfix the paramters of auxiliary heads.
-        epochs : int
-            Number of epochs planned for training.
-        steps_per_epoch : int
-            Steps of one epoch.
-        loss_alpha : float
-            The loss coefficient.
-        loss_T : float
-            The loss coefficient.
-        distributed : bool
-            ``True`` if using distributed training, else non-distributed training.
-        log_frequency : int
-            Step count per logging.
-        grad_clip : float
-            Gradient clipping for weights.
-        interactive_type : string
-            ``kl`` or ``smoothl1``.
-        output_path : string
-            Log storage path.
-        w_lr : float
-            Learning rate of the search network parameters.
-        w_momentum : float
-            Momentum of the search and the evaluation network.
-        w_weight_decay : float
-            The weight decay the search and the evaluation network parameters.
-        alpha_lr : float
-            Learning rate of the architecture parameters.
-        alpha_weight_decay : float
-            The weight decay the architecture parameters.
-        nasnet_lr : float
-            Learning rate of the evaluation network parameters.
-        local_rank : int
-            The number of thread.
-        share_module : bool
-            ``True`` if sharing the stem and auxiliary heads, else not sharing these modules.
-        """
         if logger is None:
             logger = logging.getLogger(__name__)
         train_loader, valid_loader = loaders
