@@ -26,22 +26,22 @@ trainer.export(args.arch_path)
 * **model** (*PyTorch 模型, 必需*) - 需要调优、搜索的模型。 它具有可变项以指定搜索空间。
 * **model_optim** (*PyTorch 优化器, 必需*) - 训练模型所需要的优化器。
 * **device** (*device, 必需*) - 用于训练、搜索的 device。 Trainer 会使用数据并行化。
-* **train_loader** (*PyTorch data loader, required*) - The data loader for training set.
-* **valid_loader** (*PyTorch data loader, required*) - The data loader for validation set.
-* **label_smoothing** (*float, optional, default = 0.1*) - The degree of label smoothing.
-* **n_epochs** (*int, optional, default = 120*) - The number of epochs to train/search.
-* **init_lr** (*float, optional, default = 0.025*) - The initial learning rate for training the model.
-* **binary_mode** (*'two', 'full', or 'full_v2', optional, default = 'full_v2'*) - The forward/backward mode for the binary weights in mutator. 'full' means forward all the candidate ops, 'two' means only forward two sampled ops, 'full_v2' means recomputing the inactive ops during backward.
-* **arch_init_type** (*'normal' or 'uniform', optional, default = 'normal'*) - The way to init architecture parameters.
-* **arch_init_ratio** (*float, optional, default = 1e-3*) - The ratio to init architecture parameters.
-* **arch_optim_lr** (*float, optional, default = 1e-3*) - The learning rate of the architecture parameters optimizer.
-* **arch_weight_decay** (*float, optional, default = 0*) - Weight decay of the architecture parameters optimizer.
-* **grad_update_arch_param_every** (*int, optional, default = 5*) - Update architecture weights every this number of minibatches.
-* **grad_update_steps** (*int, optional, default = 1*) - During each update of architecture weights, the number of steps to train architecture weights.
-* **warmup** (*bool, optional, default = True*) - Whether to do warmup.
-* **warmup_epochs** (*int, optional, default = 25*) - The number of epochs to do during warmup.
-* **arch_valid_frequency** (*int, optional, default = 1*) - The frequency of printing validation result.
-* **load_ckpt** (*bool, optional, default = False*) - Whether to load checkpoint.
+* **train_loader** (*PyTorch DataLoader, 必需*) - 训练数据集的 DataLoader。
+* **valid_loader** (*PyTorch DataLoader, 必需*) - 验证数据集的 DataLoader。
+* **label_smoothing** (*float, 可选, 默认为 0.1*) - 标签平滑度。
+* **n_epochs** (*int, 可选, 默认为 120*) - 训练、搜索的 Epoch 数量。
+* **init_lr** (*float, 可选, 默认为 0.025*) - 训练的初始学习率。
+* **binary_mode** (*'two', 'full', 或 'full_v2', 可选, 默认为 'full_v2'*) - Mutabor 中二进制权重的 forward, backword 模式。 'full' 表示前向传播所有候选操作，'two' 表示仅前向传播两个采样操作，'full_v2' 表示在反向传播时重新计算非激活的操作。
+* **arch_init_type** (*'normal' 或 'uniform', 可选, 默认为 'normal'*) - 初始化架构参数的方法。
+* **arch_init_ratio** (*float, 可选, 默认为 1e-3*) - 初始化架构参数的比例。
+* **arch_optim_lr** (*float, 可选, 默认为 1e-3*) - 架构参数优化器的学习率。
+* **arch_weight_decay** (*float, 可选, 默认为 0*) - 架构参数优化器的权重衰减。
+* **grad_update_arch_param_every** (*int, 可选, 默认为 5*) - 多少个迷你批处理后更新权重。
+* **grad_update_steps** (*int, 可选, 默认为 1*) - 在每次权重更新时，训练架构权重的次数。
+* **warmup** (*bool, 可选, 默认为 True*) - 是否需要热身。
+* **warmup_epochs** (*int, 可选, 默认为 25*) - 热身的 Epoch 数量。
+* **arch_valid_frequency** (*int, 可选, 默认为 = 1*) - 输出验证集结果的频率。
+* **load_ckpt** (*bool, 可选, 默认为 False*) - 是否加载检查点。
 * **ckpt_path** (*str, optional, default = None*) - checkpoint path, if load_ckpt is True, ckpt_path cannot be None.
 * **arch_path** (*str, optional, default = None*) - The path to store chosen architecture.
 
