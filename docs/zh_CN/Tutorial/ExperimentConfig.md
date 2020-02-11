@@ -663,7 +663,7 @@ OpenPAI 帐户的密码。
 
 如果使用令牌（token）身份验证，则需要。 字符串。
 
-可以从 OpenPAI 门户检索的个人访问 token。
+可以从 OpenPAI 门户检索的个人访问令牌。
 
 #### host
 
