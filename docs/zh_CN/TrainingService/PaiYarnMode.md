@@ -83,14 +83,14 @@ paiYarnConfig:
         portNumber: 1
     ```
 
-NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn Token，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
+NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn 令牌（token)，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
   host: 10.1.1.1
 ```
-Token 认证的 `paiYarnConfig` 配置如下：
+令牌认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
