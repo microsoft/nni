@@ -27,12 +27,12 @@ class WeightRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list)
-        self.mask_calculated_ops = set()  # operations whose mask has been calculated
+        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
     def get_mask(self, base_mask, weight, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, layer, config, **kwargs):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion of the kernel weights are masked.
@@ -49,14 +49,13 @@ class WeightRankFilterPruner(Pruner):
         """
 
         weight = layer.module.weight.data
-        op_name = layer.name
         op_type = layer.type
         assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
         assert op_type in ['Conv1d', 'Conv2d'], "only support Conv1d and Conv2d"
         assert op_type in config.get('op_types')
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+        if_calculated = kwargs["if_calculated"]
+        if if_calculated:
+            return None
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
         if hasattr(layer.module, 'bias') and layer.module.bias is not None:
             mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
@@ -70,8 +69,7 @@ class WeightRankFilterPruner(Pruner):
                 return mask
             mask = self.get_mask(mask, weight, num_prune)
         finally:
-            self.mask_dict.update({op_name: mask})
-            self.mask_calculated_ops.add(op_name)
+            if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
 
@@ -259,4 +257,5 @@ class FPGMPruner(WeightRankFilterPruner):
         return x.sum()
 
     def update_epoch(self, epoch):
-        self.mask_calculated_ops = set()
+        for wrapper in self.get_modules_wrapper():
+            wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0)) # pylint: disable=not-callable

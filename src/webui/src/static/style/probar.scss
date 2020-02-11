@@ -4,37 +4,22 @@
     .RUNNING, .STOPPING, .INITIALIZED, .NO_MORE_TRIAL, .TUNER_NO_MORE_TRIAL{
         /* specific status color */
         color: #0071bc;
-        .ant-progress-bg {
+        /* progress- duration & trial numbers span */
+        .ms-ProgressIndicator-progressBar {
             background-color: #0071bc;
-        }
-        .ant-progress-text{
-            color: #0071bc;
         }
     }
     .DONE, .STOPPED{
         color: #009245;
-        .ant-progress-bg {
+        .ms-ProgressIndicator-progressBar {
             background-color: #009245;
-        }
-        .ant-progress-text{
-            color: #009245;
         }
     }
     .ERROR{
         color: #eb0716;
-        .ant-progress-bg {
+        .ms-ProgressIndicator-progressBar {
             background-color: #eb0716;
         }
-        .ant-progress-text{
-            color: #eb0716;
-        }
-
-    }
-    .ant-progress-bg{
-        border-radius: 0 !important;
-    }
-    .ant-progress-status-success .ant-progress-bg{
-        border-radius: 0 12px 12px 0 !important;
     }
 }
 
