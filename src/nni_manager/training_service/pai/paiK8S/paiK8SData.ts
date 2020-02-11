@@ -30,13 +30,7 @@ else
 fi`;
 
 export const PAI_K8S_TRIAL_COMMAND_FORMAT: string =
-`
-apt-get update \
-&& umask 000 \
-&& apt-get install --assume-yes nfs-common \
-&& mkdir --parents /data \
-&& mount -t nfs4 gcr-openpai-infra02:/pai/data  /data \
-&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} \
+`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} \
 && ls $NNI_SYS_DIR \
 && cd $NNI_SYS_DIR && sh install_nni.sh \
 && python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}' \

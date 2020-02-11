@@ -63,6 +63,7 @@ class PAIK8STrainingService extends PAITrainingService {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
+
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
@@ -174,11 +175,13 @@ class PAIK8STrainingService extends PAITrainingService {
                     ]
                 }
             },
-            extras: { 
-                submitFrom: 'submit-job-v2',
-                hivedScheduler: {
-                    jobPriorityClass: 'prod',
-                }
+            extras: {
+                'com.microsoft.pai.runtimeplugin': [
+                    {
+                        plugin: this.paiTrialConfig.paiStoragePlugin
+                    }
+                ],
+                submitFrom: 'submit-job-v2'
             }
         }
         if (this.paiTrialConfig.virtualCluster) {
@@ -246,8 +249,7 @@ class PAIK8STrainingService extends PAITrainingService {
         //Copy codeDir files to local working folder
         await execCopydir(this.paiTrialConfig.codeDir, trialLocalFolder);
         
-        // const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
-        const nniManagerIp: string = "172.23.234.89";
+        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobId}`;
         const nniPaiTrialCommand: string = String.Format(
