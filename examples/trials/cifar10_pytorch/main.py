@@ -179,7 +179,10 @@ def test(epoch):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=200)
+
+    # Maximum mini-batches per epoch, for code testing purpose
     parser.add_argument("--batches", type=int, default=-1)
+
     args, _ = parser.parse_known_args()
 
     try:
