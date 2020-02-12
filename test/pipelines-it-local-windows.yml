@@ -1,5 +1,6 @@
 jobs:
-- job: 'Test'
+- job: 'integration_test_local_windows'
+  timeoutInMinutes: 0
 
   steps:
   - script: |
@@ -17,7 +18,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --config config_test\examples\cifar10-pytorch.test.yml
+      python config_test.py --ts local --local_gpu --exclude smac,bohb
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
