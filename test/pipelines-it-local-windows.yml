@@ -17,7 +17,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb,cifar10
+      python config_test.py --ts local --local_gpu --config config_test\examples\cifar10-pytorch.test.yml
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
