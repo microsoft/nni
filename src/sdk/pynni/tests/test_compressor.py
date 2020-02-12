@@ -135,12 +135,11 @@ class CompressorTestCase(TestCase):
 
         model.conv2.weight.data = torch.tensor(w).float()
         layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
-        masks = pruner.calc_mask(layer, config_list[0])
+        masks = pruner.calc_mask(layer, config_list[0], if_calculated=torch.tensor(0))
         assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
-        pruner.update_epoch(1)
         model.conv2.weight.data = torch.tensor(w).float()
-        masks = pruner.calc_mask(layer, config_list[1])
+        masks = pruner.calc_mask(layer, config_list[1], if_calculated=torch.tensor(0))
         assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     @tf2
@@ -159,7 +158,6 @@ class CompressorTestCase(TestCase):
 
         assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
-        pruner.update_epoch(1)
         model.layers[2].set_weights([weights[0], weights[1].numpy()])
         masks = pruner.calc_mask(layer, config_list[1]).numpy()
         masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
@@ -187,9 +185,9 @@ class CompressorTestCase(TestCase):
         model.conv1.weight.data = torch.tensor(w).float()
         model.conv2.weight.data = torch.tensor(w).float()
         layer1 = torch_compressor.compressor.LayerInfo('conv1', model.conv1)
-        mask1 = pruner.calc_mask(layer1, config_list[0])
+        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
         layer2 = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
-        mask2 = pruner.calc_mask(layer2, config_list[1])
+        mask2 = pruner.calc_mask(layer2, config_list[1], if_calculated=torch.tensor(0))
         assert all(torch.sum(mask1['weight'], (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
         assert all(torch.sum(mask2['weight'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
 
@@ -215,9 +213,9 @@ class CompressorTestCase(TestCase):
         pruner = torch_compressor.SlimPruner(model, config_list)
 
         layer1 = torch_compressor.compressor.LayerInfo('bn1', model.bn1)
-        mask1 = pruner.calc_mask(layer1, config_list[0])
+        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
         layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
-        mask2 = pruner.calc_mask(layer2, config_list[0])
+        mask2 = pruner.calc_mask(layer2, config_list[0], if_calculated=torch.tensor(0))
         assert all(mask1['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
         assert all(mask2['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
         assert all(mask1['bias'].numpy() == np.array([0., 1., 1., 1., 1.]))
@@ -229,9 +227,9 @@ class CompressorTestCase(TestCase):
         pruner = torch_compressor.SlimPruner(model, config_list)
 
         layer1 = torch_compressor.compressor.LayerInfo('bn1', model.bn1)
-        mask1 = pruner.calc_mask(layer1, config_list[0])
+        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
         layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
-        mask2 = pruner.calc_mask(layer2, config_list[0])
+        mask2 = pruner.calc_mask(layer2, config_list[0], if_calculated=torch.tensor(0))
         assert all(mask1['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
         assert all(mask2['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
         assert all(mask1['bias'].numpy() == np.array([0., 0., 0., 1., 1.]))
@@ -268,14 +266,14 @@ class CompressorTestCase(TestCase):
         # test ema
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         out = model.relu(x)
-        assert math.isclose(model.relu.tracked_min_biased, 0, abs_tol=eps)
-        assert math.isclose(model.relu.tracked_max_biased, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_biased, 0, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_biased, 0.002, abs_tol=eps)
 
         quantizer.step()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
-        assert math.isclose(model.relu.tracked_min_biased, 0.002, abs_tol=eps)
-        assert math.isclose(model.relu.tracked_max_biased, 0.00998, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_biased, 0.00998, abs_tol=eps)
 
 
 if __name__ == '__main__':

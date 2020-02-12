@@ -1,81 +1,130 @@
 import * as React from 'react';
-import { Table } from 'antd';
-import OpenRow from '../public-child/OpenRow';
-import DefaultMetric from '../public-child/DefaultMetrc';
-import { TRIALS } from '../../static/datamodel';
-import { TableRecord } from '../../static/interface';
+import { DetailsList, IDetailsListProps, IColumn } from 'office-ui-fabric-react';
+import DefaultMetric from '../public-child/DefaultMetric';
+import Details from './Details';
 import { convertDuration } from '../../static/function';
-import '../../static/style/tableStatus.css';
+import { TRIALS } from '../../static/datamodel';
+import '../../static/style/succTable.scss';
 import '../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];
 }
 
-function openRow(record: TableRecord): any {
-    return (
-        <OpenRow trialId={record.id} />
-    );
+interface SuccessTableState {
+    columns: IColumn[];
+    source: Array<any>;
 }
 
-class SuccessTable extends React.Component<SuccessTableProps, {}> {
+class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
     constructor(props: SuccessTableProps) {
         super(props);
+        this.state = { columns: this.columns, source: TRIALS.table(this.props.trialIds) };
     }
 
-    render(): React.ReactNode {
-        const columns = [
-            {
-                title: 'Trial No.',
-                dataIndex: 'sequenceId',
-                className: 'tableHead'
-            }, {
-                title: 'ID',
-                dataIndex: 'id',
-                width: 80,
-                className: 'tableHead leftTitle',
-                render: (text: string, record: TableRecord): React.ReactNode => {
-                    return (
-                        <div>{record.id}</div>
-                    );
-                },
-            }, {
-                title: 'Duration',
-                dataIndex: 'duration',
-                width: 140,
-                render: (text: string, record: TableRecord): React.ReactNode => {
-                    return (
-                        <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
-                    );
-                },
-            }, {
-                title: 'Status',
-                dataIndex: 'status',
-                width: 150,
-                className: 'tableStatus',
-                render: (text: string, record: TableRecord): React.ReactNode => {
-                    return (
-                        <div className={`${record.status} commonStyle`}>{record.status}</div>
-                    );
-                }
-            }, {
-                title: 'Default metric',
-                dataIndex: 'accuracy',
-                render: (text: string, record: TableRecord): React.ReactNode => {
-                    return (
-                        <DefaultMetric trialId={record.id} />
-                    );
-                }
+    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
+        if (props) {
+            return <Details detailsProps={props} />;
+        }
+        return null;
+    };
+
+    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+        const { columns, source } = this.state;
+        const newColumns: IColumn[] = columns.slice();
+        const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
+        newColumns.forEach((newCol: IColumn) => {
+            if (newCol === currColumn) {
+                currColumn.isSortedDescending = !currColumn.isSortedDescending;
+                currColumn.isSorted = true;
+            } else {
+                newCol.isSorted = false;
+                newCol.isSortedDescending = true;
             }
-        ];
+        });
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newItems = this.copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        this.setState({
+            columns: newColumns,
+            source: newItems
+        });
+    };
+
+    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+        const key = columnKey as keyof T;
+        return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
+    }
+
+    columns = [
+        {
+            name: 'Trial No.',
+            key: 'sequenceId',
+            fieldName: 'sequenceId', // required!
+            minWidth: 60,
+            maxWidth: 80,
+            data: 'number',
+            onColumnClick: this.onColumnClick
+        }, {
+            name: 'ID',
+            key: 'id',
+            fieldName: 'id',
+            minWidth: 80,
+            maxWidth: 150,
+            className: 'tableHead leftTitle',
+            data: 'string',
+            onColumnClick: this.onColumnClick
+        }, {
+            name: 'Duration',
+            key: 'duration',
+            minWidth: 100,
+            maxWidth: 150,
+            fieldName: 'duration',
+            data: 'number',
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => {
+                return (
+                    <div className="durationsty"><div>{convertDuration(item.duration)}</div></div>
+                );
+            },
+        }, {
+            name: 'Status',
+            key: 'status',
+            minWidth: 100,
+            maxWidth: 150,
+            fieldName: 'status',
+            onRender: (item: any): React.ReactNode => {
+                return (
+                    <div className={`${item.status} commonStyle`}>{item.status}</div>
+                );
+            }
+        }, {
+            name: 'Default metric',
+            key: 'accuracy',
+            fieldName: 'accuracy',
+            minWidth: 100,
+            maxWidth: 150,
+            data: 'number',
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => {
+                return (
+                    <DefaultMetric trialId={item.id} />
+                );
+            }
+        }
+    ];
+
+    render(): React.ReactNode {
+        const { columns, source } = this.state;
         return (
-            <div className="tabScroll" >
-                <Table
+            <div id="succTable">
+                {/* TODO: [style] lineHeight question */}
+                <DetailsList
                     columns={columns}
-                    expandedRowRender={openRow}
-                    dataSource={TRIALS.table(this.props.trialIds)}
-                    className="commonTableStyle"
-                    pagination={false}
+                    items={source}
+                    setKey="set"
+                    compact={true}
+                    onRenderRow={this.onRenderRow}
+                    selectionMode={0} // close selector function
                 />
             </div>
         );
