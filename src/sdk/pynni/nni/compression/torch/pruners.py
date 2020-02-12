@@ -54,7 +54,7 @@ class LevelPruner(Pruner):
                 return torch.ones(weight.shape).type_as(weight)
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             mask_weight = torch.gt(w_abs, threshold).type_as(weight)
-            mask = {'weight': mask_weight}
+            mask = {'weight_mask': mask_weight}
             if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
             return mask
         else:
@@ -113,15 +113,15 @@ class AGP_Pruner(Pruner):
         if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
             return None
 
-        mask = {'weight': kwargs['weight_mask'] if 'weight_mask' in kwargs else torch.ones(weight.shape).type_as(weight)}
+        mask = {'weight_mask': kwargs['weight_mask'] if 'weight_mask' in kwargs else torch.ones(weight.shape).type_as(weight)}
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
             return mask
         # if we want to generate new mask, we should update weigth first
-        w_abs = weight.abs() * mask['weight']
+        w_abs = weight.abs() * mask['weight_mask']
         threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-        new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
+        new_mask = {'weight_mask': torch.gt(w_abs, threshold).type_as(weight)}
         if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
 
         return new_mask
@@ -227,14 +227,14 @@ class SlimPruner(Pruner):
         if if_calculated:
             return None
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
-        mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
+        mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
         filters = weight.size(0)
         num_prune = int(filters * config.get('sparsity'))
         if filters >= 2 and num_prune >= 1:
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
-            mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
+            mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
         if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
         return mask
 
@@ -307,7 +307,7 @@ class LotteryTicketPruner(Pruner):
             k = int(w_abs.numel() * curr_sparsity)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
-        return {'weight': mask}
+        return {'weight_mask': mask}
 
     def calc_mask(self, layer, config, **kwargs):
         """
@@ -367,7 +367,7 @@ class LotteryTicketPruner(Pruner):
             sparsity = config.get('sparsity')
             mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
             # TODO: directly use weight_mask is not good
-            module_wrapper.weight_mask.copy_(mask['weight'])
+            module_wrapper.weight_mask.copy_(mask['weight_mask'])
             # there is no mask for bias
 
         # reinit weights back to original after new masks are generated

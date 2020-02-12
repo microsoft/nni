@@ -3,6 +3,7 @@
 
 import logging
 import torch
+import types
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -241,15 +242,9 @@ class PrunerModuleWrapper(torch.nn.Module):
             self.registered_buffers[name] = getattr(self, name)
 
     def forward(self, *inputs):
-        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config, **self.registered_buffers)
-        if mask is not None:
-            self.weight_mask.copy_(mask['weight'])
-        # apply mask to weight
+        # apply mask to weight, bias
         self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
-        # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            if mask is not None and 'bias' in mask:
-                self.bias_mask.copy_(mask['bias'])
             self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
 
@@ -265,8 +260,28 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list)
+        if optimizer is not None:
+            def patch_step(old_step):
+                def new_step(self, *args, **kwargs):
+                    # cal_mask and update buffers accordingly
+                    wrappers = self.get_modules_wrapper()
+                    for wrapper in wrappers:
+                        buffers = self.calc_mask(LayerInfo(wrapper.name, wrapper.module), wrapper.config, **wrapper.registered_buffers)
+                        if buffers is not None:
+                            for name in buffers:
+                                assert hasattr(wrapper, name), "buffer %s is not registered" % name
+                                getattr(wrapper, name) = buffers[name]
+                    
+                    # call step overrided by user to do additional update
+                    self.step()
+                    # call origin optimizer step method
+                    output = old_step(*args, **kwargs)
+                    return output
+                return new_step
+
+            optimizer.step = types.MethodType(patch_step(optimizer.step), optimizer)
 
     def calc_mask(self, layer, config, **kwargs):
         """
