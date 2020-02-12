@@ -16,6 +16,7 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Overview <Compressor/Overview>
+    Quick Start <Compressor/QuickStart>
     Pruners <pruners>
     Quantizers <quantizers>
     Model Speedup <Compressor/ModelSpeedup>
