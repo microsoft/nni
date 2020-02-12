@@ -18,4 +18,5 @@ For details, please refer to the following tutorials:
     Overview <Compressor/Overview>
     Pruners <pruners>
     Quantizers <quantizers>
+    Model Speedup <Compressor/ModelSpeedup>
     Automatic Model Compression <Compressor/AutoCompression>
