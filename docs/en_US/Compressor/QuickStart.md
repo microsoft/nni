@@ -1,6 +1,6 @@
 # Quick Start to Compress a Model
 
-NNI provides very simple APIs for compressing a model. The compression include pruning and quantization. The usage of them are the same, thus, we use slim pruner as an example to show the usage. The complete code of this example can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py).
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage. The complete code of this example can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py).
 
 ## Write configuration
 
@@ -13,7 +13,7 @@ configure_list = [{
 }]
 ```
 
-The specification of configuration can be found [here](Overview.md). Different pruners may have their own defined fields in configuration, please refer to each pruner's usage for details.
+The specification of configuration can be found [here](Overview.md#user-configuration-for-a-compression-algorithm). Note that different pruners may have their own defined fields in configuration, for exmaple `start_epoch` in AGP pruner. Please refer to each pruner's [usage](Overview.md#supported-algorithms) for details, and adjust the configuration accordingly.
 
 ## Choose a compression algorithm
 
@@ -24,11 +24,11 @@ pruner = SlimPruner(model, configure_list)
 model = pruner.compress()
 ```
 
-Then, you can train your model using traditional training approach (e.g., SGD). Some pruners prune once at the beginning, the following training is fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
 ## Export compression result
 
-After training, you get accuracy of your model after pruning. And, you can export model weights, the generated masks to a file respectively. Exporting onnx model is also supported.
+After training, you get accuracy of the pruned model. You can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
 
 ```python
 pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
