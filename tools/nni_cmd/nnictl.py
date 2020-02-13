@@ -66,7 +66,6 @@ def parse_args():
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
     parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
     parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_view.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command

@@ -128,7 +128,6 @@ Debug mode will disable version check function in Trialkeeper.
   |------|------|------ |------|
   |id|  True| |The id of the experiment you want to view|
   |--port, -p|  False| |Rest port of the experiment you want to view|
-  |--foreground, -f|False||set foreground mode, print log content to terminal|
 
 * Example
 
