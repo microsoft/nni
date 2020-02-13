@@ -151,7 +151,13 @@ class Compressor:
             config = config.copy()
             # expand config if key `default` is in config['op_types']
             if 'op_types' in config and 'default' in config['op_types']:
-                config['op_types'].extend(default_layers.weighted_modules)
+                expanded_op_types = []
+                for op_type in config['op_types']:
+                    if op_type == 'default':
+                        expanded_op_types.extend(default_layers.weighted_modules)
+                    else:
+                        expanded_op_types.append(op_type)
+                config['op_types'] = expanded_op_types
 
             # check if condition is satisified
             if 'op_types' in config and layer.type not in config['op_types']:
