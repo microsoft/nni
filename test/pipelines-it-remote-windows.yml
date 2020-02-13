@@ -1,5 +1,6 @@
 jobs:
 - job: 'integration_test_remote_windows'
+  timeoutInMinutes: 0
 
   steps:
   - script: python -m pip install --upgrade pip setuptools

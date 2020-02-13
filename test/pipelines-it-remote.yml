@@ -1,5 +1,6 @@
 jobs:
 - job: 'integration_test_remote'
+  timeoutInMinutes: 0
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
