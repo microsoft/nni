@@ -172,9 +172,9 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/zh_CN/sdk_reference.rst">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
         <li><a href="docs/zh_CN/Tutorial/AnnotationSpec.md">NNI Annotation</a></li>
-         <li><a href="docs/zh_CN/Tutorial/Installation.md">支持的操作系统</a></li>
+         <li><a href="https://nni.readthedocs.io/en/latest/installation.html">支持的操作系统</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
@@ -211,9 +211,9 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-如果想要尝试最新代码，可通过源代码[安装 NNI](docs/zh_CN/Tutorial/Installation.md)。
+If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/latest/installation.html) from source code.
 
-有关 NNI 的详细系统要求，参考[这里](docs/zh_CN/Tutorial/Installation.md#system-requirements)。
+For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationWin.html#system-requirements) for Windows.
 
 注意：
 
