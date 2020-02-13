@@ -58,7 +58,7 @@ jobs:
     displayName: 'integration test'
   - task: SSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
