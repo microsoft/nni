@@ -1,6 +1,6 @@
-# Customize a NAS Algorithm
+# 自定义 NAS 算法
 
-## Extend the Ability of One-Shot Trainers
+## 扩展 One-Shot Trainer
 
 Users might want to do multiple things if they are using the trainers on real tasks, for example, distributed training, half-precision training, logging periodically, writing tensorboard, dumping checkpoints and so on. As mentioned previously, some trainers do have support for some of the items listed above; others might not. Generally, there are two recommended ways to add anything you want to an existing trainer: inherit an existing trainer and override, or copy an existing trainer and modify.
 
