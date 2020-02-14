@@ -18,7 +18,7 @@
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    Quick Start <NAS/QuickStart>
+    快速入门 <NAS/QuickStart>
     教程 <NAS/NasGuide>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
@@ -26,5 +26,5 @@
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
     ProxylessNAS <NAS/Proxylessnas>
-    Customize a NAS Algorithm <NAS/Advanced>
+    自定义 NAS 算法 <NAS/Advanced>
     API 参考 <NAS/NasReference>
