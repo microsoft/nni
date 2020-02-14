@@ -263,7 +263,10 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        if optimizer is not None:
+        self.patch_optimizer()
+
+    def patch_optimizer(self):
+        if self.optimizer is not None:
             def patch_step(old_step):
                 def new_step(_, *args, **kwargs):
                     # cal_mask and update buffers accordingly
@@ -281,9 +284,8 @@ class Pruner(Compressor):
                     output = old_step(*args, **kwargs)
                     return output
                 return new_step
-
-            optimizer.step = types.MethodType(patch_step(optimizer.step), optimizer)
-
+            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+    
     def calc_mask(self, layer, config, **kwargs):
         """
         Pruners should overload this method to provide mask for weight tensors.
