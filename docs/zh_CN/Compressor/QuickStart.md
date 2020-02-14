@@ -1,4 +1,4 @@
-# Quick Start to Compress a Model
+# 模型压缩快速入门
 
 NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage. The complete code of this example can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py).
 
