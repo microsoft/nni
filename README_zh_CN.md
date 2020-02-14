@@ -211,9 +211,9 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/latest/installation.html) from source code.
+如果想试试最新代码，可参考从源代码[安装 NNI](https://nni.readthedocs.io/zh/latest/installation.html)。
 
-For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationWin.html#system-requirements) for Windows.
+Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh/latest/Tutorial/InstallationLinux.html#system-requirements) ，Windows [参考这里](https://nni.readthedocs.io/zh/latest/Tutorial/InstallationWin.html#system-requirements)。
 
 注意：
 
