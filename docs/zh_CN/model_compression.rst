@@ -16,8 +16,8 @@ NNI 中也内置了一些流程的模型压缩算法。
     :maxdepth: 2
 
     概述 <Compressor/Overview>
-    Quick Start <Compressor/QuickStart>
+    快速入门 <Compressor/QuickStart>
     Pruner <pruners>
     Quantizer <quantizers>
-    Model Speedup <Compressor/ModelSpeedup>
+    模型加速 <Compressor/ModelSpeedup>
     自动模型压缩 <Compressor/AutoCompression>
