@@ -1,10 +1,10 @@
 # 模型压缩快速入门
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage. The complete code of this example can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py).
+NNI 为模型压缩提供了非常简单的 API。 压缩包括剪枝和量化算法。 它们的用法相同，这里通过 slim Pruner 来演示如何使用。 完整示例在[这里](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py)
 
-## Write configuration
+## 编写配置
 
-Write a configuration to specify the layers that you want to prune. The following configuration means pruning all the `BatchNorm2d`s to sparsity 0.7 while keeping other layers unpruned.
+编写配置来指定要剪枝的层。 以下配置表示剪枝所有的 `BatchNorm2d`，稀疏度设为 0.7，其它层保持不变。
 
 ```python
 configure_list = [{
@@ -13,30 +13,30 @@ configure_list = [{
 }]
 ```
 
-The specification of configuration can be found [here](Overview.md#user-configuration-for-a-compression-algorithm). Note that different pruners may have their own defined fields in configuration, for exmaple `start_epoch` in AGP pruner. Please refer to each pruner's [usage](Overview.md#supported-algorithms) for details, and adjust the configuration accordingly.
+配置说明在[这里](Overview.md#user-configuration-for-a-compression-algorithm)。 注意，不同的 Pruner 可能有自定义的配置字段，例如，AGP Pruner 有 `start_epoch`。 详情参考每个 Pruner 的 [使用](Overview.md#supported-algorithms)，来调整相应的配置。
 
-## Choose a compression algorithm
+## 选择压缩算法
 
-Choose a pruner to prune your model. First instantiate the chosen pruner with your model and configuration as arguments, then invoke `compress()` to compress your model.
+选择 Pruner 来修剪模型。 首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 `compress()` 来压缩模型。
 
 ```python
 pruner = SlimPruner(model, configure_list)
 model = pruner.compress()
 ```
 
-Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。 一些 Pruner 只在最开始剪枝一次，接下来的训练可被看作是微调优化。 有些 Pruner 会迭代的对模型剪枝，在训练过程中逐步修改掩码。
 
-## Export compression result
+## 导出压缩结果
 
-After training, you get accuracy of the pruned model. You can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
+训练完成后，可获得剪枝后模型的精度。 可将模型权重到处到文件，同时将生成的掩码也导出到文件。 也支持导出 ONNX 模型。
 
 ```python
 pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 ```
 
-## Speed up the model
+## 加速模型
 
-Masks do not provide real speedup of your model. The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
+掩码实际上并不能加速模型。 The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
 
 ```python
 from nni.compression.torch import apply_compression_results
