@@ -180,7 +180,7 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -189,7 +189,7 @@ class SlimPruner(Pruner):
                 - sparsity: percentage of convolutional filters to be pruned.
         """
 
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
@@ -235,7 +235,7 @@ class SlimPruner(Pruner):
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
-        if_calculated.copy_(torch.tensor(1)) # pylint: disable=not-callable
+        mask['if_calculated'] = torch.tensor(1) # pylint: disable=not-callable
         return mask
 
 class LotteryTicketPruner(Pruner):

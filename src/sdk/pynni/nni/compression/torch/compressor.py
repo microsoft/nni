@@ -26,7 +26,7 @@ class Compressor:
     Abstract base PyTorch compressor
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Record necessary info in class members
 
@@ -43,7 +43,8 @@ class Compressor:
         self.modules_wrapper = None
         self.buffers = {}
         self.is_wrapped = False
-
+        self.optimizer = optimizer
+    
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
@@ -90,7 +91,7 @@ class Compressor:
         """
         if self.modules_wrapper is not None:
             # already compressed
-            return self.bound_model
+            return self.bound_model, self.optimizer
         else:
             self.modules_wrapper = []
 
@@ -100,7 +101,7 @@ class Compressor:
             self.modules_wrapper.append(wrapper)
 
         self._wrap_model()
-        return self.bound_model
+        return self.bound_model, self.optimizer
 
     def register_buffer(self, name, value):
         """
@@ -261,10 +262,10 @@ class Pruner(Compressor):
     """
 
     def __init__(self, model, config_list, optimizer=None):
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
         if optimizer is not None:
             def patch_step(old_step):
-                def new_step(self, *args, **kwargs):
+                def new_step(_, *args, **kwargs):
                     # cal_mask and update buffers accordingly
                     wrappers = self.get_modules_wrapper()
                     for wrapper in wrappers:
@@ -272,7 +273,7 @@ class Pruner(Compressor):
                         if buffers is not None:
                             for name in buffers:
                                 assert hasattr(wrapper, name), "buffer %s is not registered" % name
-                                getattr(wrapper, name) = buffers[name]
+                                getattr(wrapper, name).copy_(buffers[name])
                     
                     # call step overrided by user to do additional update
                     self.step()
