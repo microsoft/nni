@@ -460,6 +460,7 @@ class ModelSpeedup:
                 m_type = g_node.op_type
                 if not m_type in replace_module:
                     raise RuntimeError("Has not supported replacing the module: `{}`".format(m_type))
+                _logger.info("replace module (name: %s, op_type: %s)", module_name, m_type)
                 compressed_module = replace_module[m_type](leaf_module, self.inferred_masks[module_name])
                 setattr(super_module, module_name.split('.')[-1], compressed_module)
             elif g_node.type == 'func':
