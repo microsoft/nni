@@ -88,6 +88,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
            <li><a href="docs/en_US/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/en_US/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
+           <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
               <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br/>
           </ul>
         </ul>
@@ -166,7 +167,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             </ul>
       </ul>
       </td>
-    </tr> 
+    </tr>
       <tr align="center" valign="bottom">
       </td>
       </tr>
@@ -176,9 +177,9 @@ Within the following table, we summarized the current NNI capabilities, we are g
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/sdk_reference.rst">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
         <li><a href="docs/en_US/Tutorial/AnnotationSpec.md">NNI Annotation</a></li>
-         <li><a href="docs/en_US/Tutorial/Installation.md">Supported OS</a></li>
+         <li><a href="https://nni.readthedocs.io/en/latest/installation.html">Supported OS</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
@@ -192,18 +193,18 @@ Within the following table, we summarized the current NNI capabilities, we are g
         <li><a href="docs/en_US/TrainingService/SupportTrainingService.md">Support TrainingService</li>
         <li><a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">Implement TrainingService</a></li>
       </ul>
-      </td>     
-    </tr> 
+      </td>
+    </tr>
   </tbody>
 </table>
 
-## **Install & Verify**
+## **Installation**
 
-**Install through pip**
+### **Install**
 
-* We support Linux, MacOS and Windows (local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.5`.
 
-Linux and MacOS
+Linux or macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -215,65 +216,39 @@ Windows
 python -m pip install --upgrade nni
 ```
 
+If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/latest/installation.html) from source code.
+
+For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationWin.html#system-requirements) for Windows.
+
 Note:
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* Currently NNI on Windows support local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md)
+* If there is any privilege issue, add `--user` to install NNI in the user directory.
+* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md).
 
-**Install through source code**
+### **Verify installation**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows (10.1809) in our current stage.
-
-Linux and MacOS
-
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
-
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-    cd nni
-    source install.sh
-```
-
-Windows
-
-* Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
-
-```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-```
-
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Tutorial/Installation.md)
-
-For NNI on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md)
-
-**Verify install**
-
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow 1.x installed** before running it. Note that **currently Tensorflow 2.0 is NOT supported**.
+The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
 * Download the examples via clone the source code.
 
-```bash
-    git clone -b v1.3 https://github.com/Microsoft/nni.git
-```
-
-Linux and MacOS
+  ```bash
+  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  ```
 
 * Run the MNIST example.
 
-```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
-```
+  Linux or macOS
 
-Windows
+  ```bash
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+  ```
 
-* Run the MNIST example.
+  Windows
 
-```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-```
+  ```bash
+  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+  ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
@@ -323,9 +298,10 @@ When you submit a pull request, a CLA-bot will automatically determine whether y
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the Code of [Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact opencode@microsoft.com with any additional questions or comments.
 
 After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI developer tutorials to get start:
-* We recommend new contributors to start with ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22), these issues are simple and easy to start.
+* We recommend new contributors to start with simple issues: ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
 * [NNI developer environment installation tutorial](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
 * [How to debug](docs/en_US/Tutorial/HowToDebug.md)
+* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 * [Implement a new NAS trainer on NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
@@ -369,4 +345,3 @@ We encourage researchers and students leverage these projects to accelerate the 
 ## **License**
 
 The entire codebase is under [MIT license](LICENSE)
-

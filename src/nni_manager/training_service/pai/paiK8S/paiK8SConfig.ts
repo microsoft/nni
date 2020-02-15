@@ -31,10 +31,11 @@ export class NNIPAIK8STrialConfig extends TrialConfig {
     public readonly nniManagerNFSMountPath: string;
     public readonly containerNFSMountPath: string;
     public readonly paiStoragePlugin: string;
+    public readonly paiConfigPath?: string;
 
     constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
                 image: string, nniManagerNFSMountPath: string, containerNFSMountPath: string,
-                paiStoragePlugin: string, virtualCluster?: string) {
+                paiStoragePlugin: string, virtualCluster?: string, paiConfigPath?: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
@@ -43,5 +44,6 @@ export class NNIPAIK8STrialConfig extends TrialConfig {
         this.nniManagerNFSMountPath = nniManagerNFSMountPath;
         this.containerNFSMountPath = containerNFSMountPath;
         this.paiStoragePlugin = paiStoragePlugin;
+        this.paiConfigPath = paiConfigPath;
     }
 }

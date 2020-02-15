@@ -1,5 +1,6 @@
 jobs:
-- job: 'Test'
+- job: 'integration_test_local_windows'
+  timeoutInMinutes: 0
 
   steps:
   - script: |
@@ -8,8 +9,7 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
-      python -m pip install torchvision --user
+      python -m pip install torch===1.2.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install tensorflow-gpu==1.11.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |

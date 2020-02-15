@@ -22,12 +22,21 @@ INPUT_CHOICE = "input_choice"
 
 def get_and_apply_next_architecture(model):
     """
-    Wrapper of ClassicMutator to make it more meaningful,
-    similar to ```get_next_parameter``` for HPO.
+    Wrapper of :class:`~nni.nas.pytorch.classic_nas.mutator.ClassicMutator` to make it more meaningful,
+    similar to ``get_next_parameter`` for HPO.
+
+    Tt will generate search space based on ``model``.
+    If env ``NNI_GEN_SEARCH_SPACE`` exists, this is in dry run mode for
+    generating search space for the experiment.
+    If not, there are still two mode, one is nni experiment mode where users
+    use ``nnictl`` to start an experiment. The other is standalone mode
+    where users directly run the trial command, this mode chooses the first
+    one(s) for each LayerChoice and InputChoice.
+
     Parameters
     ----------
-    model : pytorch model
-        user's model with search space (e.g., LayerChoice, InputChoice) embedded in it
+    model : nn.Module
+        User's model with search space (e.g., LayerChoice, InputChoice) embedded in it.
     """
     ClassicMutator(model)
 
@@ -36,23 +45,15 @@ class ClassicMutator(Mutator):
     """
     This mutator is to apply the architecture chosen from tuner.
     It implements the forward function of LayerChoice and InputChoice,
-    to only activate the chosen ones
+    to only activate the chosen ones.
+
+    Parameters
+    ----------
+    model : nn.Module
+        User's model with search space (e.g., LayerChoice, InputChoice) embedded in it.
     """
 
     def __init__(self, model):
-        """
-        Generate search space based on ```model```.
-        If env ```NNI_GEN_SEARCH_SPACE``` exists, this is in dry run mode for
-        generating search space for the experiment.
-        If not, there are still two mode, one is nni experiment mode where users
-        use ```nnictl``` to start an experiment. The other is standalone mode
-        where users directly run the trial command, this mode chooses the first
-        one(s) for each LayerChoice and InputChoice.
-        Parameters
-        ----------
-        model : PyTorch model
-            user's model with search space (e.g., LayerChoice, InputChoice) embedded in it
-        """
         super(ClassicMutator, self).__init__(model)
         self._chosen_arch = {}
         self._search_space = self._generate_search_space()
@@ -67,6 +68,13 @@ class ClassicMutator(Mutator):
         else:
             # get chosen arch from tuner
             self._chosen_arch = nni.get_next_parameter()
+            if self._chosen_arch is None:
+                if trial_env_vars.NNI_PLATFORM == "unittest":
+                    # happens if NNI_PLATFORM is intentionally set, e.g., in UT
+                    logger.warning("`NNI_PLATFORM` is set but `param` is None. Falling back to standalone mode.")
+                    self._chosen_arch = self._standalone_generate_chosen()
+                else:
+                    raise RuntimeError("Chosen architecture is None. This may be a platform error.")
         self.reset()
 
     def _sample_layer_choice(self, mutable, idx, value, search_space_item):
@@ -114,9 +122,15 @@ class ClassicMutator(Mutator):
         return torch.tensor(multihot_list, dtype=torch.bool)  # pylint: disable=not-callable
 
     def sample_search(self):
+        """
+        See :meth:`sample_final`.
+        """
         return self.sample_final()
 
     def sample_final(self):
+        """
+        Convert the chosen arch and apply it on model.
+        """
         assert set(self._chosen_arch.keys()) == set(self._search_space.keys()), \
             "Unmatched keys, expected keys '{}' from search space, found '{}'.".format(self._search_space.keys(),
                                                                                        self._chosen_arch.keys())
@@ -162,6 +176,8 @@ class ClassicMutator(Mutator):
             elif val["_type"] == INPUT_CHOICE:
                 choices = val["_value"]["candidates"]
                 n_chosen = val["_value"]["n_chosen"]
+                if n_chosen is None:
+                    n_chosen = len(choices)
                 chosen_arch[key] = {"_value": choices[:n_chosen], "_idx": list(range(n_chosen))}
             else:
                 raise ValueError("Unknown key '%s' and value '%s'." % (key, val))

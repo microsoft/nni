@@ -138,7 +138,6 @@ class CompressorTestCase(TestCase):
         masks = pruner.calc_mask(layer, config_list[0], if_calculated=torch.tensor(0))
         assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
-        pruner.update_epoch(1)
         model.conv2.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(layer, config_list[1], if_calculated=torch.tensor(0))
         assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
@@ -159,7 +158,6 @@ class CompressorTestCase(TestCase):
 
         assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
-        pruner.update_epoch(1)
         model.layers[2].set_weights([weights[0], weights[1].numpy()])
         masks = pruner.calc_mask(layer, config_list[1]).numpy()
         masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])

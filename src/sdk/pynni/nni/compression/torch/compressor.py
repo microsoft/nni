@@ -89,7 +89,7 @@ class Compressor:
         """
         if self.modules_wrapper is not None:
             # already compressed
-            return
+            return self.bound_model
         else:
             self.modules_wrapper = []
 
@@ -149,13 +149,24 @@ class Compressor:
         ret = None
         for config in self.config_list:
             config = config.copy()
-            config['op_types'] = self._expand_config_op_types(config)
-            if layer.type not in config['op_types']:
+            # expand config if key `default` is in config['op_types']
+            if 'op_types' in config and 'default' in config['op_types']:
+                expanded_op_types = []
+                for op_type in config['op_types']:
+                    if op_type == 'default':
+                        expanded_op_types.extend(default_layers.weighted_modules)
+                    else:
+                        expanded_op_types.append(op_type)
+                config['op_types'] = expanded_op_types
+
+            # check if condition is satisified
+            if 'op_types' in config and layer.type not in config['op_types']:
                 continue
-            if config.get('op_names') and layer.name not in config['op_names']:
+            if 'op_names' in config and layer.name not in config['op_names']:
                 continue
+
             ret = config
-        if ret is None or ret.get('exclude'):
+        if ret is None or 'exclude' in ret:
             return None
         return ret
 
@@ -188,16 +199,6 @@ class Compressor:
         """
         raise NotImplementedError()
 
-    def _expand_config_op_types(self, config):
-        if config is None:
-            return []
-        expanded_op_types = []
-        for op_type in config.get('op_types', []):
-            if op_type == 'default':
-                expanded_op_types.extend(default_layers.weighted_modules)
-            else:
-                expanded_op_types.append(op_type)
-        return expanded_op_types
 
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
@@ -225,6 +226,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
+        self.registered_buffers = {}
 
         # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
@@ -232,8 +234,10 @@ class PrunerModuleWrapper(torch.nn.Module):
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
         else:
             self.register_buffer("bias_mask", None)
+
+        self.registered_buffers['weight_mask'] = self.weight_mask
+        self.registered_buffers['bias_mask'] = self.bias_mask
         # register user specified buffer
-        self.registered_buffers = {}
         for name in self.pruner.buffers:
             self.register_buffer(name, self.pruner.buffers[name].clone())
             self.registered_buffers[name] = getattr(self, name)
@@ -246,7 +250,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
         # apply mask to bias
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            if mask is not None:
+            if mask is not None and 'bias' in mask:
                 self.bias_mask.copy_(mask['bias'])
             self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
@@ -295,7 +299,8 @@ class Pruner(Compressor):
         """
         _logger.info("compressing module %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
-        assert hasattr(layer.module, 'weight')
+        assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
+        # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
 
@@ -565,4 +570,3 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
-    

@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import FPGMPruner
@@ -6,10 +7,10 @@ from nni.compression.torch import FPGMPruner
 class Mnist(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
+        self.conv1 = nn.Conv2d(1, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 50, 500)
+        self.fc2 = nn.Linear(500, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -27,8 +28,14 @@ class Mnist(torch.nn.Module):
         return num_zero_filters, num_filters, float(num_zero_filters)/num_filters
 
     def print_conv_filter_sparsity(self):
-        conv1_data = self._get_conv_weight_sparsity(self.conv1)
-        conv2_data = self._get_conv_weight_sparsity(self.conv2)
+        if isinstance(self.conv1, nn.Conv2d):
+            conv1_data = self._get_conv_weight_sparsity(self.conv1)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2)
+        else:
+            # self.conv1 is wrapped as PrunerModuleWrapper
+            conv1_data = self._get_conv_weight_sparsity(self.conv1.module)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2.module)
+
         print('conv1: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv1_data[0], conv1_data[1], conv1_data[2]))
         print('conv2: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv2_data[0], conv2_data[1], conv2_data[2]))
 
