@@ -342,7 +342,7 @@ class ModelSpeedup:
         predecessors = []
         for _input in self.name_to_gnode[module_name].inputs:
             if not _input in self.output_to_gnode:
-                _logger.warning("cannot find gnode with %s as its output", _input)
+                _logger.debug("cannot find gnode with %s as its output", _input)
             else:
                 g_node = self.output_to_gnode[_input]
                 predecessors.append(g_node.name)
