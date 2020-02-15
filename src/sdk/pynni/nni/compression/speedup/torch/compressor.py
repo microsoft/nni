@@ -379,7 +379,7 @@ class ModelSpeedup:
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """
         Infer input shape / output shape based on the module's weight mask / input shape / output shape.
-        
+
         For a module:
             Infer its input and output shape from its weight mask
             Infer its output shape from its input shape
