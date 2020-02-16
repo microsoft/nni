@@ -5,6 +5,7 @@ import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton
 } from 'office-ui-fabric-react';
+import * as JSON5 from 'json5';
 import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
@@ -377,7 +378,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // trial parameters & dict final keys & Trial No. Id ...
     private getAllColumnKeys = (): string[] => {
-        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
+        const tableSource: Array<TableRecord> = JSON5.parse(JSON5.stringify(this.props.tableSource));
         // parameter as table column
         const parameterStr: string[] = [];
         if (tableSource.length > 0) {
@@ -545,7 +546,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCustomizedModal, copyTrialId, intermediateOption
         } = this.state;
         const { columnList } = this.props;
-        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
+        const tableSource: Array<TableRecord> = JSON5.parse(JSON5.stringify(this.state.tableSourceForSort));
 
         return (
             <Stack>
