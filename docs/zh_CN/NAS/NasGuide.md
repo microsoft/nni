@@ -66,11 +66,11 @@ class Net(nn.Module):
         返回输出
 ```
 
-Input choice can be thought of as a callable module that receives a list of tensors and output the concatenation/sum/mean of some of them (sum by default), or `None` if none is selected. Like layer choices, input choices should be **initialized in `__init__` and called in `forward`**. We will see later that this is to allow search algorithms to identify these choices, and do necessary preparation.
+Input Choice 可被视为可调用的模块，它接收张量数组，输出其中部分的连接、求和、平均（默认为求和），或没有选择时输出 `None`。 与 Layer Choice 一样，Input Choice 要**在 `__init__` 中初始化，并在 `forward` 中调用。 稍后的例子中会看到搜索算法如何识别这些 Choice，并进行相应的准备。</p>
 
-`LayerChoice` and `InputChoice` are both **mutables**. Mutable means "changeable". As opposed to traditional deep learning layers/modules which have fixed operation type once defined, models with mutables are essentially a series of possible models.
+`LayerChoice` 和 `InputChoice` 都是 **Mutable**。 Mutable 表示 "可变化的"。 与传统深度学习层、模型都是固定的不同，使用 Mutable 的模块，是一组可能选择的模型。
 
-Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea. For advanced usage on mutables, see [Mutables](./NasReference.md#mutables).
+用户可为每个 Mutable 指定 **key**。 默认情况下，NNI 会分配全局唯一的，但如果需要共享 Choice（例如，两个 `LayerChoice` 有同样的候选操作，希望共享同样的 Choice。即，如果一个选择了第 i 个操作，第二个也要选择第 i 个操作），那么就应该给它们相同的 key。 key 标记了此 Choice，并会在存储的检查点中使用。 So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea. For advanced usage on mutables, see [Mutables](./NasReference.md#mutables).
 
 ## Use a Search Algorithm
 
