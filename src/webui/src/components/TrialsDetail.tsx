@@ -56,7 +56,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             return;
         }
         switch (this.state.searchType) {
-            case 'id':
+            case 'Id':
                 filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'Trial No.':
