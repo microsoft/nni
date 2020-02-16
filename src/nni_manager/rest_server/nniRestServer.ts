@@ -35,7 +35,6 @@ export class NNIRestServer extends RestServer {
     protected registerRestHandler(): void {
         this.app.use(express.static('static'));
         this.app.use(bodyParser.json({limit: '50mb'}));
-        this.app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
         this.app.use(this.LOGS_ROOT_URL, express.static(getLogDir()));
         this.app.get('*', (req: express.Request, res: express.Response) => {
