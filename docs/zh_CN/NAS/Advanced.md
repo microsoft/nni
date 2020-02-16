@@ -27,15 +27,15 @@ for _ in range(epochs):
 
 要展示 Mutator 的用途，需要先了解 One-Shot NAS 的工作原理。 通常 One-Shot NAS 会同时优化模型权重和架构权重。 它会反复的：对架构采样，或由超网络中的几种架构组成，然后像普通深度学习模型一样训练，将训练后的参数更新到超网络中，然后用指标或损失作为信号来指导架构的采样。 Mutator，在这里用作架构采样，通常会是另一个深度学习模型。 因此，可将其看作一个通过定义参数，并使用优化器进行优化的任何模型。 Mutator 是由一个模型来初始化的。 一旦 Mutator 绑定到了某个模型，就不能重新绑定到另一个模型上。
 
-`mutator.reset()` is the core step. That's where all the choices in the model are finalized. The reset result will be always effective, until the next reset flushes the data. After the reset, the model can be seen as a traditional model to do forward-pass and backward-pass.
+`mutator.reset()` 是关键步骤。 这一步确定了模型最终的所有 Choice。 重置的结果会一直有效，直到下一次重置来刷新数据。 重置后，模型可看作是普通的模型来进行前向和反向传播。
 
-Finally, mutators provide a method called `mutator.export()` that export a dict with architectures to the model. Note that currently this dict this a mapping from keys of mutables to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
+最后，Mutator 会提供叫做 `mutator.export()` 的方法来将模型的架构参数作为 dict 导出。 注意，当前 dict 是从 Mutable 键值到选择张量的映射。 为了存储到 JSON，用户需要将张量显式的转换为 Python 的 list。
 
-Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md#trainers) for details.
+同时，NNI 提供了工具，能更容易地实现 Trainer。 参考 [Trainer](./NasReference.md#trainers) 了解详情。
 
-## Implement New Mutators
+## 实现新的 Mutator
 
-To start with, here is the pseudo-code that demonstrates what happens on `mutator.reset()` and `mutator.export()`.
+这是为了演示 `mutator.reset()` 和 `mutator.export()` 的伪代码。
 
 ```python
 def reset(self):
@@ -47,9 +47,9 @@ def export(self):
     return self.sample_final()
 ```
 
-On reset, a new architecture is sampled with `sample_search()` and applied on the model. Then the model is trained for one or more steps in search phase. On export, a new architecture is sampled with `sample_final()` and **do nothing to the model**. This is either for checkpoint or exporting the final architecture.
+重置时，新架构会通过 `sample_search()` 采样，并应用到模型上。 然后，对模型进行一步或多步的搜索。 导出时，新架构通过 `sample_final()` 来采样，**不对模型做操作**。 可用于检查点或导出最终架构。
 
-The requirements of return values of `sample_search()` and `sample_final()` are the same: a mapping from mutable keys to tensors. The tensor can be either a BoolTensor (true for selected, false for negative), or a FloatTensor which applies weight on each candidate. The selected branches will then be computed (in `LayerChoice`, modules will be called; in `InputChoice`, it's just tensors themselves), and reduce with the reduction operation specified in the choices. For most algorithms only worrying about the former part, here is an example of your mutator implementation.
+`sample_search()` 和 `sample_final()` 返回值的要求一致：从 Mutable 键值到张量的映射。 The tensor can be either a BoolTensor (true for selected, false for negative), or a FloatTensor which applies weight on each candidate. The selected branches will then be computed (in `LayerChoice`, modules will be called; in `InputChoice`, it's just tensors themselves), and reduce with the reduction operation specified in the choices. For most algorithms only worrying about the former part, here is an example of your mutator implementation.
 
 ```python
 class RandomMutator(Mutator):
