@@ -37,34 +37,33 @@ class Net(nn.Module):
         返回输出
 ```
 
-以上示例在 conv1 上添加了 conv5x5 的选项。 修改非常简单，只需要声明 `LayerChoice` 并将原始的 conv3x3 和新的 conv5x5 作为参数即可。 就这么简单！ You don't have to modify the forward function in anyway. You can imagine conv1 as any another module without NAS.
+以上示例在 conv1 上添加了 conv5x5 的选项。 修改非常简单，只需要声明 `LayerChoice` 并将原始的 conv3x3 和新的 conv5x5 作为参数即可。 就这么简单！ 不需要修改 forward 函数。 可将 conv1 想象为没有 NAS 的模型。
 
-So how about the possibilities of connections? This can be done by `InputChoice`. To allow for a skipconnection on an MNIST example, we add another layer called conv3. In the following example, a possible connection from conv2 is added to the output of conv3.
+如何表示可能的连接？ 通过 `InputChoice` 来实现。 要在 MNIST 示例上使用跳过连接，需要增加另一层 conv3。 下面的示例中，从 conv2 的可能连接加入到了 conv3 的输出中。
 
 ```python
 from nni.nas.pytorch import mutables
 
 class Net(nn.Module):
     def __init__(self):
-        # ... same ...
+        # ... 相同 ...
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.conv3 = nn.Conv2d(64, 64, 1, 1)
-        # declaring that there is exactly one candidate to choose from
-        # search strategy will choose one or None
+        # 声明搜索策略，来选择最多一个选项
         self.skipcon = mutables.InputChoice(n_candidates=1)
-        # ... same ...
+        # ... 相同 ...
 
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)
-        x0 = self.skipcon([x])  # choose one or none from [x]
+        x0 = self.skipcon([x])  # 从 [x] 中选择 0 或 1 个
         x = self.conv3(x)
-        if x0 is not None:  # skipconnection is open
+        if x0 is not None:  # 允许跳过连接
             x += x0
         x = F.max_pool2d(x, 2)
-        # ... same ...
-        return output
+        # ... 相同 ...
+        返回输出
 ```
 
 Input choice can be thought of as a callable module that receives a list of tensors and output the concatenation/sum/mean of some of them (sum by default), or `None` if none is selected. Like layer choices, input choices should be **initialized in `__init__` and called in `forward`**. We will see later that this is to allow search algorithms to identify these choices, and do necessary preparation.
