@@ -49,50 +49,50 @@ def export(self):
 
 重置时，新架构会通过 `sample_search()` 采样，并应用到模型上。 然后，对模型进行一步或多步的搜索。 导出时，新架构通过 `sample_final()` 来采样，**不对模型做操作**。 可用于检查点或导出最终架构。
 
-`sample_search()` 和 `sample_final()` 返回值的要求一致：从 Mutable 键值到张量的映射。 The tensor can be either a BoolTensor (true for selected, false for negative), or a FloatTensor which applies weight on each candidate. The selected branches will then be computed (in `LayerChoice`, modules will be called; in `InputChoice`, it's just tensors themselves), and reduce with the reduction operation specified in the choices. For most algorithms only worrying about the former part, here is an example of your mutator implementation.
+`sample_search()` 和 `sample_final()` 返回值的要求一致：从 Mutable 键值到张量的映射。 张量可以是 BoolTensor （true 表示选择，false 表示没有），或 FloatTensor 将权重应用于每个候选对象。 选定的分支会被计算出来（对于 `LayerChoice`，模型会被调用；对于 `InputChoice`，只有权重），并通过 Choice 的剪枝操作来剪枝模型。 这是 Mutator 实现的示例，大多数算法只需要关心前面部分。
 
 ```python
 class RandomMutator(Mutator):
     def __init__(self, model):
-        super().__init__(model)  # don't forget to call super
-        # do something else
+        super().__init__(model)  # 记得调用 super
+        # 别的操作
 
     def sample_search(self):
         result = dict()
-        for mutable in self.mutables:  # this is all the mutable modules in user model
-            # mutables share the same key will be de-duplicated
+        for mutable in self.mutables:  # 这是用户模型中所有 Mutable 模块
+            # 共享同样键值的 Mutable 会去重
             if isinstance(mutable, LayerChoice):
-                # decided that this mutable should choose `gen_index`
+                # 决定此模型会选择 `gen_index`
                 gen_index = np.random.randint(mutable.length)
                 result[mutable.key] = torch.tensor([i == gen_index for i in range(mutable.length)], 
                                                    dtype=torch.bool)
             elif isinstance(mutable, InputChoice):
-                if mutable.n_chosen is None:  # n_chosen is None, then choose any number
+                if mutable.n_chosen is None:  # n_chosen 是 None，表示选择所有数字
                     result[mutable.key] = torch.randint(high=2, size=(mutable.n_candidates,)).view(-1).bool()
-                # else do something else
+                # 其它
         return result
 
     def sample_final(self):
-        return self.sample_search()  # use the same logic here. you can do something different
+        return self.sample_search()  # 使用同样的逻辑 其它操作
 ```
 
-The complete example of random mutator can be found [here](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/random/mutator.py).
+随机 Mutator 的完整示例在[这里](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/random/mutator.py)。
 
-For advanced usages, e.g., users want to manipulate the way modules in `LayerChoice` are executed, they can inherit `BaseMutator`, and overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the callback implementation of `LayerChoice` and `InputChoice` respectively. Users can still use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. For details, please refer to [reference](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) here to learn more.
+对于高级用法，例如，需要在 `LayerChoice` 执行的时候操作模型，可继承 `BaseMutator`，并重载 `on_forward_layer_choice` 和`on_forward_input_choice`。这些是 `LayerChoice` 和 `InputChoice` 对应的回调实现。 还可使用属性 `mutables` 来获得模型中所有的 `LayerChoice` 和 `InputChoice`。 详细信息，[参考这里](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch)。
 
 ```eval_rst
 .. tip::
-    A useful application of random mutator is for debugging. Use
+    用于调试的随机 Mutator。 使用
 
     .. code-block:: python
 
         mutator = RandomMutator(model)
         mutator.reset()
 
-    will immediately set one possible candidate in the search space as the active one.
+    会立刻从搜索空间中选择一个来激活。
 ```
 
-## Implemented a Distributed NAS Tuner
+## 实现分布式 NAS Tuner
 
 Before learning how to write a one-shot NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
 
