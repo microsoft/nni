@@ -1,10 +1,10 @@
-# NAS Quick Start
+# NAS 快速入门
 
-The NAS feature provided by NNI has two key components: APIs for expressing search space, and NAS training approaches. The former is for users to easily specify a class of models (i.e., the candidate models specified by search space) which may perform well. The latter is for users to easily apply state-of-the-art NAS training approaches on their own model.
+NNI 提供的 NAS 功能有两个关键组件：用于表示搜索空间的 API 和 NAS 的训练方法。 前者为用户提供了表示性能好的模块的方法（即，通过搜索空间指定的候选模型）。 后者能让用户可以轻松的在自己的模型上使用最新的 NAS 训练方法。
 
-Here we use a simple example to demonstrate how to tune your model architecture with NNI NAS APIs step by step. The complete code of this example can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/naive).
+这里，通过简单的示例，来一步步演示如何使用 NNI NAS API 调优自己的模型架构。 示例的完整代码可在[这里](https://github.com/microsoft/nni/tree/master/examples/nas/naive)找到。
 
-## Write your model with NAS APIs
+## 使用 NAS API 编写模型
 
 Instead of writing a concrete neural model, you can write a class of neural models using two NAS APIs `LayerChoice` and `InputChoice`. For example, you think either of two operations might work in the first convolution layer, then you can get one from them using `LayerChoice` as shown by `self.conv1` in the code. Similarly, the second convolution layer `self.conv2` also chooses one from two operations. To this line, four candidate neural networks are specified. `self.skipconnect` uses `InputChoice` to specify two choices, i.e., adding skip connection or not.
 
