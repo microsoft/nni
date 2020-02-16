@@ -10,7 +10,7 @@
 ## 如何使用
 
 ```python
-from nni.feature_engineering.gradient_selector import GradientFeatureSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # 读取数据
@@ -18,7 +18,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # 初始化 Selector
-fgs = GradientFeatureSelector(...)
+fgs = FeatureGradientSelector(...)
 # 拟合数据
 fgs.fit(X_train, y_train)
 # 获取重要的特征
