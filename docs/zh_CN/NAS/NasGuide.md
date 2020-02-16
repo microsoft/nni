@@ -129,31 +129,31 @@ trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导�
 ```python
 model = Net()
 
-# get the chosen architecture from tuner and apply it on model
+# 从 Tuner 中获得选择的架构，并应用到模型上
 get_and_apply_next_architecture(model)
-train(model)  # your code for training the model
-acc = test(model)  # test the trained model
-nni.report_final_result(acc)  # report the performance of the chosen architecture
+train(model)  # 训练模型的代码
+acc = test(model)  # 测试训练好的模型
+nni.report_final_result(acc)  # 报告所选架构的性能
 ```
 
-The search space should be generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
+搜索空间应生成，并发送给 Tuner。 通过 NNI NAS API，搜索空间嵌入在用户代码中，需要通过 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 来生成搜索空间文件。 然后，将生成的搜索空间文件路径填入 `config.yml` 的 `searchSpacePath`。 `config.yml` 中的其它字段参考[教程](../Tutorial/QuickStart.md)。
 
-You could use [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search space.
+可使用 [NNI Tuner](../Tuner/BuiltinTuner.md) 来搜索。 目前，只有 PPO Tuner 支持 NAS 搜索空间。
 
-We support standalone mode for easy debugging, where you could directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
+为了便于调试，其支持独立运行模式，可直接运行 Trial 命令，而不启动 NNI Experiment。 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择最开始的候选项。
 
-A complete example can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
+[此处](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml)是完整示例。
 
-### Retrain with Exported Architecture
+### 使用导出的架构重新训练
 
-After the searching phase, it's time to train the architecture found. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that searching model and retraining model are usual very similar, and therefore you can construct your final model with the exact model code. For example
+搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如：
 
 ```python
 model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to one-hot or multi-hot representation of choices. For example
+JSON 文件是从 Mutable key 到 Choice 的表示。 例如：
 
 ```json
 {
@@ -162,6 +162,6 @@ The JSON is simply a mapping from mutable keys to one-hot or multi-hot represent
 }
 ```
 
-After applying, the model is then fixed and ready for a final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during search phase and start retrain from there. However, this is also a model with redundant parameters, which may cause problems when trying to count the number of parameters in model. For deeper reasons and possible workaround, see [Trainers](./NasReference.md#retrain).
+应用后，模型会被固定，并准备好进行最终训练。 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 好的方面是，可以在搜索阶段直接读取来自超网络的检查点，并开始重新训练。 但是，这也造成模型有荣誉的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md#retrain)。
 
-Also refer to [DARTS](./DARTS.md) for example code of retraining.
+也可参考 [DARTS](./DARTS.md) 的重新训练代码。
