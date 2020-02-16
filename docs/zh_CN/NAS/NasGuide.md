@@ -83,22 +83,22 @@ Input Choice 可被视为可调用的模块，它接收张量数组，输出其�
 每个 One-Shot NAS 都实现了 Trainer，可在每种算法说明中找到详细信息。 这是如何使用 `EnasTrainer` 的简单示例。
 
 ```python
-# this is exactly same as traditional model training
+# 此处与普通模型训练相同
 model = Net()
 dataset_train = CIFAR10(root="./data", train=True, download=True, transform=train_transform)
 dataset_valid = CIFAR10(root="./data", train=False, download=True, transform=valid_transform)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
 
-# use NAS here
+# 使用 NAS
 def top1_accuracy(output, target):
-    # this is the function that computes the reward, as required by ENAS algorithm
+    # ENAS 使用此函数来计算奖励
     batch_size = target.size(0)
     _, predicted = torch.max(output.data, 1)
     return (predicted == target).sum().item() / batch_size
 
 def metrics_fn(output, target):
-    # metrics function receives output and target and computes a dict of metrics
+    # 指标函数接收输出和目标，并计算出指标 dict
     return {"acc1": reward_accuracy(output, target)}
 
 from nni.nas.pytorch import enas
@@ -111,14 +111,14 @@ trainer = enas.EnasTrainer(model,
                            num_epochs=10,  # 10 epochs
                            dataset_train=dataset_train,
                            dataset_valid=dataset_valid,
-                           log_frequency=10)  # print log every 10 steps
-trainer.train()  # training
-trainer.export(file="model_dir/final_architecture.json")  # export the final architecture to file
+                           log_frequency=10)  # 每 10 步打印
+trainer.train()  # 训练
+trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导出到文件
 ```
 
-Users can directly run their training file by `python3 train.py`, without `nnictl`. After training, users could export the best one of the found models through `trainer.export()`.
+用户可直接通过 `python3 train.py` 开始训练，不需要使用 `nnictl`。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。
 
-Normally, the trainer exposes a few arguments that you can customize, for example, loss function, metrics function, optimizer, and datasets. These should satisfy the needs from most usages, and we do our best to make sure our built-in trainers work on as many models, tasks and datasets as possible. But there is no guarantee. For example, some trainers have assumption that the task has to be a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might very soon need to [customize your trainer](#extend-the-ability-of-one-shot-trainers).
+通常，Trainer 会有些可定制的参数，例如，损失函数，指标函数，优化器，以及数据集。 These should satisfy the needs from most usages, and we do our best to make sure our built-in trainers work on as many models, tasks and datasets as possible. But there is no guarantee. For example, some trainers have assumption that the task has to be a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might very soon need to [customize your trainer](#extend-the-ability-of-one-shot-trainers).
 
 ### Distributed NAS
 
