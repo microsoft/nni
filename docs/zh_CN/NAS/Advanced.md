@@ -94,9 +94,9 @@ class RandomMutator(Mutator):
 
 ## 实现分布式 NAS Tuner
 
-Before learning how to write a one-shot NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
+在学习编写 One-Shot NAS Tuner前，应先了解如何写出通用的 Tuner。 阅读[自定义 Tuner](../Tuner/CustomizeTuner.md) 的教程。
 
-When users call "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file, a search space file like this will be generated:
+当调用 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 时，会生成下面这样的搜索空间文件：
 
 ```json
 {
@@ -114,7 +114,7 @@ When users call "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search spac
 }
 ```
 
-This is the exact search space tuners will receive in `update_search_space`. It's then tuners' responsibility to interpret the search space and generate new candidates in `generate_parameters`. A valid "parameters" will be in the following format:
+这是 Tuner 在 `update_search_space` 中会收到的搜索空间。 Tuner 需要解析搜索空间，并在 `generate_parameters` 中生成新的候选。 有效的 "参数" 格式如下：
 
 ```json
 {
@@ -129,4 +129,4 @@ This is the exact search space tuners will receive in `update_search_space`. It'
 }
 ```
 
-Send it through `generate_parameters`, and the tuner would look like any HPO tuner. Refer to [SPOS](./SPOS.md) example code for an example.
+和普通超参优化 Tuner 类似，通过 `generate_parameters` 来发送。 参考 [SPOS](./SPOS.md) 示例代码。
