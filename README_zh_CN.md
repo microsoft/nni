@@ -172,9 +172,9 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/latest/autotune_ref.html#trial">Python API</a></li>
         <li><a href="docs/zh_CN/Tutorial/AnnotationSpec.md">NNI Annotation</a></li>
-         <li><a href="https://nni.readthedocs.io/en/latest/installation.html">支持的操作系统</a></li>
+         <li><a href="https://nni.readthedocs.io/zh/latest/installation.html">支持的操作系统</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
