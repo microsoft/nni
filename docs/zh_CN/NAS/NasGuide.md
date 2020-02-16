@@ -8,11 +8,11 @@
 
 ![](../../img/nas_abstract_illustration.png)
 
-现代神经架构搜索（NAS）方法通常包含 [三个维度](https://arxiv.org/abs/1808.05377)：搜索空间、搜索策略和性能估计策略。 Search space often contains a limited neural network architectures to explore, while search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, search strategy should find the best architecture in the search space and report it to users. After users obtain such "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
+现代神经架构搜索（NAS）方法通常包含 [三个维度](https://arxiv.org/abs/1808.05377)：搜索空间、搜索策略和性能估计策略。 搜索空间通常是要搜索的一个有限的神经网络架构，而搜索策略会采样来自搜索空间的架构，评估性能，并不断演进。 理想情况下，搜索策略会找到搜索空间中最好的架构，并返回给用户。 在获得了 "最好架构" 后，很多方法都会有 "重新训练" 的步骤，会像普通神经网络模型一样训练。
 
-## Implement a Search Space
+## 实现搜索空间
 
-Assuming now we've got a baseline model, what should we do to be empowered with NAS? Take [MNIST on PyTorch](https://github.com/pytorch/examples/blob/master/mnist/main.py) as an example, the code might look like this:
+假设已经有了基础的模型，该如何使用 NAS 来提升？ 以 [PyTorch 上的 MNIST](https://github.com/pytorch/examples/blob/master/mnist/main.py) 为例，代码如下：
 
 ```python
 from nni.nas.pytorch import mutables
@@ -37,7 +37,7 @@ class Net(nn.Module):
         返回输出
 ```
 
-The example above adds an option of choosing conv5x5 at conv1. The modification is as simple as declaring a `LayerChoice` with original conv3x3 and a new conv5x5 as its parameter. That's it! You don't have to modify the forward function in anyway. You can imagine conv1 as any another module without NAS.
+以上示例在 conv1 上添加了 conv5x5 的选项。 修改非常简单，只需要声明 `LayerChoice` 并将原始的 conv3x3 和新的 conv5x5 作为参数即可。 就这么简单！ You don't have to modify the forward function in anyway. You can imagine conv1 as any another module without NAS.
 
 So how about the possibilities of connections? This can be done by `InputChoice`. To allow for a skipconnection on an MNIST example, we add another layer called conv3. In the following example, a possible connection from conv2 is added to the output of conv3.
 
