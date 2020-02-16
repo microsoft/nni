@@ -1,14 +1,14 @@
-# Guide: Using NAS on NNI
+# 指南：在 NNI 上使用 NAS
 
 ```eval_rst
 .. contents::
 
-.. Note:: The APIs are in an experimental stage. The current programing interface is subject to change.
+.. Note:: 此 API 初始试验阶段。 当前接口可能会更改。
 ```
 
 ![](../../img/nas_abstract_illustration.png)
 
-Modern Neural Architecture Search (NAS) methods usually incorporate [three dimensions](https://arxiv.org/abs/1808.05377): search space, search strategy, and performance estimation strategy. Search space often contains a limited neural network architectures to explore, while search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, search strategy should find the best architecture in the search space and report it to users. After users obtain such "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
+现代神经架构搜索（NAS）方法通常包含 [三个维度](https://arxiv.org/abs/1808.05377)：搜索空间、搜索策略和性能估计策略。 Search space often contains a limited neural network architectures to explore, while search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, search strategy should find the best architecture in the search space and report it to users. After users obtain such "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
 
 ## Implement a Search Space
 
