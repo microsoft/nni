@@ -2,30 +2,30 @@
 
 ## 扩展 One-Shot Trainer
 
-Users might want to do multiple things if they are using the trainers on real tasks, for example, distributed training, half-precision training, logging periodically, writing tensorboard, dumping checkpoints and so on. As mentioned previously, some trainers do have support for some of the items listed above; others might not. Generally, there are two recommended ways to add anything you want to an existing trainer: inherit an existing trainer and override, or copy an existing trainer and modify.
+如果要在真实任务上使用 Trainer，还需要更多操作，如分布式训练，低精度训练，周期日志，写入 TensorBoard，保存检查点等等。 如前所述，一些 Trainer 支持了上述某些功能。 有两种方法可往已有的 Trainer 中加入功能：继承已有 Trainer 并重载，或复制已有 Trainer 并修改。
 
-Either way, you are walking into the scope of implementing a new trainer. Basically, implementing a one-shot trainer is no different from any traditional deep learning trainer, except that a new concept called mutator will reveal itself. So that the implementation will be different in at least two places:
+无论哪种方法，都需要实现新的 Trainer。 基本上，除了新的 Mutator 的概念，实现 One-Shot Trainer 与普通的深度学习 Trainer 相同。 因此，有两处会有所不同：
 
-* Initialization
+* 初始化
 
 ```python
 model = Model()
 mutator = MyMutator(model)
 ```
 
-* Training
+* 训练
 
 ```python
 for _ in range(epochs):
     for x, y in data_loader:
-        mutator.reset()  # reset all the choices in model
-        out = model(x)  # like traditional model
+        mutator.reset()  # 在模型中重置所有 Choice
+        out = model(x)  # 与普通模型相同
         loss = criterion(out, y)
         loss.backward()
-        # no difference below
+        # 以下代码没有不同
 ```
 
-To demonstrate what mutators are for, we need to know how one-shot NAS normally works. Usually, one-shot NAS "co-optimize model weights and architecture weights". It repeatedly: sample an architecture or combination of several architectures from the supernet, train the chosen architectures like traditional deep learning model, update the trained parameters to the supernet, and use the metrics or loss as some signal to guide the architecture sampler. The mutator, is the architecture sampler here, often defined to be another deep-learning model. Therefore, you can treat it as any model, by defining parameters in it and optimizing it with optimizers. One mutator is initialized with exactly one model. Once a mutator is binded to a model, it cannot be rebinded to another model.
+要展示 Mutator 的用途，需要先了解 One-Shot NAS 的工作原理。 通常 One-Shot NAS 会同时优化模型权重和架构权重。 它会反复的：对架构采样，或由超网络中的几种架构组成，然后像普通深度学习模型一样训练，将训练后的参数更新到超网络中，然后用指标或损失作为信号来指导架构的采样。 Mutator，在这里用作架构采样，通常会是另一个深度学习模型。 因此，可将其看作一个通过定义参数，并使用优化器进行优化的任何模型。 Mutator 是由一个模型来初始化的。 一旦 Mutator 绑定到了某个模型，就不能重新绑定到另一个模型上。
 
 `mutator.reset()` is the core step. That's where all the choices in the model are finalized. The reset result will be always effective, until the next reset flushes the data. After the reset, the model can be seen as a traditional model to do forward-pass and backward-pass.
 
