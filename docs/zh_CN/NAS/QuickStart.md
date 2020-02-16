@@ -6,7 +6,7 @@ NNI 提供的 NAS 功能有两个关键组件：用于表示搜索空间的 API 
 
 ## 使用 NAS API 编写模型
 
-Instead of writing a concrete neural model, you can write a class of neural models using two NAS APIs `LayerChoice` and `InputChoice`. For example, you think either of two operations might work in the first convolution layer, then you can get one from them using `LayerChoice` as shown by `self.conv1` in the code. Similarly, the second convolution layer `self.conv2` also chooses one from two operations. To this line, four candidate neural networks are specified. `self.skipconnect` uses `InputChoice` to specify two choices, i.e., adding skip connection or not.
+可通过两个 NAS API `LayerChoice` 和 `InputChoice` 来定义神经网络模型，而不需要编写具体的模型。 例如，如果认为在第一卷积层有两种操作可能会有效，可通过 `LayerChoice` 来为代码中的 `self.conv1` 赋值。 同样，第二个卷积层 `self.conv2` 也可以从中选择一个。 此处，指定了 4 个候选的神经网络。 `self.skipconnect` 使用 `InputChoice` 来指定两个选项，即是否添加跳跃的连接。
 
 ```python
 import torch.nn as nn
@@ -29,11 +29,11 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(84, 10)
 ```
 
-For detailed description of `LayerChoice` and `InputChoice`, please refer to [the guidance](NasGuide.md)
+有关 `LayerChoice` 和 `InputChoice` 的详细描述可参考[指南](NasGuide.md)。
 
-## Choose a NAS trainer
+## 选择 NAS Trainer
 
-After the model is instantiated, it is time to train the model using NAS trainer. Different trainers use different approaches to search for the best one from a class of neural models that you specified. NNI provides popular NAS training approaches, such as DARTS, ENAS. Here we use `DartsTrainer` as an example below. After the trainer is instantiated, invoke `trainer.train()` to do the search.
+实例化模型后，需要通过 NAS Trainer 来训练模型。 不同的 Trainer 会使用不同的方法来从指定的神经网络模块中搜索出最好的。 NNI 提供了流行的 NAS 训练方法，如 DARTS，ENAS。 以下以 `DartsTrainer` 为例。 在 Trainer 实例化后，调用`trainer.train()` 开始搜索。
 
 ```python
 trainer = DartsTrainer(net,
@@ -48,17 +48,17 @@ trainer = DartsTrainer(net,
 trainer.train()
 ```
 
-## Export the best model
+## 导出最佳模型
 
-After the search (i.e., `trainer.train()`) is done, we want to get the best performing model, then simply call `trainer.export("final_arch.json")` to export the found neural architecture to a file.
+搜索（即`trainer.train()`）完成后，需要拿到最好的模型，只需要调用 `trainer.export("final_arch.json")` 来将找到的神经网络架构导出到文件。
 
-## NAS visualization
+## NAS 可视化
 
-We are working on visualization of NAS and will release soon.
+正在开发 NAS 的可视化，并将很快发布。
 
-## Retrain the exported best model
+## 重新训练导出的最佳模型
 
-It is simple to retrain the found (exported) neural architecture. Step one, instantiate the model you defined above. Step two, invoke `apply_fixed_architecture` on the model. Then the model becomes the found (exported) one, you can use traditional model training to train this model.
+重新训练找到（导出）的网络架构非常容易。 第一步，实例化上面定义的模型。 第二步，在模型上调用 `apply_fixed_architecture`。 然后，模型会变为找到（导出）的模型，可通过正常的训练方法来训练此模型。
 
 ```python
 model = Net()
