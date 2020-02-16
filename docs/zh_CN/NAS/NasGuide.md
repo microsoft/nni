@@ -33,8 +33,8 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
-        # ... same as original ...
-        return output
+        # ... 与原始的一样 ...
+        返回输出
 ```
 
 The example above adds an option of choosing conv5x5 at conv1. The modification is as simple as declaring a `LayerChoice` with original conv3x3 and a new conv5x5 as its parameter. That's it! You don't have to modify the forward function in anyway. You can imagine conv1 as any another module without NAS.
