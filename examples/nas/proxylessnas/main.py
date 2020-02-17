@@ -23,7 +23,8 @@ if __name__ == "__main__":
     parser.add_argument("--dropout_rate", default=0, type=float)
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
     # configurations of imagenet dataset
-    parser.add_argument("--data_path", default='/data/imagenet/', type=str)
+    #parser.add_argument("--data_path", default='/data/imagenet/', type=str)
+    parser.add_argument("--data_path", default='/mnt/v-yugzh/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)
     parser.add_argument("--test_batch_size", default=500, type=int)
     parser.add_argument("--n_worker", default=32, type=int)
@@ -34,6 +35,7 @@ if __name__ == "__main__":
     # configurations for search
     parser.add_argument("--checkpoint_path", default='./search_mobile_net.pt', type=str)
     parser.add_argument("--arch_path", default='./arch_path.pt', type=str)
+    parser.add_argument("--no-warmup", dest='warmup', action='store_false')
     # configurations for retrain
     parser.add_argument("--exported_arch_path", default=None, type=str)
 
@@ -54,7 +56,7 @@ if __name__ == "__main__":
 
     # move network to GPU if available
     if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+        device = torch.device('cuda')
     else:
         device = torch.device('cpu')
 
@@ -86,7 +88,7 @@ if __name__ == "__main__":
                                       train_loader=data_provider.train,
                                       valid_loader=data_provider.valid,
                                       device=device,
-                                      warmup=True,
+                                      warmup=args.warmup,
                                       ckpt_path=args.checkpoint_path,
                                       arch_path=args.arch_path)
 
