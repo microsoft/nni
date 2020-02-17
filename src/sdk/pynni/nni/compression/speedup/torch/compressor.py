@@ -462,14 +462,16 @@ class ModelSpeedup:
         if mask is not None:
             _logger.debug("mask is not None")
             if not m_type in infer_from_mask:
-                raise RuntimeError("Has not supported infering \
-                    input/output shape from mask for module/function: `{}`".format(m_type))
+                raise RuntimeError(
+                    "Has not supported infering input/output shape from mask for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
             _logger.debug("in_shape is not None")
             if not m_type in infer_from_inshape:
-                raise RuntimeError("Has not supported infering \
-                    output shape from input shape for module/function: `{}`, {}, {}".format(m_type, module_name, self.name_to_gnode[module_name]))
+                raise RuntimeError(
+                    "Has not supported infering output shape from input shape for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             if m_type == 'aten::view':
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
@@ -479,8 +481,9 @@ class ModelSpeedup:
         if out_shape is not None:
             _logger.debug("out_shape is not None")
             if not m_type in infer_from_outshape:
-                raise RuntimeError("Has not supported infering \
-                    input shape from output shape for module/function: `{}`, {}, {}".format(m_type, module_name, self.name_to_gnode[module_name]))
+                raise RuntimeError(
+                    "Has not supported infering input shape from output shape for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
