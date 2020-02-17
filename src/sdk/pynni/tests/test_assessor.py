@@ -47,9 +47,9 @@ def _restore_io():
 class AssessorTestCase(TestCase):
     def test_assessor(self):
         _reverse_io()
-        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":0,"value":2}')
-        send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"PERIODICAL","sequence":0,"value":2}')
-        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":3}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":0,"value":"2"}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"PERIODICAL","sequence":0,"value":"2"}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":"3"}')
         send(CommandType.TrialEnd, '{"trial_job_id":"A","event":"SYS_CANCELED"}')
         send(CommandType.TrialEnd, '{"trial_job_id":"B","event":"SUCCEEDED"}')
         send(CommandType.NewTrialJob, 'null')
