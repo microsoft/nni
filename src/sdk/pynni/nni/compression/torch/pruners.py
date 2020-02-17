@@ -202,7 +202,7 @@ class SlimPruner(Pruner):
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
         self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
 
-    def calc_mask(self, layer, config, **kwargs):
+    def calc_mask(self, wrapper):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
@@ -220,12 +220,12 @@ class SlimPruner(Pruner):
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_type = layer.type
-        if_calculated = kwargs["if_calculated"]
+        weight = wrapper.module.weight.data
+        op_type = wrapper.type
+        config = wrapper.config
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if if_calculated:
-            return None
+        if wrapper.if_calculated:
+            return
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
         filters = weight.size(0)
@@ -235,8 +235,10 @@ class SlimPruner(Pruner):
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
-        mask['if_calculated'] = torch.tensor(1) # pylint: disable=not-callable
-        return mask
+        wrapper.if_calculated = torch.tensor(1) # pylint: disable=not-callable
+        wrapper.weight_mask = mask['weight_mask']
+        wrapper.bias_mask = mask['bias_mask']
+        return
 
 class LotteryTicketPruner(Pruner):
     """

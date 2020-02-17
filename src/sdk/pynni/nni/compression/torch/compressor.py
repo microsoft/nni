@@ -272,11 +272,7 @@ class Pruner(Compressor):
                     # cal_mask and update buffers accordingly
                     wrappers = self.get_modules_wrapper()
                     for wrapper in wrappers:
-                        buffers = self.calc_mask(LayerInfo(wrapper.name, wrapper.module), wrapper.config, **wrapper.registered_buffers)
-                        if buffers is not None:
-                            for name in buffers:
-                                assert hasattr(wrapper, name), "buffer %s is not registered" % name
-                                getattr(wrapper, name).copy_(buffers[name])
+                        self.calc_mask(wrapper)
                     
                     # call step overrided by user to do additional update
                     self.step()
