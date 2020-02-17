@@ -116,13 +116,14 @@ class AverageMeter:
         n : int
             The weight of the new value.
         """
-        if not isinstance(val, float) and not isinstance(val, int) \
-            and not (isinstance(val, torch.Tensor) and len(val.size()) == 0):
+        if isinstance(val, float) or isinstance(val, int) \
+            or (isinstance(val, torch.Tensor) and not val.size()):
+            self.val = val
+            self.sum += val * n
+            self.count += n
+            self.avg = self.sum / self.count
+        else:
             _logger.warning("Values passed to AverageMeter must be number, not %s.", type(val))
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
 
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
