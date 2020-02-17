@@ -116,7 +116,8 @@ class AverageMeter:
         n : int
             The weight of the new value.
         """
-        if not isinstance(val, float) and not isinstance(val, int):
+        if not isinstance(val, float) and not isinstance(val, int) \
+            and not (isinstance(val, torch.Tensor) and len(val.size()) == 0):
             _logger.warning("Values passed to AverageMeter must be number, not %s.", type(val))
         self.val = val
         self.sum += val * n
