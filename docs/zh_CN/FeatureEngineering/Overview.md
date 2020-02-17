@@ -6,6 +6,9 @@
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+这些 Selector 适用于结构化的数据（也就是不适用于图像，语音和文本数据）。
+
+另外，Selector 仅用于特征选择。 如果需要： 1) 在特征选择时，通过 NNI 生成高阶的组合特征； 2) 使用分布式资源； 可以尝试[本示例](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering)。
 
 ## 如何使用
 
