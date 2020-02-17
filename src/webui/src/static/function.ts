@@ -37,13 +37,21 @@ const convertDuration = (num: number): string => {
     return result.join(' ');
 };
 
+function parseMetrics(metricData: string): any {
+    if (metricData.includes('NaN')) {
+        return JSON5.parse(JSON5.parse(metricData));
+    } else {
+        return JSON.parse(JSON.parse(metricData));
+    }
+}
+
 // get final result value
 // draw Accuracy point graph
 const getFinalResult = (final?: MetricDataRecord[]): number => {
     let acc;
     let showDefault = 0;
     if (final) {
-        acc = JSON.parse(final[final.length - 1].data);
+        acc = parseMetrics(final[final.length - 1].data);
         if (typeof (acc) === 'object') {
             if (acc.default) {
                 showDefault = acc.default;
@@ -61,7 +69,7 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
 const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
     let showDefault: FinalType;
     if (final) {
-        showDefault = JSON.parse(final[final.length - 1].data);
+        showDefault = parseMetrics(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
             showDefault = { default: showDefault };
         }
@@ -177,14 +185,6 @@ function formatTimestamp(timestamp?: number, placeholder?: string): string {
         placeholder = 'N/A';
     }
     return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
-}
-
-function parseMetrics(metricData: string): any {
-    if (metricData.includes('NaN')) {
-        return JSON5.parse(metricData)
-    } else {
-        return JSON.parse(metricData)
-    }
 }
 
 function metricAccuracy(metric: MetricDataRecord): number {
