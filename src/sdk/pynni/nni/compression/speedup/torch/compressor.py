@@ -210,6 +210,32 @@ class ModelSpeedup:
         out_shape = t_output.type().sizes()
         return {'in_shape': in_shape, 'out_shape': out_shape}
 
+    def _extract_leaf_modules(self, graph):
+        pieces = [] # each element is a dict
+        for node in graph.nodes():
+            scope_name = node.scopeName()
+            segs = scope_name.split('/')
+            segs_len = len(segs)
+            for _ in range(segs_len - len(pieces)):
+                pieces.append({})
+            for i, seg in enumerate(segs[:-1]):
+                seg_name_dict = pieces[i]
+                if seg in seg_name_dict:
+                    if seg_name_dict[seg][0] == 'L':
+                        seg_name_dict[seg] = ('I', node)
+                else:
+                    seg_name_dict[seg] = ('I', node)
+            last_segs_dict = pieces[len(segs) - 1]
+            if not segs[-1] in last_segs_dict:
+                last_segs_dict[segs[-1]] = ('L', node)
+        leaf_modules = []
+        for piece in pieces:
+            for _, value in piece.items():
+                if value[0] == 'L':
+                    assert value[1].scopeName() not in leaf_modules
+                    leaf_modules.append(value[1].scopeName())
+        return leaf_modules
+
     def _build_graph(self):
         """
         Build graph using our defined format from jit trace.
@@ -230,7 +256,7 @@ class ModelSpeedup:
         """
         graph = self.trace_graph.graph
         # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
-        #_logger.debug(graph)
+        _logger.debug(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
@@ -249,6 +275,9 @@ class ModelSpeedup:
         for output in graph.outputs():
             graph_outputs.append(output.debugName())
 
+        leaf_modules = self._extract_leaf_modules(graph)
+        _logger.debug(leaf_modules)
+
         for node in graph.nodes():
             # populate output_to_node and input_to_node
             for output in node.outputs():
@@ -258,10 +287,8 @@ class ModelSpeedup:
                 input_name = _input.debugName()
                 input_to_node[input_name] = node
             scope_name = node.scopeName() # example: scope_name, 'MyCell/Linear[linear]'
-            module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
-            module_name = '.'.join(module_name_slices)
             # if module_name is empty, it is not a module
-            if module_name == '':
+            if not scope_name in leaf_modules:
                 if scope_name == '':
                     continue
                 else:
@@ -270,6 +297,8 @@ class ModelSpeedup:
                     else:
                         func_to_nodes[scope_name] = [node]
             else:
+                module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
+                module_name = '.'.join(module_name_slices)
                 scope_slice = scope_name.split('/')[-1]
                 module_type = scope_slice.split('[')[0]
                 module_to_type[module_name] = module_type
@@ -412,7 +441,7 @@ class ModelSpeedup:
             _logger.debug("in_shape is not None")
             if not m_type in infer_from_inshape:
                 raise RuntimeError("Has not supported infering \
-                    output shape from input shape for module/function: `{}`".format(m_type))
+                    output shape from input shape for module/function: `{}`, {}, {}".format(m_type, module_name, self.name_to_gnode[module_name]))
             if m_type == 'aten::view':
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,

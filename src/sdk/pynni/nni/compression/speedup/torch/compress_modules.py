@@ -11,6 +11,7 @@ replace_module = {
     'BatchNorm2d': lambda module, mask: replace_batchnorm2d(module, mask),
     'Conv2d': lambda module, mask: replace_conv2d(module, mask),
     'MaxPool2d': lambda module, mask: no_replace(module, mask),
+    'AvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
     'Linear': lambda module, mask: replace_linear(module, mask)
 }
