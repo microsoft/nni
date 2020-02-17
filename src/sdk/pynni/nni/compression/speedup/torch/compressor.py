@@ -211,13 +211,36 @@ class ModelSpeedup:
         return {'in_shape': in_shape, 'out_shape': out_shape}
 
     def _extract_leaf_modules(self, graph):
+        """
+        Extract leaf modules from the given graph. Leaf module means it does not have submodules.
+        To extract leaf modules because only leaf module can be replaced. And shape inference can
+        be done in leaf module level. Other shape inference is done in lower level i.e.,
+        operation level.
+
+        Parameters
+        ----------
+        graph : jit trace graph
+            the graph generated from jit trace
+
+        Returns
+        -------
+        list
+            a list of scope name of all the leaf modules
+        """
         pieces = [] # each element is a dict
         for node in graph.nodes():
             scope_name = node.scopeName()
+            if scope_name == '':
+                continue
             segs = scope_name.split('/')
             segs_len = len(segs)
+            # increase the length of `pieces` if not enough
             for _ in range(segs_len - len(pieces)):
                 pieces.append({})
+            # process internal segments of the scope name
+            # 'L' means leaf segment
+            # 'I' means internal segment
+            # internal segment can replace leaf segment at the same position of `pieces`
             for i, seg in enumerate(segs[:-1]):
                 seg_name_dict = pieces[i]
                 if seg in seg_name_dict:
@@ -225,15 +248,20 @@ class ModelSpeedup:
                         seg_name_dict[seg] = ('I', node)
                 else:
                     seg_name_dict[seg] = ('I', node)
+            # process the leaf segment of the scope name
             last_segs_dict = pieces[len(segs) - 1]
             if not segs[-1] in last_segs_dict:
                 last_segs_dict[segs[-1]] = ('L', node)
+        # traverse `pieces` to obtain all the leaf modules which are labeled with 'L'
         leaf_modules = []
         for piece in pieces:
             for _, value in piece.items():
                 if value[0] == 'L':
                     assert value[1].scopeName() not in leaf_modules
-                    leaf_modules.append(value[1].scopeName())
+                    # if this is a leaf module, the last segment of its scope name
+                    # must be in pattern `xxx[xxx]`
+                    if value[1].scopeName()[-1] == ']':
+                        leaf_modules.append(value[1].scopeName())
         return leaf_modules
 
     def _build_graph(self):
@@ -452,7 +480,7 @@ class ModelSpeedup:
             _logger.debug("out_shape is not None")
             if not m_type in infer_from_outshape:
                 raise RuntimeError("Has not supported infering \
-                    input shape from output shape for module/function: `{}`".format(m_type))
+                    input shape from output shape for module/function: `{}`, {}, {}".format(m_type, module_name, self.name_to_gnode[module_name]))
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
