@@ -189,7 +189,12 @@ function formatTimestamp(timestamp?: number, placeholder?: string): string {
 
 function metricAccuracy(metric: MetricDataRecord): number {
     const data = parseMetrics(metric.data);
-    return typeof data === 'number' ? data : NaN;
+    // return typeof data === 'number' ? data : NaN;
+    if (typeof data === 'number') {
+        return data;
+    } else {
+        return data.default;
+    }
 }
 
 function formatAccuracy(accuracy: number): string {

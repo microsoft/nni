@@ -82,9 +82,11 @@ class Trial implements TableObj {
             duration,
             status: this.info.status,
             intermediateCount: this.intermediates.length,
-            accuracy: this.finalAcc,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
+            accDictionary: this.acc
         };
     }
 

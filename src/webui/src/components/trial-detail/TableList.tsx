@@ -388,29 +388,28 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
-        allColumnList = COLUMNPro.concat(parameterStr);
+        // let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
+        let allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accuracy;
+            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
             if (temp !== undefined && typeof temp === 'object') {
-                if (!isNaN(temp)) {
-                    // concat default column and finalkeys
-                    const item = Object.keys(temp);
-                    // item: ['default', 'other-keys', 'maybe loss']
-                    if (item.length > 1) {
-                        const want: string[] = [];
-                        item.forEach(value => {
-                            if (value !== 'default') {
-                                want.push(value);
-                            }
-                        });
-                        allColumnList = COLUMNPro.concat(want);
-                    }
+                // concat default column and finalkeys
+                const item = Object.keys(temp);
+                // item: ['default', 'other-keys', 'maybe loss']
+                if (item.length > 1) {
+                    const want: string[] = [];
+                    item.forEach(value => {
+                        if (value !== 'default') {
+                            want.push(value);
+                        }
+                    });
+                    allColumnList = allColumnList.concat(want);
                 }
             }
         }
+
         return allColumnList;
     }
 
@@ -522,8 +521,32 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     });
                     break;
                 default:
-                    // FIXME
-                    alert('Unexpected column type');
+                    showColumn.push({
+                        name: item,
+                        key: item,
+                        fieldName: item,
+                        minWidth: 100,
+                        onRender: (record: TableRecord) => {
+                            const temp = record.accDictionary;
+                            let decimals = 0;
+                            let other = '';
+                            if (temp !== undefined) {
+                                if (temp[item].toString().indexOf('.') !== -1) {
+                                    decimals = temp[item].toString().length - temp[item].toString().indexOf('.') - 1;
+                                    if (decimals > 6) {
+                                        other = `${temp[item].toFixed(6)}`;
+                                    } else {
+                                        other = temp[item].toString();
+                                    }
+                                }
+                            } else {
+                                other = '--';
+                            }
+                            return (
+                                <div>{other}</div>
+                            );
+                        }
+                    });
             }
         }
         return showColumn;
@@ -546,7 +569,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         } = this.state;
         const { columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
-
         return (
             <Stack>
                 <div id="tableList">
