@@ -16,6 +16,13 @@ NNI 中也内置了一些流程的模型压缩算法。
     :maxdepth: 2
 
     概述 <Compressor/Overview>
-    Pruner <pruners>
-    Quantizer <quantizers>
+    Level Pruner <Compressor/Pruner>
+    AGP Pruner <Compressor/Pruner>
+    L1Filter Pruner <Compressor/l1filterpruner>
+    Slim Pruner <Compressor/SlimPruner>
+    Lottery Ticket Pruner <Compressor/LotteryTicketHypothesis>
+    FPGM Pruner <Compressor/Pruner>
+    Naive Quantizer <Compressor/Quantizer>
+    QAT Quantizer <Compressor/Quantizer>
+    DoReFa Quantizer <Compressor/Quantizer>
     自动模型压缩 <Compressor/AutoCompression>

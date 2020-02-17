@@ -229,7 +229,7 @@
 
 ### 主要功能
 
-* [支持在 Windows 上使用 NNI](Tutorial/InstallationWin.md) 
+* [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
   * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
   * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点

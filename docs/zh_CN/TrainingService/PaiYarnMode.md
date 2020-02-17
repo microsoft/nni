@@ -6,7 +6,7 @@
 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 ## 运行 Experiment
-以 `examples/trials/mnist-tfv1` 为例。 NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
@@ -22,14 +22,14 @@ trainingServicePlatform: paiYarn
 # 搜索空间文件
 searchSpacePath: search_space.json
 # 可选项: true, false
-useAnnotation: false
+useAnnotation: true
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-tfv1
+  codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
@@ -83,14 +83,14 @@ paiYarnConfig:
         portNumber: 1
     ```
 
-NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn 令牌（token)，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
+NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn Token，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
   host: 10.1.1.1
 ```
-令牌认证的 `paiYarnConfig` 配置如下：
+Token 认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
