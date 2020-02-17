@@ -127,6 +127,8 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'value': metric value reported by nni.report_final_result()
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
+        # metrics value is dumped as json string in trial, so we need to decode it here
+        data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.FINAL:
             self._handle_final_metric_data(data)
         elif data['type'] == MetricType.PERIODICAL:
