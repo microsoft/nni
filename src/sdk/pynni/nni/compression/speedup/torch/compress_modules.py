@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import torch
-from .infer_shape import CoarseMask, ModuleMasks
+from .infer_shape import ModuleMasks
 
 replace_module = {
     'BatchNorm2d': lambda module, mask: replace_batchnorm2d(module, mask),
