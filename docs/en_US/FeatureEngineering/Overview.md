@@ -6,6 +6,12 @@ For now, we support the following feature selector:
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
+
+In addition, those selector only for feature selection. If you want to:
+1) generate high-order combined features on nni while doing feature selection;
+2) leverage your distributed resources;
+you could try this [example](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering).
 
 ## How to use?
 
