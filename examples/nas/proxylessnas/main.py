@@ -23,8 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--dropout_rate", default=0, type=float)
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
     # configurations of imagenet dataset
-    #parser.add_argument("--data_path", default='/data/imagenet/', type=str)
-    parser.add_argument("--data_path", default='/mnt/v-yugzh/imagenet/', type=str)
+    parser.add_argument("--data_path", default='/data/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)
     parser.add_argument("--test_batch_size", default=500, type=int)
     parser.add_argument("--n_worker", default=32, type=int)
