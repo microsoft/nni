@@ -6,7 +6,7 @@ For now, we support the following feature selector:
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
-These selector are suitable for tabular data(which means it doesn't include image, speech and text data).
+These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 
 In addition, those selector only for feature selection. If you want to:
 1) generate high-order combined features on nni while doing feature selection;
