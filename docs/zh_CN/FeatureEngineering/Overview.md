@@ -6,6 +6,9 @@
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
+
+In addition, those selector only for feature selection. If you want to: 1) generate high-order combined features on nni while doing feature selection; 2) leverage your distributed resources; you could try this [example](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering).
 
 ## 如何使用
 
@@ -28,21 +31,21 @@ print(fgs.get_selected_features(...))
 ...
 ```
 
-使用内置 Selector 时，需要 `import` 对应的特征选择器，并 `initialize`。 可在 Selector 中调用 `fit` 函数来传入数据。 之后，可通过 `get_seleteced_features` 来获得重要的特征。 不同 Selector 的函数参数可能不同，在使用前需要先检查文档。
+When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it.
 
 ## 如何定制？
 
-NNI 内置了_最先进的_特征工程算法的 Selector。 NNI 也支持定制自己的特征 Selector。
+NNI provides _state-of-the-art_ feature selector algorithm in the builtin-selector. NNI also supports to build a feature selector by yourself.
 
-如果要实现定制的特征 Selector，需要：
+If you want to implement a customized feature selector, you need to:
 
 1. 继承基类 FeatureSelector
 1. 实现 _fit_ 和 _get_selected_features_ 函数
 1. 与 sklearn 集成 (可选)
 
-示例如下：
+Here is an example:
 
-**1. 继承基类 FeatureSelector**
+**1. Inherit the base Featureselector Class**
 
 ```python
 from nni.feature_engineering.feature_selector import FeatureSelector
@@ -52,7 +55,7 @@ class CustomizedSelector(FeatureSelector):
     ...
 ```
 
-**2. 实现 _fit_ 和 _get_selected_features_ 函数**
+**2. Implement _fit_ and _get_selected_features_ Function**
 
 ```python
 from nni.tuner import Tuner
@@ -93,18 +96,18 @@ class CustomizedSelector(FeatureSelector):
     ...
 ```
 
-**3. 与 sklearn 集成**
+**3. Integrate with Sklearn**
 
-`sklearn.pipeline.Pipeline` 可将模型连接在一起，例如特征选择，规范化，以及分类、回归，来组成一个典型的机器学习问题工作流。 下列步骤可帮助集成 sklearn，将定制的特征 Selector 作为管道的模块。
+`sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of the pipeline.
 
 1. 继承类 _sklearn.base.BaseEstimator_
 1. 实现 _BaseEstimator_ 中的 _get_params_ 和 _set_params_ 函数
 1. 继承类 _sklearn.feature_selection.base.SelectorMixin_
 1. 实现 _SelectorMixin_ 中的 _get_support_, _transform_ 和 _inverse_transform_ 函数
 
-示例如下：
+Here is an example:
 
-**1. 继承类 BaseEstimator 及其函数**
+**1. Inherit the BaseEstimator Class and its Function**
 
 ```python
 from sklearn.base import BaseEstimator
@@ -134,7 +137,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
 
 ```
 
-**2. 继承 SelectorMixin 类及其函数**
+**2. Inherit the SelectorMixin Class and its Function**
 ```python
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection.base import SelectorMixin
@@ -220,7 +223,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         return X_r
 ```
 
-与 sklearn 继承后，可如下使用特征 Selector：
+After integrating with Sklearn, we could use the feature selector as follows:
 ```python
 from sklearn.linear_model import LogisticRegression
 
@@ -240,7 +243,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ## 基准测试
 
-`Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。 对于 GradientFeatureSelector，仅使用了前 20 个特征。 下列指标是在给定测试数据和标签上的平均精度。
+`Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
 | 数据集           | 所有特征 + LR (acc, time, memory) | GradientFeatureSelector + LR (acc, time, memory) | TreeBasedClassifier + LR (acc, time, memory) | 训练次数       | 特征数量      |
 | ------------- | ----------------------------- | ------------------------------------------------ | -------------------------------------------- | ---------- | --------- |
@@ -251,9 +254,9 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 | news20.binary | 0.9208, 707ms, 361MiB         | 0.6870, 565ms, 371MiB                            | 0.9070, 904ms, 364MiB                        | 19,996     | 1,355,191 |
 | real-sim      | 0.9681, 433ms, 274MiB         | 0.7969, 251ms, 274MiB                            | 0.9591, 643ms, 367MiB                        | 72,309     | 20,958    |
 
-此基准测试可在[这里](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)下载
+The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/)
 
-代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
+The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.
 
 ## 参考和反馈
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
