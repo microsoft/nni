@@ -18,6 +18,7 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Overview <NAS/Overview>
+    Quick Start <NAS/QuickStart>
     Tutorial <NAS/NasGuide>
     ENAS <NAS/ENAS>
     DARTS <NAS/DARTS>
@@ -25,4 +26,5 @@ For details, please refer to the following tutorials:
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
     ProxylessNAS <NAS/Proxylessnas>
+    Customize a NAS Algorithm <NAS/Advanced>
     API Reference <NAS/NasReference>

@@ -128,7 +128,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         name: 'Default metric',
         className: 'leftTitle',
         key: 'accuracy',
-        fieldName: 'accuracy',
+        fieldName: 'latestAccuracy',
         minWidth: 200,
         maxWidth: 300,
         isResizable: true,
@@ -534,8 +534,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
-        const { columnList } = nextProps;
-        this.setState({ tableColumns: this.initTableColumnList(columnList) });
+        const { columnList, tableSource } = nextProps;
+        this.setState({ tableSourceForSort: tableSource, tableColumns: this.initTableColumnList(columnList) });
 
     }
     render(): React.ReactNode {
