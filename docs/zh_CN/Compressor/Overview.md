@@ -1,7 +1,7 @@
 # 使用 NNI 进行模型压缩
 随着更多层和节点大型神经网络的使用，降低其存储和计算成本变得至关重要，尤其是对于某些实时应用程序。 模型压缩可用于解决此问题。
 
-我们很高兴的宣布，基于 NNI 的模型压缩工具发布了试用版本。该版本仍处于试验阶段，根据用户反馈会进行改进。 诚挚邀请您使用、反馈，或有更多贡献。
+We are glad to introduce model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. 诚挚邀请您使用、反馈，或有更多贡献。
 
 NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。 当前支持基于 PyTorch 的统一接口。 只需要添加几行代码即可压缩模型。 NNI 中也内置了一些流程的模型压缩算法。 用户还可以通过 NNI 强大的自动调参功能来找到最好的压缩后的模型，详见[自动模型压缩](./AutoCompression.md)。 另外，用户还能使用 NNI 的接口，轻松定制新的压缩算法，详见[教程](#customize-new-compression-algorithms)。
 
@@ -332,9 +332,9 @@ class YourQuantizer(Quantizer):
 
 如果不定制 `QuantGrad`，默认的 backward 为 Straight-Through Estimator。 _即将推出_...
 
-## **参考和反馈**
+## Reference and Feedback
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
 * 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
-* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/FeatureEngineering/Overview.md)；
-* 了解 NNI 中[ NAS 的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
-* 了解如何[使用 NNI 进行超参数调优](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/BuiltinTuner.md)；
+* To know more about [Feature Engineering with NNI](../FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](../NAS/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](../Tuner/BuiltinTuner.md);
