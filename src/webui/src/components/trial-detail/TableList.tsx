@@ -547,6 +547,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         } = this.state;
         const { columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON5.parse(JSON5.stringify(this.state.tableSourceForSort));
+        console.info(tableSource); // eslint-disable-line
 
         return (
             <Stack>
