@@ -56,9 +56,9 @@ def get_metric_results(metrics):
     final_result = []
     for metric in metrics:
         if metric['type'] == 'PERIODICAL':
-            intermediate_result.append(metric['data'])
+            intermediate_result.append(json.loads(metric['data']))
         elif metric['type'] == 'FINAL':
-            final_result.append(metric['data'])
+            final_result.append(json.loads(metric['data']))
     print(intermediate_result, final_result)
 
     return [round(float(x),6) for x in intermediate_result], [round(float(x), 6) for x in final_result]

@@ -226,7 +226,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
-        self.registered_buffers = {}
+        self.registered_buffers = []
 
         # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
@@ -234,16 +234,21 @@ class PrunerModuleWrapper(torch.nn.Module):
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
         else:
             self.register_buffer("bias_mask", None)
-
-        self.registered_buffers['weight_mask'] = self.weight_mask
-        self.registered_buffers['bias_mask'] = self.bias_mask
+        self.registered_buffers.append('weight_mask')
+        self.registered_buffers.append('bias_mask')
         # register user specified buffer
         for name in self.pruner.buffers:
             self.register_buffer(name, self.pruner.buffers[name].clone())
-            self.registered_buffers[name] = getattr(self, name)
+            self.registered_buffers.append(name)
+
+    def get_registered_buffers(self):
+        buffers = {}
+        for name in self.registered_buffers:
+            buffers[name] = getattr(self, name)
+        return buffers
 
     def forward(self, *inputs):
-        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config, **self.registered_buffers)
+        mask = self.pruner.calc_mask(LayerInfo(self.name, self.module), self.config, **self.get_registered_buffers())
         if mask is not None:
             self.weight_mask.copy_(mask['weight'])
         # apply mask to weight
@@ -399,6 +404,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.quantizer = quantizer
+        self.registered_buffers = []
 
         # register buffer and parameter
         # old_weight is used to store origin weight and weight is used to store quantized weight
@@ -413,10 +419,15 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.module.register_buffer('weight', self.module.old_weight)
 
         # register user specified buffer
-        self.registered_buffers = {}
         for name in self.quantizer.buffers:
             self.register_buffer(name, self.quantizer.buffers[name].clone())
-            self.registered_buffers[name] = getattr(self, name)
+            self.registered_buffers.append(name)
+
+    def get_registered_buffers(self):
+        buffers = {}
+        for name in self.registered_buffers:
+            buffers[name] = getattr(self, name)
+        return buffers
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
@@ -426,7 +437,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.quantizer.quantize_input,
                 self.config,
                 LayerInfo(self.name, self.module),
-                **self.registered_buffers)
+                **self.get_registered_buffers())
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
             new_weight = self.quantizer.quant_grad.apply(
@@ -435,7 +446,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.quantizer.quantize_weight,
                 self.config,
                 LayerInfo(self.name, self.module),
-                **self.registered_buffers)
+                **self.get_registered_buffers())
             self.module.weight = new_weight
             result = self.module(*inputs)
         else:
@@ -448,7 +459,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.quantizer.quantize_output,
                 self.config,
                 LayerInfo(self.name, self.module),
-                **self.registered_buffers)
+                **self.get_registered_buffers())
         return result
 
 class Quantizer(Compressor):

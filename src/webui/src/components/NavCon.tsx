@@ -172,7 +172,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                         />
                         <CommandBarButton
                             iconProps={infoIconAbout}
-                            text="about"
+                            text="About"
                             menuProps={aboutProps}
                         />
                     </Stack>
