@@ -43,7 +43,7 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
     let acc;
     let showDefault = 0;
     if (final) {
-        acc = JSON5.parse(final[final.length - 1].data);
+        acc = parseMetrics(final[final.length - 1].data);
         if (typeof (acc) === 'object') {
             if (acc.default) {
                 showDefault = acc.default;
@@ -181,7 +181,9 @@ function formatTimestamp(timestamp?: number, placeholder?: string): string {
 
 function parseMetrics(metricData: string): any {
     if (metricData.includes('NaN')) {
-        return JSON5.parse(metricData)
+        return JSON5.parse(metricData);
+    } else {
+        return JSON.parse(metricData);
     }
 }
 
