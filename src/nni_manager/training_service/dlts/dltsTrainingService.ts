@@ -253,14 +253,14 @@ class DLTSTrainingService implements TrainingService {
                 if (!this.dltsClusterConfig.cluster) {
                     this.dltsClusterConfig.cluster = '.default'
                 }
-                if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL'] !== undefined) {
-                    this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL']
+                if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL']) {
+                    this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL'] as string
                 }
-                if (!this.dltsClusterConfig.password && process.env['DLTS_JOB_TOKEN'] !== undefined) {
-                    this.dltsClusterConfig.password = process.env['DLTS_JOB_TOKEN']
+                if (!this.dltsClusterConfig.password && process.env['DLTS_JOB_TOKEN']) {
+                    this.dltsClusterConfig.password = process.env['DLTS_JOB_TOKEN'] as string
                 }
-                if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME'] !== undefined) {
-                    this.dltsClusterConfig.team = process.env['DLWS_VC_NAME']
+                if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME']) {
+                    this.dltsClusterConfig.team = process.env['DLWS_VC_NAME'] as string
                 }
                 // TODO: move GPU here
                 break;
