@@ -53,10 +53,13 @@ class Trial implements TableObj {
         if (this.accuracy !== undefined) {
             return this.accuracy;
         } else if (this.intermediates.length > 0) {
-            // TODO: support intermeidate result is dict
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                return parseMetrics(temp.data);
+                if (typeof parseMetrics(temp.data) === 'object') {
+                    return parseMetrics(temp.data).default;
+                } else {
+                    return parseMetrics(temp.data);
+                }
             } else {
                 return undefined;
             }

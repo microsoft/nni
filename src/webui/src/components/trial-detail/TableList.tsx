@@ -54,7 +54,7 @@ interface TableListState {
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
     isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
-    intermediateKeys: string[]; // intermeidate modal: which key is choosed.
+    intermediateKey: string; // intermeidate modal: which key is choosed.
     isExpand: boolean;
     modalIntermediateWidth: number;
     modalIntermediateHeight: number;
@@ -86,7 +86,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCustomizedModal: false,
             isCalloutVisible: false,
             copyTrialId: '',
-            intermediateKeys: ['default'],
+            intermediateKey: 'default',
             isExpand: false,
             modalIntermediateWidth: window.innerWidth,
             modalIntermediateHeight: window.innerHeight,
@@ -294,7 +294,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
             // re-render
             this.setState({
-                intermediateKeys: [value],
+                intermediateKey: value,
                 intermediateOption: intermediate
             });
         }
@@ -388,7 +388,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        // let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
         let allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
@@ -562,7 +561,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     }
     render(): React.ReactNode {
-        const { intermediateKeys, modalIntermediateWidth, modalIntermediateHeight,
+        const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
             isShowCustomizedModal, copyTrialId, intermediateOption
@@ -602,11 +601,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     {
                         intermediateOtherKeys.length > 1
                             ?
-                            <Stack className="selectKeys" styles={{ root: { width: 800 } }}>
+                            <Stack horizontalAlign="end" className="selectKeys">
                                 <Dropdown
                                     className="select"
-                                    selectedKeys={intermediateKeys}
-                                    onChange={this.selectOtherKeys}
+                                    selectedKey={intermediateKey}
                                     options={
                                         intermediateOtherKeys.map((key, item) => {
                                             return {
@@ -614,7 +612,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             };
                                         })
                                     }
-                                    styles={{ dropdown: { width: 300 } }}
+                                    onChange={this.selectOtherKeys}
                                 />
                             </Stack>
                             :
