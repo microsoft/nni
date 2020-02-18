@@ -250,6 +250,9 @@ class DLTSTrainingService implements TrainingService {
 
             case TrialConfigMetadataKey.DLTS_CLUSTER_CONFIG:
                 this.dltsClusterConfig = <DLTSClusterConfig>JSON.parse(value);
+                if (!this.dltsClusterConfig.cluster) {
+                    this.dltsClusterConfig.cluster = '.default'
+                }
                 if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL'] !== undefined) {
                     this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL']
                 }

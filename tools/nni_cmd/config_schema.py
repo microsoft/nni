@@ -310,7 +310,7 @@ dlts_config_schema = {
     'dltsConfig': {
         'dashboard': setType('dashboard', str),
 
-        'cluster': setType('cluster', str),
+        Optional('cluster'): setType('cluster', str),
         Optional('team'): setType('team', str),
 
         Optional('email'): setType('email', str),
