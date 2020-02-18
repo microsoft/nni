@@ -250,13 +250,13 @@ class DLTSTrainingService implements TrainingService {
 
             case TrialConfigMetadataKey.DLTS_CLUSTER_CONFIG:
                 this.dltsClusterConfig = <DLTSClusterConfig>JSON.parse(value);
-                if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL']) {
+                if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL'] !== undefined) {
                     this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL']
                 }
-                if (!this.dltsClusterConfig.password && process.env['DLTS_JOB_TOKEN']) {
+                if (!this.dltsClusterConfig.password && process.env['DLTS_JOB_TOKEN'] !== undefined) {
                     this.dltsClusterConfig.password = process.env['DLTS_JOB_TOKEN']
                 }
-                if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME']) {
+                if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME'] !== undefined) {
                     this.dltsClusterConfig.team = process.env['DLWS_VC_NAME']
                 }
                 // TODO: move GPU here
