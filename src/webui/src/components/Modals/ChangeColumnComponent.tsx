@@ -117,7 +117,6 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         });
         return (
             <div>
-                <div>Hello</div>
                 <Dialog
                     hidden={isHideDialog} // required field!
                     dialogContentProps={{
@@ -130,7 +129,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                         styles: { main: { maxWidth: 450 } }
                     }}
                 >
-                    <div>
+                    <div className="columns-height">
                         {renderOptions.map(item => {
                             return <Checkbox key={item.label} {...item} styles={{ root: { marginBottom: 8 } }} />
                         })}

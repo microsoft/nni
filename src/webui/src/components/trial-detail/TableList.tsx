@@ -54,7 +54,7 @@ interface TableListState {
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
     isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
-    intermediateKeys: string[]; // intermeidate modal: which key is choosed.
+    intermediateKey: string; // intermeidate modal: which key is choosed.
     isExpand: boolean;
     modalIntermediateWidth: number;
     modalIntermediateHeight: number;
@@ -86,7 +86,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCustomizedModal: false,
             isCalloutVisible: false,
             copyTrialId: '',
-            intermediateKeys: ['default'],
+            intermediateKey: 'default',
             isExpand: false,
             modalIntermediateWidth: window.innerWidth,
             modalIntermediateHeight: window.innerHeight,
@@ -294,7 +294,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
             // re-render
             this.setState({
-                intermediateKeys: [value],
+                intermediateKey: value,
                 intermediateOption: intermediate
             });
         }
@@ -388,29 +388,27 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
-        allColumnList = COLUMNPro.concat(parameterStr);
+        let allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accuracy;
+            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
             if (temp !== undefined && typeof temp === 'object') {
-                if (!isNaN(temp)) {
-                    // concat default column and finalkeys
-                    const item = Object.keys(temp);
-                    // item: ['default', 'other-keys', 'maybe loss']
-                    if (item.length > 1) {
-                        const want: string[] = [];
-                        item.forEach(value => {
-                            if (value !== 'default') {
-                                want.push(value);
-                            }
-                        });
-                        allColumnList = COLUMNPro.concat(want);
-                    }
+                // concat default column and finalkeys
+                const item = Object.keys(temp);
+                // item: ['default', 'other-keys', 'maybe loss']
+                if (item.length > 1) {
+                    const want: string[] = [];
+                    item.forEach(value => {
+                        if (value !== 'default') {
+                            want.push(value);
+                        }
+                    });
+                    allColumnList = allColumnList.concat(want);
                 }
             }
         }
+
         return allColumnList;
     }
 
@@ -522,8 +520,32 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     });
                     break;
                 default:
-                    // FIXME
-                    alert('Unexpected column type');
+                    showColumn.push({
+                        name: item,
+                        key: item,
+                        fieldName: item,
+                        minWidth: 100,
+                        onRender: (record: TableRecord) => {
+                            const accDictionary = record.accDictionary;
+                            let decimals = 0;
+                            let other = '';
+                            if (accDictionary !== undefined) {
+                                if (accDictionary[item].toString().indexOf('.') !== -1) {
+                                    decimals = accDictionary[item].toString().length - accDictionary[item].toString().indexOf('.') - 1;
+                                    if (decimals > 6) {
+                                        other = `${accDictionary[item].toFixed(6)}`;
+                                    } else {
+                                        other = accDictionary[item].toString();
+                                    }
+                                }
+                            } else {
+                                other = '--';
+                            }
+                            return (
+                                <div>{other}</div>
+                            );
+                        }
+                    });
             }
         }
         return showColumn;
@@ -539,14 +561,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     }
     render(): React.ReactNode {
-        const { intermediateKeys, modalIntermediateWidth, modalIntermediateHeight,
+        const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
             isShowCustomizedModal, copyTrialId, intermediateOption
         } = this.state;
         const { columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
-
         return (
             <Stack>
                 <div id="tableList">
@@ -580,11 +601,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     {
                         intermediateOtherKeys.length > 1
                             ?
-                            <Stack className="selectKeys" styles={{ root: { width: 800 } }}>
+                            <Stack horizontalAlign="end" className="selectKeys">
                                 <Dropdown
                                     className="select"
-                                    selectedKeys={intermediateKeys}
-                                    onChange={this.selectOtherKeys}
+                                    selectedKey={intermediateKey}
                                     options={
                                         intermediateOtherKeys.map((key, item) => {
                                             return {
@@ -592,7 +612,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             };
                                         })
                                     }
-                                    styles={{ dropdown: { width: 300 } }}
+                                    onChange={this.selectOtherKeys}
                                 />
                             </Stack>
                             :
