@@ -26,7 +26,4 @@ dltsConfig:
   dashboard: http://azure-eastus-p40-dev1-infra01.eastus.cloudapp.azure.com/
 
   cluster: Azure-EastUS-P40-Dev1
-  team: platform
-
-  email: qixcheng@microsoft.com
-  password: 41a3fa14df7f4cb8f1b2743ec93cfef3
+ 
