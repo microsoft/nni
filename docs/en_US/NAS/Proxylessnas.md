@@ -60,4 +60,4 @@ ProxylessNasMutator also implements the forward logic of the mutables (i.e., Lay
 
 ## Reproduce Results
 
-Ongoing...
+To reproduce the result, we first run the search, we found that though it runs many epochs the chosen architecture converges at the first several epochs. This is probably induced by hyper-parameters or the implementation, we are working on it. The test accuracy of the found architecture is top1: 72.31, top5: 90.26.
