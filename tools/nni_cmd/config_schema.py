@@ -311,10 +311,10 @@ dlts_config_schema = {
         'dashboard': setType('dashboard', str),
 
         'cluster': setType('cluster', str),
-        'team': setType('team', str),
+        Optional('team'): setType('team', str),
 
-        'email': setType('email', str),
-        'password': setType('password', str),
+        Optional('email'): setType('email', str),
+        Optional('password'): setType('password', str),
     }
 }
 
