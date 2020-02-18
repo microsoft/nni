@@ -6,4 +6,6 @@ export interface DLTSClusterConfig {
 
   email: string;
   password: string;
+
+  gpuType?: string;
 }

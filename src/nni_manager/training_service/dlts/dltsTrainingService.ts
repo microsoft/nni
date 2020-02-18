@@ -262,7 +262,25 @@ class DLTSTrainingService implements TrainingService {
                 if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME']) {
                     this.dltsClusterConfig.team = process.env['DLWS_VC_NAME'] as string
                 }
-                // TODO: move GPU here
+                const gpuRequestOptions: request.Options = {
+                    method: 'GET',
+                    qs: {
+                        email: this.dltsClusterConfig.email,
+                        password: this.dltsClusterConfig.password
+                    },
+                    uri: `${this.dltsClusterConfig.dashboard}api/teams/${this.dltsClusterConfig.team}/clusters/${this.dltsClusterConfig.cluster}`,
+                    json: true
+                };
+                const gpu = await new Promise<string>((resolve, reject) => {
+                    request(gpuRequestOptions, (error, response, data) => {
+                        if (error) {
+                            return reject(error)
+                        }
+                        let gpus = Object.keys(data['gpu_capacity'])
+                        resolve(gpus[0])
+                    })
+                });
+                this.dltsClusterConfig.gpuType = gpu;
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -384,27 +402,8 @@ class DLTSTrainingService implements TrainingService {
         }
 
         // Step 3. Submit DLTS job via Rest call
-        const gpuRequestOptions: request.Options = {
-            method: 'GET',
-            qs: {
-                email: this.dltsClusterConfig.email,
-                password: this.dltsClusterConfig.password
-            },
-            uri: `${this.dltsClusterConfig.dashboard}api/teams/${this.dltsClusterConfig.team}/clusters/${this.dltsClusterConfig.cluster}`,
-            json: true
-        };
-        const gpu = await new Promise<string>((resolve, reject) => {
-            request(gpuRequestOptions, (error, response, data) => {
-                if (error) {
-                    return reject(error)
-                }
-                let gpus = Object.keys(data['gpu_capacity'])
-                resolve(gpus[0])
-            })
-        });
         const dltsJobConfig: DLTSJobConfig = new DLTSJobConfig(
             this.dltsClusterConfig,
-            gpu,
             trialJobDetail.dltsJobName,
             this.dltsTrialConfig.gpuNum,
             this.dltsTrialConfig.image,

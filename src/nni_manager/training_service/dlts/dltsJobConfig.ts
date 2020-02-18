@@ -4,6 +4,7 @@ export class DLTSJobConfig {
   public readonly team: string;
   public readonly userName: string;
   public readonly vcName: string;
+  public readonly gpuType: string;
   public readonly jobType = "training";
   public readonly jobtrainingtype = "RegularJob";
   public readonly ssh = false;
@@ -25,14 +26,17 @@ export class DLTSJobConfig {
 
   public constructor(
     clusterConfig: DLTSClusterConfig,
-    public readonly gpuType: string,
     public readonly jobName: string,
     public readonly resourcegpu: number,
     public readonly image: string,
     public readonly cmd: string,
     public readonly interactivePorts: number[],
   ) {
+    if (clusterConfig.gpuType === undefined) {
+      throw Error('GPU type not fetched')
+    }
     this.vcName = this.team = clusterConfig.team
+    this.gpuType = clusterConfig.gpuType
     this.userName = clusterConfig.email
   }
 }
