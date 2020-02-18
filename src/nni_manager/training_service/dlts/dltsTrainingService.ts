@@ -6,7 +6,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
-import { copy } from 'fs-extra';
 
 import * as component from '../../common/component';
 import { EventEmitter } from 'events';
@@ -366,7 +365,7 @@ class DLTSTrainingService implements TrainingService {
         
         const codeDir = path.join('/work/trials', trialJobId);
         try {
-            await copy(trialLocalTempFolder, codeDir)
+            await execCopydir(trialLocalTempFolder, codeDir)
         } catch (error) {
             this.log.error(`DLTS Training Service: failed to copy ${trialLocalTempFolder} to ${codeDir}\n${error}`)
             return true
