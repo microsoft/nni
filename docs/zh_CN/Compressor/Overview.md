@@ -335,6 +335,6 @@ class YourQuantizer(Quantizer):
 ## 参考和反馈
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
 * 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
-* To know more about [Feature Engineering with NNI](../FeatureEngineering/Overview.md);
-* To know more about [NAS with NNI](../NAS/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](../Tuner/BuiltinTuner.md);
+* 了解更多关于 [NNI 中的特征工程](../FeatureEngineering/Overview.md)；
+* 了解更多关于 [NNI 中的 NAS](../NAS/Overview.md)；
+* 了解更多关于 [NNI 中的超参调优](../Tuner/BuiltinTuner.md)；
