@@ -557,7 +557,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
         const { columnList, tableSource } = nextProps;
-        this.setState({ tableSourceForSort: tableSource, tableColumns: this.initTableColumnList(columnList) });
+        this.setState({
+            tableSourceForSort: tableSource,
+            tableColumns: this.initTableColumnList(columnList),
+            allColumnList: this.getAllColumnKeys()
+        });
 
     }
     render(): React.ReactNode {
