@@ -526,16 +526,16 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         fieldName: item,
                         minWidth: 100,
                         onRender: (record: TableRecord) => {
-                            const temp = record.accDictionary;
+                            const accDictionary = record.accDictionary;
                             let decimals = 0;
                             let other = '';
-                            if (temp !== undefined) {
-                                if (temp[item].toString().indexOf('.') !== -1) {
-                                    decimals = temp[item].toString().length - temp[item].toString().indexOf('.') - 1;
+                            if (accDictionary !== undefined) {
+                                if (accDictionary[item].toString().indexOf('.') !== -1) {
+                                    decimals = accDictionary[item].toString().length - accDictionary[item].toString().indexOf('.') - 1;
                                     if (decimals > 6) {
-                                        other = `${temp[item].toFixed(6)}`;
+                                        other = `${accDictionary[item].toFixed(6)}`;
                                     } else {
-                                        other = temp[item].toString();
+                                        other = accDictionary[item].toString();
                                     }
                                 }
                             } else {
