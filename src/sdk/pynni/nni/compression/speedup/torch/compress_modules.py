@@ -1,13 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 import torch
-from .infer_shape import CoarseMask, ModuleMasks
+from .infer_shape import ModuleMasks
+
+_logger = logging.getLogger(__name__)
 
 replace_module = {
     'BatchNorm2d': lambda module, mask: replace_batchnorm2d(module, mask),
     'Conv2d': lambda module, mask: replace_conv2d(module, mask),
     'MaxPool2d': lambda module, mask: no_replace(module, mask),
+    'AvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
     'Linear': lambda module, mask: replace_linear(module, mask)
 }
@@ -16,6 +20,7 @@ def no_replace(module, mask):
     """
     No need to replace
     """
+    _logger.debug("no need to replace")
     return module
 
 def replace_linear(linear, mask):
@@ -37,9 +42,8 @@ def replace_linear(linear, mask):
     assert mask.output_mask is None
     assert not mask.param_masks
     index = mask.input_mask.mask_index[-1]
-    print(mask.input_mask.mask_index)
     in_features = index.size()[0]
-    print('linear: ', in_features)
+    _logger.debug("replace linear with new in_features: %d", in_features)
     new_linear = torch.nn.Linear(in_features=in_features,
                                  out_features=linear.out_features,
                                  bias=linear.bias is not None)
@@ -67,7 +71,7 @@ def replace_batchnorm2d(norm, mask):
     assert 'weight' in mask.param_masks and 'bias' in mask.param_masks
     index = mask.param_masks['weight'].mask_index[0]
     num_features = index.size()[0]
-    print("replace batchnorm2d: ", num_features, index)
+    _logger.debug("replace batchnorm2d with num_features: %d", num_features)
     new_norm = torch.nn.BatchNorm2d(num_features=num_features,
                                     eps=norm.eps,
                                     momentum=norm.momentum,
@@ -106,6 +110,7 @@ def replace_conv2d(conv, mask):
     else:
         out_channels_index = mask.output_mask.mask_index[1]
         out_channels = out_channels_index.size()[0]
+    _logger.debug("replace conv2d with in_channels: %d, out_channels: %d", in_channels, out_channels)
     new_conv = torch.nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
                                kernel_size=conv.kernel_size,
@@ -128,6 +133,5 @@ def replace_conv2d(conv, mask):
     assert tmp_weight_data is not None, "Conv2d weight should be updated based on masks"
     new_conv.weight.data.copy_(tmp_weight_data)
     if conv.bias is not None:
-        print('final conv.bias is not None')
         new_conv.bias.data.copy_(conv.bias.data if tmp_bias_data is None else tmp_bias_data)
     return new_conv

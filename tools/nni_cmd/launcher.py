@@ -78,17 +78,17 @@ def get_nni_installation_path():
     print_error('Fail to find nni under python library')
     exit(1)
 
-def start_rest_server(args, platform, mode, config_file_name, experiment_id=None, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, config_file_name, foreground=False, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
-    if detect_port(args.port):
+    if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
-        'You could use \'nnictl create --help\' to get help information' % args.port)
+        'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
 
-    if (platform != 'local') and detect_port(int(args.port) + 1):
+    if (platform != 'local') and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % ((int(args.port) + 1), (int(args.port) + 1)))
+        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
@@ -99,7 +99,7 @@ def start_rest_server(args, platform, mode, config_file_name, experiment_id=None
     node_command = 'node'
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
-    cmds = [node_command, entry_file, '--port', str(args.port), '--mode', platform]
+    cmds = [node_command, entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
         cmds += ['--readonly', 'true']
@@ -111,7 +111,7 @@ def start_rest_server(args, platform, mode, config_file_name, experiment_id=None
         cmds += ['--log_level', log_level]
     if mode in ['resume', 'view']:
         cmds += ['--experiment_id', experiment_id]
-    if args.foreground:
+    if foreground:
         cmds += ['--foreground', 'true']
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
@@ -122,12 +122,12 @@ def start_rest_server(args, platform, mode, config_file_name, experiment_id=None
         stderr_file.write(log_header)
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
-            if args.foreground:
+            if foreground:
                 process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NEW_PROCESS_GROUP)
             else:
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
         else:
-            if args.foreground:
+            if foreground:
                 process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE)
             else:
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
@@ -428,12 +428,14 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
+    foreground = False
     if mode != 'view':
+        foreground = args.foreground
         if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
             log_level = 'debug'
     # start rest server
-    rest_process, start_time = start_rest_server(args, experiment_config['trainingServicePlatform'], \
-                                                 mode, config_file_name, experiment_id, log_dir, log_level)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
+                                                 mode, config_file_name, foreground, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -501,7 +503,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                                             experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
-    if args.foreground:
+    if mode != 'view' and args.foreground:
         try:
             while True:
                 log_content = rest_process.stdout.readline().strip().decode('utf-8')

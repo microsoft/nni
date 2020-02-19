@@ -27,9 +27,10 @@
 .selectKeys{
     /* intermediate result is dict, select box for keys */
     .select{
+        margin-right: 12%;
+    }
+    .ms-Dropdown{
         width: 120px;
-        float: right;
-        margin-right: 10%;
     }
 }
 
