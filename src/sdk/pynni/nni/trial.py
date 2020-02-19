@@ -114,7 +114,7 @@ def report_intermediate_result(metric):
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'PERIODICAL',
         'sequence': _intermediate_seq,
-        'value': metric
+        'value': to_json(metric)
     })
     _intermediate_seq += 1
     platform.send_metric(metric)
@@ -135,6 +135,6 @@ def report_final_result(metric):
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'FINAL',
         'sequence': 0,
-        'value': metric
+        'value': to_json(metric)
     })
     platform.send_metric(metric)

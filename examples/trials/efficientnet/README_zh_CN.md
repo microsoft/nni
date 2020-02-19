@@ -1,1 +1,1 @@
-[文档](https://nni.readthedocs.io/en/latest/TrialExample/EfficientNet.html)
+[文档](https://nni.readthedocs.io/zh/latest/TrialExample/EfficientNet.html)

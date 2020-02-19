@@ -1,5 +1,6 @@
 jobs:
 - job: 'integration_test_remote_windows'
+  timeoutInMinutes: 0
 
   steps:
   - script: python -m pip install --upgrade pip setuptools
@@ -32,7 +33,10 @@ jobs:
   - powershell: |
       Write-Host "Downloading Putty..."
       (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
-      $(Agent.TempDirectory)\pscp.exe -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      Write-Host "Download Putty success!"
+      Write-Host "Connecting to host..."
+      $(Agent.TempDirectory)\pscp.exe -P $(remote_port) -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      Write-Host "Get port success!"
       Get-Content test\port
     displayName: 'Get docker port'
   - powershell: |
