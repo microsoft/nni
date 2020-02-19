@@ -68,9 +68,6 @@ def main():
 
     model = Mnist()
     model = model.to(device)
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(configure_list).compress(model)
-    '''
     configure_list = [{
         'quant_types': ['weight'],
         'quant_bits': {

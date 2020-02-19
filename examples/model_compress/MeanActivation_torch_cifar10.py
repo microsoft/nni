@@ -80,11 +80,11 @@ def main():
             test(model, device, test_loader)
             lr_scheduler.step(epoch)
         torch.save(model.state_dict(), 'vgg16_cifar10.pth')
-
+    else:
+        assert os.path.isfile('vgg16_cifar10.pth'), "can not find checkpoint 'vgg16_cifar10.pth'"
+        model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
-    if os.path.isfile('vgg16_cifar10.pth'):
-        model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.51%
 
