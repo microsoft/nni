@@ -59,8 +59,8 @@ class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         _reverse_io()  # now we are sending to Tuner's incoming stream
         send(CommandType.RequestTrialJobs, '2')
-        send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":10}')
-        send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":11}')
+        send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":"10"}')
+        send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":"11"}')
         send(CommandType.UpdateSearchSpace, '{"name":"SS0"}')
         send(CommandType.RequestTrialJobs, '1')
         send(CommandType.KillTrialJob, 'null')

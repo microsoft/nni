@@ -380,6 +380,8 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
+        if 'value' in data:
+            data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
