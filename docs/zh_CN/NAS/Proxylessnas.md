@@ -60,4 +60,4 @@ ProxylessNasMutator 还实现了可变量的前向逻辑 (即, LayerChoice)。
 
 ## 重现结果
 
-To reproduce the result, we first run the search, we found that though it runs many epochs the chosen architecture converges at the first several epochs. This is probably induced by hyper-parameters or the implementation, we are working on it. The test accuracy of the found architecture is top1: 72.31, top5: 90.26.
+为了重现结果，首先运行了搜索过程。我们发现虽然需要跑许多 Epoch，但选择的架构会在头几个 Epoch 就收敛了。 这可能是由超参或实现造成的，正在分析中。 找到架构的测试精度为 top1: 72.31, top5: 90.26。
