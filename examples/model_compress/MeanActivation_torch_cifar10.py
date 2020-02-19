@@ -1,4 +1,5 @@
 import math
+import os
 import argparse
 import torch
 import torch.nn as nn
@@ -48,7 +49,7 @@ def main():
 
     args = parser.parse_args()
     torch.manual_seed(0)
-    device = torch.device('cuda')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10('./data.cifar10', train=True, download=True,
                          transform=transforms.Compose([
@@ -82,7 +83,8 @@ def main():
 
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
-    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    if os.path.isfile('vgg16_cifar10.pth'):
+        model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.51%
 
