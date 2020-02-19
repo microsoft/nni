@@ -55,7 +55,7 @@ def test(model, device, test_loader):
 
 def main():
     torch.manual_seed(0)
-    device = torch.device('cpu')
+    device = torch.device('cuda')
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = torch.utils.data.DataLoader(
@@ -66,7 +66,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
-    model.to(device)
+    model = model.to(device)
 
     '''you can change this to LevelPruner to implement it
     pruner = LevelPruner(configure_list)
@@ -82,14 +82,14 @@ def main():
 
     pruner = AGP_Pruner(model, configure_list)
     model = pruner.compress()
-
+    model = model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
-    pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28])
+    pruner.export_model('model.pth', 'mask.pth', 'model.onnx', [1, 1, 28, 28], device)
 
 
 if __name__ == '__main__':
