@@ -116,8 +116,6 @@ class AverageMeter:
         n : int
             The weight of the new value.
         """
-        if not isinstance(val, float) and not isinstance(val, int):
-            _logger.warning("Values passed to AverageMeter must be number, not %s.", type(val))
         self.val = val
         self.sum += val * n
         self.count += n
