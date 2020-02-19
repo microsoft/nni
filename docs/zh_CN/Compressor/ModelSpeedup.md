@@ -1,12 +1,12 @@
-# Speed up Masked Model
+# 加速掩码的模型
 
-*This feature is still in Alpha version.*
+*此功能还处于预览版。*
 
-## Introduction
+## 介绍
 
-Pruning algorithms usually use weight masks to simulate the real pruning. Masks can be used to check model performance of a specific pruning (or sparsity), but there is no real speedup. Since model speedup is the ultimate goal of model pruning, we try to provide a tool to users to convert a model to a smaller one based on user provided masks (the masks come from the pruning algorithms).
+剪枝算法通常都用权重掩码来模拟实际的剪枝。 掩码可以用来检查某个剪枝（或稀疏）算法的模型性能，但还没有真正加速。 模型加速才是模型剪枝的最终目标。因此提供了此工具，来帮助基于用户提供的掩码（掩码来自于剪枝算法），将已有模型转换成小模型。
 
-There are two types of pruning. One is fine-grained pruning, it does not change the shape of weights, and input/output tensors. Sparse kernel is required to speed up a fine-grained pruned layer. The other is coarse-grained pruning (e.g., channels), shape of weights and input/output tensors usually change due to such pruning. To speed up this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one. Since the support of sparse kernels in community is limited, we only support the speedup of coarse-grained pruning and leave the support of fine-grained pruning in future.
+有两种剪枝算法。 一种是细粒度的剪枝，不改变权重形状，和输入输出的张量。 稀疏内核会被用来加速细粒度剪枝的层。 另一类是粗粒度的剪枝（例如，通道），通常，权重形状，输入输出张量会有所改变。 To speed up this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one. Since the support of sparse kernels in community is limited, we only support the speedup of coarse-grained pruning and leave the support of fine-grained pruning in future.
 
 ## Design and Implementation
 
