@@ -1,34 +1,34 @@
 # 更改日志
 
-## Release 1.4 - 2/19/2020
+## 发布 1.4 - 2/19/2020
 
 ### 主要功能
 
-#### Neural Architecture Search
+#### 神经网络架构搜索
 
-* Support [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) algorithm and add [the example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts) using it
-* Support a preliminary version of [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) and the corresponding [example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
-* Add unit tests for the NAS framework
+* 支持 [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) 算法，并增加对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts)。
+* 初步支持 [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) 以及对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* 为 NAS 框架增加单元测试
 
-#### Model Compression
+#### 模型压缩
 
-* Support DataParallel for compressing models, and provide [an example](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py) of using DataParallel
-* Support [model speedup](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md) for compressed models, in Alpha version
+* 为压缩模型增加 DataParallel，并提供相应的 [示例](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py)
+* 支持压缩模型的[加速](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md)（试用版）
 
 #### 训练平台
 
-* Support complete PAI configurations by allowing users to specify PAI config file path
-* Add example config yaml files for the new PAI mode (i.e., paiK8S)
-* Support deleting experiments using sshkey in remote mode (thanks external contributor @tyusr)
+* 通过允许指定 OpenPAI 配置文件路径，来支持完整的 OpenPAI 配置
+* 为新的 OpenPAI 模式（又称，paiK8S）增加示例配置 YAML 文件
+* 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
 
-#### WebUI
+#### Web 界面
 
-* WebUI refactor: adopt fabric framework
+* Web 界面重构：采用 fabric 框架
 
-#### Others
+#### 其它
 
-* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
-* Support canceling the trials in UNKNOWN state
+* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* 支持取消 UNKNOWN 状态的 Trial。
 * Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
 
 ### Documentation
@@ -85,7 +85,7 @@
 * Fix local system as remote machine [issue](https://github.com/microsoft/nni/issues/1852)
 * de-duplicate trial configuration in smac tuner [ticket](https://github.com/microsoft/nni/issues/1364)
 
-## Release 1.2 - 12/02/2019
+## 发布 1.2 - 12/02/2019
 
 ### Major Features
 
