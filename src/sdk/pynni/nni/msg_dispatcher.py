@@ -113,6 +113,8 @@ class MsgDispatcher(MsgDispatcherBase):
         """Import additional data for tuning
         data: a list of dictionaries, each of which has at least two keys, 'parameter' and 'value'
         """
+        for entry in data:
+            entry['value'] = json_tricks.loads(entry['value'])
         self.tuner.import_data(data)
 
     def handle_add_customized_trial(self, data):
@@ -128,7 +130,8 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
         # metrics value is dumped as json string in trial, so we need to decode it here
-        data['value'] = json_tricks.loads(data['value'])
+        if 'value' in data:
+            data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.FINAL:
             self._handle_final_metric_data(data)
         elif data['type'] == MetricType.PERIODICAL:
