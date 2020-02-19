@@ -19,7 +19,7 @@ import {
 } from '../../common/trainingService';
 import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsTemplates';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
+import { execMkdir, validateCodeDir } from '../common/util';
 import { delay, uniqueString, getIPV4Address, getExperimentRootDir, getVersion, generateParamFileName } from '../../common/utils';
 import { DLTSJobRestServer, ParameterFileMeta } from './dltsJobRestServer';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
@@ -288,13 +288,11 @@ class DLTSTrainingService implements TrainingService {
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
-                    await validateCodeDir('/work/nni-code');
+                    await validateCodeDir(this.dltsTrialConfig.codeDir);
                 } catch (error) {
                     this.log.error(error);
                     throw error;
                 }
-
-                await execCopydir(this.dltsTrialConfig.codeDir, '/work/nni-code')
            
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
@@ -356,18 +354,18 @@ class DLTSTrainingService implements TrainingService {
 
         // Step 1. Prepare PAI job configuration
 
-        const trialLocalTempFolder = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const trialLocalFolder = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
-        await execMkdir(trialLocalTempFolder);
+        await execMkdir(trialLocalFolder);
 
         const runScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialLocalFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local tmp folders
         if (trialJobDetail.form !== undefined) {
             await fs.promises.writeFile(
-                path.join(trialLocalTempFolder, generateParamFileName(trialJobDetail.form.hyperParameters)),
+                path.join(trialLocalFolder, generateParamFileName(trialJobDetail.form.hyperParameters)),
                 trialJobDetail.form.hyperParameters.value, { encoding: 'utf8' }
             );
         }
@@ -376,13 +374,13 @@ class DLTSTrainingService implements TrainingService {
         const version: string = this.versionCheck ? await getVersion() : '';
         const nniDLTSTrialCommand: string = String.Format(
             DLTS_TRIAL_COMMAND_FORMAT,
-            // PAI will copy job's codeDir into /root directory
-            `/work/trials/${trialJobId}`,
-            `/work/trials/${trialJobId}/nnioutput`,
+            trialLocalFolder,
+            path.join(trialLocalFolder, 'nnioutput'),
             trialJobId,
             this.experimentId,
             trialJobDetail.form.sequenceId,
             false,
+            this.dltsTrialConfig.codeDir,
             this.dltsTrialConfig.command,
             nniManagerIp,
             this.dltsRestServerPort,
@@ -392,14 +390,6 @@ class DLTSTrainingService implements TrainingService {
         .replace(/\r\n|\n|\r/gm, '');
 
         // Step 2. Upload code files in codeDir onto NFS
-        
-        const codeDir = path.join('/work/trials', trialJobId);
-        try {
-            await execCopydir(trialLocalTempFolder, codeDir)
-        } catch (error) {
-            this.log.error(`DLTS Training Service: failed to copy ${trialLocalTempFolder} to ${codeDir}\n${error}`)
-            return true
-        }
 
         // Step 3. Submit DLTS job via Rest call
         const dltsJobConfig: DLTSJobConfig = new DLTSJobConfig(
