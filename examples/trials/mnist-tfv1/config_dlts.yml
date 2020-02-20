@@ -24,3 +24,11 @@ trial:
   image: msranni/nni:latest
 dltsConfig:
   dashboard: http://azure-eastus-p40-dev1-infra01.eastus.cloudapp.azure.com/
+
+  # The following fields are all optional and could be retrieved from environment
+  # variables if running in DLTS job container.
+
+  # cluster: .default
+  # team: platform
+  # email: example@microsoft.com
+  # password: # Paste from DLTS dashboard
