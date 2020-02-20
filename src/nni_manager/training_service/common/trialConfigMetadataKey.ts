@@ -20,5 +20,5 @@ export enum TrialConfigMetadataKey {
     FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
     DLTS_CLUSTER_CONFIG = 'dlts_config',
     VERSION_CHECK = 'version_check',
-    LOG_COLLECTION = 'log_collection',
+    LOG_COLLECTION = 'log_collection'
 }

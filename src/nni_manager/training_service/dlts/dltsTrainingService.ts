@@ -148,7 +148,7 @@ class DLTSTrainingService implements TrainingService {
         while (!this.stopping) {
             while (!this.stopping && this.jobQueue.length > 0) {
                 const trialJobId: string = this.jobQueue[0];
-                this.log.info('Got job ' + trialJobId);
+                this.log.info(`Got job ${trialJobId}`);
                 if (await this.submitTrialJobToDLTS(trialJobId)) {
                     // Remove trial job with trialJobId from job queue
                     this.jobQueue.shift();
@@ -318,19 +318,16 @@ class DLTSTrainingService implements TrainingService {
         this.log.info('Stopping DLTS training service...');
         this.stopping = true;
 
-        const deferred: Deferred<void> = new Deferred<void>();
         const restServer: DLTSJobRestServer = component.get(DLTSJobRestServer);
         try {
             await restServer.stop();
-            deferred.resolve();
             this.log.info('DLTS Training service rest server stopped successfully.');
+            return;
         } catch (error) {
             // tslint:disable-next-line: no-unsafe-any
             this.log.error(`DLTS Training service rest server stopped failed, error: ${error.message}`);
-            deferred.reject(error);
+            throw error;
         }
-
-        return deferred.promise;
     }
 
     private async submitTrialJobToDLTS(trialJobId: string): Promise<boolean> {
