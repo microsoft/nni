@@ -17,7 +17,7 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python3 /work/nni-code/mnist.py
+  command: python3 mnist.py
   codeDir: .
   gpuNum: 1
   #The docker image to run nni job on dlts

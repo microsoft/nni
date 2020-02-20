@@ -127,7 +127,7 @@ class DLTSTrainingService implements TrainingService {
                 dltsTrialJob.status = "FAILED";
                 break;
             case 'pausing':
-                dltsTrialJob.status = "RUNNING";
+            case 'paused':
                 dltsTrialJob.status = "RUNNING";
                 break;
             case 'killing':
