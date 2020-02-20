@@ -242,6 +242,30 @@ class DLTSTrainingService implements TrainingService {
         });
     }
 
+    private async getGpuType(): Promise<string> {
+        if (this.dltsClusterConfig === undefined) {
+            throw new Error('DLTS Cluster config is not initialized');
+        }
+        const gpuRequestOptions: request.Options = {
+            method: 'GET',
+            qs: {
+                email: this.dltsClusterConfig.email,
+                password: this.dltsClusterConfig.password
+            },
+            uri: `${this.dltsClusterConfig.dashboard}api/teams/${this.dltsClusterConfig.team}/clusters/${this.dltsClusterConfig.cluster}`,
+            json: true
+        };
+        return new Promise<string>((resolve, reject) => {
+            request(gpuRequestOptions, (error, response, data) => {
+                if (error) {
+                    return reject(error)
+                }
+                let gpus = Object.keys(data['gpu_capacity'])
+                resolve(gpus[0])
+            })
+        });
+    }
+
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
@@ -262,25 +286,7 @@ class DLTSTrainingService implements TrainingService {
                 if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME']) {
                     this.dltsClusterConfig.team = process.env['DLWS_VC_NAME'] as string
                 }
-                const gpuRequestOptions: request.Options = {
-                    method: 'GET',
-                    qs: {
-                        email: this.dltsClusterConfig.email,
-                        password: this.dltsClusterConfig.password
-                    },
-                    uri: `${this.dltsClusterConfig.dashboard}api/teams/${this.dltsClusterConfig.team}/clusters/${this.dltsClusterConfig.cluster}`,
-                    json: true
-                };
-                const gpu = await new Promise<string>((resolve, reject) => {
-                    request(gpuRequestOptions, (error, response, data) => {
-                        if (error) {
-                            return reject(error)
-                        }
-                        let gpus = Object.keys(data['gpu_capacity'])
-                        resolve(gpus[0])
-                    })
-                });
-                this.dltsClusterConfig.gpuType = gpu;
+                this.dltsClusterConfig.gpuType = await this.getGpuType();
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
