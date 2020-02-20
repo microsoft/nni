@@ -276,14 +276,26 @@ class DLTSTrainingService implements TrainingService {
                 if (!this.dltsClusterConfig.cluster) {
                     this.dltsClusterConfig.cluster = '.default'
                 }
-                if (!this.dltsClusterConfig.email && process.env['DLWS_USER_EMAIL']) {
-                    this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL'] as string
+                if (!this.dltsClusterConfig.email) {
+                    if (process.env['DLWS_USER_EMAIL']) {
+                        this.dltsClusterConfig.email = process.env['DLWS_USER_EMAIL'] as string
+                    } else {
+                        throw Error('`email` field in `dltsConfig` is not configured.')
+                    }
                 }
-                if (!this.dltsClusterConfig.password && process.env['DLTS_JOB_TOKEN']) {
-                    this.dltsClusterConfig.password = process.env['DLTS_JOB_TOKEN'] as string
+                if (!this.dltsClusterConfig.password) {
+                    if (process.env['DLTS_JOB_TOKEN']) {
+                        this.dltsClusterConfig.password = process.env['DLTS_JOB_TOKEN'] as string
+                    } else {
+                        throw Error('`password` field in `dltsConfig` is not configured.')
+                    }
                 }
-                if (!this.dltsClusterConfig.team && process.env['DLWS_VC_NAME']) {
-                    this.dltsClusterConfig.team = process.env['DLWS_VC_NAME'] as string
+                if (!this.dltsClusterConfig.team) {
+                    if (process.env['DLWS_VC_NAME']) {
+                        this.dltsClusterConfig.team = process.env['DLWS_VC_NAME'] as string
+                    } else {
+                        throw Error('`team` field in `dltsConfig` is not configured.')
+                    }
                 }
                 this.dltsClusterConfig.gpuType = await this.getGpuType();
                 break;
