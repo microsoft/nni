@@ -9,19 +9,18 @@ import * as request from 'request';
 
 import * as component from '../../common/component';
 import { EventEmitter } from 'events';
-import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import { getExperimentId, getExperimentStartupInfo } from '../../common/experimentStartupInfo';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService,
+    NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir } from '../common/util';
 import { delay, uniqueString, getIPV4Address, getExperimentRootDir, getVersion, generateParamFileName } from '../../common/utils';
-import { DLTSJobRestServer, ParameterFileMeta } from './dltsJobRestServer';
+import { DLTSJobRestServer } from './dltsJobRestServer';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { DLTSJobConfig } from './dltsJobConfig';
 import { DLTSClusterConfig } from './dltsClusterConfig';
@@ -260,7 +259,7 @@ class DLTSTrainingService implements TrainingService {
                 if (error) {
                     return reject(error)
                 }
-                let gpus = Object.keys(data['gpu_capacity'])
+                const gpus = Object.keys(data['gpu_capacity'])
                 resolve(gpus[0])
             })
         });
