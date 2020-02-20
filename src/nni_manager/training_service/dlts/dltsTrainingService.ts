@@ -337,11 +337,11 @@ class DLTSTrainingService implements TrainingService {
         const trialJobDetail: DLTSTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
         if (trialJobDetail === undefined) {
-            throw new Error(`Failed to find PAITrialJobDetail for job ${trialJobId}`);
+            throw new Error(`Failed to find DLTSTrialJobDetail for job ${trialJobId}`);
         }
 
         if (this.dltsClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
+            throw new Error('DLTS Cluster config is not initialized');
         }
         if (this.dltsTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
@@ -352,7 +352,7 @@ class DLTSTrainingService implements TrainingService {
             this.dltsRestServerPort = restServer.clusterRestServerPort;
         }
 
-        // Step 1. Prepare PAI job configuration
+        // Step 1. Prepare DLTS job configuration
 
         const trialLocalFolder = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
@@ -389,9 +389,7 @@ class DLTSTrainingService implements TrainingService {
         )
         .replace(/\r\n|\n|\r/gm, '');
 
-        // Step 2. Upload code files in codeDir onto NFS
-
-        // Step 3. Submit DLTS job via Rest call
+        // Step 2. Submit DLTS job via Rest call
         const dltsJobConfig: DLTSJobConfig = new DLTSJobConfig(
             this.dltsClusterConfig,
             trialJobDetail.dltsJobName,
@@ -431,10 +429,10 @@ class DLTSTrainingService implements TrainingService {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
         if (this.dltsClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
+            throw new Error('DLTS Cluster config is not initialized');
         }
         if (this.dltsTrialConfig === undefined) {
-            throw new Error('PAI trial config is not initialized');
+            throw new Error('DLTS trial config is not initialized');
         }
 
         const hyperParameters = form.hyperParameters;
@@ -445,8 +443,7 @@ class DLTSTrainingService implements TrainingService {
 
         const parameterFileMeta = {
             experimentId: this.experimentId,
-            trialId: trialJobId,
-            // filePath: hdfsHpFilePath
+            trialId: trialJobId
         };
         const restServer: DLTSJobRestServer = component.get(DLTSJobRestServer);
         const req: request.Options = {
