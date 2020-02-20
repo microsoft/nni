@@ -17,7 +17,7 @@ import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsTemplates';
+import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir } from '../common/util';
 import { delay, uniqueString, getIPV4Address, getExperimentRootDir, getVersion, generateParamFileName } from '../../common/utils';

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { DLTSClusterConfig } from "./dltsClusterConfig";
 
 export class DLTSJobConfig {

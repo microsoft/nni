@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { TrialConfig } from "training_service/common/trialConfig";
 
 export class DLTSTrialConfig extends TrialConfig {
