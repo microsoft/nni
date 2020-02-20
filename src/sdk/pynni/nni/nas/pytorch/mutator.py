@@ -88,8 +88,14 @@ class Mutator(BaseMutator):
             Containing keys ``nodes``, ``edges`` and ``key2chain``. ``key2chain`` is to map each mutable
             to a set of edges on the graph.
         """
+        if not torch.__version__.startswith("1.4"):
+            logger.warning("Graph is only tested with PyTorch 1.4. Other versions might not work.")
         from ._graph_utils import get_vis_graph
-        return get_vis_graph(self.model, inputs, self)
+        try:
+            self._connect_all = True
+            return get_vis_graph(self.model, inputs, self)
+        finally:
+            self._connect_all = False
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
@@ -110,7 +116,8 @@ class Mutator(BaseMutator):
             Output and mask.
         """
         if self._connect_all:
-            return self._tensor_reduction(mutable.reduction, [op(*inputs) for op in mutable.choices]), \
+            return self._all_connect_tensor_reduction(mutable.reduction,
+                                                      [op(*inputs) for op in mutable.choices]), \
                 torch.ones(mutable.length)
 
         def _map_fn(op, *inputs):
@@ -140,7 +147,7 @@ class Mutator(BaseMutator):
             Output and mask.
         """
         if self._connect_all:
-            return self._tensor_reduction(mutable.reduction, tensor_list), \
+            return self._all_connect_tensor_reduction(mutable.reduction, tensor_list), \
                 torch.ones(mutable.n_candidates)
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \
@@ -171,6 +178,13 @@ class Mutator(BaseMutator):
         if reduction_type == "concat":
             return torch.cat(tensor_list, dim=1)
         raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+
+    def _all_connect_tensor_reduction(self, reduction_type, tensor_list):
+        if reduction_type == "none":
+            return tensor_list
+        if reduction_type == "concat":
+            return torch.cat(tensor_list, dim=1)
+        return torch.stack(tensor_list).sum(0)
 
     def _get_decision(self, mutable):
         """

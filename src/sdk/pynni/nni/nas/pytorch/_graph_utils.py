@@ -10,7 +10,7 @@ def _graph(model, args, verbose=False):
     """
     Copy from ``torch.utils.tensorboard._pytorch_graph.graph``.
     Copied because we don't need to convert to proto.
-    This works on PyTorch 1.4. Other versions might need double-check.
+    This works on PyTorch 1.4. We tried PyTorch 1.3, and it didn't work.
 
     Original docstring:
 
@@ -138,7 +138,7 @@ class VisGraph:
 
     def build(self, graph, module_name2key):
         self.default_display_treeset = {"input", "output"}
-        for scope_name in g.unique_name_to_scoped_name.values():
+        for scope_name in graph.unique_name_to_scoped_name.values():
             # scope is an op, find corresponding father
             path = scope_name.split("/")
             if len(path) >= 1 and (
@@ -151,7 +151,7 @@ class VisGraph:
         for node_id, node in graph.nodes_io.items():
             id_in_graph = self.add_complex_node(node_id, node)
             self.oriid2visid[node_id] = id_in_graph
-        for node_id, node in g.nodes_io.items():
+        for node_id, node in graph.nodes_io.items():
             for input_name in node.inputs:
                 input_id = input_name.split("/")[-1]
                 if input_id in self.oriid2visid:
@@ -159,7 +159,7 @@ class VisGraph:
         self.eliminate_sidechain_nodes()
 
         key2chain = dict()
-        for node_id, node in g.nodes_io.items():
+        for node_id, node in graph.nodes_io.items():
             if ("op." + node_id) not in self.nodes:
                 # filter out unused ListConstruct
                 continue
@@ -169,7 +169,7 @@ class VisGraph:
                     # backtrack until out of scope
                     module_name = self._extract_module_name(node.scope)
                     module_key = module_name2key[module_name]
-                    chain_list = self._retrieve_chains(node)
+                    chain_list = self._retrieve_chains(graph, node)
                     if module_key not in key2chain:
                         key2chain[module_key] = [set() for _ in range(len(node.inputs))]
                     for i, c in enumerate(chain_list):
@@ -184,7 +184,6 @@ class VisGraph:
                 module_name = self._extract_module_name(node.debugName)
                 if module_name:
                     module_name += "."
-                print(node.kind)
                 new_node = VisNode(node_id, "blob", module_name + node.kind.split("::")[-1], kind=node.kind)
             else:
                 raise NotImplementedError
@@ -284,7 +283,7 @@ class VisGraph:
                 path.append(x)
         return path
 
-    def _retrieve_chains(self, node):
+    def _retrieve_chains(self, graph, node):
         # node is the ListConstruct node of mutable
         _adj_list = defaultdict(list)
         _rev_adj_list = defaultdict(list)
@@ -293,10 +292,10 @@ class VisGraph:
         def _debug_name_to_id(debug_name):
             return debug_name.split("/")[-1]
 
-        for node_id, node_data in g.nodes_io.items():
+        for node_id, node_data in graph.nodes_io.items():
             for input_name in node_data.inputs:
                 input_name = _debug_name_to_id(input_name)
-                if input_name in g.nodes_io:
+                if input_name in graph.nodes_io:
                     _adj_list[input_name].append(node_id)
                     _rev_adj_list[node_id].append(input_name)
 
@@ -309,7 +308,7 @@ class VisGraph:
             dfs_stack = [src_node]
             while dfs_stack:
                 u = dfs_stack.pop()
-                if not g.nodes_io[u].scope or not g.nodes_io[u].scope.startswith(src_scope):
+                if not graph.nodes_io[u].scope or not graph.nodes_io[u].scope.startswith(src_scope):
                     continue
                 for v in adj_list[u]:
                     if v not in visited_edges:
