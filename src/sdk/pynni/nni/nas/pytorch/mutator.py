@@ -3,6 +3,7 @@
 
 import logging
 
+import numpy as np
 import torch
 
 from nni.nas.pytorch.base_mutator import BaseMutator
@@ -15,6 +16,7 @@ class Mutator(BaseMutator):
     def __init__(self, model):
         super().__init__(model)
         self._cache = dict()
+        self._connect_all = False
 
     def sample_search(self):
         """
@@ -57,6 +59,38 @@ class Mutator(BaseMutator):
         """
         return self.sample_final()
 
+    def status(self):
+        """
+        Return current selection status of mutator.
+
+        Returns
+        -------
+        dict
+            A mapping from key of mutables to decisions. All weights (boolean type and float type)
+            are converted into real number values. Numpy arrays and tensors are converted into list.
+        """
+        data = dict()
+        for k, v in self._cache.items():
+            if torch.is_tensor(v):
+                v = v.detach().cpu().numpy()
+            if isinstance(v, np.ndarray):
+                v = v.astype(np.float32).tolist()
+            data[k] = v
+        return data
+
+    def graph(self, inputs):
+        """
+        Return model supernet graph.
+
+        Returns
+        -------
+        dict
+            Containing keys ``nodes``, ``edges`` and ``key2chain``. ``key2chain`` is to map each mutable
+            to a set of edges on the graph.
+        """
+        from ._graph_utils import get_vis_graph
+        return get_vis_graph(self.model, inputs, self)
+
     def on_forward_layer_choice(self, mutable, *inputs):
         """
         On default, this method retrieves the decision obtained previously, and select certain operations.
@@ -75,6 +109,10 @@ class Mutator(BaseMutator):
         tuple of torch.Tensor and torch.Tensor
             Output and mask.
         """
+        if self._connect_all:
+            return self._tensor_reduction(mutable.reduction, [op(*inputs) for op in mutable.choices]), \
+                torch.ones(mutable.length)
+
         def _map_fn(op, *inputs):
             return op(*inputs)
 
@@ -101,6 +139,9 @@ class Mutator(BaseMutator):
         tuple of torch.Tensor and torch.Tensor
             Output and mask.
         """
+        if self._connect_all:
+            return self._tensor_reduction(mutable.reduction, tensor_list), \
+                torch.ones(mutable.n_candidates)
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \
             "Invalid mask, expected {} to be of length {}.".format(mask, mutable.n_candidates)
