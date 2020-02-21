@@ -20,7 +20,7 @@ export class DLTSJobConfig {
   public readonly jobPath = '';
   public readonly enablejobpath = true;
   public readonly mountpoints = [];
-  public readonly env = []
+  public readonly env = [{ name: 'TMPDIR', value: '$HOME/tmp' }]
   public readonly hostNetwork = false;
   public readonly useGPUTopology = false;
   public readonly isPrivileged = false;
