@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiement new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **NNI v1.3 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **NNI v1.4 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiements. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms. 
@@ -177,9 +177,9 @@ Within the following table, we summarized the current NNI capabilities, we are g
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/sdk_reference.rst">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
         <li><a href="docs/en_US/Tutorial/AnnotationSpec.md">NNI Annotation</a></li>
-         <li><a href="docs/en_US/Tutorial/Installation.md">Supported OS</a></li>
+         <li><a href="https://nni.readthedocs.io/en/latest/installation.html">Supported OS</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
@@ -216,9 +216,9 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try latest code, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
+If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/latest/installation.html) from source code.
 
-For detail system requirements of NNI, please refer to [here](docs/en_US/Tutorial/Installation.md#system-requirements).
+For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationWin.html#system-requirements) for Windows.
 
 Note:
 
@@ -233,7 +233,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  git clone -b v1.4 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

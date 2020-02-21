@@ -38,7 +38,7 @@
 
 如果你直接使用NNI的官方镜像`msranni/nni`来启动实验，你可以直接使用`nnictl`命令。 NNI的官方镜像有最基础的python环境和深度学习框架。
 
-如果你使用你自己的docker镜像，你首先需要安装NNI环境。[参考](Installation.md)
+如果使用自己的 Docker 镜像，需要首先[安装 NNI](InstallationLinux.md)。
 
 如果你想要使用NNI的官方例子，你可以通过以下git命令来克隆NNI：
 

@@ -21,8 +21,11 @@ trial:
   gpuNum: 1
   virtualCluster: nni
   image: msranni/nni:latest
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+  paiStoragePlugin: team_wise
 nniManagerIp: <nni_manager_ip>
 paiConfig:
   userName: <username>
-  passWord: <password>
+  token: <token>
   host: <host>

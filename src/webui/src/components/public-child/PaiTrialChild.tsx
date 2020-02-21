@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Row } from 'antd';
 import { DOWNLOAD_IP } from '../../static/const';
 
 interface PaiTrialChildProps {
@@ -24,7 +23,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                         ?
                         <div />
                         :
-                        <Row>
+                        <div>
                             {
                                 logCollect
                                     ?
@@ -39,7 +38,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                     :
                                     <span>trial stdout: {logString}</span>
                             }
-                        </Row>
+                        </div>
                 }
             </div>
         );

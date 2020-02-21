@@ -557,7 +557,8 @@ class BOHB(MsgDispatcherBase):
             Data type not supported
         """
         logger.debug('handle report metric data = %s', data)
-
+        if 'value' in data:
+            data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
@@ -627,6 +628,8 @@ class BOHB(MsgDispatcherBase):
         AssertionError
             data doesn't have required key 'parameter' and 'value'
         """
+        for entry in data:
+            entry['value'] = json_tricks.loads(entry['value'])
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
