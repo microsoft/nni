@@ -563,7 +563,7 @@ def manage_stopped_experiment(args, mode):
     try:
         launch_experiment(args, experiment_config, mode, new_config_file_name, experiment_id)
     except Exception as exception:
-        nni_config = Config(config_file_name)
+        nni_config = Config(new_config_file_name)
         restServerPid = nni_config.get_config('restServerPid')
         if restServerPid:
             kill_command(restServerPid)
