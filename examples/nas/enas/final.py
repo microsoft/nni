@@ -11,11 +11,12 @@ from torch.utils.tensorboard import SummaryWriter
 
 import datasets
 import utils
-from model import CNN
+from macro import GeneralNetwork
+from micro import MicroNetwork
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeter
 
-logger = logging.getLogger('nni')
+logger = logging.getLogger("nni")
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,10 +40,8 @@ def train(config, train_loader, model, optimizer, criterion, epoch):
         bs = x.size(0)
 
         optimizer.zero_grad()
-        logits, aux_logits = model(x)
+        logits = model(x)
         loss = criterion(logits, y)
-        if config.aux_weight > 0.:
-            loss += config.aux_weight * criterion(aux_logits, y)
         loss.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.parameters(), config.grad_clip)
@@ -107,27 +106,33 @@ def validate(config, valid_loader, model, criterion, epoch, cur_step):
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--layers", default=20, type=int)
-    parser.add_argument("--batch-size", default=96, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
-    parser.add_argument("--epochs", default=600, type=int)
-    parser.add_argument("--aux-weight", default=0.4, type=float)
-    parser.add_argument("--drop-path-prob", default=0.2, type=float)
     parser.add_argument("--workers", default=4)
     parser.add_argument("--grad-clip", default=5., type=float)
     parser.add_argument("--arc-checkpoint", default="./checkpoints/epoch_0.json")
+    parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
 
     args = parser.parse_args()
-    dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
-    model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
+    dataset_train, dataset_valid = datasets.get_dataset("cifar10")
+    if args.search_for == "macro":
+        model = GeneralNetwork(out_filters=96, dropout_rate=0.5)
+        args.batch_size = 100
+        args.epochs = 310
+    elif args.search_for == "micro":
+        model = MicroNetwork(num_layers=15, out_channels=36, num_nodes=5, dropout_rate=0.2, use_aux_heads=False)
+        args.epochs = 630
+        args.batch_size = 144
+    else:
+        raise AssertionError
+
     apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
-
     model.to(device)
     criterion.to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=1E-6)
+    optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=2.0e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.001)
 
     train_loader = torch.utils.data.DataLoader(dataset_train,
                                                batch_size=args.batch_size,
@@ -142,9 +147,6 @@ if __name__ == "__main__":
 
     best_top1 = 0.
     for epoch in range(args.epochs):
-        drop_prob = args.drop_path_prob * epoch / args.epochs
-        model.drop_path_prob(drop_prob)
-
         # training
         train(args, train_loader, model, optimizer, criterion, epoch)
 
