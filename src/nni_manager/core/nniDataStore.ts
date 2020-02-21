@@ -4,7 +4,6 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as JSON5 from 'json5';
 import { Deferred } from 'ts-deferred';
 
 import * as component from '../common/component';
@@ -132,7 +131,7 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
-        const metrics: MetricData = JSON5.parse(data);
+        const metrics: MetricData = JSON.parse(data);
         // REQUEST_PARAMETER is used to request new parameters for multiphase trial job,
         // it is not metrics, so it is skipped here.
         if (metrics.type === 'REQUEST_PARAMETER') {
@@ -141,7 +140,7 @@ class NNIDataStore implements DataStore {
         }
         assert(trialJobId === metrics.trial_job_id);
         try {
-            await this.db.storeMetricData(trialJobId, JSON5.stringify({
+            await this.db.storeMetricData(trialJobId, JSON.stringify({
                 trialJobId: metrics.trial_job_id,
                 parameterId: metrics.parameter_id,
                 type: metrics.type,

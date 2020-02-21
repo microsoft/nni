@@ -338,6 +338,6 @@ _Coming Soon_ ...
 ## Reference and Feedback
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
 * To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
-* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+* To know more about [Feature Engineering with NNI](../FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](../NAS/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](../Tuner/BuiltinTuner.md);

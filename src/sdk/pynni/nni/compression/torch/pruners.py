@@ -170,7 +170,7 @@ class AGP_Pruner(Pruner):
         if epoch > 0:
             self.now_epoch = epoch
             for wrapper in self.get_modules_wrapper():
-                wrapper.registered_buffers['if_calculated'].copy_(torch.tensor(0)) # pylint: disable=not-callable
+                wrapper.if_calculated.copy_(torch.tensor(0)) # pylint: disable=not-callable
 
 class SlimPruner(Pruner):
     """

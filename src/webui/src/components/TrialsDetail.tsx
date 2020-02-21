@@ -56,7 +56,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             return;
         }
         switch (this.state.searchType) {
-            case 'id':
+            case 'Id':
                 filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'Trial No.':
@@ -65,7 +65,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             case 'Status':
                 filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
                 break;
-            case 'parameters':
+            case 'Parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
                 filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
                 break;

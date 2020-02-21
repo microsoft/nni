@@ -6,11 +6,17 @@ For now, we support the following feature selector:
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
+
+In addition, those selector only for feature selection. If you want to:
+1) generate high-order combined features on nni while doing feature selection;
+2) leverage your distributed resources;
+you could try this [example](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering).
 
 ## How to use?
 
 ```python
-from nni.feature_engineering.gradient_selector import GradientFeatureSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # load data
@@ -18,7 +24,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # initlize a selector
-fgs = GradientFeatureSelector(...)
+fgs = FeatureGradientSelector(...)
 # fit data
 fgs.fit(X_train, y_train)
 # get improtant features
