@@ -568,6 +568,7 @@ def manage_stopped_experiment(args, mode):
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
+        exit(1)
     new_nni_config.set_config('restServerPort', args.port)
 
 def view_experiment(args):
