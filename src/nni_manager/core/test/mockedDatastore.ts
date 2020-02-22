@@ -251,7 +251,11 @@ class MockedDataStore implements DataStore {
             }
             switch (record.event) {
                 case 'RUNNING':
-                    jobInfo.startTime = Date.now();
+                    if (jobInfo.startTime === undefined) {
+                        // assign startTime once
+                        // not to reassign startTime in case job status become RUNNING from PAUSED
+                        jobInfo.startTime = Date.now();
+                    }
                     break;
                 case 'SUCCEEDED':
                 case 'FAILED':

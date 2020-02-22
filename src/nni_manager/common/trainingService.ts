@@ -6,7 +6,7 @@
 /**
  * define TrialJobStatus
  */
-type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
+type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'PAUSED' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 
 interface TrainingServiceMetadata {
     readonly key: string;

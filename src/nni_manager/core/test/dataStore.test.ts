@@ -97,6 +97,22 @@ describe('Unit test for dataStore', () => {
             jobId: '222'
         },
         {
+            event: 'PAUSED',
+            jobId: '111'
+        },
+        {
+            event: 'PAUSED',
+            jobId: '222'
+        },
+        {
+            event: 'RUNNING',
+            jobId: '111'
+        },
+        {
+            event: 'RUNNING',
+            jobId: '222'
+        },
+        {
             event: 'SUCCEEDED',
             jobId: '111',
             data: 'lr: 0.001'

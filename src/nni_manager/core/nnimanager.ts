@@ -224,9 +224,9 @@ class NNIManager implements Manager {
         // Resume currSubmittedTrialNum
         this.currSubmittedTrialNum = allTrialJobs.length;
 
-        // Check the final status for WAITING and RUNNING jobs
+        // Check the final status for WAITING, PAUSED and RUNNING jobs
         await Promise.all(allTrialJobs
-            .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
+            .filter((job: TrialJobInfo) => ['WAITING', 'RUNNING', 'PAUSED'].includes(job.status))
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
         // Collect generated trials and imported trials
@@ -438,8 +438,7 @@ class NNIManager implements Manager {
         const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
         // TO DO: to promise all
         for (const trialJob of trialJobList) {
-            if (trialJob.status === 'RUNNING' ||
-                trialJob.status === 'WAITING') {
+            if (['WAITING', 'RUNNING', 'PAUSED'].includes(trialJob.status)) {
                 try {
                     this.log.info(`cancelTrialJob: ${trialJob.id}`);
                     await this.trainingService.cancelTrialJob(trialJob.id);
@@ -520,6 +519,7 @@ class NNIManager implements Manager {
                     break;
                 case 'WAITING':
                 case 'RUNNING':
+                case 'PAUSED':
                 case 'UNKNOWN':
                     // Do nothing
                     break;
