@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+from collections import defaultdict
 
 import numpy as np
 import torch
@@ -100,7 +101,8 @@ class Mutator(BaseMutator):
         # protobuf should be installed as long as tensorboard is installed
         try:
             self._connect_all = True
-            graph_def, _ = graph(net, inputs, verbose=False)
+            start_time = time.time()
+            graph_def, _ = graph(self.model, inputs, verbose=False)
             result = json_format.MessageToDict(graph_def)
         finally:
             self._connect_all = False
@@ -108,7 +110,7 @@ class Mutator(BaseMutator):
         # `mutable` is to map the keys to a list of corresponding modules.
         # A key can be linked to multiple modules, use `dedup=False` to find them all.
         result["mutable"] = defaultdict(list)
-        for mutable in mutator.mutables.traverse(deduplicate=False):
+        for mutable in self.mutables.traverse(deduplicate=False):
             modules = mutable.name.split(".")
             path = [
                 {"type": self.model.__class__.__name__, "name": ""}
