@@ -73,7 +73,6 @@ pai:
   maxExecDuration: 15m
   paiConfig:
     host:
-    host:
     userName:
   trainingServicePlatform: pai
   trial:
