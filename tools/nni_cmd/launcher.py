@@ -560,6 +560,7 @@ def manage_stopped_experiment(args, mode):
     new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
     new_nni_config = Config(new_config_file_name)
     new_nni_config.set_config('experimentConfig', experiment_config)
+    new_nni_config.set_config('restServerPort', args.port)
     try:
         launch_experiment(args, experiment_config, mode, new_config_file_name, experiment_id)
     except Exception as exception:
@@ -569,7 +570,6 @@ def manage_stopped_experiment(args, mode):
             kill_command(restServerPid)
         print_error(exception)
         exit(1)
-    new_nni_config.set_config('restServerPort', args.port)
 
 def view_experiment(args):
     '''view a stopped experiment'''
