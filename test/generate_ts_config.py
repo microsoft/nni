@@ -111,6 +111,10 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", type=str)
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
+    parser.add_argument("--pai_token", type=str)
+    parser.add_argument("--paiStoragePlugin", type=str)
+    parser.add_argument("--nniManagerNFSMountPath", type=str)
+    parser.add_argument("--containerNFSMountPath", type=str)
     # args for kubeflow and frameworkController
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
