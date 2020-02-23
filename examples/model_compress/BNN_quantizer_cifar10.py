@@ -105,7 +105,7 @@ def adjust_learning_rate(optimizer, epoch):
 
 def main():
     torch.manual_seed(0)
-    device = torch.device('cuda')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10('./data.cifar10', train=True, download=True,
                          transform=transforms.Compose([
