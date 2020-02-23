@@ -96,7 +96,7 @@ class Mutator(BaseMutator):
         """
         if not torch.__version__.startswith("1.4"):
             logger.warning("Graph is only tested with PyTorch 1.4. Other versions might not work.")
-        from torch.utils.tensorboard._pytorch_graph import graph
+        from ._graph_utils import graph
         from google.protobuf import json_format
         # protobuf should be installed as long as tensorboard is installed
         try:
