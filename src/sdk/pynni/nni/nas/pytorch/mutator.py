@@ -101,7 +101,6 @@ class Mutator(BaseMutator):
         # protobuf should be installed as long as tensorboard is installed
         try:
             self._connect_all = True
-            start_time = time.time()
             graph_def, _ = graph(self.model, inputs, verbose=False)
             result = json_format.MessageToDict(graph_def)
         finally:
