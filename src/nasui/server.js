@@ -10,6 +10,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
+app.get('/hey', (req, res) => res.send('ho!'));
 app.get('/refresh', (req, res) => {
   const graph = fs.readFileSync(path.join(logdir, 'graph.json'), 'utf8');
   const log = fs.readFileSync(path.join(logdir, 'log.json'), 'utf8');
@@ -19,6 +20,6 @@ app.get('/refresh', (req, res) => {
   });
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(8080, () => {
   console.log(`NNI NAS board is running on port ${port}, logdir is ${logdir}.`);
 });

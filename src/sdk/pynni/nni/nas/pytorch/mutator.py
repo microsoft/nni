@@ -82,20 +82,46 @@ class Mutator(BaseMutator):
         """
         Return model supernet graph.
 
+        Parameters
+        ----------
+        inputs: tuple of tensor
+            Inputs that will be feeded into the network.
+
         Returns
         -------
         dict
-            Containing keys ``nodes``, ``edges`` and ``key2chain``. ``key2chain`` is to map each mutable
-            to a set of edges on the graph.
+            Containing ``node``, in Tensorboard GraphDef format.
+            Additional key ``mutable`` is a map from key to list of modules.
         """
         if not torch.__version__.startswith("1.4"):
             logger.warning("Graph is only tested with PyTorch 1.4. Other versions might not work.")
-        from ._graph_utils import get_vis_graph
+        from torch.utils.tensorboard._pytorch_graph import graph
+        from google.protobuf import json_format
+        # protobuf should be installed as long as tensorboard is installed
         try:
             self._connect_all = True
-            return get_vis_graph(self.model, inputs, self)
+            graph_def, _ = graph(net, inputs, verbose=False)
+            result = json_format.MessageToDict(graph_def)
         finally:
             self._connect_all = False
+
+        # `mutable` is to map the keys to a list of corresponding modules.
+        # A key can be linked to multiple modules, use `dedup=False` to find them all.
+        result["mutable"] = defaultdict(list)
+        for mutable in mutator.mutables.traverse(deduplicate=False):
+            modules = mutable.name.split(".")
+            path = [
+                {"type": self.model.__class__.__name__, "name": ""}
+            ]
+            m = self.model
+            for module in modules:
+                m = getattr(m, module)
+                path.append({
+                    "type": m.__class__.__name__,
+                    "name": module
+                })
+            result["mutable"][mutable.key].append(path)
+        return result
 
     def on_forward_layer_choice(self, mutable, *inputs):
         """
