@@ -13,7 +13,7 @@ import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesCluste
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2' | 'v1';
 
 /**
  * Kubeflow Cluster Configuration

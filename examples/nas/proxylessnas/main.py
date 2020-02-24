@@ -101,6 +101,6 @@ if __name__ == "__main__":
         from nni.nas.pytorch.fixed import apply_fixed_architecture
         assert os.path.isfile(args.exported_arch_path), \
             "exported_arch_path {} should be a file.".format(args.exported_arch_path)
-        apply_fixed_architecture(model, args.exported_arch_path, device=device)
+        apply_fixed_architecture(model, args.exported_arch_path)
         trainer = Retrain(model, optimizer, device, data_provider, n_epochs=300)
         trainer.run()

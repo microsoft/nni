@@ -37,10 +37,6 @@ python3 search.py -h
 ..  autoclass:: nni.nas.pytorch.enas.EnasTrainer
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.enas.EnasMutator
     :members:
-
-    .. automethod:: __init__
 ```
