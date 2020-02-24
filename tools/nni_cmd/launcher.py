@@ -533,6 +533,7 @@ def create_experiment(args):
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
+        exit(1)
 
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
