@@ -22,6 +22,7 @@
     "cytoscape-cola": "^2.3.0",
     "cytoscape-dagre": "^2.2.2",
     "cytoscape-expand-collapse": "^3.2.0",
+    "cytoscape-panzoom": "^2.5.3",
     "d3": "^5.15.0",
     "d3-graphviz": "^2.6.1",
     "d3-selection": "^1.4.1",

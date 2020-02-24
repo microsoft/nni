@@ -3697,6 +3697,13 @@ cytoscape-expand-collapse@^3.2.0:
   resolved "https://registry.yarnpkg.com/cytoscape-expand-collapse/-/cytoscape-expand-collapse-3.2.0.tgz#3b705eec0bc094a9e1874e4e6635450787fcf5ab"
   integrity sha512-do33Kn4S7yP4QzdV0yK+aQOsXxTBfhA+BORWynKspkn5hw7kuktc5wKJEpr8jq7Vb9tT1bFSOMFr/IGbYJNG/w==
 
+cytoscape-panzoom@^2.5.3:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/cytoscape-panzoom/-/cytoscape-panzoom-2.5.3.tgz#edf041b5aa8be1cbe3c001f16a8b2193b46127a7"
+  integrity sha512-//qLOqbbFUCGddarNKHDZArItOJHgnkQ1TvxI9nV2/8aOOl/5wuEOHmra3fL/aWSjB4AYpYTG4LX7w96uWfRTQ==
+  dependencies:
+    jquery "^1.4 || ^2.0 || ^3.0"
+
 cytoscape@^3.14.0:
   version "3.14.0"
   resolved "https://registry.yarnpkg.com/cytoscape/-/cytoscape-3.14.0.tgz#fa23e38209bebb759415dbbd88f8320b37e9ae56"
@@ -6628,6 +6635,11 @@ jest@24.9.0:
   dependencies:
     import-local "^2.0.0"
     jest-cli "^24.9.0"
+
+"jquery@^1.4 || ^2.0 || ^3.0":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.4.1.tgz#714f1f8d9dde4bdfa55764ba37ef214630d80ef2"
+  integrity sha512-36+AdBzCL+y6qjw5Tx7HgzeGCzC81MDDgaUP8ld2zhx58HdqXGoBd+tHdrBMiyjGQs0Hxs/MLZTu/eHNJJuWPw==
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"

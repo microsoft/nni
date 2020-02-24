@@ -11,6 +11,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import SettingsIcon from '@material-ui/icons/Settings';
+import CloseIcon from '@material-ui/icons/Close';
+import ShuffleIcon from '@material-ui/icons/Shuffle';
+import Snackbar from '@material-ui/core/Snackbar';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormGroup from '@material-ui/core/FormGroup';
@@ -19,20 +22,21 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import MuiExpansionPanel from '@material-ui/core/ExpansionPanel';
+import MuiExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import MuiExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import Backdrop from '@material-ui/core/Backdrop';
 import Chart from './Chart';
-import { preprocessGraphData, eliminateSidechainNodes, subgraphMetadata } from './graphUtils';
-import lodash from 'lodash';
+import { Graph } from './graphUtils';
 
 const styles = createStyles({
   bottomAppBar: {
     top: 'auto',
     bottom: 0,
+    zIndex: 'auto',
   },
   title: {
     flexGrow: 1,
@@ -49,17 +53,56 @@ const styles = createStyles({
     paddingRight: 0,
     paddingTop: 2,
     paddingBottom: 2,
-    fontSize: '80%'
+    fontSize: '0.8em',
+    wordBreak: 'break-all',
   },
   listSubtitle: {
     fontWeight: 600,
     paddingLeft: 0,
-    paddingRight: 0
+    paddingRight: 0,
+    fontSize: '0.9em',
+  },
+  listTitle: {
+    lineHeight: 1.1,
+    wordBreak: 'break-all'
+  },
+  backdrop: {
+    color: '#fff',
+    zIndex: 100,
+  },
+  snackbar: {
+    bottom: 76
   }
 });
 
+const ExpansionPanel = withStyles({
+  root: {
+    '&$expanded': {
+      margin: 'auto',
+    },
+  },
+  expanded: {},
+})(MuiExpansionPanel);
+
+const ExpansionPanelSummary = withStyles({
+  root: {},
+  content: {
+    '&$expanded': {
+      margin: '12px 0',
+    },
+  },
+  expanded: {},
+})(MuiExpansionPanelSummary);
+
+const ExpansionPanelDetails = withStyles(theme => ({
+  root: {
+    paddingTop: 0,
+    paddingBottom: theme.spacing(1),
+  },
+}))(MuiExpansionPanelDetails);
+
 type AppState = {
-  rawGraphData: any,
+  graph: Graph | undefined,
   graphData: any,
   logData: any[],
   sliderValue: number,
@@ -68,7 +111,10 @@ type AppState = {
   settingsOpen: boolean,
   hideSidechainNodes: boolean,
   hidePrimitiveNodes: boolean,
+  snackbarOpen: boolean,
   selectedNode: string,
+  loading: boolean,
+  layout: boolean,
 }
 
 type AppProps = {
@@ -79,8 +125,8 @@ class App extends React.Component<AppProps, AppState>  {
   constructor(props: any) {
     super(props);
     this.state = {
-      rawGraphData: null,
-      graphData: null,
+      graph: undefined,
+      graphData: undefined,
       logData: [],
       sliderValue: 0,
       maxSliderValue: 0,
@@ -89,6 +135,9 @@ class App extends React.Component<AppProps, AppState>  {
       hideSidechainNodes: true,
       hidePrimitiveNodes: true,
       selectedNode: '',
+      loading: false,
+      snackbarOpen: false,
+      layout: false,
     };
     this.refresh = this.refresh.bind(this);
   }
@@ -98,62 +147,72 @@ class App extends React.Component<AppProps, AppState>  {
   }
 
   refresh() {
+    this.setState({ loading: true });
     fetch('/refresh')
       .then((response) => { return response.json() })
       .then((data) => {
+        const graph = new Graph(data.graph, this.state.hideSidechainNodes);
         this.setState({
-          rawGraphData: data['graph'],
-          graphData: this.graphProcessPipeline(data['graph']),
-          logData: data['log'],
-          maxSliderValue: data['log'].length - 1,
-          sliderStep: Math.max(1, Math.floor(data['log'].length / 20)),
-          sliderValue: Math.min(data['log'].length, this.state.sliderValue)
+          graphData: data.graph,
+          graph: graph,
+          logData: data.log,
+          maxSliderValue: data.log.length - 1,
+          sliderStep: Math.max(1, Math.floor(data.log.length / 20)),
+          sliderValue: Math.min(data.log.length, this.state.sliderValue),
+          loading: false,
+          snackbarOpen: graph.nodes.length > 100
         });
       });
   }
 
-  private graphProcessPipeline(rawGraph: any): any {
-    const graph = lodash.cloneDeep(rawGraph);
-    if (this.state.hideSidechainNodes)
-      eliminateSidechainNodes(graph);
-    preprocessGraphData(graph);
-    return graph;
-  }
-
   private renderExpansionPanel() {
     const { classes } = this.props;
-    const { selectedNode, graphData } = this.state;
-    if (graphData === null)
+    const { selectedNode, graph } = this.state;
+    if (graph === undefined)
       return null;
-    const info = subgraphMetadata(graphData, selectedNode);
-    if (info === null)
-      return null;
+    const info = graph.nodeSummary(selectedNode);
+    if (info === undefined)
+      return undefined;
     const subtitle = info.op ?
-    (info.op === 'IO Node' ? info.op : `Operation: ${info.op}`) :
+      (info.op === 'IO Node' ? info.op : `Operation: ${info.op}`) :
       `Subgraph: ${info.nodeCount} nodes, ${info.edgeCount} edges`;
     return (
       <ExpansionPanel className={classes.panel}>
         <ExpansionPanelSummary
           expandIcon={<ExpandMoreIcon />}
         >
-          <Typography variant='subtitle1'>{info.name}</Typography>
+          <Typography variant='subtitle1' className={classes.listTitle}><b>{info.name}</b><br />{subtitle}</Typography>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails>
           <List dense={true} style={{
             maxHeight: window.innerHeight * .5,
-            overflowY: 'scroll',
-            wordWrap: 'break-word',
+            overflowY: 'auto',
+            paddingTop: 0,
+            width: '100%'
           }}>
-            <ListItem className={classes.listSubtitle}>{subtitle}</ListItem>
-            <ListItem className={classes.listSubtitle}>Attributes</ListItem>
-            <ListItem className={classes.listItem}>{info.attributes}</ListItem>
-            <ListItem className={classes.listSubtitle}>Inputs</ListItem>
             {
-              info.inputs.map(item => <ListItem className={classes.listItem}>{item}</ListItem>)
+              info.attributes &&
+              <React.Fragment>
+                <ListItem className={classes.listSubtitle}>Attributes</ListItem>
+                <ListItem className={classes.listItem}>{info.attributes}</ListItem>
+              </React.Fragment>
             }
-            <ListItem className={classes.listSubtitle}>Outputs</ListItem>
             {
-              info.inputs.map(item => <ListItem className={classes.listItem}>{item}</ListItem>)
+              info.inputs.length > 0 &&
+              <React.Fragment>
+                <ListItem className={classes.listSubtitle}>Inputs ({info.inputs.length})</ListItem>
+                {
+                  info.inputs.map((item, i) => <ListItem className={classes.listItem} key={`input${i}`}>{item}</ListItem>)
+                }</React.Fragment>
+            }
+            {
+              info.outputs.length > 0 &&
+              <React.Fragment>
+                <ListItem className={classes.listSubtitle}>Outputs ({info.outputs.length})</ListItem>
+                {
+                  info.outputs.map((item, i) => <ListItem className={classes.listItem} key={`output${i}`}>{item}</ListItem>)
+                }
+              </React.Fragment>
             }
           </List>
         </ExpansionPanelDetails>
@@ -163,7 +222,7 @@ class App extends React.Component<AppProps, AppState>  {
 
   render() {
     const { classes } = this.props;
-    const { sliderValue, maxSliderValue, sliderStep, settingsOpen } = this.state;
+    const { sliderValue, maxSliderValue, sliderStep, settingsOpen, loading, snackbarOpen } = this.state;
     const handleSliderChange = (event: ChangeEvent<{}>, value: number | number[]) => {
       this.setState({ sliderValue: value as number });
     };
@@ -176,7 +235,7 @@ class App extends React.Component<AppProps, AppState>  {
         [name]: event.target.checked
       }, () => {
         this.setState({
-          graphData: this.graphProcessPipeline(this.state.rawGraphData),
+          graph: new Graph(this.state.graphData, this.state.hideSidechainNodes),
         })
       });
     };
@@ -185,21 +244,36 @@ class App extends React.Component<AppProps, AppState>  {
         selectedNode: node
       });
     };
+    const handleLoadingState = (state: boolean) => () => {
+      this.setState({ loading: state });
+    };
+    const handleSnackbarClose = () => {
+      this.setState({ snackbarOpen: false });
+    };
+    const handleLayoutStateChanged = (state: boolean) => () => {
+      this.setState({ layout: state });
+    };
     return (
       <div className='App'>
-        <Chart 
+        <Chart
           width={window.innerWidth}
           height={window.innerHeight}
-          displayStep={sliderValue}
-          graphData={this.state.graphData}
-          logData={this.state.logData}
+          graph={this.state.graph}
+          activation={sliderValue < this.state.logData.length ? this.state.logData[sliderValue] : undefined}
           handleSelectionChange={handleSelectionChange}
+          onRefresh={handleLoadingState(true)}
+          onRefreshComplete={handleLoadingState(false)}
+          layout={this.state.layout}
+          onLayoutComplete={handleLayoutStateChanged(false)}
         />
         <AppBar position='fixed' color='primary'>
           <Toolbar>
             <Typography variant='h6' className={classes.title}>
               NNI NAS Board
             </Typography>
+            <IconButton color='inherit' onClick={handleLayoutStateChanged(true)}>
+              <ShuffleIcon />
+            </IconButton>
             <IconButton color='inherit' onClick={this.refresh}>
               <RefreshIcon />
             </IconButton>
@@ -231,31 +305,51 @@ class App extends React.Component<AppProps, AppState>  {
         <Dialog onClose={handleSettingsDialogToggle(false)} open={settingsOpen}>
           <DialogTitle>Settings</DialogTitle>
           <DialogContent>
-            <FormControl component="fieldset">
+            <FormControl component='fieldset'>
               <FormGroup>
                 <FormControlLabel
                   control={<Checkbox checked={this.state.hideSidechainNodes}
                     onChange={handleSettingsChange('hideSidechainNodes')}
                     value='hideSidechainNodes' />}
-                  label="Hide sidechain nodes"
+                  label='Hide sidechain nodes'
                 />
                 { // TODO: hide primitive nodes
                 /* <FormControlLabel
                   control={<Checkbox checked={this.state.hidePrimitiveNodes}
                     onChange={handleSettingsChange('hidePrimitiveNodes')}
                     value='hidePrimitiveNodes' />}
-                  label="Hide primitive nodes"
+                  label='Hide primitive nodes'
                 /> */}
               </FormGroup>
             </FormControl>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleSettingsDialogToggle(false)} color="primary">
+            <Button onClick={handleSettingsDialogToggle(false)} color='primary'>
               Close
             </Button>
           </DialogActions>
         </Dialog>
         {this.renderExpansionPanel()}
+        <Snackbar
+          className={classes.snackbar}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          open={snackbarOpen}
+          message='Graph is too large. Might induce performance issue.'
+          onClose={handleSnackbarClose}
+          action={
+            <IconButton size='small' color='inherit' onClick={handleSnackbarClose}>
+              <CloseIcon fontSize='small' />
+            </IconButton>
+          }
+        />
+        {
+          loading && <Backdrop className={classes.backdrop} open={true}>
+            <Typography>Loading...</Typography>
+          </Backdrop>
+        }
       </div>
     );
   }

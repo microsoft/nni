@@ -2,20 +2,29 @@ import React, { createRef } from 'react';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import lodash from 'lodash';
-import { collapseTo, defaultCollapsedNodes } from './graphUtils';
+import { Graph, NodeTs } from './graphUtils';
 
 cytoscape.use(dagre);
 
 type ChartProps = {
   width: number,
   height: number,
-  displayStep: number,
-  graphData: any,
-  logData: any[],
+  graph: Graph | undefined,
+  activation: any,
   handleSelectionChange: (_: string) => void,
+  onRefresh: () => void,
+  onRefreshComplete: () => void,
+  layout: boolean,
+  onLayoutComplete: () => void,
 }
 
 const styles = [
+  {
+    selector: ':active',
+    style: {
+      'overlay-opacity': 0.1,
+    }
+  },
   {
     selector: 'node',
     style: {
@@ -33,11 +42,9 @@ const styles = [
       'padding-top': '8px',
       'padding-bottom': '8px',
       'background-color': '#000',
-      'background-opacity': 0.05,
-      'border-color': '#aaa',
+      'background-opacity': 0.02,
+      'border-color': '#555',
       'border-width': '2px',
-      'selection-box-opacity': 0,
-      'active-bg-opacity': 0,
     }
   },
   {
@@ -51,7 +58,7 @@ const styles = [
     selector: 'node:selected',
     style: {
       'border-width': '4px',
-      'border-color': '#333',
+      'border-color': '#101010',
     }
   },
   {
@@ -59,8 +66,8 @@ const styles = [
     style: {
       'curve-style': 'bezier',
       'target-arrow-shape': 'triangle',
-      'line-color': '#aaa',
-      'target-arrow-color': '#aaa'
+      'line-color': '#555',
+      'target-arrow-color': '#555'
     }
   },
   {
@@ -81,8 +88,9 @@ export default class Chart extends React.Component<ChartProps> {
   zoom: any;
   collapseInstance: any;
   cyInstance: cytoscape.Core | null = null;
-  collapsedNodes: any = Object.create({});
-  elemWeight: any = Object.create({});
+  expandSet: Set<string> = new Set<string>();
+  elemWeight: Map<string, number> = new Map<string, number>();
+  graphEl: any[] = [];
 
   componentDidMount() {
     this.cyInstance = cytoscape({
@@ -106,13 +114,16 @@ export default class Chart extends React.Component<ChartProps> {
       }
     });
     this.cyInstance!.on('dblclick', (e: cytoscape.EventObject) => {
-      let nodeId = e.target.id();
-      if (this.collapsedNodes[nodeId]) {
-        this.collapsedNodes[nodeId] = false;
-      } else {
-        this.collapsedNodes[nodeId] = true;
+      const nodeId = e.target.id();
+      const node = this.props.graph!.getNodeById(nodeId);
+      if (node !== undefined && node.isParent()) {
+        if (this.expandSet.has(nodeId)) {
+          this.expandSet.delete(nodeId);
+        } else {
+          this.expandSet.add(nodeId);
+        }
+        this.renderGraph(false);
       }
-      this.renderGraph(false);
     });
     this.cyInstance!.on('select', (e: cytoscape.EventObject) => {
       this.props.handleSelectionChange(e.target.id());
@@ -121,12 +132,17 @@ export default class Chart extends React.Component<ChartProps> {
   }
 
   componentDidUpdate(prevProps: ChartProps) {
-    if (lodash.isEqual(prevProps.graphData, this.props.graphData)) {
+    if (prevProps.graph === this.props.graph) {
       if (prevProps.width === this.props.width &&
-        prevProps.height === this.props.height &&
-        lodash.isEqual(prevProps.logData, this.props.logData)) {
-        // perhaps only display step is changed
-        this.applyMutableWeight();
+        prevProps.height === this.props.height) {
+        if (this.props.layout) {
+          this.props.onLayoutComplete();
+          this.reLayout();
+        }
+        if (prevProps.activation !== this.props.activation) {
+          // perhaps only display step is changed
+          this.applyMutableWeight();
+        }
       } else {
         // something changed, re-render
         this.renderGraph(false);
@@ -138,149 +154,142 @@ export default class Chart extends React.Component<ChartProps> {
   }
 
   private graphElements() {
-    let graphElements = [];
-    let nodeSet = new Set();
-    let collapsedNodes = Object.keys(this.collapsedNodes).filter((d) => this.collapsedNodes[d]);
-    const collapseMap = collapseTo(this.props.graphData, collapsedNodes);
-    for (const node of this.props.graphData['node']) {
-      nodeSet.add(node['name']);
-    }
-    for (const cluster of this.props.graphData['cluster']) {
-      if (collapseMap[cluster['name']] !== cluster['name'])
-        continue;
-      const isCompound = collapsedNodes.indexOf(cluster['name']) === -1;
-      let clusterData: any = {
-        id: cluster['name'],
-        label: cluster['tail']
-      };
-      if (cluster['parent']) {
-        clusterData.parent = cluster['parent'];
-      }
-      graphElements.push({
-        data: clusterData,
-        classes: isCompound ? ['compound'] : []
-      });
-    }
-    for (const node of this.props.graphData['node']) {
-      if (collapseMap[node['name']] !== node['name'])
-        continue;
-      let nodeData: any = {
-        id: node['name'],
-        label: node['op']
-      };
-      if (node['parent']) {
-        nodeData.parent = node['parent'];
-      }
-      graphElements.push({
-        data: nodeData,
-        classes: ['op']
-      });
-    }
-    for (const node of this.props.graphData['node']) {
-      if (!node.hasOwnProperty('input'))
-        continue;
-      const target = node['name'];
-      for (const input of node['input']) {
-        if (!nodeSet.has(input))
-          continue;
-        if (input !== target && collapseMap[input] === collapseMap[target])
-          continue;
+    let graphElements: any[] = [];
+    const { graph } = this.props;
+    if (graph === undefined)
+      return [];
+
+    const collapseMap = new Map<string, string>();
+    const traverse = (node: NodeTs, top: NodeTs | undefined) => {
+      collapseMap.set(node.id, top === undefined ? node.id : top.id);
+      if (node.id && (top === undefined || node === top)) {
+        // not root and will display
+        const isCompound = node.isParent() && this.expandSet.has(node.id);
+        let data: any = {
+          id: node.id,
+          label: node.op ? node.op : node.tail,
+        };
+        if (node.parent !== undefined)
+          data.parent = node.parent.id;
+        const classes = [];
+        if (isCompound) classes.push('compound');
+        if (node.op) classes.push('op');
         graphElements.push({
-          data: {
-            id: JSON.stringify([input, target]),
-            source: collapseMap[input],
-            target: collapseMap[target]
-          }
+          data: data,
+          classes: classes
         });
       }
+      for (const child of node.children)
+        traverse(child, node.id && top === undefined && !this.expandSet.has(node.id) ? node : top);
     }
+    traverse(graph.root, undefined);
+    graph.edges.forEach(edge => {
+      const [srcCollapse, trgCollapse] = [edge.source, edge.target].map((node) => collapseMap.get(node.id)!);
+      if (edge.source !== edge.target && srcCollapse === trgCollapse) {
+        return;
+      }
+      graphElements.push({
+        data: {
+          id: edge.id,
+          source: srcCollapse,
+          target: trgCollapse
+        }
+      });
+    });
     return graphElements;
   }
 
   private applyMutableWeight() {
-    const keyMap = this.props.logData[this.props.displayStep];
-    const graph = this.props.graphData;
-    let elemWeight: any = Object.create({});
-    console.log(graph.mutableEdges);
-    Object.entries(keyMap).forEach((entry) => {
-      const [key, weights] = entry;
-      console.log(weights);
-      graph.mutableEdges[key].forEach((edges: any, i: number) => {
-        edges.forEach((edge: any) => {
-          if (!elemWeight.hasOwnProperty(edge.id())) {
-            elemWeight[edge.id()] = (weights as any)[i];
-          } else {
-            elemWeight[edge.id()] += (weights as any)[i];
-          }
-        })
-      });
-    });
-    console.log(elemWeight);
-    Object.keys(elemWeight).forEach((k) => {
-      elemWeight[k] = Math.min(elemWeight[k], 1.);
-    });
-    this.cyInstance!.edges()
-      .filter(edge => !elemWeight.hasOwnProperty(edge.id()))
-      .forEach(edge => {
-        elemWeight[edge.id()] = 1.;
-      });
-    this.cyInstance!.nodes().forEach(node => {
-      if (node.isOrphan()) {
-        elemWeight[node.id()] = 1.;
-      } else {
-        const nodeWeight = node.connectedEdges()
-          .map(edge => elemWeight[edge.id()] as number)
-          .reduce((a, b) => Math.max(a, b), 0.);
-        elemWeight[node.id()] = nodeWeight;
-      }
-    });
-    this.cyInstance!.nodes()
-      .filter(node => node.isParent())
-      .forEach(node => {
-        const compoundWeight = node.descendants()
-          .filter(node => node.isChildless())
-          .map(node => elemWeight[node.id()] as number)
-          .reduce((a, b) => Math.max(a, b));
-        elemWeight[node.id()] = compoundWeight;
-      });
-    Object.entries(elemWeight).forEach((entry) => {
-      const [elem, weight] = entry;
-      if (!this.elemWeight.hasOwnProperty(elem) || this.elemWeight[elem] !== weight) {
+    const { graph, activation } = this.props;
+    if (graph === undefined || activation === undefined)
+      return;
+    const weights = graph.weightFromMutables(activation);
+    console.log(weights.size);
+    weights.forEach((weight, elem) => {
+      if (this.elemWeight.get(elem) !== weight) {
         this.cyInstance!.getElementById(elem).style({
-          opacity: 0.2 + 0.8 * (weight as number)
+          opacity: 0.2 + 0.8 * weight
         });
       }
     });
-    console.log(elemWeight);
-    this.elemWeight = elemWeight;
+    this.elemWeight = weights;
+  }
+
+  private graphElDifference(prev: any[], next: any[]): [Set<string>, any] {
+    const tracedElements = new Set(prev.map(ele => ele.data.id));
+    const prevMap = new Map(prev.map(ele => [ele.data.id, ele]));
+    const nextMap = new Map(next.map(ele => [ele.data.id, ele]));
+    const addedEles: any = [];
+    nextMap.forEach((val, k) => {
+      const prevEle = prevMap.get(k);
+      if (prevEle === undefined) {
+        addedEles.push(val);
+      } else if (!lodash.isEqual(val, prevEle)) {
+        tracedElements.delete(k);
+        addedEles.push(val);
+      } else {
+        tracedElements.delete(k);
+      }
+    });
+    return [tracedElements, addedEles];
+  }
+
+  private reLayout() {
+    this.props.onRefresh();
+    const _render = () => {
+      const layout: any = {
+        name: 'dagre'
+      };
+      this.cyInstance!.layout(layout).run();
+      this.props.onRefreshComplete();
+    };
+    setTimeout(_render, 100);
   }
 
   private renderGraph(graphChanged: boolean) {
-    if (this.props.graphData === null || this.props.logData.length === 0)
+    const { graph } = this.props;
+    if (graph === undefined)
       return;
 
-    if (graphChanged) {
-      const collapsed = defaultCollapsedNodes(this.props.graphData);
-      this.collapsedNodes = Object.create({});
-      collapsed.forEach((name) => { this.collapsedNodes[name] = true; });
-      console.log(this.collapsedNodes);
-    }
-    const graphEl = this.graphElements();
-    console.log(graphEl);
-    this.cyInstance!.json({
-      elements: graphEl
-    });
-    const layout = {
-      name: 'dagre',
-      animate: true,
-      animationDuration: 1000,
+    this.props.onRefresh();
+    const _render = () => {
+      if (graphChanged)
+        this.expandSet = lodash.cloneDeep(graph.defaultExpandSet);
+      const graphEl = this.graphElements();
+      console.log(graphEl);
+      const [remove, add] = this.graphElDifference(this.graphEl, graphEl);
+      console.log(remove);
+      console.log(add);
+      const layout: any = {
+        name: 'dagre'
+      };
+      if (graphEl.length > 100) {
+        if (remove.size > 0) {
+          const removedEles = this.cyInstance!.elements().filter(ele => remove.has(ele.id()));
+          this.cyInstance!.remove(removedEles);
+        }
+        if (add.length > 0) {
+          const eles = this.cyInstance!.add(add);
+          this.cyInstance!.json({
+            elements: graphEl
+          });
+          layout.fit = false;
+          eles.layout(layout).run();
+        }
+      } else {
+        this.cyInstance!.json({
+          elements: graphEl
+        });
+        this.cyInstance!.layout(layout).run();
+      }
+      this.applyMutableWeight();
+      this.graphEl = graphEl;
+      this.props.onRefreshComplete();
     };
-    this.cyInstance!.layout(layout).run();
-    this.elemWeight = Object.create({});
-    this.cyInstance!.elements().forEach((ele) => {
-      this.elemWeight[ele.id()] = 1.;
-    });
-    this.applyMutableWeight();
+    if (graph.nodes.length > 100)
+      setTimeout(_render, 100);
+    else
+      _render();
   }
 
   render() {

@@ -11,7 +11,7 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
-                          get_config, log_stdout, log_stderr, search_space_auto_gen
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
 from .package_management import package_install, package_show
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -158,6 +158,10 @@ def parse_args():
     parser_webui_url = parser_webui_subparsers.add_parser('url', help='show the url of web ui')
     parser_webui_url.add_argument('id', nargs='?', help='the id of experiment')
     parser_webui_url.set_defaults(func=webui_url)
+    parser_webui_nas = parser_webui_subparsers.add_parser('nas', help='show nas ui')
+    parser_webui_nas.add_argument('--port', default=6060, type=int)
+    parser_webui_nas.add_argument('--logdir', default='.', type=str)
+    parser_webui_nas.set_defaults(func=webui_nas)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')
@@ -203,7 +207,7 @@ def parse_args():
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
     parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
-    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
+    parser_tensorboard_start.add_argument('--port', dest='port', default=6060, help='the port to start tensorboard')
     parser_tensorboard_start.set_defaults(func=start_tensorboard)
     parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
     parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')

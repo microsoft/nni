@@ -8,6 +8,7 @@ import json
 import time
 import re
 import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
@@ -387,6 +388,17 @@ def webui_url(args):
     '''show the url of web ui'''
     nni_config = Config(get_config_filename(args))
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
+
+def webui_nas(args):
+    '''launch nas ui'''
+    print_normal('Starting NAS UI...')
+    # TODO: find file path on installing with pypi
+    # TODO: use correct node on win32
+    try:
+        cmds = ['node', 'src/nasui/server.js', '--port', str(args.port), '--logdir', args.logdir]
+        subprocess.run(cmds)
+    except KeyboardInterrupt:
+        pass
 
 def local_clean(directory):
     '''clean up local data'''
