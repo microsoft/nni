@@ -47,6 +47,6 @@ python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
     :members:
 ```
 
-## Limitations
+## 局限性
 
-* DARTS doesn't support DataParallel and needs to be customized in order to support DistributedDataParallel.
+* DARTS 不支持 DataParallel，若要支持 DistributedDataParallel，则需要定制。
