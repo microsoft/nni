@@ -34,6 +34,7 @@ if __name__ == "__main__":
     # configurations for search
     parser.add_argument("--checkpoint_path", default='./search_mobile_net.pt', type=str)
     parser.add_argument("--arch_path", default='./arch_path.pt', type=str)
+    parser.add_argument("--no-warmup", dest='warmup', action='store_false')
     # configurations for retrain
     parser.add_argument("--exported_arch_path", default=None, type=str)
 
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
     # move network to GPU if available
     if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+        device = torch.device('cuda')
     else:
         device = torch.device('cpu')
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
                                       train_loader=data_provider.train,
                                       valid_loader=data_provider.valid,
                                       device=device,
-                                      warmup=True,
+                                      warmup=args.warmup,
                                       ckpt_path=args.checkpoint_path,
                                       arch_path=args.arch_path)
 
