@@ -259,8 +259,12 @@ class DLTSTrainingService implements TrainingService {
                 if (error) {
                     return reject(error)
                 }
-                const gpus = Object.keys(data['gpu_capacity'])
-                resolve(gpus[0])
+                try {
+                    const metadata = JSON.parse(data['metadata'])
+                    resolve(Object.keys(metadata)[0])
+                } catch (error) {
+                    reject(error)
+                }
             })
         });
     }
