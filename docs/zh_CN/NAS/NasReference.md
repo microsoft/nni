@@ -1,10 +1,10 @@
-# NAS Reference
+# NAS 参考
 
 ```eval_rst
 .. contents::
 ```
 
-## Mutables
+## Mutable
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.mutables.Mutable
@@ -20,13 +20,13 @@
     :members:
 ```
 
-### Utilities
+### 工具
 
 ```eval_rst
 ..  autofunction:: nni.nas.pytorch.utils.global_mutable_counting
 ```
 
-## Mutators
+## Mutator
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.base_mutator.BaseMutator
@@ -43,14 +43,14 @@
     :members:
 ```
 
-### Utilities
+### 工具
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.utils.StructuredMutableTreeNode
     :members:
 ```
 
-## Trainers
+## Trainer
 
 ### Trainer
 
@@ -62,7 +62,7 @@
     :members:
 ```
 
-### Retrain
+### 重新训练
 
 ```eval_rst
 ..  autofunction:: nni.nas.pytorch.fixed.apply_fixed_architecture
@@ -71,7 +71,7 @@
     :members:
 ```
 
-### Distributed NAS
+### 分布式 NAS
 
 ```eval_rst
 ..  autofunction:: nni.nas.pytorch.classic_nas.get_and_apply_next_architecture
@@ -80,7 +80,7 @@
     :members:
 ```
 
-### Callbacks
+### 回调
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.callbacks.Callback
@@ -96,7 +96,7 @@
     :members:
 ```
 
-### Utilities
+### 工具
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.utils.AverageMeterGroup
