@@ -38,21 +38,23 @@ def parse(graph, trace, args=None, omit_useless_nodes=True):
             nodes_py.append(NodePyIO(node, 'input'))
 
     attr_to_scope = dict()
+    node_to_name = lambda d: str(d).split(":")[0].strip()
     for node in graph.nodes():
         if node.kind() == GETATTR_KIND:
             attr_name = node.s('name')
+            node_name = node_to_name(node)
             parent = node.input().node()
             if parent.kind() == GETATTR_KIND:  # If the parent node is not the top-level "self" node
                 parent_attr_name = parent.s('name')
-                parent_scope = attr_to_scope[parent_attr_name]
+                parent_scope = attr_to_scope[node_to_name(parent)]
                 attr_scope = parent_scope.split('/')[-1]
-                attr_to_scope[attr_name] = '{}/{}.{}'.format(parent_scope, attr_scope, attr_name)
+                attr_to_scope[node_name] = '{}/{}.{}'.format(parent_scope, attr_scope, attr_name)
             else:
-                attr_to_scope[attr_name] = '__module.{}'.format(attr_name)
+                attr_to_scope[node_name] = '__module.{}'.format(attr_name)
             # We don't need classtype nodes; scope will provide this information
             if node.output().type().kind() != CLASSTYPE_KIND:
                 node_py = NodePyOP(node)
-                node_py.scopeName = attr_to_scope[attr_name]
+                node_py.scopeName = attr_to_scope[node_name]
                 nodes_py.append(node_py)
         else:
             nodes_py.append(NodePyOP(node))
