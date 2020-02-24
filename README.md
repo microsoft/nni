@@ -127,6 +127,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
+              <li><a href="docs/en_US/NAS/Overview.md#Proxylessnas">ProxylessNAS</a></li>
               <li><a href="docs/en_US/NAS/Overview.md#cdarts">CDARTS</a></li>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
