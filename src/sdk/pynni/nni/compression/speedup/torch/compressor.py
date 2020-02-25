@@ -158,7 +158,7 @@ class ModelSpeedup:
         """
         # TODO: scope name could be empty
         node_name = '.'.join([node.scopeName(), node.kind(), str(self.global_count)])
-        #print('node_name: ', node_name)
+        _logger.debug("expand non-prim node, node name: %s", node_name)
         self.global_count += 1
         op_type = node.kind()
 
@@ -173,7 +173,6 @@ class ModelSpeedup:
                 input_name = _input.debugName()
                 if input_name in output_to_node and output_to_node[input_name] in nodes:
                         predecessor_node = output_to_node[input_name]
-                        #print("predecessor_node: ", predecessor_node)
                         if predecessor_node.kind().startswith('prim::'):
                             node_group.append(predecessor_node)
                             node_queue.put(predecessor_node)
@@ -211,6 +210,60 @@ class ModelSpeedup:
         out_shape = t_output.type().sizes()
         return {'in_shape': in_shape, 'out_shape': out_shape}
 
+    def _extract_leaf_modules(self, graph):
+        """
+        Extract leaf modules from the given graph. Leaf module means it does not have submodules.
+        To extract leaf modules because only leaf module can be replaced. And shape inference can
+        be done in leaf module level. Other shape inference is done in lower level i.e.,
+        operation level.
+
+        Parameters
+        ----------
+        graph : jit trace graph
+            the graph generated from jit trace
+
+        Returns
+        -------
+        list
+            a list of scope name of all the leaf modules
+        """
+        pieces = [] # each element is a dict
+        for node in graph.nodes():
+            scope_name = node.scopeName()
+            if scope_name == '':
+                continue
+            segs = scope_name.split('/')
+            segs_len = len(segs)
+            # increase the length of `pieces` if not enough
+            for _ in range(segs_len - len(pieces)):
+                pieces.append({})
+            # process internal segments of the scope name
+            # 'L' means leaf segment
+            # 'I' means internal segment
+            # internal segment can replace leaf segment at the same position of `pieces`
+            for i, seg in enumerate(segs[:-1]):
+                seg_name_dict = pieces[i]
+                if seg in seg_name_dict:
+                    if seg_name_dict[seg][0] == 'L':
+                        seg_name_dict[seg] = ('I', node)
+                else:
+                    seg_name_dict[seg] = ('I', node)
+            # process the leaf segment of the scope name
+            last_segs_dict = pieces[len(segs) - 1]
+            if not segs[-1] in last_segs_dict:
+                last_segs_dict[segs[-1]] = ('L', node)
+        # traverse `pieces` to obtain all the leaf modules which are labeled with 'L'
+        leaf_modules = []
+        for piece in pieces:
+            for _, value in piece.items():
+                if value[0] == 'L':
+                    assert value[1].scopeName() not in leaf_modules
+                    # if this is a leaf module, the last segment of its scope name
+                    # must be in pattern `xxx[xxx]`
+                    if value[1].scopeName()[-1] == ']':
+                        leaf_modules.append(value[1].scopeName())
+        return leaf_modules
+
     def _build_graph(self):
         """
         Build graph using our defined format from jit trace.
@@ -231,7 +284,7 @@ class ModelSpeedup:
         """
         graph = self.trace_graph.graph
         # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
-        #print(graph)
+        _logger.debug(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
@@ -250,6 +303,9 @@ class ModelSpeedup:
         for output in graph.outputs():
             graph_outputs.append(output.debugName())
 
+        leaf_modules = self._extract_leaf_modules(graph)
+        _logger.debug(leaf_modules)
+
         for node in graph.nodes():
             # populate output_to_node and input_to_node
             for output in node.outputs():
@@ -259,10 +315,8 @@ class ModelSpeedup:
                 input_name = _input.debugName()
                 input_to_node[input_name] = node
             scope_name = node.scopeName() # example: scope_name, 'MyCell/Linear[linear]'
-            module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
-            module_name = '.'.join(module_name_slices)
             # if module_name is empty, it is not a module
-            if module_name == '':
+            if not scope_name in leaf_modules:
                 if scope_name == '':
                     continue
                 else:
@@ -271,6 +325,8 @@ class ModelSpeedup:
                     else:
                         func_to_nodes[scope_name] = [node]
             else:
+                module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
+                module_name = '.'.join(module_name_slices)
                 scope_slice = scope_name.split('/')[-1]
                 module_type = scope_slice.split('[')[0]
                 module_to_type[module_name] = module_type
@@ -301,10 +357,8 @@ class ModelSpeedup:
                     m_inputs.append(_input)
                 elif not output_to_node[_input] in nodes:
                     m_inputs.append(_input)
-            print("module node_name: ", module_name)
             if module_name == '':
-                for n in nodes:
-                    print(n)
+                _logger.warning("module_name is empty string")
             g_node = GNode(module_name, 'module', module_to_type[module_name], m_inputs, m_outputs, nodes)
             self.g_nodes.append(g_node)
 
@@ -345,10 +399,7 @@ class ModelSpeedup:
         predecessors = []
         for _input in self.name_to_gnode[module_name].inputs:
             if not _input in self.output_to_gnode:
-                print(_input)
-            if not _input in self.output_to_gnode:
-                # TODO: check _input which does not have node
-                print("output with no gnode: ", _input)
+                _logger.debug("cannot find gnode with %s as its output", _input)
             else:
                 g_node = self.output_to_gnode[_input]
                 predecessors.append(g_node.name)
@@ -379,7 +430,7 @@ class ModelSpeedup:
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """
         Infer input shape / output shape based on the module's weight mask / input shape / output shape.
-        
+
         For a module:
             Infer its input and output shape from its weight mask
             Infer its output shape from its input shape
@@ -407,18 +458,20 @@ class ModelSpeedup:
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.name_to_gnode[module_name].op_type
-        print("infer_module_mask: {}, module type: {}".format(module_name, m_type))
+        _logger.debug("infer mask of module %s with op_type %s", module_name, m_type)
         if mask is not None:
-            #print("mask is not None")
+            _logger.debug("mask is not None")
             if not m_type in infer_from_mask:
-                raise RuntimeError("Has not supported infering \
-                    input/output shape from mask for module/function: `{}`".format(m_type))
+                raise RuntimeError(
+                    "Has not supported infering input/output shape from mask for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
-            #print("in_shape is not None")
+            _logger.debug("in_shape is not None")
             if not m_type in infer_from_inshape:
-                raise RuntimeError("Has not supported infering \
-                    output shape from input shape for module/function: `{}`".format(m_type))
+                raise RuntimeError(
+                    "Has not supported infering output shape from input shape for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             if m_type == 'aten::view':
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
@@ -426,23 +479,20 @@ class ModelSpeedup:
             else:
                 output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
-            #print("out_shape is not None")
+            _logger.debug("out_shape is not None")
             if not m_type in infer_from_outshape:
-                raise RuntimeError("Has not supported infering \
-                    input shape from output shape for module/function: `{}`".format(m_type))
+                raise RuntimeError(
+                    "Has not supported infering input shape from output shape for module/function: `{}`, {}"
+                    .format(m_type, module_name))
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
-            #print("input_cmask is not None")
             predecessors = self._find_predecessors(module_name)
             for _module_name in predecessors:
-                print("input_cmask, module_name: ", _module_name)
                 self.infer_module_mask(_module_name, out_shape=input_cmask)
         if output_cmask:
-            #print("output_cmask is not None")
             successors = self._find_successors(module_name)
             for _module_name in successors:
-                print("output_cmask, module_name: ", _module_name)
                 self.infer_module_mask(_module_name, in_shape=output_cmask)
 
     def infer_modules_masks(self):
@@ -463,16 +513,19 @@ class ModelSpeedup:
         """
         for module_name in self.inferred_masks:
             g_node = self.name_to_gnode[module_name]
-            print(module_name, g_node.op_type)
+            _logger.debug("replace %s, in %s type, with op_type %s",
+                          module_name, g_node.type, g_node.op_type)
             if g_node.type == 'module':
                 super_module, leaf_module = get_module_by_name(self.bound_model, module_name)
                 m_type = g_node.op_type
                 if not m_type in replace_module:
                     raise RuntimeError("Has not supported replacing the module: `{}`".format(m_type))
+                _logger.info("replace module (name: %s, op_type: %s)", module_name, m_type)
                 compressed_module = replace_module[m_type](leaf_module, self.inferred_masks[module_name])
                 setattr(super_module, module_name.split('.')[-1], compressed_module)
             elif g_node.type == 'func':
-                print("Warning: Cannot replace func...")
+                _logger.info("Warning: cannot replace (name: %s, op_type: %s) which is func type",
+                             module_name, g_node.op_type)
             else:
                 raise RuntimeError("Unsupported GNode type: {}".format(g_node.type))
 
@@ -482,10 +535,12 @@ class ModelSpeedup:
         first, do mask/shape inference,
         second, replace modules
         """
-        #print("start to compress")
+        _logger.info("start to speed up the model")
+        _logger.info("infer module masks...")
         self.infer_modules_masks()
+        _logger.info("replace compressed modules...")
         self.replace_compressed_modules()
-        #print("finished compressing")
+        _logger.info("speedup done")
         # resume the model mode to that before the model is speed up
         if self.is_training:
             self.bound_model.train()

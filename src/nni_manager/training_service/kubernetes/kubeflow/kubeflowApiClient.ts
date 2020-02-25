@@ -83,7 +83,24 @@ class TFOperatorClientV1 extends KubernetesCRDClient {
         return 'tensorflow';
     }
 }
+class PyTorchOperatorClientV1 extends KubernetesCRDClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/pytorchjob-crd-v1.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
 
+    protected get operator(): any {
+        return this.client.apis['kubeflow.org'].v1.namespaces('default').pytorchjobs;
+    }
+
+    public get containerName(): string {
+        return 'pytorch';
+    }
+}
 class PyTorchOperatorClientV1Alpha2 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
@@ -178,6 +195,9 @@ class KubeflowOperatorClientFactory {
                     }
                     case 'v1beta2': {
                         return new PyTorchOperatorClientV1Beta2();
+                    }
+                    case 'v1': {
+                        return new PyTorchOperatorClientV1();
                     }
                     default:
                         throw new Error(`Invalid pytorch-operator apiVersion ${operatorApiVersion}`);

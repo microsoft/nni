@@ -115,7 +115,7 @@ class ENASLayer(nn.Module):
         nodes_used_mask = torch.zeros(self.num_nodes + 2, dtype=torch.bool, device=prev.device)
         for i in range(self.num_nodes):
             node_out, mask = self.nodes[i](prev_nodes_out)
-            nodes_used_mask[:mask.size(0)] |= mask
+            nodes_used_mask[:mask.size(0)] |= mask.to(node_out.device)
             prev_nodes_out.append(node_out)
 
         unused_nodes = torch.cat([out for used, out in zip(nodes_used_mask, prev_nodes_out) if not used], 1)
