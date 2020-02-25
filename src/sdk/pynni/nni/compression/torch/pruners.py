@@ -180,7 +180,7 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer, scheduler):
         """
         Parameters
         ----------
@@ -189,7 +189,7 @@ class SlimPruner(Pruner):
                 - sparsity: percentage of convolutional filters to be pruned.
         """
 
-        super().__init__(model, config_list, optimizer)
+        super().__init__(model, config_list, optimizer, scheduler)
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')

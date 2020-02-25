@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import SlimPruner
+from nni.compression.torch import SlimPruner, Scheduler
 from models.cifar10.vgg import VGG
 
 def updateBN(model):
@@ -106,8 +106,9 @@ def main():
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
-    pruner = SlimPruner(model, configure_list, optimizer_finetune)
-    model, optimizer_finetune = pruner.compress()
+    scheduler = Scheduler(0, 40, 40) 
+    pruner = SlimPruner(model, configure_list, optimizer_finetune, scheduler)
+    model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
             print("use {} gpus for pruning".format(torch.cuda.device_count()))
@@ -120,8 +121,8 @@ def main():
     print('=' * 10 + 'Fine tuning' + '=' * 10)
     best_top1 = 0
     for epoch in range(40):
-        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
+        scheduler.update(epoch)
         train(model, device, train_loader, optimizer_finetune)
         top1 = test(model, device, test_loader)
         if top1 > best_top1:

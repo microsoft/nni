@@ -21,12 +21,40 @@ def _setattr(model, name, module):
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
 
+class Scheduler:
+    def __init__(self, start_epoch, end_epoch, frequency):
+        self._epoch_list = list(range(start_epoch, end_epoch, frequency))
+        self._current_epoch = -1
+        self._is_new_epoch = True
+        self._task = []
+    
+    def add_task(self, task):
+        self._task.append(task)
+    
+    def update(self, epoch):
+        self._is_new_epoch = epoch != self._current_epoch
+        self._is_in_scheduler = self._is_new_epoch
+        self._current_epoch = epoch
+        if self._is_new_epoch:
+            if self._is_in_scheduler:
+                for task in self._task:
+                    task()
+    
+
+    def is_new_epoch(self):
+        return self._is_new_epoch
+    
+    def is_in_scheduler(self):
+        return self._current_epoch in self._epoch_list
+
+
+        
 class Compressor:
     """
     Abstract base PyTorch compressor
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer, scheduler):
         """
         Record necessary info in class members
 
@@ -39,11 +67,13 @@ class Compressor:
         """
         self.bound_model = model
         self.config_list = config_list
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        
         self.modules_to_compress = None
         self.modules_wrapper = None
         self.buffers = {}
         self.is_wrapped = False
-        self.optimizer = optimizer
     
     def detect_modules_to_compress(self):
         """
@@ -91,7 +121,7 @@ class Compressor:
         """
         if self.modules_wrapper is not None:
             # already compressed
-            return self.bound_model, self.optimizer
+            return self.bound_model
         else:
             self.modules_wrapper = []
 
@@ -101,7 +131,7 @@ class Compressor:
             self.modules_wrapper.append(wrapper)
 
         self._wrap_model()
-        return self.bound_model, self.optimizer
+        return self.bound_model
 
     def register_buffer(self, name, value):
         """
@@ -161,7 +191,7 @@ class Compressor:
             return None
         return ret
 
-    def update_epoch(self, epoch):
+    def update_epoch(self):
         """
         If user want to update model every epoch, user can override this method.
         This method should be called at the beginning of each epoch
@@ -171,11 +201,13 @@ class Compressor:
         epoch : num
             the current epoch number
         """
+        pass
 
-    def step(self):
+    def update_step(self):
         """
         If user want to update model every step, user can override this method
         """
+        pass
 
     def _wrap_modules(self, layer, config):
         """
@@ -201,6 +233,23 @@ class Compressor:
                 expanded_op_types.append(op_type)
         return expanded_op_types
 
+    def add_activation_collector(self, collector):
+        wrappers = self.get_modules_wrapper()
+        for wrapper in wrappers:
+            handle = wrapper.register_forward_hook(collector)
+            wrapper.fwd_hook_handles.append(handle)
+    
+    def patch_optimizer(self):
+        def patch_step(old_step):
+            def new_step(_, *args, **kwargs):
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
+                # call pruner step method
+                self.update_step()
+                return output
+            return new_step
+        self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+        
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
         """
@@ -227,6 +276,7 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
+        self.fwd_hook_handles = []
         self.registered_buffers = {}
 
         # register buffer for mask
@@ -240,7 +290,6 @@ class PrunerModuleWrapper(torch.nn.Module):
         # register user specified buffer
         for name in self.pruner.buffers:
             self.register_buffer(name, self.pruner.buffers[name].clone())
-            self.registered_buffers[name] = getattr(self, name)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
@@ -261,26 +310,21 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer=None):
-        super().__init__(model, config_list, optimizer)
+    def __init__(self, model, config_list, optimizer, scheduler):
+        super().__init__(model, config_list, optimizer, scheduler)
         self.patch_optimizer()
+        self.scheduler.add_task(self.update_mask)
+        self.scheduler.add_task(self.update_epoch)
 
-    def patch_optimizer(self):
-        if self.optimizer is not None:
-            def patch_step(old_step):
-                def new_step(_, *args, **kwargs):
-                    # cal_mask and update buffers accordingly
-                    wrappers = self.get_modules_wrapper()
-                    for wrapper in wrappers:
-                        self.calc_mask(wrapper)
-                    
-                    # call step overrided by user to do additional update
-                    self.step()
-                    # call origin optimizer step method
-                    output = old_step(*args, **kwargs)
-                    return output
-                return new_step
-            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+    def compress(self):
+        super().compress()
+        self.update_mask()
+        return self.bound_model
+    
+    def update_mask(self):
+        wrappers = self.get_modules_wrapper()
+        for wrapper in wrappers:
+            self.calc_mask(wrapper)
     
     def calc_mask(self, layer, config, **kwargs):
         """
