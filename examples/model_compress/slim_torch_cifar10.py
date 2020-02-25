@@ -122,14 +122,15 @@ def main():
     best_top1 = 0
     for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
-        scheduler.update(epoch)
         train(model, device, train_loader, optimizer_finetune)
         top1 = test(model, device, test_loader)
+
         if top1 > best_top1:
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
+        scheduler.update(epoch)
 
     # Test the exported model
     print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
