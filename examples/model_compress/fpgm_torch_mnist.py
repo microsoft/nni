@@ -1,42 +1,57 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import QAT_Quantizer
-
+from nni.compression.torch import FPGMPruner
 
 class Mnist(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
-        self.relu1 = torch.nn.ReLU6()
-        self.relu2 = torch.nn.ReLU6()
-        self.relu3 = torch.nn.ReLU6()
+        self.conv1 = nn.Conv2d(1, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 50, 500)
+        self.fc2 = nn.Linear(500, 10)
 
     def forward(self, x):
-        x = self.relu1(self.conv1(x))
+        x = F.relu(self.conv1(x))
         x = F.max_pool2d(x, 2, 2)
-        x = self.relu2(self.conv2(x))
+        x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
-        x = self.relu3(self.fc1(x))
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
+    def _get_conv_weight_sparsity(self, conv_layer):
+        num_zero_filters = (conv_layer.weight.data.sum((1, 2, 3)) == 0).sum()
+        num_filters = conv_layer.weight.data.size(0)
+        return num_zero_filters, num_filters, float(num_zero_filters)/num_filters
 
-def train(model, quantizer, device, train_loader, optimizer):
+    def print_conv_filter_sparsity(self):
+        if isinstance(self.conv1, nn.Conv2d):
+            conv1_data = self._get_conv_weight_sparsity(self.conv1)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2)
+        else:
+            # self.conv1 is wrapped as PrunerModuleWrapper
+            conv1_data = self._get_conv_weight_sparsity(self.conv1.module)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2.module)
+
+        print('conv1: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv1_data[0], conv1_data[1], conv1_data[2]))
+        print('conv2: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv2_data[0], conv2_data[1], conv2_data[2]))
+
+def train(model, device, train_loader, optimizer):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
+        if batch_idx % 100 == 0:
+            print('{:.2f}%  Loss {:.4f}'.format(100 * batch_idx / len(train_loader), loss.item()))
+        if batch_idx == 0:
+            model.print_conv_filter_sparsity()
         loss.backward()
         optimizer.step()
-        if batch_idx % 100 == 0:
-            print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
 
 def test(model, device, test_loader):
     model.eval()
@@ -51,8 +66,9 @@ def test(model, device, test_loader):
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
 
-    print('Loss: {}  Accuracy: {}%)\n'.format(
+    print('Loss: {:.4f}  Accuracy: {}%)\n'.format(
         test_loss, 100 * correct / len(test_loader.dataset)))
+
 
 def main():
     torch.manual_seed(0)
@@ -67,31 +83,25 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(configure_list).compress(model)
-    '''
-    configure_list = [{
-        'quant_types': ['weight'],
-        'quant_bits': {
-            'weight': 8,
-        }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
-        'op_types':['Conv2d', 'Linear']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': 8,
-        'quant_start_step': 7000,
-        'op_types':['ReLU6']
-    }]
-    quantizer = QAT_Quantizer(model, configure_list)
-    quantizer.compress()
+    model.to(device)
+    model.print_conv_filter_sparsity()
 
+    configure_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+
+    pruner = FPGMPruner(model, configure_list)
+    pruner.compress()
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
+        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
-        train(model, quantizer, device, train_loader, optimizer)
+        train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
 
+    pruner.export_model('model.pth', 'mask.pth')
 
 if __name__ == '__main__':
     main()
