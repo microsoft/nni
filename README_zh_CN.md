@@ -119,11 +119,13 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
           <a href="docs/zh_CN/NAS/Overview.md">神经网络架构搜索</a>
           <ul>                        
             <ul>
-              <li><a href="docs/zh_CN/NAS/Overview.md#enas">ENAS</a></li>
-              <li><a href="docs/zh_CN/NAS/Overview.md#darts">DARTS</a></li>
-              <li><a href="docs/zh_CN/NAS/Overview.md#p-darts">P-DARTS</a></li>
-              <li><a href="docs/zh_CN/NAS/Overview.md#cdarts">CDARTS</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/en_US/NAS/ENAS.md">ENAS</a></li>
+              <li><a href="docs/en_US/NAS/DARTS.md">DARTS</a></li>
+              <li><a href="docs/en_US/NAS/PDARTS.md">P-DARTS</a></li>
+              <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
+              <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
+              <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
@@ -219,7 +221,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 
 * 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
-* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
+* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md#faq).
 
 ### **验证安装**
 
@@ -285,7 +287,7 @@ You can use these commands to get more information about the experiment
 
 * 要了解 NNI，请阅读 [NNI 概述](https://nni.readthedocs.io/zh/latest/Overview.html)。 
 * 要熟悉如何使用 NNI，请阅读[文档](https://nni.readthedocs.io/zh/latest/index.html)。 
-* 要安装 NNI，请参阅[安装 NNI](docs/zh_CN/Tutorial/Installation.md)。
+* To get started and install NNI on your system, please refer to [Install NNI](https://nni.readthedocs.io/en/latest/installation.html).
 
 ## **贡献**
 
@@ -303,7 +305,7 @@ You can use these commands to get more information about the experiment
 * 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [在 NNI 上实现新的 NAS Trainer](docs/en_US/NAS/Advanced.md)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
