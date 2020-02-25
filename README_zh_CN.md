@@ -119,13 +119,13 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
           <a href="docs/zh_CN/NAS/Overview.md">神经网络架构搜索</a>
           <ul>                        
             <ul>
-              <li><a href="docs/en_US/NAS/ENAS.md">ENAS</a></li>
-              <li><a href="docs/en_US/NAS/DARTS.md">DARTS</a></li>
-              <li><a href="docs/en_US/NAS/PDARTS.md">P-DARTS</a></li>
-              <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
-              <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
-              <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/zh_CN/NAS/ENAS.md">ENAS</a></li>
+              <li><a href="docs/zh_CN/NAS/DARTS.md">DARTS</a></li>
+              <li><a href="docs/zh_CN/NAS/PDARTS.md">P-DARTS</a></li>
+              <li><a href="docs/zh_CN/NAS/CDARTS.md">CDARTS</a></li>
+              <li><a href="docs/zh_CN/NAS/SPOS.md">SPOS</a></li>
+              <li><a href="docs/zh_CN/NAS/Proxylessnas.md">ProxylessNAS</a></li>
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
@@ -287,7 +287,7 @@ You can use these commands to get more information about the experiment
 
 * 要了解 NNI，请阅读 [NNI 概述](https://nni.readthedocs.io/zh/latest/Overview.html)。 
 * 要熟悉如何使用 NNI，请阅读[文档](https://nni.readthedocs.io/zh/latest/index.html)。 
-* To get started and install NNI on your system, please refer to [Install NNI](https://nni.readthedocs.io/en/latest/installation.html).
+* 要安装并使用 NNI，参考[安装指南](https://nni.readthedocs.io/zh/latest/installation.html)。
 
 ## **贡献**
 
@@ -305,7 +305,7 @@ You can use these commands to get more information about the experiment
 * 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
 * [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
 * [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](docs/en_US/NAS/Advanced.md)
+* [在 NNI 上实现新的 NAS Trainer](docs/zh_CN/NAS/Advanced.md)
 * [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
 
 ## **其它代码库和参考**
