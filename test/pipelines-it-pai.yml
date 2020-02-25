@@ -54,6 +54,6 @@ jobs:
       python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $TEST_IMG --paiStoragePlugin $(paiStoragePlugin)\
        --pai_token $(pai_token) --nniManagerNFSMountPath $(nniManagerNFSMountPath) --containerNFSMountPath $(containerNFSMountPath) --nni_manager_ip $(nni_manager_ip)
 
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai --exclude multi_phase
       PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'integration test'
