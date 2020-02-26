@@ -26,14 +26,14 @@
         "@typescript-eslint/no-var-requires": 0,
         "react/display-name": 0
     },
-    "ignorePatterns": [
-        "node_modules/",
-        "build/",
-        "**/*.js"
-    ],
     "settings": {
         "react": {
             "version": "detect"
-        }
+        },
+        "ignorePatterns": [
+            "node_modules/",
+            "build/",
+            "**/*.js"
+        ]
     }
 }

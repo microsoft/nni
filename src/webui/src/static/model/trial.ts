@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -53,10 +53,13 @@ class Trial implements TableObj {
         if (this.accuracy !== undefined) {
             return this.accuracy;
         } else if (this.intermediates.length > 0) {
-            // TODO: support intermeidate result is dict
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                return JSON.parse(temp.data);
+                if (typeof parseMetrics(temp.data) === 'object') {
+                    return parseMetrics(temp.data).default;
+                } else {
+                    return parseMetrics(temp.data);
+                }
             } else {
                 return undefined;
             }
@@ -82,9 +85,11 @@ class Trial implements TableObj {
             duration,
             status: this.info.status,
             intermediateCount: this.intermediates.length,
-            accuracy: this.finalAcc,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
+            accDictionary: this.acc
         };
     }
 
@@ -138,10 +143,10 @@ class Trial implements TableObj {
 
         const mediate: number[] = [ ];
         for (const items of this.intermediateMetrics) {
-            if (typeof JSON.parse(items.data) === 'object') {
-                mediate.push(JSON.parse(items.data).default);
+            if (typeof parseMetrics(items.data) === 'object') {
+                mediate.push(parseMetrics(items.data).default);
             } else {
-                mediate.push(JSON.parse(items.data));
+                mediate.push(parseMetrics(items.data));
             }
         }
         ret.intermediate = mediate;

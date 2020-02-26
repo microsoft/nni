@@ -6,11 +6,17 @@ For now, we support the following feature selector:
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 
-# How to use?
+In addition, those selector only for feature selection. If you want to:
+1) generate high-order combined features on nni while doing feature selection;
+2) leverage your distributed resources;
+you could try this [example](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering).
+
+## How to use?
 
 ```python
-from nni.feature_engineering.gradient_selector import GradientFeatureSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # load data
@@ -18,7 +24,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # initlize a selector
-fgs = GradientFeatureSelector(...)
+fgs = FeatureGradientSelector(...)
 # fit data
 fgs.fit(X_train, y_train)
 # get improtant features
@@ -30,7 +36,7 @@ print(fgs.get_selected_features(...))
 
 When using the built-in Selector, you first need to `import` a feature selector, and `initialize` it. You could call the function `fit` in the selector to pass the data to the selector. After that, you could use `get_seleteced_features` to get important features. The function parameters in different selectors might be different, so you need to check the docs before using it. 
 
-# How to customize?
+## How to customize?
 
 NNI provides _state-of-the-art_ feature selector algorithm in the builtin-selector. NNI also supports to build a feature selector by yourself.
 
@@ -239,7 +245,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
-# Benchmark
+## Benchmark
 
 `Baseline` means without any feature selection, we directly pass the data to LogisticRegression. For this benchmark, we only use 10% data from the train as test data. For the GradientFeatureSelector, we only take the top20 features. The metric is the mean accuracy on the given test data and labels.
 
@@ -257,7 +263,7 @@ The dataset of benchmark could be download in [here](https://www.csie.ntu.edu.tw
 
 The code could be refenrence `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`.
 
-## **Reference and Feedback**
+## Reference and Feedback
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
 * To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
 * To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);

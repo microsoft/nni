@@ -28,38 +28,43 @@ class StackedLSTMCell(nn.Module):
 
 
 class EnasMutator(Mutator):
+    """
+    A mutator that mutates the graph with RL.
+
+    Parameters
+    ----------
+    model : nn.Module
+        PyTorch model.
+    lstm_size : int
+        Controller LSTM hidden units.
+    lstm_num_layers : int
+        Number of layers for stacked LSTM.
+    tanh_constant : float
+        Logits will be equal to ``tanh_constant * tanh(logits)``. Don't use ``tanh`` if this value is ``None``.
+    cell_exit_extra_step : bool
+        If true, RL controller will perform an extra step at the exit of each MutableScope, dump the hidden state
+        and mark it as the hidden state of this MutableScope. This is to align with the original implementation of paper.
+    skip_target : float
+        Target probability that skipconnect will appear.
+    temperature : float
+        Temperature constant that divides the logits.
+    branch_bias : float
+        Manual bias applied to make some operations more likely to be chosen.
+        Currently this is implemented with a hardcoded match rule that aligns with original repo.
+        If a mutable has a ``reduce`` in its key, all its op choices
+        that contains `conv` in their typename will receive a bias of ``+self.branch_bias`` initially; while others
+        receive a bias of ``-self.branch_bias``.
+    entropy_reduction : str
+        Can be one of ``sum`` and ``mean``. How the entropy of multi-input-choice is reduced.
+    """
 
     def __init__(self, model, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5, cell_exit_extra_step=False,
-                 skip_target=0.4, branch_bias=0.25):
-        """
-        Initialize a EnasMutator.
-
-        Parameters
-        ----------
-        model : nn.Module
-            PyTorch model.
-        lstm_size : int
-            Controller LSTM hidden units.
-        lstm_num_layers : int
-            Number of layers for stacked LSTM.
-        tanh_constant : float
-            Logits will be equal to ``tanh_constant * tanh(logits)``. Don't use ``tanh`` if this value is ``None``.
-        cell_exit_extra_step : bool
-            If true, RL controller will perform an extra step at the exit of each MutableScope, dump the hidden state
-            and mark it as the hidden state of this MutableScope. This is to align with the original implementation of paper.
-        skip_target : float
-            Target probability that skipconnect will appear.
-        branch_bias : float
-            Manual bias applied to make some operations more likely to be chosen.
-            Currently this is implemented with a hardcoded match rule that aligns with original repo.
-            If a mutable has a ``reduce`` in its key, all its op choices
-            that contains `conv` in their typename will receive a bias of ``+self.branch_bias`` initially; while others
-            receive a bias of ``-self.branch_bias``.
-        """
+                 skip_target=0.4, temperature=None, branch_bias=0.25, entropy_reduction="sum"):
         super().__init__(model)
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
         self.tanh_constant = tanh_constant
+        self.temperature = temperature
         self.cell_exit_extra_step = cell_exit_extra_step
         self.skip_target = skip_target
         self.branch_bias = branch_bias
@@ -70,6 +75,8 @@ class EnasMutator(Mutator):
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
         self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]), requires_grad=False)  # pylint: disable=not-callable
+        assert entropy_reduction in ["sum", "mean"], "Entropy reduction must be one of sum and mean."
+        self.entropy_reduction = torch.sum if entropy_reduction == "sum" else torch.mean
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction="none")
         self.bias_dict = nn.ParameterDict()
 
@@ -135,15 +142,17 @@ class EnasMutator(Mutator):
     def _sample_layer_choice(self, mutable):
         self._lstm_next_step()
         logit = self.soft(self._h[-1])
+        if self.temperature is not None:
+            logit /= self.temperature
         if self.tanh_constant is not None:
             logit = self.tanh_constant * torch.tanh(logit)
         if mutable.key in self.bias_dict:
             logit += self.bias_dict[mutable.key]
         branch_id = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
         log_prob = self.cross_entropy_loss(logit, branch_id)
-        self.sample_log_prob += torch.sum(log_prob)
+        self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
-        self.sample_entropy += torch.sum(entropy)
+        self.sample_entropy += self.entropy_reduction(entropy)
         self._inputs = self.embedding(branch_id)
         return F.one_hot(branch_id, num_classes=self.max_layer_choice).bool().view(-1)
 
@@ -158,6 +167,8 @@ class EnasMutator(Mutator):
         query = torch.cat(query, 0)
         query = torch.tanh(query + self.attn_query(self._h[-1]))
         query = self.v_attn(query)
+        if self.temperature is not None:
+            query /= self.temperature
         if self.tanh_constant is not None:
             query = self.tanh_constant * torch.tanh(query)
 
@@ -178,7 +189,7 @@ class EnasMutator(Mutator):
             log_prob = self.cross_entropy_loss(logit, index)
             self._inputs = anchors[index.item()]
 
-        self.sample_log_prob += torch.sum(log_prob)
+        self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
-        self.sample_entropy += torch.sum(entropy)
+        self.sample_entropy += self.entropy_reduction(entropy)
         return skip.bool()

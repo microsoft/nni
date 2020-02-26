@@ -2,15 +2,15 @@
 
 ## 安装
 
-当前支持 Linux，MacOS 和 Windows，在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，macOS 和 Windows，在 Ubuntu 16.04 或更高版本，macOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-#### Linux 和 MacOS
+**Linux 和 macOS**
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-#### Windows
+**Windows**
 
 ```bash
     python -m pip install --upgrade nni
@@ -18,15 +18,15 @@
 
 注意：
 
-* 在 Linux 和 MacOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
+* 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
-* 参考[安装 NNI](Installation.md)，来了解`系统需求`。
+* 有关 NNI 的`系统要求`，参考[在 Linux 和 macOS 上安装](InstallationLinux.md) 或 [Windows](InstallationWin.md)。
 
 ## MNIST 上的 "Hello World"
 
 NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 下面会展示如何使用 NNI 来找到最佳超参组合。
 
-这是还**没有 NNI** 的样例代码，用 CNN 在 MNIST 数据集上训练：
+这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
 
 ```python
 def run_trial(params):
@@ -54,21 +54,22 @@ if __name__ == '__main__':
 
 NNI 用来帮助超参调优。它的流程如下：
 
-    输入: 搜索空间, Trial 代码, 配置文件
-    输出: 一组最佳的超参配置
-    
-    1: For t = 0, 1, 2, ..., maxTrialNum,
-    2:      hyperparameter = 从搜索空间选择一组参数
-    3:      final result = run_trial_and_evaluate(hyperparameter)
-    4:      返回最终结果给 NNI
-    5:      If 时间达到上限,
-    6:          停止实验
-    7: return 最好的实验结果
-    
+```text
+输入: 搜索空间, Trial 代码, 配置文件
+输出: 一组最佳的超参配置
+
+1: For t = 0, 1, 2, ..., maxTrialNum,
+2:      hyperparameter = 从搜索空间选择一组参数
+3:      final result = run_trial_and_evaluate(hyperparameter)
+4:      返回最终结果给 NNI
+5:      If 时间达到上限,
+6:          停止实验
+7: return 最好的实验结果
+```
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
 
-**使用 NNI 时的三个步骤**
+**启动 Experiment 的三个步骤**
 
 **第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
@@ -140,7 +141,7 @@ trial:
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
 
-#### Linux 和 macOS
+**Linux 和 macOS**
 
 从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
 
@@ -148,17 +149,17 @@ trial:
     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-#### Windows
+**Windows**
 
 从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
-**注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
+注意：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
     nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
-注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
+注意：`nnictl` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
@@ -201,7 +202,7 @@ Web 地址为：[IP 地址]:8080
 
 在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考 [FAQ](FAQ.md)。
 
-#### 查看概要页面
+### 查看概要页面
 
 点击标签 "Overview"。
 
@@ -213,7 +214,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ![](../../img/QuickStart2.png)
 
-#### 查看 Trial 详情页面
+### 查看 Trial 详情页面
 
 点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 

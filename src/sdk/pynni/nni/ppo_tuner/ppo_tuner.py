@@ -503,8 +503,11 @@ class PPOTuner(Tuner):
         """
         Generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
 
+        Parameters
+        ----------
         parameter_id : int
-            Unique identifier for requested hyper-parameters. This will later be used in :meth:`receive_trial_result`.
+            Unique identifier for requested hyper-parameters.
+            This will later be used in :meth:`receive_trial_result`.
         **kwargs
             Not used
 
@@ -512,6 +515,7 @@ class PPOTuner(Tuner):
         -------
         dict
             One newly generated configuration
+
         """
         if self.first_inf:
             self.trials_result = [None for _ in range(self.inf_batch_size)]

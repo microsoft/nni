@@ -1,4 +1,4 @@
-// draw accuracy graph data interface
+// draw accuracy graph data export interface
 interface TableObj {
     key: number;
     sequenceId: number;
@@ -23,7 +23,8 @@ interface TableRecord {
     intermediateCount: number;
     accuracy?: number;
     latestAccuracy: number | undefined;
-    formattedLatestAccuracy: string; // format (LATEST/FINAL)
+    formattedLatestAccuracy: string; // format (LATEST/FINAL),
+    accDictionary: FinalType | undefined;
 }
 
 interface SearchSpace {
@@ -184,8 +185,8 @@ interface EventMap {
 }
 
 export {
-    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
-    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
-    TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
-    NNIManagerStatus, EventMap
+    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
+    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
+    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
+    ExperimentProfile, NNIManagerStatus, EventMap
 };

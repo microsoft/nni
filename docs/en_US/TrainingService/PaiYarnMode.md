@@ -6,7 +6,7 @@ The original `pai` mode is modificated to `paiYarn` mode, which is a distributed
 Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
+Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's content is like:
 
 ```yaml
 authorName: your_name
@@ -22,14 +22,14 @@ trainingServicePlatform: paiYarn
 # search space file
 searchSpacePath: search_space.json
 # choice: true, false
-useAnnotation: true
+useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
@@ -106,7 +106,7 @@ nnictl create --config exp_paiYarn.yml
 ```
 to start the experiment in paiYarn mode. NNI will create OpenpaiYarn job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`.
 You can see jobs created by NNI in the OpenpaiYarn cluster's web portal, like:
-![](../../img/nni_paiYarn_joblist.jpg)
+![](../../img/nni_pai_joblist.jpg)
 
 Notice: In paiYarn mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 

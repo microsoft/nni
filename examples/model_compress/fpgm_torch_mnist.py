@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.compression.torch import FPGMPruner
@@ -6,17 +7,17 @@ from nni.compression.torch import FPGMPruner
 class Mnist(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
+        self.conv1 = nn.Conv2d(1, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 50, 500)
+        self.fc2 = nn.Linear(500, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
+        x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
@@ -27,8 +28,14 @@ class Mnist(torch.nn.Module):
         return num_zero_filters, num_filters, float(num_zero_filters)/num_filters
 
     def print_conv_filter_sparsity(self):
-        conv1_data = self._get_conv_weight_sparsity(self.conv1)
-        conv2_data = self._get_conv_weight_sparsity(self.conv2)
+        if isinstance(self.conv1, nn.Conv2d):
+            conv1_data = self._get_conv_weight_sparsity(self.conv1)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2)
+        else:
+            # self.conv1 is wrapped as PrunerModuleWrapper
+            conv1_data = self._get_conv_weight_sparsity(self.conv1.module)
+            conv2_data = self._get_conv_weight_sparsity(self.conv2.module)
+
         print('conv1: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv1_data[0], conv1_data[1], conv1_data[2]))
         print('conv2: num zero filters: {}, num filters: {}, sparsity: {:.4f}'.format(conv2_data[0], conv2_data[1], conv2_data[2]))
 
@@ -65,7 +72,7 @@ def test(model, device, test_loader):
 
 def main():
     torch.manual_seed(0)
-    device = torch.device('cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = torch.utils.data.DataLoader(
@@ -76,6 +83,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
+    model.to(device)
     model.print_conv_filter_sparsity()
 
     configure_list = [{
@@ -85,7 +93,7 @@ def main():
 
     pruner = FPGMPruner(model, configure_list)
     pruner.compress()
-
+    model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         pruner.update_epoch(epoch)

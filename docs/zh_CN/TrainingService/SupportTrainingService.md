@@ -19,21 +19,22 @@ NNI 不仅提供了这些内置的训练平台，还提供了轻松连接自己�
 TrainingService 在设计上为了便于实现，将平台相关的公共属性抽象成类。用户只需要继承这个抽象类，并根据平台特点实现子类，便能够实现 TrainingService。  
 TrainingService 的声明如下：
 
-    abstract class TrainingService {
-        public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
-        public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
-        public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-        public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-        public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
-        public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
-        public abstract get isMultiPhaseJobSupported(): boolean;
-        public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
-        public abstract setClusterMetadata(key: string, value: string): Promise<void>;
-        public abstract getClusterMetadata(key: string): Promise<string>;
-        public abstract cleanUp(): Promise<void>;
-        public abstract run(): Promise<void>;
-    }
-    
+```javascript
+abstract class TrainingService {
+    public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
+    public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
+    public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
+    public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
+    public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
+    public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
+    public abstract get isMultiPhaseJobSupported(): boolean;
+    public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
+    public abstract setClusterMetadata(key: string, value: string): Promise<void>;
+    public abstract getClusterMetadata(key: string): Promise<string>;
+    public abstract cleanUp(): Promise<void>;
+    public abstract run(): Promise<void>;
+}
+```
 
 TrainingService 的父类有一些抽象函数，用户需要继承父类并实现所有这些抽象函数。  
 有关如何实现 TrainingService 的更多信息，[参考这里](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/HowToImplementTrainingService.md)。

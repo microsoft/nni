@@ -27,7 +27,6 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         };
         const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
 
-        // FIXME: highlight not working?
         return (
             <div className="profile">
                 <MonacoEditor

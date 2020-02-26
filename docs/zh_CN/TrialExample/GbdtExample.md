@@ -168,7 +168,7 @@ if __name__ == '__main__':
 * 路径设置：`searchSpacePath`, `trial codeDir`，等等。
 * 算法设置：选择 `Tuner` 算法，`优化方向`，等等。
 
-config.yml 样例：
+config.yml 示例：
 
 ```yaml
 authorName: default

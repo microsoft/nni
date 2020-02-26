@@ -1,5 +1,45 @@
 # ChangeLog
 
+## Release 1.4 - 2/19/2020
+
+### Major Features
+
+#### Neural Architecture Search
+* Support [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) algorithm and add [the example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts) using it
+* Support a preliminary version of [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) and the corresponding [example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* Add unit tests for the NAS framework
+
+#### Model Compression
+* Support DataParallel for compressing models, and provide [an example](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py) of using DataParallel
+* Support [model speedup](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md) for compressed models, in Alpha version
+
+#### Training Service
+* Support complete PAI configurations by allowing users to specify PAI config file path
+* Add example config yaml files for the new PAI mode (i.e., paiK8S)
+* Support deleting experiments using sshkey in remote mode (thanks external contributor @tyusr)
+
+#### WebUI
+* WebUI refactor: adopt fabric framework
+
+#### Others
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
+* Support canceling the trials in UNKNOWN state
+* Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
+
+### Documentation
+* Improve [the index structure](https://nni.readthedocs.io/en/latest/) of NNI readthedocs
+* Improve [documentation for NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.md)
+* Improve documentation for [the new PAI mode](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.md)
+* Add QuickStart guidance for [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md) and [model compression](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md)
+* Improve documentation for [the supported EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md)
+
+### Bug Fixes
+* Correctly support NaN in metric data, JSON compliant
+* Fix the out-of-range bug of `randint` type in search space
+* Fix the bug of wrong tensor device when exporting onnx model in model compression
+* Fix incorrect handling of nnimanagerIP in the new PAI mode (i.e., paiK8S)
+
+
 ## Release 1.3 - 12/30/2019
 
 ### Major Features
@@ -186,7 +226,7 @@
   * Run trial jobs on the GPU running non-NNI jobs
 * Kubeflow v1beta2 operator
   * Support Kubeflow TFJob/PyTorchJob v1beta2
-* [General NAS programming interface](AdvancedFeature/GeneralNasInterfaces.md)
+* [General NAS programming interface](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md)
   * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
   * Provide a new command `nnictl trial codegen` for debugging the NAS code
   * Tutorial of NAS programming interface, example of NAS on MNIST, customized random tuner for NAS
@@ -213,7 +253,7 @@
 
 ### Major Features
 
-* [Support NNI on Windows](Tutorial/NniOnWindows.md)
+* [Support NNI on Windows](Tutorial/InstallationWin.md)
   * NNI running on windows for local mode
 * [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
@@ -299,7 +339,7 @@
 * Support [Metis tuner](Tuner/MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
 * Support [Curve fitting assessor](Assessor/CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](AdvancedFeature/AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
+* Advanced Support of [Weight Sharing](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
 
