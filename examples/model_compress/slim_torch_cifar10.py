@@ -1,13 +1,20 @@
 import math
+import os
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import ActivationAPoZRankFilterPruner
+from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
 
+def updateBN(model):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))  # L1
 
-def train(model, device, train_loader, optimizer):
+
+def train(model, device, train_loader, optimizer, sparse_bn=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -15,6 +22,9 @@ def train(model, device, train_loader, optimizer):
         output = model(data)
         loss = F.cross_entropy(output, target)
         loss.backward()
+        # L1 regularization on BN layer
+        if sparse_bn:
+            updateBN(model)
         optimizer.step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
@@ -40,6 +50,13 @@ def test(model, device, test_loader):
 
 
 def main():
+    parser = argparse.ArgumentParser("multiple gpu with pruning")
+    parser.add_argument("--epochs", type=int, default=160)
+    parser.add_argument("--retrain", default=False, action="store_true")
+    parser.add_argument("--parallel", default=False, action="store_true")
+
+    args = parser.parse_args()
+
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
@@ -59,40 +76,47 @@ def main():
         ])),
         batch_size=200, shuffle=False)
 
-    model = VGG(depth=16)
+    model = VGG(depth=19)
     model.to(device)
-
-    # Train the base VGG-16 model
-    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
-    for epoch in range(160):
-        train(model, device, train_loader, optimizer)
-        test(model, device, test_loader)
-        lr_scheduler.step(epoch)
-    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
-
+    # Train the base VGG-19 model
+    if args.retrain:
+        print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+        epochs = args.epochs
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+        for epoch in range(epochs):
+            if epoch in [epochs * 0.5, epochs * 0.75]:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] *= 0.1
+            print("epoch {}".format(epoch))
+            train(model, device, train_loader, optimizer, True)
+            test(model, device, test_loader)
+        torch.save(model.state_dict(), 'vgg19_cifar10.pth')
+    else:
+        assert os.path.isfile('vgg19_cifar10.pth'), "can not find checkpoint 'vgg19_cifar10.pth'"
+        model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     # Test base model accuracy
-    print('=' * 10 + 'Test on the original model' + '=' * 10)
-    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    print('=' * 10 + 'Test the original model' + '=' * 10)
     test(model, device, test_loader)
-    # top1 = 93.51%
+    # top1 = 93.60%
 
-    # Pruning Configuration, in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
-    # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+    # Pruning Configuration, in paper 'Learning efficient convolutional networks through network slimming',
     configure_list = [{
-        'sparsity': 0.5,
-        'op_types': ['default'],
-        'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+        'sparsity': 0.7,
+        'op_types': ['BatchNorm2d'],
     }]
-
+    
     # Prune model and test accuracy without fine tuning.
-    print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = ActivationAPoZRankFilterPruner(model, configure_list)
+    print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
+    pruner = SlimPruner(model, configure_list)
     model = pruner.compress()
-    test(model, device, test_loader)
-    # top1 = 88.19%
-
+    if args.parallel:
+        if torch.cuda.device_count() > 1:
+            print("use {} gpus for pruning".format(torch.cuda.device_count()))
+            model = nn.DataParallel(model)
+            # model = nn.DataParallel(model, device_ids=[0, 1])
+        else:
+            print("only detect 1 gpu, fall back")
+    model.to(device)
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
@@ -106,15 +130,15 @@ def main():
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
-            pruner.export_model(model_path='pruned_vgg16_cifar10.pth', mask_path='mask_vgg16_cifar10.pth')
+            pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
     # Test the exported model
-    print('=' * 10 + 'Test on the pruned model after fine tune' + '=' * 10)
-    new_model = VGG(depth=16)
+    print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
+    new_model = VGG(depth=19)
     new_model.to(device)
-    new_model.load_state_dict(torch.load('pruned_vgg16_cifar10.pth'))
+    new_model.load_state_dict(torch.load('pruned_vgg19_cifar10.pth'))
     test(new_model, device, test_loader)
-    # top1 = 93.53%
+    # top1 = 93.74%
 
 
 if __name__ == '__main__':

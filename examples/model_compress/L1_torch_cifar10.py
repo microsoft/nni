@@ -1,11 +1,9 @@
 import math
-import os
-import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import ActivationMeanRankFilterPruner
+from nni.compression.torch import L1FilterPruner
 from models.cifar10.vgg import VGG
 
 
@@ -42,12 +40,6 @@ def test(model, device, test_loader):
 
 
 def main():
-    parser = argparse.ArgumentParser("multiple gpu with pruning")
-    parser.add_argument("--epochs", type=int, default=160)
-    parser.add_argument("--retrain", default=False, action="store_true")
-    parser.add_argument("--parallel", default=False, action="store_true")
-
-    args = parser.parse_args()
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
@@ -71,20 +63,18 @@ def main():
     model.to(device)
 
     # Train the base VGG-16 model
-    if args.retrain:
-        print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
-        for epoch in range(args.epochs):
-            train(model, device, train_loader, optimizer)
-            test(model, device, test_loader)
-            lr_scheduler.step(epoch)
-        torch.save(model.state_dict(), 'vgg16_cifar10.pth')
-    else:
-        assert os.path.isfile('vgg16_cifar10.pth'), "can not find checkpoint 'vgg16_cifar10.pth'"
-        model.load_state_dict(torch.load('vgg16_cifar10.pth'))
+    print('=' * 10 + 'Train the unpruned base model' + '=' * 10)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 160, 0)
+    for epoch in range(160):
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+        lr_scheduler.step(epoch)
+    torch.save(model.state_dict(), 'vgg16_cifar10.pth')
+
     # Test base model accuracy
     print('=' * 10 + 'Test on the original model' + '=' * 10)
+    model.load_state_dict(torch.load('vgg16_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.51%
 
@@ -98,16 +88,8 @@ def main():
 
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = ActivationMeanRankFilterPruner(model, configure_list)
+    pruner = L1FilterPruner(model, configure_list)
     model = pruner.compress()
-    if args.parallel:
-        if torch.cuda.device_count() > 1:
-            print("use {} gpus for pruning".format(torch.cuda.device_count()))
-            model = nn.DataParallel(model)
-        else:
-            print("only detect 1 gpu, fall back")
-
-    model.to(device)
     test(model, device, test_loader)
     # top1 = 88.19%
 
