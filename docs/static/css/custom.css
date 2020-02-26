@@ -1,3 +1,75 @@
 .wy-table-responsive table td, .wy-table-responsive table th{
     white-space:normal
 }
+
+.title {
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ccc;
+}
+
+.second-title{
+    margin-top: 14px;
+}
+/* command style */
+.command {
+    background-color: #f8f8f8;
+    border: 1px solid #e1e4e5;
+    height: 40px;
+    line-height: 40px;
+    font-size: 12px;
+    padding-left: 10px;
+}
+
+.command-intro {
+    line-height: 40px;
+}
+
+.code{
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+}
+
+/* p margin-top: 24 */
+.topMargin{
+    margin-top: 24px;
+}
+
+.wy-nav-content ul li{
+    list-style: disc;
+    margin-bottom: 12px;
+    margin-left: 24px;
+}
+
+.list, .list tr, .list td{
+    border: 1px solid #ccc;
+}
+
+.column b{
+    padding-bottom: 4px;
+    border-bottom: 2px solid blue;
+}
+.column td{
+    width: 200px;
+    text-align: center;
+    line-height: 36px;
+}
+td.framework{
+    width:300px;
+    -webkit-width: 220px;
+}
+.list .circle li{
+    list-style-type: circle;
+}
+
+.list .firstUl, .circle{
+    padding-left: 20px;
+}
+
+.list .verticalMiddle{
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.inline{
+    display: inline-block;
+}
