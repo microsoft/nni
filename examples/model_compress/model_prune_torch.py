@@ -164,13 +164,14 @@ def main(args):
     train_loader, test_loader = get_data_loaders(dataset_name, args.batch_size)
     model = create_model(model_name).cuda()
     if args.resume_from is not None and os.path.exists(args.resume_from):
-        print(f'loading checkpoint {args.resume_from} ...')
+        print('loading checkpoint {} ...'.format(args.resume_from))
         model.load_state_dict(torch.load(args.resume_from))
         test(model, device, test_loader)
     else:
         optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
         print('start training')
-        pretrain_model_path = os.path.join(args.checkpoints_dir, f'pretrain_{model_name}_{dataset_name}_{args.pruner_name}.pth')
+        pretrain_model_path = os.path.join(
+            args.checkpoints_dir, 'pretrain_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
         for epoch in range(args.pretrain_epochs):
             train(model, device, train_loader, optimizer)
             test(model, device, test_loader)
@@ -180,8 +181,8 @@ def main(args):
 
     if not os.path.exists(args.checkpoints_dir):
         os.makedirs(args.checkpoints_dir)
-    model_path = os.path.join(args.checkpoints_dir, f'pruned_{model_name}_{dataset_name}_{args.pruner_name}.pth')
-    mask_path = os.path.join(args.checkpoints_dir, f'mask_{model_name}_{dataset_name}_{args.pruner_name}.pth')
+    model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
+    mask_path = os.path.join(args.checkpoints_dir, 'mask_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
 
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
