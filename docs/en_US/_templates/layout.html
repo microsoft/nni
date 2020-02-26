@@ -1,0 +1,7 @@
+{% extends "!layout.html" %}
+
+{% block sidebarlogo %}
+<a href="{{ pathto('index') }}">
+    {%- if logo %}<img src="{{ pathto('_static/' + logo, 1) }}">{%- endif %}
+</a>
+{% endblock %}
