@@ -132,6 +132,7 @@ class NNIDataStore implements DataStore {
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
         const metrics: MetricData = JSON.parse(data);
+        this.log.debug(`--------------store metric to datastore ${trialJobId} ${metrics}-----------------`);
         // REQUEST_PARAMETER is used to request new parameters for multiphase trial job,
         // it is not metrics, so it is skipped here.
         if (metrics.type === 'REQUEST_PARAMETER') {
