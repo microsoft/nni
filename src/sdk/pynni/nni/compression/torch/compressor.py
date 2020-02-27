@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import types
 import logging
 import torch
-import types
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -21,40 +21,13 @@ def _setattr(model, name, module):
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
 
-class Scheduler:
-    def __init__(self, start_epoch, end_epoch, frequency):
-        self._epoch_list = list(range(start_epoch, end_epoch, frequency))
-        self._current_epoch = -1
-        self._is_new_epoch = True
-        self._task = []
-    
-    def add_task(self, task):
-        self._task.append(task)
-    
-    def update(self, epoch):
-        self._is_new_epoch = epoch != self._current_epoch
-        self._is_in_scheduler = self._is_new_epoch
-        self._current_epoch = epoch
-        if self._is_new_epoch:
-            if self._is_in_scheduler:
-                for task in self._task:
-                    task()
-    
 
-    def is_new_epoch(self):
-        return self._is_new_epoch
-    
-    def is_in_scheduler(self):
-        return self._current_epoch in self._epoch_list
-
-
-        
 class Compressor:
     """
     Abstract base PyTorch compressor
     """
 
-    def __init__(self, model, config_list, optimizer, scheduler):
+    def __init__(self, model, config_list, optimizer):
         """
         Record necessary info in class members
 
@@ -68,26 +41,29 @@ class Compressor:
         self.bound_model = model
         self.config_list = config_list
         self.optimizer = optimizer
-        self.scheduler = scheduler
-        
-        self.modules_to_compress = None
-        self.modules_wrapper = None
-        self.buffers = {}
+
+        self.modules_to_compress = self.detect_modules_to_compress()
+        self.modules_wrapper = []
         self.is_wrapped = False
-    
+
+        for layer, config in self.modules_to_compress:
+            wrapper = self._wrap_modules(layer, config)
+            self.modules_wrapper.append(wrapper)
+
+        self._wrap_model()
+
     def detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
         """
-        if self.modules_to_compress is None:
-            self.modules_to_compress = []
-            for name, module in self.bound_model.named_modules():
-                layer = LayerInfo(name, module)
-                config = self.select_config(layer)
-                if config is not None:
-                    self.modules_to_compress.append((layer, config))
-        return self.modules_to_compress
+        modules_to_compress = []
+        for name, module in self.bound_model.named_modules():
+            layer = LayerInfo(name, module)
+            config = self.select_config(layer)
+            if config is not None:
+                modules_to_compress.append((layer, config))
+        return modules_to_compress
 
     def _wrap_model(self):
         """
@@ -119,18 +95,6 @@ class Compressor:
         torch.nn.Module
             model with specified modules compressed.
         """
-        if self.modules_wrapper is not None:
-            # already compressed
-            return self.bound_model
-        else:
-            self.modules_wrapper = []
-
-        modules_to_compress = self.detect_modules_to_compress()
-        for layer, config in modules_to_compress:
-            wrapper = self._wrap_modules(layer, config)
-            self.modules_wrapper.append(wrapper)
-
-        self._wrap_model()
         return self.bound_model
 
     def register_buffer(self, name, value):
@@ -138,7 +102,11 @@ class Compressor:
         To register buffers used in wrapped module's forward method.
 
         """
-        self.buffers[name] = value
+        for wrapper in self.get_modules_wrapper():
+            if isinstance(value, torch.Tensor):
+                wrapper.register_buffer(name, value.clone())
+            else:
+                setattr(wrapper, name, value)
 
     def get_modules_to_compress(self):
         """
@@ -239,18 +207,20 @@ class Compressor:
         for wrapper in wrappers:
             handle = wrapper.register_forward_hook(collector)
             wrapper.fwd_hook_handles.append(handle)
-    
-    def patch_optimizer(self):
+
+    def patch_optimizer(self, func):
         def patch_step(old_step):
             def new_step(_, *args, **kwargs):
                 # call origin optimizer step method
                 output = old_step(*args, **kwargs)
+                # calculate mask
+                func()
                 # call pruner step method
                 self.update_step()
                 return output
             return new_step
         self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
-        
+
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
         """
@@ -278,7 +248,6 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.config = config
         self.pruner = pruner
         self.fwd_hook_handles = []
-        self.registered_buffers = {}
 
         # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
@@ -286,11 +255,6 @@ class PrunerModuleWrapper(torch.nn.Module):
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
         else:
             self.register_buffer("bias_mask", None)
-        self.registered_buffers.append('weight_mask')
-        self.registered_buffers.append('bias_mask')
-        # register user specified buffer
-        for name in self.pruner.buffers:
-            self.register_buffer(name, self.pruner.buffers[name].clone())
 
     def forward(self, *inputs):
         # apply mask to weight, bias
@@ -311,23 +275,20 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer, scheduler):
-        super().__init__(model, config_list, optimizer, scheduler)
-        self.patch_optimizer()
-        self.scheduler.add_task(self.update_mask)
-        self.scheduler.add_task(self.update_epoch)
+    def __init__(self, model, config_list, optimizer):
+        super().__init__(model, config_list, optimizer)
+        self.patch_optimizer(self.update_mask)
 
     def compress(self):
         super().compress()
         self.update_mask()
         return self.bound_model
-    
+
     def update_mask(self):
-        wrappers = self.get_modules_wrapper()
-        for wrapper in wrappers:
+        for wrapper in self.get_modules_wrapper():
             self.calc_mask(wrapper)
-    
-    def calc_mask(self, layer, config, **kwargs):
+
+    def calc_mask(self, wrapper, **kwargs):
         """
         Pruners should overload this method to provide mask for weight tensors.
         The mask must have the same shape and type comparing to the weight.
@@ -336,10 +297,8 @@ class Pruner(Compressor):
 
         Parameters
         ----------
-        layer : LayerInfo
-            calculate mask for `layer`'s weight
-        config : dict
-            the configuration for generating the mask
+        wrapper : Module
+            calculate mask for `wrapper.module`'s weight
         """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
@@ -456,7 +415,6 @@ class QuantizerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.quantizer = quantizer
-        self.registered_buffers = []
 
         # register buffer and parameter
         # old_weight is used to store origin weight and weight is used to store quantized weight
@@ -470,17 +428,6 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 delattr(self.module, 'weight')
                 self.module.register_buffer('weight', self.module.old_weight)
 
-        # register user specified buffer
-        for name in self.quantizer.buffers:
-            self.register_buffer(name, self.quantizer.buffers[name].clone())
-            self.registered_buffers.append(name)
-
-    def get_registered_buffers(self):
-        buffers = {}
-        for name in self.registered_buffers:
-            buffers[name] = getattr(self, name)
-        return buffers
-
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
             inputs = self.quantizer.quant_grad.apply(
@@ -488,8 +435,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 QuantType.QUANT_INPUT,
                 self.quantizer.quantize_input,
                 self.config,
-                LayerInfo(self.name, self.module),
-                **self.get_registered_buffers())
+                LayerInfo(self.name, self.module))
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
             new_weight = self.quantizer.quant_grad.apply(
@@ -497,8 +443,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 QuantType.QUANT_WEIGHT,
                 self.quantizer.quantize_weight,
                 self.config,
-                LayerInfo(self.name, self.module),
-                **self.get_registered_buffers())
+                LayerInfo(self.name, self.module))
             self.module.weight = new_weight
             result = self.module(*inputs)
         else:
@@ -510,8 +455,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 QuantType.QUANT_OUTPUT,
                 self.quantizer.quantize_output,
                 self.config,
-                LayerInfo(self.name, self.module),
-                **self.get_registered_buffers())
+                LayerInfo(self.name, self.module))
         return result
 
 class Quantizer(Compressor):

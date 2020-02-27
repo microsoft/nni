@@ -180,7 +180,7 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list, optimizer, scheduler):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -189,7 +189,7 @@ class SlimPruner(Pruner):
                 - sparsity: percentage of convolutional filters to be pruned.
         """
 
-        super().__init__(model, config_list, optimizer, scheduler)
+        super().__init__(model, config_list, optimizer)
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
@@ -200,7 +200,7 @@ class SlimPruner(Pruner):
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
-        self.register_buffer("if_calculated", torch.tensor(0)) # pylint: disable=not-callable
+        self.register_buffer("if_calculated", False)
 
     def calc_mask(self, wrapper):
         """
@@ -235,7 +235,7 @@ class SlimPruner(Pruner):
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
-        wrapper.if_calculated = torch.tensor(1) # pylint: disable=not-callable
+        wrapper.if_calculated = True
         wrapper.weight_mask = mask['weight_mask']
         wrapper.bias_mask = mask['bias_mask']
         return

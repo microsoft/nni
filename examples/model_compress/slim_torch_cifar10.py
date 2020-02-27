@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import SlimPruner, Scheduler
+from nni.compression.torch import SlimPruner
 from models.cifar10.vgg import VGG
 
 def updateBN(model):
@@ -106,8 +106,7 @@ def main():
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
-    scheduler = Scheduler(0, 40, 40) 
-    pruner = SlimPruner(model, configure_list, optimizer_finetune, scheduler)
+    pruner = SlimPruner(model, configure_list, optimizer_finetune)
     model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
@@ -130,7 +129,6 @@ def main():
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
-        scheduler.update(epoch)
 
     # Test the exported model
     print('=' * 10 + 'Test the export pruned model after fine tune' + '=' * 10)
