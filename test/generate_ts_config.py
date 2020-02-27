@@ -37,11 +37,11 @@ def update_training_service_config(args):
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.nniManagerNFSMountPath is not None:
-            config[args.ts]['trial']['nniManagerNFSMountPath'] = args.nniManagerNFSMountPath
+            config[args.ts]['trial']['nniManagerNFSMountPath'] = args.nni_manager_nfs_mount_path
         if args.containerNFSMountPath is not None:
-            config[args.ts]['trial']['containerNFSMountPath'] = args.containerNFSMountPath
+            config[args.ts]['trial']['containerNFSMountPath'] = args.container_nfs_mount_path
         if args.paiStoragePlugin is not None:
-            config[args.ts]['trial']['paiStoragePlugin'] = args.paiStoragePlugin
+            config[args.ts]['trial']['paiStoragePlugin'] = args.pai_storage_plugin
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
     elif args.ts == 'kubeflow':
@@ -112,9 +112,9 @@ if __name__ == '__main__':
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
     parser.add_argument("--pai_token", type=str)
-    parser.add_argument("--paiStoragePlugin", type=str)
-    parser.add_argument("--nniManagerNFSMountPath", type=str)
-    parser.add_argument("--containerNFSMountPath", type=str)
+    parser.add_argument("--pai_storage_plugin", type=str)
+    parser.add_argument("--nni_manager_nfs_mount_path", type=str)
+    parser.add_argument("--container_nfs_mount_path", type=str)
     # args for kubeflow and frameworkController
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
