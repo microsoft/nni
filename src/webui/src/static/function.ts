@@ -45,6 +45,15 @@ function parseMetrics(metricData: string): any {
     }
 }
 
+const isArrayType = (list: any): boolean | undefined => {
+
+    if (!Array.isArray) {
+        return Object.prototype.toString.call(list) === '[object Array]';
+    } else {
+        return Array.isArray(list);
+    }
+}
+
 // get final result value
 // draw Accuracy point graph
 const getFinalResult = (final?: MetricDataRecord[]): number => {
@@ -52,12 +61,14 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
     let showDefault = 0;
     if (final) {
         acc = parseMetrics(final[final.length - 1].data);
-        if (typeof (acc) === 'object') {
+        if (typeof (acc) === 'object' && !isArrayType(acc)) {
             if (acc.default) {
                 showDefault = acc.default;
             }
-        } else {
+        } else if (typeof (acc) === 'number') {
             showDefault = acc;
+        } else {
+            showDefault = NaN;
         }
         return showDefault;
     } else {
@@ -72,8 +83,13 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         showDefault = parseMetrics(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
             showDefault = { default: showDefault };
+            return showDefault;
+        } else if (isArrayType(showDefault)) {
+            // not support final type
+            return undefined;
+        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')){
+            return showDefault;
         }
-        return showDefault;
     } else {
         return undefined;
     }
@@ -205,5 +221,6 @@ function formatAccuracy(accuracy: number): string {
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics
+    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics,
+    isArrayType
 };
