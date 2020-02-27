@@ -433,17 +433,13 @@ class QuantizerModuleWrapper(torch.nn.Module):
             inputs = self.quantizer.quant_grad.apply(
                 inputs,
                 QuantType.QUANT_INPUT,
-                self.quantizer.quantize_input,
-                self.config,
-                LayerInfo(self.name, self.module))
+                self)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
             new_weight = self.quantizer.quant_grad.apply(
                 self.module.old_weight,
                 QuantType.QUANT_WEIGHT,
-                self.quantizer.quantize_weight,
-                self.config,
-                LayerInfo(self.name, self.module))
+                self)
             self.module.weight = new_weight
             result = self.module(*inputs)
         else:
@@ -453,9 +449,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
             result = self.quantizer.quant_grad.apply(
                 result,
                 QuantType.QUANT_OUTPUT,
-                self.quantizer.quantize_output,
-                self.config,
-                LayerInfo(self.name, self.module))
+                self)
         return result
 
 class Quantizer(Compressor):
@@ -464,7 +458,7 @@ class Quantizer(Compressor):
     """
 
     def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, None)
         self.quant_grad = QuantGrad
 
     def quantize_weight(self, weight, config, op, op_type, op_name):
@@ -562,15 +556,20 @@ class QuantGrad(torch.autograd.Function):
         return grad_output
 
     @staticmethod
-    def forward(ctx, tensor, quant_type, quant_func, config, layer, **kwargs):
+    def forward(ctx, tensor, quant_type, wrapper, **kwargs):
         ctx.save_for_backward(tensor, torch.Tensor([quant_type]))
-        return quant_func(tensor, config, op=layer.module, op_type=layer.type, op_name=layer.name, **kwargs)
+        if quant_type == QuantType.QUANT_INPUT:
+            return wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
+        elif quant_type == QuantType.QUANT_WEIGHT:
+            return wrapper.quantizer.quantize_weight(tensor, wrapper, **kwargs)
+        else:
+            return wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
 
     @classmethod
     def backward(cls, ctx, grad_output):
         tensor, quant_type = ctx.saved_variables
         output = cls.quant_backward(tensor, grad_output, quant_type)
-        return output, None, None, None, None, None
+        return output, None, None, None
 
 def _check_weight(module):
     try:

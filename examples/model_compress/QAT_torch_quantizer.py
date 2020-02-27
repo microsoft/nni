@@ -35,6 +35,7 @@ def train(model, quantizer, device, train_loader, optimizer):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
+        quantizer.update_step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
 
@@ -80,7 +81,7 @@ def main():
     }, {
         'quant_types': ['output'],
         'quant_bits': 8,
-        'quant_start_step': 7000,
+        'quant_start_step': 1000,
         'op_types':['ReLU6']
     }]
     quantizer = QAT_Quantizer(model, configure_list)
