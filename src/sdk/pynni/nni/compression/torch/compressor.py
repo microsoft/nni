@@ -37,6 +37,8 @@ class Compressor:
             the model user wants to compress
         config_list : list
             the configurations that users specify for compression
+        optimizer: pytorch optimizer
+            optimizer used to train the model
         """
         self.bound_model = model
         self.config_list = config_list
@@ -100,8 +102,16 @@ class Compressor:
 
     def register_buffer(self, name, value):
         """
-        To register buffers used in wrapped module's forward method.
+        To register buffers or add regular variable used in wrapped module's forward method.
+        If the type of the value is Torch.tensor, then this value is registered as a buffer in wrapper,
+        which will be saved by model.state_dict. Otherwise, this value is just a regular variable in wrapper.
 
+        Parameters
+        ----------
+        name : str
+            name of the variable
+        value: any
+            value of the variable
         """
         for wrapper in self.get_modules_wrapper():
             if isinstance(value, torch.Tensor):
@@ -281,7 +291,6 @@ class Pruner(Compressor):
         self.patch_optimizer(self.update_mask)
 
     def compress(self):
-        super().compress()
         self.update_mask()
         return self.bound_model
 
@@ -460,7 +469,7 @@ class Quantizer(Compressor):
         super().__init__(model, config_list, None)
         self.quant_grad = QuantGrad
 
-    def quantize_weight(self, weight, config, op, op_type, op_name):
+    def quantize_weight(self, weight, wrapper, **kwargs):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
@@ -468,12 +477,12 @@ class Quantizer(Compressor):
         ----------
         weight : Tensor
             weight that needs to be quantized
-        config : dict
-            the configuration for weight quantization
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
         """
         raise NotImplementedError('Quantizer must overload quantize_weight()')
 
-    def quantize_output(self, output, config, op, op_type, op_name):
+    def quantize_output(self, output, wrapper, **kwargs):
         """
         quantize should overload this method to quantize output.
         This method is effectively hooked to :meth:`forward` of the model.
@@ -481,12 +490,12 @@ class Quantizer(Compressor):
         ----------
         output : Tensor
             output that needs to be quantized
-        config : dict
-            the configuration for output quantization
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
         """
         raise NotImplementedError('Quantizer must overload quantize_output()')
 
-    def quantize_input(self, *inputs, config, op, op_type, op_name):
+    def quantize_input(self, *inputs, wrapper, **kwargs):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to :meth:`forward` of the model.
@@ -494,8 +503,8 @@ class Quantizer(Compressor):
         ----------
         inputs : Tensor
             inputs that needs to be quantized
-        config : dict
-            the configuration for inputs quantization
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
