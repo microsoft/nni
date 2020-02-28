@@ -5,8 +5,9 @@ import os
 import json
 from schema import SchemaError
 from schema import Schema
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
-                           FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
+                           DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
+                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
 from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
@@ -147,7 +148,9 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts']:
+        experiment_config.get('trainingServicePlatform') not in [
+                'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'
+        ]:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
