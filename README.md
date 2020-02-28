@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiement new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **NNI v1.3 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **NNI v1.4 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiements. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms. 
@@ -124,10 +124,12 @@ Within the following table, we summarized the current NNI capabilities, we are g
           <a href="docs/en_US/NAS/Overview.md">Neural Architecture Search</a>
           <ul>                        
             <ul>
-              <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#cdarts">CDARTS</a></li>
+              <li><a href="docs/en_US/NAS/ENAS.md">ENAS</a></li>
+              <li><a href="docs/en_US/NAS/DARTS.md">DARTS</a></li>
+              <li><a href="docs/en_US/NAS/PDARTS.md">P-DARTS</a></li>
+              <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
+              <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
+              <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
             </ul>    
           </ul>
@@ -177,9 +179,9 @@ Within the following table, we summarized the current NNI capabilities, we are g
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/sdk_reference.rst">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
         <li><a href="docs/en_US/Tutorial/AnnotationSpec.md">NNI Annotation</a></li>
-         <li><a href="docs/en_US/Tutorial/Installation.md">Supported OS</a></li>
+         <li><a href="https://nni.readthedocs.io/en/latest/installation.html">Supported OS</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
@@ -216,15 +218,15 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try latest code, please [install NNI](docs/en_US/Tutorial/Installation.md) from source code.
+If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/latest/installation.html) from source code.
 
-For detail system requirements of NNI, please refer to [here](docs/en_US/Tutorial/Installation.md#system-requirements).
+For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/latest/Tutorial/InstallationWin.html#system-requirements) for Windows.
 
 Note:
 
 * If there is any privilege issue, add `--user` to install NNI in the user directory.
 * Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/NniOnWindows.md).
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md#faq).
 
 ### **Verify installation**
 
@@ -233,7 +235,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  git clone -b v1.4 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -288,7 +290,7 @@ You can use these commands to get more information about the experiment
 ## **Documentation**
 * To learn about what's NNI, read the [NNI Overview](https://nni.readthedocs.io/en/latest/Overview.html). 
 * To get yourself familiar with how to use NNI, read the [documentation](https://nni.readthedocs.io/en/latest/index.html). 
-* To get started and install NNI on your system, please refer to [Install NNI](docs/en_US/Tutorial/Installation.md).
+* To get started and install NNI on your system, please refer to [Install NNI](https://nni.readthedocs.io/en/latest/installation.html).
 
 ## **Contributing**
 This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
@@ -304,7 +306,7 @@ After getting familiar with contribution agreements, you are ready to create you
 * If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
-* [Implement a new NAS trainer on NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/NasInterface.md#implement-a-new-nas-trainer-on-nni)
+* [Implement a new NAS trainer on NNI](docs/en_US/NAS/Advanced.md)
 * [Customize your own Advisor](docs/en_US/Tuner/CustomizeAdvisor.md)
 
 ## **External Repositories and References**

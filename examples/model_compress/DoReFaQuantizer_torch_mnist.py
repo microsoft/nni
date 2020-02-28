@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import QAT_Quantizer
+from nni.compression.torch import DoReFaQuantizer
 
 
 class Mnist(torch.nn.Module):
@@ -67,26 +67,18 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(configure_list).compress(model)
-    '''
+    model = model.to(device)
     configure_list = [{
         'quant_types': ['weight'],
         'quant_bits': {
             'weight': 8,
         }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
         'op_types':['Conv2d', 'Linear']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': 8,
-        'quant_start_step': 7000,
-        'op_types':['ReLU6']
     }]
-    quantizer = QAT_Quantizer(model, configure_list)
+    quantizer = DoReFaQuantizer(model, configure_list)
     quantizer.compress()
 
-    model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.5)
     for epoch in range(10):
         print('# Epoch {} #'.format(epoch))
         train(model, quantizer, device, train_loader, optimizer)
