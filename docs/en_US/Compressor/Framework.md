@@ -27,10 +27,10 @@ configure_list = [{
 
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 pruner = SlimPruner(model, configure_list, optimizer)
-model, optimizer = pruner.compress()
+model = pruner.compress()
 ```
 
-A pruner receive model, config and optimizer as arguments. In the `__init__` method, the `step` method of the optimizer is replaced with a new `step` method that calls `cal_mask`. In the `compress` method, all modules are checked if they need to be pruned based on config. If a module needs to be pruned, then this module is replaced by a `module wrapper`. Afterward, the new model and new optimizer are returned, which can be trained as before.
+A pruner receive model, config and optimizer as arguments. In the `__init__` method, the `step` method of the optimizer is replaced with a new `step` method that calls `cal_mask`. Also, all modules are checked if they need to be pruned based on config. If a module needs to be pruned, then this module is replaced by a `module wrapper`. Afterward, the new model and new optimizer are returned, which can be trained as before. `compress` method will calculate the default masks.
 
 ## Implement a new pruning algorithm
 Implementing a new pruning algorithm requires implementing a new `pruner` class, which should subclass `Pruner` and override the `cal_mask` method. The `cal_mask` is called by`optimizer.step` method.
@@ -43,7 +43,7 @@ class NewPruner(Pruner):
         super().__init__(model, config_list, optimizer)
         # do some initialization
 
-    def calc_mask(self, wrapper):
+    def calc_mask(self, wrapper, **kwargs):
         # do something to calculate weight_mask
         wrapper.weight_mask = weight_mask
 ```
@@ -54,14 +54,15 @@ Sometimes `cal_mask` must save some state data, therefore users can use `registe
 class NewPruner(Pruner):
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
-        self.register_buffer("if_calculated", torch.tensor(0))
+        self.register_buffer("if_calculated", False)
     
     def calc_mask(self, wrapper):
         # do something to calculate weight_mask
         if wrapper.if_calculated:
             pass
         else:
-            wrapper.if_calculated = torch.tensor(1)
+            wrapper.if_calculated = True
+            # update masks
 ```
 
 ### Multi-GPU support
