@@ -172,7 +172,7 @@ class App extends React.Component<AppProps, AppState>  {
       return null;
     const info = graph.nodeSummary(selectedNode);
     if (info === undefined)
-      return undefined;
+      return null;
     const subtitle = info.op ?
       (info.op === 'IO Node' ? info.op : `Operation: ${info.op}`) :
       `Subgraph: ${info.nodeCount} nodes, ${info.edgeCount} edges`;
