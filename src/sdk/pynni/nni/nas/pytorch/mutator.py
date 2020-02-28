@@ -110,6 +110,10 @@ class Mutator(BaseMutator):
         # A key can be linked to multiple modules, use `dedup=False` to find them all.
         result["mutable"] = defaultdict(list)
         for mutable in self.mutables.traverse(deduplicate=False):
+            # A module will be represent in the format of
+            # [{"type": "Net", "name": ""}, {"type": "Cell", "name": "cell1"}, {"type": "Conv2d": "name": "conv"}]
+            # which will be concatenated into Net/Cell[cell1]/Conv2d[conv] in frontend.
+            # This format is aligned with the scope name jit gives.
             modules = mutable.name.split(".")
             path = [
                 {"type": self.model.__class__.__name__, "name": ""}
