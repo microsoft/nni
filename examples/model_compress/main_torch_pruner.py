@@ -80,10 +80,10 @@ def main():
         'op_types': ['default']
     }]
 
-    pruner = AGP_Pruner(model, configure_list)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    pruner = AGP_Pruner(model, configure_list, optimizer)
     model = pruner.compress()
     model = model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))

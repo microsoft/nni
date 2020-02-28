@@ -126,7 +126,7 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(model, config_list)
         self.steps = 1
-        modules_to_compress = self.detect_modules_to_compress()
+        modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", None)
             layer.module.register_buffer("scale", None)

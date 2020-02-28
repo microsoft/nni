@@ -90,10 +90,10 @@ def main():
         'op_types': ['Conv2d']
     }]
 
-    pruner = FPGMPruner(model, configure_list)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    pruner = FPGMPruner(model, configure_list, optimizer)
     pruner.compress()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     for epoch in range(10):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))

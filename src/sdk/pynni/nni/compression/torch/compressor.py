@@ -42,28 +42,29 @@ class Compressor:
         self.config_list = config_list
         self.optimizer = optimizer
 
-        self.modules_to_compress = self.detect_modules_to_compress()
+        self.modules_to_compress = None
         self.modules_wrapper = []
         self.is_wrapped = False
 
-        for layer, config in self.modules_to_compress:
+        for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper.append(wrapper)
 
         self._wrap_model()
 
-    def detect_modules_to_compress(self):
+    def _detect_modules_to_compress(self):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
         """
-        modules_to_compress = []
-        for name, module in self.bound_model.named_modules():
-            layer = LayerInfo(name, module)
-            config = self.select_config(layer)
-            if config is not None:
-                modules_to_compress.append((layer, config))
-        return modules_to_compress
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for name, module in self.bound_model.named_modules():
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
 
     def _wrap_model(self):
         """
@@ -170,7 +171,7 @@ class Compressor:
             return None
         return ret
 
-    def update_epoch(self):
+    def update_epoch(self, epoch):
         """
         If user want to update model every epoch, user can override this method.
         This method should be called at the beginning of each epoch
@@ -338,8 +339,6 @@ class Pruner(Compressor):
             device of the model, used to place the dummy input tensor for exporting onnx file.
             the tensor is placed on cpu if ```device``` is None
         """
-        # if self.detect_modules_to_compress() and not self.mask_dict:
-        #     _logger.warning('You may not use self.mask_dict in base Pruner class to record masks')
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
         self._unwrap_model() # used for generating correct state_dict name without wrapper state

@@ -96,7 +96,8 @@ def main():
 
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
-    pruner = ActivationMeanRankFilterPruner(model, configure_list)
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+    pruner = ActivationMeanRankFilterPruner(model, configure_list, optimizer_finetune)
     model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
@@ -111,7 +112,6 @@ def main():
 
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
         pruner.update_epoch(epoch)
