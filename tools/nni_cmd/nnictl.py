@@ -159,8 +159,8 @@ def parse_args():
     parser_webui_url.add_argument('id', nargs='?', help='the id of experiment')
     parser_webui_url.set_defaults(func=webui_url)
     parser_webui_nas = parser_webui_subparsers.add_parser('nas', help='show nas ui')
-    parser_webui_nas.add_argument('--port', default=6060, type=int)
-    parser_webui_nas.add_argument('--logdir', default='.', type=str)
+    parser_webui_nas.add_argument('--port', default=6060, type=int, help='port of nas ui')
+    parser_webui_nas.add_argument('--logdir', default='.', type=str, help='the logdir where nas ui will read data')
     parser_webui_nas.set_defaults(func=webui_nas)
 
     #parse config command

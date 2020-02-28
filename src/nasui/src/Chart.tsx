@@ -204,7 +204,6 @@ export default class Chart extends React.Component<ChartProps> {
     if (graph === undefined || activation === undefined)
       return;
     const weights = graph.weightFromMutables(activation);
-    console.log(weights.size);
     weights.forEach((weight, elem) => {
       if (this.elemWeight.get(elem) !== weight) {
         this.cyInstance!.getElementById(elem).style({
@@ -256,10 +255,7 @@ export default class Chart extends React.Component<ChartProps> {
       if (graphChanged)
         this.expandSet = lodash.cloneDeep(graph.defaultExpandSet);
       const graphEl = this.graphElements();
-      console.log(graphEl);
       const [remove, add] = this.graphElDifference(this.graphEl, graphEl);
-      console.log(remove);
-      console.log(add);
       const layout: any = {
         name: 'dagre'
       };

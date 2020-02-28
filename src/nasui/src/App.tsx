@@ -203,7 +203,8 @@ class App extends React.Component<AppProps, AppState>  {
                 <ListItem className={classes.listSubtitle}>Inputs ({info.inputs.length})</ListItem>
                 {
                   info.inputs.map((item, i) => <ListItem className={classes.listItem} key={`input${i}`}>{item}</ListItem>)
-                }</React.Fragment>
+                }
+              </React.Fragment>
             }
             {
               info.outputs.length > 0 &&

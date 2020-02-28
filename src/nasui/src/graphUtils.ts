@@ -191,7 +191,6 @@ export class Graph {
     }
     this.defaultExpandSet = this.getDefaultExpandSet(graphData.mutable);
     this.mutableEdges = this.inferMutableEdges(graphData.mutable);
-    console.log(this);
   }
 
   private eliminateSidechains(): void {
