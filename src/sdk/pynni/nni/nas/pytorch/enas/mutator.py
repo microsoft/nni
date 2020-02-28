@@ -23,7 +23,7 @@ class StackedLSTMCell(nn.Module):
             curr_c, curr_h = m(inputs, (prev_c[i], prev_h[i]))
             next_c.append(curr_c)
             next_h.append(curr_h)
-            inputs = curr_h[-1]
+            inputs = curr_h[-1].view(1, -1)
         return next_c, next_h
 
 
