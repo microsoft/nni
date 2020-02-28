@@ -113,44 +113,46 @@ class DLTSTrainingService implements TrainingService {
                 }
             })
         }) as any;
-        switch (body['jobStatus']) {
-            case 'unapproved':
-            case 'queued':
-            case 'scheduling':
-                dltsTrialJob.status = "WAITING";
-                break;
-            case 'running':
-                dltsTrialJob.status = "RUNNING";
-                if (dltsTrialJob.startTime === undefined) {
-                    dltsTrialJob.startTime = Date.parse(body['jobStatusDetail'][0]['startedAt'])
-                }
-                if (dltsTrialJob.url === undefined) {
-                    dltsTrialJob.url = `${this.dltsClusterConfig.dashboard}job/${this.dltsClusterConfig.team}/${this.dltsClusterConfig.cluster}/${dltsTrialJob.dltsJobId}`
-                }
-                break;
-            case 'finished':
-                dltsTrialJob.status = "SUCCEEDED";
-                break;
-            case 'failed':
-                dltsTrialJob.status = "FAILED";
-                break;
-            case 'pausing':
-            case 'paused':
-                dltsTrialJob.status = "RUNNING";
-                dltsTrialJob.dltsPaused = true;
-                break;
-            case 'killing':
-            case 'killed':
-                if (dltsTrialJob.isEarlyStopped !== undefined) {
-                    dltsTrialJob.status = dltsTrialJob.isEarlyStopped === true
-                        ? 'EARLY_STOPPED' : 'USER_CANCELED';
-                } else {
-                    dltsTrialJob.status = 'SYS_CANCELED';
-                }
-                break;
-            default:
-                dltsTrialJob.status = "UNKNOWN";
-        }
+        void ((): void => {
+            switch (body['jobStatus']) {
+                case 'unapproved':
+                case 'queued':
+                case 'scheduling':
+                    dltsTrialJob.status = "WAITING";
+                    break;
+                case 'running':
+                    dltsTrialJob.status = "RUNNING";
+                    if (dltsTrialJob.startTime === undefined) {
+                        dltsTrialJob.startTime = Date.parse(body['jobStatusDetail'][0]['startedAt'])
+                    }
+                    if (dltsTrialJob.url === undefined) {
+                        dltsTrialJob.url = `${this.dltsClusterConfig.dashboard}job/${this.dltsClusterConfig.team}/${this.dltsClusterConfig.cluster}/${dltsTrialJob.dltsJobId}`
+                    }
+                    break;
+                case 'finished':
+                    dltsTrialJob.status = "SUCCEEDED";
+                    break;
+                case 'failed':
+                    dltsTrialJob.status = "FAILED";
+                    break;
+                case 'pausing':
+                case 'paused':
+                    dltsTrialJob.status = "RUNNING";
+                    dltsTrialJob.dltsPaused = true;
+                    break;
+                case 'killing':
+                case 'killed':
+                    if (dltsTrialJob.isEarlyStopped !== undefined) {
+                        dltsTrialJob.status = dltsTrialJob.isEarlyStopped === true
+                            ? 'EARLY_STOPPED' : 'USER_CANCELED';
+                    } else {
+                        dltsTrialJob.status = 'SYS_CANCELED';
+                    }
+                    break;
+                default:
+                    dltsTrialJob.status = "UNKNOWN";
+            }
+        }) ();
     }
 
     private async submitJobLoop(): Promise<void> {
