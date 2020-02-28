@@ -72,7 +72,7 @@ def test(model, device, test_loader):
 
 def main():
     torch.manual_seed(0)
-    device = torch.device('cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = torch.utils.data.DataLoader(
@@ -83,6 +83,7 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
+    model.to(device)
     model.print_conv_filter_sparsity()
 
     configure_list = [{
@@ -93,7 +94,6 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     pruner = FPGMPruner(model, configure_list, optimizer)
     pruner.compress()
-
     for epoch in range(10):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
