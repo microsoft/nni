@@ -75,6 +75,15 @@ class DLTSTrainingService implements TrainingService {
     
             await Promise.all(updateDLTSTrialJobs);
 
+            // Calcel paused dlts job
+            const cancelPausedJobPromises: Promise<void>[] = [];
+            for (const [trialJobId, dltsTrialJob] of this.trialJobsMap) {
+                if (dltsTrialJob.dltsPaused && dltsTrialJob.status === 'RUNNING') {
+                    cancelPausedJobPromises.push(this.cancelTrialJob(trialJobId));
+                }
+            }
+            await Promise.all(cancelPausedJobPromises);
+
             const restServer: DLTSJobRestServer = component.get(DLTSJobRestServer);
             if (restServer.getErrorMessage !== undefined) {
                 throw new Error(restServer.getErrorMessage);
@@ -128,6 +137,7 @@ class DLTSTrainingService implements TrainingService {
             case 'pausing':
             case 'paused':
                 dltsTrialJob.status = "RUNNING";
+                dltsTrialJob.dltsPaused = true;
                 break;
             case 'killing':
             case 'killed':

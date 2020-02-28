@@ -16,6 +16,7 @@ export class DLTSTrialJobDetail implements TrialJobDetail {
 
   // DLTS staff
   public dltsJobId?: string;
+  public dltsPaused: boolean = false;
 
   public constructor (
     public id: string,
