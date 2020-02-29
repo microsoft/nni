@@ -33,9 +33,14 @@ class ActivationRankFilterPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.register_variable("if_calculated", False)
+        self.register_variable("collected_activation", [])
         self.statistics_batch_num = statistics_batch_num
-        self.collected_activation = {}
         self.hooks = {}
+
+        def collector(module_, input_, output):
+            if len(module_.collected_activation) < self.statistics_batch_num:
+                module_.collected_activation.append(self.activation(output.detach().cpu()))
+        self.add_activation_collector(collector)
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
             self.activation = torch.nn.functional.relu
@@ -43,20 +48,6 @@ class ActivationRankFilterPruner(Pruner):
             self.activation = torch.nn.functional.relu6
         else:
             self.activation = None
-
-    def compress(self):
-        """
-        Compress the model, register a hook for collecting activations.
-        """
-        for wrapper in self.get_modules_wrapper():
-            self.collected_activation[wrapper.name] = []
-
-            def _hook(module_, input_, output, name=wrapper.name):
-                if len(self.collected_activation[name]) < self.statistics_batch_num:
-                    self.collected_activation[name].append(self.activation(output.detach().cpu()))
-
-            wrapper.module.register_forward_hook(_hook)
-        return self.bound_model
 
     def get_mask(self, base_mask, activations, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
@@ -93,15 +84,15 @@ class ActivationRankFilterPruner(Pruner):
             mask_bias = torch.ones(wrapper.module.bias.size()).type_as(wrapper.module.bias).detach()
         else:
             mask_bias = None
-        mask = {'weight': mask_weight, 'bias': mask_bias}
+        mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1 or len(self.collected_activation[wrapper.name]) < self.statistics_batch_num:
+            if filters < 2 or num_prune < 1 or len(wrapper.collected_activation) < self.statistics_batch_num:
                 return mask
-            mask = self.get_mask(mask, self.collected_activation[wrapper.name], num_prune)
+            mask = self.get_mask(mask, wrapper.collected_activation, num_prune)
         finally:
-            if len(self.collected_activation[wrapper.name]) == self.statistics_batch_num:
+            if len(wrapper.collected_activation) == self.statistics_batch_num:
                 wrapper.if_calculated = True
         return mask
 
@@ -153,9 +144,9 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         apoz = self._calc_apoz(activations)
         prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
         for idx in prune_indices:
-            base_mask['weight'][idx] = 0.
-            if base_mask['bias'] is not None:
-                base_mask['bias'][idx] = 0.
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
         return base_mask
 
     def _calc_apoz(self, activations):
@@ -225,9 +216,9 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         mean_activation = self._cal_mean_activation(activations)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:
-            base_mask['weight'][idx] = 0.
-            if base_mask['bias'] is not None:
-                base_mask['bias'][idx] = 0.
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
         return base_mask
 
     def _cal_mean_activation(self, activations):

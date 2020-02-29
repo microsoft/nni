@@ -48,6 +48,9 @@ class Compressor:
         self.modules_wrapper = []
         self.is_wrapped = False
 
+        self._fwd_hook_handles = {}
+        self._fwd_hook_id = 0
+
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper.append(wrapper)
@@ -214,10 +217,19 @@ class Compressor:
 
 
     def add_activation_collector(self, collector):
-        wrappers = self.get_modules_wrapper()
-        for wrapper in wrappers:
+        self._fwd_hook_id += 1
+        self._fwd_hook_handles[self._fwd_hook_id] = []
+        for wrapper in self.get_modules_wrapper():
             handle = wrapper.register_forward_hook(collector)
-            wrapper.fwd_hook_handles.append(handle)
+            self._fwd_hook_handles[self._fwd_hook_id].append(handle)
+        return self._fwd_hook_id
+
+    def remove_activation_collector(self, fwd_hook_id):
+        if fwd_hook_id not in self._fwd_hook_handles:
+            raise ValueError("%s is not a valid collector id" % str(fwd_hook_id))
+        for handle in self._fwd_hook_handles[fwd_hook_id]:
+            handle.remove()
+        del self._fwd_hook_handles[fwd_hook_id]
 
     def patch_optimizer(self, *tasks):
         def patch_step(old_step):
@@ -257,7 +269,6 @@ class PrunerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.pruner = pruner
-        self.fwd_hook_handles = []
 
         # register buffer for mask
         self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))

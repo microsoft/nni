@@ -161,6 +161,11 @@ class CompressorTestCase(TestCase):
 
         assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
+        model.layers[2].set_weights([weights[0], weights[1].numpy()])
+        masks = pruner.calc_mask(layer, config_list[1]).numpy()
+        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
+        assert all(masks.sum((1)) == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
+        
     def test_torch_l1filter_pruner(self):
         """
         Filters with the minimum sum of the weights' L1 norm are pruned in this paper:
