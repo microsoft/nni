@@ -32,8 +32,8 @@ class ActivationRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list, optimizer)
-        self.register_variable("if_calculated", False)
-        self.register_variable("collected_activation", [])
+        self.set_wrappers_attribute("if_calculated", False)
+        self.set_wrappers_attribute("collected_activation", [])
         self.statistics_batch_num = statistics_batch_num
 
         def collector(module_, input_, output):

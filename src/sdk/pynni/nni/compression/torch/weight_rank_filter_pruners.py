@@ -27,7 +27,7 @@ class WeightRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list, optimizer)
-        self.register_variable("if_calculated", False)
+        self.set_wrappers_attribute("if_calculated", False)
 
     def get_mask(self, base_mask, weight, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))

@@ -103,9 +103,9 @@ class Compressor:
         """
         return self.bound_model
 
-    def register_variable(self, name, value):
+    def set_wrappers_attribute(self, name, value):
         """
-        To register buffers or add regular variable used in wrapped module's forward method.
+        To register attributes used in wrapped module's forward method.
         If the type of the value is Torch.tensor, then this value is registered as a buffer in wrapper,
         which will be saved by model.state_dict. Otherwise, this value is just a regular variable in wrapper.
 
