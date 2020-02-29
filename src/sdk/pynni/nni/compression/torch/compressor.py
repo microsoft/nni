@@ -219,15 +219,14 @@ class Compressor:
             handle = wrapper.register_forward_hook(collector)
             wrapper.fwd_hook_handles.append(handle)
 
-    def patch_optimizer(self, func):
+    def patch_optimizer(self, *tasks):
         def patch_step(old_step):
             def new_step(_, *args, **kwargs):
                 # call origin optimizer step method
                 output = old_step(*args, **kwargs)
                 # calculate mask
-                func()
-                # call pruner step method
-                self.update_step()
+                for task in tasks:
+                    task()
                 return output
             return new_step
         self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
@@ -288,7 +287,7 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
-        self.patch_optimizer(self.update_mask)
+        self.patch_optimizer(self.update_mask, self.update_step)
 
     def compress(self):
         self.update_mask()
@@ -469,9 +468,14 @@ class Quantizer(Compressor):
     Base quantizer for pytorch quantizer
     """
 
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, None)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantGrad
+        if self.optimizer is not None:
+            self.patch_optimizer(self.update_step)
+            for wrapper in self.get_modules_wrapper():
+                if 'weight' in wrapper.config['quant_types']:
+                    self.optimizer.add_param_group({"params": wrapper.module.old_weight})
 
     def quantize_weight(self, weight, wrapper, **kwargs):
         """

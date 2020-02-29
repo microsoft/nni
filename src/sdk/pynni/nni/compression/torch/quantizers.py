@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class NaiveQuantizer(Quantizer):
     """quantize weight to 8 bits
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
         self.layer_scale = {}
 
     def quantize_weight(self, weight, wrapper, **kwargs):
@@ -104,7 +104,7 @@ class QAT_Quantizer(Quantizer):
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -124,7 +124,7 @@ class QAT_Quantizer(Quantizer):
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
         self.steps = 1
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
@@ -230,8 +230,8 @@ class DoReFaQuantizer(Quantizer):
     Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
     (https://arxiv.org/abs/1606.06160)
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
 
     def quantize_weight(self, weight, wrapper, **kwargs):
         weight_bits = get_bits_length(wrapper.config, 'weight')
@@ -260,8 +260,8 @@ class BNNQuantizer(Quantizer):
     Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1
     (https://arxiv.org/abs/1602.02830)
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
         self.quant_grad = ClipGrad
 
     def quantize_weight(self, weight, wrapper, **kwargs):
