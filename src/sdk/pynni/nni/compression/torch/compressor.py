@@ -542,6 +542,7 @@ class QuantType:
     QUANT_WEIGHT = 1
     QUANT_OUTPUT = 2
 
+
 class QuantGrad(torch.autograd.Function):
     """
     Base class for overriding backward function of quantization operation.
@@ -574,8 +575,10 @@ class QuantGrad(torch.autograd.Function):
             return wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
             return wrapper.quantizer.quantize_weight(tensor, wrapper, **kwargs)
-        else:
+        elif quant_type == QuantType.QUANT_OUTPUT:
             return wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
+        else:
+            raise ValueError("unrecognized QuantType.")
 
     @classmethod
     def backward(cls, ctx, grad_output):

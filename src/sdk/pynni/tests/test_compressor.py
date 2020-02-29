@@ -132,7 +132,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d']}]
+        config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
         pruner = torch_compressor.FPGMPruner(model, config_list, optimizer)
 
         model.conv2.module.weight.data = torch.tensor(w).float()
@@ -141,7 +141,7 @@ class CompressorTestCase(TestCase):
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         model.conv2.if_calculated = False
-        model.conv2.config = {'sparsity': 0.6, 'op_types': ['Conv2d']}
+        model.conv2.config = config_list[0]
         masks = pruner.calc_mask(model.conv2)
         assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 

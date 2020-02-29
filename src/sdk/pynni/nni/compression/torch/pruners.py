@@ -109,7 +109,7 @@ class AGP_Pruner(Pruner):
         if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
             return None
 
-        mask = {'weight_mask': kwargs['weight_mask'] if 'weight_mask' in kwargs else torch.ones(weight.shape).type_as(weight)}
+        mask = {'weight_mask': wrapper.weight_mask}
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
         if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
@@ -216,7 +216,7 @@ class SlimPruner(Pruner):
         config = wrapper.config
         weight = wrapper.module.weight.data
         op_type = wrapper.type
-        config = wrapper.config
+
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
         if wrapper.if_calculated:
             return None
