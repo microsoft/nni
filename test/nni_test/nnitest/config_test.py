@@ -81,7 +81,8 @@ def get_max_values(config_file):
 def run(args):
     '''test all configuration files'''
     if args.config is None:
-        config_files = glob.glob('./config_test/**/*.test.yml')
+        assert args.config_dir is not None
+        config_files = glob.glob('{}/**/*.test.yml'.format(args.config_dir))
     else:
         config_files = args.config.split(',')
 
@@ -111,6 +112,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--config_dir", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
