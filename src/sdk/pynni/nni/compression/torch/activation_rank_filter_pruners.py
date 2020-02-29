@@ -35,7 +35,6 @@ class ActivationRankFilterPruner(Pruner):
         self.register_variable("if_calculated", False)
         self.register_variable("collected_activation", [])
         self.statistics_batch_num = statistics_batch_num
-        self.hooks = {}
 
         def collector(module_, input_, output):
             if len(module_.collected_activation) < self.statistics_batch_num:
