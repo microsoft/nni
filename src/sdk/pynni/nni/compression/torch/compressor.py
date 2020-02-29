@@ -100,7 +100,7 @@ class Compressor:
         """
         return self.bound_model
 
-    def register_buffer(self, name, value):
+    def register_variable(self, name, value):
         """
         To register buffers or add regular variable used in wrapped module's forward method.
         If the type of the value is Torch.tensor, then this value is registered as a buffer in wrapper,
@@ -296,7 +296,11 @@ class Pruner(Compressor):
 
     def update_mask(self):
         for wrapper in self.get_modules_wrapper():
-            self.calc_mask(wrapper)
+            masks = self.calc_mask(wrapper)
+            if masks is not None:
+                for k in masks:
+                    assert hasattr(wrapper, k), "there is no attribute '%s' in wrapper" % k
+                    setattr(wrapper, k, masks[k])
 
     def calc_mask(self, wrapper, **kwargs):
         """

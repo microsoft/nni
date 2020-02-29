@@ -27,7 +27,7 @@ class LevelPruner(Pruner):
         """
 
         super().__init__(model, config_list, optimizer)
-        self.register_buffer("if_calculated", False)
+        self.register_variable("if_calculated", False)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -82,7 +82,7 @@ class AGP_Pruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.now_epoch = 0
-        self.register_buffer("if_calculated", False)
+        self.register_variable("if_calculated", False)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -196,7 +196,7 @@ class SlimPruner(Pruner):
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
-        self.register_buffer("if_calculated", False)
+        self.register_variable("if_calculated", False)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -230,8 +230,6 @@ class SlimPruner(Pruner):
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
         wrapper.if_calculated = True
-        wrapper.weight_mask = mask['weight_mask']
-        wrapper.bias_mask = mask['bias_mask']
         return mask
 
 class LotteryTicketPruner(Pruner):

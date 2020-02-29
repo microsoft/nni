@@ -32,7 +32,7 @@ class ActivationRankFilterPruner(Pruner):
         """
 
         super().__init__(model, config_list, optimizer)
-        self.register_buffer("if_calculated", False)
+        self.register_variable("if_calculated", False)
         self.statistics_batch_num = statistics_batch_num
         self.collected_activation = {}
         self.hooks = {}
