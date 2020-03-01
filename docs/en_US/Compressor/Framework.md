@@ -47,14 +47,14 @@ class NewPruner(Pruner):
         # do something to calculate weight_mask
         wrapper.weight_mask = weight_mask
 ```
-### register buffers
-Sometimes `cal_mask` must save some state data, therefore users can use `register_buffer` API to register buffers just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`.
+### Set wrapper attribute
+Sometimes `cal_mask` must save some state data, therefore users can use `set_wrappers_attribute` API to register attribute just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`.
 
 ```python
 class NewPruner(Pruner):
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
-        self.register_buffer("if_calculated", False)
+        self.set_wrappers_attribute("if_calculated", False)
     
     def calc_mask(self, wrapper):
         # do something to calculate weight_mask
@@ -63,6 +63,38 @@ class NewPruner(Pruner):
         else:
             wrapper.if_calculated = True
             # update masks
+```
+
+### Collect data during forward
+Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. Therefore user can add a customized collector to module.
+
+```python
+class ActivationRankFilterPruner(Pruner):
+    def __init__(self, model, config_list, optimizer, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, optimizer)
+        self.set_wrappers_attribute("if_calculated", False)
+        self.set_wrappers_attribute("collected_activation", [])
+        self.statistics_batch_num = statistics_batch_num
+
+        def collector(module_, input_, output):
+            if len(module_.collected_activation) < self.statistics_batch_num:
+                module_.collected_activation.append(self.activation(output.detach().cpu()))
+        self.add_activation_collector(collector)
+        assert activation in ['relu', 'relu6']
+        if activation == 'relu':
+            self.activation = torch.nn.functional.relu
+        elif activation == 'relu6':
+            self.activation = torch.nn.functional.relu6
+        else:
+            self.activation = None
+```
+The collector function will be called each time the forward method runs.
+
+Users can also remove this collector like this:
+```python
+collector_id = self.add_activation_collector(collector)
+# ...
+self.remove_activation_collector(collector_id)
 ```
 
 ### Multi-GPU support
