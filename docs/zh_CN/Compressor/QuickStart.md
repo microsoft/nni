@@ -38,11 +38,11 @@ pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19
 
 ## 加速模型
 
-Masks do not provide real speedup of your model. The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
+掩码实际上并不能加速模型。 要基于导出的掩码，来对模型加速，因此，NNI 提供了 API 来加速模型。 在模型上调用 `apply_compression_results` 后，模型会变得更小，推理延迟也会减小。
 
 ```python
 from nni.compression.torch import apply_compression_results
 apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 ```
 
-Please refer to [here](ModelSpeedup.md) for detailed description.
+参考[这里](ModelSpeedup.md)，了解详情。
