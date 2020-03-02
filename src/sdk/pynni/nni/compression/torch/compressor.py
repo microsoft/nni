@@ -480,6 +480,8 @@ class Quantizer(Compressor):
             self.patch_optimizer(self.step_with_optimizer)
             for wrapper in self.get_modules_wrapper():
                 if 'weight' in wrapper.config['quant_types']:
+                    # old_weight is registered to keep track of weight before quantization
+                    # and it is trainable, therefore, it should be added to optimizer.
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
 
     def quantize_weight(self, weight, wrapper, **kwargs):
