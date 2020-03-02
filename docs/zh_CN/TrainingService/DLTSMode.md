@@ -1,8 +1,8 @@
 **在 DLTS 上运行 Experiment**
 ===
-NNI 支持在 [DLTS](https://github.com/microsoft/DLWorkspace.git) 上运行 Experiment ，称之为 dlts 模式。 Before starting to use NNI dlts mode, you should have an account to access DLTS dashboard.
+NNI 支持在 [DLTS](https://github.com/microsoft/DLWorkspace.git) 上运行 Experiment ，称之为 dlts 模式。 在开始使用 NNI dlts 模式之前，应该有访问 DLTS 仪表板的账号。
 
-## Setup Environment
+## 设置环境
 
 步骤 1. 从 DLTS 仪表板中选择集群，关于仪表板地址，需咨询管理员。
 
@@ -34,16 +34,16 @@ dltsConfig:
   dashboard: # Ask administrator for the cluster dashboard URL
 ```
 
-Remember to fill the cluster dashboard URL to the last line.
+记得将群集仪表板地址填到最后一行。
 
-步骤 3. Open your working directory of the cluster, paste the NNI config as well as related code to a directory.
+步骤 3. 打开群集的工作目录，将 NNI 配置和相关代码放入目录中。
 
 ![复制配置](../../img/dlts-step3.png)
 
-步骤 4. Submit a NNI manager job to the specified cluster.
+步骤 4. 将 NNI 管理器任务提交到指定的群集。
 
 ![提交 Job](../../img/dlts-step4.png)
 
-步骤 5. Go to Endpoints tab of the newly created job, click the Port 40000 link to check trial's information.
+步骤 5. 转到新创建的任务选项卡，单击端口 40000 的链接检查 Trial 的信息。
 
 ![查看 NNI Web 界面](../../img/dlts-step5.png)
