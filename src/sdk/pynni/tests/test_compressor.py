@@ -160,11 +160,6 @@ class CompressorTestCase(TestCase):
         masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
 
         assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
-
-        model.layers[2].set_weights([weights[0], weights[1].numpy()])
-        masks = pruner.calc_mask(layer, config_list[1]).numpy()
-        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
-        assert all(masks.sum((1)) == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
         
     def test_torch_l1filter_pruner(self):
         """
@@ -270,7 +265,7 @@ class CompressorTestCase(TestCase):
         assert math.isclose(model.relu.module.tracked_min_biased, 0, abs_tol=eps)
         assert math.isclose(model.relu.module.tracked_max_biased, 0.002, abs_tol=eps)
 
-        quantizer.update_step()
+        quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
         assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)
