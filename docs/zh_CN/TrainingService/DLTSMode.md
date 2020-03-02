@@ -1,17 +1,17 @@
-**Run an Experiment on DLTS**
+**在 DLTS 上运行 Experiment**
 ===
-NNI supports running an experiment on [DLTS](https://github.com/microsoft/DLWorkspace.git), called dlts mode. Before starting to use NNI dlts mode, you should have an account to access DLTS dashboard.
+NNI 支持在 [DLTS](https://github.com/microsoft/DLWorkspace.git) 上运行 Experiment ，称之为 dlts 模式。 Before starting to use NNI dlts mode, you should have an account to access DLTS dashboard.
 
 ## Setup Environment
 
-Step 1. Choose a cluster from DLTS dashboard, ask administrator for the cluster dashboard URL.
+步骤 1. 从 DLTS 仪表板中选择集群，关于仪表板地址，需咨询管理员。
 
-![Choose Cluster](../../img/dlts-step1.png)
+![选择集群](../../img/dlts-step1.png)
 
-Step 2. Prepare a NNI config YAML like the following:
+步骤 2. 准备 NNI 配置 YAML，如下所示：
 
 ```yaml
-# Set this field to "dlts"
+# 将此字段设置为 "dlts"
 trainingServicePlatform: dlts
 authorName: your_name
 experimentName: auto_mnist
@@ -29,21 +29,21 @@ trial:
   codeDir: .
   gpuNum: 1
   image: msranni/nni
-# Configuration to access DLTS
+# 访问 DLTS 的配置
 dltsConfig:
   dashboard: # Ask administrator for the cluster dashboard URL
 ```
 
 Remember to fill the cluster dashboard URL to the last line.
 
-Step 3. Open your working directory of the cluster, paste the NNI config as well as related code to a directory.
+步骤 3. Open your working directory of the cluster, paste the NNI config as well as related code to a directory.
 
-![Copy Config](../../img/dlts-step3.png)
+![复制配置](../../img/dlts-step3.png)
 
-Step 4. Submit a NNI manager job to the specified cluster.
+步骤 4. Submit a NNI manager job to the specified cluster.
 
-![Submit Job](../../img/dlts-step4.png)
+![提交 Job](../../img/dlts-step4.png)
 
-Step 5. Go to Endpoints tab of the newly created job, click the Port 40000 link to check trial's information.
+步骤 5. Go to Endpoints tab of the newly created job, click the Port 40000 link to check trial's information.
 
-![View NNI WebUI](../../img/dlts-step5.png)
+![查看 NNI Web 界面](../../img/dlts-step5.png)
