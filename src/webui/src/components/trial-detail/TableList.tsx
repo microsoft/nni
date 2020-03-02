@@ -247,11 +247,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                const temp = parseMetrics(res.data[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp.default);
-                } else {
-                    intermediateArr.push(temp);
+                if(res.data[item].type === 'PERIODICAL'){
+                    const temp = parseMetrics(res.data[item].data);
+                    if (typeof temp === 'object') {
+                        intermediateArr.push(temp.default);
+                    } else {
+                        intermediateArr.push(temp);
+                    }
                 }
             });
             const intermediate = intermediateGraphOption(intermediateArr, id);
