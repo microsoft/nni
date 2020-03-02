@@ -46,12 +46,7 @@ function parseMetrics(metricData: string): any {
 }
 
 const isArrayType = (list: any): boolean | undefined => {
-
-    if (!Array.isArray) {
-        return Object.prototype.toString.call(list) === '[object Array]';
-    } else {
-        return Array.isArray(list);
-    }
+    return Array.isArray(list);
 }
 
 // get final result value
@@ -87,7 +82,7 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
-        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')){
+        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')) {
             return showDefault;
         }
     } else {
