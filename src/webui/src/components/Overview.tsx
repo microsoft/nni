@@ -121,7 +121,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         </div>
                     </Stack>
                     <Stack horizontal tokens={stackTokens}>
-                        <div style={{ width: '40%'}}>
+                        <div style={{ width: '40%', position: 'relative'}}>
                             <Accuracy
                                 accuracyData={accuracyGraphData}
                                 accNodata={noDataMessage}

@@ -1,0 +1,34 @@
+debug: true
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: dlts
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 1
+  #The docker image to run nni job on dlts
+  image: msranni/nni:latest
+dltsConfig:
+  dashboard: http://azure-eastus-p40-dev1-infra01.eastus.cloudapp.azure.com/
+
+  # The following fields are all optional and could be retrieved from environment
+  # variables if running in DLTS job container.
+
+  # cluster: .default
+  # team: platform
+  # email: example@microsoft.com
+  # password: # Paste from DLTS dashboard
