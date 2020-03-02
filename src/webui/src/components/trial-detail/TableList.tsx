@@ -241,6 +241,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // support intermediate result is dict because the last intermediate result is
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
+            const { intermediateKey } = this.state;
             let otherkeys: string[] = ['default'];
             if (res.data.length !== 0) {
                 otherkeys = Object.keys(parseMetrics(res.data[0].data));
@@ -249,7 +250,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             Object.keys(res.data).map(item => {
                 const temp = parseMetrics(res.data[item].data);
                 if (typeof temp === 'object') {
-                    intermediateArr.push(temp.default);
+                    intermediateArr.push(temp[intermediateKey]);
                 } else {
                     intermediateArr.push(temp);
                 }
