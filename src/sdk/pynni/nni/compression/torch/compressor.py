@@ -196,12 +196,6 @@ class Compressor:
         """
         pass
 
-    def update_step(self):
-        """
-        If user want to update model every step, user can override this method
-        """
-        pass
-
     def _wrap_modules(self, layer, config):
         """
         This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
@@ -298,7 +292,7 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
-        self.patch_optimizer(self.update_mask, self.update_step)
+        self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()
@@ -483,7 +477,7 @@ class Quantizer(Compressor):
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantGrad
         if self.optimizer is not None:
-            self.patch_optimizer(self.update_step)
+            self.patch_optimizer(self.step_with_optimizer)
             for wrapper in self.get_modules_wrapper():
                 if 'weight' in wrapper.config['quant_types']:
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
@@ -548,6 +542,9 @@ class Quantizer(Compressor):
                 assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+
+    def step_with_optimizer(self):
+        pass
 
 class QuantType:
     """

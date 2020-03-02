@@ -35,7 +35,6 @@ def train(model, quantizer, device, train_loader, optimizer):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        quantizer.update_step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
 
@@ -83,12 +82,12 @@ def main():
         'quant_start_step': 1000,
         'op_types':['ReLU6']
     }]
-    quantizer = QAT_Quantizer(model, configure_list)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer)
     quantizer.compress()
 
     model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    for epoch in range(10):
+    for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
         train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)

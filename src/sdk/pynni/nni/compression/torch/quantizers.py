@@ -218,7 +218,7 @@ class QAT_Quantizer(Quantizer):
         # TODO simulate folded weight
         pass
 
-    def update_step(self):
+    def step_with_optimizer(self):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
