@@ -2,7 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
+from collections import defaultdict
 
+import numpy as np
 import torch
 
 from nni.nas.pytorch.base_mutator import BaseMutator
@@ -15,6 +17,7 @@ class Mutator(BaseMutator):
     def __init__(self, model):
         super().__init__(model)
         self._cache = dict()
+        self._connect_all = False
 
     def sample_search(self):
         """
@@ -57,6 +60,74 @@ class Mutator(BaseMutator):
         """
         return self.sample_final()
 
+    def status(self):
+        """
+        Return current selection status of mutator.
+
+        Returns
+        -------
+        dict
+            A mapping from key of mutables to decisions. All weights (boolean type and float type)
+            are converted into real number values. Numpy arrays and tensors are converted into list.
+        """
+        data = dict()
+        for k, v in self._cache.items():
+            if torch.is_tensor(v):
+                v = v.detach().cpu().numpy()
+            if isinstance(v, np.ndarray):
+                v = v.astype(np.float32).tolist()
+            data[k] = v
+        return data
+
+    def graph(self, inputs):
+        """
+        Return model supernet graph.
+
+        Parameters
+        ----------
+        inputs: tuple of tensor
+            Inputs that will be feeded into the network.
+
+        Returns
+        -------
+        dict
+            Containing ``node``, in Tensorboard GraphDef format.
+            Additional key ``mutable`` is a map from key to list of modules.
+        """
+        if not torch.__version__.startswith("1.4"):
+            logger.warning("Graph is only tested with PyTorch 1.4. Other versions might not work.")
+        from ._graph_utils import graph
+        from google.protobuf import json_format
+        # protobuf should be installed as long as tensorboard is installed
+        try:
+            self._connect_all = True
+            graph_def, _ = graph(self.model, inputs, verbose=False)
+            result = json_format.MessageToDict(graph_def)
+        finally:
+            self._connect_all = False
+
+        # `mutable` is to map the keys to a list of corresponding modules.
+        # A key can be linked to multiple modules, use `dedup=False` to find them all.
+        result["mutable"] = defaultdict(list)
+        for mutable in self.mutables.traverse(deduplicate=False):
+            # A module will be represent in the format of
+            # [{"type": "Net", "name": ""}, {"type": "Cell", "name": "cell1"}, {"type": "Conv2d": "name": "conv"}]
+            # which will be concatenated into Net/Cell[cell1]/Conv2d[conv] in frontend.
+            # This format is aligned with the scope name jit gives.
+            modules = mutable.name.split(".")
+            path = [
+                {"type": self.model.__class__.__name__, "name": ""}
+            ]
+            m = self.model
+            for module in modules:
+                m = getattr(m, module)
+                path.append({
+                    "type": m.__class__.__name__,
+                    "name": module
+                })
+            result["mutable"][mutable.key].append(path)
+        return result
+
     def on_forward_layer_choice(self, mutable, *inputs):
         """
         On default, this method retrieves the decision obtained previously, and select certain operations.
@@ -75,6 +146,11 @@ class Mutator(BaseMutator):
         tuple of torch.Tensor and torch.Tensor
             Output and mask.
         """
+        if self._connect_all:
+            return self._all_connect_tensor_reduction(mutable.reduction,
+                                                      [op(*inputs) for op in mutable.choices]), \
+                torch.ones(mutable.length)
+
         def _map_fn(op, *inputs):
             return op(*inputs)
 
@@ -101,6 +177,9 @@ class Mutator(BaseMutator):
         tuple of torch.Tensor and torch.Tensor
             Output and mask.
         """
+        if self._connect_all:
+            return self._all_connect_tensor_reduction(mutable.reduction, tensor_list), \
+                torch.ones(mutable.n_candidates)
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \
             "Invalid mask, expected {} to be of length {}.".format(mask, mutable.n_candidates)
@@ -130,6 +209,13 @@ class Mutator(BaseMutator):
         if reduction_type == "concat":
             return torch.cat(tensor_list, dim=1)
         raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+
+    def _all_connect_tensor_reduction(self, reduction_type, tensor_list):
+        if reduction_type == "none":
+            return tensor_list
+        if reduction_type == "concat":
+            return torch.cat(tensor_list, dim=1)
+        return torch.stack(tensor_list).sum(0)
 
     def _get_decision(self, mutable):
         """
