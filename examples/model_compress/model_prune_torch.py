@@ -215,7 +215,7 @@ def main(args):
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
 
-    pruner = create_pruner(model, args.pruner_name)
+    pruner = create_pruner(model, args.pruner_name, optimizer_finetune)
     model = pruner.compress()
 
     if args.multi_gpu and torch.cuda.device_count() > 1:

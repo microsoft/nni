@@ -92,8 +92,9 @@ class CompressorTestCase(TestCase):
 
     def test_torch_level_pruner(self):
         model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
-        torch_compressor.LevelPruner(model, configure_list).compress()
+        torch_compressor.LevelPruner(model, configure_list, optimizer).compress()
 
     @tf2
     def test_tf_level_pruner(self):
@@ -130,22 +131,24 @@ class CompressorTestCase(TestCase):
         """
 
         model = TorchModel()
-        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d']}, {'sparsity': 0.6, 'op_types': ['Conv2d']}]
-        pruner = torch_compressor.FPGMPruner(model, config_list)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
+        pruner = torch_compressor.FPGMPruner(model, config_list, optimizer)
 
-        model.conv2.weight.data = torch.tensor(w).float()
-        layer = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
-        masks = pruner.calc_mask(layer, config_list[0], if_calculated=torch.tensor(0))
-        assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
+        model.conv2.module.weight.data = torch.tensor(w).float()
+        masks = pruner.calc_mask(model.conv2)
+        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
 
-        model.conv2.weight.data = torch.tensor(w).float()
-        masks = pruner.calc_mask(layer, config_list[1], if_calculated=torch.tensor(0))
-        assert all(torch.sum(masks['weight'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
+        model.conv2.module.weight.data = torch.tensor(w).float()
+        model.conv2.if_calculated = False
+        model.conv2.config = config_list[0]
+        masks = pruner.calc_mask(model.conv2)
+        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
 
     @tf2
     def test_tf_fpgm_pruner(self):
         model = get_tf_model()
-        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}, {'sparsity': 0.6, 'op_types': ['Conv2D']}]
+        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}]
 
         pruner = tf_compressor.FPGMPruner(model, config_list)
         weights = model.layers[2].weights
@@ -157,12 +160,7 @@ class CompressorTestCase(TestCase):
         masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
 
         assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
-
-        model.layers[2].set_weights([weights[0], weights[1].numpy()])
-        masks = pruner.calc_mask(layer, config_list[1]).numpy()
-        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
-        assert all(masks.sum((1)) == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
-
+        
     def test_torch_l1filter_pruner(self):
         """
         Filters with the minimum sum of the weights' L1 norm are pruned in this paper:
@@ -178,18 +176,17 @@ class CompressorTestCase(TestCase):
         w = np.array([np.zeros((3, 3, 3)), np.ones((3, 3, 3)), np.ones((3, 3, 3)) * 2,
                       np.ones((3, 3, 3)) * 3, np.ones((3, 3, 3)) * 4])
         model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
                        {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
-        pruner = torch_compressor.L1FilterPruner(model, config_list)
+        pruner = torch_compressor.L1FilterPruner(model, config_list, optimizer)
 
-        model.conv1.weight.data = torch.tensor(w).float()
-        model.conv2.weight.data = torch.tensor(w).float()
-        layer1 = torch_compressor.compressor.LayerInfo('conv1', model.conv1)
-        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
-        layer2 = torch_compressor.compressor.LayerInfo('conv2', model.conv2)
-        mask2 = pruner.calc_mask(layer2, config_list[1], if_calculated=torch.tensor(0))
-        assert all(torch.sum(mask1['weight'], (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
-        assert all(torch.sum(mask2['weight'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
+        model.conv1.module.weight.data = torch.tensor(w).float()
+        model.conv2.module.weight.data = torch.tensor(w).float()
+        mask1 = pruner.calc_mask(model.conv1)
+        mask2 = pruner.calc_mask(model.conv2)
+        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
+        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
 
     def test_torch_slim_pruner(self):
         """
@@ -207,33 +204,32 @@ class CompressorTestCase(TestCase):
         """
         w = np.array([0, 1, 2, 3, 4])
         model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.2, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(-w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list)
+        pruner = torch_compressor.SlimPruner(model, config_list, optimizer)
 
-        layer1 = torch_compressor.compressor.LayerInfo('bn1', model.bn1)
-        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
-        layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
-        mask2 = pruner.calc_mask(layer2, config_list[0], if_calculated=torch.tensor(0))
-        assert all(mask1['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
-        assert all(mask2['weight'].numpy() == np.array([0., 1., 1., 1., 1.]))
-        assert all(mask1['bias'].numpy() == np.array([0., 1., 1., 1., 1.]))
-        assert all(mask2['bias'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        mask1 = pruner.calc_mask(model.bn1)
+        mask2 = pruner.calc_mask(model.bn2)
+        assert all(mask1['weight_mask'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask2['weight_mask'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask1['bias_mask'].numpy() == np.array([0., 1., 1., 1., 1.]))
+        assert all(mask2['bias_mask'].numpy() == np.array([0., 1., 1., 1., 1.]))
 
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.6, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list)
+        pruner = torch_compressor.SlimPruner(model, config_list, optimizer)
 
-        layer1 = torch_compressor.compressor.LayerInfo('bn1', model.bn1)
-        mask1 = pruner.calc_mask(layer1, config_list[0], if_calculated=torch.tensor(0))
-        layer2 = torch_compressor.compressor.LayerInfo('bn2', model.bn2)
-        mask2 = pruner.calc_mask(layer2, config_list[0], if_calculated=torch.tensor(0))
-        assert all(mask1['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
-        assert all(mask2['weight'].numpy() == np.array([0., 0., 0., 1., 1.]))
-        assert all(mask1['bias'].numpy() == np.array([0., 0., 0., 1., 1.]))
-        assert all(mask2['bias'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        mask1 = pruner.calc_mask(model.bn1)
+        mask2 = pruner.calc_mask(model.bn2)
+        assert all(mask1['weight_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask2['weight_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask1['bias_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
+        assert all(mask2['bias_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
@@ -254,14 +250,14 @@ class CompressorTestCase(TestCase):
         # range not including 0
         eps = 1e-7
         weight = torch.tensor([[1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
-        assert math.isclose(model.conv2.scale, 5 / 255, abs_tol=eps)
-        assert model.conv2.zero_point == 0
+        quantize_weight = quantizer.quantize_weight(weight, model.conv2)
+        assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
+        assert model.conv2.module.zero_point == 0
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, config_list[0], model.conv2)
-        assert math.isclose(model.conv2.scale, 6 / 255, abs_tol=eps)
-        assert model.conv2.zero_point in (42, 43)
+        quantize_weight = quantizer.quantize_weight(weight, model.conv2)
+        assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
+        assert model.conv2.module.zero_point in (42, 43)
 
         # test ema
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
@@ -269,7 +265,7 @@ class CompressorTestCase(TestCase):
         assert math.isclose(model.relu.module.tracked_min_biased, 0, abs_tol=eps)
         assert math.isclose(model.relu.module.tracked_max_biased, 0.002, abs_tol=eps)
 
-        quantizer.step()
+        quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
         assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)

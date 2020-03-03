@@ -79,15 +79,15 @@ def main():
     }, {
         'quant_types': ['output'],
         'quant_bits': 8,
-        'quant_start_step': 7000,
+        'quant_start_step': 1000,
         'op_types':['ReLU6']
     }]
-    quantizer = QAT_Quantizer(model, configure_list)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer)
     quantizer.compress()
 
     model.to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    for epoch in range(10):
+    for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
         train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)
