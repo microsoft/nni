@@ -3,7 +3,7 @@
 
 import logging
 
-from tf.keras import Model
+from tensorflow.keras import Model
 
 
 _logger = logging.getLogger(__name__)
@@ -14,7 +14,6 @@ def _global_mutable_counting():
     global _counter
     _counter += 1
     return _counter
-
 
 
 class Mutable(Model):
@@ -45,7 +44,7 @@ class Mutable(Model):
         self.__dict__['mutator'] = mutator
 
     def call(self, *inputs):
-        raise NotImplementedError('Method `call` of Mutable is not overrided')
+        raise NotImplementedError('Method `call` of Mutable must be overridden')
 
     @property
     def key(self):
