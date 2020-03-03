@@ -21,3 +21,4 @@ For details, please refer to the following tutorials:
     Quantizers <quantizers>
     Model Speedup <Compressor/ModelSpeedup>
     Automatic Model Compression <Compressor/AutoCompression>
+    Implementation <Compressor/Framework>
