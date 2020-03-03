@@ -74,7 +74,6 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
                 <Stack horizontal className="overMessage">
                     {/* status block */}
-                    {/* <Stack.Item grow styles={{ root: { maxWidth: 440 } }} className="prograph overviewBoder cc"> */}
                     <Stack.Item grow className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
