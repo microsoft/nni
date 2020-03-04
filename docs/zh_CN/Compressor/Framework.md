@@ -14,11 +14,11 @@
 3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
 
 使用 `module 包装`的原因：
-1. some buffers are needed by `cal_mask` to calculate masks and these buffers should be registered in `module wrapper` so that the original modules are not contaminated.
-2. a new `forward` method is needed to apply masks to weight before calling the real `forward` method.
+1. 计算掩码所需要的 `cal_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
+2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
 
-## How it works
-A basic pruner usage:
+## 工作原理
+基本的 Pruner 用法：
 ```python
 configure_list = [{
     'sparsity': 0.7,
@@ -30,7 +30,7 @@ pruner = SlimPruner(model, configure_list, optimizer)
 model = pruner.compress()
 ```
 
-A pruner receive model, config and optimizer as arguments. In the `__init__` method, the `step` method of the optimizer is replaced with a new `step` method that calls `cal_mask`. Also, all modules are checked if they need to be pruned based on config. If a module needs to be pruned, then this module is replaced by a `module wrapper`. Afterward, the new model and new optimizer are returned, which can be trained as before. `compress` method will calculate the default masks.
+Pruner 接收模型，配置和优化器作为参数。 在 `__init__` 方法中，优化器的 `step` 方法会被一个会调用 `cal_mask` 的新的 `step` 方法替换。 同样，所有 module 都会检查它们是否被配置为需要剪枝。如果 module 需要被剪枝，就会用 `module 包装`来替换它。 之后，会返回新的模型和优化器，并进行训练。 `compress` method will calculate the default masks.
 
 ## Implement a new pruning algorithm
 Implementing a new pruning algorithm requires implementing a new `pruner` class, which should subclass `Pruner` and override the `cal_mask` method. The `cal_mask` is called by`optimizer.step` method. The `Pruner` base class provided basic functionality listed above, for example, replacing modules and patching optimizer.
