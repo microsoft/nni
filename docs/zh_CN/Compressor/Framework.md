@@ -1,16 +1,16 @@
 ## 概述
-The model compression framework has two main components: `pruner` and `module wrapper`.
+模型压缩框架有两个主要组件： `Pruner` 和 `module 的包装`。
 
-### pruner
-A `pruner` is responsible for :
-1. provide a `cal_mask` method that calculates masks for weight and bias.
-2. replace the module with `module wrapper` based on config.
-3. modify the optimizer so that the `cal_mask` method is called every time the `step` method is called.
+### Pruner
+`Pruner` 用于：
+1. 提供 `cal_mask` 方法来计算权重和偏差的掩码（mask）。
+2. 根据配置，用 `module 的包装`来替换原始的 module。
+3. 修改优化器，来在 `step` 方法被调用时，调用 `cal_mask`。
 
-### module wrapper
-A `module wrapper` is a module containing :
-1. the origin module
-2. some buffers used by `cal_mask`
+### module 的包装
+`module 的包装` 包含：
+1. 原始的 module
+2. `cal_mask` 使用的一些缓存
 3. a new forward method that applies masks before running the original forward method.
 
 the reasons to use `module wrapper` :
