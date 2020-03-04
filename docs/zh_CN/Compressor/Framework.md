@@ -65,7 +65,7 @@ class NewPruner(Pruner):
 ```
 
 ### 在 forward 时收集数据
-Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. Therefore user can add a customized collector to module.
+有时，需要在 forward 方法中收集数据，例如，需要激活的平均值。 这时，可以为 module 增加定制的收集方法。
 
 ```python
 class ActivationRankFilterPruner(Pruner):
@@ -87,9 +87,9 @@ class ActivationRankFilterPruner(Pruner):
         else:
             self.activation = None
 ```
-The collector function will be called each time the forward method runs.
+收集函数会在每次 forward 方法运行时调用。
 
-Users can also remove this collector like this:
+还可这样来移除收集方法：
 ```python
 collector_id = self.add_activation_collector(collector)
 # ...
@@ -97,4 +97,4 @@ self.remove_activation_collector(collector_id)
 ```
 
 ### 多 GPU 支持
-On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective. Since `cal_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
+在多 GPU 训练中，缓存和参数会在每次 `forward` 方法被调用时，复制到多个 GPU 上。 如果缓存和参数要在 `forward` 更新，就需要通过`原地`更新来提高效率。 因为 `cal_mask` 会在 `optimizer.step` 方法中的调用，会在 `forward` 方法后才被调用，且只会发生在单 GPU 上，因此它天然的就支持多 GPU 的情况。
