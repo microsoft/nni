@@ -77,7 +77,7 @@ jobs:
 
 - job: 'basic_test_pr_macOS'
   pool:
-    vmImage: 'macOS 10.15'
+    vmImage: 'macOS-10.15'
   strategy:
     matrix:
       Python36:
