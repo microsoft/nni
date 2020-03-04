@@ -61,7 +61,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
             minWidth: 60,
-            maxWidth: 80,
+            maxWidth: 120,
+            isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick
         }, {
@@ -69,7 +70,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'id',
             fieldName: 'id',
             minWidth: 80,
-            maxWidth: 150,
+            maxWidth: 100,
+            isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick
@@ -77,7 +79,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Duration',
             key: 'duration',
             minWidth: 100,
-            maxWidth: 150,
+            maxWidth: 210,
+            isResizable: true,
             fieldName: 'duration',
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -89,8 +92,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }, {
             name: 'Status',
             key: 'status',
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: 140,
+            maxWidth: 210,
+            isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {
                 return (
@@ -101,8 +105,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: 120,
+            maxWidth: 360,
+            isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => {
