@@ -77,11 +77,11 @@ jobs:
 
 - job: 'basic_test_pr_macOS'
   pool:
-    vmImage: 'macOS 10.15'
+    vmImage: 'macOS-10.15'
   strategy:
     matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+      Python3:
+        PYTHON_VERSION: '3.7'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
