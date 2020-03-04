@@ -33,21 +33,21 @@ model = pruner.compress()
 Pruner 接收模型，配置和优化器作为参数。 在 `__init__` 方法中，优化器的 `step` 方法会被一个会调用 `cal_mask` 的新的 `step` 方法替换。 同样，所有 module 都会检查它们是否被配置为需要剪枝。如果 module 需要被剪枝，就会用 `module 包装`来替换它。 之后，会返回新的模型和优化器，并进行训练。 `compress` 方法会计算默认的掩码。
 
 ## 实现新的剪枝算法
-Implementing a new pruning algorithm requires implementing a new `pruner` class, which should subclass `Pruner` and override the `cal_mask` method. The `cal_mask` is called by`optimizer.step` method. The `Pruner` base class provided basic functionality listed above, for example, replacing modules and patching optimizer.
+要实现新的剪枝算法，需要继承 `Pruner` 来实现新的类，并重载 `cal_mask` 方法。 `cal_mask` 会被 `optimizer.step` 方法调用。 `Pruner` 基类提供了上述的基本功能，如替换 module 和优化器。
 
-A basic pruner look likes this:
+基础的 Pruner 如下所示：
 ```python
 class NewPruner(Pruner):
     def __init__(self, model, config_list, optimizer)
         super().__init__(model, config_list, optimizer)
-        # do some initialization
+        # 进行初始化
 
     def calc_mask(self, wrapper, **kwargs):
-        # do something to calculate weight_mask
+        # 计算 weight_mask
         wrapper.weight_mask = weight_mask
 ```
-### Set wrapper attribute
-Sometimes `cal_mask` must save some state data, therefore users can use `set_wrappers_attribute` API to register attribute just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`.
+### 设置包装的属性
+有时，`cal_mask` 需要保存一些状态数据，可以像 PyTorch 的 module 一样，使用 `set_wrappers_attribute` API 来注册属性。 这些缓存会注册到 `module 包装`中。 用户可以通过 `module 包装`来直接访问这些缓存。
 
 ```python
 class NewPruner(Pruner):
@@ -56,15 +56,15 @@ class NewPruner(Pruner):
         self.set_wrappers_attribute("if_calculated", False)
 
     def calc_mask(self, wrapper):
-        # do something to calculate weight_mask
+        # 计算 weight_mask
         if wrapper.if_calculated:
             pass
         else:
             wrapper.if_calculated = True
-            # update masks
+            # 更新掩码
 ```
 
-### Collect data during forward
+### 在 forward 时收集数据
 Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. Therefore user can add a customized collector to module.
 
 ```python
@@ -96,5 +96,5 @@ collector_id = self.add_activation_collector(collector)
 self.remove_activation_collector(collector_id)
 ```
 
-### Multi-GPU support
+### 多 GPU 支持
 On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective. Since `cal_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
