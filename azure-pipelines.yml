@@ -97,7 +97,6 @@ jobs:
       brew install swig@3
       rm /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      swig -version
       nnictl package install --name=SMAC
     displayName: 'Install dependencies'
   - script: |
