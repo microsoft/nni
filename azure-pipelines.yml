@@ -96,7 +96,9 @@ jobs:
       python3 -m pip install tensorflow==1.13.1 --user
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
       brew install swig@3
+      ls -al /usr/local/bin
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      swig -version
       nnictl package install --name=SMAC
     displayName: 'Install dependencies'
   - script: |
