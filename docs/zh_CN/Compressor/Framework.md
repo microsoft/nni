@@ -1,4 +1,4 @@
-## Overview
+## 概述
 The model compression framework has two main components: `pruner` and `module wrapper`.
 
 ### pruner
