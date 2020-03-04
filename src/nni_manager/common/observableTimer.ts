@@ -19,7 +19,7 @@ class ObservableTimer {
     }
 
     public unsubscribe( subscription: Rx.IDisposable): void {
-        if(typeof subscription !== undefined) {
+        if(typeof subscription !== 'undefined') {
             subscription.dispose();
         }
     }

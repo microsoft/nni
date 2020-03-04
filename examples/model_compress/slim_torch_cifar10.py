@@ -107,7 +107,8 @@ def main():
     
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
-    pruner = SlimPruner(model, configure_list)
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+    pruner = SlimPruner(model, configure_list, optimizer_finetune)
     model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
@@ -119,13 +120,12 @@ def main():
     model.to(device)
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
-        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer_finetune)
         top1 = test(model, device, test_loader)
+
         if top1 > best_top1:
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
