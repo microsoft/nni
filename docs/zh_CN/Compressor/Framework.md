@@ -11,9 +11,9 @@
 `module 的包装` 包含：
 1. 原始的 module
 2. `cal_mask` 使用的一些缓存
-3. a new forward method that applies masks before running the original forward method.
+3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
 
-the reasons to use `module wrapper` :
+使用 `module 包装`的原因：
 1. some buffers are needed by `cal_mask` to calculate masks and these buffers should be registered in `module wrapper` so that the original modules are not contaminated.
 2. a new `forward` method is needed to apply masks to weight before calling the real `forward` method.
 
