@@ -30,9 +30,9 @@ pruner = SlimPruner(model, configure_list, optimizer)
 model = pruner.compress()
 ```
 
-Pruner 接收模型，配置和优化器作为参数。 在 `__init__` 方法中，优化器的 `step` 方法会被一个会调用 `cal_mask` 的新的 `step` 方法替换。 同样，所有 module 都会检查它们是否被配置为需要剪枝。如果 module 需要被剪枝，就会用 `module 包装`来替换它。 之后，会返回新的模型和优化器，并进行训练。 `compress` method will calculate the default masks.
+Pruner 接收模型，配置和优化器作为参数。 在 `__init__` 方法中，优化器的 `step` 方法会被一个会调用 `cal_mask` 的新的 `step` 方法替换。 同样，所有 module 都会检查它们是否被配置为需要剪枝。如果 module 需要被剪枝，就会用 `module 包装`来替换它。 之后，会返回新的模型和优化器，并进行训练。 `compress` 方法会计算默认的掩码。
 
-## Implement a new pruning algorithm
+## 实现新的剪枝算法
 Implementing a new pruning algorithm requires implementing a new `pruner` class, which should subclass `Pruner` and override the `cal_mask` method. The `cal_mask` is called by`optimizer.step` method. The `Pruner` base class provided basic functionality listed above, for example, replacing modules and patching optimizer.
 
 A basic pruner look likes this:
