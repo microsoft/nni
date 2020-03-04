@@ -21,4 +21,4 @@ NNI 中也内置了一些流程的模型压缩算法。
     Quantizer <quantizers>
     模型加速 <Compressor/ModelSpeedup>
     自动模型压缩 <Compressor/AutoCompression>
-    Implementation <Compressor/Framework>
+    实现 <Compressor/Framework>
