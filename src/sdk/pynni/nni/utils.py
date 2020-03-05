@@ -102,7 +102,7 @@ def extract_scalar_history(trial_history, scalar_key='default'):
         Incorrect final result: the final result should be float/int,
         or a dict which has a key named "default" whose value is float/int.
     """
-    return [extract_scalar_reward(ele) for ele in trial_history]
+    return [extract_scalar_reward(ele, scalar_key) for ele in trial_history]
 
 
 def convert_dict2tuple(value):
