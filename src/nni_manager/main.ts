@@ -26,6 +26,7 @@ import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTr
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
+import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number,
@@ -59,6 +60,10 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
     } else if (platformMode === 'frameworkcontroller') {
         Container.bind(TrainingService)
             .to(FrameworkControllerTrainingService)
+            .scope(Scope.Singleton);
+    } else if (platformMode === 'dlts') {
+        Container.bind(TrainingService)
+            .to(DLTSTrainingService)
             .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
@@ -108,7 +113,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

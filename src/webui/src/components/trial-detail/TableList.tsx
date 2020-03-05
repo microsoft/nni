@@ -31,7 +31,6 @@ echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
 
-
 interface TableListProps {
     pageSize: number;
     tableSource: Array<TableRecord>;
@@ -54,7 +53,7 @@ interface TableListState {
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
     isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
-    intermediateKeys: string[]; // intermeidate modal: which key is choosed.
+    intermediateKey: string; // intermeidate modal: which key is choosed.
     isExpand: boolean;
     modalIntermediateWidth: number;
     modalIntermediateHeight: number;
@@ -86,7 +85,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCustomizedModal: false,
             isCalloutVisible: false,
             copyTrialId: '',
-            intermediateKeys: ['default'],
+            intermediateKey: 'default',
             isExpand: false,
             modalIntermediateWidth: window.innerWidth,
             modalIntermediateHeight: window.innerHeight,
@@ -128,7 +127,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         name: 'Default metric',
         className: 'leftTitle',
         key: 'accuracy',
-        fieldName: 'accuracy',
+        fieldName: 'latestAccuracy',
         minWidth: 200,
         maxWidth: 300,
         isResizable: true,
@@ -142,7 +141,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'sequenceId',
         fieldName: 'sequenceId',
         minWidth: 80,
-        maxWidth: 120,
+        maxWidth: 240,
         className: 'tableHead',
         data: 'string',
         onColumnClick: this.onColumnClick,
@@ -166,7 +165,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'startTime',
         fieldName: 'startTime',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 400,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -179,8 +178,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         name: 'End Time',
         key: 'endTime',
         fieldName: 'endTime',
-        minWidth: 150,
-        maxWidth: 200,
+        minWidth: 200,
+        maxWidth: 400,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -194,7 +193,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'duration',
         fieldName: 'duration',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 300,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -209,7 +208,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         fieldName: 'status',
         className: 'tableStatus',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 250,
         isResizable: true,
         data: 'string',
         onColumnClick: this.onColumnClick,
@@ -241,17 +240,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // support intermediate result is dict because the last intermediate result is
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
+            const { intermediateKey } = this.state;
             let otherkeys: string[] = ['default'];
             if (res.data.length !== 0) {
                 otherkeys = Object.keys(parseMetrics(res.data[0].data));
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                const temp = parseMetrics(res.data[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp.default);
-                } else {
-                    intermediateArr.push(temp);
+                if(res.data[item].type === 'PERIODICAL'){
+                    const temp = parseMetrics(res.data[item].data);
+                    if (typeof temp === 'object') {
+                        intermediateArr.push(temp[intermediateKey]);
+                    } else {
+                        intermediateArr.push(temp);
+                    }
                 }
             });
             const intermediate = intermediateGraphOption(intermediateArr, id);
@@ -294,7 +296,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
             // re-render
             this.setState({
-                intermediateKeys: [value],
+                intermediateKey: value,
                 intermediateOption: intermediate
             });
         }
@@ -388,29 +390,27 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        let allColumnList = COLUMNPro; // eslint-disable-line @typescript-eslint/no-unused-vars
-        allColumnList = COLUMNPro.concat(parameterStr);
+        let allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accuracy;
+            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
             if (temp !== undefined && typeof temp === 'object') {
-                if (!isNaN(temp)) {
-                    // concat default column and finalkeys
-                    const item = Object.keys(temp);
-                    // item: ['default', 'other-keys', 'maybe loss']
-                    if (item.length > 1) {
-                        const want: string[] = [];
-                        item.forEach(value => {
-                            if (value !== 'default') {
-                                want.push(value);
-                            }
-                        });
-                        allColumnList = COLUMNPro.concat(want);
-                    }
+                // concat default column and finalkeys
+                const item = Object.keys(temp);
+                // item: ['default', 'other-keys', 'maybe loss']
+                if (item.length > 1) {
+                    const want: string[] = [];
+                    item.forEach(value => {
+                        if (value !== 'default') {
+                            want.push(value);
+                        }
+                    });
+                    allColumnList = allColumnList.concat(want);
                 }
             }
         }
+
         return allColumnList;
     }
 
@@ -522,8 +522,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     });
                     break;
                 default:
-                    // FIXME
-                    alert('Unexpected column type');
+                    showColumn.push({
+                        name: item,
+                        key: item,
+                        fieldName: item,
+                        minWidth: 100,
+                        onRender: (record: TableRecord) => {
+                            const accDictionary = record.accDictionary;
+                            let other = '';
+                            if (accDictionary !== undefined) {
+                                other = accDictionary[item].toString();
+                            }
+                            return (
+                                <div>{other}</div>
+                            );
+                        }
+                    });
             }
         }
         return showColumn;
@@ -534,19 +548,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
-        const { columnList } = nextProps;
-        this.setState({ tableColumns: this.initTableColumnList(columnList) });
+        const { columnList, tableSource } = nextProps;
+        this.setState({
+            tableSourceForSort: tableSource,
+            tableColumns: this.initTableColumnList(columnList),
+            allColumnList: this.getAllColumnKeys()
+        });
 
     }
     render(): React.ReactNode {
-        const { intermediateKeys, modalIntermediateWidth, modalIntermediateHeight,
+        const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
             isShowCustomizedModal, copyTrialId, intermediateOption
         } = this.state;
         const { columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
-
         return (
             <Stack>
                 <div id="tableList">
@@ -580,11 +597,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     {
                         intermediateOtherKeys.length > 1
                             ?
-                            <Stack className="selectKeys" styles={{ root: { width: 800 } }}>
+                            <Stack horizontalAlign="end" className="selectKeys">
                                 <Dropdown
                                     className="select"
-                                    selectedKeys={intermediateKeys}
-                                    onChange={this.selectOtherKeys}
+                                    selectedKey={intermediateKey}
                                     options={
                                         intermediateOtherKeys.map((key, item) => {
                                             return {
@@ -592,7 +608,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             };
                                         })
                                     }
-                                    styles={{ dropdown: { width: 300 } }}
+                                    onChange={this.selectOtherKeys}
                                 />
                             </Stack>
                             :

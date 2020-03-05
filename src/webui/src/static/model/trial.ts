@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -53,10 +53,15 @@ class Trial implements TableObj {
         if (this.accuracy !== undefined) {
             return this.accuracy;
         } else if (this.intermediates.length > 0) {
-            // TODO: support intermeidate result is dict
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                return parseMetrics(temp.data);
+                if (isArrayType(parseMetrics(temp.data))) {
+                    return undefined;
+                } else if (typeof parseMetrics(temp.data) === 'object' && parseMetrics(temp.data).hasOwnProperty('default')) {
+                    return parseMetrics(temp.data).default;
+                } else if (typeof parseMetrics(temp.data) === 'number') {
+                    return parseMetrics(temp.data);
+                }
             } else {
                 return undefined;
             }
@@ -64,7 +69,6 @@ class Trial implements TableObj {
             return undefined;
         }
     }
-
     /* table obj start */
 
     get tableRecord(): TableRecord {
@@ -82,9 +86,11 @@ class Trial implements TableObj {
             duration,
             status: this.info.status,
             intermediateCount: this.intermediates.length,
-            accuracy: this.finalAcc,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
+            accDictionary: this.acc
         };
     }
 

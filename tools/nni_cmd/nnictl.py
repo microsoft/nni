@@ -11,7 +11,7 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
-                          get_config, log_stdout, log_stderr, search_space_auto_gen
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
 from .package_management import package_install, package_show
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -63,10 +63,10 @@ def parse_args():
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
-    parser_resume = subparsers.add_parser('view', help='view a stopped experiment')
-    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to view')
-    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_resume.set_defaults(func=view_experiment)
+    parser_view = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_view.set_defaults(func=view_experiment)
 
     # parse update command
     parser_updater = subparsers.add_parser('update', help='update the experiment')
@@ -158,6 +158,10 @@ def parse_args():
     parser_webui_url = parser_webui_subparsers.add_parser('url', help='show the url of web ui')
     parser_webui_url.add_argument('id', nargs='?', help='the id of experiment')
     parser_webui_url.set_defaults(func=webui_url)
+    parser_webui_nas = parser_webui_subparsers.add_parser('nas', help='show nas ui')
+    parser_webui_nas.add_argument('--port', default=6060, type=int, help='port of nas ui')
+    parser_webui_nas.add_argument('--logdir', default='.', type=str, help='the logdir where nas ui will read data')
+    parser_webui_nas.set_defaults(func=webui_nas)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')

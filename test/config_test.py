@@ -112,7 +112,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
-    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
+    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'paiYarn', 'kubeflow', 'frameworkcontroller'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
     args = parser.parse_args()

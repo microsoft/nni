@@ -33,4 +33,7 @@ def init_params(params):
     _params = copy.deepcopy(params)
 
 def get_last_metric():
-    return json_tricks.loads(_last_metric)
+    metrics = json_tricks.loads(_last_metric)
+    metrics['value'] = json_tricks.loads(metrics['value'])
+
+    return metrics

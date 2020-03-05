@@ -120,7 +120,7 @@ if __name__ == "__main__":
     dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
     model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
-    apply_fixed_architecture(model, args.arc_checkpoint, device=device)
+    apply_fixed_architecture(model, args.arc_checkpoint)
     criterion = nn.CrossEntropyLoss()
 
     model.to(device)
