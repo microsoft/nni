@@ -1,4 +1,5 @@
 import math
+import os
 import argparse
 import torch
 import torch.nn as nn
@@ -57,7 +58,7 @@ def main():
     args = parser.parse_args()
 
     torch.manual_seed(0)
-    device = torch.device('cuda')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10('./data.cifar10', train=True, download=True,
                          transform=transforms.Compose([
@@ -90,10 +91,11 @@ def main():
             train(model, device, train_loader, optimizer, True)
             test(model, device, test_loader)
         torch.save(model.state_dict(), 'vgg19_cifar10.pth')
-
+    else:
+        assert os.path.isfile('vgg19_cifar10.pth'), "can not find checkpoint 'vgg19_cifar10.pth'"
+        model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     # Test base model accuracy
     print('=' * 10 + 'Test the original model' + '=' * 10)
-    model.load_state_dict(torch.load('vgg19_cifar10.pth'))
     test(model, device, test_loader)
     # top1 = 93.60%
 
@@ -105,7 +107,8 @@ def main():
     
     # Prune model and test accuracy without fine tuning.
     print('=' * 10 + 'Test the pruned model before fine tune' + '=' * 10)
-    pruner = SlimPruner(model, configure_list)
+    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+    pruner = SlimPruner(model, configure_list, optimizer_finetune)
     model = pruner.compress()
     if args.parallel:
         if torch.cuda.device_count() > 1:
@@ -117,13 +120,12 @@ def main():
     model.to(device)
     # Fine tune the pruned model for 40 epochs and test accuracy
     print('=' * 10 + 'Fine tuning' + '=' * 10)
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
     for epoch in range(40):
-        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(model, device, train_loader, optimizer_finetune)
         top1 = test(model, device, test_loader)
+
         if top1 > best_top1:
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
