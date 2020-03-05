@@ -59,29 +59,34 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         });
 
         // true: parameters are wrong
-        let flag = false;
+        let parametersIllegal = false;
         Object.keys(customized).map(item => {
             if (item !== 'tag') {
                 // unified data type
                 if (typeof copyTrialParameter[item] === 'number' && typeof customized[item] === 'string') {
                     customized[item] = JSON.parse(customized[item]);
                 }
+                if (searchSpace[item] === undefined) {
+                    // sometimes the schema of trial parameters is different from search space
+                    // e.g. Batch Tuner
+                    return;
+                }
                 if (searchSpace[item]._type === 'choice') {
                     if (searchSpace[item]._value.find((val: string | number) =>
                         val === customized[item]) === undefined) {
-                        flag = true;
+                        parametersIllegal = true;
                         return;
                     }
                 } else {
                     if (customized[item] < searchSpace[item]._value[0]
                         || customized[item] > searchSpace[item]._value[1]) {
-                        flag = true;
+                        parametersIllegal = true;
                         return;
                     }
                 }
             }
         });
-        if (flag !== false) {
+        if (parametersIllegal !== false) {
             // open the warning modal
             this.setState(() => ({ isShowWarning: true, customParameters: customized }));
         } else {
