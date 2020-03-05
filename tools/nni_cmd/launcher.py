@@ -99,7 +99,7 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
     node_command = 'node'
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
-    cmds = [node_command, entry_file, '--port', str(port), '--mode', platform]
+    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
         cmds += ['--readonly', 'true']
