@@ -247,7 +247,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                if(res.data[item].type === 'PERIODICAL'){
+                if (res.data[item].type === 'PERIODICAL') {
                     const temp = parseMetrics(res.data[item].data);
                     if (typeof temp === 'object') {
                         intermediateArr.push(temp[intermediateKey]);
@@ -278,11 +278,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // just watch default key-val
             if (isShowDefault === true) {
                 Object.keys(intermediateData).map(item => {
-                    const temp = parseMetrics(intermediateData[item].data);
-                    if (typeof temp === 'object') {
-                        intermediateArr.push(temp[value]);
-                    } else {
-                        intermediateArr.push(temp);
+                    if (intermediateData[item].type === 'PERIODICAL') {
+                        const temp = parseMetrics(intermediateData[item].data);
+                        if (typeof temp === 'object') {
+                            intermediateArr.push(temp[value]);
+                        } else {
+                            intermediateArr.push(temp);
+                        }
                     }
                 });
             } else {
