@@ -48,7 +48,8 @@ interface TableListState {
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
-    intermediateId: string;
+    // intermediateId: string;
+    intermediateRecord?: TableRecord;
     intermediateOtherKeys: string[];
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
@@ -80,7 +81,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectRows: [],
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
-            intermediateId: '',
+            // intermediateRecord: {},
             intermediateOtherKeys: [],
             isShowCustomizedModal: false,
             isCalloutVisible: false,
@@ -231,10 +232,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         )
     };
 
-    showIntermediateModal = async (id: string, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
+    showIntermediateModal = async (record: TableRecord, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
@@ -256,12 +257,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 }
             });
-            const intermediate = intermediateGraphOption(intermediateArr, id);
+            const intermediate = intermediateGraphOption(intermediateArr, record.id, record.sequenceId);
             this.setState({
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                intermediateId: id
+                // intermediateId: record.id
+                intermediateRecord: record
             });
         }
         this.setState({ modalVisible: true });
@@ -273,7 +275,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         if (item !== undefined) {
             const value = item.text;
             const isShowDefault: boolean = value === 'default' ? true : false;
-            const { intermediateData, intermediateId } = this.state;
+            // const { intermediateData, intermediateId } = this.state;
+            const { intermediateData, intermediateRecord } = this.state;
             const intermediateArr: number[] = [];
             // just watch default key-val
             if (isShowDefault === true) {
@@ -293,7 +296,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 });
             }
-            const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
+            const intermediate = intermediateGraphOption(intermediateArr, intermediateRecord!.id, intermediateRecord!.sequenceId);
             // re-render
             this.setState({
                 intermediateKey: value,
@@ -471,7 +474,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         className="detail-button-operation"
                                         title="Intermediate"
-                                        onClick={this.showIntermediateModal.bind(this, record.id)}
+                                        // onClick={this.showIntermediateModal.bind(this, record.id)}
+                                        onClick={this.showIntermediateModal.bind(this, record)}
                                     >
                                         {LineChart}
                                     </PrimaryButton>

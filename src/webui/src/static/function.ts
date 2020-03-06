@@ -91,13 +91,16 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
 };
 
 // detail page table intermediate button
-const intermediateGraphOption = (intermediateArr: number[], id: string): any => {
+const intermediateGraphOption = (intermediateArr: number[], id: string, trialNum: number): any => {
     const sequence: number[] = [];
     const lengthInter = intermediateArr.length;
     for (let i = 1; i <= lengthInter; i++) {
         sequence.push(i);
     }
     return {
+        grid: {
+            right: '12%'
+        },
         title: {
             text: id,
             left: 'center',
@@ -110,7 +113,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             trigger: 'item'
         },
         xAxis: {
-            name: 'Trial',
+            name: `Trial No.${trialNum}`,
             data: sequence
         },
         yAxis: {
