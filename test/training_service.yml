@@ -52,7 +52,7 @@ frameworkcontroller:
 
 local:
   trainingServicePlatform: local
-pai:
+paiYarn:
   nniManagerIp:
   maxExecDuration: 15m
   paiYarnConfig:
@@ -68,6 +68,21 @@ pai:
     memoryMB: 8192
     outputDir:
     virtualCluster:
+pai:
+  nniManagerIp:
+  maxExecDuration: 15m
+  paiConfig:
+    host:
+    userName:
+  trainingServicePlatform: pai
+  trial:
+    gpuNum: 1
+    cpuNum: 1
+    image:
+    memoryMB: 8192
+    nniManagerNFSMountPath: 
+    containerNFSMountPath: 
+    paiStoragePlugin: 
 remote:
   machineList:
   - ip:

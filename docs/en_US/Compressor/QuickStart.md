@@ -1,6 +1,6 @@
 # Quick Start to Compress a Model
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage. The complete code of this example can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py).
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage.
 
 ## Write configuration
 
@@ -33,6 +33,8 @@ After training, you get accuracy of the pruned model. You can export model weigh
 ```python
 pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 ```
+
+The complete code of model compression examples can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py).
 
 ## Speed up the model
 

@@ -70,6 +70,8 @@ build:
 	cp -rf src/nni_manager/config src/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
+	#$(_INFO) Building NAS UI $(_END)
+	cd src/nasui && $(NNI_YARN) && $(NNI_YARN) build
 
 # All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH

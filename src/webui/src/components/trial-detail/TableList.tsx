@@ -31,7 +31,6 @@ echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
 
-
 interface TableListProps {
     pageSize: number;
     tableSource: Array<TableRecord>;
@@ -142,7 +141,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'sequenceId',
         fieldName: 'sequenceId',
         minWidth: 80,
-        maxWidth: 120,
+        maxWidth: 240,
         className: 'tableHead',
         data: 'string',
         onColumnClick: this.onColumnClick,
@@ -166,7 +165,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'startTime',
         fieldName: 'startTime',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 400,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -179,8 +178,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         name: 'End Time',
         key: 'endTime',
         fieldName: 'endTime',
-        minWidth: 150,
-        maxWidth: 200,
+        minWidth: 200,
+        maxWidth: 400,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -194,7 +193,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         key: 'duration',
         fieldName: 'duration',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 300,
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
@@ -209,7 +208,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         fieldName: 'status',
         className: 'tableStatus',
         minWidth: 150,
-        maxWidth: 200,
+        maxWidth: 250,
         isResizable: true,
         data: 'string',
         onColumnClick: this.onColumnClick,
@@ -241,17 +240,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // support intermediate result is dict because the last intermediate result is
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
+            const { intermediateKey } = this.state;
             let otherkeys: string[] = ['default'];
             if (res.data.length !== 0) {
                 otherkeys = Object.keys(parseMetrics(res.data[0].data));
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                const temp = parseMetrics(res.data[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp.default);
-                } else {
-                    intermediateArr.push(temp);
+                if(res.data[item].type === 'PERIODICAL'){
+                    const temp = parseMetrics(res.data[item].data);
+                    if (typeof temp === 'object') {
+                        intermediateArr.push(temp[intermediateKey]);
+                    } else {
+                        intermediateArr.push(temp);
+                    }
                 }
             });
             const intermediate = intermediateGraphOption(intermediateArr, id);
