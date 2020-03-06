@@ -140,6 +140,15 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
+            dlts_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                dashboard: joi.string().min(1),
+              
+                cluster: joi.string().min(1),
+                team: joi.string().min(1),
+              
+                email: joi.string().min(1),
+                password: joi.string().min(1)
+            }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             })

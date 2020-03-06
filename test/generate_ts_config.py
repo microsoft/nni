@@ -12,7 +12,7 @@ def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
     if args.nni_manager_ip is not None:
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
-    if args.ts == 'pai':
+    if args.ts == 'paiYarn':
         if args.pai_user is not None:
             config[args.ts]['paiYarnConfig']['userName'] = args.pai_user
         if args.pai_pwd is not None:
@@ -25,6 +25,23 @@ def update_training_service_config(args):
             config[args.ts]['trial']['dataDir'] = args.data_dir
         if args.output_dir is not None:
             config[args.ts]['trial']['outputDir'] = args.output_dir
+        if args.vc is not None:
+            config[args.ts]['trial']['virtualCluster'] = args.vc
+    if args.ts == 'pai':
+        if args.pai_user is not None:
+            config[args.ts]['paiConfig']['userName'] = args.pai_user
+        if args.pai_host is not None:
+            config[args.ts]['paiConfig']['host'] = args.pai_host
+        if args.pai_token is not None:
+            config[args.ts]['paiConfig']['token'] = args.pai_token
+        if args.nni_docker_image is not None:
+            config[args.ts]['trial']['image'] = args.nni_docker_image
+        if args.nniManagerNFSMountPath is not None:
+            config[args.ts]['trial']['nniManagerNFSMountPath'] = args.nni_manager_nfs_mount_path
+        if args.containerNFSMountPath is not None:
+            config[args.ts]['trial']['containerNFSMountPath'] = args.container_nfs_mount_path
+        if args.paiStoragePlugin is not None:
+            config[args.ts]['trial']['paiStoragePlugin'] = args.pai_storage_plugin
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
     elif args.ts == 'kubeflow':
@@ -94,6 +111,10 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", type=str)
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
+    parser.add_argument("--pai_token", type=str)
+    parser.add_argument("--pai_storage_plugin", type=str)
+    parser.add_argument("--nni_manager_nfs_mount_path", type=str)
+    parser.add_argument("--container_nfs_mount_path", type=str)
     # args for kubeflow and frameworkController
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)

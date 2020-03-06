@@ -152,7 +152,7 @@ class SendMetrics(keras.callbacks.Callback):
         if logs is None:
             logs = dict()
         logger.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        nni.report_intermediate_result(logs["val_accuracy"])
 
 
 # Training
