@@ -184,7 +184,7 @@ class FPGMPruner(WeightRankFilterPruner):
     https://arxiv.org/pdf/1811.00250.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -197,6 +197,7 @@ class FPGMPruner(WeightRankFilterPruner):
             Optimizer used to train model
         """
         super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "FPGM pruner is an iterative pruner, please pass optimizer of the model to it"
 
     def get_mask(self, base_mask, weight, num_prune):
         """

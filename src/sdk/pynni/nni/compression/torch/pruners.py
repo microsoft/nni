@@ -72,7 +72,7 @@ class AGP_Pruner(Pruner):
     https://arxiv.org/pdf/1710.01878.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -85,6 +85,8 @@ class AGP_Pruner(Pruner):
         """
 
         super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
+
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
 
