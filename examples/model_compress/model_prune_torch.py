@@ -179,8 +179,7 @@ def test(model, device, test_loader):
 
 def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    if not os.path.exists(args.checkpoints_dir):
-        os.makedirs(args.checkpoints_dir)
+    os.makedirs(args.checkpoints_dir, exist_ok=True)
 
     model_name = prune_config[args.pruner_name]['model_name']
     dataset_name = prune_config[args.pruner_name]['dataset_name']
