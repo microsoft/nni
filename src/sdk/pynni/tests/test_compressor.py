@@ -131,9 +131,8 @@ class CompressorTestCase(TestCase):
         """
 
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
-        pruner = torch_compressor.FPGMPruner(model, config_list, optimizer)
+        pruner = torch_compressor.FPGMPruner(model, config_list, torch.optim.SGD(model.parameters(), lr=0.01))
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(model.conv2)
@@ -176,10 +175,9 @@ class CompressorTestCase(TestCase):
         w = np.array([np.zeros((3, 3, 3)), np.ones((3, 3, 3)), np.ones((3, 3, 3)) * 2,
                       np.ones((3, 3, 3)) * 3, np.ones((3, 3, 3)) * 4])
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
                        {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
-        pruner = torch_compressor.L1FilterPruner(model, config_list, optimizer)
+        pruner = torch_compressor.L1FilterPruner(model, config_list)
 
         model.conv1.module.weight.data = torch.tensor(w).float()
         model.conv2.module.weight.data = torch.tensor(w).float()
@@ -204,11 +202,10 @@ class CompressorTestCase(TestCase):
         """
         w = np.array([0, 1, 2, 3, 4])
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.2, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(-w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list, optimizer)
+        pruner = torch_compressor.SlimPruner(model, config_list)
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -218,11 +215,10 @@ class CompressorTestCase(TestCase):
         assert all(mask2['bias_mask'].numpy() == np.array([0., 1., 1., 1., 1.]))
 
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         config_list = [{'sparsity': 0.6, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list, optimizer)
+        pruner = torch_compressor.SlimPruner(model, config_list)
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
