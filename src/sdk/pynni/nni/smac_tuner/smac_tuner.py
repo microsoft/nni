@@ -309,6 +309,7 @@ class SMACTuner(Tuner):
             if not _value:
                 self.logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
+            _value = extract_scalar_reward(_value)
             # convert the keys in loguniform and categorical types
             valid_entry = True
             for key, value in _params.items():
