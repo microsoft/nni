@@ -36,11 +36,11 @@ def update_training_service_config(args):
             config[args.ts]['paiConfig']['token'] = args.pai_token
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
-        if args.nniManagerNFSMountPath is not None:
+        if args.nni_manager_nfs_mount_path is not None:
             config[args.ts]['trial']['nniManagerNFSMountPath'] = args.nni_manager_nfs_mount_path
-        if args.containerNFSMountPath is not None:
+        if args.container_nfs_mount_path is not None:
             config[args.ts]['trial']['containerNFSMountPath'] = args.container_nfs_mount_path
-        if args.paiStoragePlugin is not None:
+        if args.pai_storage_plugin is not None:
             config[args.ts]['trial']['paiStoragePlugin'] = args.pai_storage_plugin
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
