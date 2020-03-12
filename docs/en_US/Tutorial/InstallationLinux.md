@@ -2,7 +2,7 @@
 
 ## Installation
 
-Installation on Linux and macOS follow the same instruction below.
+Installation on Linux and macOS follow the same instructions, given below.
 
 ### Install NNI through pip
 
@@ -14,7 +14,7 @@ Installation on Linux and macOS follow the same instruction below.
 
 ### Install NNI through source code
 
-  If you are interested on special or latest code version, you can install NNI through source code.
+  If you are interested in special or the latest code versions, you can install NNI through source code.
 
   Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
 
@@ -26,7 +26,7 @@ Installation on Linux and macOS follow the same instruction below.
 
 ### Use NNI in a docker image
 
-  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## Verify installation
 
@@ -72,7 +72,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+* Open the `Web UI url` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
 
 ![overview](../../img/webui_overview_page.png)
 
