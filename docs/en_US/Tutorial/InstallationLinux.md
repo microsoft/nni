@@ -32,7 +32,7 @@ Installation on Linux and macOS follow the same instructions, given below.
 
 The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
-* Download the examples via clone the source code.
+* Download the examples via cloning the source code.
 
   ```bash
   git clone -b v1.4 https://github.com/Microsoft/nni.git
