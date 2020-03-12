@@ -10,7 +10,7 @@ Users can start NNI experiments using Docker. NNI also provides an official Dock
 ## Using Docker in local machine
 
 ### Step 1: Installation of Docker
-Before you start using Docker for NNI experiments, you should install Docker on your local machine. [Refer to this](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+Before you start using Docker for NNI experiments, you should install Docker on your local machine. [See here](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
 ### Step 2: Start a Docker container
 If you have installed the Docker package in your local machine, you can start a Docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
@@ -43,7 +43,7 @@ git clone https://github.com/Microsoft/nni.git
 ```
 then you can enter `nni/examples/trials` to start an experiment.
 
-After you prepare NNI's environment, you can start a new experiment using the `nnictl` command. [Refer to this](QuickStart.md).
+After you prepare NNI's environment, you can start a new experiment using the `nnictl` command. [See here](QuickStart.md).
 
 ## Using Docker on a remote platform
 
