@@ -122,7 +122,7 @@ Currently, you can't.
 
 Note:
 
-* If an error like `Segmentation fault` is encountered, please refer to [FAQ](FAQ.md)
+* If an error like `Segmentation fault` is encountered, please refer to the [FAQ](FAQ.md)
 
 
 ## Further reading
