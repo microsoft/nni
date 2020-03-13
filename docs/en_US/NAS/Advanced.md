@@ -31,7 +31,7 @@ To demonstrate what mutators are for, we need to know how one-shot NAS normally 
 
 Finally, mutators provide a method called `mutator.export()` that export a dict with architectures to the model. Note that currently this dict this a mapping from keys of mutables to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
 
-Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md#trainers) for details.
+Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md) for details.
 
 ## Implement New Mutators
 

@@ -62,6 +62,13 @@ def extract_scalar_reward(value, scalar_key='default'):
     """
     Extract scalar reward from trial result.
 
+    Parameters
+    ----------
+    value : int, float, dict
+        the reported final metric data
+    scalar_key : str
+        the key name that indicates the numeric number
+
     Raises
     ------
     RuntimeError
@@ -78,6 +85,26 @@ def extract_scalar_reward(value, scalar_key='default'):
     return reward
 
 
+def extract_scalar_history(trial_history, scalar_key='default'):
+    """
+    Extract scalar value from a list of intermediate results.
+
+    Parameters
+    ----------
+    trial_history : list
+        accumulated intermediate results of a trial
+    scalar_key : str
+        the key name that indicates the numeric number
+
+    Raises
+    ------
+    RuntimeError
+        Incorrect final result: the final result should be float/int,
+        or a dict which has a key named "default" whose value is float/int.
+    """
+    return [extract_scalar_reward(ele, scalar_key) for ele in trial_history]
+
+
 def convert_dict2tuple(value):
     """
     convert dict type to tuple to solve unhashable problem.
@@ -90,7 +117,9 @@ def convert_dict2tuple(value):
 
 
 def init_dispatcher_logger():
-    """ Initialize dispatcher logging configuration"""
+    """
+    Initialize dispatcher logging configuration
+    """
     logger_file_path = 'dispatcher.log'
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)

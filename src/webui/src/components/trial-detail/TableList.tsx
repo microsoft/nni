@@ -242,13 +242,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
-            let otherkeys: string[] = ['default'];
+            const otherkeys: string[] = [ ];
             if (res.data.length !== 0) {
-                otherkeys = Object.keys(parseMetrics(res.data[0].data));
+                // just add type=number keys
+                const intermediateMetrics = parseMetrics(res.data[0].data);
+                for(const key in intermediateMetrics){
+                    if(typeof intermediateMetrics[key] === 'number') {
+                        otherkeys.push(key);
+                    }
+                }
             }
             // intermediateArr just store default val
             Object.keys(res.data).map(item => {
-                if(res.data[item].type === 'PERIODICAL'){
+                if (res.data[item].type === 'PERIODICAL') {
                     const temp = parseMetrics(res.data[item].data);
                     if (typeof temp === 'object') {
                         intermediateArr.push(temp[intermediateKey]);
@@ -281,11 +287,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // just watch default key-val
             if (isShowDefault === true) {
                 Object.keys(intermediateData).map(item => {
-                    const temp = parseMetrics(intermediateData[item].data);
-                    if (typeof temp === 'object') {
-                        intermediateArr.push(temp[value]);
-                    } else {
-                        intermediateArr.push(temp);
+                    if (intermediateData[item].type === 'PERIODICAL') {
+                        const temp = parseMetrics(intermediateData[item].data);
+                        if (typeof temp === 'object') {
+                            intermediateArr.push(temp[value]);
+                        } else {
+                            intermediateArr.push(temp);
+                        }
                     }
                 });
             } else {
