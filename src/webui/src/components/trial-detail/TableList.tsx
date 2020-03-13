@@ -632,7 +632,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             theme="my_theme"
                         />
-                        <div className="yAxis">#Intermediate result</div>
+                        <div className="xAxis">#Intermediate result</div>
                     </div>
                 </Modal>
                 {/* Add Column Modal */}
