@@ -48,7 +48,6 @@ interface TableListState {
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
-    // intermediateId: string;
     intermediateRecord?: TableRecord;
     intermediateOtherKeys: string[];
     isShowCustomizedModal: boolean;
@@ -81,7 +80,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectRows: [],
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
-            // intermediateRecord: {},
             intermediateOtherKeys: [],
             isShowCustomizedModal: false,
             isCalloutVisible: false,
@@ -268,7 +266,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                // intermediateId: record.id
                 intermediateRecord: record
             });
         }
@@ -281,7 +278,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         if (item !== undefined) {
             const value = item.text;
             const isShowDefault: boolean = value === 'default' ? true : false;
-            // const { intermediateData, intermediateId } = this.state;
             const { intermediateData, intermediateRecord } = this.state;
             const intermediateArr: number[] = [];
             // just watch default key-val
@@ -482,7 +478,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         className="detail-button-operation"
                                         title="Intermediate"
-                                        // onClick={this.showIntermediateModal.bind(this, record.id)}
                                         onClick={this.showIntermediateModal.bind(this, record)}
                                     >
                                         {LineChart}
