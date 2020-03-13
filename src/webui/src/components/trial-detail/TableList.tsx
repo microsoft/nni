@@ -48,7 +48,7 @@ interface TableListState {
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
-    intermediateRecord?: TableRecord;
+    intermediateId: string;
     intermediateOtherKeys: string[];
     isShowCustomizedModal: boolean;
     copyTrialId: string; // user copy trial to submit a new customized trial
@@ -80,6 +80,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectRows: [],
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
+            intermediateId: '',
             intermediateOtherKeys: [],
             isShowCustomizedModal: false,
             isCalloutVisible: false,
@@ -229,11 +230,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <span>{`#${record.intermediateCount}`}</span>
         )
     };
-
-    showIntermediateModal = async (record: TableRecord, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
+    showIntermediateModal = async (id: string, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
@@ -261,12 +261,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 }
             });
-            const intermediate = intermediateGraphOption(intermediateArr, record.id, record.sequenceId);
+            const intermediate = intermediateGraphOption(intermediateArr, id);
             this.setState({
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                intermediateRecord: record
+                intermediateRecord: id
             });
         }
         this.setState({ modalVisible: true });
@@ -278,7 +278,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         if (item !== undefined) {
             const value = item.text;
             const isShowDefault: boolean = value === 'default' ? true : false;
-            const { intermediateData, intermediateRecord } = this.state;
+            const { intermediateData, intermediateId  } = this.state;
             const intermediateArr: number[] = [];
             // just watch default key-val
             if (isShowDefault === true) {
@@ -298,8 +298,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 });
             }
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const intermediate = intermediateGraphOption(intermediateArr, intermediateRecord!.id, intermediateRecord!.sequenceId);
+            const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
             // re-render
             this.setState({
                 intermediateKey: value,
@@ -477,7 +476,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         className="detail-button-operation"
                                         title="Intermediate"
-                                        onClick={this.showIntermediateModal.bind(this, record)}
+                                        onClick={this.showIntermediateModal.bind(this, record.id)}
                                     >
                                         {LineChart}
                                     </PrimaryButton>
