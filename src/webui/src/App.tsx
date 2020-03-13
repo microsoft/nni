@@ -18,6 +18,7 @@ interface AppState {
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | null;
+    private dataFormatimer!: number | null;
 
     constructor(props: {}) {
         super(props);
@@ -41,7 +42,7 @@ class App extends React.Component<{}, AppState> {
         // final result is legal
         // 选一条succeed trial，查看final result格式是否支持
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        window.setInterval(this.test, this.state.interval * 1000);
+        this.dataFormatimer = window.setInterval(this.test, this.state.interval * 1000);
         
     }
 
@@ -59,6 +60,7 @@ class App extends React.Component<{}, AppState> {
                         isilLegalFinal: true,
                         expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
                     }));
+                    window.clearInterval(this.dataFormatimer);
                 }
             }
         }
