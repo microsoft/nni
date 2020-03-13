@@ -241,7 +241,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
-            const otherkeys: string[] = [];
+            const otherkeys: string[] = [ ];
             if (res.data.length !== 0) {
                 // just add type=number keys
                 const intermediateMetrics = parseMetrics(res.data[0].data);
