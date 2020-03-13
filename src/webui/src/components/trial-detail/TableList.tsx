@@ -300,6 +300,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 });
             }
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const intermediate = intermediateGraphOption(intermediateArr, intermediateRecord!.id, intermediateRecord!.sequenceId);
             // re-render
             this.setState({
