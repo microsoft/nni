@@ -18,7 +18,7 @@ interface AppState {
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | null;
-    private dataFormatimer!: number | null;
+    private dataFormatimer!: number;
 
     constructor(props: {}) {
         super(props);
@@ -43,7 +43,6 @@ class App extends React.Component<{}, AppState> {
         // 选一条succeed trial，查看final result格式是否支持
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this.dataFormatimer = window.setInterval(this.test, this.state.interval * 1000);
-        
     }
 
     test = () => {
@@ -51,6 +50,8 @@ class App extends React.Component<{}, AppState> {
         for(let i = 0; this.state.isilLegalFinal === false; i++){
             if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
                 const oneSucceedTrial = JSON.parse(TRIALS.succeededTrials()[0].final!.data);
+                console.info(oneSucceedTrial); // eslint-disable-line
+                console.info(typeof oneSucceedTrial); // eslint-disable-line
                 if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
                     return;
                 } else {
