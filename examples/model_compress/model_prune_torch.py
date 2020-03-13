@@ -142,10 +142,10 @@ def create_model(model_name='naive'):
     else:
         return VGG(19)
 
-def create_pruner(model, pruner_name, optimizer=None):
+def create_pruner(model, pruner_name):
     pruner_class = prune_config[pruner_name]['pruner_class']
     config_list = prune_config[pruner_name]['config_list']
-    return pruner_class(model, config_list, optimizer)
+    return pruner_class(model, config_list)
 
 def train(model, device, train_loader, optimizer):
     model.train()
@@ -179,7 +179,6 @@ def test(model, device, test_loader):
 
 def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    os.makedirs(args.checkpoints_dir, exist_ok=True)
 
     model_name = prune_config[args.pruner_name]['model_name']
     dataset_name = prune_config[args.pruner_name]['dataset_name']
@@ -204,6 +203,8 @@ def main(args):
 
     print('start model pruning...')
 
+    if not os.path.exists(args.checkpoints_dir):
+        os.makedirs(args.checkpoints_dir)
     model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
     mask_path = os.path.join(args.checkpoints_dir, 'mask_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
 

@@ -15,13 +15,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 
-# Temporary patch this example until the MNIST dataset download issue get resolved
-# https://github.com/pytorch/vision/issues/1938
-import urllib
-
-opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-urllib.request.install_opener(opener)
 
 logger = logging.getLogger('mnist_AutoML')
 

@@ -27,7 +27,7 @@ class Compressor:
     Abstract base PyTorch compressor
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Record necessary info in class members
 
@@ -235,8 +235,7 @@ class Compressor:
                     task()
                 return output
             return new_step
-        if self.optimizer is not None:
-            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+        self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
 
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
@@ -291,10 +290,9 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
-        if optimizer is not None:
-            self.patch_optimizer(self.update_mask)
+        self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()

@@ -15,7 +15,7 @@ class WeightRankFilterPruner(Pruner):
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -24,8 +24,6 @@ class WeightRankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -85,7 +83,7 @@ class L1FilterPruner(WeightRankFilterPruner):
     https://arxiv.org/abs/1608.08710
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -94,8 +92,6 @@ class L1FilterPruner(WeightRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -135,7 +131,7 @@ class L2FilterPruner(WeightRankFilterPruner):
     smallest L2 norm of the weights.
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -144,8 +140,6 @@ class L2FilterPruner(WeightRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -193,11 +187,8 @@ class FPGMPruner(WeightRankFilterPruner):
         config_list: list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
         """
         super().__init__(model, config_list, optimizer)
-        assert isinstance(optimizer, torch.optim.Optimizer), "FPGM pruner is an iterative pruner, please pass optimizer of the model to it"
 
     def get_mask(self, base_mask, weight, num_prune):
         """
