@@ -3,6 +3,7 @@ import { Stack } from 'office-ui-fabric-react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
+import MessageInfo from './components/Modals/MessageInfo';
 import './App.scss';
 
 interface AppState {
@@ -11,6 +12,8 @@ interface AppState {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
+    isilLegalFinal: boolean;
+    expWarningMessage: string;
 }
 
 class App extends React.Component<{}, AppState> {
@@ -23,7 +26,9 @@ class App extends React.Component<{}, AppState> {
             columnList: COLUMN,
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
-            metricGraphMode: 'max'
+            metricGraphMode: 'max',
+            isilLegalFinal: false,
+            expWarningMessage: ''
         };
     }
 
@@ -33,6 +38,30 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
         this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
+        // final result is legal
+        // 选一条succeed trial，查看final result格式是否支持
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        window.setInterval(this.test, this.state.interval * 1000);
+        
+    }
+
+    test = () => {
+        console.info('例行检查'); // eslint-disable-line
+        for(let i = 0; this.state.isilLegalFinal === false; i++){
+            if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
+                const oneSucceedTrial = JSON.parse(TRIALS.succeededTrials()[0].final!.data);
+                if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
+                    return;
+                } else {
+                    console.info('数据不合常理'); // eslint-disable-line
+                    // 非法
+                    this.setState(() => ({
+                        isilLegalFinal: true,
+                        expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
+                    }));
+                }
+            }
+        }
     }
 
     changeInterval = (interval: number): void => {
@@ -54,18 +83,19 @@ class App extends React.Component<{}, AppState> {
     }
 
     render(): React.ReactNode {
-        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
+        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
+        metricGraphMode, isilLegalFinal, expWarningMessage } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
                 child as React.ReactElement<any>, {
-                    interval,
-                    columnList, changeColumn: this.changeColumn,
-                    experimentUpdateBroadcast,
-                    trialsUpdateBroadcast,
-                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
+                interval,
+                columnList, changeColumn: this.changeColumn,
+                experimentUpdateBroadcast,
+                trialsUpdateBroadcast,
+                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
             })
         );
 
@@ -73,11 +103,14 @@ class App extends React.Component<{}, AppState> {
             <Stack className="nni" style={{ minHeight: window.innerHeight }}>
                 <div className="header">
                     <div className="headerCon">
-                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh}/>
+                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                     </div>
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
+                        {isilLegalFinal && <div className="warning">
+                            <MessageInfo info={expWarningMessage} typeInfo="warning" />
+                        </div>}
                         {reactPropsChildren}
                     </Stack>
                 </Stack>
