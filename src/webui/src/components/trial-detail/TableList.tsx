@@ -241,12 +241,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
-            const otherkeys: string[] = [ ];
+            const otherkeys: string[] = [];
             if (res.data.length !== 0) {
                 // just add type=number keys
                 const intermediateMetrics = parseMetrics(res.data[0].data);
-                for(const key in intermediateMetrics){
-                    if(typeof intermediateMetrics[key] === 'number') {
+                for (const key in intermediateMetrics) {
+                    if (typeof intermediateMetrics[key] === 'number') {
                         otherkeys.push(key);
                     }
                 }
@@ -622,15 +622,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             :
                             null
                     }
-                    <ReactEcharts
-                        option={intermediateOption}
-                        style={{
-                            width: 0.5 * modalIntermediateWidth,
-                            height: 0.7 * modalIntermediateHeight,
-                            padding: 20
-                        }}
-                        theme="my_theme"
-                    />
+                    <div className="intermediate-graph">
+                        <ReactEcharts
+                            option={intermediateOption}
+                            style={{
+                                width: 0.5 * modalIntermediateWidth,
+                                height: 0.7 * modalIntermediateHeight,
+                                padding: 20
+                            }}
+                            theme="my_theme"
+                        />
+                        <div className="yAxis">#Intermediate result</div>
+                    </div>
                 </Modal>
                 {/* Add Column Modal */}
                 {
