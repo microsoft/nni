@@ -98,6 +98,9 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
         sequence.push(i);
     }
     return {
+        grid: {
+            right: '12%'
+        },
         title: {
             text: id,
             left: 'center',
@@ -110,7 +113,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             trigger: 'item'
         },
         xAxis: {
-            name: 'Trial',
+            name: '#Intermediate result',
             data: sequence
         },
         yAxis: {
