@@ -16,7 +16,7 @@ class ActivationRankFilterPruner(Pruner):
     to achieve a preset level of network sparsity.
     """
 
-    def __init__(self, model, config_list, optimizer, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -25,6 +25,8 @@ class ActivationRankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
@@ -105,7 +107,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
     https://arxiv.org/abs/1607.03250
     """
 
-    def __init__(self, model, config_list, optimizer, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -114,6 +116,8 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
@@ -177,7 +181,7 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
     https://arxiv.org/abs/1611.06440
     """
 
-    def __init__(self, model, config_list, optimizer, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -186,6 +190,8 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
