@@ -324,8 +324,8 @@ def batchnorm2d_mask(module_masks, mask):
     CoarseMask, CoarseMask
         The mask of its input tensor, the mask of its output tensor
     """
-    assert 'weight_mask' in mask and 'bias_mask' in mask
-    sum_mask = mask['weight_mask'] + mask['bias_mask']
+    assert 'weight' in mask and 'bias' in mask
+    sum_mask = mask['weight'] + mask['bias']
     nonzero_index = torch.nonzero(sum_mask, as_tuple=True)[0]
     # infer shape of parameters
     param_cmask = CoarseMask(num_dim=1)
@@ -335,7 +335,7 @@ def batchnorm2d_mask(module_masks, mask):
     # infer shape of input tensor
     input_cmask = CoarseMask(num_dim=4)
     input_cmask.add_index_mask(dim=1,
-                               index=torch.nonzero(mask['weight_mask'], as_tuple=True)[0])
+                               index=torch.nonzero(mask['weight'], as_tuple=True)[0])
     module_masks.set_input_mask(input_cmask)
     # infer shape of output tensor
     output_cmask = CoarseMask(num_dim=4)
@@ -371,9 +371,9 @@ def conv2d_mask(module_masks, mask):
         LongTensor, CoarseMask, CoarseMask
             Index of the masked dimension, weight mask, bias mask
         """
-        assert 'weight_mask' in mask
-        assert isinstance(mask['weight_mask'], torch.Tensor)
-        weight_mask = mask['weight_mask']
+        assert 'weight' in mask
+        assert isinstance(mask['weight'], torch.Tensor)
+        weight_mask = mask['weight']
         shape = weight_mask.size()
         ones = torch.ones(shape[1:]).to(weight_mask.device)
         zeros = torch.zeros(shape[1:]).to(weight_mask.device)
@@ -393,8 +393,8 @@ def conv2d_mask(module_masks, mask):
             weight_cmask = CoarseMask(num_dim=4)
             weight_cmask.add_index_mask(dim=0, index=index)
             bias_cmask = None
-            if 'bias_mask' in mask and mask['bias_mask'] is not None:
-                bias_index = torch.nonzero(mask['bias_mask'], as_tuple=True)[0]
+            if 'bias' in mask and mask['bias'] is not None:
+                bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
                 assert torch.all(torch.eq(index, bias_index)), \
                     "bias mask should be consistent with weight mask"
                 bias_cmask = CoarseMask(num_dim=1)

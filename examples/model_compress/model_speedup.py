@@ -9,7 +9,7 @@ from nni.compression.speedup.torch import ModelSpeedup
 from nni.compression.torch import apply_compression_results
 
 torch.manual_seed(0)
-use_mask = False
+use_mask = True
 
 def apoz_speedup(masks_file, model_checkpoint):
     device = torch.device('cuda')
@@ -24,7 +24,7 @@ def apoz_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('mask elapsed time: ', time.time() - start)
         return
     else:
@@ -36,7 +36,7 @@ def apoz_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('speedup elapsed time: ', time.time() - start)
         return
 
@@ -53,28 +53,27 @@ def l1filter_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('mask elapsed time: ', time.time() - start)
         return
     else:
         #print("model before: ", model)
         m_speedup = ModelSpeedup(model, dummy_input.to(device), masks_file)
         m_speedup.speedup_model()
-        #print("model after: ", model)
+        print("model after: ", model)
         dummy_input = dummy_input.to(device)
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('speedup elapsed time: ', time.time() - start)
         return
 
 def fpgm_speedup(masks_file, model_checkpoint):
-    from fpgm_torch_mnist import Mnist
+    from model_prune_torch import NaiveModel
     device = torch.device('cpu')
-    model = Mnist()
+    model = NaiveModel()
     model.to(device)
-    model.print_conv_filter_sparsity()
 
     dummy_input = torch.randn(64, 1, 28, 28)
     if use_mask:
@@ -83,8 +82,8 @@ def fpgm_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(40):
             out = model(dummy_input)
+        print(out.size(), out)
         print('mask elapsed time: ', time.time() - start)
-        #print(out.size(), out)
         return
     else:
         m_speedup = ModelSpeedup(model, dummy_input.to(device), masks_file)
@@ -93,8 +92,8 @@ def fpgm_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(40):
             out = model(dummy_input)
+        print(out.size(), out)
         print('speedup elapsed time: ', time.time() - start)
-        #print(out.size(), out)
         return
 
 def slim_speedup(masks_file, model_checkpoint):
@@ -110,7 +109,7 @@ def slim_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('mask elapsed time: ', time.time() - start)
         return
     else:
@@ -122,13 +121,13 @@ def slim_speedup(masks_file, model_checkpoint):
         start = time.time()
         for _ in range(32):
             out = model(dummy_input)
-        #print(out.size(), out)
+        print(out.size(), out)
         print('speedup elapsed time: ', time.time() - start)
         return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="slim", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="fpgm", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     parser.add_argument("--model_checkpoint", type=str, default=None, help="the path of checkpointed model")
     args = parser.parse_args()
