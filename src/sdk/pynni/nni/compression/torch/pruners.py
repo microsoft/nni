@@ -16,7 +16,7 @@ class LevelPruner(Pruner):
     Prune to an exact pruning level specification
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -24,6 +24,8 @@ class LevelPruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -78,9 +80,13 @@ class AGP_Pruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
+
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
 
@@ -176,13 +182,17 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -244,7 +254,7 @@ class LotteryTicketPruner(Pruner):
     5. Repeat step 2, 3, and 4.
     """
 
-    def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=True):
+    def __init__(self, model, config_list, optimizer=None, lr_scheduler=None, reset_weights=True):
         """
         Parameters
         ----------
