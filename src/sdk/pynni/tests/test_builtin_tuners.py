@@ -58,7 +58,6 @@ class BuiltinTunersTestCase(TestCase):
                 tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
             if not parameters and not self.exhaustive:
                 raise ValueError("No parameters generated")
-        # import data again
 
     def check_range(self, generated_params, search_space):
         EPS = 1E-6
