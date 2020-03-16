@@ -15,8 +15,8 @@ from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterP
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
-    #if bias and wrapper.bias_mask is not None:
-    #    masks.append(wrapper.bias_mask)
+    if bias and wrapper.bias_mask is not None:
+        masks.append(wrapper.bias_mask)
     for m in masks:
         actual_sparsity = (m == 0).sum().item() / m.numel()
         msg = 'actual sparsity: {:.2f}, target sparsity: {:.2f}'.format(actual_sparsity, sparsity)
@@ -30,8 +30,8 @@ prune_config = {
             'op_types': ['default'],
         }],
         'validators': [
-            lambda model: validate_sparsity(model.conv1, 0.5, model.bias),
-            lambda model: validate_sparsity(model.fc, 0.5, model.bias)
+            lambda model: validate_sparsity(model.conv1, 0.5, False),
+            lambda model: validate_sparsity(model.fc, 0.5, False)
         ]
     },
     'agp': {
