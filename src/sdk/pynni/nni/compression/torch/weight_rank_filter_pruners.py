@@ -120,9 +120,9 @@ class L1FilterPruner(WeightRankFilterPruner):
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
         threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
         mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight)
+        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
 
-        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
 class L2FilterPruner(WeightRankFilterPruner):
@@ -166,9 +166,9 @@ class L2FilterPruner(WeightRankFilterPruner):
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
         threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
         mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight)
+        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
 
-        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
 class FPGMPruner(WeightRankFilterPruner):
