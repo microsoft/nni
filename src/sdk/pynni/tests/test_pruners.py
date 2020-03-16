@@ -2,12 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import numpy as np
-import tensorflow as tf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import nni.compression.torch as torch_compressor
 import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
