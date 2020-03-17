@@ -9,3 +9,4 @@ Introduction to NNI Training Services
     OpenPAI Yarn Mode<./TrainingService/PaiYarnMode>
     Kubeflow<./TrainingService/KubeflowMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
+    OpenPAI<./TrainingService/DLTSMode>

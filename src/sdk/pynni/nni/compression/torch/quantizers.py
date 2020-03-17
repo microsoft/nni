@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 class NaiveQuantizer(Quantizer):
     """quantize weight to 8 bits
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
         self.layer_scale = {}
 
-    def quantize_weight(self, weight, config, op_name, **kwargs):
+    def quantize_weight(self, weight, wrapper, **kwargs):
         new_scale = weight.abs().max() / 127
-        scale = max(self.layer_scale.get(op_name, 0), new_scale)
-        self.layer_scale[op_name] = scale
+        scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
+        self.layer_scale[wrapper.name] = scale
         orig_type = weight.type()  # TODO: user layer
         return weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
 
@@ -104,7 +104,7 @@ class QAT_Quantizer(Quantizer):
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -124,9 +124,9 @@ class QAT_Quantizer(Quantizer):
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
         self.steps = 1
-        modules_to_compress = self.detect_modules_to_compress()
+        modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", None)
             layer.module.register_buffer("scale", None)
@@ -181,7 +181,9 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
-    def quantize_weight(self, weight, config, op, **kwargs):
+    def quantize_weight(self, weight, wrapper, **kwargs):
+        config = wrapper.config
+        module = wrapper.module
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
@@ -189,12 +191,14 @@ class QAT_Quantizer(Quantizer):
         if quant_start_step > self.steps:
             return weight
         rmin, rmax = torch.min(weight), torch.max(weight)
-        op.scale, op.zero_point = update_quantization_param(weight_bits, rmin, rmax)
-        out = self._quantize(weight_bits, op, weight)
-        out = self._dequantize(op, out)
+        module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
+        out = self._quantize(weight_bits, module, weight)
+        out = self._dequantize(module, out)
         return out
 
-    def quantize_output(self, output, config, op, **kwargs):
+    def quantize_output(self, output, wrapper, **kwargs):
+        config = wrapper.config
+        module = wrapper.module
         output_bits = get_bits_length(config, 'output')
         quant_start_step = config.get('quant_start_step', 0)
         assert output_bits >= 1, "quant bits length should be at least 1"
@@ -203,18 +207,18 @@ class QAT_Quantizer(Quantizer):
             return output
 
         current_min, current_max = torch.min(output), torch.max(output)
-        op.tracked_min_biased, op.tracked_min = update_ema(op.tracked_min_biased, current_min, op.ema_decay, self.steps)
-        op.tracked_max_biased, op.tracked_max = update_ema(op.tracked_max_biased, current_max, op.ema_decay, self.steps)
-        op.scale, op.zero_point = update_quantization_param(output_bits, op.tracked_min, op.tracked_max)
-        out = self._quantize(output_bits, op, output)
-        out = self._dequantize(op, out)
+        module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min, module.ema_decay, self.steps)
+        module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max, module.ema_decay, self.steps)
+        module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
+        out = self._quantize(output_bits, module, output)
+        out = self._dequantize(module, out)
         return out
 
     def fold_bn(self, config, **kwargs):
         # TODO simulate folded weight
         pass
 
-    def step(self):
+    def step_with_optimizer(self):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
@@ -226,11 +230,11 @@ class DoReFaQuantizer(Quantizer):
     Zhou et al., DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients
     (https://arxiv.org/abs/1606.06160)
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
 
-    def quantize_weight(self, weight, config, **kwargs):
-        weight_bits = get_bits_length(config, 'weight')
+    def quantize_weight(self, weight, wrapper, **kwargs):
+        weight_bits = get_bits_length(wrapper.config, 'weight')
         out = weight.tanh()
         out = out / (2 * out.abs().max()) + 0.5
         out = self.quantize(out, weight_bits)
@@ -256,17 +260,17 @@ class BNNQuantizer(Quantizer):
     Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1
     (https://arxiv.org/abs/1602.02830)
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list)
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
         self.quant_grad = ClipGrad
 
-    def quantize_weight(self, weight, config, **kwargs):
+    def quantize_weight(self, weight, wrapper, **kwargs):
         out = torch.sign(weight)
         # remove zeros
         out[out == 0] = 1
         return out
 
-    def quantize_output(self, output, config, **kwargs):
+    def quantize_output(self, output, wrapper, **kwargs):
         out = torch.sign(output)
         # remove zeros
         out[out == 0] = 1

@@ -74,7 +74,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
                 <Stack horizontal className="overMessage">
                     {/* status block */}
-                    <Stack.Item styles={{ root: { maxWidth: 440 } }} className="prograph overviewBoder cc">
+                    <Stack.Item grow className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             bestAccuracy={bestAccuracy}
@@ -84,13 +84,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         />
                     </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Stack.Item styles={{root: {width: 400}}} className="overviewBoder">
+                    <Stack.Item grow styles={{root: {width: 450}}} className="overviewBoder">
                         <Title1 text="Search space" icon="10.png" />
                         <Stack className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Stack>
                     </Stack.Item>
-                    <Stack.Item styles={{root: {width: 400}}}>
+                    <Stack.Item grow styles={{root: {width: 450}}}>
                         <Title1 text="Config" icon="4.png" />
                         <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
@@ -120,7 +120,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         </div>
                     </Stack>
                     <Stack horizontal tokens={stackTokens}>
-                        <div style={{ width: '40%'}}>
+                        <div style={{ width: '40%', position: 'relative'}}>
                             <Accuracy
                                 accuracyData={accuracyGraphData}
                                 accNodata={noDataMessage}

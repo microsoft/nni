@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -55,9 +55,11 @@ class Trial implements TableObj {
         } else if (this.intermediates.length > 0) {
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                if (typeof parseMetrics(temp.data) === 'object') {
+                if (isArrayType(parseMetrics(temp.data))) {
+                    return undefined;
+                } else if (typeof parseMetrics(temp.data) === 'object' && parseMetrics(temp.data).hasOwnProperty('default')) {
                     return parseMetrics(temp.data).default;
-                } else {
+                } else if (typeof parseMetrics(temp.data) === 'number') {
                     return parseMetrics(temp.data);
                 }
             } else {
@@ -67,7 +69,6 @@ class Trial implements TableObj {
             return undefined;
         }
     }
-
     /* table obj start */
 
     get tableRecord(): TableRecord {
