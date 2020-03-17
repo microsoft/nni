@@ -12,12 +12,14 @@ testCases:
   config:
 
   # validator is run after experiment is done
+  # validator class needs to be implemented in nni_test/nnitest/validators.py
   validator:
 
-  # optional nnictl command line extra args, default nnictl command line is
-  # 'nnictl create --config <configFile>'. If this nnictlExtraArgs is specified as '--debug',
-  # the experiment will be lauched using 'nnictl create --config <configFile> --debug'
-  nnictlExtraArgs:
+  # launch command, default launch command is 'nnictl create --config $configFile'
+  launchCommand: nnictl create --config $configFile
+
+  # set experiment ID into variable, variable name should start with $, such as $expId
+  setExperimentIdtoVar: $expId
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
@@ -66,10 +68,21 @@ testCases:
   # validator is run after experiment is done
   validator: MetricsValidator
 
-  # optional nnictl command line extra args, default nnictl command line is
-  # 'nnictl create --config <configFile>'. If this nnictlExtraArgs is specified as '--debug',
-  # the experiment will be lauched using 'nnictl create --config <configFile> --debug'
-  nnictlExtraArgs:
+    # launch command, default launch command is 'nnictl create --config $configFile'
+  launchCommand: nnictl create --config $configFile
+
+  # set experiment ID into variable, variable name should start with $, such as $expId
+  setExperimentIdtoVar: $expId
+
+# Experiment resume test part 1
+- name: resume-1
+  configFile: test/config/examples/sklearn-regression.yml
+  setExperimentIdtoVar: $resumeExpId
+
+# Experiment resume test part 2
+- name: resume-2
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: nnictl resume $resumeExpId
 
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml

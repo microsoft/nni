@@ -10,10 +10,14 @@ import json
 import torch
 import ruamel.yaml as yaml
 
-from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
+from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
     parse_max_duration_time, get_succeeded_trial_num, deep_update, print_trial_job_log, get_failed_trial_jobs
-from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL
 import validators
+
+it_variables = {}
+
+DEFAULT_LAUNCH_COMMAND = 'nnictl create --config $configFile'
 
 def update_training_service_config(config, training_service):
     it_ts_config = get_yml_content('training_service.yml')
@@ -52,11 +56,14 @@ def run_test_case(test_case_config, it_config, args):
     dump_yml_content(new_config_file, test_yml_config)
     print(yaml.dump(test_yml_config, default_flow_style=False))
 
+    # set configFile variable
+    it_variables['$configFile'] = new_config_file
+
     try:
         if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
             print('skipping {}, gpu is not available'.format(test_case_config['name']))
             return
-        launch_test(new_config_file, args.ts)
+        launch_test(new_config_file, args.ts, test_case_config)
 
         validator_name = test_case_config.get('validator')
         if validator_name is not None:
@@ -72,11 +79,30 @@ def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
     return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
 
-def launch_test(config_file, training_service):
+def get_launch_command(test_case_config):
+    launch_command = test_case_config.get('launchCommand')
+    if launch_command is None:
+        launch_command = DEFAULT_LAUNCH_COMMAND
+
+    # replace variables
+    for k in it_variables:
+        launch_command = launch_command.replace(k, it_variables[k])
+    print('launch command: ', launch_command)
+    return launch_command
+
+def launch_test(config_file, training_service, test_case_config):
     '''run test per configuration file'''
 
-    proc = subprocess.run(['nnictl', 'create', '--config', config_file])
+    # replace variables in launch command
+    proc = subprocess.run(get_launch_command(test_case_config).split(' '))
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
+
+    # set experiment ID into variable
+    exp_var_name = test_case_config.get('setExperimentIdtoVar')
+    if exp_var_name is not None:
+        assert exp_var_name.startswith('$')
+        it_variables[exp_var_name] = get_experiment_id(EXPERIMENT_URL)
+    print('variables:', it_variables)
 
     max_duration, max_trial_num = get_max_values(config_file)
     sleep_interval = 3
