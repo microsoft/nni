@@ -195,8 +195,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 //deepmerge(x, y), if an element at the same key is present for both x and y, the value from y will appear in the result.
                 //refer: https://github.com/TehShrike/deepmerge
-                const overwriteMerge = (destinationArray: any, sourceArray: any, options: any) => sourceArray;
-                return yaml.safeDump(deepmerge(additionalPAIConfig, paiJobConfig, { arrayMerge: overwriteMerge }));
+                return yaml.safeDump(deepmerge(paiJobConfig, additionalPAIConfig));
             } catch (error) {
                 this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
             }
