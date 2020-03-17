@@ -36,7 +36,7 @@ class StdOutputType(Enum):
 def nni_log(log_type, log_message):
     '''Log message into stdout'''
     dt = datetime.now()
-    print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))
+    print('[{0}] {1} {2}'.format(dt, log_type.value, log_message), flush=True)
 
 class NNIRestLogHanlder(StreamHandler):
     def __init__(self, host, port, tag, std_output_type=StdOutputType.Stdout):

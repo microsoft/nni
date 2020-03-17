@@ -15,6 +15,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 
+# Temporary patch this example until the MNIST dataset download issue get resolved
+# https://github.com/pytorch/vision/issues/1938
+import urllib
+
+opener = urllib.request.build_opener()
+opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+urllib.request.install_opener(opener)
 
 logger = logging.getLogger('mnist_AutoML')
 
@@ -128,7 +135,7 @@ def get_params():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument("--data_dir", type=str,
-                        default='/tmp/tensorflow/mnist/input_data', help="data directory")
+                        default='/tmp/pytorch/mnist/input_data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument("--hidden_size", type=int, default=512, metavar='N',

@@ -152,7 +152,9 @@ class SendMetrics(keras.callbacks.Callback):
         if logs is None:
             logs = dict()
         logger.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        # accuracy key for keras 2.2.2: val_acc
+        # for keras 2.3.1: val_accuracy
+        nni.report_intermediate_result(logs["val_accuracy"])
 
 
 # Training

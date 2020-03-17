@@ -1,6 +1,6 @@
 jobs:
 - job: 'build_docker_image'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
   pool:
     vmImage: 'Ubuntu 16.04'
   steps:
