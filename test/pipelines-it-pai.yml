@@ -3,7 +3,7 @@
 
 jobs:
 - job: 'integration_test_pai'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
