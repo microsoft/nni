@@ -110,7 +110,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             trigger: 'item'
         },
         xAxis: {
-            name: 'Trial',
+            // name: '#Intermediate result',
             data: sequence
         },
         yAxis: {
