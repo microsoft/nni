@@ -127,7 +127,7 @@ def slim_speedup(masks_file, model_checkpoint):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="fpgm", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="slim", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     parser.add_argument("--model_checkpoint", type=str, default=None, help="the path of checkpointed model")
     args = parser.parse_args()
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         slim_speedup(args.masks_file, args.model_checkpoint)
     elif args.example_name == 'fpgm':
         if args.masks_file is None:
-            args.masks_file = 'mask.pth'
+            args.masks_file = './checkpoints/mask_naive_mnist_fpgm.pth'
         fpgm_speedup(args.masks_file, args.model_checkpoint)
     elif args.example_name == 'l1filter':
         if args.masks_file is None:
