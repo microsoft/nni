@@ -3,6 +3,7 @@
 
 import logging
 from nni.assessor import Assessor, AssessResult
+from nni.utils import extract_scalar_history
 
 logger = logging.getLogger('medianstop_Assessor')
 
@@ -91,20 +92,12 @@ class MedianstopAssessor(Assessor):
         if curr_step < self._start_step:
             return AssessResult.Good
 
-        try:
-            num_trial_history = [float(ele) for ele in trial_history]
-        except (TypeError, ValueError) as error:
-            logger.warning('incorrect data type or value:')
-            logger.exception(error)
-        except Exception as error:
-            logger.warning('unrecognized exception in medianstop_assessor:')
-            logger.exception(error)
-
-        self._update_data(trial_job_id, num_trial_history)
+        scalar_trial_history = extract_scalar_history(trial_history)
+        self._update_data(trial_job_id, scalar_trial_history)
         if self._high_better:
-            best_history = max(trial_history)
+            best_history = max(scalar_trial_history)
         else:
-            best_history = min(trial_history)
+            best_history = min(scalar_trial_history)
 
         avg_array = []
         for id_ in self._completed_avg_history:
