@@ -1,4 +1,8 @@
 
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile
+  stopCommand: nnictl stop
+
 testCases:
 #######################################################################
 # nni examples test
@@ -11,12 +15,15 @@ testCases:
   # by config section
   config:
 
-  # validator is run after experiment is done
+  # validator is called after experiment is done
   # validator class needs to be implemented in nni_test/nnitest/validators.py
   validator:
 
   # launch command, default launch command is 'nnictl create --config $configFile'
   launchCommand: nnictl create --config $configFile
+
+  # stop command, default stop command is 'nnictl stop', empty means no stop command
+  stopCommand: nnictl stop
 
   # set experiment ID into variable, variable name should start with $, such as $expId
   setExperimentIdtoVar: $expId
@@ -56,23 +63,11 @@ testCases:
 # nni features test
 #########################################################################
 - name: metrics_test
-  # test case config yml file relative to nni source code directory
   configFile: test/config/metrics_test/metrics.test.yml
-
-  # test case specific config, the content of configFile will be overrided
-  # by config section
   config:
     maxTrialNum: 1
     trialConcurrency: 1
-
-  # validator is run after experiment is done
   validator: MetricsValidator
-
-    # launch command, default launch command is 'nnictl create --config $configFile'
-  launchCommand: nnictl create --config $configFile
-
-  # set experiment ID into variable, variable name should start with $, such as $expId
-  setExperimentIdtoVar: $expId
 
 # Experiment resume test part 1
 - name: resume-1

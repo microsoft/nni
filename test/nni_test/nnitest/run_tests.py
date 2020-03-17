@@ -39,10 +39,14 @@ def update_training_service_config(config, training_service):
     deep_update(config, it_ts_config[training_service])
 
 def run_test_case(test_case_config, it_config, args):
+    # fill test case default config
+    for k in it_config['defaultTestCaseConfig']:
+        if k not in test_case_config:
+            test_case_config[k] = it_config['defaultTestCaseConfig'][k]
     print(test_case_config)
+
     config_path = os.path.join(args.nni_source_dir, test_case_config['configFile'])
     test_yml_config = get_yml_content(config_path)
-    #print(test_yml_config)
 
     # apply training service config
     update_training_service_config(test_yml_config, args.ts)
@@ -93,7 +97,6 @@ def get_launch_command(test_case_config):
 def launch_test(config_file, training_service, test_case_config):
     '''run test per configuration file'''
 
-    # replace variables in launch command
     proc = subprocess.run(get_launch_command(test_case_config).split(' '))
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
