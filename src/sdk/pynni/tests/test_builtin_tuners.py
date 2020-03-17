@@ -142,9 +142,18 @@ class BuiltinTunersTestCase(TestCase):
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
     def import_data_test(self, tuner_factory, stype="choice_str"):
-        # import data at the beginning with number value and dict value
-        # import data in the middle also with number value and dict value, and duplicate data record
-        # generate parameters after data import
+        """
+        import data at the beginning with number value and dict value
+        import data in the middle also with number value and dict value, and duplicate data record
+        generate parameters after data import
+
+        Parameters
+        ----------
+        tuner_factory : lambda
+            a lambda for instantiate a tuner
+        stype : str
+            the value type of hp choice, support "choice_str" and "choice_num"
+        """
         if stype == "choice_str":
             search_space = {
                 "choice_str": {
