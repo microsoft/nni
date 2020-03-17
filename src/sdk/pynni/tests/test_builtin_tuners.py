@@ -194,57 +194,66 @@ class BuiltinTunersTestCase(TestCase):
 
     def test_grid_search(self):
         self.exhaustive = True
-        self.search_space_test_all(lambda: GridSearchTuner(),
+        tuner_fn = lambda: GridSearchTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "quniform"])
-        self.import_data_test(lambda: GridSearchTuner())
+        self.import_data_test(tuner_fn)
 
     def test_tpe(self):
-        self.search_space_test_all(lambda: HyperoptTuner("tpe"),
+        tuner_fn = lambda: HyperoptTuner("tpe")
+        self.search_space_test_all(tuner_fn,
                                    ignore_types=["uniform_equal", "qloguniform_equal", "loguniform_equal", "quniform_clip_2"])
         # NOTE: types are ignored because `tpe.py line 465, in adaptive_parzen_normal assert prior_sigma > 0`
-        self.import_data_test(lambda: HyperoptTuner("tpe"))
+        self.import_data_test(tuner_fn)
 
     def test_random_search(self):
-        self.search_space_test_all(lambda: HyperoptTuner("random_search"))
-        self.import_data_test(lambda: HyperoptTuner("random_search"))
+        tuner_fn = lambda: HyperoptTuner("random_search")
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_anneal(self):
-        self.search_space_test_all(lambda: HyperoptTuner("anneal"))
-        self.import_data_test(lambda: HyperoptTuner("anneal"))
+        tuner_fn = lambda: HyperoptTuner("anneal")
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_smac(self):
         if sys.platform == "win32":
             return  # smac doesn't work on windows
-        self.search_space_test_all(lambda: SMACTuner(),
+        tuner_fn = lambda: SMACTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
-        self.import_data_test(lambda: SMACTuner())
+        self.import_data_test(tuner_fn)
 
     def test_batch(self):
         self.exhaustive = True
-        self.search_space_test_all(lambda: BatchTuner(),
+        tuner_fn = lambda: BatchTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice"])
-        self.import_data_test(lambda: BatchTuner())
+        self.import_data_test(tuner_fn)
 
     def test_evolution(self):
         # Needs enough population size, otherwise it will throw a runtime error
-        self.search_space_test_all(lambda: EvolutionTuner(population_size=100))
-        self.import_data_test(lambda: EvolutionTuner(population_size=100))
+        tuner_fn = lambda: EvolutionTuner(population_size=100)
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_gp(self):
         self.test_round = 1  # NOTE: GP tuner got hanged for multiple testing round
-        self.search_space_test_all(lambda: GPTuner(),
+        tuner_fn = lambda: GPTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform",
                                                     "qloguniform"],
                                    ignore_types=["normal", "lognormal", "qnormal", "qlognormal"],
                                    fail_types=["choice_str", "choice_mixed"])
-        self.import_data_test(lambda: GPTuner(), "choice_num")
+        self.import_data_test(tuner_fn, "choice_num")
 
     def test_metis(self):
         self.test_round = 1  # NOTE: Metis tuner got hanged for multiple testing round
-        self.search_space_test_all(lambda: MetisTuner(),
+        tuner_fn = lambda: MetisTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform"],
                                    fail_types=["choice_str", "choice_mixed"])
-        self.import_data_test(lambda: MetisTuner(), "choice_num")
+        self.import_data_test(tuner_fn, "choice_num")
 
     def test_networkmorphism(self):
         pass
