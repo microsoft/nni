@@ -22,9 +22,5 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
-      python nni_test/nnitest/generate_ts_config.py --ts local
-    displayName: 'generate config files'
-  - script: |
-      cd test
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local --exclude smac,bohb
     displayName: 'Integration tests'

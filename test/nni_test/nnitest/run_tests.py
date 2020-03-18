@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import sys
 import os
 import argparse
 import subprocess
@@ -53,6 +54,10 @@ def run_test_case(test_case_config, it_config, args):
     # apply test case specific config
     if test_case_config.get('config') is not None:
         deep_update(test_yml_config, test_case_config['config'])
+
+    # hack for windows
+    if sys.platform == 'win32':
+        test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
 
     # check GPU
     if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
