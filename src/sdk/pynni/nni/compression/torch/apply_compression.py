@@ -18,6 +18,8 @@ def apply_compression_results(model, masks_file, map_location=None):
         The model to be compressed
     masks_file : str
         The path of the mask file
+    map_location : str
+        the device on which masks are placed, same to map_location in ```torch.load```
     """
     masks = torch.load(masks_file, map_location)
     for name, module in model.named_modules():

@@ -61,28 +61,33 @@ def model_inference(config):
         start = time.time()
         for _ in range(32):
             use_mask_out = model(dummy_input)
-        #print(out.size(), out)
         print('elapsed time when use mask: ', time.time() - start)
     if use_speedup:
-        m_speedup = ModelSpeedup(model, dummy_input, masks_file)
+        m_speedup = ModelSpeedup(model, dummy_input, masks_file,
+                                 'cpu' if config['device'] == 'cpu' else None)
         m_speedup.speedup_model()
         start = time.time()
         for _ in range(32):
             use_speedup_out = model(dummy_input)
-        #print(out.size(), out)
         print('elapsed time when use speedup: ', time.time() - start)
     if compare_results:
-        if torch.allclose(use_mask_out, use_speedup_out):
+        if torch.allclose(use_mask_out, use_speedup_out, atol=1e-07):
             print('the outputs from use_mask and use_speedup are the same')
         else:
-            print('ERROR: the outputs from use_mask and use_speedup are different')
+            raise RuntimeError('the outputs from use_mask and use_speedup are different')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="apoz", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="fpgm", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     args = parser.parse_args()
     
-    if args.masks_file is not None:
-        config[args.example_name]['masks_file'] = args.masks_file
-    model_inference(config[args.example_name])
+    if args.example_name != 'all':
+        if args.masks_file is not None:
+            config[args.example_name]['masks_file'] = args.masks_file
+        model_inference(config[args.example_name])
+    else:
+        model_inference(config['fpgm'])
+        model_inference(config['slim'])
+        model_inference(config['l1filter'])
+        model_inference(config['apoz'])
