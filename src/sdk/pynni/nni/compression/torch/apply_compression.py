@@ -6,9 +6,11 @@ import torch
 
 logger = logging.getLogger('torch apply compression')
 
-def apply_compression_results(model, masks_file):
+def apply_compression_results(model, masks_file, map_location=None):
     """
     Apply the masks from ```masks_file``` to the model
+    Note: this API is for inference, because it simply multiplies weights with
+    corresponding masks when this API is called.
 
     Parameters
     ----------
@@ -17,7 +19,7 @@ def apply_compression_results(model, masks_file):
     masks_file : str
         The path of the mask file
     """
-    masks = torch.load(masks_file)
+    masks = torch.load(masks_file, map_location)
     for name, module in model.named_modules():
         if name in masks:
             module.weight.data = module.weight.data.mul_(masks[name]['weight'])
