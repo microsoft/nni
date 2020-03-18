@@ -18,7 +18,7 @@ import validators
 it_variables = {}
 
 def update_training_service_config(config, training_service):
-    it_ts_config = get_yml_content('training_service.yml')
+    it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
 
     # hack for kubeflow trial config
     if training_service == 'kubeflow':
