@@ -36,7 +36,7 @@ config = {
         'model_name': 'vgg19',
         'device': 'cuda',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': 'mask_vgg19_cifar10.pth'
+        'masks_file': './checkpoints/mask_vgg19_cifar10_slim.pth' #'mask_vgg19_cifar10.pth'
     }
 }
 
@@ -78,10 +78,10 @@ def model_inference(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="fpgm", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="slim", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     args = parser.parse_args()
-    
+
     if args.example_name != 'all':
         if args.masks_file is not None:
             config[args.example_name]['masks_file'] = args.masks_file
