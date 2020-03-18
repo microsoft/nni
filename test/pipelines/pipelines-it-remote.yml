@@ -39,7 +39,7 @@ jobs:
     inputs:
       sshEndpoint: $(end_point)
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/nni_test/nnitest/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
   - task: DownloadSecureFile@1
     inputs:
