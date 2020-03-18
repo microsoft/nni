@@ -131,5 +131,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     update_training_service_config(args)
-    if args.ts == 'local':
-        convert_command()

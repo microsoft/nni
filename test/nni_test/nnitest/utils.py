@@ -90,14 +90,12 @@ def get_experiment_status(status_url):
     nni_status = requests.get(status_url).json()
     return nni_status['status']
 
-def get_succeeded_trial_num(trial_jobs_url):
+def get_trial_stats(trial_jobs_url):
     trial_jobs = requests.get(trial_jobs_url).json()
-    num_succeed = 0
+    trial_stats = collections.defaultdict(int)
     for trial_job in trial_jobs:
-        if trial_job['status'] in ['SUCCEEDED', 'EARLY_STOPPED']:
-            num_succeed += 1
-    print('num_succeed:', num_succeed)
-    return num_succeed
+        trial_stats[trial_job['status']] += 1
+    return trial_stats
 
 def get_trial_jobs(trial_jobs_url, status=None):
     '''Return failed trial jobs'''

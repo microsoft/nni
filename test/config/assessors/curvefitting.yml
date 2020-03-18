@@ -1,8 +1,8 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 5m
-maxTrialNum: 2
-trialConcurrency: 1
+maxTrialNum: 8
+trialConcurrency: 8
 searchSpacePath: search_space.json
 
 tuner:
@@ -17,8 +17,8 @@ assessor:
       start_step: 6
       threshold: 0.95
 trial:
-  codeDir: ../../../examples/trials/mnist-tfv1
-  command: python3 mnist.py --batch_num 100
+  codeDir: ./
+  command: python3 trial.py
   gpuNum: 0
 
 useAnnotation: false

@@ -1,17 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import sys
 import os
 import argparse
 import subprocess
 import time
+import shlex
 import traceback
 import json
 import torch
 import ruamel.yaml as yaml
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
-    parse_max_duration_time, get_succeeded_trial_num, deep_update, print_trial_job_log, get_failed_trial_jobs
+    parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT
 import validators
 
@@ -53,6 +55,10 @@ def run_test_case(test_case_config, it_config, args):
     if test_case_config.get('config') is not None:
         deep_update(test_yml_config, test_case_config['config'])
 
+    # hack for windows
+    if sys.platform == 'win32':
+        test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
+
     # check GPU
     if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
         print('skipping {}, gpu is not available'.format(test_case_config['name']))
@@ -76,7 +82,7 @@ def run_test_case(test_case_config, it_config, args):
     finally:
         print('Stop command:', test_case_config.get('stopCommand'))
         if test_case_config.get('stopCommand'):
-            subprocess.run(test_case_config.get('stopCommand').split(' '))
+            subprocess.run(shlex.split(test_case_config.get('stopCommand')))
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
@@ -99,7 +105,8 @@ def get_launch_command(test_case_config):
 def launch_test(config_file, training_service, test_case_config):
     '''run test per configuration file'''
 
-    proc = subprocess.run(get_launch_command(test_case_config).split(' '))
+    proc = subprocess.run(shlex.split(get_launch_command(test_case_config)))
+
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     # set experiment ID into variable
@@ -117,8 +124,9 @@ def launch_test(config_file, training_service, test_case_config):
         status = get_experiment_status(STATUS_URL)
         if status in ['DONE', 'ERROR'] or get_failed_trial_jobs(TRIAL_JOBS_URL):
             break
-
-    if status != 'DONE' or get_succeeded_trial_num(TRIAL_JOBS_URL) < max_trial_num:
+    trial_stats = get_trial_stats(TRIAL_JOBS_URL)
+    print(json.dumps(trial_stats, indent=4), flush=True)
+    if status != 'DONE' or trial_stats['SUCCEEDED'] + trial_stats['EARLY_STOPPED'] < max_trial_num:
         print_trial_job_log(training_service, TRIAL_JOBS_URL)
         raise AssertionError('Failed to finish in maxExecDuration')
 
