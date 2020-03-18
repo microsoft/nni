@@ -10,7 +10,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install scikit-learn==0.20.0 --user
-      python3 -m pip install torch==1.3.1 --user
+      python3 -m pip install torch==1.13.1 --user
       python3 -m pip install torchvision==0.4.1 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install tensorflow-gpu==1.15 --user
@@ -28,9 +28,9 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
-    displayName: 'Integration test'
-  - script: |
-      cd test
       source scripts/model_compression.sh
     displayName: 'Model compression test'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+    displayName: 'Integration test'
