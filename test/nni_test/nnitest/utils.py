@@ -17,11 +17,12 @@ GREEN = '\33[32m'
 RED = '\33[31m'
 CLEAR = '\33[0m'
 
-REST_ENDPOINT = 'http://localhost:8080/api/v1/nni'
-EXPERIMENT_URL = REST_ENDPOINT + '/experiment'
-STATUS_URL = REST_ENDPOINT + '/check-status'
-TRIAL_JOBS_URL = REST_ENDPOINT + '/trial-jobs'
-METRICS_URL = REST_ENDPOINT + '/metric-data'
+REST_ENDPOINT = 'http://localhost:8080'
+API_ROOT_URL = REST_ENDPOINT + '/api/v1/nni'
+EXPERIMENT_URL = API_ROOT_URL + '/experiment'
+STATUS_URL = API_ROOT_URL + '/check-status'
+TRIAL_JOBS_URL = API_ROOT_URL + '/trial-jobs'
+METRICS_URL = API_ROOT_URL + '/metric-data'
 
 def read_last_line(file_name):
     '''read last line of a file and return None if file not found'''

@@ -87,18 +87,6 @@ def update_training_service_config(args):
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
-def convert_command():
-    '''convert command by platform'''
-    if sys.platform != 'win32':
-        return None
-    config_files = glob.glob('./**/*.yml') + glob.glob('./**/**/*.yml')
-    for config_file in config_files:
-        print('processing {}'.format(config_file))
-        yml_content = get_yml_content(config_file)
-        if yml_content.get('trial'):
-            if yml_content['trial'].get('command'):
-                yml_content['trial']['command'] = yml_content['trial']['command'].replace('python3', 'python')
-                dump_yml_content(config_file, yml_content)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
