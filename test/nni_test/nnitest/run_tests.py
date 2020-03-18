@@ -12,12 +12,10 @@ import ruamel.yaml as yaml
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
     parse_max_duration_time, get_succeeded_trial_num, deep_update, print_trial_job_log, get_failed_trial_jobs
-from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT
 import validators
 
 it_variables = {}
-
-DEFAULT_LAUNCH_COMMAND = 'nnictl create --config $configFile'
 
 def update_training_service_config(config, training_service):
     it_ts_config = get_yml_content('training_service.yml')
@@ -43,7 +41,7 @@ def run_test_case(test_case_config, it_config, args):
     for k in it_config['defaultTestCaseConfig']:
         if k not in test_case_config:
             test_case_config[k] = it_config['defaultTestCaseConfig'][k]
-    print(test_case_config)
+    print(json.dumps(test_case_config, indent=4))
 
     config_path = os.path.join(args.nni_source_dir, test_case_config['configFile'])
     test_yml_config = get_yml_content(config_path)
@@ -55,6 +53,11 @@ def run_test_case(test_case_config, it_config, args):
     if test_case_config.get('config') is not None:
         deep_update(test_yml_config, test_case_config['config'])
 
+    # check GPU
+    if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
+        print('skipping {}, gpu is not available'.format(test_case_config['name']))
+        return
+
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
     dump_yml_content(new_config_file, test_yml_config)
@@ -64,16 +67,16 @@ def run_test_case(test_case_config, it_config, args):
     it_variables['$configFile'] = new_config_file
 
     try:
-        if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
-            print('skipping {}, gpu is not available'.format(test_case_config['name']))
-            return
         launch_test(new_config_file, args.ts, test_case_config)
 
         validator_name = test_case_config.get('validator')
         if validator_name is not None:
             validator = validators.__dict__[validator_name]()
-            validator(None, None, args.nni_source_dir)
+            validator(REST_ENDPOINT, None, args.nni_source_dir)
     finally:
+        print('Stop command:', test_case_config.get('stopCommand'))
+        if test_case_config.get('stopCommand'):
+            subprocess.run(test_case_config.get('stopCommand').split(' '))
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
@@ -85,8 +88,7 @@ def get_max_values(config_file):
 
 def get_launch_command(test_case_config):
     launch_command = test_case_config.get('launchCommand')
-    if launch_command is None:
-        launch_command = DEFAULT_LAUNCH_COMMAND
+    assert launch_command is not None
 
     # replace variables
     for k in it_variables:
@@ -143,11 +145,9 @@ def run(args):
         print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
         time.sleep(5)
         begin_time = time.time()
-        try:
-            run_test_case(test_case_config, it_config, args)
-            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (name, (time.time() - begin_time)/60) + CLEAR)
-        finally:
-            subprocess.run(['nnictl', 'stop'])
+
+        run_test_case(test_case_config, it_config, args)
+        print(GREEN + 'Test %s: TEST PASS IN %d mins' % (name, (time.time() - begin_time)/60) + CLEAR)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -2,11 +2,12 @@
 # Licensed under the MIT license.
 
 import sys
+import os
 import glob
 import argparse
 from utils import get_yml_content, dump_yml_content
 
-TRAINING_SERVICE_FILE = 'training_service.yml'
+TRAINING_SERVICE_FILE = os.path.join('config', 'training_service.yml')
 
 def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
