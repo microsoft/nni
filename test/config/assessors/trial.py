@@ -15,7 +15,7 @@ if __name__ == '__main__':
     nni.get_next_parameter()
     for i in range(20):
         time.sleep(1)
-        for _ in range(5):
+        for _ in range(2):
             if up:
                 v *= 1.1
             else:
