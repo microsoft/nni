@@ -20,7 +20,7 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
