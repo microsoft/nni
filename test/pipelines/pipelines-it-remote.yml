@@ -15,6 +15,7 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      python3 -m pip install torch==1.2.0 --user
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
