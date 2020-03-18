@@ -40,33 +40,33 @@ class App extends React.Component<{}, AppState> {
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
         this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
         // final result is legal
-        // 选一条succeed trial，查看final result格式是否支持
+        // get a succeed trial，see final result data's format
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.dataFormatimer = window.setInterval(this.test, this.state.interval * 1000);
+        this.dataFormatimer = window.setInterval(this.getFinalDataFormat, this.state.interval * 1000);
     }
 
-    test = () => {
-        console.info('例行检查'); // eslint-disable-line
+    getFinalDataFormat = (): void => {
         for(let i = 0; this.state.isilLegalFinal === false; i++){
             if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
-                const oneSucceedTrial = JSON.parse(TRIALS.succeededTrials()[0].final!.data);
-                console.info(oneSucceedTrial); // eslint-disable-line
-                console.info(typeof oneSucceedTrial); // eslint-disable-line
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
                 if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
-                    return;
+                    window.clearInterval(this.dataFormatimer);
+                    break;
                 } else {
-                    console.info('数据不合常理'); // eslint-disable-line
-                    // 非法
+                    // illegal final data
                     this.setState(() => ({
                         isilLegalFinal: true,
                         expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
                     }));
                     window.clearInterval(this.dataFormatimer);
                 }
+            } else {
+                break;
             }
         }
     }
-
+    
     changeInterval = (interval: number): void => {
         this.setState({ interval });
         if (this.timerId === null && interval !== 0) {
