@@ -1,6 +1,6 @@
 jobs:
 - job: 'integration_test_remote_windows'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
 
   steps:
   - script: python -m pip install --upgrade pip setuptools
@@ -11,6 +11,7 @@ jobs:
       targetFolder: /tmp/nnitest/$(Build.BuildId)/nni-remote
       overwrite: true
     displayName: 'Copy all files to remote machine'
+    timeoutInMinutes: 10
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'

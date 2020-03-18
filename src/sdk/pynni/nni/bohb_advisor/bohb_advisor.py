@@ -641,6 +641,7 @@ class BOHB(MsgDispatcherBase):
             if not _value:
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
+            _value = extract_scalar_reward(_value)
             budget_exist_flag = False
             barely_params = dict()
             for keys in _params:
