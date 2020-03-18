@@ -17,9 +17,9 @@ ASSESSOR_LIST = ['Medianstop']
 
 def get_config_file_path():
     if sys.platform == 'win32':
-        config_file = osp.join('tuner_test', 'local_win32.yml')
+        config_file = osp.join('config', 'tuner_test', 'local_win32.yml')
     else:
-        config_file = osp.join('tuner_test', 'local.yml')
+        config_file = osp.join('config', 'tuner_test', 'local.yml')
     return config_file
 
 def switch(dispatch_type, dispatch_name):
