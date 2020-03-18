@@ -2,6 +2,7 @@
 defaultTestCaseConfig:
   launchCommand: nnictl create --config $configFile
   stopCommand: nnictl stop
+  experimentStatusCheck: True
 
 testCases:
 #######################################################################
@@ -27,6 +28,9 @@ testCases:
 
   # set experiment ID into variable, variable name should start with $, such as $expId
   setExperimentIdtoVar: $expId
+
+  # check status of experiment before calling validator
+  experimentStatusCheck: True
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
@@ -92,6 +96,7 @@ testCases:
 - name: nnictl-view
   configFile: test/config/examples/sklearn-regression.yml
   launchCommand: nnictl view $resumeExpId
+  experimentStatusCheck: False
 
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml
