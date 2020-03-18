@@ -69,6 +69,15 @@ testCases:
     trialConcurrency: 1
   validator: MetricsValidator
 
+- name: nnicli
+  configFile: test/config/examples/sklearn-regression.yml
+  config:
+    maxTrialNum: 4
+    trialConcurrency: 4
+  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
+  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+  validator:
+
 # Experiment resume test part 1
 - name: resume-1
   configFile: test/config/examples/sklearn-regression.yml
@@ -105,6 +114,15 @@ testCases:
   configFile: test/config/multi_phase/tpe.yml
 
 #########################################################################
+# nni assessor test
+#########################################################################
+- name: assessor-curvefitting
+  configFile: test/config/assessors/curvefitting.yml
+
+- name: assessor-medianstop
+  configFile: test/config/assessors/medianstop.yml
+
+#########################################################################
 # nni tuners test
 #########################################################################
 - name: tuner-annel
@@ -127,9 +145,6 @@ testCases:
 
 - name: tuner-bohb
   configFile: test/config/tuners/mnist-bohb.yml
-
-- name: tuner-curvefitting
-  configFile: test/config/tuners/mnist-curvefitting.yml
 
 - name: tuner-gp
   configFile: test/config/tuners/mnist-gp.yml
