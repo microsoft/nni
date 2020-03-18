@@ -1,12 +1,12 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 5m
-maxTrialNum: 8
+maxTrialNum: 4
 trialConcurrency: 4
 searchSpacePath: ./search_space.json
 
 tuner:
-  builtinTunerName: TPE
+  builtinTunerName: MetisTuner
   classArgs:
     optimize_mode: maximize
 

@@ -1,0 +1,144 @@
+
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile
+  stopCommand: nnictl stop
+
+testCases:
+#######################################################################
+# nni examples test
+#######################################################################
+- name: sklearn-classification
+  # test case config yml file relative to nni source code directory
+  configFile: test/config/examples/sklearn-classification.yml
+
+  # test case specific config, the content of configFile will be overrided
+  # by config section
+  config:
+
+  # validator is called after experiment is done
+  # validator class needs to be implemented in nni_test/nnitest/validators.py
+  validator:
+
+  # launch command, default launch command is 'nnictl create --config $configFile'
+  launchCommand: nnictl create --config $configFile
+
+  # stop command, default stop command is 'nnictl stop', empty means no stop command
+  stopCommand: nnictl stop
+
+  # set experiment ID into variable, variable name should start with $, such as $expId
+  setExperimentIdtoVar: $expId
+
+- name: sklearn-regression
+  configFile: test/config/examples/sklearn-regression.yml
+
+- name: mnist-tfv1
+  configFile: test/config/examples/mnist-tfv1.yml
+
+- name: mnist-keras
+  configFile: test/config/examples/mnist-keras.yml
+
+- name: mnist-pytorch
+  configFile: test/config/examples/mnist-pytorch.yml
+
+- name: mnist-annotation
+  configFile: test/config/examples/mnist-annotation.yml
+
+- name: cifar10_pytorch
+  configFile: test/config/examples/cifar10-pytorch.yml
+  config:
+    # this example downloads large pretrained model weights
+    # test 1 trial to save time
+    maxExecDuration: 10m
+    maxTrialNum: 1
+    trialConcurrency: 1
+    trial:
+      command: python3 main.py --epochs 1 --batches 1
+      gpuNum: 0
+
+- name: nested-ss
+  configFile: test/config/examples/mnist-nested-search-space.yml
+
+
+#########################################################################
+# nni features test
+#########################################################################
+- name: metrics_test
+  configFile: test/config/metrics_test/metrics.test.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator: MetricsValidator
+
+# Experiment resume test part 1
+- name: resume-1
+  configFile: test/config/examples/sklearn-regression.yml
+  setExperimentIdtoVar: $resumeExpId
+
+# Experiment resume test part 2
+- name: resume-2
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: nnictl resume $resumeExpId
+
+- name: multi-thread
+  configFile: test/config/multi_thread/config.yml
+
+- name: multi-phase-batch
+  configFile: test/config/multi_phase/batch.yml
+  config:
+    # for batch tuner, maxTrialNum can not exceed length of search space
+    maxTrialNum: 2
+    trialConcurrency: 2
+
+- name: multi-phase-evolution
+  configFile: test/config/multi_phase/evolution.yml
+
+- name: multi-phase-grid
+  configFile: test/config/multi_phase/grid.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+
+- name: multi-phase-metis
+  configFile: test/config/multi_phase/metis.yml
+
+- name: multi-phase-tpe
+  configFile: test/config/multi_phase/tpe.yml
+
+#########################################################################
+# nni tuners test
+#########################################################################
+- name: tuner-annel
+  configFile: test/config/tuners/mnist-annotation-anneal.yml
+
+- name: tuner-evolution
+  configFile: test/config/tuners/mnist-annotation-evolution.yml
+
+- name: tuner-random
+  configFile: test/config/tuners/mnist-annotation-random.yml
+
+- name: tuner-smac
+  configFile: test/config/tuners/mnist-annotation-smac.yml
+
+- name: tuner-tpe
+  configFile: test/config/tuners/mnist-annotation-tpe.yml
+
+- name: tuner-batch
+  configFile: test/config/tuners/mnist-batchtuner.yml
+
+- name: tuner-bohb
+  configFile: test/config/tuners/mnist-bohb.yml
+
+- name: tuner-curvefitting
+  configFile: test/config/tuners/mnist-curvefitting.yml
+
+- name: tuner-gp
+  configFile: test/config/tuners/mnist-gp.yml
+
+- name: tuner-grid
+  configFile: test/config/tuners/mnist-gridsearch.yml
+
+- name: tuner-hyperband
+  configFile: test/config/tuners/mnist-hyperband.yml
+
+- name: tuner-metis
+  configFile: test/config/tuners/mnist-metis.yml

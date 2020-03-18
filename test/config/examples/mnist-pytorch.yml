@@ -1,9 +1,9 @@
 authorName: nni
 experimentName: default_test
-maxExecDuration: 5m
+maxExecDuration: 15m
 maxTrialNum: 4
 trialConcurrency: 2
-searchSpacePath: ./mnist_search_space.json
+searchSpacePath: ./mnist_pytorch_search_space.json
 
 tuner:
   builtinTunerName: Random
@@ -12,8 +12,8 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-tfv1
-  command: python3 mnist.py --batch_num 100
+  codeDir: ../../../examples/trials/mnist-pytorch
+  command: python3 mnist.py  --epochs 1
   gpuNum: 0
 
 useAnnotation: false

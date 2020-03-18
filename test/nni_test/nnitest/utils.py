@@ -99,14 +99,35 @@ def get_succeeded_trial_num(trial_jobs_url):
     print('num_succeed:', num_succeed)
     return num_succeed
 
-def get_failed_trial_jobs(trial_jobs_url):
+def get_trial_jobs(trial_jobs_url, status=None):
     '''Return failed trial jobs'''
     trial_jobs = requests.get(trial_jobs_url).json()
-    failed_jobs = []
+    res = []
     for trial_job in trial_jobs:
-        if trial_job['status'] in ['FAILED']:
-            failed_jobs.append(trial_job)
-    return failed_jobs
+        if status is None or trial_job['status'] == status:
+            res.append(trial_job)
+    return res
+
+def get_failed_trial_jobs(trial_jobs_url):
+    '''Return failed trial jobs'''
+    return get_trial_jobs(trial_jobs_url, 'FAILED')
+
+def print_trial_job_log(training_service, trial_jobs_url):
+    '''Print job log of FAILED trial jobs'''
+    trial_jobs = get_trial_jobs(trial_jobs_url)
+    for trial_job in trial_jobs:
+        log_files = []
+        trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'])
+        if training_service == 'local':
+            log_files.append(os.path.join(trial_log_dir, 'stderr'))
+            log_files.append(os.path.join(trial_log_dir, 'trial.log'))
+        else:
+            log_files.append(os.path.join(trial_log_dir, 'stdout_log_collection.log'))
+        for log_file in log_files:
+            with open(log_file, 'r') as f:
+                log_content = f.read()
+                print(log_file, flush=True)
+                print(log_content, flush=True)
 
 def print_failed_job_log(training_service, trial_jobs_url):
     '''Print job log of FAILED trial jobs'''
