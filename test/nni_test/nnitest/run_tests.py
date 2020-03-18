@@ -9,7 +9,6 @@ import time
 import shlex
 import traceback
 import json
-import torch
 import ruamel.yaml as yaml
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
@@ -58,11 +57,6 @@ def run_test_case(test_case_config, it_config, args):
     # hack for windows
     if sys.platform == 'win32':
         test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
-
-    # check GPU
-    if test_yml_config['trial']['gpuNum'] > 0 and torch.cuda.device_count() < 1:
-        print('skipping {}, gpu is not available'.format(test_case_config['name']))
-        return
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
