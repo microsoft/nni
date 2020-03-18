@@ -62,5 +62,5 @@ jobs:
     inputs:
       sshEndpoint: $(end_point)
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/nni_test/nnitest/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
