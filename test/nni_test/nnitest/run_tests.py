@@ -113,6 +113,9 @@ def launch_test(config_file, training_service, test_case_config):
     max_duration, max_trial_num = get_max_values(config_file)
     sleep_interval = 3
 
+    if not test_case_config.get('experimentStatusCheck'):
+        return
+
     for _ in range(0, max_duration+10, sleep_interval):
         time.sleep(sleep_interval)
         status = get_experiment_status(STATUS_URL)
