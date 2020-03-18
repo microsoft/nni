@@ -211,7 +211,11 @@ class Trial implements TableObj {
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
         if (this.accuracy !== undefined) {
-            return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            if (isNaN(this.accuracy)) {
+                return this.accuracy.toString();
+            } else {
+                return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            }
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
