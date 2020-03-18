@@ -85,6 +85,13 @@ class RemoteLogger(object):
         '''
         return PipeLogReader(self.logger, self.log_collection, logging.INFO)
 
+    def flush(self):
+        '''
+        Add flush in handler
+        '''
+        for handler in self.logger.handlers:
+            handler.flush()
+
     def write(self, buf):
         '''
         Write buffer data into logger/stdout
