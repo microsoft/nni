@@ -10,8 +10,8 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       python3 -m pip install scikit-learn==0.20.0 --user
-      python3 -m pip install torch==1.2.0 --user
-      python3 -m pip install torchvision==0.4.0 --user
+      python3 -m pip install torch==1.3.1 --user
+      python3 -m pip install torchvision==0.4.1 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install tensorflow-gpu==1.15 --user
       sudo apt-get install swig -y

@@ -4,17 +4,17 @@
 import os.path as osp
 import json
 import requests
-from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
+import nnicli as nc
+from utils import METRICS_URL
 
 
 class ITValidator:
-    def __call__(self, api_root_url, experiment_dir, nni_source_dir):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
         pass
 
 
 class MetricsValidator(ITValidator):
-    def __call__(self, api_root_url, experiment_dir, nni_source_dir):
-        #print('VALIDATOR CALLED!!!')
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
         self.check_metrics(nni_source_dir)
 
     def check_metrics(self, nni_source_dir):
@@ -50,3 +50,12 @@ class MetricsValidator(ITValidator):
                 else:
                     final_result[metric['trialJobId']] = [metric_value]
         return intermediate_result, final_result
+
+class NnicliValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
+        print(rest_endpoint)
+        nc.set_endpoint(rest_endpoint)
+        #print(nc.version())
+        print(nc.get_job_statistics())
+        print(nc.get_experiment_status())
+        print(nc.list_trial_jobs())

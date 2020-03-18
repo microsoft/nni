@@ -76,17 +76,22 @@ testCases:
     trialConcurrency: 4
   launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
   stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
-  validator:
+  validator: NnicliValidator
 
 # Experiment resume test part 1
-- name: resume-1
+- name: nnictl-resume-1
   configFile: test/config/examples/sklearn-regression.yml
   setExperimentIdtoVar: $resumeExpId
 
 # Experiment resume test part 2
-- name: resume-2
+- name: nnictl-resume-2
   configFile: test/config/examples/sklearn-regression.yml
   launchCommand: nnictl resume $resumeExpId
+
+# Experiment view test
+- name: nnictl-view
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: nnictl view $resumeExpId
 
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml
