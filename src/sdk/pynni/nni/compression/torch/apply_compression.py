@@ -21,5 +21,5 @@ def apply_compression_results(model, masks_file):
     for name, module in model.named_modules():
         if name in masks:
             module.weight.data = module.weight.data.mul_(masks[name]['weight'])
-            if 'bias' in masks[name]:
+            if hasattr(module, 'bias') and module.bias is not None and 'bias' in masks[name]:
                 module.bias.data = module.bias.data.mul_(masks[name]['bias'])

@@ -127,7 +127,7 @@ def slim_speedup(masks_file, model_checkpoint):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("speedup")
-    parser.add_argument("--example_name", type=str, default="slim", help="the name of pruning example")
+    parser.add_argument("--example_name", type=str, default="apoz", help="the name of pruning example")
     parser.add_argument("--masks_file", type=str, default=None, help="the path of the masks file")
     parser.add_argument("--model_checkpoint", type=str, default=None, help="the path of checkpointed model")
     args = parser.parse_args()
@@ -142,11 +142,11 @@ if __name__ == '__main__':
         fpgm_speedup(args.masks_file, args.model_checkpoint)
     elif args.example_name == 'l1filter':
         if args.masks_file is None:
-            args.masks_file = 'mask_vgg16_cifar10.pth'
+            args.masks_file = './checkpoints/mask_vgg16_cifar10_l1.pth'
         l1filter_speedup(args.masks_file, args.model_checkpoint)
     elif args.example_name == 'apoz':
         if args.masks_file is None:
-            args.masks_file = 'mask_vgg16_cifar10.pth'
+            args.masks_file = './checkpoints/mask_vgg16_cifar10_apoz.pth'
         apoz_speedup(args.masks_file, args.model_checkpoint)
     else:
         raise ValueError('unsupported example_name: {}'.format(args.example_name))
