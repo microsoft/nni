@@ -37,18 +37,9 @@ def update_training_service_config(config, training_service):
     deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
-def run_test_case(test_case_config, it_config, args):
-    # fill test case default config
-    for k in it_config['defaultTestCaseConfig']:
-        if k not in test_case_config:
-            test_case_config[k] = it_config['defaultTestCaseConfig'][k]
-    print(json.dumps(test_case_config, indent=4))
-
+def prepare_config_file(test_case_config, it_config, args):
     config_path = os.path.join(args.nni_source_dir, test_case_config['configFile'])
     test_yml_config = get_yml_content(config_path)
-
-    # apply training service config
-    update_training_service_config(test_yml_config, args.ts)
 
     # apply test case specific config
     if test_case_config.get('config') is not None:
@@ -58,21 +49,32 @@ def run_test_case(test_case_config, it_config, args):
     if sys.platform == 'win32':
         test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
 
+    # apply training service config
+    # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
+    # the hack for kubeflow should be applied at last step
+    update_training_service_config(test_yml_config, args.ts)
+
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
     dump_yml_content(new_config_file, test_yml_config)
     print(yaml.dump(test_yml_config, default_flow_style=False))
 
+    return new_config_file
+
+def run_test_case(test_case_config, it_config, args):
+    # fill test case default config
+    for k in it_config['defaultTestCaseConfig']:
+        if k not in test_case_config:
+            test_case_config[k] = it_config['defaultTestCaseConfig'][k]
+    print(json.dumps(test_case_config, indent=4))
+
+    new_config_file = prepare_config_file(test_case_config, it_config, args)
     # set configFile variable
     it_variables['$configFile'] = new_config_file
 
     try:
         launch_test(new_config_file, args.ts, test_case_config)
-
-        validator_name = test_case_config.get('validator')
-        if validator_name is not None:
-            validator = validators.__dict__[validator_name]()
-            validator(REST_ENDPOINT, None, args.nni_source_dir)
+        invoke_validator(test_case_config, args.nni_source_dir)
     finally:
         print('Stop command:', test_case_config.get('stopCommand'))
         if test_case_config.get('stopCommand'):
@@ -80,6 +82,16 @@ def run_test_case(test_case_config, it_config, args):
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
+
+def invoke_validator(test_case_config, nni_source_dir):
+    validator_config = test_case_config.get('validator')
+    if validator_config is None or validator_config.get('class') is None:
+        return
+
+    validator = validators.__dict__[validator_config.get('class')]()
+    kwargs = validator_config.get('kwargs', {})
+    print('kwargs:', kwargs)
+    validator(REST_ENDPOINT, None, nni_source_dir, **kwargs)
 
 def get_max_values(config_file):
     '''Get maxExecDuration and maxTrialNum of experiment'''
@@ -152,7 +164,8 @@ def run(args):
         begin_time = time.time()
 
         run_test_case(test_case_config, it_config, args)
-        print(GREEN + 'Test %s: TEST PASS IN %d mins' % (name, (time.time() - begin_time)/60) + CLEAR)
+        print('{}Test {}: TEST PASS IN {} SECONDS{}'.format(GREEN, name, int(time.time()-begin_time), CLEAR), flush=True)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

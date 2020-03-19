@@ -66,12 +66,25 @@ testCases:
 #########################################################################
 # nni features test
 #########################################################################
-- name: metrics_test
-  configFile: test/config/metrics_test/metrics.test.yml
+- name: metrics_float
+  configFile: test/config/metrics_test/config.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
-  validator: MetricsValidator
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics.json
+
+- name: metrics_dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics_dict.json
 
 - name: nnicli
   configFile: test/config/examples/sklearn-regression.yml
@@ -80,7 +93,8 @@ testCases:
     trialConcurrency: 4
   launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
   stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
-  validator: NnicliValidator
+  validator:
+    class: NnicliValidator
 
 # Experiment resume test part 1
 - name: nnictl-resume-1

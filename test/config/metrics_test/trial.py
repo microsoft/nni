@@ -2,18 +2,28 @@
 # Licensed under the MIT license.
 
 import time
+import json
+import argparse
 import nni
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dict_metrics", action='store_true')
+    args = parser.parse_args()
+
+    if args.dict_metrics:
+        result_file = 'expected_metrics_dict.json'
+    else:
+        result_file = 'expected_metrics.json'
+
     nni.get_next_parameter()
+    with open(result_file, 'r') as f:
+        m = json.load(f)
+    for v in m['intermediate_result']:
+        time.sleep(1)
+        print('report_intermediate_result:', v)
+        nni.report_intermediate_result(v)
     time.sleep(1)
-    for i in range(10):
-        if i % 2 == 0:
-            print('report intermediate result without end of line.', end='')
-        else:
-            print('report intermediate result.')
-        nni.report_intermediate_result(0.1*(i+1))
-        time.sleep(2)
-    print('test final metrics not at line start.', end='')
-    nni.report_final_result(1.0)
+    print('report_final_result:', m['final_result'])
+    nni.report_final_result(m['final_result'])
     print('done')

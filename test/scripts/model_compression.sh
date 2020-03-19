@@ -27,12 +27,11 @@ do
     python3 model_prune_torch.py --pruner_name $name --pretrain_epochs 1 --prune_epochs 1
 done
 
-echo "testing lottery ticket pruning..."
-python3 lottery_torch_mnist_fc.py
+#echo "testing lottery ticket pruning..."
+#python3 lottery_torch_mnist_fc.py
 
 echo ""
 echo "===========================Testing: quantizers==========================="
-cd ${CWD}/../examples/model_compress
 
 echo "testing QAT quantizer..."
 python3 QAT_torch_quantizer.py
