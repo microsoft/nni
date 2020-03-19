@@ -4,7 +4,6 @@
 import logging
 import torch
 from .compressor import Pruner
-import pdb
 
 __all__ = ['GradientWeightRankFilterPruner']
 
