@@ -32,12 +32,12 @@ done
 
 echo ""
 echo "===========================Testing: quantizers==========================="
+# to be enabled
+#echo "testing QAT quantizer..."
+#python3 QAT_torch_quantizer.py
 
-echo "testing QAT quantizer..."
-python3 QAT_torch_quantizer.py
+#echo "testing DoReFa quantizer..."
+#python3 DoReFaQuantizer_torch_mnist.py
 
-echo "testing DoReFa quantizer..."
-python3 DoReFaQuantizer_torch_mnist.py
-
-echo "testing BNN quantizer..."
-python3 BNN_quantizer_cifar10.py
+#echo "testing BNN quantizer..."
+#python3 BNN_quantizer_cifar10.py

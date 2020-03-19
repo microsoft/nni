@@ -47,7 +47,7 @@ def prepare_config_file(test_case_config, it_config, args):
         deep_update(test_yml_config, test_case_config['config'])
 
     # hack for windows
-    if sys.platform == 'win32':
+    if sys.platform == 'win32' and args.ts == 'local':
         test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
 
     # apply training service config
@@ -58,7 +58,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
     dump_yml_content(new_config_file, test_yml_config)
-    print(yaml.dump(test_yml_config, default_flow_style=False))
+    print(yaml.dump(test_yml_config, default_flow_style=False), flush=True)
 
     return new_config_file
 
@@ -130,7 +130,7 @@ def launch_test(config_file, training_service, test_case_config):
         return
 
     bg_time = time.time()
-    print(str(datetime.datetime.now()), ' waiting ...')
+    print(str(datetime.datetime.now()), ' waiting ...', flush=True)
     while True:
         time.sleep(3)
         if time.time() - bg_time > max_duration+10:
@@ -138,7 +138,7 @@ def launch_test(config_file, training_service, test_case_config):
         status = get_experiment_status(STATUS_URL)
         if status in ['DONE', 'ERROR'] or get_failed_trial_jobs(TRIAL_JOBS_URL):
             break
-    print(str(datetime.datetime.now()), ' waiting done')
+    print(str(datetime.datetime.now()), ' waiting done', flush=True)
 
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)
