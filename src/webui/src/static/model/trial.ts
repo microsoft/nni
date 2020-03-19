@@ -221,7 +221,11 @@ class Trial implements TableObj {
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const latest = this.intermediates[this.intermediates.length - 1]!;
-            return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            if (isNaN(metricAccuracy(latest))) {
+                return 'NaN';
+            } else {
+                return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            }
         }
     }
 }
