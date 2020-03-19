@@ -77,9 +77,10 @@ def run_test_case(test_case_config, it_config, args):
         launch_test(new_config_file, args.ts, test_case_config)
         invoke_validator(test_case_config, args.nni_source_dir)
     finally:
-        print('Stop command:', test_case_config.get('stopCommand'))
-        if test_case_config.get('stopCommand'):
-            subprocess.run(shlex.split(test_case_config.get('stopCommand')))
+        stop_command = get_command(test_case_config, 'stopCommand')
+        print('Stop command:', stop_command, flush=True)
+        if stop_command:
+            subprocess.run(shlex.split(stop_command))
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
@@ -99,25 +100,29 @@ def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
     return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
 
-def get_launch_command(test_case_config):
-    launch_command = test_case_config.get('launchCommand')
-    assert launch_command is not None
+def get_command(test_case_config, commandKey):
+    command = test_case_config.get(commandKey)
+    if commandKey == 'launchCommand':
+        assert command is not None
+    if command is None:
+        return None
 
     # replace variables
     for k in it_variables:
-        launch_command = launch_command.replace(k, it_variables[k])
+        command = command.replace(k, it_variables[k])
 
     # hack for windows, not limited to local training service
     if sys.platform == 'win32':
-        launch_command = launch_command.replace('python3', 'python')
+        command = command.replace('python3', 'python')
 
-    print('launch command: ', launch_command)
-    return launch_command
+    return command
 
 def launch_test(config_file, training_service, test_case_config):
     '''run test per configuration file'''
+    launch_command = get_command(test_case_config, 'launchCommand')
+    print('launch command: ', launch_command, flush=True)
 
-    proc = subprocess.run(shlex.split(get_launch_command(test_case_config)))
+    proc = subprocess.run(shlex.split(launch_command))
 
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
