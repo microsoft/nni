@@ -6,6 +6,7 @@ import os
 import argparse
 import subprocess
 import time
+import datetime
 import shlex
 import traceback
 import json
@@ -123,16 +124,22 @@ def launch_test(config_file, training_service, test_case_config):
     print('variables:', it_variables)
 
     max_duration, max_trial_num = get_max_values(config_file)
-    sleep_interval = 3
+    print('max_duration:', max_duration, ' max_trial_num:', max_trial_num)
 
     if not test_case_config.get('experimentStatusCheck'):
         return
 
-    for _ in range(0, max_duration+10, sleep_interval):
-        time.sleep(sleep_interval)
+    bg_time = time.time()
+    print(str(datetime.datetime.now()), ' waiting ...')
+    while True:
+        time.sleep(3)
+        if time.time() - bg_time > max_duration+10:
+            break
         status = get_experiment_status(STATUS_URL)
         if status in ['DONE', 'ERROR'] or get_failed_trial_jobs(TRIAL_JOBS_URL):
             break
+    print(str(datetime.datetime.now()), ' waiting done')
+
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)
     if status != 'DONE' or trial_stats['SUCCEEDED'] + trial_stats['EARLY_STOPPED'] < max_trial_num:
