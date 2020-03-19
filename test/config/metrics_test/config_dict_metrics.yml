@@ -10,7 +10,7 @@ tuner:
 
 trial:
   codeDir: .
-  command: python trial.py
+  command: python3 trial.py --dict_metrics
   gpuNum: 0
 
 useAnnotation: false

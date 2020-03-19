@@ -9,19 +9,21 @@ from utils import METRICS_URL
 
 
 class ITValidator:
-    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         pass
 
 
 class MetricsValidator(ITValidator):
-    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
-        self.check_metrics(nni_source_dir)
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        self.check_metrics(nni_source_dir, **kwargs)
 
-    def check_metrics(self, nni_source_dir):
-        with open(osp.join(nni_source_dir, 'test', 'config', 'metrics_test', 'expected_metrics.json'), 'r') as f:
+    def check_metrics(self, nni_source_dir, **kwargs):
+        expected_result_file = kwargs.get('expected_result_file', 'expected_metrics.json')
+        with open(osp.join(nni_source_dir, 'test', 'config', 'metrics_test', expected_result_file), 'r') as f:
             expected_metrics = json.load(f)
         print('expected metrics:', expected_metrics)
         metrics = requests.get(METRICS_URL).json()
+        print('RAW METRICS:', json.dumps(metrics, indent=4))
         intermediate_result, final_result = self.get_metric_results(metrics)
 
         assert intermediate_result and final_result
@@ -32,13 +34,17 @@ class MetricsValidator(ITValidator):
             print('final result:', trial_final_result)
             assert len(trial_final_result) == 1, 'there should be 1 final result'
             assert trial_final_result[0] == expected_metrics['final_result']
-            assert set(trial_intermediate_result) == set(expected_metrics['intermediate_result'])
+            # encode dict/number into json string to compare them in set
+            assert set([json.dumps(x) for x in trial_intermediate_result]) \
+                == set([json.dumps(x) for x in expected_metrics['intermediate_result']])
 
     def get_metric_results(self, metrics):
         intermediate_result = {}
         final_result = {}
         for metric in metrics:
-            metric_value = round(float(json.loads(metric['data'])), 2)
+            # metrics value are encoded by NNI SDK as json string,
+            # here we decode the value by json.loads twice
+            metric_value = json.loads(json.loads(metric['data']))
             if metric['type'] == 'PERIODICAL':
                 if metric['trialJobId'] in intermediate_result:
                     intermediate_result[metric['trialJobId']].append(metric_value)
@@ -52,7 +58,7 @@ class MetricsValidator(ITValidator):
         return intermediate_result, final_result
 
 class NnicliValidator(ITValidator):
-    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         print(rest_endpoint)
         nc.set_endpoint(rest_endpoint)
         #print(nc.version())
