@@ -42,7 +42,7 @@ class GradientRankFilterPruner(Pruner):
     def calc_contributions(self):
         raise NotImplementedError('{} calc_contributions is not implemented'.format(self.__class__.__name__))
 
-    def get_mask(self, base_mask, weights, gradient, num_prune):
+    def get_mask(self, base_mask, contribution, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
     def calc_mask(self, wrapper, **kwargs):
@@ -145,7 +145,6 @@ class GradientWeightRankFilterPruner(GradientRankFilterPruner):
     def calc_contributions(self):
         if self.iterations >= self.statistics_batch_num:
             return
-            
         for wrapper in self.get_modules_wrapper():
             filters = wrapper.module.weight.size(0)
             contribution = (wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)

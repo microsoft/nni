@@ -44,7 +44,6 @@ class ActivationRankFilterPruner(Pruner):
 
             if len(module_.collected_activation) < self.statistics_batch_num:
                 module_.collected_activation.append(self.activation(output.detach().cpu()))
-                
         self.add_activation_collector(collector)
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
@@ -94,7 +93,8 @@ class ActivationRankFilterPruner(Pruner):
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1 or wrapper.collected_activation is None or len(wrapper.collected_activation) < self.statistics_batch_num:
+            acts = wrapper.collected_activation
+            if filters < 2 or num_prune < 1 or acts is None or len(acts) < self.statistics_batch_num:
                 return mask
             mask = self.get_mask(mask, wrapper.collected_activation, num_prune)
         finally:
