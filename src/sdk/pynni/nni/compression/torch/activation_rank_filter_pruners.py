@@ -35,12 +35,16 @@ class ActivationRankFilterPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        self.set_wrappers_attribute("collected_activation", [])
+        self.set_wrappers_attribute("collected_activation", None)
         self.statistics_batch_num = statistics_batch_num
 
         def collector(module_, input_, output):
+            if module_.collected_activation is None:
+                module_.collected_activation = []
+
             if len(module_.collected_activation) < self.statistics_batch_num:
                 module_.collected_activation.append(self.activation(output.detach().cpu()))
+                
         self.add_activation_collector(collector)
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
@@ -80,6 +84,7 @@ class ActivationRankFilterPruner(Pruner):
 
         if wrapper.if_calculated:
             return None
+
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             mask_bias = torch.ones(wrapper.module.bias.size()).type_as(wrapper.module.bias).detach()
@@ -89,12 +94,13 @@ class ActivationRankFilterPruner(Pruner):
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1 or len(wrapper.collected_activation) < self.statistics_batch_num:
+            if filters < 2 or num_prune < 1 or wrapper.collected_activation is None or len(wrapper.collected_activation) < self.statistics_batch_num:
                 return mask
             mask = self.get_mask(mask, wrapper.collected_activation, num_prune)
         finally:
-            if len(wrapper.collected_activation) == self.statistics_batch_num:
+            if wrapper.collected_activation is not None and len(wrapper.collected_activation) == self.statistics_batch_num:
                 wrapper.if_calculated = True
+
         return mask
 
 
