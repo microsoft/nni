@@ -161,6 +161,13 @@ def case_excluded(name, excludes):
                 return True
     return False
 
+def case_included(name, cases):
+    assert cases is not None
+    for case in cases.split(','):
+        if case in name:
+            return True
+    return False
+
 def run(args):
     it_config = get_yml_content(args.config)
 
@@ -169,7 +176,7 @@ def run(args):
         if case_excluded(name, args.exclude):
             print('{} excluded'.format(name))
             continue
-        if args.case and name and args.case not in name:
+        if args.cases and not case_included(name, args.cases):
             continue
         print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
         time.sleep(5)
@@ -183,7 +190,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--nni_source_dir", type=str, default='../')
-    parser.add_argument("--case", type=str, default=None)
+    parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
     args = parser.parse_args()

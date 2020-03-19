@@ -52,23 +52,23 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
+      python3 nni_test/nnitest/naive_test.py
     displayName: 'Naive test'
   - script: |
       cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
+      python3 nni_test/nnitest/tuner_test.py
+    displayName: 'Built-in tuners / assessors with naive trial tests'
   - script: |
       cd test
-      python3 metrics_test.py
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases metrics
     displayName: 'Trial job metrics test'
   - script: |
       cd test
-      python3 cli_test.py
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
     displayName: 'nnicli test'
   - script: |
       cd docs/en_US/
@@ -101,19 +101,19 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
+      python3 nni_test/nnitest/naive_test.py
     displayName: 'Naive test'
   - script: |
       cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
+      python3 nni_test/nnitest/tuner_test.py
+    displayName: 'Built-in tuners / assessors with naive trial tests'
   - script: |
       cd test
-      python3 cli_test.py
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
     displayName: 'nnicli test'
 
 - job: 'basic_test_pr_Windows'
@@ -137,13 +137,13 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test
-      powershell.exe -file unittest.ps1
+      powershell.exe -file scripts/unittest.ps1
     displayName: 'unit test'
   - script: |
       cd test
-      python tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
+      python nni_test/nnitest/tuner_test.py
+    displayName: 'Built-in tuners / assessors with naive trial tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
     displayName: 'nnicli test'
