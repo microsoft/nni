@@ -12,7 +12,7 @@ interface AppState {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
-    isilLegalFinal: boolean;
+    isillegalFinal: boolean;
     expWarningMessage: string;
 }
 
@@ -28,7 +28,7 @@ class App extends React.Component<{}, AppState> {
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
             metricGraphMode: 'max',
-            isilLegalFinal: false,
+            isillegalFinal: false,
             expWarningMessage: ''
         };
     }
@@ -46,7 +46,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     getFinalDataFormat = (): void => {
-        for(let i = 0; this.state.isilLegalFinal === false; i++){
+        for(let i = 0; this.state.isillegalFinal === false; i++){
             if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
@@ -56,7 +56,7 @@ class App extends React.Component<{}, AppState> {
                 } else {
                     // illegal final data
                     this.setState(() => ({
-                        isilLegalFinal: true,
+                        isillegalFinal: true,
                         expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
                     }));
                     window.clearInterval(this.dataFormatimer);
@@ -87,18 +87,19 @@ class App extends React.Component<{}, AppState> {
 
     render(): React.ReactNode {
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
-        metricGraphMode, isilLegalFinal, expWarningMessage } = this.state;
+            metricGraphMode, isillegalFinal, expWarningMessage 
+        } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
                 child as React.ReactElement<any>, {
-                interval,
-                columnList, changeColumn: this.changeColumn,
-                experimentUpdateBroadcast,
-                trialsUpdateBroadcast,
-                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
+                    interval,
+                    columnList, changeColumn: this.changeColumn,
+                    experimentUpdateBroadcast,
+                    trialsUpdateBroadcast,
+                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
             })
         );
 
@@ -111,7 +112,7 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
-                        {isilLegalFinal && <div className="warning">
+                        {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}
                         {reactPropsChildren}
