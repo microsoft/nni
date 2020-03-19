@@ -106,6 +106,11 @@ def get_launch_command(test_case_config):
     # replace variables
     for k in it_variables:
         launch_command = launch_command.replace(k, it_variables[k])
+
+    # hack for windows, not limited to local training service
+    if sys.platform == 'win32':
+        launch_command = launch_command.replace('python3', 'python')
+
     print('launch command: ', launch_command)
     return launch_command
 
