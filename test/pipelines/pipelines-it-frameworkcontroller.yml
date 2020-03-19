@@ -51,5 +51,5 @@ jobs:
       --azs_account $(azureStorage_accountName) --azs_share $(azureStorage_azureShare) --nni_docker_image $TEST_IMG --nni_manager_ip $(nni_manager_ip)
 
       cat config/training_service.yml
-      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --exclude multi_phase
+      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --exclude multi-phase
     displayName: 'integration test'
