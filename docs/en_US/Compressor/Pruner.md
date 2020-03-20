@@ -377,7 +377,7 @@ You can view example for more information
 #### User configuration for GradientWeightSumFilterPruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in GradientWeightSumFilterPruner.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
 
 
 
