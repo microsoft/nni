@@ -3,7 +3,7 @@
 
 jobs:
 - job: 'integration_test_pai'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
@@ -51,9 +51,9 @@ jobs:
 
       echo "TEST_IMG:$TEST_IMG"
       cd test
-      python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) \
-      --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
+      python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $TEST_IMG --pai_storage_plugin $(pai_storage_plugin)\
+       --pai_token $(pai_token) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip)
 
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai --exclude multi_phase
       PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
     displayName: 'integration test'
