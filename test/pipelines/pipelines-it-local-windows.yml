@@ -22,5 +22,5 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local --exclude smac,bohb,nnicli
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: 'Integration tests'
