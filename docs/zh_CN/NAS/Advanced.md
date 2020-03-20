@@ -94,7 +94,7 @@ class RandomMutator(Mutator):
 
 ## 实现分布式 NAS Tuner
 
-在学习编写 One-Shot NAS Tuner前，应先了解如何写出通用的 Tuner。 阅读[自定义 Tuner](../Tuner/CustomizeTuner.md) 的教程。
+Before learning how to write a distributed NAS tuner, users should first learn how to write a general tuner. 阅读[自定义 Tuner](../Tuner/CustomizeTuner.md) 的教程。
 
 当调用 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 时，会生成下面这样的搜索空间文件：
 
