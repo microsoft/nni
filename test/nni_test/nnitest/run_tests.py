@@ -143,11 +143,19 @@ def launch_test(config_file, training_service, test_case_config):
     print(str(datetime.datetime.now()), ' waiting ...', flush=True)
     while True:
         time.sleep(3)
-        if time.time() - bg_time > max_duration+10:
+        waited_time = time.time() - bg_time
+        if  waited_time > max_duration + 10:
+            print('waited: {}, max_duration: {}'.format(waited_time, max_duration))
             break
         status = get_experiment_status(STATUS_URL)
-        if status in ['DONE', 'ERROR'] or get_failed_trial_jobs(TRIAL_JOBS_URL):
+        if status in ['DONE', 'ERROR']:
+            print('experiment status:', status)
             break
+        num_failed = len(get_failed_trial_jobs(TRIAL_JOBS_URL))
+        if num_failed > 0:
+            print('failed jobs: ', num_failed)
+            break
+
     print(str(datetime.datetime.now()), ' waiting done', flush=True)
 
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
