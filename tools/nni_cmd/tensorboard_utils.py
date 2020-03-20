@@ -78,6 +78,7 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
     with open(os.path.join(temp_nni_path, 'tensorboard_stdout'), 'a+') as stdout_file, \
          open(os.path.join(temp_nni_path, 'tensorboard_stderr'), 'a+') as stderr_file:
         cmds = ['tensorboard', '--logdir', format_tensorboard_log_path(path_list), '--port', str(args.port)]
+        print('tensorboard cmd:', cmds)
         tensorboard_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     url_list = get_local_urls(args.port)
     print_normal(COLOR_GREEN_FORMAT % 'Start tensorboard success!\n' + 'Tensorboard urls: ' + '     '.join(url_list))
