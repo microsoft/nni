@@ -1,0 +1,16 @@
+# basic setting
+dataset_path: /home/yanchenqian/data/cifar10
+dataset_name: cifar10
+
+# training setting
+train_params: {
+  batch_size: 128,
+  num_epochs: 160,
+}
+log_interval: 200
+log_dir: experiments
+
+retrain_epochs: 40
+
+
+

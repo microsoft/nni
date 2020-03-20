@@ -1,0 +1,11 @@
+_default: !include ./base_pruner.yaml
+
+model_name: resnet56
+# pruning setting
+config_list: [{
+    'sparsity': 0.5,
+    'op_types': ['default'],
+}]
+
+pretrain: ./experiments/resnet56_pretrain_cifar10.pth
+

@@ -1,0 +1,20 @@
+
+dataset_path: /home/yanchenqian/data/mnist
+dataset_name: mnist
+
+# training setting
+train_params: {
+  batch_size: 64,
+  num_epochs: 10,
+}
+log_interval: 200
+log_dir: experiments
+
+# pruning setting
+model_name: naive
+config_list: [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+
+retrain_epochs: 10

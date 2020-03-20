@@ -1,0 +1,11 @@
+_default: !include ./base_pruner.yaml
+
+model_name: densenet40
+# pruning setting
+pruner_name: FPGMPruner
+config_list: [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d'],
+}]
+
+retrain_epochs: 40

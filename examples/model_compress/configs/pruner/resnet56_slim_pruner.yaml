@@ -1,0 +1,12 @@
+_default: !include ./base_pruner.yaml
+
+model_name: resnet56
+# pruning setting
+pruner_name: SlimPruner
+config_list: [{
+  'sparsity': 0.5,  
+  'op_types': ['BatchNorm2d'],
+  'sr': 0.001,
+}]
+
+sparsity_epochs: 5

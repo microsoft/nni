@@ -1,0 +1,13 @@
+_default: !include ./base_pruner.yaml
+
+model_name: vgg16
+# pruning setting
+pruner_name: SlimPruner
+config_list: [{
+  'sparsity': 0.5,  
+  'op_types': ['BatchNorm2d'],
+  'op_names': ['feature.1', 'feature.4', 'feature.8', 'feature.11', 'feature.15', 'feature.18', 'feature.25', 'feature.28', 'feature.29', 'feature.35', 'feature.38'],
+  'sr': 0.001,
+}]
+
+sparsity_epochs: 5
