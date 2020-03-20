@@ -92,8 +92,8 @@ class GradientRankFilterPruner(Pruner):
 
 class TaylorFOWeightFilterPruner(GradientRankFilterPruner):
     """
-    A structured pruning algorithm that prunes the filters with the
-    smallest importance approximations based on the first order taylor expansion on the weight. 
+    A structured pruning algorithm that prunes the filters with the smallest
+    importance approximations based on the first order taylor expansion on the weight.
     Molchanov, Pavlo and Mallya, Arun and Tyree, Stephen and Frosio, Iuri and Kautz, Jan,
     "Importance Estimation for Neural Network Pruning", CVPR 2019.
     http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf

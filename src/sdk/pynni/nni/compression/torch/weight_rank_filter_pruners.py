@@ -42,7 +42,6 @@ class WeightRankFilterPruner(Pruner):
         ----------
         wrapper : Module
             the module to instrument the compression operation
-       
         Returns
         -------
         dict
