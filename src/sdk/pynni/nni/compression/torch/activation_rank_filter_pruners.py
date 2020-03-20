@@ -63,10 +63,8 @@ class ActivationRankFilterPruner(Pruner):
 
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
 
         Returns
         -------
@@ -134,7 +132,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
     def get_mask(self, base_mask, activations, num_prune):
         """
         Calculate the mask of given layer.
-        Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+        Filters with the largest APoZ(average percentage of zeros) of output activations are masked.
 
         Parameters
         ----------

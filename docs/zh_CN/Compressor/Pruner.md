@@ -14,6 +14,12 @@ NNI Compressor 中的 Pruner
     * [APoZ Rank Pruner](#activationapozrankfilterpruner)
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
 
+* [具有梯度等级的 Filter Pruners](#gradientfilterpruners)
+
+  * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+
+  
+
 ## Level Pruner
 
 这是个基本的一次性 Pruner：可设置目标稀疏度（以分数表示，0.6 表示会剪除 60%）。
@@ -335,3 +341,35 @@ pruner.compress()
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
 - **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
+
+## GradientRankFilterPruner
+
+GradientRankFilterPruner 是一系列的 Pruner，从卷积层的梯度，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
+
+### TaylorFOWeightFilterPruner
+
+其实现为一次性修剪器，基于权重的一阶泰勒展开来修剪卷积层。论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中定义了权重的预估重要性。本文中提到的其它修剪标准将在以后的版本中支持。
+
+![](/Users/colorjam/Documents/Workspace/MSRA/nni-dev/docs/img/importance_estimation_sum.png)
+
+#### 用法
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import TaylorFOWeightFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = TaylorFOWeightFilterPruner(model, config_list)
+pruner.compress()
+```
+
+查看示例进一步了解
+
+#### TaylorFOWeightFilterPruner 的用户配置
+
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 当前 TaylorFOWeightFilterPruner 仅支持 Conv2d。
+

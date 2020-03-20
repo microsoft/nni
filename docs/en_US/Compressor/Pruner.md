@@ -11,8 +11,10 @@ Index of supported pruning algorithms
     * [L1Filter Pruner](#l1filter-pruner)
     * [L2Filter Pruner](#l2filter-pruner)
 * [Filter Pruners with Activation Rank](#activationrankfilterpruner)
-    * [APoZ Rank Pruner](#activationapozrankfilterpruner)
-    * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+  * [APoZ Rank Pruner](#activationapozrankfilterpruner)
+  * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+* [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
+    * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
 
 ## Level Pruner
 
@@ -281,7 +283,7 @@ pruner.compress()
 - **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
 
 ## ActivationRankFilterPruner
-ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity
+ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
 
 ### ActivationAPoZRankFilterPruner
 
@@ -341,4 +343,42 @@ You can view example for more information
 #### User configuration for ActivationMeanRankFilterPruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner
+- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
+
+
+## GradientRankFilterPruner
+
+GradientRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the gradients of convolution layers to achieve a preset level of network sparsity.
+
+### TaylorFOWeightFilterPruner
+
+We implemented it as a one-shot pruner, it prunes convolutional layers based on the first order taylor expansion on weights. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+
+> 
+
+![](../../img/importance_estimation_sum.png)
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import TaylorFOWeightFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = TaylorFOWeightFilterPruner(model, config_list)
+pruner.compress()
+```
+
+You can view example for more information
+
+#### User configuration for GradientWeightSumFilterPruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in GradientWeightSumFilterPruner.
+
+
+
+ 

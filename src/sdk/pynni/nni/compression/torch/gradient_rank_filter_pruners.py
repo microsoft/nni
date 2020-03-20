@@ -5,7 +5,7 @@ import logging
 import torch
 from .compressor import Pruner
 
-__all__ = ['GradientWeightRankFilterPruner']
+__all__ = ['TaylorFOWeightFilterPruner']
 
 logger = logging.getLogger('torch gradient rank filter pruners')
 
@@ -52,16 +52,15 @@ class GradientRankFilterPruner(Pruner):
 
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
 
         Returns
         -------
         dict
             dictionary for storing masks
         """
+
         weight = wrapper.module.weight.data
         op_type = wrapper.type
         config = wrapper.config
@@ -91,10 +90,10 @@ class GradientRankFilterPruner(Pruner):
         return mask
 
 
-class GradientWeightRankFilterPruner(GradientRankFilterPruner):
+class TaylorFOWeightFilterPruner(GradientRankFilterPruner):
     """
     A structured pruning algorithm that prunes the filters with the
-    smallest importance approximations based on weight and gradient.
+    smallest importance approximations based on the first order taylor expansion on the weight. 
     Molchanov, Pavlo and Mallya, Arun and Tyree, Stephen and Frosio, Iuri and Kautz, Jan,
     "Importance Estimation for Neural Network Pruning", CVPR 2019.
     http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
@@ -125,8 +124,8 @@ class GradientWeightRankFilterPruner(GradientRankFilterPruner):
         ----------
         base_mask : dict
             The basic mask with the same shape of weight, all item in the basic mask is 1.
-        contribution : list
-            Layer's output gradient
+        contribution : torch.Tensor
+            Layer's importance approximations
         num_prune : int
             Num of filters to prune
 
@@ -143,6 +142,11 @@ class GradientWeightRankFilterPruner(GradientRankFilterPruner):
         return base_mask
 
     def calc_contributions(self):
+        """
+        Calculate the estimated importance of filters as a sum of individual contribution
+        based on the first order taylor expansion.
+        """
+
         if self.iterations >= self.statistics_batch_num:
             return
         for wrapper in self.get_modules_wrapper():
