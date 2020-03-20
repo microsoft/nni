@@ -97,6 +97,12 @@ testCases:
   validator:
     class: NnicliValidator
 
+- name: foreground
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: python3 nni_test/nnitest/foreground.py --config $configFile --timeout 45
+  stopCommand:
+  experimentStatusCheck: False
+
 # Experiment resume test part 1
 - name: nnictl-resume-1
   configFile: test/config/examples/sklearn-regression.yml
