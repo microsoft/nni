@@ -7,10 +7,7 @@ import nni
 
 if __name__ == '__main__':
     print('trial start')
-    if random.random() > 0.5:
-        up = True
-    else:
-        up = False
+    up = random.random() > 0.5
     v = 0.5
     nni.get_next_parameter()
     for i in range(20):

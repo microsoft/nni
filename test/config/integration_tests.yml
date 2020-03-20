@@ -3,6 +3,7 @@ defaultTestCaseConfig:
   launchCommand: nnictl create --config $configFile
   stopCommand: nnictl stop
   experimentStatusCheck: True
+  platform: linux darwin win32
 
 testCases:
 #######################################################################
@@ -96,12 +97,14 @@ testCases:
   stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
   validator:
     class: NnicliValidator
+  platform: linux darwin
 
 - name: foreground
   configFile: test/config/examples/sklearn-regression.yml
   launchCommand: python3 nni_test/nnitest/foreground.py --config $configFile --timeout 45
   stopCommand:
   experimentStatusCheck: False
+  platform: linux darwin
 
 # Experiment resume test part 1
 - name: nnictl-resume-1
@@ -167,6 +170,7 @@ testCases:
 
 - name: tuner-smac
   configFile: test/config/tuners/mnist-annotation-smac.yml
+  platform: linux darwin
 
 - name: tuner-tpe
   configFile: test/config/tuners/mnist-annotation-tpe.yml
@@ -176,6 +180,7 @@ testCases:
 
 - name: tuner-bohb
   configFile: test/config/tuners/mnist-bohb.yml
+  platform: linux darwin
 
 - name: tuner-gp
   configFile: test/config/tuners/mnist-gp.yml

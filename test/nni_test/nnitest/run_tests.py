@@ -14,7 +14,7 @@ import ruamel.yaml as yaml
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
     parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs
-from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT, detect_port
 import validators
 
 it_variables = {}
@@ -63,12 +63,6 @@ def prepare_config_file(test_case_config, it_config, args):
     return new_config_file
 
 def run_test_case(test_case_config, it_config, args):
-    # fill test case default config
-    for k in it_config['defaultTestCaseConfig']:
-        if k not in test_case_config:
-            test_case_config[k] = it_config['defaultTestCaseConfig'][k]
-    print(json.dumps(test_case_config, indent=4))
-
     new_config_file = prepare_config_file(test_case_config, it_config, args)
     # set configFile variable
     it_variables['$configFile'] = new_config_file
@@ -96,7 +90,6 @@ def invoke_validator(test_case_config, nni_source_dir):
     validator(REST_ENDPOINT, None, nni_source_dir, **kwargs)
 
 def get_max_values(config_file):
-    '''Get maxExecDuration and maxTrialNum of experiment'''
     experiment_config = get_yml_content(config_file)
     return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
 
@@ -118,7 +111,6 @@ def get_command(test_case_config, commandKey):
     return command
 
 def launch_test(config_file, training_service, test_case_config):
-    '''run test per configuration file'''
     launch_command = get_command(test_case_config, 'launchCommand')
     print('launch command: ', launch_command, flush=True)
 
@@ -181,6 +173,19 @@ def case_included(name, cases):
             return True
     return False
 
+def wait_for_port_available(port, timeout):
+    begin_time = time.time()
+    while True:
+        if not detect_port(port):
+            return
+        if time.time() - begin_time > timeout:
+            msg = 'port {} is not available in {} seconds.'.format(port, timeout)
+            raise RuntimeError(msg)
+        time.sleep(5)
+
+def match_platform(test_case_config):
+    return sys.platform in test_case_config['platform'].split(' ')
+
 def run(args):
     it_config = get_yml_content(args.config)
 
@@ -191,8 +196,19 @@ def run(args):
             continue
         if args.cases and not case_included(name, args.cases):
             continue
+
+        # fill test case default config
+        for k in it_config['defaultTestCaseConfig']:
+            if k not in test_case_config:
+                test_case_config[k] = it_config['defaultTestCaseConfig'][k]
+        print(json.dumps(test_case_config, indent=4))
+
+        if not match_platform(test_case_config):
+            print('skipped {}, platform {} not match [{}]'.format(name, sys.platform, test_case_config['platform']))
+            continue
+
+        wait_for_port_available(8080, 30)
         print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
-        time.sleep(5)
         begin_time = time.time()
 
         run_test_case(test_case_config, it_config, args)
