@@ -97,18 +97,6 @@ testCases:
       codeDir: ../naive_trial
       command: python3 trial.py
 
-- name: tuner-smac
-  configFile: test/config/tuners/smac.yml
-  platform: linux darwin
-  config:
-    maxTrialNum: 2
-    trialConcurrency: 2
-    useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
-    trial:
-      codeDir: ../naive_trial
-      command: python3 trial.py
-
 - name: tuner-tpe
   configFile: test/config/tuners/tpe.yml
   config:
@@ -131,18 +119,6 @@ testCases:
       codeDir: ../naive_trial
       command: python3 trial.py
 
-- name: tuner-bohb
-  configFile: test/config/tuners/bohb.yml
-  platform: linux darwin
-  config:
-    maxTrialNum: 2
-    trialConcurrency: 2
-    useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
-    trial:
-      codeDir: ../naive_trial
-      command: python3 trial.py
-
 - name: tuner-gp
   configFile: test/config/tuners/gp.yml
   config:
@@ -156,28 +132,6 @@ testCases:
 
 - name: tuner-grid
   configFile: test/config/tuners/gridsearch.yml
-  config:
-    maxTrialNum: 2
-    trialConcurrency: 2
-    useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
-    trial:
-      codeDir: ../naive_trial
-      command: python3 trial.py
-
-- name: tuner-hyperband
-  configFile: test/config/tuners/hyperband.yml
-  config:
-    maxTrialNum: 2
-    trialConcurrency: 2
-    useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
-    trial:
-      codeDir: ../naive_trial
-      command: python3 trial.py
-
-- name: tuner-metis
-  configFile: test/config/tuners/metis.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
