@@ -13,7 +13,7 @@ import json
 import ruamel.yaml as yaml
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
-    parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs
+    parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs, get_experiment_dir
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT, detect_port
 import validators
 
@@ -87,7 +87,7 @@ def invoke_validator(test_case_config, nni_source_dir):
     validator = validators.__dict__[validator_config.get('class')]()
     kwargs = validator_config.get('kwargs', {})
     print('kwargs:', kwargs)
-    validator(REST_ENDPOINT, None, nni_source_dir, **kwargs)
+    validator(REST_ENDPOINT, get_experiment_dir(EXPERIMENT_URL), nni_source_dir, **kwargs)
 
 def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
