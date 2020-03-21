@@ -61,7 +61,7 @@ jobs:
   - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'nnicli test'
+    displayName: 'Simple test'
   - script: |
       cd docs/en_US/
       sphinx-build -M html . _build -W
@@ -102,7 +102,7 @@ jobs:
   - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'nnicli test'
+    displayName: 'Simple test'
 
 - job: 'basic_test_pr_Windows'
   pool:
@@ -130,4 +130,4 @@ jobs:
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'nnicli test'
+    displayName: 'Simple test'

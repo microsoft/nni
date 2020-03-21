@@ -128,23 +128,6 @@ def print_trial_job_log(training_service, trial_jobs_url):
                 print(log_file, flush=True)
                 print(log_content, flush=True)
 
-def print_failed_job_log(training_service, trial_jobs_url):
-    '''Print job log of FAILED trial jobs'''
-    trial_jobs = get_failed_trial_jobs(trial_jobs_url)
-    for trial_job in trial_jobs:
-        if training_service == 'local':
-            if sys.platform == "win32":
-                p = trial_job['stderrPath'].split(':')
-                log_filename = ':'.join([p[-2], p[-1]])
-            else:
-                log_filename = trial_job['stderrPath'].split(':')[-1]
-        else:
-            log_filename = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'], 'stdout_log_collection.log')
-        with open(log_filename, 'r') as f:
-            log_content = f.read()
-            print(log_filename, flush=True)
-            print(log_content, flush=True)
-
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]
     time = max_exec_duration[:-1]
