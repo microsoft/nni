@@ -12,8 +12,9 @@ import traceback
 import json
 import ruamel.yaml as yaml
 
-from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
-    parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs, get_experiment_dir
+from utils import get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
+    parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs, \
+    get_experiment_dir, print_experiment_log
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT, detect_port
 import validators
 
@@ -149,6 +150,8 @@ def launch_test(config_file, training_service, test_case_config):
             break
 
     print(str(datetime.datetime.now()), ' waiting done', flush=True)
+    if get_experiment_status(STATUS_URL) == 'ERROR':
+        print_experiment_log(EXPERIMENT_URL)
 
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)

@@ -111,22 +111,25 @@ def get_failed_trial_jobs(trial_jobs_url):
     '''Return failed trial jobs'''
     return get_trial_jobs(trial_jobs_url, 'FAILED')
 
+def print_file_content(filepath):
+    with open(filepath, 'r') as f:
+        content = f.read()
+        print(filepath, flush=True)
+        print(content, flush=True)
+
 def print_trial_job_log(training_service, trial_jobs_url):
-    '''Print job log of FAILED trial jobs'''
     trial_jobs = get_trial_jobs(trial_jobs_url)
     for trial_job in trial_jobs:
-        log_files = []
         trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'])
-        if training_service == 'local':
-            log_files.append(os.path.join(trial_log_dir, 'stderr'))
-            log_files.append(os.path.join(trial_log_dir, 'trial.log'))
-        else:
-            log_files.append(os.path.join(trial_log_dir, 'stdout_log_collection.log'))
+        log_files = ['stderr', 'trial.log'] if training_service == 'local' else ['stdout_log_collection.log']
         for log_file in log_files:
-            with open(log_file, 'r') as f:
-                log_content = f.read()
-                print(log_file, flush=True)
-                print(log_content, flush=True)
+            print_file_content(os.path.join(trial_log_dir, log_file))
+
+def print_experiment_log(experiment_url):
+    log_dir = get_nni_log_dir(experiment_url)
+    for log_file in ['dispatcher.log', 'nnimanager.log']:
+        filepath = os.path.join(log_dir, log_file)
+        print_file_content(filepath)
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]
