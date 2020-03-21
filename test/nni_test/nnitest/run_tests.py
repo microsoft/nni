@@ -40,7 +40,7 @@ def update_training_service_config(config, training_service):
     deep_update(config, it_ts_config[training_service])
 
 def prepare_config_file(test_case_config, it_config, args):
-    config_path = os.path.join(args.nni_source_dir, test_case_config['configFile'])
+    config_path = args.nni_source_dir + test_case_config['configFile']
     test_yml_config = get_yml_content(config_path)
 
     # apply test case specific config
@@ -221,7 +221,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--nni_source_dir", type=str, default='..')
+    parser.add_argument("--nni_source_dir", type=str, default='../')
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
