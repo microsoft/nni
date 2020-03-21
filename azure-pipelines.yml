@@ -60,15 +60,7 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
-      python3 nni_test/nnitest/tuner_test.py
-    displayName: 'Built-in tuners / assessors with naive trial tests'
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases metrics
-    displayName: 'Trial job metrics test'
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'nnicli test'
   - script: |
       cd docs/en_US/
@@ -109,11 +101,7 @@ jobs:
     displayName: 'Naive test'
   - script: |
       cd test
-      python3 nni_test/nnitest/tuner_test.py
-    displayName: 'Built-in tuners / assessors with naive trial tests'
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'nnicli test'
 
 - job: 'basic_test_pr_Windows'
@@ -141,9 +129,5 @@ jobs:
     displayName: 'unit test'
   - script: |
       cd test
-      python nni_test/nnitest/tuner_test.py
-    displayName: 'Built-in tuners / assessors with naive trial tests'
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --cases nnicli
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'nnicli test'
