@@ -3,6 +3,7 @@
 
 import sys
 import os.path as osp
+import argparse
 import json
 import subprocess
 import sys
@@ -12,19 +13,16 @@ import traceback
 from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port, snooze
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
-NAIVE_TEST_CONFIG_DIR = 'config/naive_test'
+NNI_SOURCE_DIR = '..'
+NAIVE_TEST_CONFIG_DIR = osp.join(NNI_SOURCE_DIR, 'test', 'config', 'naive_test')
 
-def naive_test():
+def naive_test(args):
     '''run naive integration test'''
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
     to_remove = list(map(lambda file: osp.join(NAIVE_TEST_CONFIG_DIR, file), to_remove))
     remove_files(to_remove)
 
-    if sys.platform == 'win32':
-        config_file = 'local_win32.yml'
-    else:
-        config_file = 'local.yml'
-    proc = subprocess.run(['nnictl', 'create', '--config', osp.join(NAIVE_TEST_CONFIG_DIR, config_file)])
+    proc = subprocess.run(['nnictl', 'create', '--config', args.config])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
@@ -75,8 +73,8 @@ def naive_test():
     subprocess.run(['nnictl', 'stop'])
     snooze()
 
-def stop_experiment_test():
-    config_file = osp.join(NAIVE_TEST_CONFIG_DIR, 'local.yml')
+def stop_experiment_test(args):
+    config_file = args.config
     '''Test `nnictl stop` command, including `nnictl stop exp_id` and `nnictl stop all`.
     Simple `nnictl stop` is not tested here since it is used in all other test code'''
     subprocess.run(['nnictl', 'create', '--config', config_file, '--port', '8080'], check=True)
@@ -105,11 +103,14 @@ def stop_experiment_test():
 
 
 if __name__ == '__main__':
-    installed = (sys.argv[-1] != '--preinstall')
-    setup_experiment(installed)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, required=True)
+    parser.add_argument("--preinstall", action='store_true')
+    args = parser.parse_args()
+    setup_experiment(not args.preinstall)
     try:
-        naive_test()
-        stop_experiment_test()
+        naive_test(args)
+        stop_experiment_test(args)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

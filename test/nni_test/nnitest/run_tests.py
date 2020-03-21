@@ -221,7 +221,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--nni_source_dir", type=str, default='../')
+    parser.add_argument("--nni_source_dir", type=str, default='..')
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'], default='local')
