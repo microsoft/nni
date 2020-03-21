@@ -12,14 +12,14 @@ import os
 
 import nni
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 import nni.parameter_expressions as parameter_expressions
 
 logger = logging.getLogger('pbt_tuner_AutoML')
 
-# to be revised
-all_checkpoint_dir = os.getenv('NNI_CHECKPOINT_DIRECTORY')
+experiment_id = os.getenv('NNI_EXP_ID')
+all_ckpt_dir = os.path.join("~/nni/checkpoint/", experiment_id)
 
 
 def json2space(x, oldy=None, name=NodeType.ROOT):
@@ -124,11 +124,11 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch):
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
         elif key=='save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
-        elif NodeType.INDEX in hyper_parameters[key]:
-            continue
-        else:
+        elif isinstance(hyper_parameters[key], float):
             perturb = np.random.choice(factors)
             hyper_parameters[key] *= perturb
+        else:
+            continue
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
@@ -144,13 +144,12 @@ class Trial_Info:
         self.parameter_id = parameter_id
         self.score = score
 
-
-    def clear_id(self):
+    def clean_id(self):
         self.parameter_id = None
 
 
 class PBTTuner(Tuner):
-    def __init__(self, optimize_mode="maximize", population_size=10, factors=(1.2, 0.8), fraction=0.2):
+    def __init__(self, optimize_mode="maximize", all_checkpoint_dir=all_ckpt_dir, population_size=10, factors=(1.2, 0.8), fraction=0.2):
         """
         Initialization
 
@@ -166,6 +165,7 @@ class PBTTuner(Tuner):
             fraction for selecting bottom and top trials
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
+        self.all_checkpoint_dir = all_checkpoint_dir
         self.population_size = population_size
         self.factors = factors
         self.fraction = fraction
@@ -212,7 +212,7 @@ class PBTTuner(Tuner):
         for i in range(self.population_size):
             hyper_parameters = json2parameter(
                 self.searchspace_json, is_rand, self.random_state)
-            checkpoint_dir = os.path.join(all_checkpoint_dir, str(i))
+            checkpoint_dir = os.path.join(self.all_checkpoint_dir, str(i))
             hyper_parameters['load_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
             hyper_parameters['save_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
             self.population.append(Trial_Info(checkpoint_dir=checkpoint_dir,
@@ -274,12 +274,12 @@ class PBTTuner(Tuner):
             self.credit += 1
             self.param_ids.append(parameter_id)
             raise nni.NoMoreTrialError('no more parameters now.')
+        self.pos += 1
         trial_info = self.population[self.pos]
         trial_info.parameter_id = parameter_id
         self.running[parameter_id] = trial_info
-        self.pos += 1
         logger.info('generate parameter : %s', trial_info.hyper_parameters)
-        return trial_info.hyper_parameters
+        return split_index(trial_info.hyper_parameters)
 
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
@@ -308,9 +308,10 @@ class PBTTuner(Tuner):
             logger.info('next epoch')
             self.epoch += 1
             self.population = []
+            self.pos = -1
             self.running = {}
             #exploit and explore
-            self.finished = sorted(self.finished, key=lambda x: x['score'], reverse=True)
+            self.finished = sorted(self.finished, key=lambda x: x.score, reverse=True)
             cutoff = int(np.ceil(self.fraction * len(self.finished)))
             tops = self.finished[:cutoff]
             bottoms = self.finished[self.finished_trials - cutoff:]
@@ -323,14 +324,17 @@ class PBTTuner(Tuner):
                     trial.hyper_parameters['load_checkpoint_dir'] = trial.hyper_parameters['save_checkpoint_dir']
                     trial.hyper_parameters['save_checkpoint_dir'] = os.path.join(trial.checkpoint_dir, str(self.epoch))
             self.finished_trials = 0
+            for _ in range(self.population_size):
+                trial_info = self.finished.pop()
+                self.population.append(trial_info)
             for _ in range(self.credit):
                 self.credit -= 1
+                self.pos += 1
                 parameter_id = self.param_ids.pop()
-                trial_info = self.finished.pop()
+                trial_info = self.population[self.pos]
                 trial_info.parameter_id = parameter_id
-                self.population.append(trial_info)
                 self.running[parameter_id] = trial_info
-                self.send_trial_callback(parameter_id, trial_info.hyper_parameters)
+                self.send_trial_callback(parameter_id, split_index(trial_info.hyper_parameters))
 
 
     def import_data(self, data):

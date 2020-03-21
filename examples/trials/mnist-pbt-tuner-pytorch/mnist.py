@@ -70,7 +70,7 @@ def test(args, model, device, test_loader):
 
 
 def save_checkpoint(model, checkpoint_path):
-    torch.save(model.state_dict, checkpoint_path)
+    torch.save(model.state_dict(), checkpoint_path)
 
 
 def load_checkpoint(checkpoint_path):
@@ -79,10 +79,6 @@ def load_checkpoint(checkpoint_path):
 
 
 def main(args):
-    save_checkpoint_path = os.path.join(args['save_checkpoint_dir'], 'model.pth')
-    load_checkpoint_path = os.path.join(args['load_checkpoint_dir'], 'model.pth')
-    model_state_dict = load_checkpoint(load_checkpoint_path)
-
     use_cuda = not args['no_cuda'] and torch.cuda.is_available()
 
     torch.manual_seed(args['seed'])
@@ -110,7 +106,17 @@ def main(args):
     hidden_size = args['hidden_size']
 
     model = Net(hidden_size=hidden_size).to(device)
-    model.load_state_dict(model_state_dict)
+
+    save_checkpoint_dir = args['save_checkpoint_dir']
+    save_checkpoint_path = os.path.join(save_checkpoint_dir, 'model.pth')
+    load_checkpoint_path = os.path.join(args['load_checkpoint_dir'], 'model.pth')
+
+    if os.path.isfile(load_checkpoint_path):
+        model_state_dict = load_checkpoint(load_checkpoint_path)
+        logger.info("test : " + load_checkpoint_path)
+        logger.info(type(model_state_dict))
+        model.load_state_dict(model_state_dict)
+
     optimizer = optim.SGD(model.parameters(), lr=args['lr'],
                           momentum=args['momentum'])
 
@@ -130,6 +136,8 @@ def main(args):
             logger.debug('Final result is %g', test_acc)
             logger.debug('Send final result done.')
 
+    if not os.path.exists(save_checkpoint_dir):
+        os.makedirs(save_checkpoint_dir)
     save_checkpoint(model, save_checkpoint_path)
 
 
@@ -137,7 +145,7 @@ def get_params():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument("--data_dir", type=str,
-                        default='/tmp/tensorflow/mnist/input_data', help="data directory")
+                        default='./tmp/pytorch/mnist/input_data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument("--hidden_size", type=int, default=512, metavar='N',
