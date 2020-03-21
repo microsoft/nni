@@ -1,9 +1,9 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 5m
-maxTrialNum: 4
-trialConcurrency: 4
-searchSpacePath: search_space.json
+maxTrialNum: 8
+trialConcurrency: 8
+searchSpacePath: ../naive_trial/search_space.json
 
 tuner:
   builtinTunerName: TPE
@@ -17,7 +17,7 @@ assessor:
       start_step: 6
       threshold: 0.95
 trial:
-  codeDir: ./
+  codeDir: ../naive_trial
   command: python3 trial.py
   gpuNum: 0
 

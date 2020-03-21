@@ -160,36 +160,36 @@ testCases:
 # nni tuners test
 #########################################################################
 - name: tuner-annel
-  configFile: test/config/tuners/mnist-annotation-anneal.yml
+  configFile: test/config/tuners/anneal.yml
 
 - name: tuner-evolution
-  configFile: test/config/tuners/mnist-annotation-evolution.yml
+  configFile: test/config/tuners/evolution.yml
 
 - name: tuner-random
-  configFile: test/config/tuners/mnist-annotation-random.yml
+  configFile: test/config/tuners/random.yml
 
 - name: tuner-smac
-  configFile: test/config/tuners/mnist-annotation-smac.yml
+  configFile: test/config/tuners/smac.yml
   platform: linux darwin
 
 - name: tuner-tpe
-  configFile: test/config/tuners/mnist-annotation-tpe.yml
+  configFile: test/config/tuners/tpe.yml
 
 - name: tuner-batch
-  configFile: test/config/tuners/mnist-batchtuner.yml
+  configFile: test/config/tuners/batch.yml
 
 - name: tuner-bohb
-  configFile: test/config/tuners/mnist-bohb.yml
+  configFile: test/config/tuners/bohb.yml
   platform: linux darwin
 
 - name: tuner-gp
-  configFile: test/config/tuners/mnist-gp.yml
+  configFile: test/config/tuners/gp.yml
 
 - name: tuner-grid
-  configFile: test/config/tuners/mnist-gridsearch.yml
+  configFile: test/config/tuners/gridsearch.yml
 
 - name: tuner-hyperband
-  configFile: test/config/tuners/mnist-hyperband.yml
+  configFile: test/config/tuners/hyperband.yml
 
 - name: tuner-metis
-  configFile: test/config/tuners/mnist-metis.yml
+  configFile: test/config/tuners/metis.yml
