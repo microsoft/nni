@@ -392,8 +392,6 @@ def webui_url(args):
 def webui_nas(args):
     '''launch nas ui'''
     print_normal('Starting NAS UI...')
-    # TODO: find file path on installing with pypi
-    # TODO: use correct node on win32
     try:
         entry_dir = get_nni_installation_path()
         entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
