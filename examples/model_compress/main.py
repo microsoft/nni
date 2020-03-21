@@ -1,19 +1,20 @@
 import os
 import argparse
-import logging
 import importlib
 
+import models.cifar10 as models
+import nni.compression.torch as nni_compression
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from utils import (AverageMeter, Config, CSVLogger,
+                                         accuracy, configure_log_paths,
+                                         set_random_seed)
+from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-import models.cifar10 as models
-from torch.optim.lr_scheduler import MultiStepLR
 
-from nni.compression.torch.utils import Config, configure_log_paths, AverageMeter, set_random_seed, accuracy, CSVLogger
-import nni.compression.torch as nni_compression
 
 class NaiveModel(torch.nn.Module):
     def __init__(self):
