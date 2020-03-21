@@ -114,10 +114,10 @@ testCases:
     maxTrialNum: 2
     trialConcurrency: 2
     useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
+    searchSpacePath: ../naive_trial/search_space_choices.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 trial_choices.py
 
 - name: tuner-gp
   configFile: test/config/tuners/gp.yml
@@ -136,7 +136,7 @@ testCases:
     maxTrialNum: 2
     trialConcurrency: 2
     useAnnotation: False
-    searchSpacePath: ../naive_trial/search_space.json
+    searchSpacePath: ../naive_trial/search_space_choices.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 trial_choices.py
