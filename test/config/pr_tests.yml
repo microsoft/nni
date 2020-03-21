@@ -8,6 +8,16 @@ defaultTestCaseConfig:
 testCases:
 
 #########################################################################
+# naive test
+#########################################################################
+
+- name: naive-test
+  configFile: test/config/naive_test/local.yml
+  launchCommand: python3 nni_test/nnitest/naive_test.py --config $configFile
+  experimentStatusCheck: False
+  stopCommand:
+
+#########################################################################
 # nni features test
 #########################################################################
 - name: metrics-float

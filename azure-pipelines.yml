@@ -56,10 +56,6 @@ jobs:
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 nni_test/nnitest/naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple test'
   - script: |
@@ -95,10 +91,6 @@ jobs:
       cd test
       source scripts/unittest.sh
     displayName: 'Unit test'
-  - script: |
-      cd test
-      python3 nni_test/nnitest/naive_test.py
-    displayName: 'Naive test'
   - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
