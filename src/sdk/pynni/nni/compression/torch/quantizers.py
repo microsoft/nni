@@ -3,6 +3,8 @@
 
 import logging
 import torch
+from schema import Schema, And, Or, Use, Optional
+from .utils import validate_op_names, validate_op_types
 from .compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
@@ -16,6 +18,16 @@ class NaiveQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
         self.layer_scale = {}
+
+    def validate_config(self, model, config_list):
+        schema = Schema([{
+            Optional('quant_types'): ['weight'],
+            Optional('quant_bits'): Or(8, { 'weight': 8 }),
+            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
+            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
+        }])
+
+        schema.validate(config_list)
 
     def quantize_weight(self, weight, wrapper, **kwargs):
         new_scale = weight.abs().max() / 127
@@ -137,6 +149,28 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('tracked_max_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_max', torch.zeros(1))
 
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list of dict
+            List of configurations
+        """
+        schema = Schema([{
+            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
+            Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
+                Optional('weight'): And(int, lambda n: 0 < n < 32),
+                Optional('output'): And(int, lambda n: 0 < n < 32),
+            })),
+            Optional('quant_start_step'): And(int, lambda n: n >=0),
+            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
+            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
+        }])
+
+        schema.validate(config_list)
+
     def _quantize(self, bits, op, real_val):
         """
         quantize real value.
@@ -233,6 +267,26 @@ class DoReFaQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list of dict
+            List of configurations
+        """
+        schema = Schema([{
+            Optional('quant_types'): Schema([lambda x: x in ['weight']]),
+            Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
+                Optional('weight'): And(int, lambda n: 0 < n < 32)
+            })),
+            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
+            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
+        }])
+
+        schema.validate(config_list)
+
     def quantize_weight(self, weight, wrapper, **kwargs):
         weight_bits = get_bits_length(wrapper.config, 'weight')
         out = weight.tanh()
@@ -263,6 +317,27 @@ class BNNQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
         self.quant_grad = ClipGrad
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list of dict
+            List of configurations
+        """
+        schema = Schema([{
+            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
+            Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
+                Optional('weight'): And(int, lambda n: 0 < n < 32),
+                Optional('output'): And(int, lambda n: 0 < n < 32),
+            })),
+            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
+            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
+        }])
+
+        schema.validate(config_list)
 
     def quantize_weight(self, weight, wrapper, **kwargs):
         out = torch.sign(weight)
