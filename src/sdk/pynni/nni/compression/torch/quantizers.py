@@ -164,7 +164,7 @@ class QAT_Quantizer(Quantizer):
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
-            Optional('quant_start_step'): And(int, lambda n: n>=0),
+            Optional('quant_start_step'): And(int, lambda n: n >= 0),
             Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
             Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
         }])
