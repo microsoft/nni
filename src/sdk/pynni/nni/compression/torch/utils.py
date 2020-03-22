@@ -14,7 +14,7 @@ def validate_op_names(model, op_names, logger):
 
 def validate_op_types(model, op_types, logger):
     found_types = set(['default'])
-    for name, module in model.named_modules():
+    for _, module in model.named_modules():
         found_types.add(type(module).__name__)
 
     not_found_op_types = set(op_types) - found_types

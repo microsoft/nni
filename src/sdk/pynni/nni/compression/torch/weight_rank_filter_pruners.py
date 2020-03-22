@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from schema import Schema, And, Use, Optional
+from schema import Schema, And, Optional
 from .utils import validate_op_names, validate_op_types
 from .compressor import Pruner
 
