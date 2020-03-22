@@ -29,12 +29,12 @@ fixed_arc="$fixed_arc 4 7 0 1 1 1 0 0 0 1 0 1 1 1 1 0 1 0 0 0 0 0 0"
 fixed_arc="$fixed_arc 0 7 0 0 1 1 1 1 0 1 0 1 1 0 0 0 0 1 0 0 0 0 0 1"
 fixed_arc="$fixed_arc 1 3 1 0 0 1 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0"
 
-python eval_arc.py \
+python -u eval_arc.py \
   --train_ratio=1.0 \
   --valid_ratio=1.0 \
   --min_count=1 \
   --is_mask=True \
-  --is_binary=True \
+  --is_binary=False \
   --embedding_model="glove" \
   --child_lr_decay_scheme="cosine" \
   --data_path="data" \
