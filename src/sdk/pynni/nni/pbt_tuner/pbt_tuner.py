@@ -7,8 +7,8 @@ pbt_tuner.py
 
 import copy
 import logging
-import numpy as np
 import os
+import numpy as np
 
 import nni
 from nni.tuner import Tuner
@@ -120,9 +120,9 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch):
     top_hyper_parameters = top_trial_info.hyper_parameters
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
     for key in hyper_parameters.keys():
-        if key=='load_checkpoint_dir':
+        if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
-        elif key=='save_checkpoint_dir':
+        elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif isinstance(hyper_parameters[key], float):
             perturb = np.random.choice(factors)
@@ -215,8 +215,7 @@ class PBTTuner(Tuner):
             checkpoint_dir = os.path.join(self.all_checkpoint_dir, str(i))
             hyper_parameters['load_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
             hyper_parameters['save_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
-            self.population.append(Trial_Info(checkpoint_dir=checkpoint_dir,
-                                               hyper_parameters=hyper_parameters))
+            self.population.append(Trial_Info(checkpoint_dir=checkpoint_dir, hyper_parameters=hyper_parameters))
 
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
