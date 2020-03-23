@@ -40,6 +40,9 @@ class CompressorSchema:
         self.compressor_schema = Schema(self._modify_schema(data_schema, model, logger))
 
     def _modify_schema(self, data_schema, model, logger):
+        if not data_schema:
+            return data_schema
+
         for k in data_schema[0]:
             old_schema = data_schema[0][k]
             if k == 'op_types' or (isinstance(k, Schema) and k._schema == 'op_types'):
