@@ -443,7 +443,7 @@ def train(data_path, output_dir, num_layers):
     if FLAGS.child_optim_algo == "adam":
         optimizer = optim.Adam(child_model.parameters(), eps=1e-3, weight_decay=FLAGS.child_l2_reg)  # with L2
     else:
-        raise ValueError("Unknown optim_algo {}".format(optim_algo))
+        raise ValueError("Unknown optim_algo {}".format(FLAGS.child_optim_algo))
 
     child_model.cuda()
     criterion.cuda()
@@ -506,7 +506,7 @@ def train(data_path, output_dir, num_layers):
             # compute the gradient norm value
             grad_norm = nn.utils.clip_grad_norm_(trainable_params, 99999999)
             for param in trainable_params:
-                nn.utils.clip_grad_norm_(param, grad_bound) #clip grad
+                nn.utils.clip_grad_norm_(param, FLAGS.child_grad_bound)  # clip grad
 
             optimizer.step()
 
@@ -521,6 +521,7 @@ def train(data_path, output_dir, num_layers):
                 log_string += " tr_acc={:<3d}/{:>3d}".format(acc, logits.size()[0])
                 log_string += " mins={:<10.2f}".format(float(curr_time - start_time) / 60)
                 print(log_string)
+
         epoch += 1
         save_state = {
             'step' : step,
