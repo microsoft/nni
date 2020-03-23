@@ -30,9 +30,6 @@ class CompressorSchema:
     def __init__(self, data_schema, model, logger):
         assert isinstance(data_schema, list) and len(data_schema) <= 1
         self.data_schema = data_schema
-        self.model = model
-        self.logger = logger
-
         self.compressor_schema = Schema(self._modify_schema(data_schema, model, logger))
 
     def _modify_schema(self, data_schema, model, logger):
