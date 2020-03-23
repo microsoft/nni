@@ -1,6 +1,6 @@
 jobs:
 - job: 'integration_test_local_windows'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
 
   steps:
   - script: |

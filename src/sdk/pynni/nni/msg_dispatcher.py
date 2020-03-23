@@ -234,4 +234,5 @@ class MsgDispatcher(MsgDispatcherBase):
         if multi_thread_enabled():
             self._handle_final_metric_data(data)
         else:
+            data['value'] = to_json(data['value'])
             self.enqueue_command(CommandType.ReportMetricData, data)
