@@ -5,7 +5,8 @@ model_name: resnet56
 config_list: [{
     'sparsity': 0.5,
     'op_types': ['default'],
+    'prune_frequency': 10,
+    'prune_filters_each_step': 50
 }]
 
-pretrain: ./experiments/resnet56_pretrain_cifar10.pth
 

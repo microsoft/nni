@@ -6,6 +6,8 @@ pruner_name: FPGMPruner
 config_list: [{
     'sparsity': 0.5,
     'op_types': ['Conv2d'],
+    'prune_frequency': 10,
+    'prune_filters_each_step': 50
 }]
 
 retrain_epochs: 40
