@@ -27,7 +27,7 @@ Note: Please follow the provided format when writing your `config.yml` file.
 
 It's applicable in a wide range of performance curves, thus, it can be used in various scenarios to speed up the tuning progress. [Detailed Description](./MedianstopAssessor.md)
 
-**Requirement of classArg**
+**classArgs requirements:**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
 * **start_step** (*int, optional, default = 0*) - A trial is determined to be stopped or not only after receiving start_step number of reported intermediate results.
