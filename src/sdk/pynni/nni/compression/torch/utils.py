@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from schema import Schema, And, Optional, SchemaError
+from schema import Schema, And, SchemaError
 
 def validate_op_names(model, op_names, logger):
-    found_names = set()
-    for name, _ in model.named_modules():
-        found_names.add(name)
+    found_names = set(map(lambda x: x[0], model.named_modules()))
 
     not_found_op_names = list(set(op_names) - found_names)
     if not_found_op_names:
@@ -15,9 +13,7 @@ def validate_op_names(model, op_names, logger):
     return True
 
 def validate_op_types(model, op_types, logger):
-    found_types = set(['default'])
-    for _, module in model.named_modules():
-        found_types.add(type(module).__name__)
+    found_types = set(['default']) | set(map(lambda x: type(x[1]).__name__, model.named_modules()))
 
     not_found_op_types = list(set(op_types) - found_types)
     if not_found_op_types:
