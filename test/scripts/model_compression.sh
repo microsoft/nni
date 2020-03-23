@@ -41,3 +41,5 @@ echo "===========================Testing: quantizers==========================="
 
 #echo "testing BNN quantizer..."
 #python3 BNN_quantizer_cifar10.py
+
+rm -rf ./checkpoints/*
