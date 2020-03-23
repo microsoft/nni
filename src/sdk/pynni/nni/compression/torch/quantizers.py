@@ -4,7 +4,7 @@
 import logging
 import torch
 from schema import Schema, And, Or, Optional
-from .utils import validate_op_names, validate_op_types
+from .utils import CompressorSchema
 from .compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
@@ -20,12 +20,12 @@ class NaiveQuantizer(Quantizer):
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
-        schema = Schema([{
+        schema = CompressorSchema([{
             Optional('quant_types'): ['weight'],
             Optional('quant_bits'): Or(8, {'weight': 8}),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -158,16 +158,16 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
             Optional('quant_start_step'): And(int, lambda n: n >= 0),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -276,14 +276,14 @@ class DoReFaQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32)
             })),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -327,15 +327,15 @@ class BNNQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 

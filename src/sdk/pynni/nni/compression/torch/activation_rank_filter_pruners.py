@@ -4,7 +4,7 @@
 import logging
 import torch
 from schema import Schema, And, Optional
-from .utils import validate_op_names, validate_op_types
+from .utils import CompressorSchema
 from .compressor import Pruner
 
 __all__ = ['ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
@@ -62,11 +62,11 @@ class ActivationRankFilterPruner(Pruner):
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
        """
-        schema = Schema([{
+        schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 

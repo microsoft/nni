@@ -6,7 +6,7 @@ import logging
 import torch
 from schema import Schema, And, Optional
 from .compressor import Pruner
-from .utils import validate_op_names, validate_op_types
+from .utils import CompressorSchema
 
 __all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'LotteryTicketPruner']
 
@@ -42,11 +42,11 @@ class LevelPruner(Pruner):
         config_list : list
             List on pruning configs
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -118,15 +118,15 @@ class AGP_Pruner(Pruner):
         config_list : list
             List on pruning configs
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             'initial_sparsity': And(float, lambda n: 0 <= n <= 1),
             'final_sparsity': And(float, lambda n: 0 <= n <= 1),
             'start_epoch': And(int, lambda n: n >= 0),
             'end_epoch': And(int, lambda n: n >= 0),
             'frequency': And(int, lambda n: n > 0),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -258,11 +258,11 @@ class SlimPruner(Pruner):
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
-            'op_types': And(['BatchNorm2d'], lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            'op_types': ['BatchNorm2d'],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -355,12 +355,12 @@ class LotteryTicketPruner(Pruner):
                 - prune_iterations : The number of rounds for the iterative pruning.
                 - sparsity : The final sparsity when the compression is done.
         """
-        schema = Schema([{
+        schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
             'prune_iterations': And(int, lambda n: n > 0),
-            Optional('op_types'): And(Schema([str]), lambda n: validate_op_types(model, n, logger)),
-            Optional('op_names'): And(Schema([str]), lambda n: validate_op_names(model, n, logger))
-        }])
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
         schema.validate(config_list)
         assert len(set([x['prune_iterations'] for x in config_list])) == 1, 'The values of prune_iterations must be equal in your config'
