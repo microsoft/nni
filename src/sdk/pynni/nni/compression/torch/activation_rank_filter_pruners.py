@@ -81,7 +81,6 @@ class ActivationRankFilterPruner(Pruner):
         dict
             dictionary for storing masks
         """
-
         weight = wrapper.module.weight.data
         op_type = wrapper.type
         config = wrapper.config
@@ -98,6 +97,7 @@ class ActivationRankFilterPruner(Pruner):
         else:
             mask_bias = None
         mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
@@ -105,6 +105,7 @@ class ActivationRankFilterPruner(Pruner):
             if filters < 2 or num_prune < 1 or len(acts) < self.statistics_batch_num:
                 return mask
             mask = self.get_mask(mask, acts, num_prune)
+            
         finally:
             if len(acts) >= self.statistics_batch_num:
                 wrapper.if_calculated = True

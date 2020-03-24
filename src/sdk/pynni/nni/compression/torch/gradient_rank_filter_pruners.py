@@ -249,12 +249,9 @@ class TaylorFOWeightFilterGlobalPruner(GradientRankFilterPruner):
             all_contributions = torch.cat(contribution_list)
             pruned_filters, self.total_filters = self._count_filters()
             self.prune_filters_now = pruned_filters + self.prune_filters_each_step
-            print('pruned_filters', pruned_filters, 'self.prune_filters_each_step', self.prune_filters_each_step,  'self.prune_filters_now', self.prune_filters_now)
             self.model_sparsity = self.prune_filters_now / self.total_filters
             self.global_threshold = torch.topk(all_contributions.view(-1), self.prune_filters_now, largest=False)[0].max()
             self.pruned_step += 1
-            print(self.global_threshold)
-            print('pruned_step',self.pruned_step, 'prune_filters_now',self.prune_filters_now, 'total_filters',self.total_filters, 'model_sparsity',self.model_sparsity)
         
         self.iterations += 1
 

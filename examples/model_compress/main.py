@@ -45,13 +45,11 @@ def create_pruner(model, optimizer_finetune, config):
     pruner = nni_compression.__dict__[config.pruner_name]
     prune_params = config['config_list']
     if 'Activation' in config.pruner_name or 'Taylor' in config.pruner_name:
-        print(config.pruner_name)
         return pruner(model, prune_params, optimizer_finetune, statistics_batch_num=100)
     else:
         return pruner(model, prune_params, optimizer_finetune)
 
 def main(args):
-    print(args.config)
     config = Config(args.config)
     config = update_from_args(args, config)
 
@@ -80,7 +78,8 @@ def main(args):
 
     configure_log_paths(config)
     set_random_seed(config.random_seed, deterministic=True)
-
+    print(config)
+    
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # Create data loader
@@ -93,8 +92,6 @@ def main(args):
         model = models.__dict__[config.model_name]()
     model = model.to(device)
     
-    
-
     if config.scratch:
         num_epochs = config.train_params['num_epochs']
         best_top1, best_top5 = 0, 0

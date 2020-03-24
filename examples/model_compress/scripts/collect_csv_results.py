@@ -11,9 +11,9 @@ def write_row(path, data, reset=False):
         o.write(row)
 
 models = ['vgg16', 'resnet56', 'densenet40']
-methods = ['FPGMPruner', 'L1FilterPruner', 'ActivationAPoZRankFilterPruner', 'GradientWeightRankFilterPruner', 'SlimPruner', 'TaylorFOWeightFilterGlobalPruner']
+methods = ['FPGMPruner', 'L1FilterPruner', 'ActivationAPoZRankFilterPruner', 'TaylorFOWeightFilterPruner', 'SlimPruner', 'TaylorFOWeightFilterGlobalPruner']
 seeds = [2333, 2222, 1000]
-file_path = f'./20200319_results.csv'
+file_path = f'./20200324_results.csv'
 
 write_row(file_path, ['model', 'method'] + [f'seed_{i}' for i in seeds], True)
 
