@@ -21,6 +21,7 @@ Currently we support the following algorithms:
 |[__BOHB__](#BOHB)|BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Bayesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)|
 |[__GP Tuner__](#GPTuner)|Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. [Reference Paper](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf), [Github Repo](https://github.com/fmfn/BayesianOptimization)|
 |[__PPO Tuner__](#PPOTuner)|PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. [Reference Paper](https://arxiv.org/abs/1707.06347)|
+|[__PBT Tuner__](#PBTTuner)|PBT Tuner is a simple asynchronous optimisation algorithm which effectively utilises a fixed computational budget to jointly optimise a population of models and their hyperparameters to maximise performance. [Reference Paper](https://arxiv.org/abs/1711.09846v1)|
 
 ## Usage of Built-in Tuners
 
@@ -450,6 +451,34 @@ PPOTuner is a Reinforcement Learning tuner based on PPO algorithm. When you are 
 # config.yml
 tuner:
   builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
+```
+
+<a name="PBTTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
+
+> Built-in Tuner Name: **PBTTuner**
+
+**Suggested scenario**
+
+Population Based Training (PBT) which bridges and extends parallel search methods and sequential optimisation methods. It has a wallclock run time that is no greater than that of a single optimisation process, does not require sequential runs, and is also able to use fewer computational resources than naive search methods. Therefore, it's effective when you want to save computational resources and time. Besides, PBT returns hyperparameter scheduler instead of configuration. If you don't need to get a specific configuration, but just expect good results, you can choose this tuner. You could try it on very simple task, such as the [mnist-pbt-tuner-pytorch](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pbt-tuner-pytorch) example. [See details](./PBTTuner.md)
+
+**Requirement of classArgs**
+
+* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **all_checkpoint_dir** (*str, optional, default = None*) - Directory to store training model checkpoint.
+* **population_size** (*int, optional, default = 10*) - Number of trials for each epoch.
+* **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
+* **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
+
+**Usage example**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PBTTuner
   classArgs:
     optimize_mode: maximize
 ```

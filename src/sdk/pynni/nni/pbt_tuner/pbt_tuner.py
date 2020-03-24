@@ -160,7 +160,7 @@ class PBTTuner(Tuner):
         all_checkpoint_dir: str
             directory to store training model checkpoint
         population_size: int
-            number if trials for each epoch
+            number of trials for each epoch
         factors: tuple
             factors for perturbation
         fraction: float
