@@ -4,23 +4,23 @@
 
 点击标签 "Overview"。
 
-* 查看 Experiment Trial 配置、搜索空间以及结果好的 Trial。
+* On the overview tab, you can see the experiment trial profile/search space and the performance of top trials.
 
 ![](../../img/webui-img/over1.png) ![](../../img/webui-img/over2.png)
 
-* 如果 Experiment 包含了较多 Trial，可改变刷新间隔。
+* If your experiment has many trials, you can change the refresh interval here.
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* "View" 按钮支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
+* You can review and download the experiment results and nni-manager/dispatcher log files from the "View" button.
 
 ![](../../img/webui-img/download.png)
 
-* 如果 Experiment 状态为 ERROR，可点击图标，查看 Experiment 错误日志。
+* You can click the exclamation point in the error box to see a log message if the experiment's status is an error.
 
 ![](../../img/webui-img/log-error.png) ![](../../img/webui-img/review-log.png)
 
-* 点击 "Feedback" 反馈问题。
+* You can click "Feedback" to report any questions.
 
 ## 查看任务默认指标
 
@@ -49,27 +49,25 @@
 
 ## 查看 Trial 中间结果
 
-单击 "Intermediate Result" 标签查看折线图。
+Click the tab "Intermediate Result" to see the line graph.
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
+The trial may have many intermediate results in the training process. 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要的中间结果。 如果要仔细查看这个点，可以在 #Intermediate 中输入其横坐标。
-
-并输入这个中间结果的指标范围。 如下图所示，选择了第 4 个中间结果， 并将指标范围设置为了 0.8 -1。
+You may find that these trials will get better or worse at an intermediate result. This indicates that it is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding X-value at #Intermediate. Then input the range of metrics on this intermedia result. In the picture below, we choose the No. 4 intermediate result and set the range of metrics to 0.8-1.
 
 ![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 包括：
+Click the tab "Trials Detail" to see the status of all trials. Specifically:
 
-* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy, and search space file.
 
 ![](../../img/webui-img/detail-local.png)
 
-* "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 可选择 "Intermediate count" 列来查看 Trial 进度。
+* The button named "Add column" can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. 可选择 "Intermediate count" 列来查看 Trial 进度。
 
 ![](../../img/webui-img/addColumn.png)
 
@@ -81,15 +79,15 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 ![](../../img/webui-img/search-trial.png)
 
-* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
+* You can use the button named "Copy as python" to copy the trial's parameters.
 
 ![](../../img/webui-img/copyParameter.png)
 
-* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
+* If you run on the OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../../img/webui-img/detail-pai.png)
 
-* 中间结果图：可在此图中通过点击 operation 中的按钮来查看默认和其它键值。
+* Intermediate Result Graph: you can see the default and other keys in this graph by clicking the operation column button.
 
 ![](../../img/webui-img/intermediate-btn.png) ![](../../img/webui-img/intermediate.png)
 
