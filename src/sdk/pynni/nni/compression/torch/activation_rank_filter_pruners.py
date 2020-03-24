@@ -35,16 +35,9 @@ class ActivationRankFilterPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        self.set_wrappers_attribute("collected_activation", None)
         self.statistics_batch_num = statistics_batch_num
+        self.hook_id = self._add_activation_collector()
 
-        def collector(module_, input_, output):
-            if module_.collected_activation is None:
-                module_.collected_activation = []
-
-            if len(module_.collected_activation) < self.statistics_batch_num:
-                module_.collected_activation.append(self.activation(output.detach().cpu()))
-        self.add_activation_collector(collector)
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
             self.activation = torch.nn.functional.relu
@@ -53,10 +46,27 @@ class ActivationRankFilterPruner(Pruner):
         else:
             self.activation = None
 
+    def _add_activation_collector(self):
+        def collector(collected_activation):
+            def hook(module_, input_, output):
+                collected_activation.append(self.activation(output.detach().cpu()))
+            return hook
+            
+        self.collected_activation = {}
+        self._fwd_hook_id += 1
+        self._fwd_hook_handles[self._fwd_hook_id] = []
+
+        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+            self.collected_activation[wrapper_idx] = []
+            handle = wrapper.register_forward_hook(collector(self.collected_activation[wrapper_idx]))
+            self._fwd_hook_handles[self._fwd_hook_id].append(handle)
+            
+        return self._fwd_hook_id
+
     def get_mask(self, base_mask, activations, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def calc_mask(self, wrapper, **kwargs):
+    def calc_mask(self, wrapper, wrapper_idx, **kwargs):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion which is calculated from the activation are masked.
@@ -71,7 +81,6 @@ class ActivationRankFilterPruner(Pruner):
         dict
             dictionary for storing masks
         """
-
         weight = wrapper.module.weight.data
         op_type = wrapper.type
         config = wrapper.config
@@ -88,16 +97,20 @@ class ActivationRankFilterPruner(Pruner):
         else:
             mask_bias = None
         mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
-            acts = wrapper.collected_activation
-            if filters < 2 or num_prune < 1 or acts is None or len(acts) < self.statistics_batch_num:
+            acts = self.collected_activation[wrapper_idx]
+            if filters < 2 or num_prune < 1 or len(acts) < self.statistics_batch_num:
                 return mask
-            mask = self.get_mask(mask, wrapper.collected_activation, num_prune)
+            mask = self.get_mask(mask, acts, num_prune)
+            
         finally:
-            if wrapper.collected_activation is not None and len(wrapper.collected_activation) == self.statistics_batch_num:
+            if len(acts) >= self.statistics_batch_num:
                 wrapper.if_calculated = True
+                if self.hook_id in self._fwd_hook_handles:
+                    self.remove_activation_collector(self.hook_id)
 
         return mask
 
