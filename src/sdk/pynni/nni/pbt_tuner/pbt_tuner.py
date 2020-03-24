@@ -18,9 +18,6 @@ import nni.parameter_expressions as parameter_expressions
 
 logger = logging.getLogger('pbt_tuner_AutoML')
 
-experiment_id = os.getenv('NNI_EXP_ID')
-all_ckpt_dir = os.path.join("~/nni/checkpoint/", experiment_id)
-
 
 def json2space(x, oldy=None, name=NodeType.ROOT):
     """
@@ -149,7 +146,7 @@ class Trial_Info:
 
 
 class PBTTuner(Tuner):
-    def __init__(self, optimize_mode="maximize", all_checkpoint_dir=all_ckpt_dir, population_size=10, factors=(1.2, 0.8), fraction=0.2):
+    def __init__(self, optimize_mode="maximize", all_checkpoint_dir=None, population_size=10, factors=(1.2, 0.8), fraction=0.2):
         """
         Initialization
 
@@ -167,6 +164,9 @@ class PBTTuner(Tuner):
             fraction for selecting bottom and top trials
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
+        if all_checkpoint_dir is None:
+            experiment_id = os.getenv('NNI_EXP_ID')
+            all_checkpoint_dir = os.path.join("~/nni/checkpoint/", experiment_id)
         self.all_checkpoint_dir = all_checkpoint_dir
         self.population_size = population_size
         self.factors = factors
