@@ -2,7 +2,7 @@
 
 ## 安装
 
-在 Linux 和 macOS 上安装，遵循以下相同的说明。
+Installation on Linux and macOS follow the same instructions, given below.
 
 ### 通过 pip 命令安装 NNI
 
@@ -13,7 +13,7 @@
 
 ### 通过源代码安装 NNI
 
-如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
+If you are interested in special or the latest code versions, you can install NNI through source code.
 
 先决条件：`python 64-bit >=3.5`, `git`, `wget`
 
@@ -24,13 +24,13 @@
 
 ### 在 Docker 映像中使用 NNI
 
-也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
+也可将 NNI 安装到 docker 映像中。 Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build an NNI docker image. 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
 ## 验证安装
 
 以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
-* 通过克隆源代码下载示例。
+* Download the examples via cloning the source code.
     
     ```bash
     git clone -b v1.4 https://github.com/Microsoft/nni.git
@@ -71,7 +71,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
+* Open the `Web UI url` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
 ![概述](../../img/webui_overview_page.png)
 
