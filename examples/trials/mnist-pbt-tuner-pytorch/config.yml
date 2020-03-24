@@ -9,9 +9,10 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  codeDir: ~/nni/src/sdk/pynni/nni/pbt_tuner
-  classFileName: pbt_tuner.py
-  className: PBTTuner
+#  codeDir: ~/nni/src/sdk/pynni/nni/pbt_tuner
+#  classFileName: pbt_tuner.py
+#  className: PBTTuner
+  builtinTunerName: PBTTuner
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize

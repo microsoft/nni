@@ -157,6 +157,8 @@ class PBTTuner(Tuner):
         ----------
         optimize_mode: str
             maximize or minimize
+        all_checkpoint_dir: str
+            directory to store training model checkpoint
         population_size: int
             number if trials for each epoch
         factors: tuple
