@@ -8,11 +8,11 @@
 
 ![](../../img/nas_abstract_illustration.png)
 
-现代神经架构搜索（NAS）方法通常包含 [三个维度](https://arxiv.org/abs/1808.05377)：搜索空间、搜索策略和性能估计策略。 搜索空间通常是要搜索的一个有限的神经网络架构，而搜索策略会采样来自搜索空间的架构，评估性能，并不断演进。 理想情况下，搜索策略会找到搜索空间中最好的架构，并返回给用户。 在获得了 "最好架构" 后，很多方法都会有 "重新训练" 的步骤，会像普通神经网络模型一样训练。
+现代神经架构搜索（NAS）方法通常包含 [三个维度](https://arxiv.org/abs/1808.05377)：搜索空间、搜索策略和性能估计策略。 Search space often contains a limited number of neural network architectures to explore, while the search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, the search strategy should find the best architecture in the search space and report it to users. After users obtain the "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
 
 ## 实现搜索空间
 
-假设已经有了基础的模型，该如何使用 NAS 来提升？ 以 [PyTorch 上的 MNIST](https://github.com/pytorch/examples/blob/master/mnist/main.py) 为例，代码如下：
+Assuming we've got a baseline model, what should we do to be empowered with NAS? 以 [PyTorch 上的 MNIST](https://github.com/pytorch/examples/blob/master/mnist/main.py) 为例，代码如下：
 
 ```python
 from nni.nas.pytorch import mutables
@@ -37,9 +37,9 @@ class Net(nn.Module):
         返回输出
 ```
 
-以上示例在 conv1 上添加了 conv5x5 的选项。 修改非常简单，只需要声明 `LayerChoice` 并将原始的 conv3x3 和新的 conv5x5 作为参数即可。 就这么简单！ 不需要修改 forward 函数。 可将 conv1 想象为没有 NAS 的模型。
+以上示例在 conv1 上添加了 conv5x5 的选项。 The modification is as simple as declaring a `LayerChoice` with the original conv3x3 and a new conv5x5 as its parameter. 就这么简单！ You don't have to modify the forward function in any way. You can imagine conv1 as any other module without NAS.
 
-如何表示可能的连接？ 通过 `InputChoice` 来实现。 要在 MNIST 示例上使用跳过连接，需要增加另一层 conv3。 下面的示例中，从 conv2 的可能连接加入到了 conv3 的输出中。
+如何表示可能的连接？ This can be done using `InputChoice`. To allow for a skip connection on the MNIST example, we add another layer called conv3. 下面的示例中，从 conv2 的可能连接加入到了 conv3 的输出中。
 
 ```python
 from nni.nas.pytorch import mutables
@@ -66,21 +66,21 @@ class Net(nn.Module):
         返回输出
 ```
 
-Input Choice 可被视为可调用的模块，它接收张量数组，输出其中部分的连接、求和、平均（默认为求和），或没有选择时输出 `None`。 与 Layer Choice 一样，Input Choice 要**在 `__init__` 中初始化，并在 `forward` 中调用。 稍后的例子中会看到搜索算法如何识别这些 Choice，并进行相应的准备。</p>
+Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or `None` if none is selected. 与 Layer Choice 一样，Input Choice 要**在 `__init__` 中初始化，并在 `forward` 中调用。 We will see later that this is to allow search algorithms to identify these choices and do necessary preparations.</p>
 
-`LayerChoice` 和 `InputChoice` 都是 **Mutable**。 Mutable 表示 "可变化的"。 与传统深度学习层、模型都是固定的不同，使用 Mutable 的模块，是一组可能选择的模型。
+`LayerChoice` 和 `InputChoice` 都是 **Mutable**。 Mutable 表示 "可变化的"。 As opposed to traditional deep learning layers/modules which have fixed operation types once defined, models with mutable are essentially a series of possible models.
 
-用户可为每个 Mutable 指定 **key**。 默认情况下，NNI 会分配全局唯一的，但如果需要共享 Choice（例如，两个 `LayerChoice` 有同样的候选操作，希望共享同样的 Choice。即，如果一个选择了第 i 个操作，第二个也要选择第 i 个操作），那么就应该给它们相同的 key。 key 标记了此 Choice，并会在存储的检查点中使用。 如果要增加导出架构的可读性，可为每个 Mutable 的 key 指派名称。 高级用法参考 [Mutable](./NasReference.md)。
+用户可为每个 Mutable 指定 **key**。 By default, NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice`s with the same candidate operations and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice and will be used in the dumped checkpoint. 如果要增加导出架构的可读性，可为每个 Mutable 的 key 指派名称。 高级用法参考 [Mutable](./NasReference.md)。
 
 ## 使用搜索算法
 
-搜索空间的探索方式和 Trial 生成方式不同，至少有两种不同的方法用来搜索。 一种是分布式运行 NAS，可从头枚举运行所有架构。或者利用更多高级功能，如 [SMASH](https://arxiv.org/abs/1708.05344), [ENAS](https://arxiv.org/abs/1802.03268), [DARTS](https://arxiv.org/abs/1808.05377), [FBNet](https://arxiv.org/abs/1812.03443), [ProxylessNAS](https://arxiv.org/abs/1812.00332), [SPOS](https://arxiv.org/abs/1904.00420), [Single-Path NAS](https://arxiv.org/abs/1904.02877),  [Understanding One-shot](http://proceedings.mlr.press/v80/bender18a) 以及 [GDAS](https://arxiv.org/abs/1910.04465)。 由于很多不同架构搜索起来成本较高，另一类方法，即 One-Shot NAS，在搜索空间中，构建包含有所有候选网络的超网络，每一步中选择一个或几个子网络来训练。
+Aside from using a search space, there are at least two other ways users can do search. One runs NAS distributedly, which can be as naive as enumerating all the architectures and training each one from scratch, or can involve leveraging more advanced technique, such as [SMASH](https://arxiv.org/abs/1708.05344), [ENAS](https://arxiv.org/abs/1802.03268), [DARTS](https://arxiv.org/abs/1808.05377), [FBNet](https://arxiv.org/abs/1812.03443), [ProxylessNAS](https://arxiv.org/abs/1812.00332), [SPOS](https://arxiv.org/abs/1904.00420), [Single-Path NAS](https://arxiv.org/abs/1904.02877),  [Understanding One-shot](http://proceedings.mlr.press/v80/bender18a) and [GDAS](https://arxiv.org/abs/1910.04465). Since training many different architectures is known to be expensive, another family of methods, called one-shot NAS, builds a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
 
-当前，NNI 支持数种 One-Shot 方法。 例如，`DartsTrainer` 使用 SGD 来交替训练架构和模型权重，`ENASTrainer` [使用 Controller 来训练模型](https://arxiv.org/abs/1802.03268)。 新的、更高效的 NAS Trainer 在研究界不断的涌现出来。
+Currently, several one-shot NAS methods are supported on NNI. For example, `DartsTrainer`, which uses SGD to train architecture weights and model weights iteratively, and `ENASTrainer`, which [uses a controller to train the model](https://arxiv.org/abs/1802.03268). New and more efficient NAS trainers keep emerging in research community and some will be implemented in future releases of NNI.
 
 ### One-Shot NAS
 
-每个 One-Shot NAS 都实现了 Trainer，可在每种算法说明中找到详细信息。 这是如何使用 `EnasTrainer` 的简单示例。
+Each one-shot NAS algorithm implements a trainer, for which users can find usage details in the description of each algorithm. 这是如何使用 `EnasTrainer` 的简单示例。
 
 ```python
 # 此处与普通模型训练相同
@@ -116,15 +116,15 @@ trainer.train()  # 训练
 trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导出到文件
 ```
 
-用户可直接通过 `python3 train.py` 开始训练，不需要使用 `nnictl`。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。
+Users can directly run their training file through `python3 train.py` without `nnictl`. After training, users can export the best one of the found models through `trainer.export()`.
 
-通常，Trainer 会有些可定制的参数，例如，损失函数，指标函数，优化器，以及数据集。 这些功能可满足大部分需求，NNI 会尽力让内置 Trainer 能够处理更多的模型、任务和数据集。 但无法保证全面的支持。 例如，一些 Trainer 假设必须是分类任务；一些 Trainer 对 "Epoch" 的定义有所不同（例如，ENAS 的 epoch 表示一部分子步骤加上一些 Controller 的步骤）；大多数 Trainer 不支持分布式训练，不会将模型通过 `DataParallel` 或 `DistributedDataParallel` 进行包装。 如果通过试用，想要在定制的应用中使用 Trainer，可能需要[自定义 Trainer](#extend-the-ability-of-one-shot-trainers)。
+Normally, the trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usages needs and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible. But there is no guarantee. For example, some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](#extend-the-ability-of-one-shot-trainers).
 
 ### 分布式 NAS
 
-神经网络架构搜索通过在 Trial 任务中独立运行单个子模型来实现。 NNI 同样支持这种搜索方法，其天然适用于 NNI 的超参搜索框架。Tuner 为每个 Trial 生成子模型，并在训练平台上运行。
+Neural architecture search was originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits within the NNI hyper-parameter tuning framework, where Tuner generates child models for the next trial and trials run in the training service.
 
-要使用此模式，不需要修改 NNI NAS API 的搜索空间定义 (即, `LayerChoice`, `InputChoice`, `MutableScope`)。 模型初始化后，在模型上调用 `get_and_apply_next_architecture`。 One-shot NAS Trainer 不能在此模式中使用。 简单示例：
+To use this mode, there is no need to change the search space expressed with the NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). 模型初始化后，在模型上调用 `get_and_apply_next_architecture`。 One-shot NAS Trainer 不能在此模式中使用。 简单示例：
 
 ```python
 model = Net()
@@ -136,17 +136,17 @@ acc = test(model)  # 测试训练好的模型
 nni.report_final_result(acc)  # 报告所选架构的性能
 ```
 
-搜索空间应生成，并发送给 Tuner。 通过 NNI NAS API，搜索空间嵌入在用户代码中，需要通过 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 来生成搜索空间文件。 然后，将生成的搜索空间文件路径填入 `config.yml` 的 `searchSpacePath`。 `config.yml` 中的其它字段参考[教程](../Tutorial/QuickStart.md)。
+The search space should be generated and sent to Tuner. As with the NNI NAS API, the search space is embedded in the user code. Users can use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate the search space file. Then put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
 
-可使用 [NNI Tuner](../Tuner/BuiltinTuner.md) 来搜索。 目前，只有 PPO Tuner 支持 NAS 搜索空间。
+You can use the [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search spaces.
 
-为了便于调试，其支持独立运行模式，可直接运行 Trial 命令，而不启动 NNI Experiment。 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择最开始的候选项。
+We support a standalone mode for easy debugging, where you can directly run the trial command without launching an NNI experiment. 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择最开始的候选项。
 
 [此处](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml)是完整示例。
 
 ### 使用导出的架构重新训练
 
-搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如：
+After the search phase, it's time to train the found architecture. 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 We found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. 例如：
 
 ```python
 model = Net()
@@ -162,6 +162,6 @@ JSON 文件是从 Mutable key 到 Choice 的表示。 例如：
 }
 ```
 
-应用后，模型会被固定，并准备好进行最终训练。 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 好的方面是，可以在搜索阶段直接读取来自超网络的检查点，并开始重新训练。 但是，这也造成模型有荣誉的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
+After applying, the model is then fixed and ready for final training. 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. However, this is also a model with redundant parameters and this may cause problems when trying to count the number of parameters in the model. For deeper reasons and possible workarounds, see [Trainers](./NasReference.md).
 
-也可参考 [DARTS](./DARTS.md) 的重新训练代码。
+Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
