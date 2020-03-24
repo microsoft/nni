@@ -227,6 +227,97 @@ class CompressorTestCase(TestCase):
         assert all(mask1['bias_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
         assert all(mask2['bias_mask'].numpy() == np.array([0., 0., 0., 1., 1.]))
 
+    def test_torch_taylorFOweight_pruner(self):
+        """
+        Filters with the minimum importance approxiamtion based on the first order 
+        taylor expansion on the weights (w*grad)**2 are pruned in this paper:
+        Importance Estimation for Neural Network Pruning,
+        http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
+
+        So if sparsity of conv1 is 0.2, the expected masks should mask out filter 0, this can be verified through:
+        `all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))`
+
+        If sparsity of conv2 is 0.6, the expected masks should mask out filter 4,5,6,7,8,9 this can be verified through:
+        `all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 0., 0., 0., 0., ]))`
+        """
+
+        w1 = np.array([np.zeros((1, 5, 5)), np.ones((1, 5, 5)), np.ones((1, 5, 5)) * 2,
+                      np.ones((1, 5, 5)) * 3, np.ones((1, 5, 5)) * 4])
+        w2 = np.array([[[[i + 1] * 5] * 5] * 5 for i in range(10)[::-1]])
+
+        grad1 = np.array([np.ones((1, 5, 5)) * -1, np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1,
+                      np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1])
+
+        grad2 = np.array([[[[(-1)**i] * 5] * 5] * 5 for i in range(10)])
+
+        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
+                       {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
+
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        pruner = torch_compressor.TaylorFOWeightFilterPruner(model, config_list, optimizer, statistics_batch_num=1)
+        
+        x = torch.rand((1, 1, 28, 28), requires_grad=True)
+        model.conv1.module.weight.data = torch.tensor(w1).float()
+        model.conv2.module.weight.data = torch.tensor(w2).float()
+
+        y = model(x)
+        y.backward(torch.ones_like(y))
+
+        model.conv1.module.weight.grad.data = torch.tensor(grad1).float()
+        model.conv2.module.weight.grad.data = torch.tensor(grad2).float()
+        optimizer.step()
+
+        mask1 = pruner.calc_mask(model.conv1)
+        mask2 = pruner.calc_mask(model.conv2)
+        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))
+        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 0., 0., 0., 0., ]))
+
+    def test_torch_taylorFOweightglobal_pruner(self):
+        """
+        Filters with the minimum importance approxiamtion based on the first order 
+        taylor expansion on the weights (w*grad)**2 are pruned in this paper:
+        Importance Estimation for Neural Network Pruning,
+        http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
+
+        So if sparsity of conv1 is 0.2, the expected masks should mask out filter 0, this can be verified through:
+        `all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))`
+
+        If sparsity of conv2 is 0.6, the expected masks should mask out filter 4,5,6,7,8,9 this can be verified through:
+        `all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 0., 0., 0., 0., ]))`
+        """
+
+        w1 = np.array([np.zeros((1, 5, 5)), np.ones((1, 5, 5)), np.ones((1, 5, 5)) * 2,
+                      np.ones((1, 5, 5)) * 3, np.ones((1, 5, 5)) * 4])
+        w2 = np.array([[[[i + 1] * 5] * 5] * 5 for i in range(10)[::-1]])
+
+        grad1 = np.array([np.ones((1, 5, 5)) * -1, np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1,
+                      np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1])
+
+        grad2 = np.array([[[[(-1)**i] * 5] * 5] * 5 for i in range(10)])
+
+        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'prune_frequency': 1, 'prune_filters_each_step': 2}]
+
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        pruner = torch_compressor.TaylorFOWeightFilterGlobalPruner(model, config_list, optimizer, statistics_batch_num=1)
+        
+        x = torch.rand((1, 1, 28, 28), requires_grad=True)
+        model.conv1.module.weight.data = torch.tensor(w1).float()
+        model.conv2.module.weight.data = torch.tensor(w2).float()
+
+        y = model(x)
+        y.backward(torch.ones_like(y))
+
+        model.conv1.module.weight.grad.data = torch.tensor(grad1).float()
+        model.conv2.module.weight.grad.data = torch.tensor(grad2).float()
+        optimizer.step()
+
+        mask1 = pruner.calc_mask(model.conv1)
+        mask2 = pruner.calc_mask(model.conv2)
+        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))
+        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 0., 0., 0., 0., ]))
+
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
         config_list = [{

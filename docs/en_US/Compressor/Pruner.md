@@ -11,8 +11,8 @@ Index of supported pruning algorithms
     * [L1Filter Pruner](#l1filter-pruner)
     * [L2Filter Pruner](#l2filter-pruner)
 * [Filter Pruners with Activation Rank](#activationrankfilterpruner)
-  * [APoZ Rank Pruner](#activationapozrankfilterpruner)
-  * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+    * [APoZ Rank Pruner](#activationapozrankfilterpruner)
+    * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
 * [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
 
@@ -368,7 +368,7 @@ config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
 }]
-pruner = TaylorFOWeightFilterPruner(model, config_list)
+pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer)
 pruner.compress()
 ```
 

@@ -301,8 +301,8 @@ class Pruner(Compressor):
         return self.bound_model
 
     def update_mask(self):
-        for wrapper in self.get_modules_wrapper():
-            masks = self.calc_mask(wrapper)
+        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+            masks = self.calc_mask(wrapper, wrapper_idx)
             if masks is not None:
                 for k in masks:
                     assert hasattr(wrapper, k), "there is no attribute '%s' in wrapper" % k
