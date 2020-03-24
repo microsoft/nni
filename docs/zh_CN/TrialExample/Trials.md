@@ -1,8 +1,8 @@
 # 实现 NNI 的 Trial（尝试）代码
 
-**Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
+A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) to a model.
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 示例。
+To define an NNI trial, you need to first define the set of parameters (i.e., search space) and then update the model. NNI provides two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). 参考[这里的](#more-examples)更多 Trial 示例。
 
 <a name="nni-api"></a>
 
@@ -21,9 +21,9 @@
 }
 ```
 
-参考 [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
+Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search spaces. Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
-### 第二步：更新模型代码
+### Step 2 - Update model code
 
 * Import NNI
     
@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
+`metrics` can be any python object. If users use the NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, or 2) a dict object that has a key named `default` whose value is a number. These `metrics` are reported to [assessor](../Assessor/BuiltinAssessor.md). Often, `metrics` includes the periodically evaluated loss or accuracy.
 
 * 返回配置的最终性能
 
@@ -53,11 +53,11 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
+`metrics` can also be any python object. If users use the NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. These `metrics` are reported to [tuner](../Tuner/BuiltinTuner.md).
 
 ### 第三步：启用 NNI API
 
-要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
+To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of the SearchSpace file was defined in step 1:
 
 ```yaml
 useAnnotation: false
@@ -72,24 +72,24 @@ searchSpacePath: /path/to/your/search_space.json
 
 ## NNI Annotation
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NNI annotations are simple, similar to comments. You don't have to make structural changes to your existing code. 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量
-* 指定变量的搜索空间范围
-* 标记哪个变量需要作为中间结果范围给 `Assessor`
+* specify the range in which you want to tune the variables
+* annotate which variable you want to report as an intermediate result to `assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
 同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
 ### 第一步：在代码中加入 Annotation
 
-下面是加入了 Annotation 的 TensorFlow 代码片段，高亮的 4 行 Annotation 用于：
+The following is a TensorFlow code snippet for NNI Annotation where the highlighted four lines are annotations that:
 
 1. 调优 batch\_size 和 dropout\_rate
 2. 每执行 100 步返回 test\_acc
-3. 最后返回 test\_acc 作为最终结果。
+3. lastly report test\_acc as the final result.
 
-新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
+It's worth noting that, as these newly added codes are merely annotations, you can still run your code as usual in environments without NNI installed.
 
 ```diff
 with tf.Session() as sess:
@@ -120,7 +120,7 @@ with tf.Session() as sess:
 
 **注意**：
 
-* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
+* `@nni.variable` will affect its following line which should be an assignment statement whose left-hand side must be the same as the keyword `name` in the `@nni.variable` statement.
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
 Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpec.md)。
@@ -132,9 +132,9 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
-## 用于调试的独立模式
+## Standalone mode for debugging
 
-NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
+NNI supports a standalone mode for trial code to run without starting an NNI experiment. 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
 
 ```python
 ＃注意：请为 Trial 代码中的超参分配默认值
@@ -146,17 +146,17 @@ nni.get_trial_id＃返回 "STANDALONE"
 nni.get_sequence_id＃返回 0
 ```
 
-可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 Trial 代码会使用默认超参成功运行。
+可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 The trial code should successfully run with the default hyperparameter values.
 
-更多调试的信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
+For more information on debugging, please refer to [How to Debug](../Tutorial/HowToDebug.md)
 
 ## Trial 存放在什么地方？
 
 ### 本机模式
 
-每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
+每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 Under this directory, you can find each trial's code, data, and other logs. 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件示例：
+If NNI Annotation is used, the trial's converted code is in another temporary directory. 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件示例：
 
 ```bash
 #!/bin/bash
@@ -174,9 +174,9 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ### 其它模式
 
-当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni/experiments/$experiment_id$/trials/$trial_id$/` 。
+When running trials on other platforms like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while the trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to the local machine in the trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
-详细信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
+For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md).
 
 <a name="more-examples"></a>
 
