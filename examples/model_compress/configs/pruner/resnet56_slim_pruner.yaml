@@ -9,4 +9,4 @@ config_list: [{
   'sr': 0.001,
 }]
 
-sparsity_epochs: 5
+sparsity_epochs: 0

@@ -48,7 +48,7 @@ class ApplyCompression(Pruner):
             op_names.append(module_name)
         return [{'sparsity': 1, 'op_types': ['default', 'BatchNorm2d'], 'op_names': op_names}]
 
-    def calc_mask(self, layer, config, **kwargs):
+    def calc_mask(self, layer, **kwargs):
         """
         Directly return the corresponding mask
 
@@ -67,4 +67,4 @@ class ApplyCompression(Pruner):
             Mask of the layer
         """
         assert layer.name in self.masks
-        return self.masks[layer.name]
+        return {"weight_mask": self.masks[layer.name]['weight'], "bias_mask": self.masks[layer.name]['bias']}

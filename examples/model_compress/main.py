@@ -44,7 +44,7 @@ def update_from_args(args, config):
 def create_pruner(model, optimizer_finetune, config):
     pruner = nni_compression.__dict__[config.pruner_name]
     prune_params = config['config_list']
-    if 'Activation' in config.pruner_name or 'Gradient' in config.pruner_name:
+    if 'Activation' in config.pruner_name or 'Taylor' in config.pruner_name:
         print(config.pruner_name)
         return pruner(model, prune_params, optimizer_finetune, statistics_batch_num=100)
     else:
@@ -78,7 +78,6 @@ def main(args):
             for block in range(12):
                 config['config_list'][0]['op_names'].append(f'dense{layer}.{block}.{op_type}')
 
-    print(config)
     configure_log_paths(config)
     set_random_seed(config.random_seed, deterministic=True)
 
@@ -93,6 +92,8 @@ def main(args):
     else:
         model = models.__dict__[config.model_name]()
     model = model.to(device)
+    
+    
 
     if config.scratch:
         num_epochs = config.train_params['num_epochs']
@@ -119,10 +120,19 @@ def main(args):
         if os.path.isfile(config.pretrain):
             print('loading pretrained model {} ...'.format(config.pretrain))
             model.load_state_dict(torch.load(config.pretrain))
-            # test(model, device, test_loader, config)
         else:
             print("no checkpoint found at '{}'".format(config.pretrain))
     
+    if config.test_only:
+        names = config.config_list[0]['op_names']
+        print(names)
+        for k, v in model.state_dict().items():
+            if '.'.join(k.split('.')[:2]) in names:
+                filters = v.size(0)
+                pruend = (v.view(filters, -1).sum(1) == 0).sum().item()
+                print(k, pruend, filters, pruend / filters)
+        return
+        
     if config.pruner_name == 'SlimPruner':
         print('=' * 10 + 'Train with sparsity' + '=' * 10)
 
@@ -143,6 +153,7 @@ def main(args):
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
     pruner = create_pruner(model, optimizer_finetune, config)
     model = pruner.compress()
+    print(model)
 
     print('=' * 10 + 'Test on the pruned model before fine tune' + '=' * 10)
     test(model, device, test_loader, config)
@@ -287,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument("--scratch", action='store_true', help="train the model from scratch")
     parser.add_argument("--pretrain", type=str, default=None, help="path to the pretrain model")
     parser.add_argument("--save_name", type=str, default='', help="name of the saved file")
+    parser.add_argument("--test_only", action='store_true', help="only test model")
     args = parser.parse_args()
 
     main(args)

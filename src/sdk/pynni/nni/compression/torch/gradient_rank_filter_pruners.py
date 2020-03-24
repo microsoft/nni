@@ -273,7 +273,7 @@ class TaylorFOWeightFilterGlobalPruner(GradientRankFilterPruner):
         dict
             dictionary for storing masks
         """
-
+        
         weight = wrapper.module.weight.data
         op_type = wrapper.type
         config = wrapper.config

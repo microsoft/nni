@@ -1,0 +1,16 @@
+_default: !include ./base_pruner.yaml
+
+model_name: vgg16
+# pruning setting
+config_list: [{
+    'sparsity': 0.5,
+    'op_types': ['default'],
+    'op_names': ['feature.0', 'feature.3', 'feature.7', 'feature.10', 'feature.14', 'feature.17', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37'],
+    'initial_sparsity': 0,
+    'final_sparsity': 0.5,
+    'start_epoch': 0,
+    'end_epoch': 10,
+    'frequency': 1,
+}]
+
+

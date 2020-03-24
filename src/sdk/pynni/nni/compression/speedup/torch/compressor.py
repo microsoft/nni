@@ -7,6 +7,7 @@ import re
 import torch
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
+import pdb
 
 _logger = logging.getLogger(__name__)
 
@@ -300,6 +301,7 @@ class ModelSpeedup:
         graph_outputs = list()
         for _input in graph.inputs():
             graph_inputs.append(_input.debugName())
+
         for output in graph.outputs():
             graph_outputs.append(output.debugName())
 
@@ -334,6 +336,14 @@ class ModelSpeedup:
                     module_to_nodes[module_name].append(node)
                 else:
                     module_to_nodes[module_name] = [node]
+
+        pdb.set_trace()
+        print('output_to_node', output_to_node)
+        pdb.set_trace()
+        print('input_to_node', input_to_node)
+        pdb.set_trace()
+        print('module_to_nodes', module_to_nodes)
+        pdb.set_trace()
 
         # construct GNode from module
         for module_name, nodes in module_to_nodes.items():
