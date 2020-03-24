@@ -2,6 +2,6 @@
 
 ## Grid Search（遍历搜索）
 
-Grid Search 会穷举定义在搜索空间文件中的所有超参组合。
+Grid Search performs an exhaustive search through a manually specified subset of the hyperparameter space defined in the searchspace file.
 
-注意，搜索空间仅支持 `choice`, `quniform`, `randint`。
+Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`.
