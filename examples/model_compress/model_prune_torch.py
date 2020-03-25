@@ -59,7 +59,7 @@ prune_config = {
         'pruner_class': L1FilterPruner,
         'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
@@ -69,7 +69,7 @@ prune_config = {
         'pruner_class': ActivationMeanRankFilterPruner,
         'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
