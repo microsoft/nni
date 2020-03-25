@@ -5,7 +5,7 @@ class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
     private intermediates: (MetricDataRecord | undefined)[] = [ ];
-    private final: MetricDataRecord | undefined;
+    public final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
     constructor(info?: TrialJobInfo, metrics?: MetricDataRecord[]) {
