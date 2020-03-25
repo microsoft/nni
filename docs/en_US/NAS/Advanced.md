@@ -94,7 +94,7 @@ For advanced usages, e.g., users want to manipulate the way modules in `LayerCho
 
 ## Implemented a Distributed NAS Tuner
 
-Before learning how to write a one-shot NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
+Before learning how to write a distributed NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
 
 When users call "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file, a search space file like this will be generated:
 

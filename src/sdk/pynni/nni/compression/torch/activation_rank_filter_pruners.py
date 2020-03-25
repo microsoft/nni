@@ -64,7 +64,7 @@ class ActivationRankFilterPruner(Pruner):
             self._fwd_hook_handles[self._fwd_hook_id].append(handle)
             
         return self._fwd_hook_id
-
+`
     def validate_config(self, model, config_list):
         """
         Parameters

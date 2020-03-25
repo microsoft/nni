@@ -154,7 +154,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         });
         Promise.all([dispatcherPromise, nniManagerPromise]).then(() => {
             this.setState({ isLoading: false });
-            this.timerId = window.setTimeout(this.refresh, 300);
+            this.timerId = window.setTimeout(this.refresh, 10000);
         });
     }
 
