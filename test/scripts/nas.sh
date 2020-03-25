@@ -12,7 +12,7 @@ SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
 if [ -f $SEARCH_SPACE_JSON ]; then
     rm $SEARCH_SPACE_JSON
 fi
-nnictl ss_gen -t "python mnist.py"
+nnictl ss_gen -t "python3 mnist.py"
 if [ ! -f $SEARCH_SPACE_JSON ]; then
     echo "Search space file not found!"
     exit 1
@@ -20,18 +20,18 @@ fi
 
 echo "testing darts..."
 cd $EXAMPLE_DIR/darts
-python search.py --epochs 1 --channels 2 --layers 4
-python retrain.py --arc-checkpoint ./checkpoints/epoch_0.json --layers 4 --epochs 1
+python3 search.py --epochs 1 --channels 2 --layers 4
+python3 retrain.py --arc-checkpoint ./checkpoints/epoch_0.json --layers 4 --epochs 1
 
 echo "testing enas..."
 cd $EXAMPLE_DIR/enas
-python search.py --search-for macro --epochs 1
-python search.py --search-for micro --epochs 1
+python3 search.py --search-for macro --epochs 1
+python3 search.py --search-for micro --epochs 1
 
 echo "testing naive..."
 cd $EXAMPLE_DIR/naive
-python train.py
+python3 train.py
 
 echo "testing pdarts..."
 cd $EXAMPLE_DIR/pdarts
-python search.py --epochs 1 --channels 4 --nodes 2 --log-frequency 10 --add_layers 0 --add_layers 1 --dropped_ops 3 --dropped_ops 3
+python3 search.py --epochs 1 --channels 4 --nodes 2 --log-frequency 10 --add_layers 0 --add_layers 1 --dropped_ops 3 --dropped_ops 3
