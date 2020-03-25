@@ -67,7 +67,7 @@ prune_config = {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': ActivationMeanRankFilterPruner,
-        'configure_list': [{
+        'config_list': [{
             'sparsity': 0.5,
             'op_types': ['default'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
