@@ -211,13 +211,21 @@ class Trial implements TableObj {
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
         if (this.accuracy !== undefined) {
-            return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            if (isNaN(this.accuracy)) {
+                return this.accuracy.toString();
+            } else {
+                return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            }
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const latest = this.intermediates[this.intermediates.length - 1]!;
-            return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            if (isNaN(metricAccuracy(latest))) {
+                return 'NaN';
+            } else {
+                return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            }
         }
     }
 }
