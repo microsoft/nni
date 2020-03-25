@@ -409,6 +409,7 @@ def update_lr(
         params_group['lr'] = learning_rate
     return learning_rate
 
+
 def train(data_path, output_dir, num_layers):
     print("Build dataloader")
     train_dataset, valid_dataset, test_dataset, embedding = \

@@ -43,14 +43,14 @@ python -u eval_arc.py \
   --output_dir="output_sst2" \
   --global_seed=1234 \
   --max_input_length=64 \
-  --batch_size=128 \
+  --batch_size=256 \
   --eval_batch_size=128 \
   --num_epochs=10 \
   --log_every=50 \
   --eval_every_epochs=1 \
   --child_num_layers=24 \
-  --child_out_filters=256 \
-  --child_l2_reg=1e-6 \
+  --child_out_filters=128 \
+  --child_l2_reg=2e-5 \
   --cnn_keep_prob=0.8 \
   --final_output_keep_prob=1.0 \
   --embed_keep_prob=0.8 \

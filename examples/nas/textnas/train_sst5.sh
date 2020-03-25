@@ -58,7 +58,7 @@ python -u eval_arc.py \
   --attention_keep_prob=0.8 \
   --child_lr=0.02 \
   --child_lr_max=0.002 \
-  --child_lr_min=0.0002 \
+  --child_lr_min=1e-6 \
   --child_lr_T_0=10 \
   --child_lr_T_mul=2 \
   --multi_path=True \
