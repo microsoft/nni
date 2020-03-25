@@ -53,7 +53,7 @@ prune_config = {
             'op_types': ['Conv2d']
         }]
     },
-    'l1': {
+    'l1filter': {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': L1FilterPruner,
