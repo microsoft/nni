@@ -52,8 +52,7 @@ class ActivationRankFilterPruner(Pruner):
         def collector(collected_activation):
             def hook(module_, input_, output):
                 collected_activation.append(self.activation(output.detach().cpu()))
-            return hook
-            
+            return hook            
         self.collected_activation = {}
         self._fwd_hook_id += 1
         self._fwd_hook_handles[self._fwd_hook_id] = []
@@ -62,9 +61,8 @@ class ActivationRankFilterPruner(Pruner):
             self.collected_activation[wrapper_idx] = []
             handle = wrapper.register_forward_hook(collector(self.collected_activation[wrapper_idx]))
             self._fwd_hook_handles[self._fwd_hook_id].append(handle)
-            
         return self._fwd_hook_id
-        
+
     def validate_config(self, model, config_list):
         """
         Parameters
@@ -125,7 +123,6 @@ class ActivationRankFilterPruner(Pruner):
             if filters < 2 or num_prune < 1 or len(acts) < self.statistics_batch_num:
                 return mask
             mask = self.get_mask(mask, acts, num_prune)
-            
         finally:
             if len(acts) >= self.statistics_batch_num:
                 wrapper.if_calculated = True
@@ -280,4 +277,3 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         activations = torch.cat(activations, 0)
         mean_activation = torch.mean(activations, dim=(0, 2, 3))
         return mean_activation
-    
