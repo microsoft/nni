@@ -3,6 +3,7 @@ import { Stack } from 'office-ui-fabric-react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
+import MessageInfo from './components/Modals/MessageInfo';
 import './App.scss';
 
 interface AppState {
@@ -11,10 +12,13 @@ interface AppState {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
+    isillegalFinal: boolean;
+    expWarningMessage: string;
 }
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | null;
+    private dataFormatimer!: number;
 
     constructor(props: {}) {
         super(props);
@@ -23,7 +27,9 @@ class App extends React.Component<{}, AppState> {
             columnList: COLUMN,
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
-            metricGraphMode: 'max'
+            metricGraphMode: 'max',
+            isillegalFinal: false,
+            expWarningMessage: ''
         };
     }
 
@@ -33,8 +39,34 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
         this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
+        // final result is legal
+        // get a succeed trial，see final result data's format
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.dataFormatimer = window.setInterval(this.getFinalDataFormat, this.state.interval * 1000);
     }
 
+    getFinalDataFormat = (): void => {
+        for(let i = 0; this.state.isillegalFinal === false; i++){
+            if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
+                if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
+                    window.clearInterval(this.dataFormatimer);
+                    break;
+                } else {
+                    // illegal final data
+                    this.setState(() => ({
+                        isillegalFinal: true,
+                        expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
+                    }));
+                    window.clearInterval(this.dataFormatimer);
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    
     changeInterval = (interval: number): void => {
         this.setState({ interval });
         if (this.timerId === null && interval !== 0) {
@@ -54,7 +86,9 @@ class App extends React.Component<{}, AppState> {
     }
 
     render(): React.ReactNode {
-        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast, metricGraphMode } = this.state;
+        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
+            metricGraphMode, isillegalFinal, expWarningMessage 
+        } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
@@ -73,11 +107,14 @@ class App extends React.Component<{}, AppState> {
             <Stack className="nni" style={{ minHeight: window.innerHeight }}>
                 <div className="header">
                     <div className="headerCon">
-                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh}/>
+                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                     </div>
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
+                        {isillegalFinal && <div className="warning">
+                            <MessageInfo info={expWarningMessage} typeInfo="warning" />
+                        </div>}
                         {reactPropsChildren}
                     </Stack>
                 </Stack>

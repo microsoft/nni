@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import torch
 import torch.nn.functional as F
+import schema
 import nni.compression.torch as torch_compressor
 import math
 
@@ -267,6 +268,79 @@ class CompressorTestCase(TestCase):
         assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)
         assert math.isclose(model.relu.module.tracked_max_biased, 0.00998, abs_tol=eps)
 
+    def test_torch_pruner_validation(self):
+        # test bad configuraiton
+        pruner_classes = [torch_compressor.__dict__[x] for x in \
+            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGP_Pruner', \
+            'ActivationMeanRankFilterPruner', 'ActivationAPoZRankFilterPruner']]
+
+        bad_configs = [
+            [
+                {'sparsity': '0.2'},
+                {'sparsity': 0.6 }
+            ],
+            [
+                {'sparsity': 0.2},
+                {'sparsity': 1.6 }
+            ],
+            [
+                {'sparsity': 0.2, 'op_types': 'default'},
+                {'sparsity': 0.6 }
+            ],
+            [
+                {'sparsity': 0.2 },
+                {'sparsity': 0.6, 'op_names': 'abc' }
+            ]
+        ]
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        for pruner_class in pruner_classes:
+            for config_list in bad_configs:
+                try:
+                    pruner_class(model, config_list, optimizer)
+                    print(config_list)
+                    assert False, 'Validation error should be raised for bad configuration'
+                except schema.SchemaError:
+                    pass
+                except:
+                    print('FAILED:', pruner_class, config_list)
+                    raise
+
+    def test_torch_quantizer_validation(self):
+        # test bad configuraiton
+        quantizer_classes = [torch_compressor.__dict__[x] for x in \
+            ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']]
+
+        bad_configs = [
+            [
+                {'bad_key': 'abc'}
+            ],
+            [
+                {'quant_types': 'abc'}
+            ],
+            [
+                {'quant_bits': 34}
+            ],
+            [
+                {'op_types': 'default'}
+            ],
+            [
+                {'quant_bits': {'abc': 123}}
+            ]
+        ]
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        for quantizer_class in quantizer_classes:
+            for config_list in bad_configs:
+                try:
+                    quantizer_class(model, config_list, optimizer)
+                    print(config_list)
+                    assert False, 'Validation error should be raised for bad configuration'
+                except schema.SchemaError:
+                    pass
+                except:
+                    print('FAILED:', quantizer_class, config_list)
+                    raise
 
 if __name__ == '__main__':
     main()
