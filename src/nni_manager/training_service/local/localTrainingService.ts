@@ -514,7 +514,6 @@ class LocalTrainingService implements TrainingService {
         });
         await execMkdir(trialJobDetail.workingDirectory);
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
-        await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName),
                                     runScriptContent.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
@@ -526,7 +525,8 @@ class LocalTrainingService implements TrainingService {
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);
-        const stream: ts.Stream = ts.createReadStream(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
+        const metricsPath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')
+        const stream: ts.Stream = ts.createReadStream(metricsPath, {waitForCreate: true});
         stream.on('data', (data: Buffer) => {
             buffer = Buffer.concat([buffer, data]);
             while (buffer.length > 0) {

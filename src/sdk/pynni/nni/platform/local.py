@@ -69,7 +69,7 @@ def send_metric(string):
         if _metric_file is None:
             metric_path = os.path.join(_sysdir, '.nni', 'metrics')
             if os.path.isfile(metric_path):
-                raise RuntimeError('Metric file exist. Only call `send_metric` in one progress.')
+                raise RuntimeError('Metric file exists. Only call `send_metric` in one process.')
             _metric_file = open(metric_path, 'wb')
         data = (string + '\n').encode('utf8')
         assert len(data) < 1000000, 'Metric too long'
