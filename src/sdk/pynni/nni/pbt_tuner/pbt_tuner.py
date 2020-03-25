@@ -152,15 +152,15 @@ class PBTTuner(Tuner):
 
         Parameters
         ----------
-        optimize_mode: str
+        optimize_mode : str
             maximize or minimize
-        all_checkpoint_dir: str
+        all_checkpoint_dir : str
             directory to store training model checkpoint
-        population_size: int
+        population_size : int
             number of trials for each epoch
-        factors: tuple
+        factors : tuple
             factors for perturbation
-        fraction: float
+        fraction : float
             fraction for selecting bottom and top trials
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -245,7 +245,6 @@ class PBTTuner(Tuner):
                 logger.debug("generating param for %s", parameter_id)
                 res = self.generate_parameters(parameter_id, **kwargs)
             except nni.NoMoreTrialError:
-                #add credit
                 had_exception = True
             if not had_exception:
                 result.append(res)
@@ -274,7 +273,7 @@ class PBTTuner(Tuner):
             logger.debug('Credit added by one in parameters request')
             self.credit += 1
             self.param_ids.append(parameter_id)
-            raise nni.NoMoreTrialError('no more parameters now.')
+            raise nni.NoMoreTrialError('No more parameters now.')
         self.pos += 1
         trial_info = self.population[self.pos]
         trial_info.parameter_id = parameter_id
