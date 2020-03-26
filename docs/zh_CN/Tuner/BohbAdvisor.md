@@ -76,17 +76,17 @@ advisor:
 * **top_n_percent**(*整数, 可选, 默认值为 15*): 认为观察点为好点的百分数 (在 1 到 99 之间)。 区分表现好的点与坏的点是为了建立树形核密度估计模型。 例如，如果有 100 个观察到的 Trial，top_n_percent 为 15，则前 15% 的点将用于构建好点模型 "l(x)"。 其余 85% 的点将用于构建坏点模型 "g(x)"。
 * **num_samples** (*整数, 可选项, 默认值为64*): 用于优化 EI 值的采样个数（默认值为64）。 在这种情况下，将对 "num_samples" 点进行采样，并比较 l(x)/g(x) 的结果。 然后，如果 optimize_mode 是 `maximize`，就会返回其中 l(x)/g(x) 值最大的点作为下一个配置参数。 否则，使用值最小的点。
 * **random_fraction**(*浮点数, 可选项, 默认值为0.33*): 使用模型的先验（通常是均匀）来随机采样的比例。
-* **bandwidth_factor**(*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
-* **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 We suggest using the default value if you are not familiar with KDE.
+* **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议使用默认值。
+* **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议使用默认值。
 
-*Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
+*请注意，浮点类型当前仅支持十进制表示。 必须使用 0.333 而不是 1/3 ，0.001 而不是 1e-3。*
 
 ## 4. 文件结构
 
-The advisor has a lot of different files, functions, and classes. Here, we will only give most of those files a brief introduction:
+Advisor 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-* `bohb_advisor.py` Definition of BOHB, handles interaction with the dispatcher, including generating new trials and processing results. Also includes the implementation of the HB (Hyperband) part.
-* `config_generator.py` Includes the implementation of the BO (Bayesian Optimization) part. The function *get_config* can generate new configurations based on BO; the function *new_result* will update the model with the new result.
+* `bohb_advisor.py` BOHB 类的定义, 包括与 Dispatcher 进行交互的部分，以及控制新 Trial 的生成，计算资源以及结果的处理。 还包含了 HB（Hyperband）的实现部分。
+* `config_generator.py` 包含了 BO（贝叶斯优化）算法的实现。 内置函数 *get_config* 使用基于贝叶斯优化生成一个新的参数组合，内置函数 *new_result* 接受新的结果并使用这些结果来更新贝叶斯优化模型。
 
 ## 5. 实验
 
@@ -94,8 +94,8 @@ The advisor has a lot of different files, functions, and classes. Here, we will 
 
 源码地址： [examples/trials/mnist-advisor](https://github.com/Microsoft/nni/tree/master/examples/trials/)
 
-We chose BOHB to build a CNN on the MNIST dataset. 下面是实验结果：
+使用 BOHB 调参算法，在 CNN 模型上跑 MNIST 数据集。 下面是实验结果：
 
 ![](../../img/bohb_5.png)
 
-More experimental results can be found in the [reference paper](https://arxiv.org/abs/1807.01774). We can see that BOHB makes good use of previous results and has a balanced trade-off in exploration and exploitation.
+更多实验结果可以在[参考文献](https://arxiv.org/abs/1807.01774)中找到。 可以看到，BOHB 充分利用了以往的成果，在探索和挖掘方面有很好的平衡。
