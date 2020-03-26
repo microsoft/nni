@@ -3,6 +3,8 @@
 
 import logging
 import torch
+from schema import And, Optional
+from .utils import CompressorSchema
 from .compressor import Pruner
 
 __all__ = ['ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
@@ -51,7 +53,6 @@ class ActivationRankFilterPruner(Pruner):
             def hook(module_, input_, output):
                 collected_activation.append(self.activation(output.detach().cpu()))
             return hook
-            
         self.collected_activation = {}
         self._fwd_hook_id += 1
         self._fwd_hook_handles[self._fwd_hook_id] = []
@@ -60,8 +61,25 @@ class ActivationRankFilterPruner(Pruner):
             self.collected_activation[wrapper_idx] = []
             handle = wrapper.register_forward_hook(collector(self.collected_activation[wrapper_idx]))
             self._fwd_hook_handles[self._fwd_hook_id].append(handle)
-            
         return self._fwd_hook_id
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+       """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
 
     def get_mask(self, base_mask, activations, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))

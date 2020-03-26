@@ -116,6 +116,10 @@ Copy-Item config -Destination .\dist\ -Recurse -Force
 cd ..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
+# Building NasUI
+cd ..\nasui
+cmd /c $NNI_YARN
+cmd /c $NNI_YARN build
 
 cd ..\..
 
@@ -130,4 +134,7 @@ $PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
 (Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
 cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
 $NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER + "\static"
+$NASUI_PKG_FOLDER = $NNI_PKG_FOLDER + "\nasui"
 Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse
+Copy-Item "src\nasui\build" $NASUI_PKG_FOLDER -Recurse
+Copy-Item "src\nasui\server.js" $NASUI_PKG_FOLDER -Recurse

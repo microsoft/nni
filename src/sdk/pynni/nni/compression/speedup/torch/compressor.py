@@ -71,7 +71,7 @@ class ModelSpeedup:
     This class is to speedup the model with provided weight mask
     """
 
-    def __init__(self, model, dummy_input, masks_file):
+    def __init__(self, model, dummy_input, masks_file, map_location=None):
         """
         Parameters
         ----------
@@ -81,10 +81,12 @@ class ModelSpeedup:
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         masks_file : str
             The path of user provided mask file
+        map_location : str
+            the device on which masks are placed, same to map_location in ```torch.load```
         """
         self.bound_model = model
         self.dummy_input = dummy_input
-        self.masks = torch.load(masks_file)
+        self.masks = torch.load(masks_file, map_location)
         self.is_training = model.training
         # to obtain forward graph, model should be in ```eval``` mode
         if self.is_training:
