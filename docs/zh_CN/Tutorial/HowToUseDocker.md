@@ -2,17 +2,17 @@
 
 ## 概述
 
-[Docker](https://www.docker.com/) 是一种工具, 可通过启动容器, 使用户能够更轻松地根据自己的操作系统部署和运行应用程序。 Docker is not a virtual machine, it does not create a virtual operating system, but it allows different applications to use the same OS kernel and isolate different applications by container.
+[Docker](https://www.docker.com/) 是一种工具, 可通过启动容器, 使用户能够更轻松地根据自己的操作系统部署和运行应用程序。 Docker 不是虚拟机，它不创建虚拟操作系统，但它允许不同的应用程序使用相同的操作系统内核，并通过容器隔离不同的应用程序。
 
-Users can start NNI experiments using Docker. NNI also provides an official Docker image [msranni/nni](https://hub.docker.com/r/msranni/nni) on Docker Hub.
+用户可使用 Docker 来启动 NNI Experiment。 NNI 在 Docker Hub 上也提供了官方的 Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni)。
 
-## Using Docker in local machine
+## 在本机使用docker
 
-### Step 1: Installation of Docker
+### 第一步：Docker 的安装
 
-Before you start using Docker for NNI experiments, you should install Docker on your local machine. [See here](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+在开始使用 Docker 运行 NNI Experiment 前，首先需要在本机安装 Docker 运行程序。 [参考这里](https://docs.docker.com/install/linux/docker-ce/ubuntu/)。
 
-### Step 2: Start a Docker container
+### 第二步：启动 Docker 容器
 
 If you have installed the Docker package in your local machine, you can start a Docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
 
