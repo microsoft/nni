@@ -237,7 +237,6 @@ class ModelSpeedup:
         root = None
         for node in graph.nodes():
             scope_name = node.scopeName()
-            print('scope_name: ', scope_name)
             if scope_name == '':
                 continue
             segs = scope_name.split('/')
@@ -262,7 +261,6 @@ class ModelSpeedup:
                 for key in node.childs:
                     traverse_tree(node.childs[key], sn)
         traverse_tree(root, '')
-        #print('leaf_nodes: ', leaf_nodes)
         return leaf_nodes
 
     def _build_graph(self):
