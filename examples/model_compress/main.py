@@ -44,7 +44,7 @@ def update_from_args(args, config):
 def create_pruner(model, optimizer_finetune, config):
     pruner = nni_compression.__dict__[config.pruner_name]
     prune_params = config['config_list']
-    if 'Activation' in config.pruner_name or 'Taylor' in config.pruner_name:
+    if 'Activation' in config.pruner_name:
         return pruner(model, prune_params, optimizer_finetune, statistics_batch_num=100)
     else:
         return pruner(model, prune_params, optimizer_finetune)

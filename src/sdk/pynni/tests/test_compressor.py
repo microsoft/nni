@@ -263,7 +263,7 @@ class CompressorTestCase(TestCase):
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'prune_frequency': 1, 'prune_filters_each_step': 2}]
 
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         pruner = torch_compressor.TaylorFOWeightFilterPruner(model, config_list, optimizer)
         
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
@@ -292,7 +292,7 @@ class CompressorTestCase(TestCase):
 
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d'], 'prune_frequency': 1, 'prune_filters_each_step': 5}]
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         pruner = torch_compressor.TaylorFOWeightFilterPruner(model, config_list, optimizer)
         
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
