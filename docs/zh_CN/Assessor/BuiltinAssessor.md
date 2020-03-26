@@ -1,8 +1,8 @@
 # 内置 Assessor
 
-NNI provides state-of-the-art tuning algorithms within our builtin-assessors and makes them easy to use. Below is a brief overview of NNI's current builtin Assessors.
+NNI 提供了先进的评估算法，使用上也很简单。 下面是内置 Assessor 的介绍。
 
-Note: Click the **Assessor's name** to get each Assessor's installation requirements, suggested usage scenario, and a config example. A link to a detailed description of each algorithm is provided at the end of the suggested scenario for each Assessor.
+注意：点击 **Assessor 的名称**可了解每个 Assessor 的安装需求，建议的场景以及示例。 A link to a detailed description of each algorithm is provided at the end of the suggested scenario for each Assessor.
 
 Currently, we support the following Assessors:
 
