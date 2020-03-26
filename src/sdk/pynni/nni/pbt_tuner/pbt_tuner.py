@@ -12,9 +12,8 @@ import numpy as np
 
 import nni
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
+from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
-import nni.parameter_expressions as parameter_expressions
 
 logger = logging.getLogger('pbt_tuner_AutoML')
 

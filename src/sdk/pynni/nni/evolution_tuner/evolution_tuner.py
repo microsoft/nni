@@ -10,9 +10,7 @@ import random
 
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
-
-import nni.parameter_expressions as parameter_expressions
+from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
 
 class Individual:

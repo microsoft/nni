@@ -2,12 +2,16 @@
 # Licensed under the MIT license.
 
 import os
+import copy
 import functools
 from enum import Enum, unique
 import json_tricks
 
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
+
+import nni.parameter_expressions as parameter_expressions
+
 
 to_json = functools.partial(json_tricks.dumps, allow_nan=True)
 
