@@ -528,7 +528,6 @@ class LocalTrainingService implements TrainingService {
         let buffer: Buffer = Buffer.alloc(0);
         const stream: ts.Stream = ts.createReadStream(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         stream.on('data', (data: Buffer) => {
-            this.log.debug(`-----------------stream on data ${trialJobId}--------------`);
             buffer = Buffer.concat([buffer, data]);
             while (buffer.length > 0) {
                 const [success, , content, remain] = decodeCommand(buffer);
