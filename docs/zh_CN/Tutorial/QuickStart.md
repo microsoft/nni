@@ -2,7 +2,7 @@
 
 ## 安装
 
-We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+目前支持 Linux、macOS 和 Windows。 Ubuntu 16.04 或更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 **Linux 和 macOS**
 
@@ -18,15 +18,15 @@ We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10
 
 注意：
 
-* For Linux and macOS, `--user` can be added if you want to install NNI in your home directory; this does not require any special privileges.
-* If there is an error like `Segmentation fault`, please refer to the [FAQ](FAQ.md).
-* For the `system requirements` of NNI, please refer to [Install NNI on Linux&Mac](InstallationLinux.md) or [Windows](InstallationWin.md).
+* 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
+* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
+* 有关 NNI 的`系统要求`，参考[在 Linux 和 macOS 上安装](InstallationLinux.md) 或 [Windows](InstallationWin.md)。
 
 ## MNIST 上的 "Hello World"
 
-NNI 是一个能进行自动机器学习实验的工具包。 It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
+NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
 
-Here is an example script to train a CNN on the MNIST dataset **without NNI**:
+这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
 
 ```python
 def run_trial(params):
@@ -48,11 +48,11 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
+注意：完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
-The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
+上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
-NNI is born to help the user do tuning jobs; the NNI working process is presented below:
+NNI 用来帮助超参调优。它的流程如下：
 
 ```text
 输入: 搜索空间, Trial 代码, 配置文件
@@ -67,11 +67,11 @@ NNI is born to help the user do tuning jobs; the NNI working process is presente
 7: return 最好的实验结果
 ```
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
+如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
 
 **启动 Experiment 的三个步骤**
 
-**Step 1**: Give a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
+**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
