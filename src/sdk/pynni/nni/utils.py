@@ -7,10 +7,9 @@ import functools
 from enum import Enum, unique
 import json_tricks
 
+import nni.parameter_expressions as parameter_expressions
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
-
-import nni.parameter_expressions as parameter_expressions
 
 
 to_json = functools.partial(json_tricks.dumps, allow_nan=True)
@@ -99,7 +98,7 @@ def init_dispatcher_logger():
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
     init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
-    
+
 
 def json2space(x, oldy=None, name=NodeType.ROOT):
     """
