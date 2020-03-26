@@ -2,13 +2,13 @@
 
 ## 1. 介绍
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) is a popular autoML algorithm. The basic idea of Hyperband is to create several buckets, each having `n` randomly generated hyperparameter configurations, each configuration using `r` resources (e.g., epoch number, batch number). After the `n` configurations are finished, it chooses the top `n/eta` configurations and runs them using increased `r*eta` resources. 最后，会选择出的最好配置。
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 是一种流行的自动机器学习算法。 Hyperband 的基本思想是对配置分组，每组有 `n` 个随机生成的超参配置，每个配置使用 `r` 次资源（如，epoch 数量，批处理数量等）。 当 `n` 个配置完成后，会选择最好的 `n/eta` 个配置，并增加 `r*eta` 次使用的资源。 最后，会选择出的最好配置。
 
-## 2. Implementation with full parallelism
+## 2. 实现并行
 
-First, this is an example of how to write an autoML algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it Advisor.
+首先，此示例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于 Tuner 和 Assessor。 这种实现方法下，Hyperband 集成了 Tuner 和 Assessor 两者的功能，因而将它叫做 Advisor。
 
-其次，本实现完全利用了 Hyperband 内部的并行性。 Specifically, the next bucket is not started strictly after the current bucket. Instead, it starts when there are available resources.
+其次，本实现完全利用了 Hyperband 内部的并行性。 具体来说，下一个分组不会严格的在当前分组结束后再运行。 只要有资源，就可以开始运行新的分组。
 
 ## 3. 用法
 
@@ -26,7 +26,7 @@ First, this is an example of how to write an autoML algorithm based on MsgDispat
         optimize_mode: maximize
     
 
-Note that once you use Advisor, you are not allowed to add a Tuner and Assessor spec in the config file. If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there will be one more key called `TRIAL_BUDGET` defined by user. **使用 `TRIAL_BUDGET`，Trial 能够控制其运行的时间。</p> 
+注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，会多一个用户定义的 `TRIAL_BUDGET`。 **使用 `TRIAL_BUDGET`，Trial 能够控制其运行的时间。</p> 
 
 对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
@@ -47,10 +47,10 @@ Note that once you use Advisor, you are not allowed to add a Tuner and Assessor 
 
 `s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置使用多少资源来运行。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
-For information about writing trial code, please refer to the instructions under `examples/trials/mnist-hyperband/`.
+关于如何实现 Trial 代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
-## 4. Future improvements
+## 4. 未来的改进
 
-The current implementation of Hyperband can be further improved by supporting a simple early stop algorithm since it's possible that not all the configurations in the top `n/eta` perform well. Any unpromising configurations should be stopped early.
+当前实现的 Hyperband 算法可以通过改进支持的提前终止算法来提高，因为最好的 `n/eta` 个配置并不一定都表现很好。 不好的配置应该更早的终止。
 
-In the current implementation, configurations are generated randomly which follows the design in the [paper](https://arxiv.org/pdf/1603.06560.pdf). As an improvement, configurations could be generated more wisely by leveraging advanced algorithms.
+在当前实现中，遵循了[此论文](https://arxiv.org/pdf/1603.06560.pdf)的设计，配置都是随机生成的。 要进一步提升，配置生成过程可以利用更高级的算法。
