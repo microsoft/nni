@@ -221,25 +221,25 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
 - `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
 - `operation_history` 是保存了所有网络形态操作的列表。
-- `layer_id_to_input_node_ids` is a dictionary mapping from layer identifiers to their input nodes identifiers.
-- `layer_id_to_output_node_ids` is a dictionary mapping from layer identifiers to their output nodes identifiers
-- `adj_list` is a two-dimensional list; the adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
-- `reverse_adj_list` is a reverse adjacent list in the same format as adj_list.
+- `layer_id_to_input_node_ids` 是字典，将层的标识映射到输入节点标识。
+- `layer_id_to_output_node_ids` 是字典，将层的标识映射到输出节点标识。
+- `adj_list` 是二维列表，是图的邻接表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
+- `reverse_adj_list` 是与 adj_list 格式一样的反向邻接列表。
 - `node_list` 是一个整数列表。 列表的索引是标识。
 - `layer_list` 是层的列表。 列表的索引是标识。
   
-  - For `StubConv (StubConv1d, StubConv2d, StubConv3d)`, the numbering follows the format: its node input id (or id list), node output id, input_channel, filters, kernel_size, stride, and padding.
+  - 对于 `StubConv(StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
   
-  - For `StubDense`, the numbering follows the format: its node input id (or id list), node output id, input_units, and units.
+  - 对于 `StubDense`，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
   
-  - For `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`, the numbering follows the format: its node input id (or id list), node output id, and features numbers.
+  - 对于 `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
   
-  - For `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`, the numbering follows the format: its node input id (or id list), node output id, and dropout rate.
+  - 对于 `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
   
-  - For `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`, the numbering follows the format: its node input id (or id list), node output id, kernel_size, stride, and padding.
+  - 对于 `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
   
-  - For else layers, the numbering follows the format: its node input id (or id list) and node output id.
+  - 对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
 ## 5. TODO
 
-Next step, we will change the API from s fixed network generator to a network generator with more available operators. We will use ONNX instead of JSON later as the intermediate representation spec in the future.
+下一步，会将 API 从固定网络生成器，改为有更多可用操作的网络生成器。 会使用 ONNX 格式来替代 JSON 作为中间表示结果。
