@@ -339,14 +339,6 @@ class ModelSpeedup:
                 else:
                     module_to_nodes[module_name] = [node]
 
-        pdb.set_trace()
-        print('output_to_node', output_to_node)
-        pdb.set_trace()
-        print('input_to_node', input_to_node)
-        pdb.set_trace()
-        print('module_to_nodes', module_to_nodes)
-        pdb.set_trace()
-
         # construct GNode from module
         for module_name, nodes in module_to_nodes.items():
             inputs = set()
