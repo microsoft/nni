@@ -24,9 +24,9 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 ## 用法
 
-要使用 NNI 内置的 Tuner，需要在 `config.yml` 文件中添加 **builtinTunerName** 和 **classArgs**。 In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
+要使用 NNI 内置的 Tuner，需要在 `config.yml` 文件中添加 **builtinTunerName** 和 **classArgs**。 本部分中，将介绍每个 Tuner 的用法和建议场景、参数要求，并提供配置示例。
 
-注意：参考示例中的格式来创建新的 `config.yml` 文件。 Some built-in tuners need to be installed using `nnictl package`, like SMAC.
+注意：参考示例中的格式来创建新的 `config.yml` 文件。 一些内置的 Tuner 还需要通过 `nnictl package` 命令先安装，如 SMAC。
 
 <a name="TPE"></a>
 
@@ -36,15 +36,15 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 **建议场景**
 
-TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况下都能得到较好的结果。 Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. [详细说明](./HyperoptTuner.md)
+TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况下都能得到较好的结果。 特别是在计算资源有限，只能运行少量 Trial 的情况。 大量的实验表明，TPE 的性能远远优于随机搜索。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-Note: We have optimized the parallelism of TPE for large-scale trial concurrency. 有关优化原理或开启优化，参考 [TPE 文档](HyperoptTuner.md)。
+注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 [TPE 文档](HyperoptTuner.md)。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -64,13 +64,13 @@ tuner:
 
 **建议场景**
 
-Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. [详细说明](./HyperoptTuner.md)
+随机搜索，可用于每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 如果要均衡的探索搜索空间，它也很有用。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -88,13 +88,13 @@ tuner:
 
 **建议场景**
 
-Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. [详细说明](./HyperoptTuner.md)
+退火算法，用于每个 Trial 的时间不长，并且有足够的计算资源（与随机搜索基本相同）。 当搜索空间中的变量可以从某些先前的分布中采样时，它也很有用。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -114,15 +114,15 @@ tuner:
 
 **建议场景**
 
-Its computational resource requirements are relatively high. Specifically, it requires a large initial population to avoid falling into a local optimum. 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 It is also suggested when your trial code supports weight transfer; that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training process. [详细说明](./EvolutionTuner.md)
+其计算资源要求相对较高。 特别是，它需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-* **population_size** (*int value (should > 0), optional, default = 20*) - the initial size of the population (trial num) in the evolution tuner. It's suggested that `population_size` be much larger than `concurrency` so users can get the most out of the algorithm (and at least `concurrency`, or the tuner will fail on its first generation of parameters).
+* **population_size** (*int 类型 (需要大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的初始种群（Trial 数量）。 建议 `population_size` 比 `concurrency` 取值更大，这样能充分利用算法（至少要等于 `concurrency`，否则 Tuner 在生成第一代参数的时候就会失败）。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -141,11 +141,11 @@ tuner:
 
 > 名称：**SMAC**
 
-**当前 SMAC 不支持在 WIndows 下运行。 For the specific reason, please refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[GitHub issue](https://github.com/automl/SMAC3/issues/483)。**
 
 **安装**
 
-SMAC needs to be installed by following command before the first usage. 注意：SMAC 依赖于 `swig`，Ubuntu 下可通过 `apt` 命令来安装 `swig`。
+SMAC 在第一次使用前，必须用下面的命令先安装。 注意：SMAC 依赖于 `swig`，Ubuntu 下可通过 `apt` 命令来安装 `swig`。
 
 ```bash
 nnictl package install --name=SMAC
@@ -153,14 +153,14 @@ nnictl package install --name=SMAC
 
 **建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner that can be tried in various scenarios and is suggested when computational resources are limited. It is optimized for discrete hyperparameters, thus, it's suggested when most of your hyperparameters are discrete. [详细说明](./SmacTuner.md)
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。 [详细说明](./SmacTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **config_dedup** (*True 或 False, 可选, 默认为 False*) - 如果为 True，则 Tuner 不会生成重复的配置。 If False, a configuration may be generated twice, but it is rare for a relatively large search space.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **config_dedup** (*True 或 False, 可选, 默认为 False*) - 如果为 True，则 Tuner 不会生成重复的配置。 如果为 False，则配置可能会重复生成，但对于相对较大的搜索空间，此概率较小。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -180,9 +180,9 @@ tuner:
 
 **建议场景**
 
-If the configurations you want to try have been decided beforehand, you can list them in search space file (using `choice`) and run them using batch tuner. [详细说明](./BatchTuner.md)
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。 [详细说明](./BatchTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -192,7 +192,7 @@ tuner:
 
 <br />
 
-Note that the search space for BatchTuner should look like:
+注意，BatchTuner 的搜索空间如下所示：
 
 ```json
 {
@@ -209,7 +209,7 @@ Note that the search space for BatchTuner should look like:
 }
 ```
 
-The search space file should include the high-level key `combine_params`. The type of params in the search space must be `choice` and the `values` must include all the combined params values.
+搜索空间文件使用了高层的键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要的参数组合。
 
 <a name="GridSearch"></a>
 
@@ -219,11 +219,11 @@ The search space file should include the high-level key `combine_params`. The ty
 
 **建议场景**
 
-Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `randint`。
 
-This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. [Detailed Description](./GridsearchTuner.md)
+当搜索空间较小时，建议这样做。 It's suggested when it is feasible to exhaustively sweep the whole search space. [Detailed Description](./GridsearchTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -245,11 +245,11 @@ This is suggested when you have limited computational resources but have a relat
 
 **classArgs Requirements:**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, optional, default = 60*) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
 * **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials.
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -279,13 +279,13 @@ This is suggested when you want to apply deep learning methods to your task but 
 
 **classArgs Requirements:**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **task** (*('cv'), optional, default = 'cv'*) - The domain of the experiment. For now, this tuner only supports the computer vision (CV) domain.
 * **input_width** (*int, 可选, 默认为 = 32*) - 输入图像的宽度
 * **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
 * **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -315,9 +315,9 @@ Note that the only acceptable types of search space types are `quniform`, `unifo
 
 **classArgs Requirements:**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -362,7 +362,7 @@ Similar to Hyperband, BOHB is suggested when you have limited computational reso
 
 *Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 advisor:
@@ -388,7 +388,7 @@ As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, 
 
 **classArgs Requirements:**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The utility function (acquisition function). 'ei', 'ucb', and 'poi' correspond to 'Expected Improvement', 'Upper Confidence Bound', and 'Probability of Improvement', respectively. 
 * **kappa** (*float, optional, default = 5*) - Used by the 'ucb' utility function. The bigger `kappa` is, the more exploratory the tuner will be.
 * **xi** (*float, optional, default = 0*) - Used by the 'ei' and 'poi' utility functions. The bigger `xi` is, the more exploratory the tuner will be.
@@ -398,7 +398,7 @@ As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, 
 * **selection_num_warm_up** (*int, optional, default = 1e5*) - Number of random points to evaluate when getting the point which maximizes the acquisition function.
 * **selection_num_starting_points** (*int, 可选, 默认为 250*) - 预热后，从随机七十点运行 L-BFGS-B 的次数。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -430,7 +430,7 @@ PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner 
 
 **classArgs Requirements:**
 
-* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trials_per_update` 设为 `trialConcurrency` 的倍数，以提高 Trial 的并发效率。
 * **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
 * **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 Note that trials_per_update must be divisible by minibatch_size.
@@ -442,7 +442,7 @@ PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner 
 * **lam** (*float, 可选, 默认为 0.95*) - Advantage estimation discounting factor (论文中的 lambda).
 * **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
