@@ -52,7 +52,8 @@ class ActivationRankFilterPruner(Pruner):
         def collector(collected_activation):
             def hook(module_, input_, output):
                 collected_activation.append(self.activation(output.detach().cpu()))
-            return hook            
+            return hook
+            
         self.collected_activation = {}
         self._fwd_hook_id += 1
         self._fwd_hook_handles[self._fwd_hook_id] = []
