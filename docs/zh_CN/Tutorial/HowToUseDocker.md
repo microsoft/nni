@@ -14,27 +14,27 @@
 
 ### 第二步：启动 Docker 容器
 
-如果已经在本地机器上安装了 Docker 程序，可以启动 Docker 容器来运行 NNI 示例。 You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
+如果已经在本地机器上安装了 Docker 程序，可以启动 Docker 容器来运行 NNI 示例。 因为 NNI 会在 Docker 容器里启动 Web 界面进程，并监听端口，因此需要指定一个在主机和 Docker 容器映射的端口，可在容器外访问 Docker 容器里的进程。 通过访问主机的 IP 和端口，就可以访问容器里的 Web 网页进程了。
 
-For example, you could start a new Docker container from the following command:
+例如，通过如下命令来启动 Docker 容器：
 
     docker run -i -t -p [hostPort]:[containerPort] [image]
     
 
-`-i:` Start a Docker in an interactive mode.
+-i: 使用交互模式启动 Docker。
 
-`-t:` Docker assign the container an input terminal.
+-t: 为 Docker 分配一个输入终端。
 
 -p: 端口映射，映射主机端口和容器端口。
 
-For more information about Docker commands, please [refer to this](https://docs.docker.com/v17.09/edge/engine/reference/run/).
+更多命令信息，可[参考这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)。
 
 注意：
 
-       NNI only supports Ubuntu and MacOS systems in local mode for the moment, please use correct Docker image type. If you want to use gpu in a Docker container, please use nvidia-docker.
+       NNI 目前仅支持本机模式下的 Ubuntu 和 macOS 系统，请使用正确的 Docker 映像类型。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
     
 
-### Step 3: Run NNI in a Docker container
+### 第三步：在 Docker 容器里运行 NNI
 
 If you start a Docker image using NNI's official image `msranni/nni`, you can directly start NNI experiments by using the `nnictl` command. Our official image has NNI's running environment and basic python and deep learning frameworks preinstalled.
 
