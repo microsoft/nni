@@ -97,6 +97,8 @@ class ModelSpeedup:
         self.g_nodes = list()
         self.global_count = 0
         self.name_to_gnode, self.input_to_gnode, self.output_to_gnode = self._build_graph()
+        #for key in self.name_to_gnode:
+        #    print(key)
 
     def _build_index_for_gnodes(self, g_nodes):
         """
@@ -122,6 +124,7 @@ class ModelSpeedup:
         input_to_gnode = dict()
         output_to_gnode = dict()
         for node in g_nodes:
+            #print('g_node name: ', node.name)
             name_to_gnode[node.name] = node
             for _input in node.inputs:
                 if _input in input_to_gnode:
@@ -229,42 +232,41 @@ class ModelSpeedup:
         list
             a list of scope name of all the leaf modules
         """
-        pieces = [] # each element is a dict
+        class SNode:
+            def __init__(self, name):
+                self.sname = name
+                self.childs = {}
+
+        root = None
         for node in graph.nodes():
             scope_name = node.scopeName()
+            print('scope_name: ', scope_name)
             if scope_name == '':
                 continue
             segs = scope_name.split('/')
-            segs_len = len(segs)
-            # increase the length of `pieces` if not enough
-            for _ in range(segs_len - len(pieces)):
-                pieces.append({})
-            # process internal segments of the scope name
-            # 'L' means leaf segment
-            # 'I' means internal segment
-            # internal segment can replace leaf segment at the same position of `pieces`
-            for i, seg in enumerate(segs[:-1]):
-                seg_name_dict = pieces[i]
-                if seg in seg_name_dict:
-                    if seg_name_dict[seg][0] == 'L':
-                        seg_name_dict[seg] = ('I', node)
-                else:
-                    seg_name_dict[seg] = ('I', node)
-            # process the leaf segment of the scope name
-            last_segs_dict = pieces[len(segs) - 1]
-            if not segs[-1] in last_segs_dict:
-                last_segs_dict[segs[-1]] = ('L', node)
-        # traverse `pieces` to obtain all the leaf modules which are labeled with 'L'
-        leaf_modules = []
-        for piece in pieces:
-            for _, value in piece.items():
-                if value[0] == 'L':
-                    assert value[1].scopeName() not in leaf_modules
-                    # if this is a leaf module, the last segment of its scope name
-                    # must be in pattern `xxx[xxx]`
-                    if value[1].scopeName()[-1] == ']':
-                        leaf_modules.append(value[1].scopeName())
-        return leaf_modules
+            if root is None:
+                root = SNode(segs[0])
+            curr = root
+            for seg in segs[1:]:
+                if not seg in curr.childs:
+                    curr.childs[seg] = SNode(seg)
+                curr = curr.childs[seg]
+
+        leaf_nodes = []
+        def traverse_tree(node, scope_name):
+            if scope_name == '':
+                sn = node.sname
+            else:
+                sn = scope_name + '/' + node.sname
+            if not node.childs:
+                if node.sname[-1] == ']':
+                    leaf_nodes.append(sn)
+            else:
+                for key in node.childs:
+                    traverse_tree(node.childs[key], sn)
+        traverse_tree(root, '')
+        print('leaf_nodes: ', leaf_nodes)
+        return leaf_nodes
 
     def _build_graph(self):
         """
@@ -286,7 +288,7 @@ class ModelSpeedup:
         """
         graph = self.trace_graph.graph
         # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
-        _logger.debug(graph)
+        _logger.info(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
@@ -518,6 +520,7 @@ class ModelSpeedup:
             _logger.debug("replace %s, in %s type, with op_type %s",
                           module_name, g_node.type, g_node.op_type)
             if g_node.type == 'module':
+                print('module_name: ', module_name)
                 super_module, leaf_module = get_module_by_name(self.bound_model, module_name)
                 m_type = g_node.op_type
                 if not m_type in replace_module:
