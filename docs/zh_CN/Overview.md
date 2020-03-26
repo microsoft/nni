@@ -25,13 +25,13 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 
 * *Tuner（调优器）*: Tuner 个自动机器学习算法，会为下一个 Trial 生成新的配置。 新的 Trial 会使用这组配置来运行。
 
-* *Assessor*: Analyze a trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
+* *Assessor（评估器）*：分析 Trial 的中间结果（例如，定期评估数据集上的精度），来确定 Trial 是否应该被提前终止。
 
-* *Training Platform*: Where trials are executed. 根据 Experiment 的配置，可以是本机，远程服务器组，或其它大规模训练平台（如，OpenPAI，Kubernetes）。
+* *训练平台*：是 Trial 的执行环境。 根据 Experiment 的配置，可以是本机，远程服务器组，或其它大规模训练平台（如，OpenPAI，Kubernetes）。
 
-Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 These configurations will be submitted to training platforms, such as the local machine, remote machines, or training clusters. 执行的性能结果会被返回给 Tuner。 然后，再生成并提交新的配置。
+Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这些配置将被提交到训练平台，如本机，远程服务器组或训练集群。 执行的性能结果会被返回给 Tuner。 然后，再生成并提交新的配置。
 
-For each experiment, the user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyperparameters and/or neural architecture. 基本上分为三步：
+每次 Experiment 执行时，用户只需要定义搜索空间，改动几行代码，就能利用 NNI 内置的 Tuner/Assessor 和训练平台来搜索最好的超参组合以及神经网络结构。 基本上分为三步：
 
 > 第一步：[定义搜索空间](Tutorial/SearchSpaceSpec.md)
 > 
@@ -43,35 +43,35 @@ For each experiment, the user only needs to define a search space and update a f
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="绘图"/>
 </p>
 
-For more details about how to run an experiment, please refer to [Get Started](Tutorial/QuickStart.md).
+更多 Experiment 运行的详情，参考[快速入门](Tutorial/QuickStart.md)。
 
 ## 核心功能
 
-NNI provides a key capacity to run multiple instances in parallel to find the best combinations of parameters. This feature can be used in various domains, like finding the best hyperparameters for a deep learning model or finding the best configuration for database and other complex systems with real data.
+NNI 提供了并行运行多个实例以查找最佳参数组合的能力。 此功能可用于各种领域，例如，为深度学习模型查找最佳超参数，或查找具有真实数据的数据库和其他复杂系统的最佳配置。
 
-NNI also provides algorithm toolkits for machine learning and deep learning, especially neural architecture search (NAS) algorithms, model compression algorithms, and feature engineering algorithms.
+NNI 还希望提供用于机器学习和深度学习的算法工具包，尤其是神经体系结构搜索（NAS）算法，模型压缩算法和特征工程算法。
 
 ### 超参调优
 
-这是 NNI 最核心、基本的功能，其中提供了许多流行的[自动调优算法](Tuner/BuiltinTuner.md) (即 Tuner) 以及 [提前终止算法](Assessor/BuiltinAssessor.md) (即 Assessor)。 You can follow [Quick Start](Tutorial/QuickStart.md) to tune your model (or system). Basically, there are the above three steps and then starting an NNI experiment.
+这是 NNI 最核心、基本的功能，其中提供了许多流行的[自动调优算法](Tuner/BuiltinTuner.md) (即 Tuner) 以及 [提前终止算法](Assessor/BuiltinAssessor.md) (即 Assessor)。 可查看[快速入门](Tutorial/QuickStart.md)来调优模型或系统。 基本上通过以上三步，就能开始 NNI Experiment。
 
 ### 通用 NAS 框架
 
-This NAS framework is for users to easily specify candidate neural architectures, for example, one can specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI 将自动找到最佳候选。 On the other hand, the NAS framework provides a simple interface for another type of user (e.g., NAS algorithm researchers) to implement new NAS algorithms. A detailed description of NAS and its usage can be found [here](NAS/Overview.md).
+此 NAS 框架可供用户轻松指定候选的神经体系结构，例如，可以为单个层指定多个候选操作（例如，可分离的 conv、扩张 conv），并指定可能的跳过连接。 NNI 将自动找到最佳候选。 另一方面，NAS 框架为其他类型的用户（如，NAS 算法研究人员）提供了简单的接口，以实现新的 NAS 算法。 NAS 详情及用法参考[这里](NAS/Overview.md)。
 
-NNI has support for many one-shot NAS algorithms such as ENAS and DARTS through NNI trial SDK. 使用这些算法时，不需启动 NNI Experiment。 Instead, import an algorithm in your trial code and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you can choose a tuner and start an NNI experiment.
+NNI 通过 Trial SDK 支持多种 one-shot（一次性） NAS 算法，如：ENAS、DARTS。 使用这些算法时，不需启动 NNI Experiment。 在 Trial 代码中加入算法，直接运行即可。 如果要调整算法中的超参数，或运行多个实例，可以使用 Tuner 并启动 NNI Experiment。
 
 除了 one-shot NAS 外，NAS 还能以 NNI 模式运行，其中每个候选的网络结构都作为独立 Trial 任务运行。 在此模式下，与超参调优类似，必须启动 NNI Experiment 并为 NAS 选择 Tuner。
 
 ### 模型压缩
 
-NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 Users can directly use them in their trial code and run the trial code without starting an NNI experiment. A detailed description of model compression and its usage can be found [here](Compressor/Overview.md).
+NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 可以直接在 Trial 代码中使用，并在不启动 NNI Experiment 的情况下运行 Trial 代码。 模型压缩的详细说明和算法可在[这里](Compressor/Overview.md)找到。
 
-There are different types of hyperparameters in model compression. One type is the hyperparameters in input configuration (e.g., sparsity, quantization bits) to a compression algorithm. The other type is the hyperparameters in compression algorithms. Here, Hyperparameter tuning of NNI can help a lot in finding the best compressed model automatically. 参考[简单示例](Compressor/AutoCompression.md)。
+模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 参考[简单示例](Compressor/AutoCompression.md)。
 
 ### 自动特征工程
 
-Automatic feature engineering is for users to find the best features for their tasks. A detailed description of automatic feature engineering and its usage can be found [here](FeatureEngineering/Overview.md). 通过 NNI Trial SDK 支持，不必创建 NNI Experiment。 只需在 Trial 代码中加入内置的自动特征工程算法，然后直接运行 Trial 代码。
+自动特征工程，为下游任务找到最有效的特征。 自动特征工程及其用法的详细说明可在[这里](FeatureEngineering/Overview.md)找到。 通过 NNI Trial SDK 支持，不必创建 NNI Experiment。 只需在 Trial 代码中加入内置的自动特征工程算法，然后直接运行 Trial 代码。
 
 自动特征工程算法通常有一些超参。 如果要自动调整这些超参，可以利用 NNI 的超参数调优，即选择调优算法（即 Tuner）并启动 NNI Experiment。
 
