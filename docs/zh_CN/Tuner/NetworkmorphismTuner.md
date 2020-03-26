@@ -2,9 +2,9 @@
 
 ## 1. 介绍
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular autoML tool using Network Morphism. Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implemented our Network Morphism method on the NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) 是使用 Network Morphism 算法的流行的自动机器学习工具。 Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 然后使用朴素贝叶斯回归，从网络的历史训练结果来预测它的指标值。 接下来，会选择预测结果最好的子网络加入训练队列中。 在[此代码](https://github.com/jhfjhfj1/autokeras)的启发下，我们在 NNI 中实现了 Network Morphism 算法。
 
-If you want to know more about network morphism trial usage, please see the [Readme.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README.md).
+要了解 Network Morphism Trial 的用法，参考 [Readme_zh_CN.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README_zh_CN.md)。
 
 ## 2. 用法
 
@@ -27,7 +27,7 @@ tuner:
     n_output_node: 10
 ```
 
-In the training procedure, it generates a JSON file which represents a Network Graph. Users can call the "json\_to\_graph()" function to build a PyTorch or Keras model from this JSON file.
+在训练过程中，会生成一个 JSON 文件来表示网络图。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```python
 import nni
@@ -52,7 +52,7 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-If you want to save and load the **best model**, the following methods are recommended.
+如果需要保存并读取**最佳模型**，推荐采用以下方法。
 
 ```python
 # 1. 使用 NNI API
@@ -100,30 +100,30 @@ loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ## 3. 文件结构
 
-The tuner has a lot of different files, functions, and classes. Here, we will give most of those files only a brief introduction:
+Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件：
 
-- `networkmorphism_tuner.py` is a tuner which uses network morphism techniques.
+- `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
-- `bayesian.py` is a Bayesian method to estimate the metric of unseen model based on the models we have already searched.
+- `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
-- `graph.py` 是元图数据结构。 The class Graph represents the neural architecture graph of a model. 
+- `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
   - Graph 从模型中抽取神经网络。
-  - Each node in the graph is an intermediate tensor between layers.
+  - 图中的每个节点都是层之间的中间张量。
   - 在图中，边表示层。
   - 注意，多条边可能会表示同一层。
 
-- `graph_transformer.py` includes some graph transformers which widen, deepen, or add skip-connections to the graph.
+- `graph_transformer.py` 包含了一些图转换，包括变宽，变深，或在图中增加跳跃连接。
 
 - `layers.py` 包括模型中用到的所有层。
 
-- `layer_transformer.py` includes some layer transformers which widen, deepen, or add skip-connections to the layer.
-- `nn.py` includes the class which generates the initial network.
+- `layer_transformer.py` 包含了一些层转换，包括变宽，变深，或在层中增加跳跃连接。
+- `nn.py` 包括生成初始网络的类。
 - `metric.py` 包括了一些指标类，如 Accuracy 和 MSE。
-- `utils.py` is the example search network architectures for the `cifar10` dataset, using Keras.
+- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的示例。
 
 ## 4. 网络表示的 JSON 示例
 
-这是定义的中间表示 JSON 示例，在架构搜索过程中会从 Tuner 传到 Trial。 Users can call the "json\_to\_graph()" function in the trial code to build a PyTorch or Keras model from this JSON file.
+这是定义的中间表示 JSON 示例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 Trial 代码中的 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```json
 {
@@ -216,9 +216,9 @@ The tuner has a lot of different files, functions, and classes. Here, we will gi
  }
 ```
 
-You can consider the model to be a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). The definition of each model is a JSON object where:
+可将模型视为[有向无环图](https://en.wikipedia.org/wiki/Directed_acyclic_graph)。 每个模型的定义都是一个 JSON 对象：
 
-- `input_shape` is a list of integers which do not include the batch axis.
+- `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
 - `operation_history` 是保存了所有网络形态操作的列表。
 - `layer_id_to_input_node_ids` is a dictionary mapping from layer identifiers to their input nodes identifiers.
