@@ -13,7 +13,7 @@ NNI Compressor 中的 Pruner
 * [具有激活等级的 Filter Pruners](#activationrankfilterpruner)
     * [APoZ Rank Pruner](#activationapozrankfilterpruner)
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
-* [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
+* [具有梯度等级的 Filter Pruners](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
 
 ## Level Pruner
@@ -276,7 +276,7 @@ pruner.compress()
 - **op_types:** 在 L2Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
 ## ActivationRankFilterPruner
-ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
+ActivationRankFilterPruner 是一系列的 Pruner，从卷积层激活的输出，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### ActivationAPoZRankFilterPruner
 
@@ -336,23 +336,23 @@ pruner.compress()
 #### ActivationMeanRankFilterPruner 的用户配置
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
+- **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
 
 
 ## GradientRankFilterPruner
 
-GradientRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the gradients of convolution layers to achieve a preset level of network sparsity.
+GradientRankFilterPruner 是一系列的 Pruner，在卷积层梯度上，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### TaylorFOWeightFilterPruner
 
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the first order taylor expansion on weights. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+其实现为一次性 Pruner，会根据权重的一阶泰勒展开式来对卷积层进行剪枝。 过滤器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
 >
 
 ![](../../img/importance_estimation_sum.png)
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import TaylorFOWeightFilterPruner
@@ -364,12 +364,12 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer)
 pruner.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for GradientWeightSumFilterPruner
+#### GradientWeightSumFilterPruner 的用户配置
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 当前 TaylorFOWeightFilterPruner 中仅支持 Conv2d。
 
 
 
