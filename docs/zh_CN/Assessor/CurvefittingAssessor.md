@@ -2,9 +2,9 @@
 
 ## 1. 介绍
 
-The Curve Fitting Assessor is an LPA (learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of the final epoch's performance is worse than the best final performance in the trial history.
+Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
 
-In this algorithm, we use 12 curves to fit the learning curve. The set of parametric curve models are chosen from this [reference paper](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf). The learning curves' shape coincides with our prior knowledge about the form of learning curves: They are typically increasing, saturating functions.
+此算法中采用了 12 种曲线来拟合学习曲线。 这组参数曲线模型来自于[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
 ![](../../img/curvefitting_learning_curve.PNG)
 
@@ -12,21 +12,21 @@ In this algorithm, we use 12 curves to fit the learning curve. The set of parame
 
 ![](../../img/curvefitting_f_comb.gif)
 
-with the new combined parameter vector
+合并后的新参数向量
 
 ![](../../img/curvefitting_expression_xi.gif)
 
-Assuming additive Gaussian noise and the noise parameter being initialized to its maximum likelihood estimate.
+假设增加一个高斯噪声，且噪声参数初始化为最大似然估计。
 
-We determine the maximum probability value of the new combined parameter vector by learning the historical data. We use such a value to predict future trial performance and stop the inadequate experiments to save computing resources.
+通过学习历史数据来确定新的组合参数向量的最大概率值。 用这样的方法来预测后面的 Trial 性能，并停止不好的 Trial 来节省计算资源。
 
-Concretely, this algorithm goes through three stages of learning, predicting, and assessing.
+具体来说，该算法有学习、预测和评估三个阶段。
 
-* 步骤 1：学习。 We will learn about the trial history of the current trial and determine the \xi at the Bayesian angle. First of all, We fit each curve using the least-squares method, implemented by `fit_theta`. After we obtained the parameters, we filter the curve and remove the outliers, implemented by `filter_curve`. Finally, we use the MCMC sampling method. implemented by `mcmc_sampling`, to adjust the weight of each curve. Up to now, we have determined all the parameters in \xi.
+* 步骤 1：学习。 从当前 Trial 的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用由 `fit_theta` 实现的最小二乘法。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法。 由 `mcmc_sampling` 实现，来调整每条曲线的权重。 至此，确定了 \xi 中的所有参数。
 
-* 步骤 2：预测。 It calculates the expected final result accuracy, implemented by `f_comb`, at the target position (i.e., the total number of epochs) by \xi and the formula of the combined model.
+* 步骤 2：预测。 用 \xi 和混合模型公式，由 `f_comb` 实现了，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度。
 
-* Step3: If the fitting result doesn't converge, the predicted value will be `None`. In this case, we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value from the `predict()` function. If this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return `AssessResult.Bad`
+* 步骤 3：如果拟合结果不收敛，则预测值将为 `None`。 在这种情况下，会返回 `AssessResult.Good/code> 来请求进一步的精度和预测信息。 此外，将从 <code>predict()` 函数获得正确值。 如果该值大于历史最好结果 * `THRESHOLD`（默认为 0.95），则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
 
 下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
@@ -61,11 +61,11 @@ Concretely, this algorithm goes through three stages of learning, predicting, an
 
 ## 3. 文件结构
 
-The assessor has a lot of different files, functions, and classes. Here we briefly describe a few of them.
+Assessor 有大量的文件、函数和类。 在这里，会简要描述其中一部分。
 
-* `curvefunctions.py` includes all the function expressions and default parameters.
-* `modelfactory.py` includes learning and predicting; the corresponding calculation part is also implemented here.
-* `curvefitting_assessor.py` is the assessor which receives the trial history and assess whether to early stop the trial.
+* `curvefunctions.py` 包含了所有函数表达式和默认参数。
+* `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。
+* `curvefitting_assessor.py` 是接收 Trial 历史数据并评估是否需要提前终止的 Assessor。
 
 ## 4. TODO
 
