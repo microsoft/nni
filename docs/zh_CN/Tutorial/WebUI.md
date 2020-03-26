@@ -67,7 +67,7 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 ![](../../img/webui-img/detail-local.png)
 
-* "Add column" 按钮可选择在表格中显示的列。 If you run an experiment whose final result is a dict, you can see other keys in the table. 可选择 "Intermediate count" 列来查看 Trial 进度。
+* "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 可选择 "Intermediate count" 列来查看 Trial 进度。
 
 ![](../../img/webui-img/addColumn.png)
 
@@ -79,15 +79,15 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 ![](../../img/webui-img/search-trial.png)
 
-* You can use the button named "Copy as python" to copy the trial's parameters.
+* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
 
 ![](../../img/webui-img/copyParameter.png)
 
-* If you run on the OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
 ![](../../img/webui-img/detail-pai.png)
 
-* Intermediate Result Graph: you can see the default and other keys in this graph by clicking the operation column button.
+* 中间结果图：可在此图中通过点击 operation 中的按钮来查看默认和其它键值。
 
 ![](../../img/webui-img/intermediate-btn.png) ![](../../img/webui-img/intermediate.png)
 
