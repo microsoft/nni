@@ -384,18 +384,18 @@ advisor:
 
 **建议场景**
 
-作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [详细说明](./GPTuner.md)
+作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 然后，由于需要反转 Gram 矩阵，GP Tuner 的计算复杂度以 *O(N^3)* 的速度增长，因此不适合于需要大量 Trial 的情形。 [详细说明](./GPTuner.md)
 
 **classArgs 要求：**
 
 * **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The utility function (acquisition function). 'ei', 'ucb', and 'poi' correspond to 'Expected Improvement', 'Upper Confidence Bound', and 'Probability of Improvement', respectively. 
-* **kappa** (*float, optional, default = 5*) - Used by the 'ucb' utility function. The bigger `kappa` is, the more exploratory the tuner will be.
-* **xi** (*float, optional, default = 0*) - Used by the 'ei' and 'poi' utility functions. The bigger `xi` is, the more exploratory the tuner will be.
-* **nu** (*float, optional, default = 2.5*) - Used to specify the Matern kernel. nu 越小，近似函数的平滑度越低。
-* **alpha** (*float, optional, default = 1e-6*) - Used to specify the Gaussian Process Regressor. Larger values correspond to an increased noise level in the observations.
-* **cold_start_num** (*int, optional, default = 10*) - Number of random explorations to perform before the Gaussian Process. 随机探索可帮助提高探索空间的广泛性。
-* **selection_num_warm_up** (*int, optional, default = 1e5*) - Number of random points to evaluate when getting the point which maximizes the acquisition function.
+* **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。 
+* **kappa** (*float, 可选, 默认值为 5*) - 用于 'ucb' 函数。 `kappa` 越大， Tuner 的探索性越强。
+* **xi** (*float, 可选, 默认为 0*) - 用于 'ei' 和 'poi' 工具函数。 `xi` 越大， Tuner 的探索性越强。
+* **nu** (*float, 可选, 默认为 2.5*) - 用于指定 Matern 核。 nu 越小，近似函数的平滑度越低。
+* **alpha** (*float, 可选, 默认值为 1e-6*) - 用于高斯过程回归器。 值越大，表示观察中的噪声水平越高。
+* **cold_start_num** (*int, 可选, 默认值为 10*) - 在高斯过程前执行随机探索的数量。 随机探索可帮助提高探索空间的广泛性。
+* **selection_num_warm_up** (*int, 可选, 默认为 1e5*) - 用于获得最大采集函数而评估的随机点数量。
 * **selection_num_starting_points** (*int, 可选, 默认为 250*) - 预热后，从随机七十点运行 L-BFGS-B 的次数。
 
 **配置示例：**
@@ -422,20 +422,20 @@ tuner:
 
 > 内置 Tuner 名称：**PPOTuner**
 
-Note that the only acceptable types within the search space is `mutable_layer`. `optional_input_size` 只能是 0, 1, 或 [0, 1]。
+搜索空间类型仅支持 `mutable_layer`。 `optional_input_size` 只能是 0, 1, 或 [0, 1]。
 
 **建议场景**
 
-PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [查看详细信息](./PPOTuner.md)
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 PPOTuner 可用于使用 NNI NAS 接口进行的神经网络结构搜索。 一般来说，尽管 PPO 算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 当有大量可用的计算资源时，才建议使用此 Tuner。 可以在简单的任务上尝试，如 [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) 示例。 [查看详细信息](./PPOTuner.md)
 
 **classArgs 要求：**
 
 * **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trials_per_update` 设为 `trialConcurrency` 的倍数，以提高 Trial 的并发效率。
 * **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
-* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 Note that trials_per_update must be divisible by minibatch_size.
+* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
 * **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
-* **lr** (*float, optional, default = 3e-4*) - Learning rate of the model (lstm network); constant.
+* **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
 * **vf_coef** (*float, 可选, 默认为 0.5*) - Value function loss coefficient in the optimization objective.
 * **max_grad_norm** (*float, 可选, 默认为 0.5*) - Gradient norm clipping coefficient.
 * **gamma** (*float, 可选, 默认为 0.99*) - Discounting factor.
