@@ -97,8 +97,6 @@ class ModelSpeedup:
         self.g_nodes = list()
         self.global_count = 0
         self.name_to_gnode, self.input_to_gnode, self.output_to_gnode = self._build_graph()
-        #for key in self.name_to_gnode:
-        #    print(key)
 
     def _build_index_for_gnodes(self, g_nodes):
         """
@@ -124,7 +122,6 @@ class ModelSpeedup:
         input_to_gnode = dict()
         output_to_gnode = dict()
         for node in g_nodes:
-            #print('g_node name: ', node.name)
             name_to_gnode[node.name] = node
             for _input in node.inputs:
                 if _input in input_to_gnode:
@@ -265,7 +262,7 @@ class ModelSpeedup:
                 for key in node.childs:
                     traverse_tree(node.childs[key], sn)
         traverse_tree(root, '')
-        print('leaf_nodes: ', leaf_nodes)
+        #print('leaf_nodes: ', leaf_nodes)
         return leaf_nodes
 
     def _build_graph(self):
@@ -288,7 +285,7 @@ class ModelSpeedup:
         """
         graph = self.trace_graph.graph
         # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
-        _logger.info(graph)
+        _logger.debug(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
         # build input mapping, from input debugName to its node
@@ -520,7 +517,6 @@ class ModelSpeedup:
             _logger.debug("replace %s, in %s type, with op_type %s",
                           module_name, g_node.type, g_node.op_type)
             if g_node.type == 'module':
-                print('module_name: ', module_name)
                 super_module, leaf_module = get_module_by_name(self.bound_model, module_name)
                 m_type = g_node.op_type
                 if not m_type in replace_module:
