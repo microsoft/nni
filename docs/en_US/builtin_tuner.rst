@@ -3,7 +3,7 @@ Builtin-Tuners
 
 NNI provides an easy way to adopt an approach to set up parameter tuning algorithms, we call them **Tuner**.
 
-Tuner receives metrics from `Trial` to evaluate the performance of a specific parameters/architecture configures. And tuner sends next hyper-parameter or architecture configure to Trial.
+Tuner receives metrics from `Trial` to evaluate the performance of a specific parameters/architecture configuration. Tuner sends the next hyper-parameter or architecture configuration to Trial.
 
 
 ..  toctree::

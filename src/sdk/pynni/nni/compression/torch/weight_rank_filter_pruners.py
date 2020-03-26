@@ -3,6 +3,8 @@
 
 import logging
 import torch
+from schema import And, Optional
+from .utils import CompressorSchema
 from .compressor import Pruner
 
 __all__ = ['L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
@@ -31,6 +33,24 @@ class WeightRankFilterPruner(Pruner):
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
 
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+       """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): ['Conv2d'],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
+
     def get_mask(self, base_mask, weight, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
@@ -40,10 +60,8 @@ class WeightRankFilterPruner(Pruner):
         Filters with the smallest importance criterion of the kernel weights are masked.
         Parameters
         ----------
-        layer : LayerInfo
-            the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+        wrapper : Module
+            the module to instrument the compression operation
         Returns
         -------
         dict
