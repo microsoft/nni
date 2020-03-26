@@ -71,7 +71,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
 ![概述](../../img/webui_overview_page.png)
 

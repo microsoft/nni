@@ -100,24 +100,24 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
           <b>启发式搜索</b>
           <ul>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>  
+            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
           </ul>
           <b>贝叶斯优化</b>
             <ul>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>  
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
               <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li> 
+            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a> </li>
-            </ul>  
+            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
+            </ul>
           <b>基于强化学习</b>
           <ul>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a> </li>
           </ul>
         </ul>
           <a href="docs/zh_CN/NAS/Overview.md">神经网络架构搜索</a>
-          <ul>                        
+          <ul>
             <ul>
               <li><a href="docs/zh_CN/NAS/ENAS.md">ENAS</a></li>
               <li><a href="docs/zh_CN/NAS/DARTS.md">DARTS</a></li>
@@ -126,7 +126,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/zh_CN/NAS/Proxylessnas.md">ProxylessNAS</a></li>
               <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
-            </ul>    
+            </ul>
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
           <ul>
@@ -150,7 +150,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
           <a href="docs/zh_CN/Assessor/BuiltinAssessor.md">提前终止算法</a>
           <ul>
           <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>   
+          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting（曲线拟合）</a></li>
           </ul>
       </td>
       <td>
@@ -285,8 +285,8 @@ You can use these commands to get more information about the experiment
 
 ## **文档**
 
-* 要了解 NNI，请阅读 [NNI 概述](https://nni.readthedocs.io/zh/latest/Overview.html)。 
-* 要熟悉如何使用 NNI，请阅读[文档](https://nni.readthedocs.io/zh/latest/index.html)。 
+* 要了解 NNI，请阅读 [NNI 概述](https://nni.readthedocs.io/zh/latest/Overview.html)。
+* 要熟悉如何使用 NNI，请阅读[文档](https://nni.readthedocs.io/zh/latest/index.html)。
 * 要安装并使用 NNI，参考[安装指南](https://nni.readthedocs.io/zh/latest/installation.html)。
 
 ## **贡献**
@@ -312,15 +312,13 @@ You can use these commands to get more information about the experiment
 
 经作者许可的一些 NNI 用法示例和相关文档。
 
-* ### **外部代码库**
-   
+* ### **外部代码库** ### 
    * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
-   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md) 
-   * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md) 
+   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md)
+   * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md)
    * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
-* ### **相关文章**
-   
+* ### **相关文章** ### 
    * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparision.md)
    * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparision.md)
    * [并行化顺序算法：TPE](docs/zh_CN/CommunitySharings/ParallelizingTpeSearch.md)

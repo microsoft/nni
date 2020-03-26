@@ -8,11 +8,11 @@
 
 ![](../../img/nas_abstract_illustration.png)
 
-Modern Neural Architecture Search (NAS) methods usually incorporate [three dimensions][1]: search space, search strategy, and performance estimation strategy. Search space often contains a limited neural network architectures to explore, while search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, search strategy should find the best architecture in the search space and report it to users. After users obtain such "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
+Modern Neural Architecture Search (NAS) methods usually incorporate [three dimensions][1]: search space, search strategy, and performance estimation strategy. Search space often contains a limited number of neural network architectures to explore, while the search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, the search strategy should find the best architecture in the search space and report it to users. After users obtain the "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
 
 ## Implement a Search Space
 
-Assuming now we've got a baseline model, what should we do to be empowered with NAS? Take [MNIST on PyTorch](https://github.com/pytorch/examples/blob/master/mnist/main.py) as an example, the code might look like this:
+Assuming we've got a baseline model, what should we do to be empowered with NAS? Take [MNIST on PyTorch](https://github.com/pytorch/examples/blob/master/mnist/main.py) as an example, the code might look like this:
 
 ```python
 from nni.nas.pytorch import mutables
@@ -37,9 +37,9 @@ class Net(nn.Module):
         return output
 ```
 
-The example above adds an option of choosing conv5x5 at conv1. The modification is as simple as declaring a `LayerChoice` with original conv3x3 and a new conv5x5 as its parameter. That's it! You don't have to modify the forward function in anyway. You can imagine conv1 as any another module without NAS.
+The example above adds an option of choosing conv5x5 at conv1. The modification is as simple as declaring a `LayerChoice` with the original conv3x3 and a new conv5x5 as its parameter. That's it! You don't have to modify the forward function in any way. You can imagine conv1 as any other module without NAS.
 
-So how about the possibilities of connections? This can be done by `InputChoice`. To allow for a skipconnection on an MNIST example, we add another layer called conv3. In the following example, a possible connection from conv2 is added to the output of conv3.
+So how about the possibilities of connections? This can be done using `InputChoice`. To allow for a skip connection on the MNIST example, we add another layer called conv3. In the following example, a possible connection from conv2 is added to the output of conv3.
 
 ```python
 from nni.nas.pytorch import mutables
@@ -67,21 +67,21 @@ class Net(nn.Module):
         return output
 ```
 
-Input choice can be thought of as a callable module that receives a list of tensors and output the concatenation/sum/mean of some of them (sum by default), or `None` if none is selected. Like layer choices, input choices should be **initialized in `__init__` and called in `forward`**. We will see later that this is to allow search algorithms to identify these choices, and do necessary preparation.
+Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or `None` if none is selected. Like layer choices, input choices should be **initialized in `__init__` and called in `forward`**. We will see later that this is to allow search algorithms to identify these choices and do necessary preparations.
 
-`LayerChoice` and `InputChoice` are both **mutables**. Mutable means "changeable". As opposed to traditional deep learning layers/modules which have fixed operation type once defined, models with mutables are essentially a series of possible models.
+`LayerChoice` and `InputChoice` are both **mutables**. Mutable means "changeable". As opposed to traditional deep learning layers/modules which have fixed operation types once defined, models with mutable are essentially a series of possible models.
 
-Users can specify a **key** for each mutable. By default NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice` with the same candidate operations, and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice, and will be used in dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea. For advanced usage on mutables, see [Mutables](./NasReference.md).
+Users can specify a **key** for each mutable. By default, NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two `LayerChoice`s with the same candidate operations and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice and will be used in the dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea. For advanced usage on mutables, see [Mutables](./NasReference.md).
 
 ## Use a Search Algorithm
 
-Different in how the search space is explored and trials are spawned, there are at least two different ways users can do search. One runs NAS distributedly, which can be as naive as enumerating all the architectures and training each one from scratch, or leveraging more advanced technique, such as [SMASH][8], [ENAS][2], [DARTS][1], [FBNet][3], [ProxylessNAS][4], [SPOS][5], [Single-Path NAS][6],  [Understanding One-shot][7] and [GDAS][9]. Since training many different architectures are known to be expensive, another family of methods, called one-shot NAS, builds a supernet containing every candidate in the search space as its subnetwork, and in each step a subnetwork or combination of several subnetworks is trained.
+Aside from using a search space, there are at least two other ways users can do search. One runs NAS distributedly, which can be as naive as enumerating all the architectures and training each one from scratch, or can involve leveraging more advanced technique, such as [SMASH][8], [ENAS][2], [DARTS][1], [FBNet][3], [ProxylessNAS][4], [SPOS][5], [Single-Path NAS][6],  [Understanding One-shot][7] and [GDAS][9]. Since training many different architectures is known to be expensive, another family of methods, called one-shot NAS, builds a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
 
-Currently, several one-shot NAS methods have been supported on NNI. For example, `DartsTrainer` which uses SGD to train architecture weights and model weights iteratively, `ENASTrainer` which [uses a controller to train the model][2]. New and more efficient NAS trainers keep emerging in research community.
+Currently, several one-shot NAS methods are supported on NNI. For example, `DartsTrainer`, which uses SGD to train architecture weights and model weights iteratively, and `ENASTrainer`, which [uses a controller to train the model][2]. New and more efficient NAS trainers keep emerging in research community and some will be implemented in future releases of NNI.
 
 ### One-Shot NAS
 
-Each one-shot NAS implements a trainer, which users can find detailed usages in the description of each algorithm. Here is a simple example, demonstrating how users can use `EnasTrainer`.
+Each one-shot NAS algorithm implements a trainer, for which users can find usage details in the description of each algorithm. Here is a simple example, demonstrating how users can use `EnasTrainer`.
 
 ```python
 # this is exactly same as traditional model training
@@ -117,15 +117,15 @@ trainer.train()  # training
 trainer.export(file="model_dir/final_architecture.json")  # export the final architecture to file
 ```
 
-Users can directly run their training file by `python3 train.py`, without `nnictl`. After training, users could export the best one of the found models through `trainer.export()`.
+Users can directly run their training file through `python3 train.py` without `nnictl`. After training, users can export the best one of the found models through `trainer.export()`.
 
-Normally, the trainer exposes a few arguments that you can customize, for example, loss function, metrics function, optimizer, and datasets. These should satisfy the needs from most usages, and we do our best to make sure our built-in trainers work on as many models, tasks and datasets as possible. But there is no guarantee. For example, some trainers have assumption that the task has to be a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might very soon need to [customize your trainer](#extend-the-ability-of-one-shot-trainers).
+Normally, the trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usages needs and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible. But there is no guarantee. For example, some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](#extend-the-ability-of-one-shot-trainers).
 
 ### Distributed NAS
 
-Neural architecture search is originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits in NNI hyper-parameter tuning framework, where tuner generates child model for next trial and trials run in training service.
+Neural architecture search was originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits within the NNI hyper-parameter tuning framework, where Tuner generates child models for the next trial and trials run in the training service.
 
-To use this mode, there is no need to change the search space expressed with NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
+To use this mode, there is no need to change the search space expressed with the NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
 
 ```python
 model = Net()
@@ -137,17 +137,17 @@ acc = test(model)  # test the trained model
 nni.report_final_result(acc)  # report the performance of the chosen architecture
 ```
 
-The search space should be generated and sent to tuner. As with NNI NAS API the search space is embedded in user code, users could use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file. Then, put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
+The search space should be generated and sent to Tuner. As with the NNI NAS API, the search space is embedded in the user code. Users can use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate the search space file. Then put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
 
-You could use [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search space.
+You can use the [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search spaces.
 
-We support standalone mode for easy debugging, where you could directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
+We support a standalone mode for easy debugging, where you can directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
 
 A complete example can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
 
 ### Retrain with Exported Architecture
 
-After the searching phase, it's time to train the architecture found. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that searching model and retraining model are usual very similar, and therefore you can construct your final model with the exact model code. For example
+After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. For example
 
 ```python
 model = Net()
@@ -163,9 +163,9 @@ The JSON is simply a mapping from mutable keys to one-hot or multi-hot represent
 }
 ```
 
-After applying, the model is then fixed and ready for a final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during search phase and start retrain from there. However, this is also a model with redundant parameters, which may cause problems when trying to count the number of parameters in model. For deeper reasons and possible workaround, see [Trainers](./NasReference.md).
+After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. However, this is also a model with redundant parameters and this may cause problems when trying to count the number of parameters in the model. For deeper reasons and possible workarounds, see [Trainers](./NasReference.md).
 
-Also refer to [DARTS](./DARTS.md) for example code of retraining.
+Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
 
 [1]: https://arxiv.org/abs/1808.05377
 [2]: https://arxiv.org/abs/1802.03268

@@ -2,7 +2,7 @@
 
 ## 安装
 
-当前支持 Linux，macOS 和 Windows，在 Ubuntu 16.04 或更高版本，macOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+目前支持 Linux、macOS 和 Windows。 Ubuntu 16.04 或更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 **Linux 和 macOS**
 
@@ -19,12 +19,12 @@
 注意：
 
 * 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
+* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
 * 有关 NNI 的`系统要求`，参考[在 Linux 和 macOS 上安装](InstallationLinux.md) 或 [Windows](InstallationWin.md)。
 
 ## MNIST 上的 "Hello World"
 
-NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 下面会展示如何使用 NNI 来找到最佳超参组合。
+NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
 
 这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
 
@@ -67,7 +67,7 @@ NNI 用来帮助超参调优。它的流程如下：
 7: return 最好的实验结果
 ```
 
-如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
+如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
 
 **启动 Experiment 的三个步骤**
 
@@ -114,7 +114,7 @@ NNI 用来帮助超参调优。它的流程如下：
 
 *实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
-**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`，以及`其它信息`，如调优算法，最大尝试次数，最大运行时间等等。
+**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`。 它还提供其他信息，例如调整算法，最大 Trial 运行次数和最大持续时间的参数。
 
 ```yaml
 authorName: default
@@ -135,7 +135,7 @@ trial:
   gpuNum: 0
 ```
 
-注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
+注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**。
 
 *实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
 
@@ -190,7 +190,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-如果根据上述步骤准备好了相应 `Trial`, `搜索空间` 和 `配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
+如果根据上述步骤准备好了相应 `Trial`, `搜索空间`和`配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
 
 ## Web 界面
 
@@ -200,17 +200,17 @@ You can use these commands to get more information about the experiment
 Web 地址为：[IP 地址]:8080
 ```
 
-在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考 [FAQ](FAQ.md)。
+在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考[常见问题](FAQ.md)。
 
 ### 查看概要页面
 
-点击标签 "Overview"。
+点击 "Overview" 标签。
 
-Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来`下载信息和参数`。 可以在运行中或结束后，随时下载 Experiment 的结果。
+Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来下载信息和参数。 可以在 Experiment 运行时随时下载结果，也可以等到执行结束。
 
 ![](../../img/QuickStart1.png)
 
-前 10 个 Trial 结果也会列在 Overview 页面中，可以在 "Trials Detail" 部分浏览所有的 Trial。
+前 10 个 Trial 将列在 Overview 页上。 可以在 "Trials Detail" 页面上浏览所有 Trial。
 
 ![](../../img/QuickStart2.png)
 
@@ -233,10 +233,10 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 下面是所有 Trial 的状态。 包括：
 
-* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
 * 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。
-* Kill: 可终止正在运行的任务。
-* 支持搜索某个特定的 Trial。
+* Kill: 可结束在 `Running` 状态的任务。
+* Support: 用于搜索某个指定的 Trial。
 
 ![](../../img/QuickStart6.png)
 

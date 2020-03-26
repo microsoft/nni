@@ -2,9 +2,9 @@
 
 ## 1. 介绍
 
-Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
+Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
 
-此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
+此算法中采用了 12 种曲线来拟合学习曲线。 这组参数曲线模型来自于[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
 ![](../../img/curvefitting_learning_curve.PNG)
 
@@ -12,7 +12,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 ![](../../img/curvefitting_f_comb.gif)
 
-合并后的参数向量
+合并后的新参数向量
 
 ![](../../img/curvefitting_expression_xi.gif)
 
@@ -22,11 +22,11 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 具体来说，该算法有学习、预测和评估三个阶段。
 
-* 步骤 1：学习。 从当前 Trial 的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
+* 步骤 1：学习。 从当前 Trial 的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用由 `fit_theta` 实现的最小二乘法。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法。 由 `mcmc_sampling` 实现，来调整每条曲线的权重。 至此，确定了 \xi 中的所有参数。
 
-* 步骤 2：预测。 用 \xi 和混合模型公式，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度（由 `f_comb` 实现）。
+* 步骤 2：预测。 用 \xi 和混合模型公式，由 `f_comb` 实现了，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度。
 
-* 步骤 3：如果拟合结果没有收敛，预测结果会是 `None`，并返回 `AssessResult.Good`，待下次有了更多精确信息后再次预测。 此外，会通过 `predict()` 函数获得正数。如果该值大于 __历史最好结果__ * `THRESHOLD`(默认为 0.95)，则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
+* 步骤 3：如果拟合结果不收敛，则预测值将为 `None`。 在这种情况下，会返回 `AssessResult.Good/code> 来请求进一步的精度和预测信息。 此外，将从 <code>predict()` 函数获得正确值。 如果该值大于历史最好结果 * `THRESHOLD`（默认为 0.95），则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
 
 下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
@@ -61,7 +61,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 ## 3. 文件结构
 
-Assessor 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+Assessor 有大量的文件、函数和类。 在这里，会简要描述其中一部分。
 
 * `curvefunctions.py` 包含了所有函数表达式和默认参数。
 * `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。

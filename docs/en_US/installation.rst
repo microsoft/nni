@@ -2,7 +2,7 @@
 Installation
 ############
 
-Currently we support installation on Linux, Mac and Windows. And also allow you to use docker.
+Currently we support installation on Linux, Mac and Windows. We also allow you to use docker.
 
 ..  toctree::
     :maxdepth: 2

@@ -10,7 +10,7 @@ BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分
 
 ### HB（Hyperband）
 
-按照 Hyperband 的方式来选择每次跑的参数个数与分配多少资源（budget），并继续使用“连续减半（SuccessiveHalving）”策略，更多有关Hyperband算法的细节，请参考[NNI 中的 Hyperband](HyperbandAdvisor.md) 和 [Hyperband 的参考论文](https://arxiv.org/abs/1603.06560)。 下面的伪代码描述了这个过程。
+按照 Hyperband 的方式来选择资源（budget），并继续使用 "连续减半（SuccessiveHalving）" 策略。 更多细节，参考 [NNI 中的 Hyperband](HyperbandAdvisor.md) 和 [Hyperband 的参考论文](https://arxiv.org/abs/1603.06560)。 下面的伪代码描述了这个过程。
 
 ![](../../img/bohb_1.png)
 
@@ -36,13 +36,13 @@ BOHB 的 BO 与 TPE 非常相似, 它们的主要区别是: BOHB 中使用一个
 
 以上这张图展示了 BOHB 的工作流程。 将每次训练的最大资源配置（max_budget）设为 9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为 3，其他的超参数为默认值。 那么在这个例子中，s_max 计算的值为 2, 所以会持续地进行 {s=2, s=1, s=0, s=2, s=1, s=0, ...} 的循环。 在“逐次减半”（SuccessiveHalving）算法的每一个阶段，即图中橙色框，都将选取表现最好的前 1/eta 个参数，并在赋予更多计算资源（budget）的情况下运行。不断重复“逐次减半” （SuccessiveHalving）过程，直到这个循环结束。 同时，收集这些试验的超参数组合，使用了计算资源（budget）和其表现（metrics），使用这些数据来建立一个以使用了多少计算资源（budget）为维度的多维核密度估计（KDE）模型。 这个多维的核密度估计（KDE）模型将用于指导下一个循环的参数选择。
 
-有关如何使用多维的KDE模型来指导参数选择的采样规程，用以下伪代码来描述。
+有关如何使用多维的 KDE 模型来指导参数选择的采样规程，用以下伪代码来描述。
 
 ![](../../img/bohb_4.png)
 
 ## 3. 用法
 
-BOHB advisor 的使用依赖 [ConfigSpace](https://github.com/automl/ConfigSpace) 包，在第一次使用 BOHB 的时候，在命令行运行以下的指令来安装要求的 ConfigSpace 包。
+BOHB Advisor 需要 [ConfigSpace](https://github.com/automl/ConfigSpace) 包。 可以使用以下命令安装 ConfigSpace。
 
 ```bash
 nnictl package install --name=SMAC
@@ -66,27 +66,27 @@ advisor:
     min_bandwidth: 0.001
 ```
 
-**需要的参数**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **min_budget** (*整数, 可选项, 默认值为 1*) - 运行一个试验给予的最低计算资源（budget），这里的计算资源通常使用mini-batches 或者 epochs。 该参数必须为正数。
 * **max_budget** (*整数, 可选项, 默认值为 3*) - 运行一个试验给予的最大计算资源（budget），这里的计算资源通常使用 mini-batches 或者 epochs。 该参数必须大于“min_budget”。
 * **eta** (*整数, 可选项, 默认值为3*) - 在每次迭代中，执行完整的“连续减半”算法。 在这里，当一个使用相同计算资源的子集结束后，选择表现前 1/eta 好的参数，给予更高的优先级，进入下一轮比较（会获得更多计算资源）。 该参数必须大于等于 2。
-* **min_points_in_model**(*整数, 可选项, 默认值为None*): 建立核密度估计（KDE）要求的最小观察到的点。 默认值 None 表示 dim+1，当在该计算资源（budget）下试验过的参数已经大于等于`max{dim+1, min_points_in_model}` 时，BOHB 将会开始建立这个计算资源（budget）下对应的核密度估计（KDE）模型，然后用这个模型来指导参数的选取。 该参数必须为正数。（dim 指的是搜索空间中超参数的维度）
-* **top_n_percent**(*整数, 可选项, 默认值为15*): 认为观察点为好点的百分数(在 1 到 99 之间，默认值为 15)。 区分表现好的点与坏的点是为了建立树形核密度估计模型。 比如，如果观察到了100个点的表现情况，同时把 top_n_percent 设置为 15，那么表现最好的 15个点将会用于创建表现好的点的分布 "l(x)"，剩下的85个点将用于创建表现坏的点的分布 “g(x)”。
-* **num_samples** (*整数, 可选项, 默认值为64*): 用于优化 EI 值的采样个数（默认值为64）。 在这个例子中，将根据 l(x) 的分布采样“num_samples”（默认值为64）个点。若优化的目标为最大化指标，则会返回其中 l(x)/g(x) 的值最大的点作为下一个试验的参数。 否则，使用值最小的点。
+* **min_points_in_model**(*整数, 可选项, 默认值为None*): 建立核密度估计（KDE）要求的最小观察到的点。 默认值 None 表示 dim+1，当在该计算资源（budget）下试验过的参数已经大于等于`max{dim+1, min_points_in_model}` 时，BOHB 将会开始建立这个计算资源（budget）下对应的核密度估计（KDE）模型，然后用这个模型来指导参数的选取。 该参数必须为正数。 (dim 表示搜索空间中超参的数量)
+* **top_n_percent**(*整数, 可选, 默认值为 15*): 认为观察点为好点的百分数 (在 1 到 99 之间)。 区分表现好的点与坏的点是为了建立树形核密度估计模型。 例如，如果有 100 个观察到的 Trial，top_n_percent 为 15，则前 15% 的点将用于构建好点模型 "l(x)"。 其余 85% 的点将用于构建坏点模型 "g(x)"。
+* **num_samples** (*整数, 可选项, 默认值为64*): 用于优化 EI 值的采样个数（默认值为64）。 在这种情况下，将对 "num_samples" 点进行采样，并比较 l(x)/g(x) 的结果。 然后，如果 optimize_mode 是 `maximize`，就会返回其中 l(x)/g(x) 值最大的点作为下一个配置参数。 否则，使用值最小的点。
 * **random_fraction**(*浮点数, 可选项, 默认值为0.33*): 使用模型的先验（通常是均匀）来随机采样的比例。
-* **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议保留默认值。
-* **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议保留默认值。
+* **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议使用默认值。
+* **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议使用默认值。
 
-*目前 NNI 的浮点类型仅支持十进制表示，必须使用 0.333 来代替 1/3，0.001代替 1e-3。*
+*请注意，浮点类型当前仅支持十进制表示。 必须使用 0.333 而不是 1/3 ，0.001 而不是 1e-3。*
 
 ## 4. 文件结构
 
-Advisor 有大量的文件、函数和类。 文件内容的简单介绍：
+Advisor 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-* `bohb_advisor.py` BOHB类的定义, 包括与dispatcher进行交互的部分，以及控制新试验的生成，计算资源以及试验结果的处理。 基本包含了HB（Hyperband）的实现部分。
-* `config_generator.py` 包含了BO（贝叶斯优化）算法的实验部分。 内置函数 *get_config* 使用基于贝叶斯优化生成一个新的参数组合, 内置函数 *new_result* 接受新的结果并使用这些结果来更新贝叶斯优化模型。
+* `bohb_advisor.py` BOHB 类的定义, 包括与 Dispatcher 进行交互的部分，以及控制新 Trial 的生成，计算资源以及结果的处理。 还包含了 HB（Hyperband）的实现部分。
+* `config_generator.py` 包含了 BO（贝叶斯优化）算法的实现。 内置函数 *get_config* 使用基于贝叶斯优化生成一个新的参数组合，内置函数 *new_result* 接受新的结果并使用这些结果来更新贝叶斯优化模型。
 
 ## 5. 实验
 
@@ -94,8 +94,8 @@ Advisor 有大量的文件、函数和类。 文件内容的简单介绍：
 
 源码地址： [examples/trials/mnist-advisor](https://github.com/Microsoft/nni/tree/master/examples/trials/)
 
-使用BOHB这个调参算法，在CNN模型上跑MNIST数据集。 下面是实验结果：
+使用 BOHB 调参算法，在 CNN 模型上跑 MNIST 数据集。 下面是实验结果：
 
 ![](../../img/bohb_5.png)
 
-更多的实验结果可以在 [参考论文](https://arxiv.org/abs/1807.01774)中看到，们可以发现BOHB很好的利用了之前的试验结果，且在开发与探索中得到了一个很好的平衡。
+更多实验结果可以在[参考文献](https://arxiv.org/abs/1807.01774)中找到。 可以看到，BOHB 充分利用了以往的成果，在探索和挖掘方面有很好的平衡。
