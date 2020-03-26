@@ -194,7 +194,7 @@ class BuiltinTunersTestCase(TestCase):
         pass
 
     def test_pbt(self):
-        self.search_space_test_all(lambda: PBTTuner(all_checkpoint_dir="~/nni/checkpoint/test/"))
+        pass
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
