@@ -192,6 +192,9 @@ class BuiltinTunersTestCase(TestCase):
     def test_ppo(self):
         pass
 
+    def test_pbt(self):
+        self.search_space_test_all(lambda: PBTTuner())
+
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
         for file in file_list:
