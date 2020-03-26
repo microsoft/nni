@@ -74,3 +74,11 @@ def get_python_dir(sitepackages_path):
         return str(Path(sitepackages_path))
     else:
         return str(Path(sitepackages_path).parents[2])
+
+def check_tensorboard_version():
+    try:
+        import tensorboard
+        return tensorboard.__version__
+    except:
+        print_error('import tensorboard error!')
+        exit(1)
