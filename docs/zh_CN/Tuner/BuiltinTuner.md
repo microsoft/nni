@@ -1,8 +1,8 @@
 # 内置的超参调优 Tuner
 
-NNI provides state-of-the-art tuning algorithms as part of our built-in tuners and makes them easy to use. Below is the brief summary of NNI's current built-in tuners:
+NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an [article](../CommunitySharings/HpoComparision.md) comparing different Tuners on several problems.
+注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an [article](../CommunitySharings/HpoComparision.md) comparing different Tuners on several problems.
 
 Currently, we support the following algorithms:
 
