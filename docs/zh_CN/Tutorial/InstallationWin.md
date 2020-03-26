@@ -14,7 +14,7 @@
 
 ### 通过源代码安装 NNI
 
-  If you are interested in special or the latest code versions, you can install NNI through source code.
+  如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
 
   先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
 
@@ -70,7 +70,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. 查看[这里](../Tutorial/WebUI.md)的更多页面。
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
 ![概述](../../img/webui_overview_page.png)
 
@@ -94,25 +94,25 @@ You can use these commands to get more information about the experiment
 
 ### 安装 NNI 时出现 simplejson 错误
 
-Make sure a C++ 14.0 compiler is installed.
+确保安装了 C++ 14.0 编译器。
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
 ### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-This error is caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and failure to install SciPy. 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
 > ImportError: DLL load failed
 
 ### Web 界面上的 Trial 错误
 
 检查 Trial 日志文件来了解详情。
 
-If there is a stderr file, please check it. Two possible cases are:
+如果存在 stderr 文件，也需要查看其内容。 两种可能的情况是：
 
-* forgetting to change the trial command `python3` to `python` in each experiment YAML.
-* forgetting to install experiment dependencies such as TensorFlow, Keras and so on.
+* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
+* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
 ### 无法在 Windows 上使用 BOHB
-Make sure a C++ 14.0 compiler is installed when trying to run `nnictl package install --name=BOHB` to install the dependencies.
+确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
 
 ### Windows 上不支持的 Tuner
 SMAC is not supported currently; for the specific reason refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
