@@ -4,19 +4,19 @@
 
 点击标签 "Overview"。
 
-* On the overview tab, you can see the experiment trial profile/search space and the performance of top trials.
+* 在 Overview 标签上，可看到 Experiment Trial 的概况、搜索空间、以及最好的 Trial 结果。
 
 ![](../../img/webui-img/over1.png) ![](../../img/webui-img/over2.png)
 
-* If your experiment has many trials, you can change the refresh interval here.
+* 如果 Experiment 包含了较多 Trial，可改变刷新间隔。
 
 ![](../../img/webui-img/refresh-interval.png)
 
-* You can review and download the experiment results and nni-manager/dispatcher log files from the "View" button.
+* "View" 按钮支持查看并下载 Experiment 结果，以及 NNI Manager、Dispatcher 的日志文件。
 
 ![](../../img/webui-img/download.png)
 
-* You can click the exclamation point in the error box to see a log message if the experiment's status is an error.
+* 如果实验的状态为错误，可以单击错误框中的感叹号来查看日志消息。
 
 ![](../../img/webui-img/log-error.png) ![](../../img/webui-img/review-log.png)
 
@@ -49,13 +49,13 @@
 
 ## 查看 Trial 中间结果
 
-Click the tab "Intermediate Result" to see the line graph.
+单击 "Intermediate Result" 标签查看折线图。
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-The trial may have many intermediate results in the training process. 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
+Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-You may find that these trials will get better or worse at an intermediate result. This indicates that it is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding X-value at #Intermediate. Then input the range of metrics on this intermedia result. In the picture below, we choose the No. 4 intermediate result and set the range of metrics to 0.8-1.
+这样可以发现 Trial 在某个中间结果上会变得更好或更差。 This indicates that it is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding X-value at #Intermediate. Then input the range of metrics on this intermedia result. In the picture below, we choose the No. 4 intermediate result and set the range of metrics to 0.8-1.
 
 ![](../../img/webui-img/filter-intermediate.png)
 
