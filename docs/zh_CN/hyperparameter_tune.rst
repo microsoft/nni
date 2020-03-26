@@ -2,7 +2,7 @@
 自动（超参数）调优
 #############################
 
-Auto tuning is one of the key features provided by NNI; a main application scenario being
+自动调优是 NNI 提供的关键功能之一，主要应用场景是
 超参调优。 Tuning specifically applies to trial code. We provide a lot of popular
 自动调优算法（称为 Tuner ）和一些提前终止算法（称为 Assessor）。
 NNI supports running trials on various training platforms, for example, on a local machine,
