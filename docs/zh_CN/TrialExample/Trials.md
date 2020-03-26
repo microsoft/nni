@@ -1,8 +1,8 @@
 # 实现 NNI 的 Trial（尝试）代码
 
-A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) to a model.
+**Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-To define an NNI trial, you need to first define the set of parameters (i.e., search space) and then update the model. NNI provides two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). 参考[这里的](#more-examples)更多 Trial 示例。
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 示例。
 
 <a name="nni-api"></a>
 
@@ -21,9 +21,9 @@ To define an NNI trial, you need to first define the set of parameters (i.e., se
 }
 ```
 
-Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search spaces. Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
+参考 [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
-### Step 2 - Update model code
+### 第二步：更新模型代码
 
 * Import NNI
     
@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`metrics` can be any python object. If users use the NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, or 2) a dict object that has a key named `default` whose value is a number. These `metrics` are reported to [assessor](../Assessor/BuiltinAssessor.md). Often, `metrics` includes the periodically evaluated loss or accuracy.
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`包含了定期评估的损失值或精度。
 
 * 返回配置的最终性能
 
@@ -53,11 +53,11 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`metrics` can also be any python object. If users use the NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. These `metrics` are reported to [tuner](../Tuner/BuiltinTuner.md).
+`指标`可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
 
 ### 第三步：启用 NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of the SearchSpace file was defined in step 1:
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径，即第一步中定义的文件：
 
 ```yaml
 useAnnotation: false
@@ -72,24 +72,24 @@ searchSpacePath: /path/to/your/search_space.json
 
 ## NNI Annotation
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NNI annotations are simple, similar to comments. You don't have to make structural changes to your existing code. 只需要添加一些 NNI Annotation，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NN Annotation 很简单，类似于注释。 不必对现有代码进行结构更改。 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量
-* specify the range in which you want to tune the variables
-* annotate which variable you want to report as an intermediate result to `assessor`
+* 指定要在其中调整的变量的范围
+* 标记哪个变量需要作为中间结果范围给 `Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
 同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
 ### 第一步：在代码中加入 Annotation
 
-The following is a TensorFlow code snippet for NNI Annotation where the highlighted four lines are annotations that:
+下面是加入了 Annotation 的 TensorFlow 代码片段，高亮的 4 行 Annotation 用于：
 
 1. 调优 batch\_size 和 dropout\_rate
 2. 每执行 100 步返回 test\_acc
-3. lastly report test\_acc as the final result.
+3. 最后返回 test\_acc 作为最终结果。
 
-It's worth noting that, as these newly added codes are merely annotations, you can still run your code as usual in environments without NNI installed.
+值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -120,7 +120,7 @@ with tf.Session() as sess:
 
 **注意**：
 
-* `@nni.variable` will affect its following line which should be an assignment statement whose left-hand side must be the same as the keyword `name` in the `@nni.variable` statement.
+* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须与 `@nni.variable` 的关键字 `name` 相同。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
 Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpec.md)。
@@ -132,9 +132,9 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
-## Standalone mode for debugging
+## 用于调试的独立模式
 
-NNI supports a standalone mode for trial code to run without starting an NNI experiment. 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
 
 ```python
 ＃注意：请为 Trial 代码中的超参分配默认值
