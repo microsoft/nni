@@ -36,24 +36,24 @@
 
 ### 第三步：在 Docker 容器里运行 NNI
 
-If you start a Docker image using NNI's official image `msranni/nni`, you can directly start NNI experiments by using the `nnictl` command. Our official image has NNI's running environment and basic python and deep learning frameworks preinstalled.
+如果直接使用 NNI 的官方镜像 `msranni/nni` 来启动 Experiment，可以直接使用 `nnictl` 命令。 NNI 官方镜像有最基础的 Python 环境和深度学习框架。
 
-If you start your own Docker image, you may need to install the NNI package first; please refer to [NNI installation](InstallationLinux.md).
+如果使用自己的 Docker 镜像，需要首先[安装 NNI](InstallationLinux.md)。
 
-If you want to run NNI's official examples, you may need to clone the NNI repo in GitHub using
+如果要使用 NNI 的官方示例，可以通过以下 git 命令来克隆 NNI：
 
     git clone https://github.com/Microsoft/nni.git
     
 
-then you can enter `nni/examples/trials` to start an experiment.
+然后可以进入 `nni/examples/trials` 文件夹来启动 Experiment。
 
-After you prepare NNI's environment, you can start a new experiment using the `nnictl` command. [See here](QuickStart.md).
+准备好 NNI 的环境后，可使用 `nnictl` 命令开始新的 Experiment。 [参考这里](QuickStart.md)。
 
-## Using Docker on a remote platform
+## 在远程平台上运行 Docker
 
-NNI supports starting experiments in [remoteTrainingService](../TrainingService/RemoteMachineMode.md), and running trial jobs on remote machines. As Docker can start an independent Ubuntu system as an SSH server, a Docker container can be used as the remote machine in NNI's remote mode.
+NNI 支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动 Experiment，并在远程机器里运行 Trial。 因为 Docker 可以运行独立的 Ubuntu 系统和 SSH 服务，因此 Docker 容器可以作为远程平台来运行 NNI。
 
-### Step 1: Setting a Docker environment
+### 第一步：设置 Docker 环境
 
 You should install the Docker software on your remote machine first, please [refer to this](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
