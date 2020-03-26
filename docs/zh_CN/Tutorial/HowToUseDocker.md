@@ -14,7 +14,7 @@
 
 ### 第二步：启动 Docker 容器
 
-If you have installed the Docker package in your local machine, you can start a Docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
+如果已经在本地机器上安装了 Docker 程序，可以启动 Docker 容器来运行 NNI 示例。 You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
 
 For example, you could start a new Docker container from the following command:
 
