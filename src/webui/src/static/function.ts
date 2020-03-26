@@ -77,8 +77,10 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
     if (final) {
         showDefault = parseMetrics(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
-            showDefault = { default: showDefault };
-            return showDefault;
+            if(!isNaN(showDefault)){
+                showDefault = { default: showDefault };
+                return showDefault;
+            }
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
