@@ -1,11 +1,11 @@
 # 概述
 
-NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户设计并调优机器学习模型的神经网络架构，复杂系统的参数（如超参）等。 NNI has several appealing properties: ease-of-use, scalability, flexibility, and efficiency.
+NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户设计并调优机器学习模型的神经网络架构，复杂系统的参数（如超参）等。 NNI 的特性包括：易于使用，可扩展，灵活，高效。
 
-* **Ease-of-use**: NNI can be easily installed through python pip. 只需要在代码中添加几行，就可以利用 NNI 来调优参数。 You can use both the commandline tool and WebUI to work with your experiments.
-* **Scalability**: Tuning hyperparameters or the neural architecture often demands a large number of computational resources, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., OpenPAI, Kubernetes). 通过训练平台，可拥有同时运行数百个 Trial 的能力。
-* **灵活**：除了内置的算法，NNI 中还可以轻松集成自定义的超参调优算法，神经网络架构搜索算法，提前终止算法等等。 Users can also extend NNI with more training platforms, such as virtual machines, kubernetes service on the cloud. 此外，NNI 还可以连接到外部环境中的特殊应用和模型上。
-* **Efficiency**: We are intensively working on more efficient model tuning on both the system and algorithm level. For example, we leverage early feedback to speedup the tuning procedure.
+* **易于使用**：NNI 可通过 pip 安装。 只需要在代码中添加几行，就可以利用 NNI 来调优参数。 可使用命令行工具或 Web 界面来查看 Experiment。
+* **可扩展**：调优超参或网络结构通常需要大量的计算资源。NNI 在设计时就支持了多种不同的计算资源，如远程服务器组，训练平台（如：OpenPAI，Kubernetes），等等。 通过训练平台，可拥有同时运行数百个 Trial 的能力。
+* **灵活**：除了内置的算法，NNI 中还可以轻松集成自定义的超参调优算法，神经网络架构搜索算法，提前终止算法等等。 还可以将 NNI 连接到更多的训练平台上，如云中的虚拟机集群，Kubernetes 服务等等。 此外，NNI 还可以连接到外部环境中的特殊应用和模型上。
+* **高效**：NNI 在系统及算法级别上不断地进行优化。 例如：通过早期的反馈来加速调优过程。
 
 下图显示了 NNI 的体系结构。
 
@@ -15,15 +15,15 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 
 ## 主要概念
 
-* *Experiment*: One task of, for example, finding out the best hyperparameters of a model, finding out the best neural network architecture, etc. 它由 Trial 和自动机器学习算法所组成。
+* *Experiment（实验）*： 表示一次任务，用来寻找模型的最佳超参组合，或最好的神经网络架构等。 它由 Trial 和自动机器学习算法所组成。
 
-* *Search Space*: The feasible region for tuning the model. For example, the value range of each hyperparameter.
+* *搜索空间*：是模型调优的范围。 例如，超参的取值范围。
 
-* *Configuration*: An instance from the search space, that is, each hyperparameter has a specific value.
+* *Configuration（配置）*：配置是来自搜索空间的实例，每个超参都会有特定的值。
 
-* *Trial*: An individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific neural architecture, etc.). Trial 会基于提供的配置来运行。
+* *Trial*: 是一次独立的尝试，它会使用某组配置（例如，一组超参值，或者特定的神经网络架构）。 Trial 会基于提供的配置来运行。
 
-* *Tuner*: An AutoML algorithm, which generates a new configuration for the next try. 新的 Trial 会使用这组配置来运行。
+* *Tuner（调优器）*: Tuner 个自动机器学习算法，会为下一个 Trial 生成新的配置。 新的 Trial 会使用这组配置来运行。
 
 * *Assessor*: Analyze a trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
 
