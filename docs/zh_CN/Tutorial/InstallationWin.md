@@ -115,14 +115,14 @@ You can use these commands to get more information about the experiment
 确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
 
 ### Windows 上不支持的 Tuner
-SMAC is not supported currently; for the specific reason refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
+当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
 ### 将 Windows 服务器用作远程服务器
-Currently, you can't.
+目前不支持。
 
 注意：
 
-* If an error like `Segmentation fault` is encountered, please refer to the [FAQ](FAQ.md)
+* 如果遇到 `Segmentation fault` 的错误，请参阅[常见问题](FAQ.md)
 
 
 ## 更多
