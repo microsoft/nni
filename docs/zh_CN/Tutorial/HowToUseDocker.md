@@ -55,41 +55,41 @@ NNI 支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动 Ex
 
 ### 第一步：设置 Docker 环境
 
-You should install the Docker software on your remote machine first, please [refer to this](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+首先在远程机器上安装 Docker 工具，[参考这里](https://docs.docker.com/install/linux/docker-ce/ubuntu/)。
 
-To make sure your Docker container can be connected by NNI experiments, you should build your own Docker image to set an SSH server or use images with an SSH configuration. If you want to use a Docker container as an SSH server, you should configure the SSH password login or private key login; please [refer to this](https://docs.docker.com/engine/examples/running_ssh_service/).
+为保证 Docker 容器可以被 NNI Experiment 连接上，要在自己的 Docker 容器里安装 SSH 服务，或使用已经配置好 SSH 的映像。 如果要在 Docker 容器里使用 SSH 服务，需要配置 SSH 密码登录或者私钥登录，[参考这里](https://docs.docker.com/engine/examples/running_ssh_service/)。
 
 注意：
 
-    NNI's official image msranni/nni does not support SSH servers for the time being; you should build your own Docker image with an SSH configuration or use other images as a remote server.
+    NNI 的官方镜像 msranni/nni 暂不支持 SSH 服务，应构建自己的带有 SSH 服务的映像，或者使用其他的带有 SSH 服务的镜像。
     
 
-### Step 2: Start a Docker container on a remote machine
+### 第二步：在远程机器上启动 Dokcer 容器
 
-An SSH server needs a port; you need to expose Docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map the container's port **`A`** to your remote host machine's other port **`B`**, NNI will connect port **`B`** as an SSH port, and your host machine will map the connection from port **`B`** to port **`A`** then NNI could connect to your Docker container.
+SSH 服务需要端口，要把 Docker 的 SSH 服务端口暴露给 NNI 作为连接端口。 例如，如果设置容器的端口 **`A`** 作为 SSH 端口，应把端口 **`A`** 映射到主机的端口 **`B`**，NNI 会连接端口**`B`** 作为 SSH 服务端口，主机会把连接到端口 **`B`** 的连接映射到端口 **`A`**，NNI 就可以连接到容器中了。
 
-For example, you could start your Docker container using the following commands:
+例如，通过如下命令来启动 Docker 容器：
 
     docker run -dit -p [hostPort]:[containerPort] [image]
     
 
-The `containerPort` is the SSH port used in your Docker container and the `hostPort` is your host machine's port exposed to NNI. You can set your NNI's config file to connect to `hostPort` and the connection will be transmitted to your Docker container. For more information about Docker commands, please [refer to this](https://docs.docker.com/v17.09/edge/engine/reference/run/).
+`containerPort`是在 Docker 容器中指定的端口，`hostPort` 是主机的端口。 可设置 NNI 配置，连接到 `hostPort`，这个连接会被转发到 Docker 容器。 更多命令信息，可[参考这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)。
 
 注意：
 
-    If you use your own Docker image as a remote server, please make sure that this image has a basic python environment and an NNI SDK runtime environment. If you want to use a GPU in a Docker container, please use nvidia-docker.
+    如果使用自己构建的 Docker 映像，确保有基础的 Python 运行时和 NNI SDK 环境。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
     
 
-### Step 3: Run NNI experiments
+### 第三步：运行 NNI Experiment
 
-You can set your config file as a remote platform and set the `machineList` configuration to connect to your Docker SSH server; [refer to this](../TrainingService/RemoteMachineMode.md). Note that you should set the correct `port`, `username`, and `passWd` or `sshKeyPath` of your host machine.
+可以在配置文件中，设置训练平台为远程平台，然后设置 `machineList` 配置。[参考这里](../TrainingService/RemoteMachineMode.md)。 注意应该设置正确的 `port`，`username`，以及 `passwd` 或 `sshKeyPath`。
 
-`port:` The host machine's port, mapping to Docker's SSH port.
+`port`: 主机的端口，映射到 Docker 的 SSH 端口。
 
-`username:` The username of the Docker container.
+`username`：Docker 容器的用户名。
 
-`passWd:` The password of the Docker container.
+`passWd: ` Docker 容器的密码。
 
-`sshKeyPath:` The path of the private key of the Docker container.
+`sshKeyPath:` Docker 容器私钥的存储路径。
 
-After the configuration of the config file, you could start an experiment, [refer to this](QuickStart.md).
+设置完配置文件，就可以启动 Experiment 了，[参考这里](QuickStart.md)。
