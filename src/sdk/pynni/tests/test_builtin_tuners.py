@@ -96,7 +96,6 @@ class BuiltinTunersTestCase(TestCase):
             for k, v in param.items():
                 if k == "load_checkpoint_dir" or k == "save_checkpoint_dir":
                     self.assertIsInstance(v, str)
-                    continue
                 if k.startswith("_mutable_layer"):
                     _, block, layer, choice = k.split("/")
                     cand = search_space[block]["_value"][layer].get(choice)
@@ -225,7 +224,7 @@ class BuiltinTunersTestCase(TestCase):
         pass
 
     def test_pbt(self):
-        self.search_space_test_all(lambda: PBTTuner(all_checkpoint_dir="~/nni/checkpoint/test/"))
+        self.search_space_test_all(lambda: PBTTuner(all_checkpoint_dir="~/nni/checkpoint/test/", population_size=100))
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
