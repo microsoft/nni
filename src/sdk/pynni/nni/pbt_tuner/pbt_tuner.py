@@ -44,10 +44,10 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
         elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif isinstance(hyper_parameters[key], float):
-            range = search_space[key]
+            limit_range = search_space[key]
             perturb = np.random.choice(factors)
             new_hyperparameter = hyper_parameters[key] * perturb
-            while new_hyperparameter < range[0] or new_hyperparameter > range[1]:
+            while new_hyperparameter < limit_range[0] or new_hyperparameter > limit_range[1]:
                 perturb = np.random.choice(factors)
                 new_hyperparameter = hyper_parameters[key] * perturb
             hyper_parameters[key] = new_hyperparameter
