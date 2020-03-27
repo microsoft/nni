@@ -76,6 +76,14 @@ def get_python_dir(sitepackages_path):
     else:
         return str(Path(sitepackages_path).parents[2])
 
+def check_tensorboard_version():
+    try:
+        import tensorboard
+        return tensorboard.__version__
+    except:
+        print_error('import tensorboard error!')
+        exit(1)
+
 def get_nni_installation_path():
     ''' Find nni lib from the following locations in order
     Return nni root directory if it exists
