@@ -18,10 +18,22 @@ from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2par
 logger = logging.getLogger('pbt_tuner_AutoML')
 
 
-def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch):
+def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_space):
     """
     Replace checkpoint of bot_trial with top, and perturb hyperparameters
 
+    Parameters
+    ----------
+    bot_trial_info : Trial_Info
+        bottom model whose parameters should be replaced
+    top_trial_info : Trial_Info
+        better model
+    factors : float
+        factors for perturbation
+    epoch : int
+        step of PBTTuner
+    search_space : dict
+        search_space to keep perturbed hyperparameters in range
     """
     bot_checkpoint_dir = bot_trial_info.checkpoint_dir
     top_hyper_parameters = top_trial_info.hyper_parameters
@@ -32,8 +44,13 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch):
         elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif isinstance(hyper_parameters[key], float):
+            range = search_space[key]
             perturb = np.random.choice(factors)
-            hyper_parameters[key] *= perturb
+            new_hyperparameter = hyper_parameters[key] * perturb
+            while new_hyperparameter < range[0] or new_hyperparameter > range[1]:
+                perturb = np.random.choice(factors)
+                new_hyperparameter = hyper_parameters[key] * perturb
+            hyper_parameters[key] = new_hyperparameter
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
@@ -227,7 +244,7 @@ class PBTTuner(Tuner):
             bottoms = self.finished[self.finished_trials - cutoff:]
             for bottom in bottoms:
                 top = np.random.choice(tops)
-                exploit_and_explore(bottom, top, self.factors, self.epoch)
+                exploit_and_explore(bottom, top, self.factors, self.epoch, self.searchspace_json)
             for trial in self.finished:
                 if trial not in bottoms:
                     trial.clean_id()
