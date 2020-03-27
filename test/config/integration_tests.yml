@@ -77,16 +77,15 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics.json
 
-# to be enabled
-#- name: metrics-dict
-#  configFile: test/config/metrics_test/config_dict_metrics.yml
-#  config:
-#    maxTrialNum: 1
-#    trialConcurrency: 1
-#  validator:
-#    class: MetricsValidator
-#    kwargs:
-#      expected_result_file: expected_metrics_dict.json
+- name: metrics-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics_dict.json
 
 - name: nnicli
   configFile: test/config/examples/sklearn-regression.yml

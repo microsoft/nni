@@ -60,10 +60,8 @@ class WeightRankFilterPruner(Pruner):
         Filters with the smallest importance criterion of the kernel weights are masked.
         Parameters
         ----------
-        layer : LayerInfo
-            the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+        wrapper : Module
+            the module to instrument the compression operation
         Returns
         -------
         dict
