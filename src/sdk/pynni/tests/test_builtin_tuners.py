@@ -66,7 +66,7 @@ class BuiltinTunersTestCase(TestCase):
         self.params_each_round = 50
         self.exhaustive = False
 
-     def send_trial_callback(self, id_, params):
+    def send_trial_callback(self, id_, params):
         send(CommandType.NewTrialJob, _pack_parameter(id_, params))
         
     def search_space_test_one(self, tuner_factory, search_space):
