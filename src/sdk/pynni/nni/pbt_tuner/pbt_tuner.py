@@ -38,19 +38,15 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
     bot_checkpoint_dir = bot_trial_info.checkpoint_dir
     top_hyper_parameters = top_trial_info.hyper_parameters
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
+    #TODO think about different type of hyperparameters for 1.perturbation 2.within search space
     for key in hyper_parameters.keys():
         if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
         elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif isinstance(hyper_parameters[key], float):
-            limit_range = search_space[key]
             perturb = np.random.choice(factors)
-            new_hyperparameter = hyper_parameters[key] * perturb
-            while new_hyperparameter < limit_range[0] or new_hyperparameter > limit_range[1]:
-                perturb = np.random.choice(factors)
-                new_hyperparameter = hyper_parameters[key] * perturb
-            hyper_parameters[key] = new_hyperparameter
+            hyper_parameters[key] *= perturb
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
