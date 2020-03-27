@@ -25,7 +25,7 @@ config = {
         'model_name': 'vgg16',
         'device': 'cuda',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': './checkpoints/mask_vgg16_cifar10_l1.pth'
+        'masks_file': './checkpoints/mask_vgg16_cifar10_l1filter.pth'
     },
     'fpgm': {
         'model_name': 'naive',
