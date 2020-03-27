@@ -4,5 +4,5 @@ declare module 'tail-stream' {
         end(data: number): void;
         emit(data: string): void;
     }
-    export function createReadStream(path: string): Stream;
+    export function createReadStream(path: string, options?: Object): Stream;
 }
