@@ -35,8 +35,8 @@ class MetricsValidator(ITValidator):
             assert len(trial_final_result) == 1, 'there should be 1 final result'
             assert trial_final_result[0] == expected_metrics['final_result']
             # encode dict/number into json string to compare them in set
-            assert set([json.dumps(x) for x in trial_intermediate_result]) \
-                == set([json.dumps(x) for x in expected_metrics['intermediate_result']])
+            assert set([json.dumps(x, sort_keys=True) for x in trial_intermediate_result]) \
+                == set([json.dumps(x, sort_keys=True) for x in expected_metrics['intermediate_result']])
 
     def get_metric_results(self, metrics):
         intermediate_result = {}
