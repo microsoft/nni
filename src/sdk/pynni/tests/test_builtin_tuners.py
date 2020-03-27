@@ -24,6 +24,8 @@ except ImportError:
     assert sys.platform == "win32"
 from nni.tuner import Tuner
 
+from nni.msg_dispatcher import MsgDispatcher
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')
 
@@ -45,19 +47,17 @@ class BuiltinTunersTestCase(TestCase):
         self.params_each_round = 50
         self.exhaustive = False
 
-    def send_trial_callback(self, id_, params):
-        send(CommandType.NewTrialJob, _pack_parameter(id_, params))
-
-
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
 
+        msg_dispatcher = MsgDispatcher(tuner)
+
         for i in range(self.test_round):
             if isinstance(tuner, PBTTuner):
                 parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
-                                                                       (i + 1) * self.params_each_round)), st_callback=self.send_trial_callback)
+                                                                       (i + 1) * self.params_each_round)), st_callback=msg_dispatcher.send_trial_callback)
             else:
                 parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
                                                                        (i + 1) * self.params_each_round)))
