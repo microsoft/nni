@@ -46,11 +46,16 @@ yarn build
 cd $CWD\..\..\src\webui
 yarn
 yarn build
+cd $CWD\..\..\src\nasui
+yarn
+yarn build
 if(Test-Path $CWD\nni){
     Remove-Item $CWD\nni -r -fo
 }
 Copy-Item $CWD\..\..\src\nni_manager\dist $CWD\nni -Recurse
 Copy-Item $CWD\..\..\src\webui\build $CWD\nni\static -Recurse
+Copy-Item $CWD\..\..\src\nasui\build $CWD\nni\nasui -Recurse
+Copy-Item $CWD\..\..\src\nasui\server.js $CWD\nni\nasui -Recurse
 Copy-Item $CWD\..\..\src\nni_manager\package.json $CWD\nni
 (Get-Content $CWD\nni\package.json).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $CWD\nni\package.json
 cd $CWD\nni

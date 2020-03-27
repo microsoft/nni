@@ -25,23 +25,28 @@ logger = logging.getLogger('nni')
 
 if __name__ == "__main__":
     parser = ArgumentParser("pdarts")
-    parser.add_argument('--add_layers', action='append',
-                        default=[0, 6, 12], help='add layers')
-    parser.add_argument('--dropped_ops', action='append',
-                        default=[3, 2, 1], help='drop ops')
+    parser.add_argument('--add_layers', action='append', type=int,
+                        help='add layers, default: [0, 6, 12]')
+    parser.add_argument('--dropped_ops', action='append', type=int,
+                        help='drop ops, default: [3, 2, 1]')
     parser.add_argument("--nodes", default=4, type=int)
     parser.add_argument("--init_layers", default=5, type=int)
+    parser.add_argument("--channels", default=16, type=int)
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--log-frequency", default=1, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     parser.add_argument("--unrolled", default=False, action="store_true")
     args = parser.parse_args()
+    if args.add_layers is None:
+        args.add_layers = [0, 6, 12]
+    if args.dropped_ops is None:
+        args.dropped_ops = [3, 2, 1]
 
     logger.info("loading data")
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
     def model_creator(layers):
-        model = CNN(32, 3, 16, 10, layers, n_nodes=args.nodes)
+        model = CNN(32, 3, args.channels, 10, layers, n_nodes=args.nodes)
         criterion = nn.CrossEntropyLoss()
 
         optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)

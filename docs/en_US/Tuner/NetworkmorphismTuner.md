@@ -2,9 +2,9 @@
 
 ## 1. Introduction
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implement our Network Morphism method in our NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) is a popular autoML tool using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implemented our Network Morphism method on the NNI platform.
 
-If you want to know about network morphism trial usage, please check [Readme.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README.md) of the trial to get more detail.
+If you want to know more about network morphism trial usage, please see the [Readme.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README.md).
 
 ## 2. Usage
 
@@ -29,7 +29,7 @@ tuner:
 
 
 
-In the training procedure, it generate a JSON file which represent a Network Graph. Users can call "json\_to\_graph()" function to build a pytorch model or keras model from this JSON file.
+In the training procedure, it generates a JSON file which represents a Network Graph. Users can call the "json\_to\_graph()" function to build a PyTorch or Keras model from this JSON file.
 
 ```python
 import nni
@@ -54,7 +54,7 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-If you want to save and **load the best model**, the following methods are recommended.
+If you want to save and load the **best model**, the following methods are recommended.
 
 ```python
 # 1. Use NNI API
@@ -102,27 +102,27 @@ loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ## 3. File Structure
 
-The tuner has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+The tuner has a lot of different files, functions, and classes. Here, we will give most of those files only a brief introduction:
 
-- `networkmorphism_tuner.py` is a tuner which using network morphism techniques.
+- `networkmorphism_tuner.py` is a tuner which uses network morphism techniques.
 
-- `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.
-- `graph.py`  is the meta graph data structure. Class Graph is representing the neural architecture graph of a model.
+- `bayesian.py` is a Bayesian method to estimate the metric of unseen model based on the models we have already searched.
+- `graph.py`  is the meta graph data structure. The class Graph represents the neural architecture graph of a model.
   - Graph extracts the neural architecture graph from a model.
-  - Each node in the graph is a intermediate tensor between layers.
+  - Each node in the graph is an intermediate tensor between layers.
   - Each layer is an edge in the graph.
   - Notably, multiple edges may refer to the same layer.
-- `graph_transformer.py` includes some graph transformer to wider, deeper or add a skip-connection into the graph.
+- `graph_transformer.py` includes some graph transformers which widen, deepen, or add skip-connections to the graph.
 
 - `layers.py`  includes all the layers we use in our model.
-- `layer_transformer.py` includes some layer transformer to wider, deeper or add a skip-connection into the layer.
-- `nn.py` includes the class to generate network class initially.
+- `layer_transformer.py` includes some layer transformers which widen, deepen, or add skip-connections to the layer.
+- `nn.py` includes the class which generates the initial network.
 - `metric.py` some metric classes including Accuracy and MSE.
-- `utils.py` is the example search network architectures in dataset `cifar10` by using Keras.
+- `utils.py` is the example search network architectures for the `cifar10` dataset, using Keras.
 
 ## 4. The Network Representation Json Example
 
-Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call "json\_to\_graph()" function in trial code to build a pytorch model or keras model from this JSON file. The example is as follows.
+Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call the "json\_to\_graph()" function in the trial code to build a PyTorch or Keras model from this JSON file.
 
 ```json
 {
@@ -215,29 +215,29 @@ Here is an example of the intermediate representation JSON file we defined, whic
  }
 ```
 
-The definition of each model is a JSON object(also you can consider the model as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)), where:
+You can consider the model to be a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). The definition of each model is a JSON object where:
 
-- `input_shape` is a list of integers, which does not include the batch axis.
+- `input_shape` is a list of integers which do not include the batch axis.
 - `weighted` means whether the weights and biases in the neural network should be included in the graph.
 - `operation_history` is a list saving all the network morphism operations.
-- `layer_id_to_input_node_ids` is a dictionary instance mapping from layer identifiers to their input nodes identifiers.
-- `layer_id_to_output_node_ids` is a dictionary instance mapping from layer identifiers to their output nodes identifiers
-- `adj_list` is a two dimensional list. The adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
-- `reverse_adj_list` is a  A reverse adjacent list in the same format as adj_list.
+- `layer_id_to_input_node_ids` is a dictionary mapping from layer identifiers to their input nodes identifiers.
+- `layer_id_to_output_node_ids` is a dictionary mapping from layer identifiers to their output nodes identifiers
+- `adj_list` is a two-dimensional list; the adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
+- `reverse_adj_list` is a reverse adjacent list in the same format as adj_list.
 - `node_list` is a list of integers. The indices of the list are the identifiers.
 - `layer_list` is a list of stub layers. The indices of the list are the identifiers.
-  - For `StubConv (StubConv1d, StubConv2d, StubConv3d)`, the number follows is its node input id(or id list), node output id, input_channel, filters, kernel_size, stride and padding.
+  - For `StubConv (StubConv1d, StubConv2d, StubConv3d)`, the numbering follows the format: its node input id (or id list), node output id, input_channel, filters, kernel_size, stride, and padding.
 
-  - For `StubDense`, the number follows is its node input id(or id list), node output id, input_units and units.
+  - For `StubDense`, the numbering follows the format: its node input id (or id list), node output id, input_units, and units.
 
-  - For `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`, the number follows is its node input id(or id list), node output id and features numbers.
+  - For `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`,  the numbering follows the format: its node input id (or id list), node output id, and features numbers.
 
-  - For `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`, the number follows is its node input id(or id list), node output id and dropout rate.
+  - For `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`, the numbering follows the format: its node input id (or id list), node output id, and dropout rate.
 
-  - For `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`, the number follows is its node input id(or id list), node output id, kernel_size, stride and padding.
+  - For `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`, the numbering follows the format: its node input id (or id list), node output id, kernel_size, stride, and padding.
 
-  - For else layers, the number follows is its node input id(or id list) and node output id.
+  - For else layers, the numbering follows the format: its node input id (or id list) and node output id.
 
 ## 5. TODO
 
-Next step, we will change the API from fixed network generator to more network operator generator. Besides, we will use ONNX instead of JSON later as the intermediate representation spec in the future.
+Next step, we will change the API from s fixed network generator to a network generator with more available operators. We will use ONNX instead of JSON later as the intermediate representation spec in the future.

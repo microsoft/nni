@@ -53,13 +53,13 @@ prune_config = {
             'op_types': ['Conv2d']
         }]
     },
-    'l1': {
+    'l1filter': {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': L1FilterPruner,
         'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
@@ -67,9 +67,9 @@ prune_config = {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': ActivationMeanRankFilterPruner,
-        'configure_list': [{
+        'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
@@ -127,7 +127,7 @@ class NaiveModel(torch.nn.Module):
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
+        x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
