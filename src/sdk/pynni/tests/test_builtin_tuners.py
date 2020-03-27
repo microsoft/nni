@@ -45,13 +45,21 @@ class BuiltinTunersTestCase(TestCase):
         self.params_each_round = 50
         self.exhaustive = False
 
+    def send_trial_callback(self, id_, params):
+        send(CommandType.NewTrialJob, _pack_parameter(id_, params))
+
+
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
 
         for i in range(self.test_round):
-            parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
+            if isinstance(tuner, PBTTuner):
+                parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
+                                                                       (i + 1) * self.params_each_round)), st_callback=self.send_trial_callback)
+            else:
+                parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
                                                                        (i + 1) * self.params_each_round)))
             logger.debug(parameters)
             self.check_range(parameters, search_space)
@@ -194,7 +202,7 @@ class BuiltinTunersTestCase(TestCase):
         pass
 
     def test_pbt(self):
-        pass
+        self.search_space_test_all(lambda: PBTTuner(all_checkpoint_dir="~/nni/checkpoint/test/"))
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
