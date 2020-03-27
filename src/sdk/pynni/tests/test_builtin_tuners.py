@@ -96,6 +96,7 @@ class BuiltinTunersTestCase(TestCase):
             for k, v in param.items():
                 if k == "load_checkpoint_dir" or k == "save_checkpoint_dir":
                     self.assertIsInstance(v, str)
+                    continue
                 if k.startswith("_mutable_layer"):
                     _, block, layer, choice = k.split("/")
                     cand = search_space[block]["_value"][layer].get(choice)
