@@ -34,7 +34,7 @@ class BaseMutator(Model):
                             raise RuntimeError('"{}" required by "{}" not found in keys that appeared before, and is not NO_KEY.'
                                                .format(k, module.key))
             for submodule in module.layers:
-                if submodule is None:
+                if not isinstance(submodule, Model):
                     continue
                 submodule_prefix = prefix + ('.' if prefix else '') + submodule.name
                 self._parse_search_space(submodule, root, submodule_prefix, memo=memo, nested_detection=nested_detection)

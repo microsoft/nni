@@ -53,7 +53,7 @@ class EnasMutator(Mutator):
         self.attn_query = Dense(self.lstm_size, use_bias=False)
         self.v_attn = Dense(1, use_bias=False)
         self.g_emb = tf.Variable(tf.random.normal((1, self.lstm_size)) * 0.1)
-        self.skip_targets = tf.Variable(tf.constant([1.0 - self.skip_target, self.skip_target]), requires_grad=False)
+        self.skip_targets = tf.constant([1.0 - self.skip_target, self.skip_target])
         assert entropy_reduction in ['sum', 'mean'], 'Entropy reduction must be one of sum and mean.'
         self.entropy_reduction = tf.reduce_sum if entropy_reduction == 'sum' else tf.reduce_mean
         self.cross_entropy_loss = SparseCategoricalCrossentropy(from_logits=True, reduction=Reduction.NONE)
