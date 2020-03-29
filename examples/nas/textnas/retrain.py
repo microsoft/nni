@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import sys
 import os
+import logging
 import pickle
 import shutil
-import sys
 import random
 import math
 
@@ -20,8 +21,12 @@ from torch import optim
 from torch.utils.data import DataLoader
 import torch.nn.functional as Func
 
-from macro_child import MacroChild
+from model import Model
+from nni.nas.pytorch.fixed import apply_fixed_architecture
 from dataloader import read_data_sst
+
+
+logger = logging.getLogger("nni.textnas")
 
 
 def parse_args():
@@ -32,15 +37,10 @@ def parse_args():
         default=True,
         help="Whether to clean the output dir if existed. (default: %(default)s)")
     parser.add_argument(
-        "--embedding_model",
-        type=str,
-        default="glove",
-        help="Embedding type. (default: %(default)s)")
-    parser.add_argument(
         "--child_fixed_arc",
         type=str,
         required=True,
-        help="Architecture description. (default: %(default)s)")
+        help="Architecture json file. (default: %(default)s)")
     parser.add_argument(
         "--data_path",
         type=str,
@@ -117,11 +117,6 @@ def parse_args():
         default=1,
         help="The threshold to cut off low frequent words. (default: %(default)s)")
     parser.add_argument(
-        "--num_last_layer_output",
-        type=int,
-        default=0,
-        help="The last n layers as output, 0 for all. (default: %(default)s)")
-    parser.add_argument(
         "--train_ratio",
         type=float,
         default=1.0,
@@ -194,7 +189,7 @@ def parse_args():
     parser.add_argument(
         "--output_type",
         type=str,
-        default="avg_pool",
+        default="avg",
         help="Opertor type for the time steps reduction. (default: %(default)s)")
     parser.add_argument(
         "--multi_path",
@@ -207,15 +202,10 @@ def parse_args():
         default=False,
         help="Binary label for sst dataset. (default: %(default)s)")
     parser.add_argument(
-        "--all_layer_output",
+        "--is_cuda",
         type=distutils.util.strtobool,
         default=True,
-        help="Use all layers as output. (default: %(default)s)")
-    parser.add_argument(
-        "--output_linear_combine",
-        type=distutils.util.strtobool,
-        default=True,
-        help="Combine all the layers in linear way. (default: %(default)s)")
+        help="Specify the device type. (default: %(default)s)")
     parser.add_argument(
         "--is_mask",
         type=distutils.util.strtobool,
@@ -248,58 +238,40 @@ def parse_args():
 
 
 def set_random_seed(seed):
-    print("-" * 80)
-    print("set random seed for data reading: {}".format(seed))
+    logger.info("set random seed for data reading: {}".format(seed))
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
+    if FLAGS.is_cuda:
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
 
 
 def get_model(embedding, num_layers):
-    print("num layers: {0}".format(num_layers))
+    logger.info("num layers: {0}".format(num_layers))
     assert FLAGS.child_fixed_arc is not None, "Architecture should be provided."
 
-    child_model = MacroChild(
+    child_model = Model(
         embedding=embedding,
-        fixed_arc=FLAGS.child_fixed_arc,
-        out_filters_scale=FLAGS.child_out_filters_scale,
+        hidden_units=FLAGS.child_out_filters_scale * FLAGS.child_out_filters,
         num_layers=num_layers,
-        out_filters=FLAGS.child_out_filters,
+        num_classes=FLAGS.class_num,
+        choose_from_k=5 if FLAGS.multi_path else 1,
+        lstm_keep_prob=FLAGS.lstm_out_keep_prob,
         cnn_keep_prob=FLAGS.cnn_keep_prob,
-        final_output_keep_prob=FLAGS.final_output_keep_prob,
-        lstm_out_keep_prob=FLAGS.lstm_out_keep_prob,
+        att_keep_prob=FLAGS.attention_keep_prob,
+        att_mask=FLAGS.is_mask,
         embed_keep_prob=FLAGS.embed_keep_prob,
-        attention_keep_prob=FLAGS.attention_keep_prob,
-        multi_path=FLAGS.multi_path,
-        embedding_model=FLAGS.embedding_model,
-        all_layer_output=FLAGS.all_layer_output,
-        output_linear_combine=FLAGS.output_linear_combine,
-        num_last_layer_output=FLAGS.num_last_layer_output,
-        is_mask=FLAGS.is_mask,
-        output_type=FLAGS.output_type,
-        class_num=FLAGS.class_num)
+        final_output_keep_prob=FLAGS.final_output_keep_prob,
+        global_pool=FLAGS.output_type)
 
+    apply_fixed_architecture(child_model, FLAGS.child_fixed_arc)
     return child_model
 
 
-def print_arc(arc, num_layers):
-   start = 0
-   for i in range(0, num_layers):
-      end = start + i + 1
-      if FLAGS.multi_path:
-          end += 1
-      out_str = "fixed_arc=\"$fixed_arc {0}\"".format(np.reshape(arc[start: end], [-1]))
-      out_str = out_str.replace("[", "").replace("]", "")
-      print(out_str)
-
-      start = end
-
-
-def eval_once(child_model, eval_set, criterion, valid_dataloader=None, test_dataloader=None):
+def eval_once(child_model, device, eval_set, criterion, valid_dataloader=None, test_dataloader=None):
     if eval_set == "test":
         assert test_dataloader is not None
         dataloader = test_dataloader
@@ -317,11 +289,11 @@ def eval_once(child_model, eval_set, criterion, valid_dataloader=None, test_data
         for batch in dataloader:
             (sent_ids, mask), labels = batch
 
-            sent_ids = sent_ids.cuda()
-            mask = mask.cuda()
-            labels = labels.cuda()
+            sent_ids = sent_ids.to(device, non_blocking=True)
+            mask = mask.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
 
-            logits = child_model(sent_ids, mask)  # run
+            logits = child_model((sent_ids, mask))  # run
 
             loss = criterion(logits, labels.long())
             loss = loss.mean()
@@ -338,14 +310,12 @@ def eval_once(child_model, eval_set, criterion, valid_dataloader=None, test_data
         final_acc = float(tot_acc) / tot
     else:
         final_acc = 0
-        print("Error in calculating final_acc")
+        logger.info("Error in calculating final_acc")
     return final_acc, loss
 
 
 def print_user_flags(FLAGS, line_limit=80):
-    print("-" * 80)
-
-    log_strings = ""
+    log_strings = "\n" + "-" * line_limit + "\n"
     for flag_name in sorted(vars(FLAGS)):
         value = "{}".format(getattr(FLAGS, flag_name))
         log_string = flag_name
@@ -353,7 +323,8 @@ def print_user_flags(FLAGS, line_limit=80):
         log_string += value
         log_strings = log_strings + log_string
         log_strings = log_strings + "\n"
-    print(log_strings)
+    log_strings += "-" * line_limit
+    logger.info(log_strings)
 
 
 def count_model_params(trainable_params):
@@ -410,8 +381,8 @@ def update_lr(
     return learning_rate
 
 
-def train(data_path, output_dir, num_layers):
-    print("Build dataloader")
+def train(device, data_path, output_dir, num_layers):
+    logger.info("Build dataloader")
     train_dataset, valid_dataset, test_dataset, embedding = \
         read_data_sst(data_path,
                       FLAGS.max_input_length,
@@ -423,16 +394,15 @@ def train(data_path, output_dir, num_layers):
     test_dataloader = DataLoader(test_dataset, batch_size=FLAGS.eval_batch_size, pin_memory=True)
     valid_dataloader = DataLoader(valid_dataset, batch_size=FLAGS.eval_batch_size, pin_memory=True)
 
-    print("Build model")
-    print("-" * 80)
+    logger.info("Build model")
     child_model = get_model(embedding, num_layers)
-    print("Finish build model")
+    logger.info("Finish build model")
 
-    for name, var in child_model.named_parameters():
-        print(name, var.size(), var.requires_grad)  # output all params
+    #for name, var in child_model.named_parameters():
+    #    logger.info(name, var.size(), var.requires_grad)  # output all params
 
     num_vars = count_model_params(child_model.parameters())
-    print("Model has {} params".format(num_vars))
+    logger.info("Model has {} params".format(num_vars))
 
     for m in child_model.modules():  # initializer
         if isinstance(m, (nn.Conv1d, nn.Linear)):
@@ -446,14 +416,10 @@ def train(data_path, output_dir, num_layers):
     else:
         raise ValueError("Unknown optim_algo {}".format(FLAGS.child_optim_algo))
 
-    child_model.cuda()
-    criterion.cuda()
+    child_model.to(device)
+    criterion.to(device)
 
-    fixed_arc = np.array([int(x) for x in FLAGS.child_fixed_arc.split(" ") if x])
-    print_arc(fixed_arc, num_layers)
-
-    print("Start training")
-    print("-" * 80)
+    logger.info("Start training")
     start_time = time.time()
     step = 0
 
@@ -485,13 +451,13 @@ def train(data_path, output_dir, num_layers):
         for batch in train_dataloader:
             (sent_ids, mask), labels = batch
 
-            sent_ids = sent_ids.cuda()
-            mask = mask.cuda()
-            labels = labels.cuda()
+            sent_ids = sent_ids.to(device, non_blocking=True)
+            mask = mask.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
 
             step += 1
 
-            logits = child_model(sent_ids, mask)  # run
+            logits = child_model((sent_ids, mask))  # run
 
             loss = criterion(logits, labels.long())
             loss = loss.mean()
@@ -521,7 +487,7 @@ def train(data_path, output_dir, num_layers):
                 log_string += " |g|={:<8.4f}".format(grad_norm)
                 log_string += " tr_acc={:<3d}/{:>3d}".format(acc, logits.size()[0])
                 log_string += " mins={:<10.2f}".format(float(curr_time - start_time) / 60)
-                print(log_string)
+                logger.info(log_string)
 
         epoch += 1
         save_state = {
@@ -531,12 +497,12 @@ def train(data_path, output_dir, num_layers):
             'optimizer_state_dict' : optimizer.state_dict()}
         torch.save(save_state, model_save_path)
         child_model.eval()
-        print("Epoch {}: Eval".format(epoch))
-        eval_acc, eval_loss = eval_once(child_model, "test", criterion, test_dataloader=test_dataloader)
-        print("ch_step={} {}_accuracy={:<6.4f} {}_loss={:<6.4f}".format(step, "test", eval_acc, "test", eval_loss))
+        logger.info("Epoch {}: Eval".format(epoch))
+        eval_acc, eval_loss = eval_once(child_model, device, "test", criterion, test_dataloader=test_dataloader)
+        logger.info("ch_step={} {}_accuracy={:<6.4f} {}_loss={:<6.4f}".format(step, "test", eval_acc, "test", eval_loss))
         if eval_acc > best_acc:
             best_acc = eval_acc
-            print("Save best model")
+            logger.info("Save best model")
             save_state = {
                 'step' : step,
                 'epoch' : epoch,
@@ -549,24 +515,21 @@ def train(data_path, output_dir, num_layers):
 
 def main():
     parse_args()
-    print("-" * 80)
     if not os.path.isdir(FLAGS.output_dir):
-        print("Path {} does not exist. Creating.".format(FLAGS.output_dir))
+        logger.info("Path {} does not exist. Creating.".format(FLAGS.output_dir))
         os.makedirs(FLAGS.output_dir)
     elif FLAGS.reset_output_dir:
-        print("Path {} exists. Remove and remake.".format(FLAGS.output_dir))
+        logger.info("Path {} exists. Remove and remake.".format(FLAGS.output_dir))
         shutil.rmtree(FLAGS.output_dir, ignore_errors=True)
         os.makedirs(FLAGS.output_dir)
-    print("-" * 80)
-    log_file = os.path.join(FLAGS.output_dir, "stdout")
-    print("Logging to {}".format(log_file))
 
     print_user_flags(FLAGS)
 
     if FLAGS.fixed_seed:
         set_random_seed(FLAGS.global_seed)
 
-    train(FLAGS.data_path, FLAGS.output_dir, FLAGS.child_num_layers)
+    device = torch.device("cuda" if FLAGS.is_cuda else "cpu")
+    train(device, FLAGS.data_path, FLAGS.output_dir, FLAGS.child_num_layers)
 
 
 if __name__ == "__main__":
