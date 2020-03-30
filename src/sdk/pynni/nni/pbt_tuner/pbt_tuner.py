@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""
-pbt_tuner.py
-"""
-
 import copy
 import logging
 import os
@@ -24,9 +20,9 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
 
     Parameters
     ----------
-    bot_trial_info : Trial_Info
+    bot_trial_info : TrialInfo
         bottom model whose parameters should be replaced
-    top_trial_info : Trial_Info
+    top_trial_info : TrialInfo
         better model
     factors : float
         factors for perturbation
@@ -38,7 +34,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
     bot_checkpoint_dir = bot_trial_info.checkpoint_dir
     top_hyper_parameters = top_trial_info.hyper_parameters
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
-    #TODO think about different type of hyperparameters for 1.perturbation 2.within search space
+    # TODO think about different type of hyperparameters for 1.perturbation 2.within search space
     for key in hyper_parameters.keys():
         if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
@@ -46,18 +42,23 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif isinstance(hyper_parameters[key], float):
             perturb = np.random.choice(factors)
-            hyper_parameters[key] *= perturb
+            val = hyper_parameters[key] * perturb
+            lb, ub = search_space[key]["_value"][:2]
+            if search_space[key]["_type"] in ("uniform", "normal"):
+                val = np.clip(val, lb, ub).item()
+                hyper_parameters[key] = val
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
 
-class Trial_Info:
+class TrialInfo:
     """
     Information of each trial, refresh for each epoch
 
     """
+
     def __init__(self, checkpoint_dir=None, hyper_parameters=None, parameter_id=None, score=None):
         self.checkpoint_dir = checkpoint_dir
         self.hyper_parameters = hyper_parameters
@@ -88,13 +89,13 @@ class PBTTuner(Tuner):
         """
         self.optimize_mode = OptimizeMode(optimize_mode)
         if all_checkpoint_dir is None:
-            experiment_id = os.getenv('NNI_EXP_ID')
-            all_checkpoint_dir = os.path.join("~/nni/checkpoint/", experiment_id)
+            all_checkpoint_dir = os.getenv('NNI_CHECKPOINT_DIRECTORY')
+            logger.info("Checkpoint dir is set to %s by default.", all_checkpoint_dir)
         self.all_checkpoint_dir = all_checkpoint_dir
         self.population_size = population_size
         self.factors = factors
         self.fraction = fraction
-        #defined in trial code
+        # defined in trial code
         #self.perturbation_interval = perturbation_interval
 
         self.population = None
@@ -111,8 +112,7 @@ class PBTTuner(Tuner):
 
         self.send_trial_callback = None
 
-        logger.info('pbt tuner initialization')
-
+        logger.info('PBT tuner initialization')
 
     def update_search_space(self, search_space):
         """
@@ -123,7 +123,7 @@ class PBTTuner(Tuner):
         search_space : dict
             Search space
         """
-        logger.info('update search space %s', search_space)
+        logger.info('Update search space %s', search_space)
         self.searchspace_json = search_space
         self.space = json2space(self.searchspace_json)
 
@@ -140,8 +140,7 @@ class PBTTuner(Tuner):
             checkpoint_dir = os.path.join(self.all_checkpoint_dir, str(i))
             hyper_parameters['load_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
             hyper_parameters['save_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
-            self.population.append(Trial_Info(checkpoint_dir=checkpoint_dir, hyper_parameters=hyper_parameters))
-
+            self.population.append(TrialInfo(checkpoint_dir=checkpoint_dir, hyper_parameters=hyper_parameters))
 
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
@@ -173,7 +172,6 @@ class PBTTuner(Tuner):
                 result.append(res)
         return result
 
-
     def generate_parameters(self, parameter_id, **kwargs):
         """
         Generate parameters, if no trial configration for now, self.credit plus 1 to send the config later
@@ -192,7 +190,7 @@ class PBTTuner(Tuner):
             One newly generated configuration
 
         """
-        if self.pos == self.population_size-1:
+        if self.pos == self.population_size - 1:
             logger.debug('Credit added by one in parameters request')
             self.credit += 1
             self.param_ids.append(parameter_id)
@@ -201,13 +199,12 @@ class PBTTuner(Tuner):
         trial_info = self.population[self.pos]
         trial_info.parameter_id = parameter_id
         self.running[parameter_id] = trial_info
-        logger.info('generate parameter : %s', trial_info.hyper_parameters)
+        logger.info('Generate parameter : %s', trial_info.hyper_parameters)
         return split_index(trial_info.hyper_parameters)
-
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
-        Receive trial's result. if the number of finished trials equals self.population_size, start the next epoch to
+        Receive trial's result. if the number of finished trials equals ``self.population_size``, start the next epoch to
         train the model.
 
         Parameters
@@ -219,7 +216,7 @@ class PBTTuner(Tuner):
         value : dict
             Result from trial (the return value of :func:`nni.report_final_result`).
         """
-        logger.info('get one trial result')
+        logger.info('Get one trial result, id = %d, value = %s', parameter_id, value)
         value = extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Minimize:
             value = -value
@@ -228,7 +225,7 @@ class PBTTuner(Tuner):
         self.finished.append(trial_info)
         self.finished_trials += 1
         if self.finished_trials == self.population_size:
-            logger.info('next epoch')
+            logger.info('Proceeding to next epoch')
             self.epoch += 1
             self.population = []
             self.pos = -1
@@ -250,7 +247,7 @@ class PBTTuner(Tuner):
             for _ in range(self.population_size):
                 trial_info = self.finished.pop()
                 self.population.append(trial_info)
-            for _ in range(self.credit):
+            while self.credit > 0 and self.pos + 1 < len(self.population):
                 self.credit -= 1
                 self.pos += 1
                 parameter_id = self.param_ids.pop()
@@ -258,7 +255,6 @@ class PBTTuner(Tuner):
                 trial_info.parameter_id = parameter_id
                 self.running[parameter_id] = trial_info
                 self.send_trial_callback(parameter_id, split_index(trial_info.hyper_parameters))
-
 
     def import_data(self, data):
         pass

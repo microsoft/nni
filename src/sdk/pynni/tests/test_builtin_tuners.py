@@ -8,6 +8,7 @@ import os
 import random
 import shutil
 import sys
+from collections import deque
 from unittest import TestCase, main
 
 from nni.batch_tuner.batch_tuner import BatchTuner
@@ -16,6 +17,7 @@ from nni.gp_tuner.gp_tuner import GPTuner
 from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
+from nni.msg_dispatcher import _pack_parameter, MsgDispatcher
 from nni.pbt_tuner.pbt_tuner import PBTTuner
 
 try:
@@ -24,29 +26,9 @@ except ImportError:
     assert sys.platform == "win32"
 from nni.tuner import Tuner
 
-from nni.protocol import CommandType, send
-from nni.utils import to_json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')
-
-_trial_params = {}
-
-
-def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
-    _trial_params[parameter_id] = params
-    ret = {
-        'parameter_id': parameter_id,
-        'parameter_source': 'customized' if customized else 'algorithm',
-        'parameters': params
-    }
-    if trial_job_id is not None:
-        ret['trial_job_id'] = trial_job_id
-    if parameter_index is not None:
-        ret['parameter_index'] = parameter_index
-    else:
-        ret['parameter_index'] = 0
-    return to_json(ret)
 
 
 class BuiltinTunersTestCase(TestCase):
@@ -66,25 +48,29 @@ class BuiltinTunersTestCase(TestCase):
         self.params_each_round = 50
         self.exhaustive = False
 
-    def send_trial_callback(self, id_, params):
-        send(CommandType.NewTrialJob, _pack_parameter(id_, params))
-        
+    def send_trial_callback(self, param_queue):
+        def receive(*args):
+            param_queue.append(tuple(args))
+        return receive
+
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
 
         for i in range(self.test_round):
-            if isinstance(tuner, PBTTuner):
-                parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
-                                                                       (i + 1) * self.params_each_round)), st_callback=self.send_trial_callback)
-            else:
-                parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
-                                                                       (i + 1) * self.params_each_round)))
+            queue = deque()
+            parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
+                                                                       (i + 1) * self.params_each_round)),
+                                                            st_callback=self.send_trial_callback(queue))
             logger.debug(parameters)
             self.check_range(parameters, search_space)
             for k in range(min(len(parameters), self.params_each_round)):
                 tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
+            while queue:
+                id_, params = queue.popleft()
+                self.check_range([params], search_space)
+                tuner.receive_trial_result(id_, params, random.uniform(-100, 100))
             if not parameters and not self.exhaustive:
                 raise ValueError("No parameters generated")
 
@@ -156,8 +142,8 @@ class BuiltinTunersTestCase(TestCase):
             if any(single.startswith(t) for t in ignore_types):
                 continue
             expected_fail = not any(single.startswith(t) for t in supported_types) or \
-                            any(single.startswith(t) for t in fail_types) or \
-                            "fail" in single  # name contains fail (fail on all)
+                any(single.startswith(t) for t in fail_types) or \
+                "fail" in single  # name contains fail (fail on all)
             single_search_space = {single: space}
             if not expected_fail:
                 # supports this key
@@ -225,7 +211,14 @@ class BuiltinTunersTestCase(TestCase):
         pass
 
     def test_pbt(self):
-        self.search_space_test_all(lambda: PBTTuner(all_checkpoint_dir="~/nni/checkpoint/test/", population_size=100))
+        self.search_space_test_all(lambda: PBTTuner(
+            all_checkpoint_dir=os.path.expanduser("~/nni/checkpoint/test/"),
+            population_size=12
+        ))
+        self.search_space_test_all(lambda: PBTTuner(
+            all_checkpoint_dir=os.path.expanduser("~/nni/checkpoint/test/"),
+            population_size=100
+        ))
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]

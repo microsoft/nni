@@ -7,7 +7,7 @@ import functools
 from enum import Enum, unique
 import json_tricks
 
-import nni.parameter_expressions as parameter_expressions
+from . import parameter_expressions
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
 
