@@ -62,7 +62,7 @@ class EnasTrainer:
 
         meters = []
         for step in range(1, child_steps + 1):
-            x, y = next(train_loader)
+            x, y = next(self.train_loader)
             with tf.GradientTape() as tape:
                 tape.watch(x)
                 logits = self.model(x, training=True)
@@ -87,10 +87,10 @@ class EnasTrainer:
         # Train sampler (mutator)
         meters = defaultdict(list)
         for mutator_step in range(1, mutator_steps + 1):
-            with GradientTape() as tape:
+            with tf.GradientTape() as tape:
                 tape.watch(self.baseline)
                 for step in range(1, mutator_steps_aggregate + 1):
-                    x, y = next(valid_loader)
+                    x, y = next(self.valid_loader)
 
                     self.mutator.reset()
                     logits = self.model(x, training=False)

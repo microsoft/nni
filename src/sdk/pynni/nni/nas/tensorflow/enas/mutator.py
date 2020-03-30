@@ -73,7 +73,7 @@ class EnasMutator(Mutator):
                             bias.append(self.branch_bias)
                         else:
                             bias.append(-self.branch_bias)
-                    self.bias_dict[mutable.key] = tf.Variable(bias, requires_grad=False)
+                    self.bias_dict[mutable.key] = tf.constant(bias)
 
         self.embedding = Embedding(self.max_layer_choice + 1, self.lstm_size)
         self.soft = Dense(self.max_layer_choice, use_bias=False)
