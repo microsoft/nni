@@ -21,6 +21,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 | [**BOHB**](#BOHB)                        | BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 [参考论文](https://arxiv.org/abs/1807.01774)                                                                    |
 | [**GP Tuner**](#GPTuner)                 | Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)，[Github 库](https://github.com/fmfn/BayesianOptimization)                                                                             |
 | [**PPO Tuner**](#PPOTuner)               | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                                                     |
+| [**PBT Tuner**](#PBTTuner)               | PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. [Reference Paper](https://arxiv.org/abs/1711.09846v1)                         |
 
 ## 用法
 
@@ -452,10 +453,38 @@ tuner:
     optimize_mode: maximize
 ```
 
+<a name="PBTTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
+
+> Built-in Tuner Name: **PBTTuner**
+
+**Suggested scenario**
+
+Population Based Training (PBT) which bridges and extends parallel search methods and sequential optimization methods. It has a wallclock run time that is no greater than that of a single optimization process, does not require sequential runs, and is also able to use fewer computational resources than naive search methods. Therefore, it's effective when you want to save computational resources and time. Besides, PBT returns hyperparameter scheduler instead of configuration. If you don't need to get a specific configuration, but just expect good results, you can choose this tuner. It should be noted that, in our implementation, the operation of checkpoint storage location is involved. A trial is considered as several traning epochs of training, so the loading and saving of checkpoint must be specified in the trial code, which is different with other tuners. Otherwise, if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials. You could try it on very simple task, such as the [mnist-pbt-tuner-pytorch](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pbt-tuner-pytorch) example. [See details](./PBTTuner.md)
+
+**classArgs requirements:**
+
+* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **all_checkpoint_dir** (*str, optional, default = None*) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/<exp-id>". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
+* **population_size** (*int, optional, default = 10*) - Number of trials for each step. In our implementation, one step is running each trial by specific training epochs set by users.
+* **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
+* **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
+
+**Usage example**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PBTTuner
+  classArgs:
+    optimize_mode: maximize
+```
+
 ## **参考和反馈**
 
-* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
-* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
-* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/FeatureEngineering/Overview.md)；
-* 了解 NNI 中[ NAS 的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
-* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Overview.md)；
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
+* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
+* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
