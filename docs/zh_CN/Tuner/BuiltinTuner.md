@@ -21,7 +21,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 | [**BOHB**](#BOHB)                        | BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 [参考论文](https://arxiv.org/abs/1807.01774)                                                                    |
 | [**GP Tuner**](#GPTuner)                 | Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)，[Github 库](https://github.com/fmfn/BayesianOptimization)                                                                             |
 | [**PPO Tuner**](#PPOTuner)               | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                                                     |
-| [**PBT Tuner**](#PBTTuner)               | PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. [Reference Paper](https://arxiv.org/abs/1711.09846v1)                         |
+| [**PBT Tuner**](#PBTTuner)               | PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. [参考论文](https://arxiv.org/abs/1711.09846v1)                                    |
 
 ## 用法
 
@@ -457,7 +457,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
 
-> Built-in Tuner Name: **PBTTuner**
+> 内置 Tuner 名称：**PBTTuner**
 
 **Suggested scenario**
 
