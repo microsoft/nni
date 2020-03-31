@@ -8,6 +8,7 @@ import os
 import random
 import shutil
 import sys
+from collections import deque
 from unittest import TestCase, main
 
 from nni.batch_tuner.batch_tuner import BatchTuner
@@ -16,12 +17,15 @@ from nni.gp_tuner.gp_tuner import GPTuner
 from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
+from nni.msg_dispatcher import _pack_parameter, MsgDispatcher
+from nni.pbt_tuner.pbt_tuner import PBTTuner
 
 try:
     from nni.smac_tuner.smac_tuner import SMACTuner
 except ImportError:
     assert sys.platform == "win32"
 from nni.tuner import Tuner
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')
@@ -34,7 +38,7 @@ class BuiltinTunersTestCase(TestCase):
         - [ ] save_checkpoint
         - [X] update_search_space
         - [X] generate_multiple_parameters
-        - [ ] import_data
+        - [X] import_data
         - [ ] trial_end
         - [x] receive_trial_result
     """
@@ -44,18 +48,29 @@ class BuiltinTunersTestCase(TestCase):
         self.params_each_round = 50
         self.exhaustive = False
 
+    def send_trial_callback(self, param_queue):
+        def receive(*args):
+            param_queue.append(tuple(args))
+        return receive
+
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
 
         for i in range(self.test_round):
+            queue = deque()
             parameters = tuner.generate_multiple_parameters(list(range(i * self.params_each_round,
-                                                                       (i + 1) * self.params_each_round)))
+                                                                       (i + 1) * self.params_each_round)),
+                                                            st_callback=self.send_trial_callback(queue))
             logger.debug(parameters)
             self.check_range(parameters, search_space)
             for k in range(min(len(parameters), self.params_each_round)):
                 tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
+            while queue:
+                id_, params = queue.popleft()
+                self.check_range([params], search_space)
+                tuner.receive_trial_result(id_, params, random.uniform(-100, 100))
             if not parameters and not self.exhaustive:
                 raise ValueError("No parameters generated")
 
@@ -65,6 +80,9 @@ class BuiltinTunersTestCase(TestCase):
             if self._testMethodName == "test_batch":
                 param = {list(search_space.keys())[0]: param}
             for k, v in param.items():
+                if k == "load_checkpoint_dir" or k == "save_checkpoint_dir":
+                    self.assertIsInstance(v, str)
+                    continue
                 if k.startswith("_mutable_layer"):
                     _, block, layer, choice = k.split("/")
                     cand = search_space[block]["_value"][layer].get(choice)
@@ -124,8 +142,8 @@ class BuiltinTunersTestCase(TestCase):
             if any(single.startswith(t) for t in ignore_types):
                 continue
             expected_fail = not any(single.startswith(t) for t in supported_types) or \
-                            any(single.startswith(t) for t in fail_types) or \
-                            "fail" in single  # name contains fail (fail on all)
+                any(single.startswith(t) for t in fail_types) or \
+                "fail" in single  # name contains fail (fail on all)
             single_search_space = {single: space}
             if not expected_fail:
                 # supports this key
@@ -141,56 +159,144 @@ class BuiltinTunersTestCase(TestCase):
             logger.info("Full supported search space: %s", full_supported_search_space)
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
+    def import_data_test(self, tuner_factory, stype="choice_str"):
+        """
+        import data at the beginning with number value and dict value
+        import data in the middle also with number value and dict value, and duplicate data record
+        generate parameters after data import
+
+        Parameters
+        ----------
+        tuner_factory : lambda
+            a lambda for instantiate a tuner
+        stype : str
+            the value type of hp choice, support "choice_str" and "choice_num"
+        """
+        if stype == "choice_str":
+            search_space = {
+                "choice_str": {
+                    "_type": "choice",
+                    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"]
+                }
+            }
+        elif stype == "choice_num":
+            search_space = {
+                "choice_num": {
+                    "_type": "choice",
+                    "_value": [10, 20, 30, 40, 50, 60]
+                }
+            }
+        else:
+            raise RuntimeError("Unexpected stype")
+        tuner = tuner_factory()
+        self.assertIsInstance(tuner, Tuner)
+        tuner.update_search_space(search_space)
+        # import data at the beginning
+        if stype == "choice_str":
+            data = [{"parameter": {"choice_str": "cat"}, "value": 1.1},
+                    {"parameter": {"choice_str": "dog"}, "value": {"default": 1.2, "tmp": 2}}]
+        else:
+            data = [{"parameter": {"choice_num": 20}, "value": 1.1},
+                    {"parameter": {"choice_num": 60}, "value": {"default": 1.2, "tmp": 2}}]
+        tuner.import_data(data)
+        logger.info("Imported data successfully at the beginning")
+        # generate parameters
+        parameters = tuner.generate_multiple_parameters(list(range(3)))
+        for i in range(3):
+            tuner.receive_trial_result(i, parameters[i], random.uniform(-100, 100))
+        # import data in the middle
+        if stype == "choice_str":
+            data = [{"parameter": {"choice_str": "cat"}, "value": 1.1},
+                    {"parameter": {"choice_str": "dog"}, "value": {"default": 1.2, "tmp": 2}},
+                    {"parameter": {"choice_str": "cow"}, "value": 1.3}]
+        else:
+            data = [{"parameter": {"choice_num": 20}, "value": 1.1},
+                    {"parameter": {"choice_num": 60}, "value": {"default": 1.2, "tmp": 2}},
+                    {"parameter": {"choice_num": 50}, "value": 1.3}]
+        tuner.import_data(data)
+        logger.info("Imported data successfully in the middle")
+        # generate parameters again
+        parameters = tuner.generate_multiple_parameters([3])
+        tuner.receive_trial_result(3, parameters[0], random.uniform(-100, 100))
+
     def test_grid_search(self):
         self.exhaustive = True
-        self.search_space_test_all(lambda: GridSearchTuner(),
+        tuner_fn = lambda: GridSearchTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "quniform"])
+        self.import_data_test(tuner_fn)
 
     def test_tpe(self):
-        self.search_space_test_all(lambda: HyperoptTuner("tpe"),
+        tuner_fn = lambda: HyperoptTuner("tpe")
+        self.search_space_test_all(tuner_fn,
                                    ignore_types=["uniform_equal", "qloguniform_equal", "loguniform_equal", "quniform_clip_2"])
         # NOTE: types are ignored because `tpe.py line 465, in adaptive_parzen_normal assert prior_sigma > 0`
+        self.import_data_test(tuner_fn)
 
     def test_random_search(self):
-        self.search_space_test_all(lambda: HyperoptTuner("random_search"))
+        tuner_fn = lambda: HyperoptTuner("random_search")
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_anneal(self):
-        self.search_space_test_all(lambda: HyperoptTuner("anneal"))
+        tuner_fn = lambda: HyperoptTuner("anneal")
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_smac(self):
         if sys.platform == "win32":
             return  # smac doesn't work on windows
-        self.search_space_test_all(lambda: SMACTuner(),
+        tuner_fn = lambda: SMACTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform"])
+        self.import_data_test(tuner_fn)
 
     def test_batch(self):
         self.exhaustive = True
-        self.search_space_test_all(lambda: BatchTuner(),
+        tuner_fn = lambda: BatchTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice"])
+        self.import_data_test(tuner_fn)
 
     def test_evolution(self):
         # Needs enough population size, otherwise it will throw a runtime error
-        self.search_space_test_all(lambda: EvolutionTuner(population_size=100))
+        tuner_fn = lambda: EvolutionTuner(population_size=100)
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn)
 
     def test_gp(self):
         self.test_round = 1  # NOTE: GP tuner got hanged for multiple testing round
-        self.search_space_test_all(lambda: GPTuner(),
+        tuner_fn = lambda: GPTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform", "loguniform",
                                                     "qloguniform"],
                                    ignore_types=["normal", "lognormal", "qnormal", "qlognormal"],
                                    fail_types=["choice_str", "choice_mixed"])
+        self.import_data_test(tuner_fn, "choice_num")
 
     def test_metis(self):
         self.test_round = 1  # NOTE: Metis tuner got hanged for multiple testing round
-        self.search_space_test_all(lambda: MetisTuner(),
+        tuner_fn = lambda: MetisTuner()
+        self.search_space_test_all(tuner_fn,
                                    supported_types=["choice", "randint", "uniform", "quniform"],
                                    fail_types=["choice_str", "choice_mixed"])
+        self.import_data_test(tuner_fn, "choice_num")
 
     def test_networkmorphism(self):
         pass
 
     def test_ppo(self):
         pass
+
+    def test_pbt(self):
+        self.search_space_test_all(lambda: PBTTuner(
+            all_checkpoint_dir=os.path.expanduser("~/nni/checkpoint/test/"),
+            population_size=12
+        ))
+        self.search_space_test_all(lambda: PBTTuner(
+            all_checkpoint_dir=os.path.expanduser("~/nni/checkpoint/test/"),
+            population_size=100
+        ))
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]

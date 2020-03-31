@@ -14,7 +14,7 @@ Anaconda or Miniconda is highly recommended to manage multiple Python environmen
 
 ### Install NNI through source code
 
-  If you are interested on special or latest code version, you can install NNI through source code.
+  If you are interested in special or the latest code versions, you can install NNI through source code.
 
   Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
 
@@ -70,7 +70,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
+* Open the `Web UI url` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
 
 ![overview](../../img/webui_overview_page.png)
 
@@ -94,35 +94,35 @@ Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is
 
 ### simplejson failed when installing NNI
 
-Make sure C++ 14.0 compiler installed.
+Make sure a C++ 14.0 compiler is installed.
 >building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
 ### Trial failed with missing DLL in command line or PowerShell
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
+This error is caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and failure to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
 >ImportError: DLL load failed
 
 ### Trial failed on webUI
 
 Please check the trial log file stderr for more details.
 
-If there is a stderr file, please check out. Two possible cases are as follows:
+If there is a stderr file, please check it. Two possible cases are:
 
-* forget to change the trial command `python3` into `python` in each experiment YAML.
-* forget to install experiment dependencies such as TensorFlow, Keras and so on.
+* forgetting to change the trial command `python3` to `python` in each experiment YAML.
+* forgetting to install experiment dependencies such as TensorFlow, Keras and so on.
 
 ### Fail to use BOHB on Windows
-Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
+Make sure a C++ 14.0 compiler is installed when trying to run `nnictl package install --name=BOHB` to install the dependencies.
 
 ### Not supported tuner on Windows
-SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
+SMAC is not supported currently; for the specific reason refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
 ### Use a Windows server as a remote worker
-Currently you can't.
+Currently, you can't.
 
 Note:
 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* If an error like `Segmentation fault` is encountered, please refer to the [FAQ](FAQ.md)
 
 
 ## Further reading

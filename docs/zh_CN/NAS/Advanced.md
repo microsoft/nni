@@ -31,7 +31,7 @@ for _ in range(epochs):
 
 最后，Mutator 会提供叫做 `mutator.export()` 的方法来将模型的架构参数作为 dict 导出。 注意，当前 dict 是从 Mutable 键值到选择张量的映射。 为了存储到 JSON，用户需要将张量显式的转换为 Python 的 list。
 
-同时，NNI 提供了工具，能更容易地实现 Trainer。 参考 [Trainer](./NasReference.md#trainers) 了解详情。
+同时，NNI 提供了工具，能更容易地实现 Trainer。 参考 [Trainer](./NasReference.md) 了解详情。
 
 ## 实现新的 Mutator
 
@@ -94,7 +94,7 @@ class RandomMutator(Mutator):
 
 ## 实现分布式 NAS Tuner
 
-在学习编写 One-Shot NAS Tuner前，应先了解如何写出通用的 Tuner。 阅读[自定义 Tuner](../Tuner/CustomizeTuner.md) 的教程。
+在学习编写分布式 NAS Tuner前，应先了解如何写出通用的 Tuner。 阅读[自定义 Tuner](../Tuner/CustomizeTuner.md) 的教程。
 
 当调用 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 时，会生成下面这样的搜索空间文件：
 

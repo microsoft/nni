@@ -4,6 +4,7 @@
 import logging
 import datetime
 from nni.assessor import Assessor, AssessResult
+from nni.utils import extract_scalar_history
 from .model_factory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
@@ -91,10 +92,11 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
-        self.trial_history = trial_history
+        scalar_trial_history = extract_scalar_history(trial_history)
+        self.trial_history = scalar_trial_history
         if not self.set_best_performance:
             return AssessResult.Good
-        curr_step = len(trial_history)
+        curr_step = len(scalar_trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
 
@@ -106,7 +108,7 @@ class CurvefittingAssessor(Assessor):
             start_time = datetime.datetime.now()
             # Predict the final result
             curvemodel = CurveModel(self.target_pos)
-            predict_y = curvemodel.predict(trial_history)
+            predict_y = curvemodel.predict(scalar_trial_history)
             logger.info('Prediction done. Trial job id = %s. Predict value = %s', trial_job_id, predict_y)
             if predict_y is None:
                 logger.info('wait for more information to predict precisely')

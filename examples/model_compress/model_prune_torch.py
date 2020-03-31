@@ -53,13 +53,13 @@ prune_config = {
             'op_types': ['Conv2d']
         }]
     },
-    'l1': {
+    'l1filter': {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': L1FilterPruner,
         'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
@@ -67,9 +67,9 @@ prune_config = {
         'dataset_name': 'cifar10',
         'model_name': 'vgg16',
         'pruner_class': ActivationMeanRankFilterPruner,
-        'configure_list': [{
+        'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     },
@@ -127,7 +127,7 @@ class NaiveModel(torch.nn.Module):
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
+        x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
@@ -142,10 +142,10 @@ def create_model(model_name='naive'):
     else:
         return VGG(19)
 
-def create_pruner(model, pruner_name):
+def create_pruner(model, pruner_name, optimizer=None):
     pruner_class = prune_config[pruner_name]['pruner_class']
     config_list = prune_config[pruner_name]['config_list']
-    return pruner_class(model, config_list)
+    return pruner_class(model, config_list, optimizer)
 
 def train(model, device, train_loader, optimizer):
     model.train()
@@ -179,6 +179,7 @@ def test(model, device, test_loader):
 
 def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    os.makedirs(args.checkpoints_dir, exist_ok=True)
 
     model_name = prune_config[args.pruner_name]['model_name']
     dataset_name = prune_config[args.pruner_name]['dataset_name']
@@ -203,8 +204,6 @@ def main(args):
 
     print('start model pruning...')
 
-    if not os.path.exists(args.checkpoints_dir):
-        os.makedirs(args.checkpoints_dir)
     model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
     mask_path = os.path.join(args.checkpoints_dir, 'mask_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
 

@@ -241,7 +241,8 @@ def init_trainable_embedding(embedding_path, word_id_dict, embed_dim=300):
     embedding = np.random.random([len(word_id_dict), embed_dim]).astype(np.float32) / 2.0 - 0.25
     embedding[0] = np.zeros(embed_dim)  # PAD
     embedding[1] = (np.random.rand(embed_dim) - 0.5) / 2  # UNK
-    for word, idx in word_id_dict.items():
+    for word in sorted(word_id_dict.keys()):
+        idx = word_id_dict[word]
         if idx == 0 or idx == 1:
             continue
         if word in word_embed_model["mapping"]:

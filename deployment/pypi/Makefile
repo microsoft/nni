@@ -36,10 +36,13 @@ build:
 	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1
 	cd $(CWD)../../src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	cd $(CWD)../../src/webui && $(NNI_YARN) && $(NNI_YARN) build
+	cd $(CWD)../../src/nasui && $(NNI_YARN) && $(NNI_YARN) build
 	rm -rf $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/config $(CWD)nni
 	cp -r $(CWD)../../src/webui/build $(CWD)nni/static
+	cp -r $(CWD)../../src/nasui/build $(CWD)nni/nasui
+	cp $(CWD)../../src/nasui/server.js $(CWD)nni/nasui
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
 	cd $(CWD)nni && $(NNI_YARN) --prod
