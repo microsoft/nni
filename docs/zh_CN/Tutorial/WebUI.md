@@ -4,7 +4,7 @@
 
 点击标签 "Overview"。
 
-* 查看 Experiment Trial 配置、搜索空间以及结果好的 Trial。
+* 在 Overview 标签上，可看到 Experiment Trial 的概况、搜索空间、以及最好的 Trial 结果。
 
 ![](../../img/webui-img/over1.png) ![](../../img/webui-img/over2.png)
 
@@ -16,11 +16,11 @@
 
 ![](../../img/webui-img/download.png)
 
-* 如果 Experiment 状态为 ERROR，可点击图标，查看 Experiment 错误日志。
+* 如果实验的状态为错误，可以单击错误框中的感叹号来查看日志消息。
 
 ![](../../img/webui-img/log-error.png) ![](../../img/webui-img/review-log.png)
 
-* 点击 "Feedback" 反馈问题。
+* 可点击 "Feedback" 报告任何问题。
 
 ## 查看任务默认指标
 
@@ -55,17 +55,15 @@
 
 Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解一些 Trial 的趋势，可以为中间结果图设置过滤。
 
-这样可以发现 Trial 在某个中间结果上会变得更好或更差。 换句话说，这是一个重要的中间结果。 如果要仔细查看这个点，可以在 #Intermediate 中输入其横坐标。
-
-并输入这个中间结果的指标范围。 如下图所示，选择了第 4 个中间结果， 并将指标范围设置为了 0.8 -1。
+这样可以发现 Trial 在某个中间结果上会变得更好或更差。 这表明它是一个重要的并相关的中间结果。 如果要仔细查看这个点，可以在 #Intermediate 中输入其 X 坐标。 并输入这个中间结果的指标范围。 在下图中，选择了 No。 并将指标范围设置为了 0.8 -1。
 
 ![](../../img/webui-img/filter-intermediate.png)
 
 ## 查看 Trial 状态
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 包括：
+点击 "Trials Detail" 标签查看所有 Trial 的状态。 特别是：
 
-* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
 
 ![](../../img/webui-img/detail-local.png)
 

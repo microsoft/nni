@@ -125,8 +125,9 @@ def report_final_result(metric):
 
     Parameters
     ----------
-    metric:
-        serializable object.
+    metric: serializable object
+        Usually (for built-in tuners to work), it should be a number, or
+        a dict with key "default" (a number), and any other extra keys.
     """
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_final_result'

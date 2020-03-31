@@ -4,9 +4,9 @@ NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称
 
 ## 远程计算机的要求
 
-* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/Installation.md)与 NNI 本机模式相同。
+* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/InstallationLinux.md)与 NNI 本机模式相同。
 
-* 根据[安装文章](../Tutorial/Installation.md)，在每台计算机上安装 NNI。
+* 根据[安装文章](../Tutorial/InstallationLinux.md)，在每台计算机上安装 NNI。
 
 * 确保远程计算机满足 Trial 代码的环境要求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
 

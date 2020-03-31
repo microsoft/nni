@@ -46,15 +46,11 @@ bash run_retrain_cifar.sh
 ..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
     :members:
 
 ..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
     :members:
-
-    .. automethod:: __init__
 
 ..  autoclass:: nni.nas.pytorch.cdarts.RegularizedMutatorParallel
     :members:
