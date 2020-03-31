@@ -6,22 +6,14 @@ echo ""
 echo "===========================Testing: pruning and speedup==========================="
 cd ${CWD}/../examples/model_compress
 
-echo "testing slim pruning and speedup..."
-python3 model_prune_torch.py --pruner_name slim --pretrain_epochs 1 --prune_epochs 1
-python3 model_speedup.py --example_name slim --model_checkpoint ./checkpoints/pruned_vgg19_cifar10_slim.pth \
-    --masks_file ./checkpoints/mask_vgg19_cifar10_slim.pth
+for name in fpgm slim l1filter apoz
+do
+    echo "testing $name pruning and speedup..."
+    python3 model_prune_torch.py --pruner_name $name --pretrain_epochs 1 --prune_epochs 1
+    python3 model_speedup.py --example_name $name
+done
 
-echo "testing l1 pruning and speedup..."
-python3 model_prune_torch.py --pruner_name l1 --pretrain_epochs 1 --prune_epochs 1
-python3 model_speedup.py --example_name l1filter --model_checkpoint ./checkpoints/pruned_vgg16_cifar10_l1.pth \
-    --masks_file ./checkpoints/mask_vgg16_cifar10_l1.pth
-
-echo "testing apoz pruning and speedup..."
-python3 model_prune_torch.py --pruner_name apoz --pretrain_epochs 1 --prune_epochs 1
-python3 model_speedup.py --example_name apoz --model_checkpoint ./checkpoints/pruned_vgg16_cifar10_apoz.pth \
-    --masks_file ./checkpoints/mask_vgg16_cifar10_apoz.pth
-
-for name in level fpgm mean_activation
+for name in level mean_activation
 do
     echo "testing $name pruning..."
     python3 model_prune_torch.py --pruner_name $name --pretrain_epochs 1 --prune_epochs 1

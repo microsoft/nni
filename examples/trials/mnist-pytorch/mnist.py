@@ -15,14 +15,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 
-# Temporary patch this example until the MNIST dataset download issue get resolved
-# https://github.com/pytorch/vision/issues/1938
-import urllib
-
-opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-urllib.request.install_opener(opener)
-
 logger = logging.getLogger('mnist_AutoML')
 
 
@@ -48,6 +40,8 @@ class Net(nn.Module):
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
+        if (args['batch_num'] is not None) and batch_idx >= args['batch_num']:
+            break
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -119,16 +113,15 @@ def main(args):
         train(args, model, device, train_loader, optimizer, epoch)
         test_acc = test(args, model, device, test_loader)
 
-        if epoch < args['epochs']:
-            # report intermediate result
-            nni.report_intermediate_result(test_acc)
-            logger.debug('test accuracy %g', test_acc)
-            logger.debug('Pipe send intermediate result done.')
-        else:
-            # report final result
-            nni.report_final_result(test_acc)
-            logger.debug('Final result is %g', test_acc)
-            logger.debug('Send final result done.')
+        # report intermediate result
+        nni.report_intermediate_result(test_acc)
+        logger.debug('test accuracy %g', test_acc)
+        logger.debug('Pipe send intermediate result done.')
+
+    # report final result
+    nni.report_final_result(test_acc)
+    logger.debug('Final result is %g', test_acc)
+    logger.debug('Send final result done.')
 
 
 def get_params():
@@ -138,6 +131,7 @@ def get_params():
                         default='/tmp/pytorch/mnist/input_data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
+    parser.add_argument("--batch_num", type=int, default=None)
     parser.add_argument("--hidden_size", type=int, default=512, metavar='N',
                         help='hidden layer size (default: 512)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
@@ -165,6 +159,7 @@ if __name__ == '__main__':
         logger.debug(tuner_params)
         params = vars(get_params())
         params.update(tuner_params)
+        print(params)
         main(params)
     except Exception as exception:
         logger.exception(exception)
