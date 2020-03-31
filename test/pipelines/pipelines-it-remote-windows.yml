@@ -56,5 +56,5 @@ jobs:
     inputs:
       sshEndpoint: $(end_point)
       runOptions: commands
-      commands: sudo rm -rf /tmp/nnitest/$(Build.BuildId)
+      commands: rm -rf /tmp/nnitest/$(Build.BuildId)
     displayName: 'Clean the remote files'  
