@@ -6,7 +6,6 @@ import os
 import sys
 import string
 import random
-import site
 import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
@@ -17,7 +16,7 @@ from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
-                          detect_port, get_user, get_python_dir
+                          detect_port, get_user, get_nni_installation_path
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
@@ -36,47 +35,6 @@ def print_log_content(config_file_name):
     print('\n\n')
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
-
-def get_nni_installation_path():
-    ''' Find nni lib from the following locations in order
-    Return nni root directory if it exists
-    '''
-    def try_installation_path_sequentially(*sitepackages):
-        '''Try different installation path sequentially util nni is found.
-        Return None if nothing is found
-        '''
-        def _generate_installation_path(sitepackages_path):
-            python_dir = get_python_dir(sitepackages_path)
-            entry_file = os.path.join(python_dir, 'nni', 'main.js')
-            if os.path.isfile(entry_file):
-                return python_dir
-            return None
-
-        for sitepackage in sitepackages:
-            python_dir = _generate_installation_path(sitepackage)
-            if python_dir:
-                return python_dir
-        return None
-
-    if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
-        # Note that conda venv will not have VIRTUAL_ENV
-        python_dir = os.getenv('VIRTUAL_ENV')
-    else:
-        python_sitepackage = site.getsitepackages()[0]
-        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
-        # that nni exists there
-        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
-        else:
-            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
-
-    if python_dir:
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        if os.path.isfile(entry_file):
-            return os.path.join(python_dir, 'nni')
-    print_error('Fail to find nni under python library')
-    exit(1)
 
 def start_rest_server(port, platform, mode, config_file_name, foreground=False, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
@@ -99,7 +57,7 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
     node_command = 'node'
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
-    cmds = [node_command, entry_file, '--port', str(port), '--mode', platform]
+    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
         cmds += ['--readonly', 'true']

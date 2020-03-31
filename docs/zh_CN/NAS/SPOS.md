@@ -92,17 +92,11 @@ python scratch.py
 ..  autoclass:: nni.nas.pytorch.spos.SPOSEvolution
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainer
     :members:
 
-    .. automethod:: __init__
-
 ..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainingMutator
     :members:
-
-    .. automethod:: __init__
 ```
 
 ## 已知的局限

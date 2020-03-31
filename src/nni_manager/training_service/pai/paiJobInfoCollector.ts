@@ -92,6 +92,7 @@ export class PAIJobInfoCollector {
                             paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
+                        case 'STOPPING':
                             if (paiTrialJob.isEarlyStopped !== undefined) {
                                 paiTrialJob.status = paiTrialJob.isEarlyStopped === true ?
                                         'EARLY_STOPPED' : 'USER_CANCELED';

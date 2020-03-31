@@ -6,7 +6,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 ### TPE 的并行优化
 
-为了利用多个计算节点，TPE 方法是异步运行的，这样能避免浪费时间等待 Trial 评估的完成。 此算法设计的初衷是优化序列。 当在高并发情况下使用 TPE 时，性能会非常差。 通过 Constant Liar 算法优化了这种情况。 关于优化的原理，参考[文档](../CommunitySharings/ParallelizingTpeSearch.md)。
+为了利用多个计算节点，TPE 方法是异步运行的，这样能避免浪费时间等待 Trial 评估的完成。 对原始算法设计进行了顺序计算优化。 如果要大并发的使用 TPE，性能将会较差。 通过 Constant Liar 算法优化了这种情况。 关于优化的原理，参考[文档](../CommunitySharings/ParallelizingTpeSearch.md)。
 
 ### 用法
 
@@ -21,15 +21,15 @@ tuner:
     constant_liar_type: min
 ```
 
-**参数**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **parallel_optimize** (*bool, 可选, 默认值为 False*) - 如果为 True，TPE 会使用 Constant Liar 算法来优化并行超参调优。 否则，TPE 不会区分序列或并发的情况。
 * **constant_liar_type** (*min、max 或 mean, 可选, 默认值为 min*) - 使用的 constant liar 类型，会在 X 点根据 y 的取值来确定。对应三个值：min{Y}, max{Y}, 和 mean{Y}。
 
 ## Random Search（随机搜索）
 
-[Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) 中介绍了随机搜索惊人的简单和效果。 建议当不清楚超参的先验分布时，采用随机搜索作为基准。
+[Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) 中介绍了随机搜索惊人的简单和效果。 建议在不知道超参数的先验分布时，使用随机搜索作为基准。
 
 ## Anneal（退火算法）
 

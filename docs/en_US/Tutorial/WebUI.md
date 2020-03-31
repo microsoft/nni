@@ -4,22 +4,22 @@
 
 Click the tab "Overview".
 
-* See the experiment trial profile/search space and performanced good trials.
+* On the overview tab, you can see the experiment trial profile/search space and the performance of top trials.
 
 ![](../../img/webui-img/over1.png)
 ![](../../img/webui-img/over2.png)
-* If your experiment have many trials, you can change the refresh interval on here.
+* If your experiment has many trials, you can change the refresh interval here.
 
 ![](../../img/webui-img/refresh-interval.png)
-* Support to review and download the experiment result and nni-manager/dispatcher log file from the "View" button.
+* You can review and download the experiment results and nni-manager/dispatcher log files from the "View" button.
 
 ![](../../img/webui-img/download.png)
-* You can click the learn about in the error box to track experiment log message if the experiment's status is error.
+* You can click the exclamation point in the error box to see a log message if the experiment's status is an error.
 
 ![](../../img/webui-img/log-error.png)
 ![](../../img/webui-img/review-log.png)
 
-* You can click "Feedback" to report it if you have any questions.
+* You can click "Feedback" to report any questions.
 
 ## View job default metric
 
@@ -46,25 +46,23 @@ Click the tab "Trial Duration" to see the bar graph.
 ![](../../img/trial_duration.png)
 ## View Trial Intermediate Result Graph
 
-Click the tab "Intermediate Result" to see the lines graph.
+Click the tab "Intermediate Result" to see the line graph.
 
 ![](../../img/webui-img/trials_intermeidate.png)
 
-The trial may have many intermediate results in the training progress. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
+The trial may have many intermediate results in the training process. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
 
-You may find that these trials will get better or worse at one of intermediate results. In other words, this is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding abscissa value at #Intermediate.
-
-And then input the range of metrics on this intermedia result. Like below picture, it chooses No. 4 intermediate result and set the range of metrics to 0.8-1.
+You may find that these trials will get better or worse at an intermediate result. This indicates that it is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding X-value at #Intermediate. Then input the range of metrics on this intermedia result. In the picture below, we choose the No. 4 intermediate result and set the range of metrics to 0.8-1.
 
 ![](../../img/webui-img/filter-intermediate.png)
 ## View trials status
 
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+Click the tab "Trials Detail" to see the status of all trials. Specifically:
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
+* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy, and search space file.
 
 ![](../../img/webui-img/detail-local.png)
-* The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
+* The button named "Add column" can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
 
 ![](../../img/webui-img/addColumn.png)
 * If you want to compare some trials, you can select them and then click "Compare" to see the results.
@@ -74,13 +72,13 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 * Support to search for a specific trial by it's id, status, Trial No. and parameters.
 
 ![](../../img/webui-img/search-trial.png)
-* You can use the button named "Copy as python" to copy trial's parameters.
+* You can use the button named "Copy as python" to copy the trial's parameters.
 
 ![](../../img/webui-img/copyParameter.png)
-* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* If you run on the OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../../img/webui-img/detail-pai.png)
-* Intermediate Result Graph: you can see default and other keys in this graph by click the operation column button.
+* Intermediate Result Graph: you can see the default and other keys in this graph by clicking the operation column button.
 
 ![](../../img/webui-img/intermediate-btn.png)
 ![](../../img/webui-img/intermediate.png)

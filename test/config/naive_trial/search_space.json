@@ -1,0 +1,17 @@
+{
+    "k":
+    {
+        "_type" : "randint",
+        "_value" : [0, 4]
+    },
+    "d":
+    {
+        "_type" : "choice",
+        "_value" : [-1, 1]
+    },
+    "n":
+    {
+        "_type" : "uniform",
+        "_value" : [0, 0.2]
+    }
+}

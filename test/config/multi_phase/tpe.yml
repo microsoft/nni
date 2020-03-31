@@ -1,0 +1,22 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 4
+trialConcurrency: 4
+searchSpacePath: ./search_space.json
+
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+
+trial:
+  codeDir: .
+  command: python3 multi_phase.py
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: true
+multiThread: false
+
+trainingServicePlatform: local
