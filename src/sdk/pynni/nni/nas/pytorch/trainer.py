@@ -175,6 +175,9 @@ class Trainer(BaseTrainer):
         raise NotImplementedError("Not implemented yet")
 
     def enable_visualization(self):
+        """
+        Enable visualization. Write graph and training log to folder ``logs/<timestamp>``.
+        """
         sample = None
         for x, _ in self.train_loader:
             sample = x.to(self.device)[:2]
