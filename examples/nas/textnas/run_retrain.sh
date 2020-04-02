@@ -4,7 +4,7 @@
 export PYTHONPATH="$(pwd)"
 export CUDA_VISIBLE_DEVICES=0
 
-python -u retrain.py \
+python3 -u retrain.py \
   --train_ratio=1.0 \
   --valid_ratio=1.0 \
   --min_count=1 \
