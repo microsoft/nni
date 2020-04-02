@@ -463,13 +463,13 @@ tuner:
 
 **Suggested scenario**
 
-Population Based Training (PBT) which bridges and extends parallel search methods and sequential optimization methods. It has a wallclock run time that is no greater than that of a single optimization process, does not require sequential runs, and is also able to use fewer computational resources than naive search methods. Therefore, it's effective when you want to save computational resources and time. Besides, PBT returns hyperparameter scheduler instead of configuration. If you don't need to get a specific configuration, but just expect good results, you can choose this tuner. It should be noted that, in our implementation, the operation of checkpoint storage location is involved. A trial is considered as several traning epochs of training, so the loading and saving of checkpoint must be specified in the trial code, which is different with other tuners. Otherwise, if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials. You could try it on very simple task, such as the [mnist-pbt-tuner-pytorch](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pbt-tuner-pytorch) example. [See details](./PBTTuner.md)
+Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [See details](./PBTTuner.md)
 
 **classArgs requirements:**
 
 * **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 * **all_checkpoint_dir** (*str, optional, default = None*) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/<exp-id>". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
-* **population_size** (*int, optional, default = 10*) - Number of trials for each step. In our implementation, one step is running each trial by specific training epochs set by users.
+* **population_size** (*int, optional, default = 10*) - Number of trials in a population. Each step has this number of trails. In our implementation, one step is running each trial by specific training epochs set by users.
 * **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
 * **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
 
@@ -482,6 +482,10 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
+
+Note that, to use this tuner, your trial code should be modified accordingly, please refer to [the document of PBTTuner](./PBTTuner.md) for details.
+
+
 ## **Reference and Feedback**
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
 * To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
