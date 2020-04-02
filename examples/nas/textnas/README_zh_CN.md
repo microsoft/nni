@@ -42,4 +42,8 @@ python search.py
 
 ## 重新训练
 
-待完成
+```
+sh run_retrain.sh
+```
+
+默认情况下，会在SST-2数据集上重新训练作者提供的结构。

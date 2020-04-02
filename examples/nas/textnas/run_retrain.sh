@@ -36,6 +36,6 @@ python -u retrain.py \
   --child_lr_T_0=10 \
   --child_lr_T_mul=2 \
   --multi_path=True \
-  --child_fixed_arc="./checkpoints/architecture_00.json" \
+  --child_fixed_arc="./arc/final_arc.json" \
   --fixed_seed=True \
   "$@"
