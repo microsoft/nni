@@ -25,10 +25,11 @@ One-shot algorithms run **standalone without nnictl**. Only the PyTorch version 
 
 Here are some common dependencies to run the examples. PyTorch needs to be above 1.2 to use ``BoolTensor``.
 
-* NNI 1.2+
 * tensorboard
 * PyTorch 1.2+
 * git
+
+One-shot NAS can be visualized with our visualization tool. Learn more details [here](./Visualization.md).
 
 ## Supported Distributed NAS Algorithms
 
