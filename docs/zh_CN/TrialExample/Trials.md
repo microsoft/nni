@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`包含了定期评估的损失值或精度。
 
 * 返回配置的最终性能
 
@@ -53,11 +53,11 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
+`指标`可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
 
 ### 第三步：启用 NNI API
 
-要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径，即第一步中定义的文件：
 
 ```yaml
 useAnnotation: false
@@ -72,10 +72,10 @@ searchSpacePath: /path/to/your/search_space.json
 
 ## NNI Annotation
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NN Annotation 很简单，类似于注释。 不必对现有代码进行结构更改。 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量
-* 指定变量的搜索空间范围
+* 指定要在其中调整的变量的范围
 * 标记哪个变量需要作为中间结果范围给 `Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
@@ -89,7 +89,7 @@ searchSpacePath: /path/to/your/search_space.json
 2. 每执行 100 步返回 test\_acc
 3. 最后返回 test\_acc 作为最终结果。
 
-新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
+值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -120,7 +120,7 @@ with tf.Session() as sess:
 
 **注意**：
 
-* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
+* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须与 `@nni.variable` 的关键字 `name` 相同。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
 Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpec.md)。
