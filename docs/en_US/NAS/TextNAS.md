@@ -13,6 +13,32 @@ The search space of TextNAS contains:
 
 Following the ENAS algorithm, TextNAS also utilizes parameter sharing to accelerate the search speed and adopts a reinforcement-learning controller for the architecture sampling and generation. Please refer to the paper for more details of TextNAS.
 
+## Preparation
+
+Prepare the word vectors and SST dataset, and organize them in data directory as shown below:
+
+```
+textnas
+├── data
+│   ├── sst
+│   │   └── trees
+│   │       ├── dev.txt
+│   │       ├── test.txt
+│   │       └── train.txt
+│   └── glove.840B.300d.txt
+├── dataloader.py
+├── model.py
+├── ops.py
+├── README.md
+├── search.py
+└── utils.py
+```
+
+The following link might be helpful for finding and downloading the corresponding dataset:
+
+* [GloVe: Global Vectors for Word Representation](https://nlp.stanford.edu/projects/glove/)
+* [Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank](https://nlp.stanford.edu/sentiment/)
+
 ## Examples
 
 ### Search Space
@@ -29,6 +55,10 @@ cd examples/nas/textnas
 # view more options for search
 python3 search.py -h
 ```
+
+After each search epoch, 10 sampled architectures will be tested directly. Their performances are expected to be 40% - 42% after 10 epochs.
+
+By default, 20 sampled architectures will be exported into `checkpoints` directory for next step.
 
 ### retrain
 
