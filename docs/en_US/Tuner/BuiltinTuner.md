@@ -469,7 +469,7 @@ Population Based Training (PBT) bridges and extends parallel search methods and 
 
 * **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
 * **all_checkpoint_dir** (*str, optional, default = None*) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/<exp-id>". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
-* **population_size** (*int, optional, default = 10*) - Number of trials in a population. Each step has this number of trails. In our implementation, one step is running each trial by specific training epochs set by users.
+* **population_size** (*int, optional, default = 10*) - Number of trials in a population. Each step has this number of trials. In our implementation, one step is running each trial by specific training epochs set by users.
 * **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
 * **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
 
