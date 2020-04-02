@@ -37,7 +37,9 @@ textnas
 The following link might be helpful for finding and downloading the corresponding dataset:
 
 * [GloVe: Global Vectors for Word Representation](https://nlp.stanford.edu/projects/glove/)
+  * [glove.840B.300d.txt](http://nlp.stanford.edu/data/glove.840B.300d.zip)
 * [Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank](https://nlp.stanford.edu/sentiment/)
+  * [trainDevTestTrees_PTB.zip](https://nlp.stanford.edu/sentiment/trainDevTestTrees_PTB.zip)
 
 ## Examples
 
