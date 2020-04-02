@@ -3,6 +3,8 @@
 
 import json
 import logging
+import os
+import time
 from abc import abstractmethod
 
 import torch
@@ -90,6 +92,9 @@ class Trainer(BaseTrainer):
         self.batch_size = batch_size
         self.workers = workers
         self.log_frequency = log_frequency
+        self.log_dir = os.path.join("logs", str(time.time()))
+        os.makedirs(self.log_dir, exist_ok=True)
+        self.status_writer = open(os.path.join(self.log_dir, "log"), "w")
         self.callbacks = callbacks if callbacks is not None else []
         for callback in self.callbacks:
             callback.build(self.model, self.mutator, self)
@@ -168,3 +173,19 @@ class Trainer(BaseTrainer):
         Return trainer checkpoint.
         """
         raise NotImplementedError("Not implemented yet")
+
+    def enable_visualization(self):
+        sample = None
+        for x, _ in self.train_loader:
+            sample = x.to(self.device)[:2]
+            break
+        if sample is None:
+            _logger.warning("Sample is %s.", sample)
+        _logger.info("Creating graph json, writing to %s. Visualization enabled.", self.log_dir)
+        with open(os.path.join(self.log_dir, "graph.json"), "w") as f:
+            json.dump(self.mutator.graph(sample), f)
+        self.visualization_enabled = True
+
+    def _write_graph_status(self):
+        if hasattr(self, "visualization_enabled") and self.visualization_enabled:
+            print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)
