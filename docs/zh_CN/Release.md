@@ -1,5 +1,51 @@
 # 更改日志
 
+## 发布 1.4 - 2/19/2020
+
+### 主要功能
+
+#### 神经网络架构搜索
+
+* 支持 [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) 算法，并增加对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts)。
+* 初步支持 [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) 以及对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* 为 NAS 框架增加单元测试
+
+#### 模型压缩
+
+* 为压缩模型增加 DataParallel，并提供相应的 [示例](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py)
+* 支持压缩模型的[加速](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md)（试用版）
+
+#### 训练平台
+
+* 通过允许指定 OpenPAI 配置文件路径，来支持完整的 OpenPAI 配置
+* 为新的 OpenPAI 模式（又称，paiK8S）增加示例配置 YAML 文件
+* 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
+
+#### Web 界面
+
+* Web 界面重构：采用 fabric 框架
+
+#### 其它
+
+* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* 支持取消 UNKNOWN 状态的 Trial。
+* 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
+
+### 文档
+
+* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/en/latest/)
+* 改进 [NAS 文档](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.md)
+* 改进[新的 OpenPAI 模式的文档](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.md)
+* 为 [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md) 和[模型压缩](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md)增加入门指南
+* 改进支持 [EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md) 的文档
+
+### 修复的 Bug
+
+* 修复在指标数据和 JSON 格式中对 NaN 的支持
+* 修复搜索空间 `randint` 类型的 out-of-range Bug
+* 修复模型压缩中导出 ONNX 模型时的错误张量设备的 Bug
+* 修复新 OpenPAI 模式（又称，paiK8S）下，错误处理 nnimanagerIP 的 Bug
+
 ## 发布 1.3 - 12/30/2019
 
 ### 主要功能
@@ -12,10 +58,10 @@
 
 * [知识蒸馏](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/TrialExample/KDExample.md)算法和使用示例
 * Pruners 
-    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#l2filter-pruner)
-    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationapozrankfilterpruner)
-    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationmeanrankfilterpruner)
-* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer)
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#3-l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#1-activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#2-activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
 
 #### 训练平台
 
@@ -43,12 +89,12 @@
 
 ### 主要功能
 
-* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/Overview.md) 
+* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md) 
   - 新增特征工程接口
   - 特征选择算法: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GBDTSelector.md)
   - [特征工程示例](https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering)
 - 神经网络结构搜索在 NNI 上的应用 
-  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/NasInterface.md)
+  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
   - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#p-darts) (PyTorch)
   - 经典模式下的 NAS（每次 Trial 独立运行）
 - 模型压缩 
@@ -69,7 +115,7 @@
 - 文档 
   - 改进了 NNI API 文档，增加了更多的 docstring。
 
-### Bug 修复
+### 修复的 Bug
 
 - 修复当失败的 Trial 没有指标时，表格的排序问题。 -Issue #1773
 - 页面切换时，保留选择的（最大、最小）状态。 -PR#1710
@@ -81,7 +127,7 @@
 ### 主要功能
 
 * 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
-* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/Nnictl.md#view)
+* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
 * Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
 * 改进 WEB 界面 
   - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）
@@ -137,7 +183,7 @@
         + 添加配置示例
     + [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
 
-### Bug 修复
+### 修复的 Bug
 
 * (Bug 修复)修复 0.9 版本中的链接 -Issue #1236
 * (Bug 修复)自动完成脚本
@@ -158,7 +204,7 @@
 
 ### 主要功能
 
-* 生成 NAS 编程接口 
+* 通用 NAS 编程接口 
     * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
@@ -202,7 +248,7 @@
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * 支持 Kubeflow v1beta2 操作符 
   * 支持 Kubeflow TFJob/PyTorchJob v1beta2
-* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/zh_CN/GeneralNasInterfaces.md) 
+* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md) 
   * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
   * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
   * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
@@ -246,7 +292,7 @@
 * 为 nnictl 提供更友好的错误消息 
   * 为 YAML 文件格式错误提供更有意义的错误信息
 
-### Bug 修复
+### 修复的 Bug
 
 * 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
 * nnictl --version 不能在 make dev-install 下使用
@@ -265,7 +311,7 @@
 * 使日志集合功能可配置
 * 为所有 Trial 增加中间结果的视图
 
-### Bug 修复
+### 修复的 Bug
 
 * [为 OpenPAI 增加 shmMB 配置](https://github.com/microsoft/nni/issues/842)
 * 修复在指标为 dict 时，无法显示任何结果的 Bug。
@@ -290,7 +336,7 @@
 
 * 修复了在某些极端条件下，不能正确存储任务的取消状态。
 * 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
-* 修复 CIFAR-10 示例中的 broken pipe 问题。
+* 修复 CIFAR-10 样例中的 broken pipe 问题。
 * 为本地训练和 NNI 管理器添加单元测试。
 * 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
 * 在 OpenPAI 客户端中支持 Pylon 路径。
@@ -438,7 +484,7 @@
 
 ### 新示例
 
-* 公开的 NNI Docker 映像：
+* 公共的 NNI Docker 映像：
     
     ```bash
     docker pull msranni/nni:latest

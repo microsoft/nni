@@ -153,6 +153,18 @@ tuner_schema_dict = {
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
     },
+    'PBTTuner': {
+        'builtinTunerName': 'PBTTuner',
+        'classArgs': {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('all_checkpoint_dir'): setType('all_checkpoint_dir', str),
+            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
+            Optional('factors'): setType('factors', tuple),
+            Optional('fraction'): setType('fraction', float),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    },
     'customized': {
         'codeDir': setPathCheck('codeDir'),
         'classFileName': setType('classFileName', str),
