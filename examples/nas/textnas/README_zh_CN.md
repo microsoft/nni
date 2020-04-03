@@ -42,4 +42,8 @@ python search.py
 
 ## 重新训练
 
-待完成
+```
+sh run_retrain.sh
+```
+
+By default, the script will retrain the architecture provided by the author on the SST-2 dataset.
