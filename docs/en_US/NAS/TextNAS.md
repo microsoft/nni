@@ -77,12 +77,4 @@ sh run_retrain.sh
 
 ## Reference
 
-### PyTorch
-
-```eval_rst
-..  autoclass:: nni.nas.pytorch.enas.EnasTrainer
-    :members:
-
-..  autoclass:: nni.nas.pytorch.enas.EnasMutator
-    :members:
-```
+TextNAS directly uses EnasTrainer, please refer to [ENAS](./ENAS.md) for the trainer APIs.
