@@ -4,7 +4,7 @@
 export PYTHONPATH="$(pwd)"
 export CUDA_VISIBLE_DEVICES=0
 
-python -u retrain.py \
+python3 -u retrain.py \
   --train_ratio=1.0 \
   --valid_ratio=1.0 \
   --min_count=1 \
@@ -36,6 +36,6 @@ python -u retrain.py \
   --child_lr_T_0=10 \
   --child_lr_T_mul=2 \
   --multi_path=True \
-  --child_fixed_arc="./checkpoints/architecture_00.json" \
+  --child_fixed_arc="./arc/final_arc.json" \
   --fixed_seed=True \
   "$@"
