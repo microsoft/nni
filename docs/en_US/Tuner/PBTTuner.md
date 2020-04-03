@@ -33,6 +33,19 @@ save_path = os.path.join(params['save_checkpoint_dir'], 'model.pth')
 
 The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pbt-tuner-pytorch).
 
+### Experiment config
+
+Below is an exmaple of PBTTuner configuration in experiment config file. **Note that Assessor is not allowed if PBTTuner is used.**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PBTTuner
+  classArgs:
+    optimize_mode: maximize
+    all_checkpoint_dir: /the/path/to/store/checkpoints
+    population_size: 10
+```
 
 ### Limitations
 
