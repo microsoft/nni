@@ -1,41 +1,55 @@
 # NAS Visualization (Experimental)
 
-## Guide
+## Built-in Trainers Support
 
-Currently NAS visualization needs to customize trainer. If you don't know how, please read this [doc](./Advanced.md#extend-the-ability-of-one-shot-trainers).
-
-The workflow of NAS visualization is:
-
-* The trainer writes two files, `graph.json` and `log` to any directory (we will refer to it as `logdir`).
-* Meanwhile (experiment can be still running, but make sure `graph.json` exists), launch NAS UI with `nnictl webui nas --logdir /path/to/your/logdir --port <port>`.
-
-We provide an example of customizing trainers here:
+Currently, only ENAS and DARTS support visualization. Examples of [ENAS](./ENAS.md) and [DARTS](./DARTS.md) has demonstrated how to enable visualization in your code, namely, adding this before `trainer.train()`:
 
 ```python
-class MyTrainer(DartsTrainer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.status_writer = open("/path/to/your/logdir/log", "w")
+trainer.enable_visualization()
+```
 
-    def _logits_and_loss(self, X, y):
-        self.mutator.reset()
-        logits = self.model(X)
-        loss = self.loss(logits, y)
-        print(json.dumps(self.mutator.status()), file=self.status_writer)
-        self.status_writer.flush()
-        return logits, loss
+This will create a directory `logs/<current_time_stamp>` in your working folder, in which you will find two files `graph.json` and `log`.
 
+You don't have to wait until your program finishes to launch NAS UI, but it's important that these two files have been already created. Launch NAS UI with
 
-model = some_model()
-model.cuda()
-mutator = DartsMutator(model)
-vis_graph = mutator.graph(inputs)
+```bash
+nnictl webui nas --logdir logs/<current_time_stamp> --port <port>
+```
+
+## Visualize a Customized Trainer
+
+If you are interested in how to customize a trainer, please read this [doc](./Advanced.md#extend-the-ability-of-one-shot-trainers).
+
+You should do two modifications to an existing trainer to enable visualization:
+
+1. Export your graph before training, with
+
+```python
+vis_graph = self.mutator.graph(inputs)
 # `inputs` is a dummy input to your model. For example, torch.randn((1, 3, 32, 32)).cuda()
 # If your model has multiple inputs, it should be a tuple.
 with open("/path/to/your/logdir/graph.json", "w") as f:
     json.dump(vis_graph, f)
+```
 
-# load dataset and train
+2. Logging the choices you've made. You can do it once per epoch, once per mini-batch or whatever frequency you'd like.
+
+```python
+def __init__(self):
+    # ...
+    self.status_writer = open("/path/to/your/logdir/log", "w")  # create a writer
+
+def train(self):
+    # ...
+    print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)  # dump a record of status
+```
+
+If you are implementing your customized trainer inheriting `Trainer`. We have provided `enable_visualization()` and `_write_graph_status()` for easy-to-use purposes. All you need to do is calling `trainer.enable_visualization()` before start, and `trainer._write_graph_status()` each time you want to do the logging. But remember both of these APIs are experimental and subject to change in future.
+
+Last but not least, invode NAS UI with
+
+```bash
+nnictl webui nas --logdir /path/to/your/logdir
 ```
 
 ## NAS UI Preview

@@ -50,6 +50,10 @@ The programming interface of designing and searching a model is often demanded i
 
 [Here](./NasGuide.md) is the user guide to get started with using NAS on NNI.
 
+## NAS Visualization
+
+To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
+
 ## Reference and Feedback
 
 [1]: https://arxiv.org/abs/1802.03268
