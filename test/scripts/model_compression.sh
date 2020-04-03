@@ -23,10 +23,10 @@ echo 'testing level pruner pruning'
 python3 model_prune_torch.py --pruner_name level --pretrain_epochs 1 --prune_epochs 1
 
 echo 'testing agp pruning'
-python3 model_prune_torch.py --pruner_name apg --pretrain_epochs 1 --prune_epochs 2
+python3 model_prune_torch.py --pruner_name agp --pretrain_epochs 1 --prune_epochs 2
 
 echo 'testing mean_activation pruning'
-python3 model_prune_torch.py --pruner_name mean_activation --pretrain_epochs 1 --prune_epochs 2
+python3 model_prune_torch.py --pruner_name mean_activation --pretrain_epochs 1 --prune_epochs 1
 
 #echo "testing lottery ticket pruning..."
 #python3 lottery_torch_mnist_fc.py
