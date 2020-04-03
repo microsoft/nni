@@ -60,6 +60,7 @@ nnictl webui nas --logdir /path/to/your/logdir
 
 ## Limitations
 
+* NAS visualization only works with PyTorch >=1.4. We've tested it on PyTorch 1.3.1 and it doesn't work.
 * We rely on PyTorch support for tensorboard for graph export, which relies on `torch.jit`. It will not work if your model doesn't support `jit`.
 * There are known performance issues when loading a moderate-size graph with many op choices (like DARTS search space).
 
