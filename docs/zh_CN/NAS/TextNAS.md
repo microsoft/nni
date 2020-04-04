@@ -2,11 +2,11 @@
 
 ## 介绍
 
-这是论文 [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf) 中 TextNAS 算法的实现。 TextNAS is a neural architecture search algorithm tailored for text representation, more specifically, TextNAS is based on a novel search space consists of operators widely adopted to solve various NLP tasks, and TextNAS also supports multi-path ensemble within a single network to balance the width and depth of the architecture.
+这是论文 [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf) 中 TextNAS 算法的实现。 TextNAS 是用于文本表示的神经网络架构搜索算法，具体来说，TextNAS 基于由适配各种自然语言任务的操作符所组成的新的搜索空间，TextNAS 还支持单个网络中的多路径集成，来平衡网络的宽度和深度。
 
-The search space of TextNAS contains:
+TextNAS 的搜索空间包含：
 
-    * 1-D convolutional operator with filter size 1, 3, 5, 7
+    * 过滤器尺寸为 1, 3, 5, 7 的一维卷积操作
     * recurrent operator (bi-directional GRU)
     * self-attention operator
     * pooling operator (max/average)
