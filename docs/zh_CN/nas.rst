@@ -26,5 +26,6 @@
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
     ProxylessNAS <NAS/Proxylessnas>
+    TextNAS <NAS/TextNAS>
     自定义 NAS 算法 <NAS/Advanced>
     API 参考 <NAS/NasReference>
