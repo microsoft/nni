@@ -7,15 +7,15 @@
 TextNAS 的搜索空间包含：
 
     * 过滤器尺寸为 1, 3, 5, 7 的一维卷积操作
-    * recurrent operator (bi-directional GRU)
-    * self-attention operator
-    * pooling operator (max/average)
+    * 循环操作符（双向 GRU）
+    * 自注意操作符
+    * 池化操作符（最大值、平均值）
 
-Following the ENAS algorithm, TextNAS also utilizes parameter sharing to accelerate the search speed and adopts a reinforcement-learning controller for the architecture sampling and generation. Please refer to the paper for more details of TextNAS.
+遵循 ENAS 算法，TextNAS 也用了参数共享来加速搜索速度，并采用了强化学习的 Controller 来进行架构采样和生成。 参考 TextNAS 论文了解更多细节。
 
-## Preparation
+## 准备
 
-Prepare the word vectors and SST dataset, and organize them in data directory as shown below:
+准备词向量和 SST 数据集，并按如下结构放到 data 目录中：
 
 ```
 textnas
@@ -34,47 +34,47 @@ textnas
 └── utils.py
 ```
 
-The following link might be helpful for finding and downloading the corresponding dataset:
+以下链接有助于查找和下载相应的数据集：
 
 * [GloVe: Global Vectors for Word Representation](https://nlp.stanford.edu/projects/glove/)
   * [glove.840B.300d.txt](http://nlp.stanford.edu/data/glove.840B.300d.zip)
 * [Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank](https://nlp.stanford.edu/sentiment/)
   * [trainDevTestTrees_PTB.zip](https://nlp.stanford.edu/sentiment/trainDevTestTrees_PTB.zip)
 
-## Examples
+## 示例
 
-### Search Space
+### 搜索空间
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/textnas)
+[示例代码](https://github.com/microsoft/nni/tree/master/examples/nas/textnas)
 
 ```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
 git clone https://github.com/Microsoft/nni.git
 
-# search the best architecture
+# 搜索最佳网络结构
 cd examples/nas/textnas
 
-# view more options for search
+# 查看搜索的更多选项
 python3 search.py -h
 ```
 
-After each search epoch, 10 sampled architectures will be tested directly. Their performances are expected to be 40% - 42% after 10 epochs.
+在每个搜索 Epoch 后，会直接测试 10 个采样的结构。 10 个 Epoch 后的性能预计为 40% - 42%。
 
-By default, 20 sampled architectures will be exported into `checkpoints` directory for next step.
+默认情况下，20 个采样结构会被导出到 `checkpoints` 目录中，以便进行下一步处理。
 
-### retrain
+### 重新训练
 
 ```bash
-# In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
+＃如果未克隆 NNI 代码。 如果代码已被克隆，请忽略此行并直接进入代码目录。
 git clone https://github.com/Microsoft/nni.git
 
-# search the best architecture
+# 搜索最佳网络结构
 cd examples/nas/textnas
 
-# default to retrain on sst-2
+# 默认在 sst-2 上训练
 sh run_retrain.sh
 ```
 
-## Reference
+## 参考
 
-TextNAS directly uses EnasTrainer, please refer to [ENAS](./ENAS.md) for the trainer APIs.
+TextNAS 直接使用了 EnasTrainer，参考 [ENAS](./ENAS.md) 了解 Trainer 的 API。
