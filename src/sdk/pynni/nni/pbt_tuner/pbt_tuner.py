@@ -61,7 +61,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             if random.random() < resample_probability:
-                hyper_parameters[key] = random_state.randint(lb, ub, size=1)
+                hyper_parameters[key] = parameter_expressions.randint(lb, ub, random_state)
             elif random.random() > 0.5:
                 hyper_parameters[key] = min(hyper_parameters[key] + 1, ub)
             else:
@@ -133,7 +133,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             elif random.random() > 0.5:
                 hyper_parameters[key] = hyper_parameters[key] + q
             else:
-                hyper_parameters[key] = hyper_parameters[key] - q
+                hyper_parameters[key] = max(0, hyper_parameters[key] - q)
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
