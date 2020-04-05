@@ -128,7 +128,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             elif random.random() > 0.5:
                 hyper_parameters[key] = hyper_parameters[key] + q
             else:
-                hyper_parameters[key] = hyper_parameters - q
+                hyper_parameters[key] = hyper_parameters[key] - q
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
