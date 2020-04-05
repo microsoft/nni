@@ -25,10 +25,11 @@ One-shot algorithms run **standalone without nnictl**. Only the PyTorch version 
 
 Here are some common dependencies to run the examples. PyTorch needs to be above 1.2 to use ``BoolTensor``.
 
-* NNI 1.2+
 * tensorboard
 * PyTorch 1.2+
 * git
+
+One-shot NAS can be visualized with our visualization tool. Learn more details [here](./Visualization.md).
 
 ## Supported Distributed NAS Algorithms
 
@@ -48,6 +49,10 @@ The programming interface of designing and searching a model is often demanded i
 2. When applying NAS on a neural network, it needs a unified way to express the search space of architectures, so that it doesn't need to update trial code for different search algorithms.
 
 [Here](./NasGuide.md) is the user guide to get started with using NAS on NNI.
+
+## NAS Visualization
+
+To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
 ## Reference and Feedback
 
