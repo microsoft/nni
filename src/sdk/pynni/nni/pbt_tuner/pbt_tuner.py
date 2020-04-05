@@ -27,7 +27,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
     top_trial_info : TrialInfo
         better model
     factor : float
-        factors for perturbation
+        factor for perturbation
     resample_probability : float
         probability for resampling
     epoch : int
