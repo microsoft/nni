@@ -4,9 +4,11 @@
 import copy
 import logging
 import os
+import random
 import numpy as np
 
 import nni
+import nni.parameter_expressions as parameter_expressions
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
@@ -14,7 +16,7 @@ from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2par
 logger = logging.getLogger('pbt_tuner_AutoML')
 
 
-def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_space):
+def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probability, epoch, search_space):
     """
     Replace checkpoint of bot_trial with top, and perturb hyperparameters
 
@@ -24,8 +26,10 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
         bottom model whose parameters should be replaced
     top_trial_info : TrialInfo
         better model
-    factors : float
+    factor : float
         factors for perturbation
+    resample_probability : float
+        probability for resampling
     epoch : int
         step of PBTTuner
     search_space : dict
@@ -34,19 +38,97 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factors, epoch, search_s
     bot_checkpoint_dir = bot_trial_info.checkpoint_dir
     top_hyper_parameters = top_trial_info.hyper_parameters
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
-    # TODO think about different type of hyperparameters for 1.perturbation 2.within search space
+    random_state = np.random.RandomState()
     for key in hyper_parameters.keys():
         if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
         elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
-        elif isinstance(hyper_parameters[key], float):
-            perturb = np.random.choice(factors)
-            val = hyper_parameters[key] * perturb
+        elif search_space[key]["_type"] == "choice":
+            choices = search_space[key]["_value"]
+            choices.sort()
+            if random.random() < resample_probability or hyper_parameters[key] not in choices:
+                hyper_parameters[key] = parameter_expressions.choice(choices, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = choices[max(0, choices.index(hyper_parameters[key]) - 1)]
+            else:
+                hyper_parameters[key] = choices[min(len(choices) - 1, choices.index(hyper_parameters[key]) + 1)]
+        elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
-            if search_space[key]["_type"] in ("uniform", "normal"):
-                val = np.clip(val, lb, ub).item()
-                hyper_parameters[key] = val
+            if random.random() < resample_probability:
+                hyper_parameters[key] = random_state.randint(lb, ub, size=1)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = min(hyper_parameters[key] + 1, ub)
+            else:
+                hyper_parameters[key] = max(hyper_parameters[key] - 1, lb)
+        elif search_space[key]["_type"] == "uniform":
+            lb, ub = search_space[key]["_value"][:2]
+            perturb = (ub - lb) * factor
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.uniform(lb, ub, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = min(hyper_parameters[key] + perturb, ub)
+            else:
+                hyper_parameters[key] = max(hyper_parameters[key] - perturb, lb)
+        elif search_space[key]["_type"] == "quniform":
+            lb, ub, q = search_space[key]["_value"][:3]
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.quniform(lb, ub, q, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = min(hyper_parameters[key] + q, ub)
+            else:
+                hyper_parameters[key] = max(hyper_parameters[key] - q, lb)
+        elif search_space[key]["_type"] == "loguniform":
+            lb, ub = search_space[key]["_value"][:2]
+            perturb = (np.log(ub) - np.log(lb)) * factor
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.loguniform(lb, ub, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub)))
+            else:
+                hyper_parameters[key] = np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb)))
+        elif search_space[key]["_type"] == "qloguniform":
+            lb, ub, q = search_space[key]["_value"][:3]
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.qloguniform(lb, ub, q, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = min(hyper_parameters[key] + q, ub)
+            else:
+                hyper_parameters[key] = max(hyper_parameters[key] - q, lb)
+        elif search_space[key]["_type"] == "normal":
+            mu, sigma = search_space[key]["_value"][:2]
+            perturb = sigma * factor
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.normal(mu, sigma, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = hyper_parameters[key] + perturb
+            else:
+                hyper_parameters[key] = hyper_parameters[key] - perturb
+        elif search_space[key]["_type"] == "qnormal":
+            mu, sigma, q = search_space[key]["_value"][:3]
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.qnormal(mu, sigma, q, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = hyper_parameters[key] + q
+            else:
+                hyper_parameters[key] = hyper_parameters[key] - q
+        elif search_space[key]["_type"] == "lognormal":
+            mu, sigma = search_space[key]["_value"][:2]
+            perturb = sigma * factor
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.lognormal(mu, sigma, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = np.exp(np.log(hyper_parameters[key]) + perturb)
+            else:
+                hyper_parameters[key] = np.exp(np.log(hyper_parameters[key]) - perturb)
+        elif search_space[key]["_type"] == "qlognormal":
+            mu, sigma, q = search_space[key]["_value"][:3]
+            if random.random() < resample_probability:
+                hyper_parameters[key] = parameter_expressions.qlognormal(mu, sigma, q, random_state)
+            elif random.random() > 0.5:
+                hyper_parameters[key] = hyper_parameters[key] + q
+            else:
+                hyper_parameters[key] = hyper_parameters - q
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
@@ -70,7 +152,7 @@ class TrialInfo:
 
 
 class PBTTuner(Tuner):
-    def __init__(self, optimize_mode="maximize", all_checkpoint_dir=None, population_size=10, factors=(1.2, 0.8), fraction=0.2):
+    def __init__(self, optimize_mode="maximize", all_checkpoint_dir=None, population_size=10, factor=0.2, resample_probability=0.25, fraction=0.2):
         """
         Initialization
 
@@ -82,8 +164,10 @@ class PBTTuner(Tuner):
             directory to store training model checkpoint
         population_size : int
             number of trials for each epoch
-        factors : tuple
-            factors for perturbation
+        factor : float
+            factor for perturbation
+        resample_probability : float
+            probability for resampling
         fraction : float
             fraction for selecting bottom and top trials
         """
@@ -93,7 +177,8 @@ class PBTTuner(Tuner):
             logger.info("Checkpoint dir is set to %s by default.", all_checkpoint_dir)
         self.all_checkpoint_dir = all_checkpoint_dir
         self.population_size = population_size
-        self.factors = factors
+        self.factor = factor
+        self.resample_probability = resample_probability
         self.fraction = fraction
         # defined in trial code
         #self.perturbation_interval = perturbation_interval
@@ -237,7 +322,7 @@ class PBTTuner(Tuner):
             bottoms = self.finished[self.finished_trials - cutoff:]
             for bottom in bottoms:
                 top = np.random.choice(tops)
-                exploit_and_explore(bottom, top, self.factors, self.epoch, self.searchspace_json)
+                exploit_and_explore(bottom, top, self.factor, self.resample_probability, self.epoch, self.searchspace_json)
             for trial in self.finished:
                 if trial not in bottoms:
                     trial.clean_id()
