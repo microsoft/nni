@@ -77,7 +77,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
                 hyper_parameters[key] = max(hyper_parameters[key] - perturb, lb)
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = hyper_parameters[key] / q
+            multi = hyper_parameters[key] // q
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.quniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
@@ -95,7 +95,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
                 hyper_parameters[key] = max(np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb))), lb)
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = hyper_parameters[key] / q
+            multi = hyper_parameters[key] // q
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.qloguniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
