@@ -77,29 +77,31 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
                 hyper_parameters[key] = max(hyper_parameters[key] - perturb, lb)
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
+            multi = hyper_parameters[key] / q
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.quniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
-                hyper_parameters[key] = min(hyper_parameters[key] + q, ub)
+                hyper_parameters[key] = min((multi + 1) * q, ub)
             else:
-                hyper_parameters[key] = max(hyper_parameters[key] - q, lb)
+                hyper_parameters[key] = max((multi - 1) * q, lb)
         elif search_space[key]["_type"] == "loguniform":
             lb, ub = search_space[key]["_value"][:2]
             perturb = (np.log(ub) - np.log(lb)) * factor
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.loguniform(lb, ub, random_state)
             elif random.random() > 0.5:
-                hyper_parameters[key] = np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub)))
+                hyper_parameters[key] = min(np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub))), ub)
             else:
-                hyper_parameters[key] = np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb)))
+                hyper_parameters[key] = max(np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb))), lb)
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
+            multi = hyper_parameters[key] / q
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.qloguniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
-                hyper_parameters[key] = min(hyper_parameters[key] + q, ub)
+                hyper_parameters[key] = min((multi + 1) * q, ub)
             else:
-                hyper_parameters[key] = max(hyper_parameters[key] - q, lb)
+                hyper_parameters[key] = max((multi - 1) * q, lb)
         elif search_space[key]["_type"] == "normal":
             mu, sigma = search_space[key]["_value"][:2]
             perturb = sigma * factor
