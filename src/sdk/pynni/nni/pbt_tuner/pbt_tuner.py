@@ -46,10 +46,12 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            try:
+            can_sort = True
+            for item in choices:
+                if isinstance(item, str):
+                    can_sort = False
+            if can_sort:
                 choices.sort()
-            except Exception as e:
-                logger.warning("Choice cannot be sorted, %s", e.message)
             if random.random() < resample_probability or hyper_parameters[key] not in choices:
                 hyper_parameters[key] = parameter_expressions.choice(choices, random_state)
             elif random.random() > 0.5:
