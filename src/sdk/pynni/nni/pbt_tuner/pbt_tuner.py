@@ -46,12 +46,10 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            can_sort = True
-            for item in choices:
-                if isinstance(item, str):
-                    can_sort = False
-            if can_sort:
+            try:
                 choices.sort()
+            except Exception as e:
+                logger.warning("Choice cannot be sorted, %s", e.message)
             if random.random() < resample_probability or hyper_parameters[key] not in choices:
                 hyper_parameters[key] = parameter_expressions.choice(choices, random_state)
             elif random.random() > 0.5:
@@ -63,7 +61,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.randint(lb, ub, random_state)
             elif random.random() > 0.5:
-                hyper_parameters[key] = min(hyper_parameters[key] + 1, ub)
+                hyper_parameters[key] = min(hyper_parameters[key] + 1, ub - 1)
             else:
                 hyper_parameters[key] = max(hyper_parameters[key] - 1, lb)
         elif search_space[key]["_type"] == "uniform":
@@ -78,6 +76,8 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
             multi = hyper_parameters[key] // q
+            if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
+                multi += 1
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.quniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
@@ -96,6 +96,8 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
             multi = hyper_parameters[key] // q
+            if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
+                multi += 1
             if random.random() < resample_probability:
                 hyper_parameters[key] = parameter_expressions.qloguniform(lb, ub, q, random_state)
             elif random.random() > 0.5:
@@ -135,7 +137,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             elif random.random() > 0.5:
                 hyper_parameters[key] = hyper_parameters[key] + q
             else:
-                hyper_parameters[key] = max(0, hyper_parameters[key] - q)
+                hyper_parameters[key] = max(1E-10, hyper_parameters[key] - q)
         else:
             continue
     bot_trial_info.hyper_parameters = hyper_parameters
