@@ -1,5 +1,5 @@
 ---
-name: Issue for NNI Student Program China
+name: Question for NNI Student Program China / NNI 学生项目问题表单
 about: NNI Student Program China issue template on Github
 
 ---
@@ -9,32 +9,21 @@ If it is a general question / idea of NNI, you could just make a short summary.
  
 If it is a operational issue, please fill operational issue template and provide as many details as possible. Not doing so may result in your bug not being addressed in a timely manner. Thanks!-->
  
+## 问题概述
+
+**请简要概述您的问题 / 观点** :
+
+
+## 其他建议
+
+**是否需要更新文档（是 / 否）** :
+**其他分享内容** :
+
 ## General Question
 
-**Short summary about the question / idea in Chinese**:
- 
-**Short summary about the question / idea in English (not required)**:
- 
-## Operational Issue
+**Short summary about the question / idea** :
 
-<!--deployment related issues
-Please fill this for deployment related issues:
-- Operating type: Initial deployment / upgrading / operating etc.
-- Brief what deployment process you are following -->
- 
-**How to reproduce it**:
- 
-<!--Fill the following information if your issue need diagnostic support from the team, as minimally and precisely as possible!-->
- 
-**nni Environment**:
-- nni version:
-- nni mode(local|pai|remote):
-- OS:
-- python version:
-- is conda or virtualenv used?:
-- is running in docker?:
- 
+
 ## Other Advice
-**Need to update document(yes/no)**:
-
-**Anything else we need to know**:
+**Need to update document ( yes / no )** :
+**Anything else we need to know** :
