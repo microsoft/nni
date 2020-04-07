@@ -8,7 +8,7 @@ import random
 import numpy as np
 
 import nni
-import nni.parameter_expressions as parameter_expressions
+import nni.parameter_expressions
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
@@ -40,7 +40,7 @@ def perturbation(hyperparameter_type, value, resample_probablity, uv, ub, lv, lb
         random state
     """
     if random.random() < resample_probablity:
-        return getattr(parameter_expressions, hyperparameter_type)(*(value + [random_state]))
+        return getattr(nni.parameter_expressions, hyperparameter_type)(*(value + [random_state]))
     else:
         if random.random() > 0.5:
             return min(uv, ub)
@@ -80,8 +80,8 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            uv, ub = len(choices) - 1, choices.index(hyper_parameters[key]) + 1
-            lv, lb = 0, choices.index(hyper_parameters[key]) - 1
+            ub, uv = len(choices) - 1, choices.index(hyper_parameters[key]["_value"]) + 1
+            lb, lv = 0, choices.index(hyper_parameters[key]["_value"]) - 1
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             ub -= 1
@@ -130,11 +130,11 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         if search_space[key]["_type"] == "choice":
             idx = perturbation(search_space[key]["_type"], search_space[key]["_value"],
-                                        resample_probability, uv, ub, lv, lb, random_state)
-            hyper_parameters[key] = choices[idx]
+                resample_probability, uv, ub, lv, lb, random_state)
+            hyper_parameters[key] = {'_index': idx, '_value': choices[idx]}
         else:
             hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"],
-                                             resample_probability, uv, ub, lv, lb, random_state)
+                resample_probability, uv, ub, lv, lb, random_state)
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
