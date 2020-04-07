@@ -41,7 +41,7 @@ def perturbation(hyperparameter_type, value, resample_probablity, uv, ub, lv, lb
     """
     if random.random() < resample_probablity:
         if hyperparameter_type == "choice":
-            return nni.parameter_experssions.choice(value, random_state)
+            return nni.parameter_expressions.choice(value, random_state)
         else:
             return getattr(nni.parameter_expressions, hyperparameter_type)(*(value + [random_state]))
     else:
