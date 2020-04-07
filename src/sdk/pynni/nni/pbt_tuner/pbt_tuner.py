@@ -40,7 +40,10 @@ def perturbation(hyperparameter_type, value, resample_probablity, uv, ub, lv, lb
         random state
     """
     if random.random() < resample_probablity:
-        return getattr(nni.parameter_expressions, hyperparameter_type)(*(value + [random_state]))
+        if hyperparameter_type == "choice":
+            return nni.parameter_experssions.choice(value, random_state)
+        else:
+            return getattr(nni.parameter_expressions, hyperparameter_type)(*(value + [random_state]))
     else:
         if random.random() > 0.5:
             return min(uv, ub)
@@ -130,11 +133,11 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         if search_space[key]["_type"] == "choice":
             idx = perturbation(search_space[key]["_type"], search_space[key]["_value"],
-                resample_probability, uv, ub, lv, lb, random_state)
+                               resample_probability, uv, ub, lv, lb, random_state)
             hyper_parameters[key] = {'_index': idx, '_value': choices[idx]}
         else:
             hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"],
-                resample_probability, uv, ub, lv, lb, random_state)
+                                                 resample_probability, uv, ub, lv, lb, random_state)
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
