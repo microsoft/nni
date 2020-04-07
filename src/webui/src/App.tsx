@@ -17,7 +17,8 @@ interface AppState {
 }
 
 class App extends React.Component<{}, AppState> {
-    private timerId!: number | null;
+    private timerId!: number | undefined;
+    private flag: boolean = true;
     private dataFormatimer!: number;
 
     constructor(props: {}) {
@@ -66,13 +67,12 @@ class App extends React.Component<{}, AppState> {
             }
         }
     }
-    
+
     changeInterval = (interval: number): void => {
         this.setState({ interval });
-        if (this.timerId === null && interval !== 0) {
-            window.setTimeout(this.refresh);
-        } else if (this.timerId !== null && interval === 0) {
-            window.clearTimeout(this.timerId);
+        if (this.flag === false) {
+            this.refresh();
+            this.flag = true;
         }
     }
 
@@ -133,14 +133,18 @@ class App extends React.Component<{}, AppState> {
 
         if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
             // experiment finished, refresh once more to ensure consistency
-            if (this.state.interval > 0) {
-                this.setState({ interval: 0 });
-                this.lastRefresh();
-            }
-
-        } else if (this.state.interval !== 0) {
-            this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
+            this.setState({ interval: 0 });
+            this.lastRefresh();
+            return;
         }
+
+        if(this.state.interval === 0){
+            this.flag = false;
+            return;
+        }
+
+        this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
+       
     }
 
     public async lastRefresh(): Promise<void> {
