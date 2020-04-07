@@ -16,6 +16,38 @@ from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2par
 logger = logging.getLogger('pbt_tuner_AutoML')
 
 
+def perturbation(type, value, resample_probablity, uv, ub, lv, lb, random_state):
+    """
+    Perturbation for hyperparameters
+
+    Parameters
+    ----------
+    type : str
+        type of hyperparameter
+    value : list
+        parameters for sampling hyperparameter
+    resample_probability : float
+        probability for resampling
+    uv : float/int
+        upper value after perturbation
+    ub : float/int
+        upper bound
+    lv : float/int
+        lower value after perturbation
+    lb : float/int
+        lower bound
+    random_state : RandomState
+        random state
+    """
+    if random.random() < resample_probablity:
+        return getattr(parameter_expressions, type)(*(value + [random_state]))
+    else:
+        if random.random() > 0.5:
+            return min(uv, ub)
+        else:
+            return max(lv, lb)
+
+
 def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probability, epoch, search_space):
     """
     Replace checkpoint of bot_trial with top, and perturb hyperparameters
@@ -60,88 +92,55 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
                 hyper_parameters[key] = choices[min(len(choices) - 1, choices.index(hyper_parameters[key]) + 1)]
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.randint(lb, ub, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = min(hyper_parameters[key] + 1, ub - 1)
-            else:
-                hyper_parameters[key] = max(hyper_parameters[key] - 1, lb)
+            ub -= 1
+            uv = hyper_parameters[key] + 1
+            lv = hyper_parameters[key] - 1
         elif search_space[key]["_type"] == "uniform":
             lb, ub = search_space[key]["_value"][:2]
             perturb = (ub - lb) * factor
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.uniform(lb, ub, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = min(hyper_parameters[key] + perturb, ub)
-            else:
-                hyper_parameters[key] = max(hyper_parameters[key] - perturb, lb)
+            uv = hyper_parameters[key] + perturb
+            lv = hyper_parameters[key] - perturb
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
             multi = hyper_parameters[key] // q
             if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
                 multi += 1
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.quniform(lb, ub, q, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = min((multi + 1) * q, ub)
-            else:
-                hyper_parameters[key] = max((multi - 1) * q, lb)
+            uv = (multi + 1) * q
+            lv = (multi - 1) * q
         elif search_space[key]["_type"] == "loguniform":
             lb, ub = search_space[key]["_value"][:2]
             perturb = (np.log(ub) - np.log(lb)) * factor
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.loguniform(lb, ub, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = min(np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub))), ub)
-            else:
-                hyper_parameters[key] = max(np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb))), lb)
+            uv = np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub)))
+            lv = np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb)))
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
             multi = hyper_parameters[key] // q
             if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
                 multi += 1
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.qloguniform(lb, ub, q, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = min((multi + 1) * q, ub)
-            else:
-                hyper_parameters[key] = max((multi - 1) * q, lb)
+            uv = (multi + 1) * q
+            lv = (multi - 1) * q
         elif search_space[key]["_type"] == "normal":
             mu, sigma = search_space[key]["_value"][:2]
             perturb = sigma * factor
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.normal(mu, sigma, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = hyper_parameters[key] + perturb
-            else:
-                hyper_parameters[key] = hyper_parameters[key] - perturb
+            uv = ub = hyper_parameters[key] + perturb
+            lv = lb = hyper_parameters[key] - perturb
         elif search_space[key]["_type"] == "qnormal":
             mu, sigma, q = search_space[key]["_value"][:3]
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.qnormal(mu, sigma, q, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = hyper_parameters[key] + q
-            else:
-                hyper_parameters[key] = hyper_parameters[key] - q
+            uv = ub = hyper_parameters[key] + q
+            lv = lb = hyper_parameters[key] - q
         elif search_space[key]["_type"] == "lognormal":
             mu, sigma = search_space[key]["_value"][:2]
             perturb = sigma * factor
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.lognormal(mu, sigma, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = np.exp(np.log(hyper_parameters[key]) + perturb)
-            else:
-                hyper_parameters[key] = np.exp(np.log(hyper_parameters[key]) - perturb)
+            uv = ub = np.exp(np.log(hyper_parameters[key]) + perturb)
+            lv = lb = np.exp(np.log(hyper_parameters[key]) - perturb)
         elif search_space[key]["_type"] == "qlognormal":
             mu, sigma, q = search_space[key]["_value"][:3]
-            if random.random() < resample_probability:
-                hyper_parameters[key] = parameter_expressions.qlognormal(mu, sigma, q, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = hyper_parameters[key] + q
-            else:
-                hyper_parameters[key] = max(1E-10, hyper_parameters[key] - q)
+            uv = ub = hyper_parameters[key] + q
+            lv, lb = hyper_parameters[key] - q, 1E-10
         else:
             continue
+        hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"], resample_probability,
+                            hyper_parameters[key] + 1, ub - 1, hyper_parameters[key] - 1, lb, random_state)
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
