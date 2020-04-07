@@ -70,6 +70,7 @@ function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
 }
 
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
+    // eslint-disable-next-line prefer-const
     let [success, commandType, content, remain] = decodeSingleCommand(data);
     if (!success || commandType[2] !== '_') {
         return [success, commandType, content, remain];
