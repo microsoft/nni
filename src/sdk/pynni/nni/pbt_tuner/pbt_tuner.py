@@ -80,19 +80,8 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            can_sort = True
-            for item in choices:
-                if isinstance(item, str):
-                    can_sort = False
-            if can_sort:
-                choices.sort()
-            if random.random() < resample_probability or hyper_parameters[key] not in choices:
-                hyper_parameters[key] = parameter_expressions.choice(choices, random_state)
-            elif random.random() > 0.5:
-                hyper_parameters[key] = choices[max(0, choices.index(hyper_parameters[key]) - 1)]
-            else:
-                hyper_parameters[key] = choices[min(len(choices) - 1, choices.index(hyper_parameters[key]) + 1)]
-            continue
+            uv, ub = len(choices) - 1, choices.index(hyper_parameters[key]) + 1
+            lv, lb = 0, choices.index(hyper_parameters[key]) - 1
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             ub -= 1
@@ -105,9 +94,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             lv = hyper_parameters[key] - perturb
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = hyper_parameters[key] // q
-            if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
-                multi += 1
+            multi = round(hyper_parameters[key] / q)
             uv = (multi + 1) * q
             lv = (multi - 1) * q
         elif search_space[key]["_type"] == "loguniform":
@@ -117,9 +104,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             lv = np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb)))
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = hyper_parameters[key] // q
-            if hyper_parameters[key] == ub and hyper_parameters[key] % q != 0:
-                multi += 1
+            multi = round(hyper_parameters[key] / q)
             uv = (multi + 1) * q
             lv = (multi - 1) * q
         elif search_space[key]["_type"] == "normal":
@@ -141,8 +126,14 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             uv = ub = hyper_parameters[key] + q
             lv, lb = hyper_parameters[key] - q, 1E-10
         else:
+            logger.warning("Illegal type to perturb: %s", search_space[key]["_type"])
             continue
-        hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"],
+        if search_space[key]["_type"] == "choice":
+            idx = perturbation(search_space[key]["_type"], search_space[key]["_value"],
+                                        resample_probability, uv, ub, lv, lb, random_state)
+            hyper_parameters[key] = choices[idx]
+        else:
+            hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"],
                                              resample_probability, uv, ub, lv, lb, random_state)
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
