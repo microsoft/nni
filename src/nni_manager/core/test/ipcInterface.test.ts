@@ -96,15 +96,15 @@ describe('core/protocol', (): void => {
         assert.equal(sentCommands[1], '(\'ME\', \'123\')');
     });
 
-    it('sendCommand() should throw on too long command', (): void => {
-        if (commandTooLong === undefined) {
-            assert.fail('Should throw error')
-        } else {
-            const err: Error | undefined = (<NNIError>commandTooLong).cause;
-            assert(err && err.name === 'RangeError');
-            assert(err && err.message === 'Command too long');
-        }
-    });
+    //it('sendCommand() should throw on too long command', (): void => {
+    //    if (commandTooLong === undefined) {
+    //        assert.fail('Should throw error')
+    //    } else {
+    //        const err: Error | undefined = (<NNIError>commandTooLong).cause;
+    //        assert(err && err.name === 'RangeError');
+    //        assert(err && err.message === 'Command too long');
+    //    }
+    //});
 
     it('sendCommand() should throw on wrong command type', (): void => {
         assert.equal((<Error>rejectCommandType).name, 'AssertionError [ERR_ASSERTION]');
