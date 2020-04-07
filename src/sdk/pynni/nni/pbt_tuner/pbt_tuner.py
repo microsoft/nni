@@ -75,6 +75,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
     random_state = np.random.RandomState()
     for key in hyper_parameters.keys():
+        hyper_parameter = hyper_parameters[key]
         if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
             continue
@@ -83,51 +84,51 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            ub, uv = len(choices) - 1, choices.index(hyper_parameters[key]["_value"]) + 1
-            lb, lv = 0, choices.index(hyper_parameters[key]["_value"]) - 1
+            ub, uv = len(choices) - 1, choices.index(hyper_parameter["_value"]) + 1
+            lb, lv = 0, choices.index(hyper_parameter["_value"]) - 1
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             ub -= 1
-            uv = hyper_parameters[key] + 1
-            lv = hyper_parameters[key] - 1
+            uv = hyper_parameter + 1
+            lv = hyper_parameter - 1
         elif search_space[key]["_type"] == "uniform":
             lb, ub = search_space[key]["_value"][:2]
             perturb = (ub - lb) * factor
-            uv = hyper_parameters[key] + perturb
-            lv = hyper_parameters[key] - perturb
+            uv = hyper_parameter + perturb
+            lv = hyper_parameter - perturb
         elif search_space[key]["_type"] == "quniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = round(hyper_parameters[key] / q)
+            multi = round(hyper_parameter / q)
             uv = (multi + 1) * q
             lv = (multi - 1) * q
         elif search_space[key]["_type"] == "loguniform":
             lb, ub = search_space[key]["_value"][:2]
             perturb = (np.log(ub) - np.log(lb)) * factor
-            uv = np.exp(min(np.log(hyper_parameters[key]) + perturb, np.log(ub)))
-            lv = np.exp(max(np.log(hyper_parameters[key]) - perturb, np.log(lb)))
+            uv = np.exp(min(np.log(hyper_parameter) + perturb, np.log(ub)))
+            lv = np.exp(max(np.log(hyper_parameter) - perturb, np.log(lb)))
         elif search_space[key]["_type"] == "qloguniform":
             lb, ub, q = search_space[key]["_value"][:3]
-            multi = round(hyper_parameters[key] / q)
+            multi = round(hyper_parameter / q)
             uv = (multi + 1) * q
             lv = (multi - 1) * q
         elif search_space[key]["_type"] == "normal":
             sigma = search_space[key]["_value"][1]
             perturb = sigma * factor
-            uv = ub = hyper_parameters[key] + perturb
-            lv = lb = hyper_parameters[key] - perturb
+            uv = ub = hyper_parameter + perturb
+            lv = lb = hyper_parameter - perturb
         elif search_space[key]["_type"] == "qnormal":
             q = search_space[key]["_value"][2]
-            uv = ub = hyper_parameters[key] + q
-            lv = lb = hyper_parameters[key] - q
+            uv = ub = hyper_parameter + q
+            lv = lb = hyper_parameter - q
         elif search_space[key]["_type"] == "lognormal":
             sigma = search_space[key]["_value"][1]
             perturb = sigma * factor
-            uv = ub = np.exp(np.log(hyper_parameters[key]) + perturb)
-            lv = lb = np.exp(np.log(hyper_parameters[key]) - perturb)
+            uv = ub = np.exp(np.log(hyper_parameter) + perturb)
+            lv = lb = np.exp(np.log(hyper_parameter) - perturb)
         elif search_space[key]["_type"] == "qlognormal":
             q = search_space[key]["_value"][2]
-            uv = ub = hyper_parameters[key] + q
-            lv, lb = hyper_parameters[key] - q, 1E-10
+            uv = ub = hyper_parameter + q
+            lv, lb = hyper_parameter - q, 1E-10
         else:
             logger.warning("Illegal type to perturb: %s", search_space[key]["_type"])
             continue
