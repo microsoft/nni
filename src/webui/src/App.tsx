@@ -18,8 +18,8 @@ interface AppState {
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
-    private flag: boolean = true;
     private dataFormatimer!: number;
+    private firstLoad: boolean = false; // when click refresh selector options
 
     constructor(props: {}) {
         super(props);
@@ -69,11 +69,18 @@ class App extends React.Component<{}, AppState> {
     }
 
     changeInterval = (interval: number): void => {
-        this.setState({ interval });
-        if (this.flag === false) {
-            this.refresh();
-            this.flag = true;
+        
+        window.clearTimeout(this.timerId);
+        if (interval === 0) {
+            return;   
         }
+        // setState will trigger page refresh at once.
+        // setState is asyc, interval not update to (this.state.interval) at once.
+        this.setState({interval}, () => {
+            this.firstLoad = true;
+            this.refresh();
+        });
+
     }
 
     // TODO: use local storage
@@ -123,12 +130,19 @@ class App extends React.Component<{}, AppState> {
     }
 
     private refresh = async (): Promise<void> => {
-        const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
-        if (experimentUpdated) {
-            this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
-        }
-        if (trialsUpdated) {
-            this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+
+        // resolve this question: 10s -> 20s, page refresh twice.
+        // only refresh this page after clicking the refresh options
+        if (this.firstLoad !== true) {
+            const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
+            if (experimentUpdated) {
+                this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
+            }
+            if (trialsUpdated) {
+                this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+            }
+        } else {
+            this.firstLoad = false;
         }
 
         if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
@@ -138,13 +152,8 @@ class App extends React.Component<{}, AppState> {
             return;
         }
 
-        if(this.state.interval === 0){
-            this.flag = false;
-            return;
-        }
+        this.timerId =  window.setTimeout(this.refresh, this.state.interval * 1000);
 
-        this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
-       
     }
 
     public async lastRefresh(): Promise<void> {
