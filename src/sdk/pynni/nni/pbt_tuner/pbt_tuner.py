@@ -16,13 +16,13 @@ from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2par
 logger = logging.getLogger('pbt_tuner_AutoML')
 
 
-def perturbation(type, value, resample_probablity, uv, ub, lv, lb, random_state):
+def perturbation(hyperparameter_type, value, resample_probablity, uv, ub, lv, lb, random_state):
     """
     Perturbation for hyperparameters
 
     Parameters
     ----------
-    type : str
+    hyperparameter_type : str
         type of hyperparameter
     value : list
         parameters for sampling hyperparameter
@@ -40,7 +40,7 @@ def perturbation(type, value, resample_probablity, uv, ub, lv, lb, random_state)
         random state
     """
     if random.random() < resample_probablity:
-        return getattr(parameter_expressions, type)(*(value + [random_state]))
+        return getattr(parameter_expressions, hyperparameter_type)(*(value + [random_state]))
     else:
         if random.random() > 0.5:
             return min(uv, ub)
@@ -139,8 +139,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             lv, lb = hyper_parameters[key] - q, 1E-10
         else:
             continue
-        hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"], resample_probability,
-                            hyper_parameters[key] + 1, ub - 1, hyper_parameters[key] - 1, lb, random_state)
+        hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"], resample_probability, uv, ub, lv, lb, random_state)
     bot_trial_info.hyper_parameters = hyper_parameters
     bot_trial_info.clean_id()
 
