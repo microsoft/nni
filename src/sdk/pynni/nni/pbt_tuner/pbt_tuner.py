@@ -74,8 +74,10 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
     for key in hyper_parameters.keys():
         if key == 'load_checkpoint_dir':
             hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
+            continue
         elif key == 'save_checkpoint_dir':
             hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
+            continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
             can_sort = True
@@ -90,6 +92,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
                 hyper_parameters[key] = choices[max(0, choices.index(hyper_parameters[key]) - 1)]
             else:
                 hyper_parameters[key] = choices[min(len(choices) - 1, choices.index(hyper_parameters[key]) + 1)]
+            continue
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             ub -= 1
