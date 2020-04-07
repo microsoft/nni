@@ -22,13 +22,22 @@ const ipcIncomingFd: number = 4;
  * @returns binary command data
  */
 function encodeCommand(commandType: string, content: string): Buffer {
-    const contentBuffer: Buffer = Buffer.from(content);
-    if (contentBuffer.length >= 1_000_000) {
-        throw new RangeError('Command too long');
+    let contentBuffer: Buffer = Buffer.from(content);
+    if (contentBuffer.length <= 999_999) {
+        if (commandType === '_C')
+            commandType = '_E';
+        const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
+        return Buffer.concat([Buffer.from(commandType), contentLengthBuffer, contentBuffer]);
+    } else {
+        let buffer: Buffer = Buffer.concat([Buffer.from(commandType + '______'), contentBuffer.slice(0, 999_999)]);
+        contentBuffer = contentBuffer.slice(999_999);
+        while (contentBuffer.length > 999_999) {
+            buffer = Buffer.concat([buffer, Buffer.from('_C999999'), contentBuffer.slice(0, 999_999)]);
+            contentBuffer = contentBuffer.slice(999_999);
+        }
+        const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
+        return Buffer.concat([buffer, Buffer.from('_E'), contentLengthBuffer, contentBuffer]);
     }
-    const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
-
-    return Buffer.concat([Buffer.from(commandType), contentLengthBuffer, contentBuffer]);
 }
 
 /**
@@ -38,12 +47,19 @@ function encodeCommand(commandType: string, content: string): Buffer {
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
-function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
+function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
     }
-    const commandType: string = data.slice(0, 2).toString();
-    const contentLength: number = parseInt(data.slice(2, 8).toString(), 10);
+    let commandType: string = data.slice(0, 2).toString();
+    const lengthString: string = data.slice(2, 8).toString();
+    let contentLength: number;
+    if (lengthString === '______') {
+        contentLength = 999_999;
+        commandType += '_';  // TODO: dirty hotfix here
+    } else {
+        contentLength = parseInt(lengthString, 10);
+    }
     if (data.length < contentLength + 8) {
         return [false, '', '', data];
     }
@@ -51,6 +67,29 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     const remain: Buffer = data.slice(contentLength + 8);
 
     return [true, commandType, content, remain];
+}
+
+function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
+    let [success, commandType, content, remain] = decodeSingleCommand(data);
+    if (!success || commandType[2] !== '_') {
+        return [success, commandType, content, remain];
+    }
+
+    let continueCommand: string;
+    let newContent: string;
+    while (true) {
+        [success, continueCommand, newContent, remain] = decodeSingleCommand(remain);
+        if (!success) {
+            return [false, '', '', data];
+        }
+        content += newContent;
+        if (continueCommand === '_E') {
+            return [true, commandType, content, remain];
+        }
+        if (continueCommand !== '_C') {
+            throw new Error('Unexpected splitted command: ' + continueCommand);
+        }
+    }
 }
 
 class IpcInterface {
