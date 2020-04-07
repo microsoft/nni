@@ -128,16 +128,16 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             uv = ub = hyper_parameters[key] + perturb
             lv = lb = hyper_parameters[key] - perturb
         elif search_space[key]["_type"] == "qnormal":
-            mu, sigma, q = search_space[key]["_value"][:3]
+            q = search_space[key]["_value"][2]
             uv = ub = hyper_parameters[key] + q
             lv = lb = hyper_parameters[key] - q
         elif search_space[key]["_type"] == "lognormal":
-            mu, sigma = search_space[key]["_value"][:2]
+            sigma = search_space[key]["_value"][1]
             perturb = sigma * factor
             uv = ub = np.exp(np.log(hyper_parameters[key]) + perturb)
             lv = lb = np.exp(np.log(hyper_parameters[key]) - perturb)
         elif search_space[key]["_type"] == "qlognormal":
-            mu, sigma, q = search_space[key]["_value"][:3]
+            q = search_space[key]["_value"][2]
             uv = ub = hyper_parameters[key] + q
             lv, lb = hyper_parameters[key] - q, 1E-10
         else:
