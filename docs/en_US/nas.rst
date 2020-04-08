@@ -27,4 +27,5 @@ For details, please refer to the following tutorials:
     CDARTS <NAS/CDARTS>
     ProxylessNAS <NAS/Proxylessnas>
     Customize a NAS Algorithm <NAS/Advanced>
+    NAS Visualization <NAS/Visualization>
     API Reference <NAS/NasReference>
