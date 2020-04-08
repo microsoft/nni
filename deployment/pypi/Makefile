@@ -41,7 +41,8 @@ build:
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/config $(CWD)nni
 	cp -r $(CWD)../../src/webui/build $(CWD)nni/static
-	cp -r $(CWD)../../src/nasui/build $(CWD)nni/nasui
+	mkdir -p $(CWD)nni/nasui/build
+	cp -r $(CWD)../../src/nasui/build $(CWD)nni/nasui/build
 	cp $(CWD)../../src/nasui/server.js $(CWD)nni/nasui
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
