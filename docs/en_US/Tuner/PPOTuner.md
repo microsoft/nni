@@ -18,3 +18,5 @@ The figure above was the chosen architecture. Each square is a layer whose opera
 The results are shown in figure below (see the experimenal config [here](https://github.com/microsoft/nni/blob/master/examples/trials/nas_cifar10/config_ppo.yml):
 
 ![](../../img/ppo_cifar10.png)
+
+**Note: The examples above are under refactoring, will provide them to users again soon.**
