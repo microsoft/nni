@@ -404,6 +404,22 @@ class Pruner(Compressor):
 
         self._wrap_model()
 
+    def load_model_state_dict(self, model_state):
+        """
+        Load the state dict saved from unwrapped model.
+
+        Parameters:
+        -----------
+        model_state : dict
+            state dict saved from unwrapped model
+        """
+        if self.is_wrapped:
+            self._unwrap_model()
+            self.bound_model.load_state_dict(model_state)
+            self._wrap_model()
+        else:
+            self.bound_model.load_state_dict(model_state)
+
 class QuantizerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, quantizer):
         """
