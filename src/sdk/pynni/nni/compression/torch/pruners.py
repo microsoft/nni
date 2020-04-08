@@ -441,7 +441,7 @@ class LotteryTicketPruner(Pruner):
         # reinit weights back to original after new masks are generated
         if self.reset_weights:
             # should use this member function to reset model weights
-            self.bound_model.load_state_dict(self._model_state)
+            self.load_model_state_dict(self._model_state)
             self._optimizer.load_state_dict(self._optimizer_state)
             if self._lr_scheduler is not None:
                 self._lr_scheduler.load_state_dict(self._scheduler_state)
