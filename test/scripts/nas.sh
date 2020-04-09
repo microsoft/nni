@@ -6,6 +6,8 @@ echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
 
+python3 -m pip install torch==1.4.0 --user
+
 echo "testing classic nas..."
 cd $EXAMPLE_DIR/classic_nas
 SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
