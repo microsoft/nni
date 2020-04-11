@@ -120,10 +120,11 @@ def launch_test(config_file, training_service, test_case_config):
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     # set experiment ID into variable
+    experiment_id = get_experiment_id(EXPERIMENT_URL)
     exp_var_name = test_case_config.get('setExperimentIdtoVar')
     if exp_var_name is not None:
         assert exp_var_name.startswith('$')
-        it_variables[exp_var_name] = get_experiment_id(EXPERIMENT_URL)
+        it_variables[exp_var_name] = experiment_id
     print('variables:', it_variables)
 
     max_duration, max_trial_num = get_max_values(config_file)
@@ -134,24 +135,27 @@ def launch_test(config_file, training_service, test_case_config):
 
     bg_time = time.time()
     print(str(datetime.datetime.now()), ' waiting ...', flush=True)
-    while True:
-        time.sleep(3)
-        waited_time = time.time() - bg_time
-        if  waited_time > max_duration + 10:
-            print('waited: {}, max_duration: {}'.format(waited_time, max_duration))
-            break
-        status = get_experiment_status(STATUS_URL)
-        if status in ['DONE', 'ERROR']:
-            print('experiment status:', status)
-            break
-        num_failed = len(get_failed_trial_jobs(TRIAL_JOBS_URL))
-        if num_failed > 0:
-            print('failed jobs: ', num_failed)
-            break
-
+    try:
+        while True:
+            time.sleep(3)
+            waited_time = time.time() - bg_time
+            if  waited_time > max_duration + 10:
+                print('waited: {}, max_duration: {}'.format(waited_time, max_duration))
+                break
+            status = get_experiment_status(STATUS_URL)
+            if status in ['DONE', 'ERROR']:
+                print('experiment status:', status)
+                break
+            num_failed = len(get_failed_trial_jobs(TRIAL_JOBS_URL))
+            if num_failed > 0:
+                print('failed jobs: ', num_failed)
+                break
+    except:
+        print_experiment_log(experiment_id=experiment_id)
+        raise
     print(str(datetime.datetime.now()), ' waiting done', flush=True)
     if get_experiment_status(STATUS_URL) == 'ERROR':
-        print_experiment_log(EXPERIMENT_URL)
+        print_experiment_log(experiment_id=experiment_id)
 
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)
