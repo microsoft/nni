@@ -154,10 +154,6 @@ def launch_test(config_file, training_service, test_case_config):
             time.sleep(3)
     except:
         print_experiment_log(experiment_id=experiment_id)
-        print('nnictl log stderr:')
-        subprocess.run(shlex.split('nnictl log stderr'))
-        print('nnictl log stdout:')
-        subprocess.run(shlex.split('nnictl log stdout'))
         raise
     print(str(datetime.datetime.now()), ' waiting done', flush=True)
     if get_experiment_status(STATUS_URL) == 'ERROR':
