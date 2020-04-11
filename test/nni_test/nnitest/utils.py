@@ -10,6 +10,7 @@ import subprocess
 import requests
 import time
 import ruamel.yaml as yaml
+import shlex
 
 EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
@@ -132,6 +133,11 @@ def print_experiment_log(experiment_id):
     for log_file in ['dispatcher.log', 'nnimanager.log']:
         filepath = os.path.join(log_dir, log_file)
         print_file_content(filepath)
+
+    print('nnictl log stderr:')
+    subprocess.run(shlex.split('nnictl log stderr {}'.format(experiment_id)))
+    print('nnictl log stdout:')
+    subprocess.run(shlex.split('nnictl log stdout {}'.format(experiment_id)))
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]
