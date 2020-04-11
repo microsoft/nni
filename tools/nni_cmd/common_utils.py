@@ -67,14 +67,12 @@ def detect_port(port):
 def get_user():
     if sys.platform == 'win32':
         return os.environ['USERNAME']
-    else:
-        return os.environ['USER']
+    return os.environ['USER']
 
 def get_python_dir(sitepackages_path):
     if sys.platform == "win32":
         return str(Path(sitepackages_path))
-    else:
-        return str(Path(sitepackages_path).parents[2])
+    return str(Path(sitepackages_path).parents[2])
 
 def check_tensorboard_version():
     try:
