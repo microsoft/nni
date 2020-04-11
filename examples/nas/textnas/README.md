@@ -42,4 +42,8 @@ By default, 20 sampled architectures will be exported into `checkpoints` directo
 
 ## Retrain
 
-Not ready.
+```
+sh run_retrain.sh
+```
+
+By default, the script will retrain the architecture provided by the author on the SST-2 dataset.
