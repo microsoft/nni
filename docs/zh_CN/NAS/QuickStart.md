@@ -29,11 +29,11 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(84, 10)
 ```
 
-有关 `LayerChoice` 和 `InputChoice` 的详细描述可参考[指南](NasGuide.md)。
+有关 `LayerChoice` 和 `InputChoice` 的详细描述可参考[ NAS 指南](NasGuide.md)。
 
 ## 选择 NAS Trainer
 
-实例化模型后，需要通过 NAS Trainer 来训练模型。 不同的 Trainer 会使用不同的方法来从指定的神经网络模块中搜索出最好的。 NNI 提供了流行的 NAS 训练方法，如 DARTS，ENAS。 以下以 `DartsTrainer` 为例。 在 Trainer 实例化后，调用`trainer.train()` 开始搜索。
+实例化模型后，需要通过 NAS Trainer 来训练模型。 不同的 Trainer 会使用不同的方法来从指定的神经网络模块中搜索出最好的。 NNI 提供了几种流行的 NAS 训练方法，如 DARTS，ENAS。 以下以 `DartsTrainer` 为例。 在 Trainer 实例化后，调用`trainer.train()` 开始搜索。
 
 ```python
 trainer = DartsTrainer(net,
@@ -54,11 +54,11 @@ trainer.train()
 
 ## NAS 可视化
 
-正在开发 NAS 的可视化，并将很快发布。
+正在研究 NAS 的可视化，并将很快发布此功能。
 
 ## 重新训练导出的最佳模型
 
-重新训练找到（导出）的网络架构非常容易。 第一步，实例化上面定义的模型。 第二步，在模型上调用 `apply_fixed_architecture`。 然后，模型会变为找到（导出）的模型，可通过正常的训练方法来训练此模型。
+重新训练找到（导出）的网络架构非常容易。 第一步，实例化上面定义的模型。 第二步，在模型上调用 `apply_fixed_architecture`。 然后，此模型会作为找到的（导出的）模型。 之后，可以使用传统方法来训练此模型。
 
 ```python
 model = Net()

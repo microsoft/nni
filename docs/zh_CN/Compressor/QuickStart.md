@@ -1,6 +1,6 @@
 # 模型压缩快速入门
 
-NNI 为模型压缩提供了非常简单的 API。 压缩包括剪枝和量化算法。 它们的用法相同，这里通过 slim Pruner 来演示如何使用。 完整示例在[这里](https://github.com/microsoft/nni/blob/master/examples/model_compress/slim_torch_cifar10.py)
+NNI 为模型压缩提供了非常简单的 API。 压缩包括剪枝和量化算法。 它们的用法相同，这里通过 slim Pruner 来演示如何使用。
 
 ## 编写配置
 
@@ -33,6 +33,8 @@ model = pruner.compress()
 ```python
 pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 ```
+
+模型的完整示例代码在[这里](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py)
 
 ## 加速模型
 

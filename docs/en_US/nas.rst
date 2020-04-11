@@ -26,5 +26,6 @@ For details, please refer to the following tutorials:
     SPOS <NAS/SPOS>
     CDARTS <NAS/CDARTS>
     ProxylessNAS <NAS/Proxylessnas>
+    TextNAS <NAS/TextNAS>
     Customize a NAS Algorithm <NAS/Advanced>
     API Reference <NAS/NasReference>

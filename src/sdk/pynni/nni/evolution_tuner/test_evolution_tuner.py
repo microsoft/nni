@@ -9,7 +9,7 @@ import numpy as np
 
 from unittest import TestCase, main
 
-from nni.evolution_tuner.evolution_tuner import json2space, json2parameter
+from nni.utils import json2space, json2parameter
 
 
 class EvolutionTunerTestCase(TestCase):
