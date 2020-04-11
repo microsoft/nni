@@ -98,13 +98,12 @@ def set_trial_config(experiment_config, port, config_file_name):
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return True
-    else:
-        print('Error message is {}'.format(response.text))
-        _, stderr_full_path = get_log_path(config_file_name)
-        if response:
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-        return False
+    print('Error message is {}'.format(response.text))
+    _, stderr_full_path = get_log_path(config_file_name)
+    if response:
+        with open(stderr_full_path, 'a+') as fout:
+            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+    return False
 
 def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
