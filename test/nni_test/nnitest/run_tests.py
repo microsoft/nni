@@ -117,14 +117,13 @@ def launch_test(config_file, training_service, test_case_config):
 
     proc = subprocess.run(shlex.split(launch_command))
 
-    assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
+    assert proc.returncode == 0, 'launch command failed with code %d' % proc.returncode
 
     # set experiment ID into variable
-    experiment_id = get_experiment_id(EXPERIMENT_URL)
     exp_var_name = test_case_config.get('setExperimentIdtoVar')
     if exp_var_name is not None:
         assert exp_var_name.startswith('$')
-        it_variables[exp_var_name] = experiment_id
+        it_variables[exp_var_name] = get_experiment_id(EXPERIMENT_URL)
     print('variables:', it_variables)
 
     max_duration, max_trial_num = get_max_values(config_file)
@@ -136,8 +135,10 @@ def launch_test(config_file, training_service, test_case_config):
     bg_time = time.time()
     print(str(datetime.datetime.now()), ' waiting ...', flush=True)
     try:
+        # wait restful server to be ready
+        time.sleep(3)
+        experiment_id = get_experiment_id(EXPERIMENT_URL)
         while True:
-            time.sleep(3)
             waited_time = time.time() - bg_time
             if  waited_time > max_duration + 10:
                 print('waited: {}, max_duration: {}'.format(waited_time, max_duration))
@@ -150,8 +151,13 @@ def launch_test(config_file, training_service, test_case_config):
             if num_failed > 0:
                 print('failed jobs: ', num_failed)
                 break
+            time.sleep(3)
     except:
         print_experiment_log(experiment_id=experiment_id)
+        print('nnictl log stderr:')
+        subprocess.run(shlex.split('nnictl log stderr'))
+        print('nnictl log stdout:')
+        subprocess.run(shlex.split('nnictl log stdout'))
         raise
     print(str(datetime.datetime.now()), ' waiting done', flush=True)
     if get_experiment_status(STATUS_URL) == 'ERROR':
