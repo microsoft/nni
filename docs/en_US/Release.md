@@ -7,7 +7,7 @@
 #### Hyper-Parameter Optimizing
 
 * New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
-* Trials can now report infinity, NaN, and string metrics
+* Trials can now report infinity and NaN as result, as well as metrics in string format
 
 #### Neural Architecture Search
 
@@ -24,7 +24,7 @@
 #### Training Service
 
 * Kubeflow now supports pytorchjob crd v1 (thanks @jiapinai)
-* Experimental DLTS support
+* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
 
 #### Overall Documentation Improvement
 
@@ -39,7 +39,7 @@
 * Experiment cannot be killed if it failed on start (#2080)
 * A bug in lottery ticket pruner
 * Some glitches in web UI
-* And more
+* And more!
 
 ## Release 1.4 - 2/19/2020
 
