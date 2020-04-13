@@ -7,7 +7,7 @@
 #### Hyper-Parameter Optimizing
 
 * New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
-* Trials can now report infinity and NaN as result, as well as metrics in string format
+* Trials can now report infinity and NaN as result
 
 #### Neural Architecture Search
 
@@ -37,9 +37,9 @@
 * NNI manager may exhaust head memory (thanks @Sundrops)
 * Batch tuner does not support customized trials (#2075)
 * Experiment cannot be killed if it failed on start (#2080)
+* Non-number type metrics break web UI (#2278)
 * A bug in lottery ticket pruner
-* Some glitches in web UI
-* And more!
+* Other minor glitches
 
 ## Release 1.4 - 2/19/2020
 
