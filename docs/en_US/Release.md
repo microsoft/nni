@@ -1,5 +1,46 @@
 # ChangeLog
 
+## Release 1.5 - 4/13/2020
+
+### New Features and Documentation
+
+#### Hyper-Parameter Optimizing
+
+* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* Trials can now report infinity, NaN, and string metrics
+
+#### Neural Architecture Search
+
+* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
+* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+
+#### Model Compression
+
+* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* Compressors will validate configuration by default
+* Model compression examples are refactored and improved
+* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+
+#### Training Service
+
+* Kubeflow now supports pytorchjob crd v1 (thanks @jiapinai)
+* Experimental DLTS support
+
+#### Overall Documentation Improvement
+
+* Documentation is significantly improved on grammar, spelling, and wording (thanks @AHartNtkn)
+
+### Fixed Bugs
+
+* ENAS cannot have more than one LSTM layers (thanks @marsggbo)
+* NNI manager's timers will never unsubscribe (thanks @guilhermehn)
+* NNI manager may exhaust head memory (thanks @Sundrops)
+* Batch tuner does not support customized trials (#2075)
+* Experiment cannot be killed if it failed on start (#2080)
+* A bug in lottery ticket pruner
+* Some glitches in web UI
+* And more
+
 ## Release 1.4 - 2/19/2020
 
 ### Major Features
