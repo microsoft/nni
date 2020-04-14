@@ -129,6 +129,7 @@ class DartsTrainer(Trainer):
         self.mutator.reset()
         logits = self.model(X)
         loss = self.loss(logits, y)
+        self._write_graph_status()
         return logits, loss
 
     def _backward(self, val_X, val_y):
