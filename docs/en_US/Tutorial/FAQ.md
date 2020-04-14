@@ -45,7 +45,7 @@ Probably it's a problem with your network config. Here is a checklist.
 
 
 ### NNI on Windows problems
-Please refer to [NNI on Windows](InstallationWin.md#FAQ)
+Please refer to [NNI on Windows](InstallationWin.md)
 
 
 ### More FAQ issues

@@ -108,6 +108,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>Bayesian optimization</b>
             <ul>
@@ -131,7 +132,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
             </ul>
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
