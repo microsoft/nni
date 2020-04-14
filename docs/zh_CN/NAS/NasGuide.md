@@ -118,7 +118,7 @@ trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导�
 
 用户可直接通过 `python3 train.py` 开始训练，不需要使用 `nnictl`。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。
 
-通常，Trainer 会提供一些可以自定义的参数。 如，损失函数，指标函数，优化器以及数据集。 这些功能可满足大部分需求，NNI 会尽力让内置 Trainer 能够处理更多的模型、任务和数据集。 但无法保证全面的支持。 例如，一些 Trainer 假设必须是分类任务；一些 Trainer 对 "Epoch" 的定义有所不同（例如，ENAS 的 epoch 表示一部分子步骤加上一些 Controller 的步骤）；大多数 Trainer 不支持分布式训练，不会将模型通过 `DataParallel` 或 `DistributedDataParallel` 进行包装。 So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers).
+通常，Trainer 会提供一些可以自定义的参数。 如，损失函数，指标函数，优化器以及数据集。 这些功能可满足大部分需求，NNI 会尽力让内置 Trainer 能够处理更多的模型、任务和数据集。 但无法保证全面的支持。 例如，一些 Trainer 假设必须是分类任务；一些 Trainer 对 "Epoch" 的定义有所不同（例如，ENAS 的 epoch 表示一部分子步骤加上一些 Controller 的步骤）；大多数 Trainer 不支持分布式训练，不会将模型通过 `DataParallel` 或 `DistributedDataParallel` 进行包装。 如果通过试用，想要在定制的应用中使用 Trainer，可能需要[自定义 Trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers)。
 
 Furthermore, one-shot NAS can be visualized with our NAS UI. [See more details.](./Visualization.md)
 
@@ -148,14 +148,14 @@ A complete example can be found [here](https://github.com/microsoft/nni/tree/mas
 
 ### 使用导出的架构重新训练
 
-After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. For example
+After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
 
 ```python
 model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to one-hot or multi-hot representation of choices. For example
+JSON 文件是从 Mutable key 到 Choice 的表示。 例如
 
 ```json
 {
@@ -164,6 +164,6 @@ The JSON is simply a mapping from mutable keys to one-hot or multi-hot represent
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. However, this is also a model with redundant parameters and this may cause problems when trying to count the number of parameters in the model. For deeper reasons and possible workarounds, see [Trainers](./NasReference.md).
+After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. 但是，这也造成模型有冗余的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
 
-Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
+也可参考 [DARTS](./DARTS.md) 的重新训练代码。
