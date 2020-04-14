@@ -5,7 +5,8 @@ PPO Tuner on NNI
 
 This is a tuner geared for NNI's Neural Architecture Search (NAS) interface. It uses the [ppo algorithm](https://arxiv.org/abs/1707.06347). The implementation inherits the main logic of the ppo2 OpenAI implementation [here](https://github.com/openai/baselines/tree/master/baselines/ppo2) and is adapted for the NAS scenario.
 
-It can successfully tune the [mnist-nas example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas), and has the following result:
+We had successfully tuned the mnist-nas example and has the following result:
+**NOTE: we are refactoring this example to the latest NAS interface, will publish the example codes after the refactor.**
 
 ![](../../img/ppo_mnist.png)
 
