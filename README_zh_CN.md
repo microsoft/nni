@@ -102,6 +102,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>贝叶斯优化</b>
             <ul>
@@ -125,7 +126,8 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/zh_CN/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/zh_CN/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
             </ul>
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
