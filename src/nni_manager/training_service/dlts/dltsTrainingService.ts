@@ -347,6 +347,36 @@ class DLTSTrainingService implements TrainingService {
         return '';
     }
 
+    public async getNniManagerIpPortFromEnv(): Promise<[string, number] | void> {
+        if (this.dltsClusterConfig == null) return;
+        if (process.env['DLTS_JOB_ID'] == null) return;
+
+        const options: request.Options = {
+            method: 'GET',
+            uri: `${this.dltsClusterConfig.dashboard}api/clusters/${this.dltsClusterConfig.cluster}/jobs/${process.env['DLTS_JOB_ID']}/endpoints`,
+            qs: {
+                email: this.dltsClusterConfig.email,
+                password: this.dltsClusterConfig.password
+            },
+            json: true
+        }
+        const body = await new Promise((resolve, reject) => request.get(options, function (error, response, body) {
+            if (error != null) {
+                reject(error)
+            } else {
+                resolve(body)
+            }
+        }))
+        if (!Array.isArray(body)) return;
+        for (let i = 0, l = body.length; i < l; i += 1) {
+            const endpoint = body[i]
+            if (endpoint['podPort'] === this.dltsRestServerPort) {
+                return [endpoint["nodeName"], endpoint['port']]
+            }
+        }
+        return;
+    }
+
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping DLTS training service...');
         this.stopping = true;
@@ -400,8 +430,22 @@ class DLTSTrainingService implements TrainingService {
             );
         }
         // tslint:disable-next-line: strict-boolean-expressions
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        let ip: string, port: number;
+        if (this.nniManagerIpConfig) {
+            ip = this.nniManagerIpConfig.nniManagerIp;
+            port = this.dltsRestServerPort!;
+        } else {
+            const envIpPort = await this.getNniManagerIpPortFromEnv();
+            if (envIpPort) {
+                ip = envIpPort[0]
+                port = envIpPort[1]
+            } else {
+                ip = getIPV4Address()
+                port = this.dltsRestServerPort!;
+            }
+        }
         const version: string = this.versionCheck ? await getVersion() : '';
+        
         const nniDLTSTrialCommand: string = String.Format(
             DLTS_TRIAL_COMMAND_FORMAT,
             trialLocalFolder,
@@ -412,8 +456,8 @@ class DLTSTrainingService implements TrainingService {
             false,
             this.dltsTrialConfig.codeDir,
             this.dltsTrialConfig.command,
-            nniManagerIp,
-            this.dltsRestServerPort,
+            ip,
+            port,
             version,
             this.logCollection
         )
