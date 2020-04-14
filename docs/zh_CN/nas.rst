@@ -28,5 +28,5 @@
     ProxylessNAS <NAS/Proxylessnas>
     TextNAS <NAS/TextNAS>
     自定义 NAS 算法 <NAS/Advanced>
-    NAS Visualization <NAS/Visualization>
+    NAS 可视化 <NAS/Visualization>
     API 参考 <NAS/NasReference>
