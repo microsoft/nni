@@ -461,7 +461,7 @@ tuner:
 
 **建议场景**
 
-Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [查看详情](./PBTTuner.md)
+Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT 也可作为训练的方法。 If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [查看详情](./PBTTuner.md)
 
 **classArgs 要求：**
 
