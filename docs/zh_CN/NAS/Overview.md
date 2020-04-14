@@ -20,7 +20,7 @@ NNI 目前支持下面列出的 NAS 算法，并且正在添加更多算法。 �
 | [SPOS](SPOS.md)                 | 论文 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。                                                                    |
 | [CDARTS](CDARTS.md)             | [Cyclic Differentiable Architecture Search](https://arxiv.org/abs/****) 在搜索和评估的网络见构建了循环反馈的机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。                                                                                                     |
 | [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332). It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms. |
-| [TextNAS](TextNAS.md)           | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf). It is a neural architecture search algorithm tailored for text representation.                             |
+| [TextNAS](TextNAS.md)           | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf)。 It is a neural architecture search algorithm tailored for text representation.                             |
 
 One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch 版本。 将来的版本会支持 Tensorflow 2.x。
 
@@ -30,7 +30,7 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 * PyTorch 1.2+
 * git
 
-One-shot NAS can be visualized with our visualization tool. Learn more details [here](./Visualization.md).
+一次性 NAS 可以通过可视化工具来查看。 Learn more details [here](./Visualization.md).
 
 ## 支持的分布式 NAS 算法
 
@@ -55,7 +55,7 @@ The programming interface of designing and searching a model is often demanded i
 
 To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
-## Reference and Feedback
+## 参考和反馈
 
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
 * 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)。
