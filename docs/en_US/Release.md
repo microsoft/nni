@@ -23,18 +23,18 @@
 
 #### Training Service
 
-* Kubeflow now supports pytorchjob crd v1 (thanks @jiapinai)
+* Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
 * Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
 
 #### Overall Documentation Improvement
 
-* Documentation is significantly improved on grammar, spelling, and wording (thanks @AHartNtkn)
+* Documentation is significantly improved on grammar, spelling, and wording (thanks external contributor @AHartNtkn)
 
 ### Fixed Bugs
 
-* ENAS cannot have more than one LSTM layers (thanks @marsggbo)
-* NNI manager's timers will never unsubscribe (thanks @guilhermehn)
-* NNI manager may exhaust head memory (thanks @Sundrops)
+* ENAS cannot have more than one LSTM layers (thanks external contributor @marsggbo)
+* NNI manager's timers will never unsubscribe (thanks external contributor @guilhermehn)
+* NNI manager may exhaust head memory (thanks external contributor @Sundrops)
 * Batch tuner does not support customized trials (#2075)
 * Experiment cannot be killed if it failed on start (#2080)
 * Non-number type metrics break web UI (#2278)
