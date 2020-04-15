@@ -125,7 +125,7 @@ class DLTSTrainingService implements TrainingService {
                     break;
                 }
             }
-        } while (await new Promise(resolve => setTimeout(resolve, 1000)));
+        } while (await new Promise(resolve => setTimeout(resolve, 1000, true)));
     }
 
     private async statusCheckingLoop(): Promise<void> {
