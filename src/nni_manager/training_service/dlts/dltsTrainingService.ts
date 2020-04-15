@@ -81,9 +81,11 @@ class DLTSTrainingService implements TrainingService {
         }
         const { dashboard, cluster, email, password } = this.dltsClusterConfig;
         const jobId = process.env['DLTS_JOB_ID'] + '';
-        const uri = `${dashboard}api/v2/clusters/${cluster}/jobs/${jobId}/endpoints`;
+        const uri = `${dashboard}api/clusters/${cluster}/jobs/${jobId}/endpoints`;
         const qs = { email, password }
+
         while (true) {
+            this.log.debug('Checking endpoints')
             const endpoints = await new Promise((resolve, reject) => {
                 request.get(uri, { qs, json: true }, function (error, response, body) {
                     if (error) {
@@ -93,9 +95,11 @@ class DLTSTrainingService implements TrainingService {
                     }
                 })
             })
+            this.log.debug('Endpoints: %o', endpoints)
             if (Array.isArray(endpoints)) {
                 const restServerEndpoint = endpoints.find(({ podPort }) => podPort === port)
                 if (restServerEndpoint == null) {
+                    this.log.debug('Exposing %d', port)
                     await new Promise((resolve, reject) => {
                         request.post(uri, {
                             qs,
@@ -113,18 +117,15 @@ class DLTSTrainingService implements TrainingService {
                                 resolve()
                             }
                         })
-                    })
-                    continue;
-                } else if (restServerEndpoint['status'] !== 'running') {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    continue;
+                    });
+                } else if (restServerEndpoint['status'] === 'running') {
+                    // We get an exposed restserver port
+                    this.dltsRestServerHost = restServerEndpoint['nodeName']
+                    this.dltsRestServerPort = restServerEndpoint['port']
+                    break;
                 }
-
-                // We get an exposed restserver port
-                this.dltsRestServerHost = restServerEndpoint['nodeName']
-                this.dltsRestServerPort = restServerEndpoint['port']
-                break;
             }
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 
