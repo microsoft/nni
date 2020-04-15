@@ -38,7 +38,9 @@ class DLTSTrainingService implements TrainingService {
     private versionCheck: boolean = true;
     private logCollection: string = 'none';
     private isMultiPhase: boolean = false;
+    private dltsRestServerHost: string;
     private dltsRestServerPort?: number;
+    private jobMode: boolean;
 
     private readonly trialJobsMap: Map<string, DLTSTrialJobDetail>;
     private nniManagerIpConfig?: NNIManagerIpConfig;
@@ -51,7 +53,9 @@ class DLTSTrainingService implements TrainingService {
         this.trialJobsMap = new Map();
         this.jobQueue = [];
         this.experimentId = getExperimentId();
-        this.log.info('Construct DLTS training service.');
+        this.dltsRestServerHost = getIPV4Address();
+        this.jobMode = 'DLTS_JOB_ID' in process.env;
+        this.log.info(`Construct DLTS training service in ${this.jobMode ? 'job mode' : 'local mode'}.`);
     }
 
     public async run(): Promise<void> {
@@ -60,10 +64,67 @@ class DLTSTrainingService implements TrainingService {
         await restServer.start();
         restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`DLTS Training service rest server listening on: ${restServer.endPoint}`);
+        if (this.jobMode) {
+            await this.exposeRestServerPort(restServer.clusterRestServerPort);
+        } else {
+            this.dltsRestServerPort = restServer.clusterRestServerPort
+        }
         await Promise.all([
             this.statusCheckingLoop(),
             this.submitJobLoop()]);
         this.log.info('DLTS training service exit.');
+    }
+
+    private async exposeRestServerPort(port: number): Promise<void> {
+        if (this.dltsClusterConfig == null) {
+            throw Error('Cluster config is not set');
+        }
+        const { dashboard, cluster, email, password } = this.dltsClusterConfig;
+        const jobId = process.env['DLTS_JOB_ID'] + '';
+        const uri = `${dashboard}api/v2/clusters/${cluster}/jobs/${jobId}/endpoints`;
+        const qs = { email, password }
+        while (true) {
+            const endpoints = await new Promise((resolve, reject) => {
+                request.get(uri, { qs, json: true }, function (error, response, body) {
+                    if (error) {
+                        reject(error)
+                    } else {
+                        resolve(body)
+                    }
+                })
+            })
+            if (Array.isArray(endpoints)) {
+                const restServerEndpoint = endpoints.find(({ podPort }) => podPort === port)
+                if (restServerEndpoint == null) {
+                    await new Promise((resolve, reject) => {
+                        request.post(uri, {
+                            qs,
+                            json: true,
+                            body: {
+                                endpoints: [{
+                                    name: "nni-rest-server",
+                                    podPort: port
+                                }]
+                            }
+                        }, function (error) {
+                            if (error) {
+                                reject(error)
+                            } else {
+                                resolve()
+                            }
+                        })
+                    })
+                } else if (restServerEndpoint['status'] !== 'running') {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    continue;
+                }
+
+                // We get an exposed restserver port
+                this.dltsRestServerHost = restServerEndpoint['nodeName']
+                this.dltsRestServerPort = restServerEndpoint['port']
+                break;
+            }
+        }
     }
 
     private async statusCheckingLoop(): Promise<void> {
@@ -347,36 +408,6 @@ class DLTSTrainingService implements TrainingService {
         return '';
     }
 
-    public async getNniManagerIpPortFromEnv(): Promise<[string, number] | void> {
-        if (this.dltsClusterConfig == null) return;
-        if (process.env['DLTS_JOB_ID'] == null) return;
-
-        const options: request.Options = {
-            method: 'GET',
-            uri: `${this.dltsClusterConfig.dashboard}api/clusters/${this.dltsClusterConfig.cluster}/jobs/${process.env['DLTS_JOB_ID']}/endpoints`,
-            qs: {
-                email: this.dltsClusterConfig.email,
-                password: this.dltsClusterConfig.password
-            },
-            json: true
-        }
-        const body = await new Promise((resolve, reject) => request.get(options, function (error, response, body) {
-            if (error != null) {
-                reject(error)
-            } else {
-                resolve(body)
-            }
-        }))
-        if (!Array.isArray(body)) return;
-        for (let i = 0, l = body.length; i < l; i += 1) {
-            const endpoint = body[i]
-            if (endpoint['podPort'] === this.dltsRestServerPort) {
-                return [endpoint["nodeName"], endpoint['port']]
-            }
-        }
-        return;
-    }
-
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping DLTS training service...');
         this.stopping = true;
@@ -430,20 +461,6 @@ class DLTSTrainingService implements TrainingService {
             );
         }
         // tslint:disable-next-line: strict-boolean-expressions
-        let ip: string, port: number;
-        if (this.nniManagerIpConfig) {
-            ip = this.nniManagerIpConfig.nniManagerIp;
-            port = this.dltsRestServerPort!;
-        } else {
-            const envIpPort = await this.getNniManagerIpPortFromEnv();
-            if (envIpPort) {
-                ip = envIpPort[0]
-                port = envIpPort[1]
-            } else {
-                ip = getIPV4Address()
-                port = this.dltsRestServerPort!;
-            }
-        }
         const version: string = this.versionCheck ? await getVersion() : '';
         
         const nniDLTSTrialCommand: string = String.Format(
@@ -456,8 +473,8 @@ class DLTSTrainingService implements TrainingService {
             false,
             this.dltsTrialConfig.codeDir,
             this.dltsTrialConfig.command,
-            ip,
-            port,
+            this.dltsRestServerHost,
+            this.dltsRestServerPort,
             version,
             this.logCollection
         )
