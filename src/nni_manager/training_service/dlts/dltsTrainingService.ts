@@ -82,24 +82,24 @@ class DLTSTrainingService implements TrainingService {
         const { dashboard, cluster, email, password } = this.dltsClusterConfig;
         const jobId = process.env['DLTS_JOB_ID'] + '';
         const uri = `${dashboard}api/clusters/${cluster}/jobs/${jobId}/endpoints`;
-        const qs = { email, password }
+        const qs = { email, password };
 
-        while (true) {
-            this.log.debug('Checking endpoints')
+        do {
+            this.log.debug('Checking endpoints');
             const endpoints = await new Promise((resolve, reject) => {
                 request.get(uri, { qs, json: true }, function (error, response, body) {
                     if (error) {
-                        reject(error)
+                        reject(error);
                     } else {
-                        resolve(body)
+                        resolve(body);
                     }
-                })
-            })
-            this.log.debug('Endpoints: %o', endpoints)
+                });
+            });
+            this.log.debug('Endpoints: %o', endpoints);
             if (Array.isArray(endpoints)) {
-                const restServerEndpoint = endpoints.find(({ podPort }) => podPort === port)
+                const restServerEndpoint = endpoints.find(({ podPort }) => podPort === port);
                 if (restServerEndpoint == null) {
-                    this.log.debug('Exposing %d', port)
+                    this.log.debug('Exposing %d', port);
                     await new Promise((resolve, reject) => {
                         request.post(uri, {
                             qs,
@@ -112,21 +112,20 @@ class DLTSTrainingService implements TrainingService {
                             }
                         }, function (error) {
                             if (error) {
-                                reject(error)
+                                reject(error);
                             } else {
-                                resolve()
+                                resolve();
                             }
-                        })
+                        });
                     });
                 } else if (restServerEndpoint['status'] === 'running') {
                     // We get an exposed restserver port
-                    this.dltsRestServerHost = restServerEndpoint['nodeName']
-                    this.dltsRestServerPort = restServerEndpoint['port']
+                    this.dltsRestServerHost = restServerEndpoint['nodeName'];
+                    this.dltsRestServerPort = restServerEndpoint['port'];
                     break;
                 }
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        } while (await new Promise(resolve => setTimeout(resolve, 1000)));
     }
 
     private async statusCheckingLoop(): Promise<void> {
