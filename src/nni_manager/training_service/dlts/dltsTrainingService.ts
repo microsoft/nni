@@ -461,6 +461,7 @@ class DLTSTrainingService implements TrainingService {
             );
         }
         // tslint:disable-next-line: strict-boolean-expressions
+        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : this.dltsRestServerHost;
         const version: string = this.versionCheck ? await getVersion() : '';
         
         const nniDLTSTrialCommand: string = String.Format(
@@ -473,7 +474,7 @@ class DLTSTrainingService implements TrainingService {
             false,
             this.dltsTrialConfig.codeDir,
             this.dltsTrialConfig.command,
-            this.dltsRestServerHost,
+            nniManagerIp,
             this.dltsRestServerPort,
             version,
             this.logCollection
