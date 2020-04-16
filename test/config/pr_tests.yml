@@ -70,12 +70,18 @@ testCases:
   config:
     maxTrialNum: 2
     trialConcurrency: 2
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
 
 - name: assessor-medianstop
   configFile: test/config/assessors/medianstop.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
 
 #########################################################################
 # nni tuners test
@@ -89,7 +95,7 @@ testCases:
     searchSpacePath: ../naive_trial/search_space.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 naive_trial.py
 
 - name: tuner-evolution
   configFile: test/config/tuners/evolution.yml
@@ -100,7 +106,7 @@ testCases:
     searchSpacePath: ../naive_trial/search_space.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 naive_trial.py
 
 - name: tuner-random
   configFile: test/config/tuners/random.yml
@@ -111,7 +117,7 @@ testCases:
     searchSpacePath: ../naive_trial/search_space.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 naive_trial.py
 
 - name: tuner-tpe
   configFile: test/config/tuners/tpe.yml
@@ -122,7 +128,7 @@ testCases:
     searchSpacePath: ../naive_trial/search_space.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 naive_trial.py
 
 - name: tuner-batch
   configFile: test/config/tuners/batch.yml
@@ -144,7 +150,7 @@ testCases:
     searchSpacePath: ../naive_trial/search_space.json
     trial:
       codeDir: ../naive_trial
-      command: python3 trial.py
+      command: python3 naive_trial.py
 
 - name: tuner-grid
   configFile: test/config/tuners/gridsearch.yml

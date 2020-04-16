@@ -126,6 +126,7 @@ class EnasTrainer(Trainer):
 
             with torch.no_grad():
                 self.mutator.reset()
+            self._write_graph_status()
             logits = self.model(x)
 
             if isinstance(logits, tuple):
@@ -159,6 +160,7 @@ class EnasTrainer(Trainer):
                 self.mutator.reset()
                 with torch.no_grad():
                     logits = self.model(x)
+                self._write_graph_status()
                 metrics = self.metrics(logits, y)
                 reward = self.reward_function(logits, y)
                 if self.entropy_weight:

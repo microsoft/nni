@@ -19,16 +19,18 @@ NNI currently supports the NAS algorithms listed below and is adding more. Users
 | [P-DARTS](PDARTS.md) | [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) is based on DARTS. It introduces an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure. |
 | [SPOS](SPOS.md) | [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) constructs a simplified supernet trained with a uniform path sampling method and applies an evolutionary algorithm to efficiently search for the best-performing architectures. |
 | [CDARTS](CDARTS.md) | [Cyclic Differentiable Architecture Search](https://arxiv.org/abs/****) builds a cyclic feedback mechanism between the search and evaluation networks. It introduces a cyclic differentiable architecture search framework which integrates the two networks into a unified architecture.|
-| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332).|
+| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332). It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms. |
+| [TextNAS](TextNAS.md) | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf). It is a neural architecture search algorithm tailored for text representation. |
 
 One-shot algorithms run **standalone without nnictl**. Only the PyTorch version has been implemented. Tensorflow 2.x will be supported in a future release.
 
 Here are some common dependencies to run the examples. PyTorch needs to be above 1.2 to use ``BoolTensor``.
 
-* NNI 1.2+
 * tensorboard
 * PyTorch 1.2+
 * git
+
+One-shot NAS can be visualized with our visualization tool. Learn more details [here](./Visualization.md).
 
 ## Supported Distributed NAS Algorithms
 
@@ -48,6 +50,10 @@ The programming interface of designing and searching a model is often demanded i
 2. When applying NAS on a neural network, it needs a unified way to express the search space of architectures, so that it doesn't need to update trial code for different search algorithms.
 
 [Here](./NasGuide.md) is the user guide to get started with using NAS on NNI.
+
+## NAS Visualization
+
+To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
 ## Reference and Feedback
 

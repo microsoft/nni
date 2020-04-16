@@ -28,4 +28,5 @@ For details, please refer to the following tutorials:
     ProxylessNAS <NAS/Proxylessnas>
     TextNAS <NAS/TextNAS>
     Customize a NAS Algorithm <NAS/Advanced>
+    NAS Visualization <NAS/Visualization>
     API Reference <NAS/NasReference>

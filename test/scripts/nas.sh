@@ -28,9 +28,10 @@ cd $EXAMPLE_DIR/enas
 python3 search.py --search-for macro --epochs 1
 python3 search.py --search-for micro --epochs 1
 
-echo "testing naive..."
-cd $EXAMPLE_DIR/naive
-python3 train.py
+#disabled for now
+#echo "testing naive..."
+#cd $EXAMPLE_DIR/naive
+#python3 train.py
 
 echo "testing pdarts..."
 cd $EXAMPLE_DIR/pdarts
