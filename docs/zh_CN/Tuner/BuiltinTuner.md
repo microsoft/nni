@@ -461,7 +461,7 @@ tuner:
 
 **建议场景**
 
-Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 它通过周期性的从较好的模型中继承权重来继续探索，这样所需的计算资源相对较少。 使用 PBTTuner，用户最终可以得到训练好的模型，而不是需要从头训练的配置。 这是因为模型权重会在搜索过程中周期性的继承。 PBT 也可作为训练的方法。 If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [查看详情](./PBTTuner.md)
+Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 它通过周期性的从较好的模型中继承权重来继续探索，这样所需的计算资源相对较少。 使用 PBTTuner，用户最终可以得到训练好的模型，而不是需要从头训练的配置。 这是因为模型权重会在搜索过程中周期性的继承。 PBT 也可作为训练的方法。 如果不需要配置，只需要好的模型，PBTTuner 是不错的选择。 [查看详情](./PBTTuner.md)
 
 **classArgs 要求：**
 
@@ -481,7 +481,7 @@ tuner:
     optimize_mode: maximize
 ```
 
-Note that, to use this tuner, your trial code should be modified accordingly, please refer to [the document of PBTTuner](./PBTTuner.md) for details.
+注意，要使用此 Tuner，Trial 代码也需要相应的修改，参考 [PBTTuner 文档](./PBTTuner.md)了解详情。
 
 ## **参考和反馈**
 
