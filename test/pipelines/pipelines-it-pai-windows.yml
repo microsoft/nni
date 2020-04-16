@@ -9,6 +9,10 @@ jobs:
 
   - script: |
       cd deployment/pypi
+      if [ -d ./dist ]
+      then
+        rm -rf ./dist/*
+      fi
       echo 'building prerelease package...'
       make build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
