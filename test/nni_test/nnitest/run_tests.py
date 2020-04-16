@@ -70,7 +70,7 @@ def run_test_case(test_case_config, it_config, args):
 
     try:
         launch_test(new_config_file, args.ts, test_case_config)
-        invoke_validator(test_case_config, args.nni_source_dir)
+        invoke_validator(test_case_config, args.nni_source_dir, args.ts)
     finally:
         stop_command = get_command(test_case_config, 'stopCommand')
         print('Stop command:', stop_command, flush=True)
@@ -80,7 +80,7 @@ def run_test_case(test_case_config, it_config, args):
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
 
-def invoke_validator(test_case_config, nni_source_dir):
+def invoke_validator(test_case_config, nni_source_dir, training_service):
     validator_config = test_case_config.get('validator')
     if validator_config is None or validator_config.get('class') is None:
         return
@@ -88,7 +88,13 @@ def invoke_validator(test_case_config, nni_source_dir):
     validator = validators.__dict__[validator_config.get('class')]()
     kwargs = validator_config.get('kwargs', {})
     print('kwargs:', kwargs)
-    validator(REST_ENDPOINT, get_experiment_dir(EXPERIMENT_URL), nni_source_dir, **kwargs)
+    experiment_id = get_experiment_id(EXPERIMENT_URL)
+    try:
+        validator(REST_ENDPOINT, get_experiment_dir(EXPERIMENT_URL), nni_source_dir, **kwargs)
+    except:
+        print_experiment_log(experiment_id=experiment_id)
+        print_trial_job_log(training_service, TRIAL_JOBS_URL)
+        raise
 
 def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
