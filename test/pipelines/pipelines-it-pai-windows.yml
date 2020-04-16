@@ -16,6 +16,7 @@ jobs:
     displayName: 'build nni bdsit_wheel'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi
