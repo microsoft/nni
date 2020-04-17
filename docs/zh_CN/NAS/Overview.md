@@ -53,7 +53,7 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 
 ## NAS 可视化
 
-To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
+为了帮助用户跟踪指定搜索空间下搜索模型的过程和状态，开发了此可视化工具。 它将搜索空间可视化为超网络，并显示子网络、层和操作的重要性，同时还能显示重要性是如何在搜索过程中变化的。 参考 [NAS 可视化](./Visualization.md)文档了解详情。
 
 ## 参考和反馈
 
