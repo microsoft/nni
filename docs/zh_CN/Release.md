@@ -7,17 +7,17 @@
 #### 超参优化
 
 * 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
-* Trials can now report infinity and NaN as result
+* Trial 现在可以返回无穷大和 NaN 结果
 
-#### Neural Architecture Search
+#### 神经网络架构搜索
 
-* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
-* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+* 新 NAS 算法：[TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
+* ENAS 和 DARTS 现在可通过网页[可视化](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md)。
 
-#### Model Compression
+#### 模型压缩
 
-* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
-* Compressors will validate configuration by default
+* 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* 默认情况下，Compressor 会验证配置
 * Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
 * Model compression examples are refactored and improved
 * Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
