@@ -12,15 +12,15 @@
 
 NNI 目前支持下面列出的 NAS 算法，并且正在添加更多算法。 用户可以重现算法或在自己的数据集上使用它。 鼓励用户使用 [NNI API](#use-nni-api) 实现其它算法，以使更多人受益。
 
-| 名称                              | 算法简介                                                                                                                                                                                                 |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ENAS](ENAS.md)                 | [Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268). 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 它通过在子模型间共享参数来实现加速和出色的性能指标。                             |
-| [DARTS](DARTS.md)               | [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 引入了一种在两级网络优化中使用的可微分算法。                                                                                                 |
-| [P-DARTS](PDARTS.md)            | [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) 基于DARTS。 它引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。                      |
-| [SPOS](SPOS.md)                 | 论文 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。                                        |
-| [CDARTS](CDARTS.md)             | [Cyclic Differentiable Architecture Search](https://arxiv.org/abs/****) 在搜索和评估的网络见构建了循环反馈的机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。                                                                         |
-| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332). 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。                                                       |
-| [TextNAS](TextNAS.md)           | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf)。 It is a neural architecture search algorithm tailored for text representation. |
+| 名称                              | 算法简介                                                                                                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ENAS](ENAS.md)                 | [Efficient Neural Architecture Search via Parameter Sharing](https://arxiv.org/abs/1802.03268). 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 它通过在子模型间共享参数来实现加速和出色的性能指标。        |
+| [DARTS](DARTS.md)               | [DARTS: Differentiable Architecture Search](https://arxiv.org/abs/1806.09055) 引入了一种在两级网络优化中使用的可微分算法。                                                                            |
+| [P-DARTS](PDARTS.md)            | [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) 基于DARTS。 它引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。 |
+| [SPOS](SPOS.md)                 | 论文 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。                   |
+| [CDARTS](CDARTS.md)             | [Cyclic Differentiable Architecture Search](https://arxiv.org/abs/****) 在搜索和评估的网络见构建了循环反馈的机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。                                                    |
+| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332). 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。                                  |
+| [TextNAS](TextNAS.md)           | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf)。 这是专门用于文本表示的神经网络架构搜索算法。                                    |
 
 One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch 版本。 将来的版本会支持 Tensorflow 2.x。
 
@@ -30,7 +30,7 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 * PyTorch 1.2+
 * git
 
-一次性 NAS 可以通过可视化工具来查看。 Learn more details [here](./Visualization.md).
+一次性 NAS 可以通过可视化工具来查看。 点击[这里](./Visualization.md)，了解详情。
 
 ## 支持的分布式 NAS 算法
 
@@ -44,14 +44,14 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 
 ## 使用 NNI API
 
-The programming interface of designing and searching a model is often demanded in two scenarios.
+在两种场景下需要用于设计和搜索模型的编程接口。
 
 1. 在设计神经网络时，可能在层、子模型或连接上有多种选择，并且无法确定是其中一种或某些的组合的结果最好。 因此，需要简单的方法来表达候选的层或子模型。
 2. 在神经网络上应用 NAS 时，需要统一的方式来表达架构的搜索空间，这样不必为不同的搜索算法来更改代码。
 
-[Here](./NasGuide.md) is the user guide to get started with using NAS on NNI.
+[这里](./NasGuide.md)是在 NNI 上开始使用 NAS 的用户指南。
 
-## NAS Visualization
+## NAS 可视化
 
 To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
