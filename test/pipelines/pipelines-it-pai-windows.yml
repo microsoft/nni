@@ -9,6 +9,10 @@ jobs:
 
   - script: |
       cd deployment/pypi
+      if [ -d ./dist ]
+      then
+        rm -rf ./dist/*
+      fi
       echo 'building prerelease package...'
       make build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
@@ -16,13 +20,14 @@ jobs:
     displayName: 'build nni bdsit_wheel'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi
         docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
         echo 'updating docker file for installing nni from local...'
         # update Dockerfile to install NNI in docker image from whl file built in last step
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\/\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
         cat ../docker/Dockerfile
         export IMG_TAG=`date -u +%y%m%d%H%M`
 
