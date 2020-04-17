@@ -18,23 +18,23 @@
 
 * 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
 * 默认情况下，Compressor 会验证配置
-* Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
-* Model compression examples are refactored and improved
-* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+* 重构：可将优化器作为 Pruner 的输入参数，从而更容易支持 DataParallel 和其它迭代剪枝方法。 这是迭代剪枝算法用法上的重大改动。
+* 重构了模型压缩示例
+* 添加了[实现模型压缩算法](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)的文档
 
-#### Training Service
+#### 训练平台
 
-* Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
-* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
+* Kubeflow 现已支持 pytorchjob crd v1 (感谢贡献者 @jiapinai)
+* 实验性的支持 [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md)
 
-#### Overall Documentation Improvement
+#### 文档的整体改进
 
-* Documentation is significantly improved on grammar, spelling, and wording (thanks external contributor @AHartNtkn)
+* 语法、拼写以及措辞上的修改 (感谢贡献者 @AHartNtkn)
 
-### Fixed Bugs
+### 修复的 Bug
 
-* ENAS cannot have more than one LSTM layers (thanks external contributor @marsggbo)
-* NNI manager's timers will never unsubscribe (thanks external contributor @guilhermehn)
+* ENAS 不能使用多个 LSTM 层 (感谢贡献者 @marsggbo)
+* NNI 管理器的计时器无法取消订阅 (感谢贡献者 @guilhermehn)
 * NNI manager may exhaust head memory (thanks external contributor @Sundrops)
 * Batch tuner does not support customized trials (#2075)
 * Experiment cannot be killed if it failed on start (#2080)
