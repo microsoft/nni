@@ -269,7 +269,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     <span style={itemStyles}>
                         {/* modify concurrency */}
                         <TooltipHost content={CONCURRENCYTOOLTIP}>
-                        <p>Concurrency<span className="progress-info">{infoIcon}</span></p>
+                        <p className="cursor">Concurrency<span className="progress-info">{infoIcon}</span></p>
                         </TooltipHost>
                         <ConcurrencyInput value={this.props.concurrency} updateValue={this.editTrialConcurrency} />
                     </span>
