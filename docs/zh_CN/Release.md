@@ -1,12 +1,12 @@
 # 更改日志
 
-## Release 1.5 - 4/13/2020
+## 发布 1.5 - 4/13/2020
 
-### New Features and Documentation
+### 新功能和文档
 
-#### Hyper-Parameter Optimizing
+#### 超参优化
 
-* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
 * Trials can now report infinity and NaN as result
 
 #### Neural Architecture Search
