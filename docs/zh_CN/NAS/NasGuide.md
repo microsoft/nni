@@ -120,13 +120,13 @@ trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导�
 
 通常，Trainer 会提供一些可以自定义的参数。 如，损失函数，指标函数，优化器以及数据集。 这些功能可满足大部分需求，NNI 会尽力让内置 Trainer 能够处理更多的模型、任务和数据集。 但无法保证全面的支持。 例如，一些 Trainer 假设必须是分类任务；一些 Trainer 对 "Epoch" 的定义有所不同（例如，ENAS 的 epoch 表示一部分子步骤加上一些 Controller 的步骤）；大多数 Trainer 不支持分布式训练，不会将模型通过 `DataParallel` 或 `DistributedDataParallel` 进行包装。 如果通过试用，想要在定制的应用中使用 Trainer，可能需要[自定义 Trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers)。
 
-Furthermore, one-shot NAS can be visualized with our NAS UI. [See more details.](./Visualization.md)
+此外，可以使用 NAS 可视化来显示 One-Shot NAS。 [了解详情](./Visualization.md)。
 
 ### 分布式 NAS
 
-Neural architecture search was originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits within the NNI hyper-parameter tuning framework, where Tuner generates child models for the next trial and trials run in the training service.
+神经网络架构搜索通过在 Trial 任务中独立运行单个子模型来实现。 NNI 同样支持这种搜索方法，其天然适用于 NNI 的超参搜索框架。Tuner 为每个 Trial 生成子模型，并在训练平台上运行。
 
-To use this mode, there is no need to change the search space expressed with the NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
+要使用此模式，不需要修改 NNI NAS API 的搜索空间定义 (即, `LayerChoice`, `InputChoice`, `MutableScope`)。 模型初始化后，在模型上调用 `get_and_apply_next_architecture`。 One-shot NAS Trainer 不能在此模式中使用。 简单示例：
 
 ```python
 model = Net()
@@ -138,17 +138,17 @@ acc = test(model)  # 测试训练好的模型
 nni.report_final_result(acc)  # 报告所选架构的性能
 ```
 
-The search space should be generated and sent to Tuner. As with the NNI NAS API, the search space is embedded in the user code. Users can use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate the search space file. Then put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
+搜索空间应生成，并发送给 Tuner。 与 NNI NAS API 一样，搜索空间嵌入到了用户代码中。 用户可以使用 "[nnictl ss_gen](../Tutorial/Nnictl.md)" 以生成搜索空间文件。 然后，将生成的搜索空间文件路径填入 `config.yml` 的 `searchSpacePath`。 `config.yml` 中的其它字段参考[教程](../Tutorial/QuickStart.md)。
 
-You can use the [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search spaces.
+可使用 [NNI Tuner](../Tuner/BuiltinTuner.md) 来搜索。 目前，只有 PPO Tuner 支持 NAS 搜索空间。
 
-We support a standalone mode for easy debugging, where you can directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
+为了便于调试，其支持独立运行模式，可直接运行 Trial 命令，而不启动 NNI Experiment。 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择最开始的候选项。
 
-A complete example can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
+[此处](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml)是完整示例。
 
 ### 使用导出的架构重新训练
 
-After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
+搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
 
 ```python
 model = Net()
@@ -164,6 +164,6 @@ JSON 文件是从 Mutable key 到 Choice 的表示。 例如
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. 但是，这也造成模型有冗余的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
+应用后，模型会被固定，并准备好进行最终训练。 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 好的方面是，可以在搜索阶段直接读取来自超网络的检查点，并开始重新训练。 但是，这也造成模型有冗余的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
 
 也可参考 [DARTS](./DARTS.md) 的重新训练代码。
