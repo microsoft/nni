@@ -1,6 +1,6 @@
-# NAS Visualization (Experimental)
+# NAS 可视化（测试版）
 
-## Built-in Trainers Support
+## 内置 Trainer 支持
 
 Currently, only ENAS and DARTS support visualization. Examples of [ENAS](./ENAS.md) and [DARTS](./DARTS.md) has demonstrated how to enable visualization in your code, namely, adding this before `trainer.train()`:
 
