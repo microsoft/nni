@@ -47,6 +47,6 @@ tuner:
     population_size: 10
 ```
 
-### Limitation
+### 局限性
 
-Importing data has not been supported yet.
+尚未支持导入数据。
