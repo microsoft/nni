@@ -7,9 +7,9 @@ Population Based Training (PBT，基于种群的训练) 来自于 [Population Ba
 
 ![](../../img/pbt.jpg)
 
-PBTTuner 使用多个 Trial 来初始化种群 (即，`population_size`)。 上图中有四步，每个 Trial 只运行一步。 每步运行的时长由 Trial 代码控制，如一个 Epoch。 当 Trial 开始时，会加载 PBTTuner 指定的检查点，并继续运行一步，然后将检查点保存到PBTTuner 指定的目录中，并退出。 种群中的 Trial 会同步的运行这些步骤，也就是说，所有 Trial 都完成了第 `i` 步后，`(i+1)` 步才能开始。 Exploitation and exploration of PBT are executed between two consecutive steps.
+PBTTuner 使用多个 Trial 来初始化种群 (即，`population_size`)。 上图中有四步，每个 Trial 只运行一步。 每步运行的时长由 Trial 代码控制，如一个 Epoch。 当 Trial 开始时，会加载 PBTTuner 指定的检查点，并继续运行一步，然后将检查点保存到PBTTuner 指定的目录中，并退出。 种群中的 Trial 会同步的运行这些步骤，也就是说，所有 Trial 都完成了第 `i` 步后，`(i+1)` 步才能开始。 PBT 的挖掘（Exploitation）和探索（Exploration）是两个连续的步骤。
 
-### Provide checkpoint directory
+### 提供检查点目录
 
 Since some trials need to load other trial's checkpoint, users should provide a directory (i.e., `all_checkpoint_dir`) which is accessible by every trial. It is easy for local mode, users could directly use the default directory or specify any directory on the local machine. For other training services, users should follow [the document of those training services](../TrainingService/SupportTrainingService.md) to provide a directory in a shared storage, such as NFS, Azure storage.
 
