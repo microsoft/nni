@@ -151,13 +151,14 @@ class LayerChoice(Mutable):
     -----
     ``op_candidates`` can be a list of modules or a ordered dict of named modules, for example,
 
-        .. code-block:: python
+    .. code-block:: python
 
         self.op_choice = LayerChoice(OrderedDict([
             ("conv3x3", nn.Conv2d(3, 16, 128)),
             ("conv5x5", nn.Conv2d(5, 16, 128)),
             ("conv7x7", nn.Conv2d(7, 16, 128))
         ]))
+
     """
 
     def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
