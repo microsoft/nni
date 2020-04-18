@@ -144,6 +144,8 @@ class LayerChoice(Mutable):
     ----------
     length : int
         Number of ops to choose from.
+    names: list of str
+        Names of candidates.
 
     Notes
     -----
@@ -162,16 +164,19 @@ class LayerChoice(Mutable):
         super().__init__(key=key)
         self.length = len(op_candidates)
         self.choices = []
+        self.names = []
         if isinstance(op_candidates, OrderedDict):
             for name, module in op_candidates.items():
-                assert name not in ["length", "reduction", "return_mask", "_key", "key"], \
+                assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.add_module(name, module)
                 self.choices.append(module)
+                self.names.append(name)
         elif isinstance(op_candidates, list):
             for i, module in enumerate(op_candidates):
                 self.add_module(str(i), module)
                 self.choices.append(module)
+                self.names.append(str(i))
         else:
             raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
         self.reduction = reduction
