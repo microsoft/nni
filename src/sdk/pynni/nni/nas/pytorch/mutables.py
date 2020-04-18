@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+from collections import OrderedDict
 
 import torch.nn as nn
 
@@ -86,9 +87,6 @@ class Mutable(nn.Module):
                 "Or did you initialize a mutable on the fly in forward pass? Move to `__init__` "
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
 
-    def __repr__(self):
-        return "{} ({})".format(self.name, self.key)
-
 
 class MutableScope(Mutable):
     """
@@ -131,7 +129,7 @@ class LayerChoice(Mutable):
 
     Parameters
     ----------
-    op_candidates : list of nn.Module
+    op_candidates : list of nn.Module or OrderedDict
         A module list to be selected from.
     reduction : str
         ``mean``, ``concat``, ``sum`` or ``none``. Policy if multiples are selected.
@@ -146,12 +144,36 @@ class LayerChoice(Mutable):
     ----------
     length : int
         Number of ops to choose from.
+
+    Notes
+    -----
+    ``op_candidates`` can be a list of modules or a ordered dict of named modules, for example,
+
+        .. code-block:: python
+
+        self.op_choice = LayerChoice(OrderedDict([
+            ("conv3x3", nn.Conv2d(3, 16, 128)),
+            ("conv5x5", nn.Conv2d(5, 16, 128)),
+            ("conv7x7", nn.Conv2d(7, 16, 128))
+        ]))
     """
 
     def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)
         self.length = len(op_candidates)
-        self.choices = nn.ModuleList(op_candidates)
+        self.choices = []
+        if isinstance(op_candidates, OrderedDict):
+            for name, module in op_candidates.items():
+                assert name not in ["length", "reduction", "return_mask", "_key", "key"], \
+                    "Please don't use a reserved name '{}' for your module.".format(name)
+                self.add_module(name, module)
+                self.choices.append(module)
+        elif isinstance(op_candidates, list):
+            for i, module in enumerate(op_candidates):
+                self.add_module(str(i), module)
+                self.choices.append(module)
+        else:
+            raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
         self.reduction = reduction
         self.return_mask = return_mask
 
