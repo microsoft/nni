@@ -131,16 +131,16 @@ def load_data(train_path='./data/regression.train', test_path='./data/regression
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # 训练
+    # train
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # 预测
+    # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # 评估
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -152,10 +152,8 @@ if __name__ == '__main__':
 +   RECEIVED_PARAMS = nni.get_next_parameter()
     PARAMS = get_default_parameters()
 +   PARAMS.update(RECEIVED_PARAMS)
-    PARAMS = get_default_parameters()
-    PARAMS.update(RECEIVED_PARAMS)
 
-    # 训练
+    # train
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
