@@ -20,19 +20,19 @@ nnictl webui nas --logdir logs/<current_time_stamp> --port <port>
 
 如果要定制 Trainer，参考[文档](./Advanced.md#extend-the-ability-of-one-shot-trainers)。
 
-You should do two modifications to an existing trainer to enable visualization:
+需要对已有 Trainer 代码做两处改动来支持可视化：
 
-1. Export your graph before training, with
+1. 在训练前导出图：
 
 ```python
 vis_graph = self.mutator.graph(inputs)
-# `inputs` is a dummy input to your model. For example, torch.randn((1, 3, 32, 32)).cuda()
-# If your model has multiple inputs, it should be a tuple.
+# `inputs` 是模型的虚拟输入。 例如，torch.randn((1, 3, 32, 32)).cuda()
+# 如果模型有多个输入，则要使用 tuple。
 with open("/path/to/your/logdir/graph.json", "w") as f:
     json.dump(vis_graph, f)
 ```
 
-2. Logging the choices you've made. You can do it once per epoch, once per mini-batch or whatever frequency you'd like.
+2. 记录选择的 Choice。 可以每个 Epoch，批处理或任何频率下做次记录。
 
 ```python
 def __init__(self):
@@ -41,10 +41,10 @@ def __init__(self):
 
 def train(self):
     # ...
-    print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)  # dump a record of status
+    print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)  # 保存状态
 ```
 
-If you are implementing your customized trainer inheriting `Trainer`. We have provided `enable_visualization()` and `_write_graph_status()` for easy-to-use purposes. All you need to do is calling `trainer.enable_visualization()` before start, and `trainer._write_graph_status()` each time you want to do the logging. But remember both of these APIs are experimental and subject to change in future.
+如果继承 `Trainer`，实现定制的 Trainer。 NNI 提供了 `enable_visualization()` 和 `_write_graph_status()` 来简化可视化。 All you need to do is calling `trainer.enable_visualization()` before start, and `trainer._write_graph_status()` each time you want to do the logging. But remember both of these APIs are experimental and subject to change in future.
 
 Last but not least, invode NAS UI with
 
