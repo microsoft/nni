@@ -44,26 +44,26 @@ def train(self):
     print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)  # 保存状态
 ```
 
-如果继承 `Trainer`，实现定制的 Trainer。 NNI 提供了 `enable_visualization()` 和 `_write_graph_status()` 来简化可视化。 All you need to do is calling `trainer.enable_visualization()` before start, and `trainer._write_graph_status()` each time you want to do the logging. But remember both of these APIs are experimental and subject to change in future.
+如果继承 `Trainer`，实现定制的 Trainer。 NNI 提供了 `enable_visualization()` 和 `_write_graph_status()` 来简化可视化。 只需要在开始前调用 `trainer.enable_visualization()`，并在每次要记录日志前调用 `trainer._write_graph_status()`。 注意，这两个 API 还处于试用阶段，未来可能会有所更改。
 
-Last but not least, invode NAS UI with
+最后，启动 NAS 界面：
 
 ```bash
 nnictl webui nas --logdir /path/to/your/logdir
 ```
 
-## NAS UI Preview
+## NAS 界面预览
 
 ![](../../img/nasui-1.png)
 
 ![](../../img/nasui-2.png)
 
-## Limitations
+## 局限性
 
-* NAS visualization only works with PyTorch >=1.4. We've tested it on PyTorch 1.3.1 and it doesn't work.
-* We rely on PyTorch support for tensorboard for graph export, which relies on `torch.jit`. It will not work if your model doesn't support `jit`.
-* There are known performance issues when loading a moderate-size graph with many op choices (like DARTS search space).
+* NAS 可视化仅适用于 PyTorch >=1.4。PyTorch 1.3.1 无法正常工作。
+* 其依赖于 PyTorch 对 tensorboard 导出图的支持，即依赖于 `torch.jit`。 如果模型不支持 `jit`，也无法使用。
+* 在加载中等大小，但有许多 Choice 的模型时（如 DARTS 的搜索空间），会遇到性能问题。
 
-## Feedback
+## 反馈
 
-NAS UI is currently experimental. We welcome your feedback. [Here](https://github.com/microsoft/nni/pull/2085) we have listed all the to-do items of NAS UI in the future. Feel free to comment (or [submit a new issue](https://github.com/microsoft/nni/issues/new?template=enhancement.md)) if you have other suggestions.
+NAS UI 目前是测试版。 欢迎提交反馈。 [这里](https://github.com/microsoft/nni/pull/2085)列出了 NAS UI 接下来的工作。 欢迎直接评论，如果有其它建议，也可以[提交新问题](https://github.com/microsoft/nni/issues/new?template=enhancement.md)。
