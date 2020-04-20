@@ -8,17 +8,17 @@
 trainer.enable_visualization()
 ```
 
-This will create a directory `logs/<current_time_stamp>` in your working folder, in which you will find two files `graph.json` and `log`.
+此代码会在当前目录中创建新目录 `logs/<current_time_stamp>`，并创建两个新文件 `graph.json` 和 `log`。
 
-You don't have to wait until your program finishes to launch NAS UI, but it's important that these two files have been already created. Launch NAS UI with
+不必等到程序运行完后，再启动 NAS 界面，但需要确保这两个文件产生后，再启动。 启动 NAS 界面：
 
 ```bash
 nnictl webui nas --logdir logs/<current_time_stamp> --port <port>
 ```
 
-## Visualize a Customized Trainer
+## 可视化定制的 Trainer
 
-If you are interested in how to customize a trainer, please read this [doc](./Advanced.md#extend-the-ability-of-one-shot-trainers).
+如果要定制 Trainer，参考[文档](./Advanced.md#extend-the-ability-of-one-shot-trainers)。
 
 You should do two modifications to an existing trainer to enable visualization:
 
