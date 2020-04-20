@@ -6,26 +6,26 @@
 
 #### 超参优化
 
-* 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/PBTTuner.md)
 * Trial 现在可以返回无穷大和 NaN 结果
 
 #### 神经网络架构搜索
 
-* 新 NAS 算法：[TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
-* ENAS 和 DARTS 现在可通过网页[可视化](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md)。
+* 新 NAS 算法：[TextNAS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/TextNAS.md)
+* ENAS 和 DARTS 现在可通过网页[可视化](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Visualization.md)。
 
 #### 模型压缩
 
-* 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#gradientrankfilterpruner)
 * 默认情况下，Compressor 会验证配置
 * 重构：可将优化器作为 Pruner 的输入参数，从而更容易支持 DataParallel 和其它迭代剪枝方法。 这是迭代剪枝算法用法上的重大改动。
 * 重构了模型压缩示例
-* 添加了[实现模型压缩算法](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)的文档
+* 添加了[实现模型压缩算法](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Framework.md)的文档
 
 #### 训练平台
 
 * Kubeflow 现已支持 pytorchjob crd v1 (感谢贡献者 @jiapinai)
-* 实验性的支持 [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md)
+* 实验性的支持 [DLTS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/DLTSMode.md)
 
 #### 文档的整体改进
 
@@ -48,14 +48,14 @@
 
 #### 神经网络架构搜索
 
-* 支持 [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) 算法，并增加对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts)。
-* 初步支持 [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) 以及对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* 支持 [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/CDARTS.md) 算法，并增加对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts)。
+* 初步支持 [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/Proxylessnas.md) 以及对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
 * 为 NAS 框架增加单元测试
 
 #### 模型压缩
 
 * 为压缩模型增加 DataParallel，并提供相应的 [示例](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py)
-* 支持压缩模型的[加速](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md)（试用版）
+* 支持压缩模型的[加速](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/ModelSpeedup.md)（试用版）
 
 #### 训练平台
 
@@ -69,17 +69,17 @@
 
 #### 其它
 
-* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
 * 支持取消 UNKNOWN 状态的 Trial。
 * 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
 
 ### 文档
 
-* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/en/latest/)
-* 改进 [NAS 文档](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.md)
-* 改进[新的 OpenPAI 模式的文档](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.md)
-* 为 [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md) 和[模型压缩](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md)增加入门指南
-* 改进支持 [EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md) 的文档
+* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/zh/latest/)
+* 改进 [NAS 文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/NasGuide.md)
+* 改进[新的 OpenPAI 模式的文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrainingService/PaiMode.md)
+* 为 [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/QuickStart.md) 和[模型压缩](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/QuickStart.md)增加入门指南
+* 改进支持 [EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrialExample/EfficientNet.md) 的文档
 
 ### 修复的 Bug
 
