@@ -19,16 +19,18 @@ NNI 目前支持下面列出的 NAS 算法，并且正在添加更多算法。 �
 | [P-DARTS](PDARTS.md)            | [Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation](https://arxiv.org/abs/1904.12760) 基于DARTS。 它引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。 |
 | [SPOS](SPOS.md)                 | 论文 [Single Path One-Shot Neural Architecture Search with Uniform Sampling](https://arxiv.org/abs/1904.00420) 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。                   |
 | [CDARTS](CDARTS.md)             | [Cyclic Differentiable Architecture Search](https://arxiv.org/abs/****) 在搜索和评估的网络见构建了循环反馈的机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。                                                    |
-| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332).                                                                |
+| [ProxylessNAS](Proxylessnas.md) | [ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware](https://arxiv.org/abs/1812.00332). 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。                                  |
+| [TextNAS](TextNAS.md)           | [TextNAS: A Neural Architecture Search Space tailored for Text Representation](https://arxiv.org/pdf/1912.10729.pdf)。 这是专门用于文本表示的神经网络架构搜索算法。                                    |
 
 One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch 版本。 将来的版本会支持 Tensorflow 2.x。
 
 这是运行示例的一些常见依赖项。 PyTorch 需要高于 1.2 才能使用 `BoolTensor`.
 
-* NNI 1.2+
 * tensorboard
 * PyTorch 1.2+
 * git
+
+一次性 NAS 可以通过可视化工具来查看。 点击[这里](./Visualization.md)，了解详情。
 
 ## 支持的分布式 NAS 算法
 
@@ -48,6 +50,10 @@ One-shot 算法**不需要 nnictl，可单独运行**。 只实现了 PyTorch �
 2. 在神经网络上应用 NAS 时，需要统一的方式来表达架构的搜索空间，这样不必为不同的搜索算法来更改代码。
 
 [这里](./NasGuide.md)是在 NNI 上开始使用 NAS 的用户指南。
+
+## NAS 可视化
+
+为了帮助用户跟踪指定搜索空间下搜索模型的过程和状态，开发了此可视化工具。 它将搜索空间可视化为超网络，并显示子网络、层和操作的重要性，同时还能显示重要性是如何在搜索过程中变化的。 参考 [NAS 可视化](./Visualization.md)文档了解详情。
 
 ## 参考和反馈
 
