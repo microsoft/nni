@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **NNI v1.4 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **NNI v1.5 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -102,6 +102,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>贝叶斯优化</b>
             <ul>
@@ -125,7 +126,8 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/zh_CN/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/zh_CN/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
             </ul>
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
@@ -230,7 +232,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
    
    ```bash
-   git clone -b v1.4 https://github.com/Microsoft/nni.git
+   git clone -b v1.5 https://github.com/Microsoft/nni.git
    ```
 
 * 运行 MNIST 示例。

@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiment new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **NNI v1.4 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **NNI v1.5 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 
@@ -108,6 +108,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>Bayesian optimization</b>
             <ul>
@@ -131,7 +132,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
             </ul>
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
@@ -236,7 +238,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.4 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", default=50, type=int)
     parser.add_argument("--channels", default=16, type=int)
     parser.add_argument("--unrolled", default=False, action="store_true")
+    parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
@@ -45,4 +46,6 @@ if __name__ == "__main__":
                            log_frequency=args.log_frequency,
                            unrolled=args.unrolled,
                            callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+    if args.visualization:
+        trainer.enable_visualization()
     trainer.train()

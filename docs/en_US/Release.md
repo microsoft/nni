@@ -1,5 +1,47 @@
 # ChangeLog
 
+## Release 1.5 - 4/13/2020
+
+### New Features and Documentation
+
+#### Hyper-Parameter Optimizing
+
+* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* Trials can now report infinity and NaN as result
+
+#### Neural Architecture Search
+
+* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
+* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+
+#### Model Compression
+
+* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* Compressors will validate configuration by default
+* Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
+* Model compression examples are refactored and improved
+* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+
+#### Training Service
+
+* Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
+* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
+
+#### Overall Documentation Improvement
+
+* Documentation is significantly improved on grammar, spelling, and wording (thanks external contributor @AHartNtkn)
+
+### Fixed Bugs
+
+* ENAS cannot have more than one LSTM layers (thanks external contributor @marsggbo)
+* NNI manager's timers will never unsubscribe (thanks external contributor @guilhermehn)
+* NNI manager may exhaust head memory (thanks external contributor @Sundrops)
+* Batch tuner does not support customized trials (#2075)
+* Experiment cannot be killed if it failed on start (#2080)
+* Non-number type metrics break web UI (#2278)
+* A bug in lottery ticket pruner
+* Other minor glitches
+
 ## Release 1.4 - 2/19/2020
 
 ### Major Features
