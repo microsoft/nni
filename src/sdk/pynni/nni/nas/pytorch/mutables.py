@@ -58,9 +58,6 @@ class Mutable(nn.Module):
                                "Or did you apply multiple fixed architectures?")
         self.__dict__["mutator"] = mutator
 
-    def forward(self, *inputs):
-        raise NotImplementedError
-
     @property
     def key(self):
         """
@@ -155,14 +152,14 @@ class LayerChoice(Mutable):
         self.reduction = reduction
         self.return_mask = return_mask
 
-    def forward(self, *inputs):
+    def forward(self, *args, **kwargs):
         """
         Returns
         -------
         tuple of tensors
             Output and selection mask. If ``return_mask`` is ``False``, only output is returned.
         """
-        out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
+        out, mask = self.mutator.on_forward_layer_choice(self, *args, **kwargs)
         if self.return_mask:
             return out, mask
         return out
