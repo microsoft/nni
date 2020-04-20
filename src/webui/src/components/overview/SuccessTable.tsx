@@ -22,7 +22,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         super(props);
         this.state = { columns: this.columns, source: TRIALS.table(this.props.trialIds) };
     }
-    
+
     private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
         if (props) {
             return <Details detailsProps={props} />;
@@ -56,14 +56,12 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
     }
 
-    private tooltipStr = (): React.ReactNode => {
-        return (
-            <div>
-                <p>The experiment is running, please wait for the final metric patiently.</p>
-                <div className="link">You could also find status of trial job with <span>{DETAILTABS}</span> button.</div>
-            </div>
-        );
-    };
+    tooltipStr = (
+        <div>
+            <p>The experiment is running, please wait for the final metric patiently.</p>
+            <div className="link">You could also find status of trial job with <span>{DETAILTABS}</span> button.</div>
+        </div>
+    );
 
     columns = [
         {
@@ -148,7 +146,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     selectionMode={0} // close selector function
                     className="succTable"
                 />
-                {isNoneData && <div className="succTable-tooltip">{this.tooltipStr()}</div>}
+                {isNoneData && <div className="succTable-tooltip">{this.tooltipStr}</div>}
             </div>
         );
     }
