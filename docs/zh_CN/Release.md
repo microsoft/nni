@@ -75,7 +75,7 @@
 
 ### 文档
 
-* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/en/latest/)
+* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/zh/latest/)
 * 改进 [NAS 文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/NasGuide.md)
 * 改进[新的 OpenPAI 模式的文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrainingService/PaiMode.md)
 * 为 [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/QuickStart.md) 和[模型压缩](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/QuickStart.md)增加入门指南
