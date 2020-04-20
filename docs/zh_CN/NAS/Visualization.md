@@ -2,7 +2,7 @@
 
 ## 内置 Trainer 支持
 
-Currently, only ENAS and DARTS support visualization. Examples of [ENAS](./ENAS.md) and [DARTS](./DARTS.md) has demonstrated how to enable visualization in your code, namely, adding this before `trainer.train()`:
+当前，仅 ENAS 和 DARTS 支持可视化。 [ENAS](./ENAS.md) 和 [DARTS](./DARTS.md) 的示例演示了如何在代码中启用可视化，其需要在 `trainer.train()` 前添加代码。
 
 ```python
 trainer.enable_visualization()
