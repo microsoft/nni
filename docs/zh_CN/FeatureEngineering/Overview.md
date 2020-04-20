@@ -159,7 +159,7 @@ class CustomizedSelector(FeatureSelector, BaseEstimator, SelectorMixin):
 
     def set_params(self, **params):
         """
-        Set the parameters of this estimator.
+        为此 estimator 设置参数
         """
         for param in params:
         if hasattr(self, param):
