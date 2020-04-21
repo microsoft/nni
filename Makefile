@@ -211,6 +211,7 @@ dev-install-node-modules:
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
 	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
 	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
+	mkdir -p $(NASUI_PKG_FOLDER)
 	ln -sf ${PWD}/src/nasui/build $(NASUI_PKG_FOLDER)/build
 	ln -sf ${PWD}/src/nasui/server.js $(NASUI_PKG_FOLDER)/server.js
 
