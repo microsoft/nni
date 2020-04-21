@@ -78,9 +78,9 @@ def parse_nvidia_smi_result(smi, outputDir):
             print(outPut)
             outputFile.write("{}\n".format(json.dumps(outPut, sort_keys=True)))
             outputFile.flush()
-    except:
+    except Exception as error:
         # e_info = sys.exc_info()
-        print('xmldoc paring error')
+        print('gpu_metrics_collector error: %s' % error)
     finally:
         os.umask(old_umask)
 
