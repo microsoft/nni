@@ -61,6 +61,7 @@ class TorchGraph:
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         """
+        assert torch.__version__ >= '1.3.1'
         self.bound_model = model
         self.dummy_input = dummy_input
         self.g_nodes = list()
@@ -72,8 +73,7 @@ class TorchGraph:
     def _trace(self, model, dummy_input):
         with torch.onnx.set_training(model, False):
             self.trace = torch.jit.trace(model, dummy_input)
-            self.graph = self.trace.graph
-            torch._C._jit_pass_inline(self.graph)
+            torch._C._jit_pass_inline(self.trace.graph)
 
     def _build_index_for_gnodes(self, g_nodes):
         """
@@ -202,11 +202,11 @@ class TorchGraph:
             a list of scope name of all the leaf modules
         """
         module_names = [x[0] for x in self.trace.named_modules()]
-        all_names = list(filter(lambda x: x, module_names))  # filter out non-empty strings
+        all_names = list(filter(lambda x: x, module_names))
         all_names.sort()
         leaf_nodes = []
         for i, name in enumerate(all_names):
-            if (i + 1 >= len(all_names) or not all_names[i + 1].startswith(name)): #  and name.endswith("]"):
+            if (i + 1 >= len(all_names) or not all_names[i + 1].startswith(name)):
                 leaf_nodes.append(name)
 
         return leaf_nodes
@@ -217,7 +217,6 @@ class TorchGraph:
             suffix = ']'
             if module_name.startswith(prefix) and module_name.endswith(suffix):
                 module_name = module_name[len(prefix):-len(suffix)]
-                print('traced module:', module_name)
             return module_name
 
         module_to_type = dict()
@@ -232,10 +231,14 @@ class TorchGraph:
         -----------
         scope_name: str
             scope_name of a graph node, for example:
-            for pytorch 1.3.1: MyCell/Linear[linear]
+            for pytorch 1.3.1: MyModel/BackboneModel[backbone]/Linear[fc1]
             for pytorch 1.4.0: __module.backbone/__module.backbone.conv2
         """
-        return scope_name.split('/')[-1].replace('__module.', '')
+        if torch.__version__ >= '1.4.0':
+            return scope_name.split('/')[-1].replace('__module.', '')
+        else:
+            module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
+            return '.'.join(module_name_slices)
 
     def _build_graph(self):
         """
@@ -255,7 +258,7 @@ class TorchGraph:
             use output (its name) to index g_nodes,
             key: output, value: g_node that generates this output
         """
-        graph = self.graph
+        graph = self.trace.graph
         # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
         _logger.debug(graph)
         # build output mapping, from output debugName to its node
@@ -286,7 +289,7 @@ class TorchGraph:
             for _input in node.inputs():
                 input_name = _input.debugName()
                 input_to_node[input_name] = node
-            scope_name = node.scopeName() # example: scope_name, 'MyCell/Linear[linear]'
+            scope_name = node.scopeName()
             module_name = self._get_module_name(scope_name)
             # if module_name is empty, it is not a module
             if not module_name in self.leaf_modules:
