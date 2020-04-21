@@ -32,10 +32,7 @@ about: NNI Student Program China issue template on Github
 
 **是否需要更新文档（是 / 否）** :
 **其他分享内容** :
-- 日志信息 :
- - [nnimanager.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
-
- - [dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
+ - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
 
  - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout): 
 
@@ -54,7 +51,6 @@ about: NNI Student Program China issue template on Github
 ## Other Advice
 **Need to update document ( yes / no )** :
 **Anything else we need to know** :
-- Log message :
  - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
 
  - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout): 
