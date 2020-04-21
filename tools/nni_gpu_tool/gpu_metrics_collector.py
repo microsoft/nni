@@ -26,7 +26,6 @@ def check_ready_to_run():
         pidList = []
         for pid in pgrep_output.splitlines():
             pid = pid.decode()
-            print(pid)
             if "pgrep " in pid or pid.startswith('%s ' % os.getpid()) or pid.startswith('%s ' % os.getppid()):
                 continue
             pidList.append(pid)
