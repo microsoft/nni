@@ -1,13 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from unittest import TestCase, main
+import os
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from unittest import TestCase, main
+
 from nni.graph_utils import TorchGraph
+from nni.compression.torch import L1FilterPruner
+from nni.compression.speedup.torch import ModelSpeedup
 
 class NaiveModel(torch.nn.Module):
     def __init__(self):
@@ -65,6 +69,24 @@ class TorchGraphTestCase(TestCase):
         assert g._find_predecessors('backbone.bn1') == ['backbone.conv1']
         assert g._find_predecessors('backbone.bn2') == ['backbone.conv2']
 
+    def test_speedup(self):
+        config_list = [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d']
+        }]
+        model = BigModel()
+        pruner = L1FilterPruner(model, config_list)
+        pruner.compress()
+        pruner.export_model(model_path='./11_model.pth', mask_path='./l1_mask.pth')
+
+        try:
+            model = BigModel()
+            ms = ModelSpeedup(model, torch.randn(2, 1, 28, 28), './l1_mask.pth')
+            ms.speedup_model()
+            assert model.backbone.conv2.in_channels == 10
+        finally:
+            os.remove('./11_model.pth')
+            os.remove('./l1_mask.pth')
 
 if __name__ == '__main__':
     main()
