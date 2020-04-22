@@ -111,6 +111,8 @@ class SimulatedAnnealingPruner(Pruner):
 
     def compress(self):
         logger.info('Simulated Annealing Compression beginning...')
+        logger.info('Current temperature: %d', self.T)
+        logger.info('Stop temperature: %d', self.stop_temperature)
         if self.T <= self.stop_temperature:
             logger.info('Compression finished')
             return self.bound_model
@@ -121,6 +123,8 @@ class SimulatedAnnealingPruner(Pruner):
             # TODO: check_sparsities(sparsities, model)
 
             config_list = self.state
+            config_list_level = [{'sparsity': params['conv0_sparsity'], 'op_names': ['conv1']},
+                     {'sparsity': params['conv1_sparsity'], 'op_names': ['conv2']}]
 
             # fast evaluation TODO:check format
             evaluation_result = LevelPruner(self.bound_model, config_list)
