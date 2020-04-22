@@ -67,7 +67,7 @@ export namespace SSHClientUtility {
         let exitCode: number;
         let captureStdOut = false;
 
-        let callback = (err: Error, channel: ClientChannel) => {
+        const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
                 log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
