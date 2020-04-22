@@ -84,8 +84,8 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
-            ub, uv = len(choices) - 1, choices.index(hyper_parameter["_value"]) + 1
-            lb, lv = 0, choices.index(hyper_parameter["_value"]) - 1
+            ub, uv = len(choices) - 1, choices.index(hyper_parameter) + 1
+            lb, lv = 0, choices.index(hyper_parameter) - 1
         elif search_space[key]["_type"] == "randint":
             lb, ub = search_space[key]["_value"][:2]
             ub -= 1
@@ -135,7 +135,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
         if search_space[key]["_type"] == "choice":
             idx = perturbation(search_space[key]["_type"], search_space[key]["_value"],
                                resample_probability, uv, ub, lv, lb, random_state)
-            hyper_parameters[key] = {'_index': idx, '_value': choices[idx]}
+            hyper_parameters[key] = choices[idx]
         else:
             hyper_parameters[key] = perturbation(search_space[key]["_type"], search_space[key]["_value"],
                                                  resample_probability, uv, ub, lv, lb, random_state)
@@ -231,6 +231,7 @@ class PBTTuner(Tuner):
         for i in range(self.population_size):
             hyper_parameters = json2parameter(
                 self.searchspace_json, is_rand, self.random_state)
+            hyper_parameters = split_index(hyper_parameters)
             checkpoint_dir = os.path.join(self.all_checkpoint_dir, str(i))
             hyper_parameters['load_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
             hyper_parameters['save_checkpoint_dir'] = os.path.join(checkpoint_dir, str(self.epoch))
@@ -294,7 +295,7 @@ class PBTTuner(Tuner):
         trial_info.parameter_id = parameter_id
         self.running[parameter_id] = trial_info
         logger.info('Generate parameter : %s', trial_info.hyper_parameters)
-        return split_index(trial_info.hyper_parameters)
+        return trial_info.hyper_parameters
 
     def _proceed_next_epoch(self):
         """
@@ -328,7 +329,7 @@ class PBTTuner(Tuner):
             trial_info = self.population[self.pos]
             trial_info.parameter_id = parameter_id
             self.running[parameter_id] = trial_info
-            self.send_trial_callback(parameter_id, split_index(trial_info.hyper_parameters))
+            self.send_trial_callback(parameter_id, trial_info.hyper_parameters)
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
@@ -374,14 +375,14 @@ class PBTTuner(Tuner):
     def import_data(self, data):
         """
         """
-        if not self.running:
-            self.logger.warning("Do not support importing data in the middle of experiment")
+        if self.running:
+            logger.warning("Do not support importing data in the middle of experiment")
             return
         # the following is for experiment resume
         _completed_num = 0
         epoch_data_dict = {} # key: epoch num, value: list of configurations
         for trial_info in data:
-            self.logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
+            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
             # simply validate data format
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
@@ -389,12 +390,16 @@ class PBTTuner(Tuner):
             _value = trial_info['value']
             if not _value:
                 # assign fake value for failed trials
-                self.logger.info("Useless trial data, value is %s, skip this trial data.", _value)
+                logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 _value = float('inf') if self.optimize_mode == OptimizeMode.Minimize else float('-inf')
             _value = extract_scalar_reward(_value)
             # 
             epoch_num = int(os.path.basename(_params['save_checkpoint_dir']))
+            if epoch_num not in epoch_data_dict:
+                epoch_data_dict[epoch_num] = []
             epoch_data_dict[epoch_num].append((_params, _value))
+        if not epoch_data_dict:
+            return
         # figure out start epoch for resume
         max_epoch_num = max(epoch_data_dict, key=int)
         if len(epoch_data_dict[max_epoch_num]) < self.population_size:
@@ -403,13 +408,17 @@ class PBTTuner(Tuner):
         if max_epoch_num < 0:
             return
         assert len(epoch_data_dict[max_epoch_num]) == self.population_size
+        # check existence of trial save checkpoint dir
+        for params, _ in epoch_data_dict[max_epoch_num]:
+            if not os.path.isdir(params['save_checkpoint_dir']):
+                logger.warning("save_checkpoint_dir %s does not exist, data will not be resumed", params['save_checkpoint_dir'])
+                return
+        # resume data
         self.epoch = max_epoch_num
         self.finished_trials = self.population_size
-        if params, value in range(epoch_data_dict[max_epoch_num]):
+        for params, value in epoch_data_dict[max_epoch_num]:
             checkpoint_dir = os.path.dirname(params['save_checkpoint_dir'])
             self.finished.append(TrialInfo(checkpoint_dir=checkpoint_dir, hyper_parameters=params, score=value))
         self._proceed_next_epoch()
-        # resume state of the tuner
-        # replace self.population with imported ones
-        self.logger.info("Successfully import data to smac tuner, total data: %d, imported data: %d.", len(data), _completed_num)
-        self.logger.info("Start from epoch %d ...", self.epoch)
+        logger.info("Successfully import data to PBT tuner, total data: %d, imported data: %d.", len(data), _completed_num)
+        logger.info("Start from epoch %d ...", self.epoch)
