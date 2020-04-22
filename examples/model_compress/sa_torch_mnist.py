@@ -104,21 +104,10 @@ if __name__ == '__main__':
         torch.save(model.state_dict(), MODEL_DIR)
 
     configure_list = [{
-        'sparsity': 0.96,
+        'sparsity': 0.9,
         'op_types': ['default']
     }]
     pruner = SimulatedAnnealingPruner(model, configure_list)
     pruner.compress()
 
-    # for i in pruner.get_prune_iterations():
-    #     pruner.prune_iteration_start()
-    #     loss = 0
-    #     accuracy = 0
-    #     for epoch in range(10):
-    #         loss = train(model, train_loader, optimizer, criterion)
-    #         accuracy = test(model, test_loader, criterion)
-    #         print('current epoch: {0}, loss: {1}, accuracy: {2}'.format(
-    #             epoch, loss, accuracy))
-    #     print('prune iteration: {0}, loss: {1}, accuracy: {2}'.format(
-    #         i, loss, accuracy))
-    # pruner.export_model('model.pth', 'mask.pth')
+    pruner.export_model('model.pth', 'mask.pth')

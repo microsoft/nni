@@ -3,6 +3,7 @@
 
 from .compressor import Compressor, Pruner, Quantizer
 from .pruners import *
+from .auto_pruners import *
 from .weight_rank_filter_pruners import *
 from .activation_rank_filter_pruners import *
 from .quantizers import *
