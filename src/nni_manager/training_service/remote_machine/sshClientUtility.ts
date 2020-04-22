@@ -67,7 +67,7 @@ export namespace SSHClientUtility {
         let exitCode: number;
         let captureStdOut = false;
 
-        var callback = (err: Error, channel: ClientChannel) => {
+        let callback = (err: Error, channel: ClientChannel) => {
             if (err !== undefined && err !== null) {
                 log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
@@ -79,7 +79,7 @@ export namespace SSHClientUtility {
                     stdout += data;
                 }
             });
-            channel.on('exit', (code: any, signal: any) => {
+            channel.on('exit', (code: any) => {
                 exitCode = <number>code;
                 log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
                 deferred.resolve({
@@ -98,6 +98,8 @@ export namespace SSHClientUtility {
                 captureStdOut = false;
                 channel.end("exit\n");
             }
+
+            return;
         };
 
         if (useShell) {
