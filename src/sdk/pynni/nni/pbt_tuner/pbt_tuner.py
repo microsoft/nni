@@ -372,4 +372,44 @@ class PBTTuner(Tuner):
             self._proceed_next_epoch()
 
     def import_data(self, data):
-        pass
+        """
+        """
+        if not self.running:
+            self.logger.warning("Do not support importing data in the middle of experiment")
+            return
+        # the following is for experiment resume
+        _completed_num = 0
+        epoch_data_dict = {} # key: epoch num, value: list of configurations
+        for trial_info in data:
+            self.logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
+            # simply validate data format
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                # assign fake value for failed trials
+                self.logger.info("Useless trial data, value is %s, skip this trial data.", _value)
+                _value = float('inf') if self.optimize_mode == OptimizeMode.Minimize else float('-inf')
+            _value = extract_scalar_reward(_value)
+            # 
+            epoch_num = int(os.path.basename(_params['save_checkpoint_dir']))
+            epoch_data_dict[epoch_num].append((_params, _value))
+        # figure out start epoch for resume
+        max_epoch_num = max(epoch_data_dict, key=int)
+        if len(epoch_data_dict[max_epoch_num]) < self.population_size:
+            max_epoch_num = max_epoch_num - 1
+        # If there is no a single complete round, no data to import, start from scratch
+        if max_epoch_num < 0:
+            return
+        assert len(epoch_data_dict[max_epoch_num]) == self.population_size
+        self.epoch = max_epoch_num
+        self.finished_trials = self.population_size
+        if params, value in range(epoch_data_dict[max_epoch_num]):
+            checkpoint_dir = os.path.dirname(params['save_checkpoint_dir'])
+            self.finished.append(TrialInfo(checkpoint_dir=checkpoint_dir, hyper_parameters=params, score=value))
+        self._proceed_next_epoch()
+        # resume state of the tuner
+        # replace self.population with imported ones
+        self.logger.info("Successfully import data to smac tuner, total data: %d, imported data: %d.", len(data), _completed_num)
+        self.logger.info("Start from epoch %d ...", self.epoch)
