@@ -74,13 +74,11 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
     top_hyper_parameters = top_trial_info.hyper_parameters
     hyper_parameters = copy.deepcopy(top_hyper_parameters)
     random_state = np.random.RandomState()
+    hyper_parameters['load_checkpoint_dir'] = hyper_parameters['save_checkpoint_dir']
+    hyper_parameters['save_checkpoint_dir'] = os.path.join(bot_checkpoint_dir, str(epoch))
     for key in hyper_parameters.keys():
         hyper_parameter = hyper_parameters[key]
-        if key == 'load_checkpoint_dir':
-            hyper_parameters[key] = hyper_parameters['save_checkpoint_dir']
-            continue
-        elif key == 'save_checkpoint_dir':
-            hyper_parameters[key] = os.path.join(bot_checkpoint_dir, str(epoch))
+        if key == 'load_checkpoint_dir' or key =='save_checkpoint_dir':
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
@@ -132,6 +130,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
         else:
             logger.warning("Illegal type to perturb: %s", search_space[key]["_type"])
             continue
+
         if search_space[key]["_type"] == "choice":
             idx = perturbation(search_space[key]["_type"], search_space[key]["_value"],
                                resample_probability, uv, ub, lv, lb, random_state)
@@ -306,7 +305,8 @@ class PBTTuner(Tuner):
         self.pos = -1
         self.running = {}
         #exploit and explore
-        self.finished = sorted(self.finished, key=lambda x: x.score, reverse=True)
+        reverse = True if self.optimize_mode == OptimizeMode.Maximize else False
+        self.finished = sorted(self.finished, key=lambda x: x.score, reverse=reverse)
         cutoff = int(np.ceil(self.fraction * len(self.finished)))
         tops = self.finished[:cutoff]
         bottoms = self.finished[self.finished_trials - cutoff:]
@@ -347,8 +347,6 @@ class PBTTuner(Tuner):
         """
         logger.info('Get one trial result, id = %d, value = %s', parameter_id, value)
         value = extract_scalar_reward(value)
-        if self.optimize_mode == OptimizeMode.Minimize:
-            value = -value
         trial_info = self.running.pop(parameter_id, None)
         trial_info.score = value
         self.finished.append(trial_info)
