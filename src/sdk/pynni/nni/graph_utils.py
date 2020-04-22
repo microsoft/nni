@@ -43,8 +43,9 @@ class GNode:
         self.auxiliary = None
 
     def __repr__(self):
-        return f'''name: {self.name}, type: {self.type}, op_type: {self.op_type}: auxiliary: {self.auxiliary},
-            inputs: {self.inputs}, outputs: {self.outputs}'''
+        return 'name: {}, type: {}, op_type: {}: auxiliary: {}, inputs: {}, outputs: {}'.format(
+            self.name, self.type, self.op_type, self.auxiliary, self.inputs, self.outputs
+        )
 
 
 class TorchGraph:
