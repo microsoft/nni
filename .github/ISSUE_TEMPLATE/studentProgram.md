@@ -15,11 +15,13 @@ about: NNI Student Program China issue template on Github
     如果是操作性问题，您需要尽可能详细地提供 NNI 环境信息。
 -->
  
-## NNI 学生项目问题概述（中文版）
+## NNI 学生项目问题概述 / General Question of Student Program
 
-**请简要概述您的问题 / 观点** :
-**请提供 NNI 环境信息:** :
+**请简要概述您的问题 / 观点 :**
+**Short summary about the question / idea :**
 
+**请提供 NNI 环境信息 :**
+**nni Environment :**
 - nni version:
 - nni mode(local|pai|remote):
 - OS:
@@ -27,30 +29,16 @@ about: NNI Student Program China issue template on Github
 - is conda or virtualenv used?:
 - is running in docker?:
 
+## 其他建议 / Other Advice
 
-## 其他建议
+**是否需要更新文档（是 / 否）:**
+**Need to update document ( yes / no ) :**
 
-**是否需要更新文档（是 / 否）** :
-**其他分享内容** :
- - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
+**其他分享内容 :**
+**Anything else we need to know :**
 
- - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout): 
+**Log message / 日志信息 :**
+ - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory) : 
 
-## General Question
+ - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) : 
 
-**Short summary about the question / idea** :
-**nni Environment:** :
-
-- nni version:
-- nni mode(local|pai|remote):
-- OS:
-- python version:
-- is conda or virtualenv used?:
-- is running in docker?:
-
-## Other Advice
-**Need to update document ( yes / no )** :
-**Anything else we need to know** :
- - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory): 
-
- - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout): 
