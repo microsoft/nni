@@ -63,7 +63,6 @@ class TorchGraph:
         """
         assert torch.__version__ >= '1.3.1'
         self.bound_model = model
-        self.dummy_input = dummy_input
         self.g_nodes = list()
         self.global_count = 0
 
@@ -270,7 +269,6 @@ class TorchGraph:
             key: output, value: g_node that generates this output
         """
         graph = self.trace.graph
-        # if torch 1.4.0 is used, consider run torch._C._jit_pass_inline(graph) here
         _logger.debug(graph)
         # build output mapping, from output debugName to its node
         output_to_node = dict()
