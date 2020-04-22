@@ -201,17 +201,24 @@ class TorchGraph:
         list
             a list of scope name of all the leaf modules
         """
-        module_names = [x[0] for x in self.trace.named_modules()]
-        all_names = list(filter(lambda x: x, module_names))
-        all_names.sort()
+        module_names = sorted([x[0] for x in self.trace.named_modules() if x[0]])
         leaf_nodes = []
-        for i, name in enumerate(all_names):
-            if (i + 1 >= len(all_names) or not all_names[i + 1].startswith(name)):
+        for i, name in enumerate(module_names):
+            if (i + 1 >= len(module_names) or not module_names[i + 1].startswith(name)):
                 leaf_nodes.append(name)
 
         return leaf_nodes
 
     def _extract_module_types(self):
+        """
+        Extract types (such as 'Conv2d', 'Linear') of model's each sub module and put them in a dict.
+
+        Returns
+        -------
+        dict
+            key: module name
+            value: type of the module
+        """
         def parse_traced_name(module_name):
             prefix = 'TracedModule['
             suffix = ']'
@@ -231,14 +238,18 @@ class TorchGraph:
         -----------
         scope_name: str
             scope_name of a graph node, for example:
-            for pytorch 1.3.1: MyModel/BackboneModel[backbone]/Linear[fc1]
+            for pytorch 1.3.1: MyModel/BackboneModel[backbone]/Conv2d[conv2]
             for pytorch 1.4.0: __module.backbone/__module.backbone.conv2
+
+        Returns:
+        -------
+        str
+            module name, such as backbone.conv2
         """
         if torch.__version__ >= '1.4.0':
             return scope_name.split('/')[-1].replace('__module.', '')
         else:
-            module_name_slices = re.findall(r'\[(.*?)\]', scope_name)
-            return '.'.join(module_name_slices)
+            return '.'.join(re.findall(r'\[(.*?)\]', scope_name))
 
     def _build_graph(self):
         """
@@ -353,7 +364,7 @@ class TorchGraph:
 
         return name_to_gnode, input_to_gnode, output_to_gnode
 
-    def _find_predecessors(self, module_name):
+    def find_predecessors(self, module_name):
         """
         Find predecessor GNode of the given GNode
 
@@ -376,7 +387,7 @@ class TorchGraph:
                 predecessors.append(g_node.name)
         return predecessors
 
-    def _find_successors(self, module_name):
+    def find_successors(self, module_name):
         """
         Find successor GNodes of the given GNode
 

@@ -2,8 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import queue
-import re
 import torch
 from nni.graph_utils import TorchGraph
 from .compress_modules import replace_module
@@ -117,11 +115,11 @@ class ModelSpeedup:
             input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
-            predecessors = self.torch_graph._find_predecessors(module_name)
+            predecessors = self.torch_graph.find_predecessors(module_name)
             for _module_name in predecessors:
                 self.infer_module_mask(_module_name, out_shape=input_cmask)
         if output_cmask:
-            successors = self.torch_graph._find_successors(module_name)
+            successors = self.torch_graph.find_successors(module_name)
             for _module_name in successors:
                 self.infer_module_mask(_module_name, in_shape=output_cmask)
 

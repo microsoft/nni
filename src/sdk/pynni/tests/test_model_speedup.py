@@ -13,7 +13,14 @@ from nni.graph_utils import TorchGraph
 from nni.compression.torch import L1FilterPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
-class NaiveModel(torch.nn.Module):
+class BackboneModel1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 1, 1, 1)
+    def forward(self, x):
+        return self.conv1(x)
+
+class BackboneModel2(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 20, 5, 1)
@@ -34,56 +41,59 @@ class NaiveModel(torch.nn.Module):
         x = self.fc2(x)
         return x
 
-class Model2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 1, 1, 1)
-    def forward(self, x):
-        return self.conv1(x)
-
 class BigModel(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = NaiveModel()
-        self.backbone2 = Model2()
+        self.backbone1 = BackboneModel1()
+        self.backbone2 = BackboneModel2()
         self.fc3 = nn.Linear(10, 2) 
     def forward(self, x):
+        x = self.backbone1(x)
         x = self.backbone2(x)
-        x = self.backbone(x)
         x = self.fc3(x)
         return x
 
 
-class TorchGraphTestCase(TestCase):
+class SpeedupTestCase(TestCase):
     def test_build_graph(self):
         big_model = BigModel()
         g = TorchGraph(big_model, torch.randn(2, 1, 28, 28))
-        print(g.leaf_modules)
-        print([x for x in g.name_to_gnode])
+        print(g.name_to_gnode.keys())
         leaf_modules = set([
-            'backbone.bn1', 'backbone.bn2', 'backbone.conv1', 'backbone.conv2',
-            'backbone.fc1', 'backbone.fc2', 'backbone2.conv1', 'fc3'])
+            'backbone1.conv1', 'backbone2.bn1', 'backbone2.bn2', 'backbone2.conv1',
+            'backbone2.conv2', 'backbone2.fc1', 'backbone2.fc2', 'fc3'
+        ])
+
         assert set(g.leaf_modules) == leaf_modules
-        assert g._find_successors('backbone.conv1') == ['backbone.bn1']
-        assert g._find_successors('backbone.conv2') == ['backbone.bn2']
-        assert g._find_predecessors('backbone.bn1') == ['backbone.conv1']
-        assert g._find_predecessors('backbone.bn2') == ['backbone.conv2']
+        assert not leaf_modules - set(g.name_to_gnode.keys())
+        assert g.find_successors('backbone2.conv1') == ['backbone2.bn1']
+        assert g.find_successors('backbone2.conv2') == ['backbone2.bn2']
+        assert g.find_predecessors('backbone2.bn1') == ['backbone2.conv1']
+        assert g.find_predecessors('backbone2.bn2') == ['backbone2.conv2']
 
     def test_speedup(self):
+        SPARSITY = 0.5
         config_list = [{
-            'sparsity': 0.5,
+            'sparsity': SPARSITY,
             'op_types': ['Conv2d']
         }]
         model = BigModel()
         pruner = L1FilterPruner(model, config_list)
         pruner.compress()
         pruner.export_model(model_path='./11_model.pth', mask_path='./l1_mask.pth')
+        orig_model = BigModel()
 
         try:
             model = BigModel()
+            model.train()
             ms = ModelSpeedup(model, torch.randn(2, 1, 28, 28), './l1_mask.pth')
             ms.speedup_model()
-            assert model.backbone.conv2.in_channels == 10
+
+            assert model.training
+            assert model.backbone2.conv1.out_channels == int(orig_model.backbone2.conv1.out_channels * SPARSITY)
+            assert model.backbone2.conv2.in_channels == int(orig_model.backbone2.conv2.in_channels * SPARSITY)
+            assert model.backbone2.conv2.out_channels == int(orig_model.backbone2.conv2.out_channels * SPARSITY)
+            assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
         finally:
             os.remove('./11_model.pth')
             os.remove('./l1_mask.pth')
