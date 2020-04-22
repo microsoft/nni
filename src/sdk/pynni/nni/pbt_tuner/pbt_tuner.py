@@ -296,6 +296,40 @@ class PBTTuner(Tuner):
         logger.info('Generate parameter : %s', trial_info.hyper_parameters)
         return split_index(trial_info.hyper_parameters)
 
+    def _proceed_next_epoch(self):
+        """
+        """
+        logger.info('Proceeding to next epoch')
+        self.epoch += 1
+        self.population = []
+        self.pos = -1
+        self.running = {}
+        #exploit and explore
+        self.finished = sorted(self.finished, key=lambda x: x.score, reverse=True)
+        cutoff = int(np.ceil(self.fraction * len(self.finished)))
+        tops = self.finished[:cutoff]
+        bottoms = self.finished[self.finished_trials - cutoff:]
+        for bottom in bottoms:
+            top = np.random.choice(tops)
+            exploit_and_explore(bottom, top, self.factor, self.resample_probability, self.epoch, self.searchspace_json)
+        for trial in self.finished:
+            if trial not in bottoms:
+                trial.clean_id()
+                trial.hyper_parameters['load_checkpoint_dir'] = trial.hyper_parameters['save_checkpoint_dir']
+                trial.hyper_parameters['save_checkpoint_dir'] = os.path.join(trial.checkpoint_dir, str(self.epoch))
+        self.finished_trials = 0
+        for _ in range(self.population_size):
+            trial_info = self.finished.pop()
+            self.population.append(trial_info)
+        while self.credit > 0 and self.pos + 1 < len(self.population):
+            self.credit -= 1
+            self.pos += 1
+            parameter_id = self.param_ids.pop()
+            trial_info = self.population[self.pos]
+            trial_info.parameter_id = parameter_id
+            self.running[parameter_id] = trial_info
+            self.send_trial_callback(parameter_id, split_index(trial_info.hyper_parameters))
+
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
         Receive trial's result. if the number of finished trials equals ``self.population_size``, start the next epoch to
@@ -319,36 +353,23 @@ class PBTTuner(Tuner):
         self.finished.append(trial_info)
         self.finished_trials += 1
         if self.finished_trials == self.population_size:
-            logger.info('Proceeding to next epoch')
-            self.epoch += 1
-            self.population = []
-            self.pos = -1
-            self.running = {}
-            #exploit and explore
-            self.finished = sorted(self.finished, key=lambda x: x.score, reverse=True)
-            cutoff = int(np.ceil(self.fraction * len(self.finished)))
-            tops = self.finished[:cutoff]
-            bottoms = self.finished[self.finished_trials - cutoff:]
-            for bottom in bottoms:
-                top = np.random.choice(tops)
-                exploit_and_explore(bottom, top, self.factor, self.resample_probability, self.epoch, self.searchspace_json)
-            for trial in self.finished:
-                if trial not in bottoms:
-                    trial.clean_id()
-                    trial.hyper_parameters['load_checkpoint_dir'] = trial.hyper_parameters['save_checkpoint_dir']
-                    trial.hyper_parameters['save_checkpoint_dir'] = os.path.join(trial.checkpoint_dir, str(self.epoch))
-            self.finished_trials = 0
-            for _ in range(self.population_size):
-                trial_info = self.finished.pop()
-                self.population.append(trial_info)
-            while self.credit > 0 and self.pos + 1 < len(self.population):
-                self.credit -= 1
-                self.pos += 1
-                parameter_id = self.param_ids.pop()
-                trial_info = self.population[self.pos]
-                trial_info.parameter_id = parameter_id
-                self.running[parameter_id] = trial_info
-                self.send_trial_callback(parameter_id, split_index(trial_info.hyper_parameters))
+            self._proceed_next_epoch()
+
+    def trial_end(self, parameter_id, success, **kwargs):
+        """
+        """
+        if success:
+            return
+        if self.optimize_mode == OptimizeMode.Minimize:
+            value = float('inf')
+        else:
+            value = float('-inf')
+        trial_info = self.running.pop(parameter_id, None)
+        trial_info.score = value
+        self.finished.append(trial_info)
+        self.finished_trials += 1
+        if self.finished_trials == self.population_size:
+            self._proceed_next_epoch()
 
     def import_data(self, data):
         pass
