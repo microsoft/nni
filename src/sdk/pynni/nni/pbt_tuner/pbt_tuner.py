@@ -78,7 +78,7 @@ def exploit_and_explore(bot_trial_info, top_trial_info, factor, resample_probabi
     hyper_parameters['save_checkpoint_dir'] = os.path.join(bot_checkpoint_dir, str(epoch))
     for key in hyper_parameters.keys():
         hyper_parameter = hyper_parameters[key]
-        if key == 'load_checkpoint_dir' or key =='save_checkpoint_dir':
+        if key == 'load_checkpoint_dir' or key == 'save_checkpoint_dir':
             continue
         elif search_space[key]["_type"] == "choice":
             choices = search_space[key]["_value"]
