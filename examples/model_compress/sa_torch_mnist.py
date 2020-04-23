@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N', # TODO:14
+    parser.add_argument('--epochs', type=int, default=1, metavar='N',  # TODO:14
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -103,20 +103,24 @@ if __name__ == '__main__':
     if args.save_model:
         torch.save(model.state_dict(), MODEL_DIR)
 
+    # TODO: single item list here
     configure_list = [{
         'sparsity': 0.9,
-        'op_types': ['default']
+        'op_types': ['default'] # module types to prune
     }]
 
-    def evaluater(model):
+    def evaluator(model):
         return test(model=model, device=device, test_loader=test_loader)
 
     pruner = SimulatedAnnealingPruner(
-        model, configure_list, evaluater=evaluater)
+        model, configure_list, evaluator=evaluator)
     pruner.compress()
 
+    # TODO: possilbe to test it without exporting & saving the model ?
     pruner.export_model('model.pth', 'mask.pth')
     model_pruned = LeNet().to(device)
     model_pruned.load_state_dict(torch.load('model.pth'))
-    evaluation_result = evaluater(model_pruned)
+    evaluation_result = evaluator(model_pruned)
     print('Evaluation result : %s' % evaluation_result)
+
+    # TODO: mobilenet/imagenet or RetinaFace
