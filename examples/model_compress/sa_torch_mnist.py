@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     # TODO: single item list here
     configure_list = [{
-        'sparsity': 0.9,
+        'sparsity': 0.3,
         'op_types': ['default'] # module types to prune
     }]
 

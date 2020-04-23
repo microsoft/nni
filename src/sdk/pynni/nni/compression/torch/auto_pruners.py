@@ -91,10 +91,10 @@ class SimulatedAnnealingPruner(Pruner):
                 - prune_iterations : The number of rounds for the iterative pruning.
                 - sparsity : The final sparsity when the compression is done.
         """
-        schema = CompressorSchema({
+        schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
             Optional('op_types'): [str],
-        }, model, logger)
+        }], model, logger)
 
         schema.validate(config_list)
 
@@ -123,20 +123,29 @@ class SimulatedAnnealingPruner(Pruner):
 
         total_weights = 0
         total_weights_pruned = 0
+        # weights_prunable = 0
 
         for wrapper in self.get_modules_wrapper():
-            op_name = wrapper.module.name
-            num_weight = wrapper.module.weight.data.numel()
-            total_weights += num_weight
+            op_name = wrapper.name
+            num_weights = wrapper.module.weight.data.numel()
+            logger.debug("op_name : %s , num_weights : %s",
+                         op_name, num_weights)
+            total_weights += num_weights
 
             if op_name in op_names:
                 idx = op_names.index(op_name)
-                total_weights_pruned += int(num_weight*sparsities[idx])
+                total_weights_pruned += int(num_weights*sparsities[idx])
+                # weights_prunable += num_weights
 
         scale = target_sparsity / (total_weights_pruned/total_weights)
         for item in config_list_level:
-            item['sparsity'] *= scale
+            item['sparsity'] = np.clip(0, 1, item['sparsity']*scale)
+            # if item['sparsity'] > 1:
+            #     raise ValueError("The limit of sparsity is : %s", weights_prunable/total_weights)
 
+        # TODO:
+        # check real sparsity
+        # deal with situation when target_sparsity ~ 1
         return config_list_level
 
     def _sparsities_2_config_list_level(self, sparsities):
@@ -151,49 +160,49 @@ class SimulatedAnnealingPruner(Pruner):
         Returns
         -------
         list of dict
-            the rescaled config_list_level
+            config_list_level for LevelPruner
         '''
         config_list_level = []
         for idx, wrapper in enumerate(self.get_modules_wrapper()):
             config_list_level.append(
                 {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
 
-        config_list_level = self._rescale_sparsities(config_list_level, self.config_list[0]['sparsity'])
+        config_list_level = self._rescale_sparsities(
+            config_list_level, self.config_list[0]['sparsity'])
 
         return config_list_level
-    
-    def _init_config_list_level(self):
+
+    def _init_sparsities(self):
         '''
         Generate config_list for LevelPruner
-
-        Parameters
-        ----------
-        sparsities : numpy array
-            pruning sparsities of the layers to be pruned
-
-        Returns
-        -------
-        list of dict
-            config_list for LevelPruner, specified by op_names (level)
         '''
-        # TODO : check 
+        # TODO : check
         # a layer with more weights will have no less pruning rate
-        self._sparsities = sorted(np.random.uniform(0, 1, len(self.get_modules_wrapper())))
-        self.modules_wrapper = sorted(self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
+        self._sparsities = sorted(np.random.uniform(
+            0, 1, len(self.get_modules_wrapper())))
+        self.modules_wrapper = sorted(
+            self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
 
     def _generate_perturbations(self):
-        # TODO: decrease magnitude
-        perturbation = np.random.uniform(-0.1, 0.1, len(self.get_modules_wrapper()))
-        self._sparsities = np.clip(self._sparsities + perturbation, 0, 1)
+        '''
+        Generate perturbation to the current sparsities distribution.
+
+        Returns:
+        --------
+        list
+            perturbated sparsities
+        '''
+        # TODO : decrease magnitude
+        perturbation = np.random.uniform(-0.1,
+                                         0.1, len(self.get_modules_wrapper()))
+        sparsities = np.clip(self._sparsities + perturbation, 0, 1)
 
         # a layer with more weights will have no less pruning rate
         for idx, sparsity in enumerate(self._sparsities):
             if idx > 0 and sparsity > self._sparsities[idx-1]:
-                self._sparsities[idx] = self._sparsities[idx-1]
+                sparsities[idx] = self._sparsities[idx-1]
 
-        config_list_level = self._sparsities_2_config_list_level(self._sparsities)
-
-        return config_list_level
+        return sparsities
 
     def _set_modules_wrapper(self, modules_wrapper):
         """
@@ -224,7 +233,7 @@ class SimulatedAnnealingPruner(Pruner):
         logger.info('Starting Simulated Annealing Compression...')
 
         # initiaze a randomized action
-        self._init_config_list_level()
+        self._init_sparsities()
 
         # stop condition
         while self._current_temperature > self._stop_temperature:
@@ -233,7 +242,9 @@ class SimulatedAnnealingPruner(Pruner):
                         self._current_temperature, self._stop_temperature)
             while True:
                 # generate perturbation
-                config_list_level = self._generate_perturbations()
+                sparsities_perturbated = self._generate_perturbations()
+                config_list_level = self._sparsities_2_config_list_level(
+                    sparsities_perturbated)
                 logger.info("config_list for LevelPruner generated: %s",
                             config_list_level)
 
@@ -277,8 +288,10 @@ class SimulatedAnnealingPruner(Pruner):
             self._current_temperature *= self._cool_down_rate
             self._pruning_iteration += 1
 
-        logger.info('Compression finished')
+        logger.info('----------Compression finished--------------')
         logger.info('Best performance: %s', self._best_performance)
         logger.info('Sparsities generated: %s', self._sparsities)
+        logger.info('config_list found for LevelPruner: %s',
+                    self._sparsities_2_config_list_level(self._sparsities))
 
         return self.bound_model
