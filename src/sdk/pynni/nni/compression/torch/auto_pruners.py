@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from schema import And, Optional
 
-
 from nni.utils import OptimizeMode
 
 from .compressor import Pruner
@@ -36,7 +35,7 @@ class SimulatedAnnealingPruner(Pruner):
     6. repeat step 2~5 while T > stop_temperature
     """
 
-    def __init__(self, model, config_list, evaluater, optimize_mode='maximize', T=100, stop_temperature=20, cool_down_rate=0.9):
+    def __init__(self, model, config_list, evaluater, optimize_mode='maximize', T=100, stop_temperature=20, cool_down_rate=0.5):
         """
         Parameters
         ----------
@@ -90,8 +89,6 @@ class SimulatedAnnealingPruner(Pruner):
 
         schema.validate(config_list)
 
-
-
     def _generate_sparsities(self):
         sparsities = np.random.uniform(0, 1, len(self.get_modules_wrapper()))
         # TODO: rescale
@@ -140,7 +137,7 @@ class SimulatedAnnealingPruner(Pruner):
         logger.info('Starting Simulated Annealing Compression...')
 
         while self.T > self.stop_temperature:
-            logger.info('Pruning iterationd: %d', self._pruning_iteration)
+            logger.info('Pruning iteration: %d', self._pruning_iteration)
             logger.info('Current temperature: %d, Stop temperature: %d',
                         self.T, self.stop_temperature)
             while True:
@@ -156,7 +153,7 @@ class SimulatedAnnealingPruner(Pruner):
                 # TODO: check model parameter
                 level_pruner = LevelPruner(
                     model=copy.deepcopy(self._model_to_prune), config_list=config_list_level)
-                level_pruner.compress()
+                bound_model_level_pruner = level_pruner.compress()
 
                 level_pruner.export_model(MODEL_PATH, MASK_PATH)
                 self._model_pruned.load_state_dict(torch.load(MODEL_PATH))
@@ -174,6 +171,9 @@ class SimulatedAnnealingPruner(Pruner):
                         self.best_performance = evaluation_result
                         self.best_sparsities = sparsities_perturbated
                         self._model_best = self._model_pruned
+                        # if SimulatedAnnealingTuner is used seperatedly, return the overall best sparsities
+                        # else return current sparsities
+                        self.bound_model = bound_model_level_pruner
                     break
                 # if not, accept with probability e^(-deltaE/T)
                 else:
@@ -190,14 +190,4 @@ class SimulatedAnnealingPruner(Pruner):
             self._pruning_iteration += 1
 
         logger.info('Compression finished')
-        # TODO:
-        # if SimulatedAnnealingTuner is used seperatedly, return the overall best sparsities
-        # else return current sparsities
-        # check bound_model
         return self.bound_model
-
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
-        '''
-        copy correspongidng model and mask to the assigned path
-        '''
-        # TODO:

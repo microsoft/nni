@@ -116,3 +116,7 @@ if __name__ == '__main__':
     pruner.compress()
 
     pruner.export_model('model.pth', 'mask.pth')
+    model_pruned = LeNet().to(device)
+    model_pruned.load_state_dict(torch.load('model.pth'))
+    evaluation_result = evaluater(model_pruned)
+    print('Evaluation result : %s' % evaluation_result)
