@@ -391,7 +391,6 @@ class PBTTuner(Tuner):
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 _value = float('inf') if self.optimize_mode == OptimizeMode.Minimize else float('-inf')
             _value = extract_scalar_reward(_value)
-            # 
             epoch_num = int(os.path.basename(_params['save_checkpoint_dir']))
             if epoch_num not in epoch_data_dict:
                 epoch_data_dict[epoch_num] = []
