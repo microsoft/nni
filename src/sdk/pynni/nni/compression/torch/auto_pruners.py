@@ -3,8 +3,11 @@
 
 import logging
 import math
-from schema import And, Optional
+import copy
 import numpy as np
+import torch
+from schema import And, Optional
+
 
 from nni.utils import OptimizeMode
 
@@ -15,7 +18,7 @@ from .utils import CompressorSchema
 
 __all__ = ['SimulatedAnnealingPruner']
 
-logger = logging.getLogger('torch pruner')
+logger = logging.getLogger(__name__)
 
 
 class SimulatedAnnealingPruner(Pruner):
@@ -30,7 +33,7 @@ class SimulatedAnnealingPruner(Pruner):
     6. repeat step 2~5 while T > stop_temperature
     """
 
-    def __init__(self, model, config_list, optimizer=None, optimize_mode='maximize', T=100, stop_temperature=20, cool_down_rate=0.9):
+    def __init__(self, model, config_list, evaluater, optimize_mode='maximize', T=100, stop_temperature=20, cool_down_rate=0.9):
         """
         Parameters
         ----------
@@ -42,28 +45,30 @@ class SimulatedAnnealingPruner(Pruner):
                 - op_type : The operation type to prune.
 
         """
+
+        self._model_to_prune = copy.deepcopy(model)
+        self._model_pruned = copy.deepcopy(model)
+        self._model_current = copy.deepcopy(model)
+
         super().__init__(model, config_list)
+
+        self._optimize_mode = OptimizeMode(optimize_mode)
+
         # hyper parameters of SA algorithm
         self.T = T
         self.stop_temperature = stop_temperature
         self.cool_down_rate = cool_down_rate  # cool down rate
 
         self._optimize_mode = OptimizeMode(optimize_mode)
-        self.state = []  # the current pruning rates of the layers
-        self.current_performance = None
 
         # init pruning rates of the layers
-        sparsities = np.random.uniform(0, 1, len(self.modules_warpper))
-        sparsities = self.rescale_sparsities(
-            model, sparsities, config_list['sparsity'])
+        self.sparsities = self._generate_sparsities()
 
-        # init current performance
+        # init current performance & best performance
         self.current_performance = -np.inf
+        self.best_performance = -np.inf
 
-    def rescale_sparsities(self, model, sparsities, target_sparsity):
-        # TODO: calculate sparsity and rescale sparsities
-        # TODO: sort the sparsities
-        return sparsities
+        self.evaluater = evaluater
 
     def validate_config(self, model, config_list):
         """
@@ -102,47 +107,100 @@ class SimulatedAnnealingPruner(Pruner):
         return None
 
     def _generate_sparsities(self):
+        sparsities = np.random.uniform(0, 1, len(self.get_modules_wrapper()))
+        # TODO: rescale
+        # sparsities = self._rescale_sparsities(
+        #     self.model, sparsities, config_list['sparsity'])
+        # check sparsities
+
+        return sparsities
+
+    def _generate_perturbations(self):
         # TODO: decrease magnitude
         perturbation = np.random.uniform(-0.1, 0.1, self.dimension)
-        self.state = self.state + perturbation
-        # TODO: refine
-        np.clip(self.state, 0, 1)
-        return self.__array_to_params(self.state)
+        sparsities_perturbated = np.clip(self.sparsities + perturbation, 0, 1)
+        # TODO: check_sparsities(sparsities, model)
+
+        return sparsities_perturbated
+
+    def _rescale_sparsities(self, model, sparsities, target_sparsity):
+        # TODO: calculate sparsity and rescale sparsities
+        # TODO: sort the sparsities
+        return sparsities
+
+    def _generate_config_list_level(self, sparsities):
+        '''
+        Generate config_list for LevelPruner
+
+        Parameters
+        ----------
+        sparsities : numpy array
+            pruning sparsities of the layers to be pruned
+
+        Returns
+        -------
+        list of dict
+            config_list for LevelPruner, specified by op_names (level)
+        '''
+        # TODO: check order & sparsities param
+        config_list_level = []
+        for idx, wrapper in enumerate(self.get_modules_wrapper()):
+            config_list_level.append(
+                {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
+
+        return config_list_level
 
     def compress(self):
-        logger.info('Simulated Annealing Compression beginning...')
-        logger.info('Current temperature: %d', self.T)
-        logger.info('Stop temperature: %d', self.stop_temperature)
+        logger.info('Starting Simulated Annealing Compression...')
+        logger.info('Current temperature: %d, Stop temperature: %d',
+                    self.T, self.stop_temperature)
+
         if self.T <= self.stop_temperature:
             logger.info('Compression finished')
+            # TODO: if SimulatedAnnealingTuner is used seperatedly, return the overall best sparsities
+            # else return current sparsities
+            # check bound_model
             return self.bound_model
 
         while True:
             # generate perturbation
-            sparsities = self._generate_sparsities()
-            # TODO: check_sparsities(sparsities, model)
+            sparsities_perturbated = self._generate_sparsities()
+            config_list_level = self._generate_config_list_level(
+                sparsities_perturbated)
+            logger.info("config_list for LevelPruner generated: %s",
+                        config_list_level)
 
-            config_list = self.state
-            config_list_level = [{'sparsity': params['conv0_sparsity'], 'op_names': ['conv1']},
-                     {'sparsity': params['conv1_sparsity'], 'op_names': ['conv2']}]
+            # fast evaluation
+            # TODO: check model parameter
+            logger.info("model:%s", self._model_to_prune)
+            level_pruner = LevelPruner(
+                model=self._model_to_prune, config_list=config_list_level)
+            level_pruner.compress()
 
-            # fast evaluation TODO:check format
-            evaluation_result = LevelPruner(self.bound_model, config_list)
+            level_pruner.export_model('model.pth', 'mask.pth')
+            self._model_pruned.load_state_dict(torch.load('model.pth'))
+            evaluation_result = self.evaluater(self._model_pruned)
 
             # if better evaluation result, then accept the perturbation
-            if self.optimize_mode is OptimizeMode.Minimize:
+            if self._optimize_mode is OptimizeMode.Minimize:
                 evaluation_result *= -1
             if evaluation_result > self.current_performance:
                 self.current_performance = evaluation_result
-                self.state = self.__params_to_array(sparsities)
+                self.sparsities = sparsities_perturbated
+                self._model_current = self._model_pruned
+                # save best performance and best params
+                if evaluation_result > self.best_performance:
+                    self.best_performance = evaluation_result
+                    self.best_sparsities = sparsities_perturbated
+                    self._model_best = self._model_pruned
                 break
-                # TODO: save best performance and best params
-            # if not, accept with probability exp(-deltaE/T)
+            # if not, accept with probability e^(-deltaE/T)
             else:
                 delta_E = np.abs(evaluation_result - self.current_performance)
                 probability = math.exp(-1 * delta_E / self.T)
                 if np.random.uniform(0, 1) < probability:
                     self.current_performance = evaluation_result
-                    self.state = self.__params_to_array(sparsities)
+                    self.sparsities = sparsities_perturbated
+                    self._model_current = self._model_pruned
 
         self.T *= self.cool_down_rate

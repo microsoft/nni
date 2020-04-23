@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=14, metavar='N',
+    parser.add_argument('--epochs', type=int, default=1, metavar='N', # TODO:14
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -107,7 +107,12 @@ if __name__ == '__main__':
         'sparsity': 0.9,
         'op_types': ['default']
     }]
-    pruner = SimulatedAnnealingPruner(model, configure_list)
+
+    def evaluater(model):
+        return test(model=model, device=device, test_loader=test_loader)
+
+    pruner = SimulatedAnnealingPruner(
+        model, configure_list, evaluater=evaluater)
     pruner.compress()
 
     pruner.export_model('model.pth', 'mask.pth')
