@@ -144,66 +144,60 @@ class PAIK8STrainingService extends PAITrainingService {
             throw new Error('trial config is not initialized');
         }
         const jobName = `nni_exp_${this.experimentId}_trial_${trialJobId}`
-        const paiJobConfig: any = {
-            protocolVersion: 2, 
-            name: jobName,
-            type: 'job',
-            jobRetryCount: 0,
-            prerequisites: [
-              {
-                type: 'dockerimage',
-                uri: this.paiTrialConfig.image,
-                name: 'docker_image_0'
-              }
-            ],
-            taskRoles: {
-                taskrole: {
-                    instances: 1,
-                    completion: {
-                       minFailedInstances: 1,
-                       minSucceededInstances: -1
-                    },
-                    taskRetryCount: 0,
-                    dockerImage: 'docker_image_0',
-                    resourcePerInstance: {
-                        gpu: this.paiTrialConfig.gpuNum,
-                        cpu: this.paiTrialConfig.cpuNum,
-                        memoryMB: this.paiTrialConfig.memoryMB
-                    },
-                    commands: [
-                        command
-                    ]
-                }
-            },
-            extras: {
-                'com.microsoft.pai.runtimeplugin': [
-                    {
-                        plugin: this.paiTrialConfig.paiStoragePlugin
-                    }
-                ],
-                submitFrom: 'submit-job-v2'
-            }
-        }
-        if (this.paiTrialConfig.virtualCluster) {
-            paiJobConfig.defaults=  {
-                virtualCluster: this.paiTrialConfig.virtualCluster
-            }
-        }
-
+        let paiJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
-            try {
-                const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                //deepmerge(x, y), if an element at the same key is present for both x and y, the value from y will appear in the result.
-                //refer: https://github.com/TehShrike/deepmerge
-                const overwriteMerge = (destinationArray: any, sourceArray: any, options: any) => sourceArray;
-                return yaml.safeDump(deepmerge(additionalPAIConfig, paiJobConfig, { arrayMerge: overwriteMerge }));
-            } catch (error) {
-                this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
-            }
+                paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+                paiJobConfig.name = jobName;
+                paiJobConfig.taskRoles.taskrole.commands = [command]
         } else {
-            return yaml.safeDump(paiJobConfig);
+            paiJobConfig = {
+                protocolVersion: 2, 
+                name: jobName,
+                type: 'job',
+                jobRetryCount: 0,
+                prerequisites: [
+                  {
+                    type: 'dockerimage',
+                    uri: this.paiTrialConfig.image,
+                    name: 'docker_image_0'
+                  }
+                ],
+                taskRoles: {
+                    taskrole: {
+                        instances: 1,
+                        completion: {
+                           minFailedInstances: 1,
+                           minSucceededInstances: -1
+                        },
+                        taskRetryCount: 0,
+                        dockerImage: 'docker_image_0',
+                        resourcePerInstance: {
+                            gpu: this.paiTrialConfig.gpuNum,
+                            cpu: this.paiTrialConfig.cpuNum,
+                            memoryMB: this.paiTrialConfig.memoryMB
+                        },
+                        commands: [
+                            command
+                        ]
+                    }
+                },
+                extras: {
+                    'com.microsoft.pai.runtimeplugin': [
+                        {
+                            plugin: this.paiTrialConfig.paiStoragePlugin
+                        }
+                    ],
+                    submitFrom: 'submit-job-v2'
+                }
+            }
+            if (this.paiTrialConfig.virtualCluster) {
+                paiJobConfig.defaults=  {
+                    virtualCluster: this.paiTrialConfig.virtualCluster
+                }
+            }
         }
-      }
+        return yaml.safeDump(paiJobConfig);
+    }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
