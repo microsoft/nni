@@ -3,6 +3,8 @@
 
 import logging
 import torch
+from schema import And, Optional
+from .utils import CompressorSchema
 from .compressor import Pruner
 
 __all__ = ['L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
@@ -15,7 +17,7 @@ class WeightRankFilterPruner(Pruner):
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -24,45 +26,63 @@ class WeightRankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
-        super().__init__(model, config_list)
-        self.mask_calculated_ops = set()  # operations whose mask has been calculated
+        super().__init__(model, config_list, optimizer)
+        self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+       """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): ['Conv2d'],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
 
     def get_mask(self, base_mask, weight, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper, **kwargs):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion of the kernel weights are masked.
         Parameters
         ----------
-        layer : LayerInfo
-            the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+        wrapper : Module
+            the module to instrument the compression operation
         Returns
         -------
         dict
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_name = layer.name
-        op_type = layer.type
+        weight = wrapper.module.weight.data
+        op_type = wrapper.type
+        config = wrapper.config
         assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
         assert op_type in ['Conv1d', 'Conv2d'], "only support Conv1d and Conv2d"
         assert op_type in config.get('op_types')
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+
+        if wrapper.if_calculated:
+            return None
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
-        if hasattr(layer.module, 'bias') and layer.module.bias is not None:
-            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = torch.ones(wrapper.module.bias.size()).type_as(wrapper.module.bias).detach()
         else:
             mask_bias = None
-        mask = {'weight': mask_weight, 'bias': mask_bias}
+        mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
@@ -70,8 +90,7 @@ class WeightRankFilterPruner(Pruner):
                 return mask
             mask = self.get_mask(mask, weight, num_prune)
         finally:
-            self.mask_dict.update({op_name: mask})
-            self.mask_calculated_ops.add(op_name)
+            wrapper.if_calculated = True
         return mask
 
 
@@ -84,7 +103,7 @@ class L1FilterPruner(WeightRankFilterPruner):
     https://arxiv.org/abs/1608.08710
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -93,9 +112,11 @@ class L1FilterPruner(WeightRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
 
     def get_mask(self, base_mask, weight, num_prune):
         """
@@ -121,9 +142,9 @@ class L1FilterPruner(WeightRankFilterPruner):
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
         threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
         mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight)
+        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
 
-        return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
 class L2FilterPruner(WeightRankFilterPruner):
@@ -132,7 +153,7 @@ class L2FilterPruner(WeightRankFilterPruner):
     smallest L2 norm of the weights.
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
@@ -141,9 +162,11 @@ class L2FilterPruner(WeightRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
 
     def get_mask(self, base_mask, weight, num_prune):
         """
@@ -167,9 +190,9 @@ class L2FilterPruner(WeightRankFilterPruner):
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
         threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
         mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight)
+        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
 
-        return {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
 class FPGMPruner(WeightRankFilterPruner):
@@ -179,7 +202,7 @@ class FPGMPruner(WeightRankFilterPruner):
     https://arxiv.org/pdf/1811.00250.pdf
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -188,8 +211,11 @@ class FPGMPruner(WeightRankFilterPruner):
         config_list: list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "FPGM pruner is an iterative pruner, please pass optimizer of the model to it"
 
     def get_mask(self, base_mask, weight, num_prune):
         """
@@ -210,9 +236,9 @@ class FPGMPruner(WeightRankFilterPruner):
         """
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
-            base_mask['weight'][idx] = 0.
-            if base_mask['bias'] is not None:
-                base_mask['bias'][idx] = 0.
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
         return base_mask
 
     def _get_min_gm_kernel_idx(self, weight, n):
@@ -259,4 +285,5 @@ class FPGMPruner(WeightRankFilterPruner):
         return x.sum()
 
     def update_epoch(self, epoch):
-        self.mask_calculated_ops = set()
+        for wrapper in self.get_modules_wrapper():
+            wrapper.if_calculated = False

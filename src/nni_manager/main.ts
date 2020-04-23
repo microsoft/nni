@@ -6,6 +6,7 @@
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
@@ -25,6 +26,7 @@ import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTr
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
+import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number,
@@ -34,7 +36,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
-async function initContainer(platformMode: string, logFileName?: string): Promise<void> {
+async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
@@ -59,6 +61,10 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
         Container.bind(TrainingService)
             .to(FrameworkControllerTrainingService)
             .scope(Scope.Singleton);
+    } else if (platformMode === 'dlts') {
+        Container.bind(TrainingService)
+            .to(DLTSTrainingService)
+            .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
@@ -71,6 +77,12 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
+    if (foreground) {
+        logFileName = undefined;
+    } else if (logFileName === undefined) {
+        logFileName = DEFAULT_LOGFILE;
+    }
     Container.bind(Logger).provider({
         get: (): Logger => new Logger(logFileName)
     });
@@ -81,7 +93,7 @@ async function initContainer(platformMode: string, logFileName?: string): Promis
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -90,10 +102,18 @@ if (!strPort || strPort.length === 0) {
     process.exit(1);
 }
 
+const foregroundArg: string = parseArg(['--foreground', '-f']);
+if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+    console.log(`FATAL: foreground property should only be true or false`);
+    usage();
+    process.exit(1);
+}
+const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
+
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
@@ -138,7 +158,7 @@ initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 mkDirP(getLogDir())
     .then(async () => {
     try {
-        await initContainer(mode);
+        await initContainer(foreground, mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
         const log: Logger = getLogger();
@@ -161,6 +181,15 @@ function getStopSignal(): any {
         return 'SIGTERM';
     }
 }
+
+function getCtrlCSignal(): any {
+    return 'SIGINT';
+}
+
+process.on(getCtrlCSignal(), async () => {
+    const log: Logger = getLogger();
+    log.info(`Get SIGINT signal!`);
+});
 
 process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();

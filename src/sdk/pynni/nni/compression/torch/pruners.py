@@ -4,7 +4,9 @@
 import copy
 import logging
 import torch
+from schema import And, Optional
 from .compressor import Pruner
+from .utils import CompressorSchema
 
 __all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'LotteryTicketPruner']
 
@@ -16,7 +18,22 @@ class LevelPruner(Pruner):
     Prune to an exact pruning level specification
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+        """
+
+        super().__init__(model, config_list, optimizer)
+        self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
         """
         Parameters
         ----------
@@ -25,41 +42,43 @@ class LevelPruner(Pruner):
         config_list : list
             List on pruning configs
         """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
-        super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        schema.validate(config_list)
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper, **kwargs):
         """
         Calculate the mask of given layer
         Parameters
         ----------
-        layer : LayerInfo
-            the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+        wrapper : Module
+            the module to instrument the compression operation
+
         Returns
         -------
         dict
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_name = layer.name
-        if op_name not in self.mask_calculated_ops:
+        config = wrapper.config
+        weight = wrapper.module.weight.data
+
+        if not wrapper.if_calculated:
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
                 return torch.ones(weight.shape).type_as(weight)
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             mask_weight = torch.gt(w_abs, threshold).type_as(weight)
-            mask = {'weight': mask_weight}
-            self.mask_dict.update({op_name: mask})
-            self.mask_calculated_ops.add(op_name)
+            mask = {'weight_mask': mask_weight}
+            wrapper.if_calculated = True
+            return mask
         else:
-            assert op_name in self.mask_dict, "op_name not in the mask_dict"
-            mask = self.mask_dict[op_name]
-        return mask
+            return None
 
 
 class AGP_Pruner(Pruner):
@@ -72,7 +91,25 @@ class AGP_Pruner(Pruner):
     https://arxiv.org/pdf/1710.01878.pdf
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+        """
+
+        super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
+
+        self.now_epoch = 0
+        self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
         """
         Parameters
         ----------
@@ -81,45 +118,54 @@ class AGP_Pruner(Pruner):
         config_list : list
             List on pruning configs
         """
+        schema = CompressorSchema([{
+            'initial_sparsity': And(float, lambda n: 0 <= n <= 1),
+            'final_sparsity': And(float, lambda n: 0 <= n <= 1),
+            'start_epoch': And(int, lambda n: n >= 0),
+            'end_epoch': And(int, lambda n: n >= 0),
+            'frequency': And(int, lambda n: n > 0),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
-        super().__init__(model, config_list)
-        self.now_epoch = 0
-        self.if_init_list = {}
+        schema.validate(config_list)
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper, **kwargs):
         """
-        Calculate the mask of given layer
+        Calculate the mask of given layer.
+        Scale factors with the smallest absolute value in the BN layer are masked.
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+
         Returns
         -------
         dict
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_name = layer.name
+        config = wrapper.config
+        weight = wrapper.module.weight.data
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
-        if self.now_epoch >= start_epoch and self.if_init_list.get(op_name, True) \
-                and (self.now_epoch - start_epoch) % freq == 0:
-            mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
-            target_sparsity = self.compute_target_sparsity(config)
-            k = int(weight.numel() * target_sparsity)
-            if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
-                return mask
-            # if we want to generate new mask, we should update weigth first
-            w_abs = weight.abs() * mask
-            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-            new_mask = {'weight': torch.gt(w_abs, threshold).type_as(weight)}
-            self.mask_dict.update({op_name: new_mask})
-            self.if_init_list.update({op_name: False})
-        else:
-            new_mask = self.mask_dict.get(op_name, {'weight': torch.ones(weight.shape).type_as(weight)})
+
+        if wrapper.if_calculated:
+            return None
+        if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
+            return None
+
+        mask = {'weight_mask': wrapper.weight_mask}
+        target_sparsity = self.compute_target_sparsity(config)
+        k = int(weight.numel() * target_sparsity)
+        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
+            return mask
+        # if we want to generate new mask, we should update weigth first
+        w_abs = weight.abs() * mask['weight_mask']
+        threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
+        new_mask = {'weight_mask': torch.gt(w_abs, threshold).type_as(weight)}
+        wrapper.if_calculated = True
+
         return new_mask
 
     def compute_target_sparsity(self, config):
@@ -165,9 +211,8 @@ class AGP_Pruner(Pruner):
 
         if epoch > 0:
             self.now_epoch = epoch
-            for k in self.if_init_list.keys():
-                self.if_init_list[k] = True
-
+            for wrapper in self.get_modules_wrapper():
+                wrapper.if_calculated = False
 
 class SlimPruner(Pruner):
     """
@@ -177,66 +222,82 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
-        super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        super().__init__(model, config_list, optimizer)
         weight_list = []
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
         config = config_list[0]
-        for (layer, config) in self.detect_modules_to_compress():
+        for (layer, config) in self.get_modules_to_compress():
             assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
             weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
+        self.set_wrappers_attribute("if_calculated", False)
 
-    def calc_mask(self, layer, config):
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            'op_types': ['BatchNorm2d'],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
+
+    def calc_mask(self, wrapper, **kwargs):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
+
         Returns
         -------
         dict
             dictionary for storing masks
         """
 
-        weight = layer.module.weight.data
-        op_name = layer.name
-        op_type = layer.type
+        config = wrapper.config
+        weight = wrapper.module.weight.data
+        op_type = wrapper.type
+
         assert op_type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+        if wrapper.if_calculated:
+            return None
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
-        mask = {'weight': base_mask.detach(), 'bias': base_mask.clone().detach()}
-        try:
-            filters = weight.size(0)
-            num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1:
-                return mask
+        mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
+        filters = weight.size(0)
+        num_prune = int(filters * config.get('sparsity'))
+        if filters >= 2 and num_prune >= 1:
             w_abs = weight.abs()
             mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
-            mask = {'weight': mask_weight.detach(), 'bias': mask_bias.detach()}
-        finally:
-            self.mask_dict.update({layer.name: mask})
-            self.mask_calculated_ops.add(layer.name)
-
+            mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
+        wrapper.if_calculated = True
         return mask
 
 class LotteryTicketPruner(Pruner):
@@ -251,7 +312,7 @@ class LotteryTicketPruner(Pruner):
     5. Repeat step 2, 3, and 4.
     """
 
-    def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=True):
+    def __init__(self, model, config_list, optimizer=None, lr_scheduler=None, reset_weights=True):
         """
         Parameters
         ----------
@@ -268,10 +329,6 @@ class LotteryTicketPruner(Pruner):
         reset_weights : bool
             Whether reset weights and optimizer at the beginning of each round.
         """
-        super().__init__(model, config_list)
-        self.curr_prune_iteration = None
-        self.prune_iterations = self._validate_config(config_list)
-
         # save init weights and optimizer
         self.reset_weights = reset_weights
         if self.reset_weights:
@@ -283,67 +340,64 @@ class LotteryTicketPruner(Pruner):
             if lr_scheduler is not None:
                 self._scheduler_state = copy.deepcopy(lr_scheduler.state_dict())
 
-    def _validate_config(self, config_list):
-        prune_iterations = None
-        for config in config_list:
-            assert 'prune_iterations' in config, 'prune_iterations must exist in your config'
-            assert 'sparsity' in config, 'sparsity must exist in your config'
-            if prune_iterations is not None:
-                assert prune_iterations == config[
-                    'prune_iterations'], 'The values of prune_iterations must be equal in your config'
-            prune_iterations = config['prune_iterations']
-        return prune_iterations
+        super().__init__(model, config_list, optimizer)
+        self.curr_prune_iteration = None
+        self.prune_iterations = config_list[0]['prune_iterations']
 
-    def _print_masks(self, print_mask=False):
-        torch.set_printoptions(threshold=1000)
-        for op_name in self.mask_dict.keys():
-            mask = self.mask_dict[op_name]
-            print('op name: ', op_name)
-            if print_mask:
-                print('mask: ', mask)
-            # calculate current sparsity
-            mask_num = mask['weight'].sum().item()
-            mask_size = mask['weight'].numel()
-            print('sparsity: ', 1 - mask_num / mask_size)
-        torch.set_printoptions(profile='default')
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            Supported keys:
+                - prune_iterations : The number of rounds for the iterative pruning.
+                - sparsity : The final sparsity when the compression is done.
+        """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            'prune_iterations': And(int, lambda n: n > 0),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
+        assert len(set([x['prune_iterations'] for x in config_list])) == 1, 'The values of prune_iterations must be equal in your config'
 
     def _calc_sparsity(self, sparsity):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)
         curr_keep_ratio = keep_ratio_once ** self.curr_prune_iteration
         return max(1 - curr_keep_ratio, 0)
 
-    def _calc_mask(self, weight, sparsity, op_name):
+    def _calc_mask(self, weight, sparsity, curr_w_mask):
         if self.curr_prune_iteration == 0:
             mask = torch.ones(weight.shape).type_as(weight)
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            assert self.mask_dict.get(op_name) is not None
-            curr_mask = self.mask_dict.get(op_name)
-            w_abs = weight.abs() * curr_mask['weight']
+            w_abs = weight.abs() * curr_w_mask
             k = int(w_abs.numel() * curr_sparsity)
             threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
             mask = torch.gt(w_abs, threshold).type_as(weight)
-        return {'weight': mask}
+        return {'weight_mask': mask}
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper, **kwargs):
         """
         Generate mask for the given ``weight``.
 
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             The layer to be pruned
-        config : dict
-            Pruning configurations for this weight
 
         Returns
         -------
         tensor
-            The mask for this weight
+            The mask for this weight, it is ```None``` because this pruner
+            calculates and assigns masks in ```prune_iteration_start```,
+            no need to do anything in this function.
         """
-        assert self.mask_dict.get(layer.name) is not None, 'Please call iteration_start before training'
-        mask = self.mask_dict[layer.name]
-        return mask
+        return None
 
     def get_prune_iterations(self):
         """
@@ -368,16 +422,26 @@ class LotteryTicketPruner(Pruner):
             self.curr_prune_iteration += 1
         assert self.curr_prune_iteration < self.prune_iterations + 1, 'Exceed the configured prune_iterations'
 
-        modules_to_compress = self.detect_modules_to_compress()
+        modules_wrapper = self.get_modules_wrapper()
+        modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
+            module_wrapper = None
+            for wrapper in modules_wrapper:
+                if wrapper.name == layer.name:
+                    module_wrapper = wrapper
+                    break
+            assert module_wrapper is not None
+
             sparsity = config.get('sparsity')
-            mask = self._calc_mask(layer.module.weight.data, sparsity, layer.name)
-            self.mask_dict.update({layer.name: mask})
-        self._print_masks()
+            mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
+            # TODO: directly use weight_mask is not good
+            module_wrapper.weight_mask = mask['weight_mask']
+            # there is no mask for bias
 
         # reinit weights back to original after new masks are generated
         if self.reset_weights:
-            self._model.load_state_dict(self._model_state)
+            # should use this member function to reset model weights
+            self.load_model_state_dict(self._model_state)
             self._optimizer.load_state_dict(self._optimizer_state)
             if self._lr_scheduler is not None:
                 self._lr_scheduler.load_state_dict(self._scheduler_state)

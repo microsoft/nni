@@ -527,7 +527,7 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### maxTrialNumPerGpu
 
-可选。 整数。 默认值：99999。
+可选。 整数。 默认值： 1。
 
 用于指定 GPU 设备上的最大并发 Trial 的数量。
 
@@ -661,9 +661,9 @@ OpenPAI 帐户的密码。
 
 #### token
 
-如果使用 token 身份验证，则需要。 字符串。
+如果使用令牌（token）身份验证，则需要。 字符串。
 
-可以从 OpenPAI 门户检索的个人访问 token。
+可以从 OpenPAI 门户检索的个人访问令牌。
 
 #### host
 

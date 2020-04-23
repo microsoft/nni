@@ -6,7 +6,7 @@
 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 ## 运行 Experiment
-以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist-tfv1` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
@@ -22,14 +22,14 @@ trainingServicePlatform: paiYarn
 # 搜索空间文件
 searchSpacePath: search_space.json
 # 可选项: true, false
-useAnnotation: true
+useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
@@ -83,14 +83,14 @@ paiYarnConfig:
         portNumber: 1
     ```
 
-NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn Token，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
+NNI 支持 OpenPAIYarn 中的两种认证授权方法，即密码和 paiYarn 令牌（token)，[参考](https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.md#2-authentication)。 授权配置在 `paiYarnConfig` 字段中。 密码认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
   passWord: your_paiYarn_password
   host: 10.1.1.1
 ```
-Token 认证的 `paiYarnConfig` 配置如下：
+令牌认证的 `paiYarnConfig` 配置如下：
 ```
 paiYarnConfig:
   userName: your_paiYarn_nni_user
@@ -102,7 +102,7 @@ paiYarnConfig:
 ```
 nnictl create --config exp_paiYarn.yml
 ```
-来在 paiYarn 模式下启动 Experiment。 NNI 会为每个 Trial 创建 OpenPAIYarn 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAIYarn 集群的网站中看到 NNI 创建的作业，例如： ![](../../img/nni_paiYarn_joblist.jpg)
+来在 paiYarn 模式下启动 Experiment。 NNI 会为每个 Trial 创建 OpenPAIYarn 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAIYarn 集群的网站中看到 NNI 创建的作业，例如： ![](../../img/nni_pai_joblist.jpg)
 
 注意：paiYarn 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的 Trial 作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 

@@ -60,6 +60,10 @@ class PAIK8STrainingService extends PAITrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
+                break;
+
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);

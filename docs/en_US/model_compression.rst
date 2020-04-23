@@ -16,13 +16,9 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Overview <Compressor/Overview>
-    Level Pruner <Compressor/Pruner>
-    AGP Pruner <Compressor/Pruner>
-    L1Filter Pruner <Compressor/l1filterpruner>
-    Slim Pruner <Compressor/SlimPruner>
-    Lottery Ticket Pruner <Compressor/LotteryTicketHypothesis>
-    FPGM Pruner <Compressor/Pruner>
-    Naive Quantizer <Compressor/Quantizer>
-    QAT Quantizer <Compressor/Quantizer>
-    DoReFa Quantizer <Compressor/Quantizer>
+    Quick Start <Compressor/QuickStart>
+    Pruners <pruners>
+    Quantizers <quantizers>
+    Model Speedup <Compressor/ModelSpeedup>
     Automatic Model Compression <Compressor/AutoCompression>
+    Implementation <Compressor/Framework>

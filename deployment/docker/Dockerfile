@@ -51,8 +51,8 @@ RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 #
 # PyTorch
 #
-RUN python3 -m pip --no-cache-dir install torch==1.2.0
-RUN python3 -m pip install torchvision==0.4.0
+RUN python3 -m pip --no-cache-dir install torch==1.4.0
+RUN python3 -m pip install torchvision==0.5.0
 
 #
 # sklearn 0.20.0

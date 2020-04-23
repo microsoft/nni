@@ -32,7 +32,8 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn'),
+    'trainingServicePlatform': setChoice(
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -148,6 +149,18 @@ tuner_schema_dict = {
             Optional('gamma'): setType('gamma', float),
             Optional('lam'): setType('lam', float),
             Optional('cliprange'): setType('cliprange', float),
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    },
+    'PBTTuner': {
+        'builtinTunerName': 'PBTTuner',
+        'classArgs': {
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('all_checkpoint_dir'): setType('all_checkpoint_dir', str),
+            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
+            Optional('factors'): setType('factors', tuple),
+            Optional('fraction'): setType('fraction', float),
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
@@ -297,6 +310,27 @@ pai_config_schema = {
     })
 }
 
+dlts_trial_schema = {
+    'trial':{
+        'command': setType('command', str),
+        'codeDir': setPathCheck('codeDir'),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'image': setType('image', str),
+    }
+}
+
+dlts_config_schema = {
+    'dltsConfig': {
+        'dashboard': setType('dashboard', str),
+
+        Optional('cluster'): setType('cluster', str),
+        Optional('team'): setType('team', str),
+
+        Optional('email'): setType('email', str),
+        Optional('password'): setType('password', str),
+    }
+}
+
 kubeflow_trial_schema = {
     'trial':{
         'codeDir':  setPathCheck('codeDir'),
@@ -408,20 +442,22 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-    Optional('machineList'):[Or({
-        'ip': setType('ip', str),
-        Optional('port'): setNumberRange('port', int, 1, 65535),
-        'username': setType('username', str),
-        'passwd': setType('passwd', str),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-        Optional('useActiveGpu'): setType('useActiveGpu', bool)
-        }, {
+    Optional('machineList'):[Or(
+        {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
             'username': setType('username', str),
             'sshKeyPath': setPathCheck('sshKeyPath'),
             Optional('passphrase'): setType('passphrase', str),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+            Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+        },
+        {
+            'ip': setType('ip', str),
+            Optional('port'): setNumberRange('port', int, 1, 65535),
+            'username': setType('username', str),
+            'passwd': setType('passwd', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool)
@@ -435,6 +471,8 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
 PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
+
+DLTS_CONFIG_SCHEMA = Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 

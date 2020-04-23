@@ -1,20 +1,16 @@
 import * as React from 'react';
-import { Row, Col } from 'antd';
+import { Stack, IStackTokens } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
-import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
+import SuccessTable from './overview/SuccessTable';
 import Progressed from './overview/Progress';
 import Accuracy from './overview/Accuracy';
 import SearchSpace from './overview/SearchSpace';
 import BasicInfo from './overview/BasicInfo';
 import TrialInfo from './overview/TrialProfile';
-
-require('../static/style/overview.scss');
-require('../static/style/logPath.scss');
-require('../static/style/accuracy.css');
-require('../static/style/table.scss');
-require('../static/style/overviewTitle.scss');
+import '../static/style/overview.scss';
+import '../static/style/logPath.scss';
 
 interface OverviewProps {
     experimentUpdateBroadcast: number;
@@ -55,9 +51,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     render(): React.ReactNode {
         const { trialConcurrency } = this.state;
         const { experimentUpdateBroadcast, metricGraphMode } = this.props;
-
         const searchSpace = this.convertSearchSpace();
-
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
@@ -67,16 +61,20 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const titleMaxbgcolor = (metricGraphMode === 'max' ? '#999' : '#b3b3b3');
         const titleMinbgcolor = (metricGraphMode === 'min' ? '#999' : '#b3b3b3');
 
+        const stackTokens: IStackTokens = {
+            childrenGap: 30,
+        };
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Row>
+                <Stack>
                     <Title1 text="Experiment" icon="11.png" />
                     <BasicInfo experimentUpdateBroadcast={experimentUpdateBroadcast} />
-                </Row>
-                <Row className="overMessage">
-                    {/* status graph */}
-                    <Col span={9} className="prograph overviewBoder cc">
+                </Stack>
+
+                <Stack horizontal className="overMessage">
+                    {/* status block */}
+                    <Stack.Item grow className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             bestAccuracy={bestAccuracy}
@@ -84,17 +82,17 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             changeConcurrency={this.changeConcurrency}
                             experimentUpdateBroadcast={experimentUpdateBroadcast}
                         />
-                    </Col>
+                    </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Col span={7} className="overviewBoder cc">
+                    <Stack.Item grow styles={{root: {width: 450}}} className="overviewBoder">
                         <Title1 text="Search space" icon="10.png" />
-                        <Row className="experiment">
+                        <Stack className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
-                        </Row>
-                    </Col>
-                    <Col span={8} className="overviewBoder cc">
-                        <Title1 text="Profile" icon="4.png" />
-                        <Row className="experiment">
+                        </Stack>
+                    </Stack.Item>
+                    <Stack.Item grow styles={{root: {width: 450}}}>
+                        <Title1 text="Config" icon="4.png" />
+                        <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
                                 <TrialInfo
@@ -102,44 +100,38 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                                     concurrency={trialConcurrency}
                                 />
                             </div>
-                        </Row>
-                    </Col>
-                </Row>
-                <Row className="overGraph">
-                    <Row className="top10bg">
-                        <Col span={4} className="top10Title">
-                            <Title1 text="Top10  trials" icon="7.png" />
-                        </Col>
-                        <Col
-                            span={2}
+                        </Stack>
+                    </Stack.Item>
+                </Stack>
+
+                <Stack>
+                    <Stack horizontal className="top10bg">
+                        <div
                             className="title"
                             onClick={this.clickMaxTop}
                         >
-                            <Title1 text="Maximal" icon="max.png" bgcolor={titleMaxbgcolor} />
-                        </Col>
-                        <Col
-                            span={2}
+                            <Title1 text="Top10 Maximal trials" icon="max.png" bgcolor={titleMaxbgcolor} />
+                        </div>
+                        <div
                             className="title minTitle"
                             onClick={this.clickMinTop}
                         >
-                            <Title1 text="Minimal" icon="min.png" bgcolor={titleMinbgcolor} />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col span={8} className="overviewBoder">
-                            <Row className="accuracy">
-                                <Accuracy
-                                    accuracyData={accuracyGraphData}
-                                    accNodata={noDataMessage}
-                                    height={324}
-                                />
-                            </Row>
-                        </Col>
-                        <Col span={16} id="succeTable">
-                            <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)}/>
-                        </Col>
-                    </Row>
-                </Row>
+                            <Title1 text="Top10 Minimal trials" icon="min.png" bgcolor={titleMinbgcolor} />
+                        </div>
+                    </Stack>
+                    <Stack horizontal tokens={stackTokens}>
+                        <div style={{ width: '40%', position: 'relative'}}>
+                            <Accuracy
+                                accuracyData={accuracyGraphData}
+                                accNodata={noDataMessage}
+                                height={404}
+                            />
+                        </div>
+                        <div style={{ width: '60%'}}>
+                        <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                        </div>
+                    </Stack>
+                </Stack>
             </div>
         );
     }

@@ -16,64 +16,64 @@ logger = logging.getLogger(__name__)
 
 
 class EnasTrainer(Trainer):
+    """
+    ENAS trainer.
+
+    Parameters
+    ----------
+    model : nn.Module
+        PyTorch model to be trained.
+    loss : callable
+        Receives logits and ground truth label, return a loss tensor.
+    metrics : callable
+        Receives logits and ground truth label, return a dict of metrics.
+    reward_function : callable
+        Receives logits and ground truth label, return a tensor, which will be feeded to RL controller as reward.
+    optimizer : Optimizer
+        The optimizer used for optimizing the model.
+    num_epochs : int
+        Number of epochs planned for training.
+    dataset_train : Dataset
+        Dataset for training. Will be split for training weights and architecture weights.
+    dataset_valid : Dataset
+        Dataset for testing.
+    mutator : EnasMutator
+        Use when customizing your own mutator or a mutator with customized parameters.
+    batch_size : int
+        Batch size.
+    workers : int
+        Workers for data loading.
+    device : torch.device
+        ``torch.device("cpu")`` or ``torch.device("cuda")``.
+    log_frequency : int
+        Step count per logging.
+    callbacks : list of Callback
+        list of callbacks to trigger at events.
+    entropy_weight : float
+        Weight of sample entropy loss.
+    skip_weight : float
+        Weight of skip penalty loss.
+    baseline_decay : float
+        Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
+    child_steps : int
+        How many mini-batches for model training per epoch.
+    mutator_lr : float
+        Learning rate for RL controller.
+    mutator_steps_aggregate : int
+        Number of steps that will be aggregated into one mini-batch for RL controller.
+    mutator_steps : int
+        Number of mini-batches for each epoch of RL controller learning.
+    aux_weight : float
+        Weight of auxiliary head loss. ``aux_weight * aux_loss`` will be added to total loss.
+    test_arc_per_epoch : int
+        How many architectures are chosen for direct test after each epoch.
+    """
     def __init__(self, model, loss, metrics, reward_function,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  mutator=None, batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
                  entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999, child_steps=500,
                  mutator_lr=0.00035, mutator_steps_aggregate=20, mutator_steps=50, aux_weight=0.4,
                  test_arc_per_epoch=1):
-        """
-        Initialize an EnasTrainer.
-
-        Parameters
-        ----------
-        model : nn.Module
-            PyTorch model to be trained.
-        loss : callable
-            Receives logits and ground truth label, return a loss tensor.
-        metrics : callable
-            Receives logits and ground truth label, return a dict of metrics.
-        reward_function : callable
-            Receives logits and ground truth label, return a tensor, which will be feeded to RL controller as reward.
-        optimizer : Optimizer
-            The optimizer used for optimizing the model.
-        num_epochs : int
-            Number of epochs planned for training.
-        dataset_train : Dataset
-            Dataset for training. Will be split for training weights and architecture weights.
-        dataset_valid : Dataset
-            Dataset for testing.
-        mutator : EnasMutator
-            Use when customizing your own mutator or a mutator with customized parameters.
-        batch_size : int
-            Batch size.
-        workers : int
-            Workers for data loading.
-        device : torch.device
-            ``torch.device("cpu")`` or ``torch.device("cuda")``.
-        log_frequency : int
-            Step count per logging.
-        callbacks : list of Callback
-            list of callbacks to trigger at events.
-        entropy_weight : float
-            Weight of sample entropy loss.
-        skip_weight : float
-            Weight of skip penalty loss.
-        baseline_decay : float
-            Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
-        child_steps : int
-            How many mini-batches for model training per epoch.
-        mutator_lr : float
-            Learning rate for RL controller.
-        mutator_steps_aggregate : int
-            Number of steps that will be aggregated into one mini-batch for RL controller.
-        mutator_steps : int
-            Number of mini-batches for each epoch of RL controller learning.
-        aux_weight : float
-            Weight of auxiliary head loss. ``aux_weight * aux_loss`` will be added to total loss.
-        test_arc_per_epoch : int
-            How many architectures are chosen for direct test after each epoch.
-        """
         super().__init__(model, mutator if mutator is not None else EnasMutator(model),
                          loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
                          batch_size, workers, device, log_frequency, callbacks)
@@ -126,6 +126,7 @@ class EnasTrainer(Trainer):
 
             with torch.no_grad():
                 self.mutator.reset()
+            self._write_graph_status()
             logits = self.model(x)
 
             if isinstance(logits, tuple):
@@ -159,6 +160,7 @@ class EnasTrainer(Trainer):
                 self.mutator.reset()
                 with torch.no_grad():
                     logits = self.model(x)
+                self._write_graph_status()
                 metrics = self.metrics(logits, y)
                 reward = self.reward_function(logits, y)
                 if self.entropy_weight:

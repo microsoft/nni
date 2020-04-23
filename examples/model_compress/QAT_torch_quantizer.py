@@ -56,7 +56,7 @@ def test(model, device, test_loader):
 
 def main():
     torch.manual_seed(0)
-    device = torch.device('cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = torch.utils.data.DataLoader(
@@ -67,7 +67,6 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
-
     '''you can change this to DoReFaQuantizer to implement it
     DoReFaQuantizer(configure_list).compress(model)
     '''
@@ -80,14 +79,15 @@ def main():
     }, {
         'quant_types': ['output'],
         'quant_bits': 8,
-        'quant_start_step': 7000,
+        'quant_start_step': 1000,
         'op_types':['ReLU6']
     }]
-    quantizer = QAT_Quantizer(model, configure_list)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer)
     quantizer.compress()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    for epoch in range(10):
+    model.to(device)
+    for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
         train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)

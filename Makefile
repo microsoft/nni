@@ -45,6 +45,7 @@ NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
+NASUI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni/nasui
 
 ## Dependency information
 NNI_DEPENDENCY_FOLDER = /tmp/$(USER)
@@ -70,6 +71,8 @@ build:
 	cp -rf src/nni_manager/config src/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
+	#$(_INFO) Building NAS UI $(_END)
+	cd src/nasui && $(NNI_YARN) && $(NNI_YARN) build
 
 # All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
@@ -130,6 +133,8 @@ clean:
 	-rm -rf src/sdk/pynni/nni_sdk.egg-info
 	-rm -rf src/webui/build
 	-rm -rf src/webui/node_modules
+	-rm -rf src/nasui/build
+	-rm -rf src/nasui/node_modules
 
 # Main targets end
 
@@ -191,6 +196,11 @@ install-node-modules:
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
 	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
 	cp -r src/webui/build $(NNI_PKG_FOLDER)/static
+	# Install nasui
+	mkdir -p $(NASUI_PKG_FOLDER)
+	cp -rf src/nasui/build $(NASUI_PKG_FOLDER)
+	cp src/nasui/server.js $(NASUI_PKG_FOLDER)
+
 
 .PHONY: dev-install-node-modules
 dev-install-node-modules:
@@ -201,6 +211,8 @@ dev-install-node-modules:
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
 	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
 	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
+	ln -sf ${PWD}/src/nasui/build $(NASUI_PKG_FOLDER)/build
+	ln -sf ${PWD}/src/nasui/server.js $(NASUI_PKG_FOLDER)/server.js
 
 .PHONY: install-scripts
 install-scripts:

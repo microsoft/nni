@@ -1,0 +1,23 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 15m
+maxTrialNum: 2
+trialConcurrency: 2
+searchSpacePath: ./cifar10_search_space.json
+
+tuner:
+  builtinTunerName: Random
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ../../../examples/trials/cifar10_pytorch
+  command: python3 main.py --epochs 1 --batches 1
+  gpuNum: 1
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

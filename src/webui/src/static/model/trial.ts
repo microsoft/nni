@@ -1,11 +1,11 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
     private intermediates: (MetricDataRecord | undefined)[] = [ ];
-    private final: MetricDataRecord | undefined;
+    public final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
     constructor(info?: TrialJobInfo, metrics?: MetricDataRecord[]) {
@@ -53,10 +53,15 @@ class Trial implements TableObj {
         if (this.accuracy !== undefined) {
             return this.accuracy;
         } else if (this.intermediates.length > 0) {
-            // TODO: support intermeidate result is dict
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                return JSON.parse(temp.data);
+                if (isArrayType(parseMetrics(temp.data))) {
+                    return undefined;
+                } else if (typeof parseMetrics(temp.data) === 'object' && parseMetrics(temp.data).hasOwnProperty('default')) {
+                    return parseMetrics(temp.data).default;
+                } else if (typeof parseMetrics(temp.data) === 'number') {
+                    return parseMetrics(temp.data);
+                }
             } else {
                 return undefined;
             }
@@ -64,7 +69,6 @@ class Trial implements TableObj {
             return undefined;
         }
     }
-
     /* table obj start */
 
     get tableRecord(): TableRecord {
@@ -82,9 +86,11 @@ class Trial implements TableObj {
             duration,
             status: this.info.status,
             intermediateCount: this.intermediates.length,
-            accuracy: this.finalAcc,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
+            accDictionary: this.acc
         };
     }
 
@@ -138,10 +144,10 @@ class Trial implements TableObj {
 
         const mediate: number[] = [ ];
         for (const items of this.intermediateMetrics) {
-            if (typeof JSON.parse(items.data) === 'object') {
-                mediate.push(JSON.parse(items.data).default);
+            if (typeof parseMetrics(items.data) === 'object') {
+                mediate.push(parseMetrics(items.data).default);
             } else {
-                mediate.push(JSON.parse(items.data));
+                mediate.push(parseMetrics(items.data));
             }
         }
         ret.intermediate = mediate;
@@ -205,13 +211,21 @@ class Trial implements TableObj {
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
         if (this.accuracy !== undefined) {
-            return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            if (isNaN(this.accuracy)) {
+                return this.accuracy.toString();
+            } else {
+                return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            }
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const latest = this.intermediates[this.intermediates.length - 1]!;
-            return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            if (isNaN(metricAccuracy(latest))) {
+                return 'NaN';
+            } else {
+                return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            }
         }
     }
 }

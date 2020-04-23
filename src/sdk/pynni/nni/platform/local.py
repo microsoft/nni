@@ -6,10 +6,10 @@ import sys
 import json
 import time
 import subprocess
-import json_tricks
 
 from ..common import init_logger
 from ..env_vars import trial_env_vars
+from ..utils import to_json
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):
@@ -30,7 +30,7 @@ _multiphase = trial_env_vars.MULTI_PHASE
 _param_index = 0
 
 def request_next_parameter():
-    metric = json_tricks.dumps({
+    metric = to_json({
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
@@ -63,9 +63,8 @@ def get_next_parameter():
 
 def send_metric(string):
     if _nni_platform != 'local':
-        data = (string).encode('utf8')
-        assert len(data) < 1000000, 'Metric too long'
-        print('NNISDK_ME%s' % (data), flush=True)
+        assert len(string) < 1000000, 'Metric too long'
+        print("NNISDK_MEb'%s'" % (string), flush=True)
     else:
         data = (string + '\n').encode('utf8')
         assert len(data) < 1000000, 'Metric too long'

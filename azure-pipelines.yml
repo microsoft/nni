@@ -26,8 +26,8 @@ jobs:
       yarn eslint
     displayName: 'Run eslint'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install torch==1.2.0 --user
+      python3 -m pip install torchvision==0.4.0 --user
       python3 -m pip install tensorflow==1.13.1 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install gym onnx --user
@@ -52,24 +52,12 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python3 metrics_test.py
-    displayName: 'Trial job metrics test'
-  - script: |
-      cd test
-      python3 cli_test.py
-    displayName: 'nnicli test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
   - script: |
       cd docs/en_US/
       sphinx-build -M html . _build -W
@@ -77,7 +65,7 @@ jobs:
 
 - job: 'basic_test_pr_macOS'
   pool:
-    vmImage: 'macOS 10.13'
+    vmImage: 'macOS-10.15'
   strategy:
     matrix:
       Python36:
@@ -91,30 +79,22 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install torch==1.2.0 --user
+      python3 -m pip install torchvision==0.4.0 --user
       python3 -m pip install tensorflow==1.13.1 --user
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
       brew install swig@3
+      rm /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
       nnictl package install --name=SMAC
     displayName: 'Install dependencies'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python3 cli_test.py
-    displayName: 'nnicli test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
 
 - job: 'basic_test_pr_Windows'
   pool:
@@ -131,19 +111,15 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+      python -m pip install torch===1.2.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install torchvision --user
       python -m pip install tensorflow==1.13.1 --user
     displayName: 'Install dependencies'
   - script: |
       cd test
-      powershell.exe -file unittest.ps1
+      powershell.exe -file scripts/unittest.ps1
     displayName: 'unit test'
   - script: |
       cd test
-      python tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
-    displayName: 'nnicli test'
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'

@@ -1,3 +1,5 @@
+# Multi-phase
+
 ## What is multi-phase experiment
 
 Typically each trial job gets a single configuration (e.g., hyperparameters) from tuner, tries this configuration and reports result, then exits. But sometimes a trial job may wants to request multiple configurations from tuner. We find this is a very compelling feature. For example:

@@ -6,11 +6,14 @@
 - [GradientFeatureSelector](./GradientFeatureSelector.md)
 - [GBDTSelector](./GBDTSelector.md)
 
+这些 Selector 适用于结构化的数据（也就是不适用于图像，语音和文本数据）。
 
-# 如何使用
+另外，Selector 仅用于特征选择。 如果需要： 1) 在特征选择时，通过 NNI 生成高阶的组合特征； 2) 使用分布式资源； 可以尝试[本示例](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering)。
+
+## 如何使用
 
 ```python
-from nni.feature_engineering.gradient_selector import GradientFeatureSelector
+from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 # from nni.feature_engineering.gbdt_selector import GBDTSelector
 
 # 读取数据
@@ -18,7 +21,7 @@ from nni.feature_engineering.gradient_selector import GradientFeatureSelector
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # 初始化 Selector
-fgs = GradientFeatureSelector(...)
+fgs = FeatureGradientSelector(...)
 # 拟合数据
 fgs.fit(X_train, y_train)
 # 获取重要的特征
@@ -30,7 +33,7 @@ print(fgs.get_selected_features(...))
 
 使用内置 Selector 时，需要 `import` 对应的特征选择器，并 `initialize`。 可在 Selector 中调用 `fit` 函数来传入数据。 之后，可通过 `get_seleteced_features` 来获得重要的特征。 不同 Selector 的函数参数可能不同，在使用前需要先检查文档。
 
-# 如何定制
+## 如何定制？
 
 NNI 内置了_最先进的_特征工程算法的 Selector。 NNI 也支持定制自己的特征 Selector。
 
@@ -141,7 +144,7 @@ from sklearn.feature_selection.base import SelectorMixin
 
 from nni.feature_engineering.feature_selector import FeatureSelector
 
-class CustomizedSelector(FeatureSelector, BaseEstimator):
+class CustomizedSelector(FeatureSelector, BaseEstimator, SelectorMixin):
     def __init__(self, ...):
         ...
 
@@ -154,9 +157,9 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         if not key.endswith('_')}
         return params
 
-        def set_params(self, **params):
+    def set_params(self, **params):
         """
-        设置参数
+        为此 estimator 设置参数
         """
         for param in params:
         if hasattr(self, param):
@@ -238,7 +241,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 ```
 
-# 基准测试
+## 基准测试
 
 `Baseline` 表示没有进行特征选择，直接将数据传入 LogisticRegression。 此基准测试中，仅用了 10% 的训练数据作为测试数据。 对于 GradientFeatureSelector，仅使用了前 20 个特征。 下列指标是在给定测试数据和标签上的平均精度。
 
@@ -255,7 +258,7 @@ print("Pipeline Score: ", pipeline.score(X_train, y_train))
 
 代码参考 `/examples/feature_engineering/gradient_feature_selector/benchmark_test.py`。
 
-## **参考和反馈**
+## 参考和反馈
 * 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
 * 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
 * 了解 NNI 中[神经网络结构搜索的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；

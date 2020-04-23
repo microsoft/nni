@@ -71,6 +71,7 @@ if __name__ == '__main__':
     pruner = LotteryTicketPruner(model, configure_list, optimizer)
     pruner.compress()
 
+
     for i in pruner.get_prune_iterations():
         pruner.prune_iteration_start()
         loss = 0

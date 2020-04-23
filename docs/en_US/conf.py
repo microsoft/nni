@@ -28,7 +28,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.3'
+release = 'v1.5'
 
 # -- General configuration ---------------------------------------------------
 
@@ -46,6 +46,9 @@ extensions = [
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
 ]
+
+# Add mock modules
+autodoc_mock_imports = ['apex']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

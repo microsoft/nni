@@ -1,5 +1,87 @@
 # ChangeLog
 
+## Release 1.5 - 4/13/2020
+
+### New Features and Documentation
+
+#### Hyper-Parameter Optimizing
+
+* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* Trials can now report infinity and NaN as result
+
+#### Neural Architecture Search
+
+* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
+* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+
+#### Model Compression
+
+* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* Compressors will validate configuration by default
+* Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
+* Model compression examples are refactored and improved
+* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+
+#### Training Service
+
+* Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
+* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
+
+#### Overall Documentation Improvement
+
+* Documentation is significantly improved on grammar, spelling, and wording (thanks external contributor @AHartNtkn)
+
+### Fixed Bugs
+
+* ENAS cannot have more than one LSTM layers (thanks external contributor @marsggbo)
+* NNI manager's timers will never unsubscribe (thanks external contributor @guilhermehn)
+* NNI manager may exhaust head memory (thanks external contributor @Sundrops)
+* Batch tuner does not support customized trials (#2075)
+* Experiment cannot be killed if it failed on start (#2080)
+* Non-number type metrics break web UI (#2278)
+* A bug in lottery ticket pruner
+* Other minor glitches
+
+## Release 1.4 - 2/19/2020
+
+### Major Features
+
+#### Neural Architecture Search
+* Support [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md) algorithm and add [the example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts) using it
+* Support a preliminary version of [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md) and the corresponding [example](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* Add unit tests for the NAS framework
+
+#### Model Compression
+* Support DataParallel for compressing models, and provide [an example](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py) of using DataParallel
+* Support [model speedup](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md) for compressed models, in Alpha version
+
+#### Training Service
+* Support complete PAI configurations by allowing users to specify PAI config file path
+* Add example config yaml files for the new PAI mode (i.e., paiK8S)
+* Support deleting experiments using sshkey in remote mode (thanks external contributor @tyusr)
+
+#### WebUI
+* WebUI refactor: adopt fabric framework
+
+#### Others
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
+* Support canceling the trials in UNKNOWN state
+* Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
+
+### Documentation
+* Improve [the index structure](https://nni.readthedocs.io/en/latest/) of NNI readthedocs
+* Improve [documentation for NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.md)
+* Improve documentation for [the new PAI mode](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.md)
+* Add QuickStart guidance for [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md) and [model compression](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md)
+* Improve documentation for [the supported EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md)
+
+### Bug Fixes
+* Correctly support NaN in metric data, JSON compliant
+* Fix the out-of-range bug of `randint` type in search space
+* Fix the bug of wrong tensor device when exporting onnx model in model compression
+* Fix incorrect handling of nnimanagerIP in the new PAI mode (i.e., paiK8S)
+
+
 ## Release 1.3 - 12/30/2019
 
 ### Major Features
@@ -213,7 +295,7 @@
 
 ### Major Features
 
-* [Support NNI on Windows](Tutorial/NniOnWindows.md)
+* [Support NNI on Windows](Tutorial/InstallationWin.md)
   * NNI running on windows for local mode
 * [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband

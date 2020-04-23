@@ -3,6 +3,8 @@
 
 import logging
 import torch
+from schema import And, Optional
+from .utils import CompressorSchema
 from .compressor import Pruner
 
 __all__ = ['ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
@@ -16,7 +18,7 @@ class ActivationRankFilterPruner(Pruner):
     to achieve a preset level of network sparsity.
     """
 
-    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -25,17 +27,19 @@ class ActivationRankFilterPruner(Pruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
             Num of batches for activation statistics
         """
 
-        super().__init__(model, config_list)
-        self.mask_calculated_ops = set()
+        super().__init__(model, config_list, optimizer)
+        self.set_wrappers_attribute("if_calculated", False)
         self.statistics_batch_num = statistics_batch_num
-        self.collected_activation = {}
-        self.hooks = {}
+        self.hook_id = self._add_activation_collector()
+
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
             self.activation = torch.nn.functional.relu
@@ -44,68 +48,87 @@ class ActivationRankFilterPruner(Pruner):
         else:
             self.activation = None
 
-    def compress(self):
-        """
-        Compress the model, register a hook for collecting activations.
-        """
-        modules_to_compress = self.detect_modules_to_compress()
-        for layer, config in modules_to_compress:
-            self._instrument_layer(layer, config)
-            self.collected_activation[layer.name] = []
+    def _add_activation_collector(self):
+        def collector(collected_activation):
+            def hook(module_, input_, output):
+                collected_activation.append(self.activation(output.detach().cpu()))
+            return hook
+        self.collected_activation = {}
+        self._fwd_hook_id += 1
+        self._fwd_hook_handles[self._fwd_hook_id] = []
 
-            def _hook(module_, input_, output, name=layer.name):
-                if len(self.collected_activation[name]) < self.statistics_batch_num:
-                    self.collected_activation[name].append(self.activation(output.detach().cpu()))
+        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+            self.collected_activation[wrapper_idx] = []
+            handle = wrapper.register_forward_hook(collector(self.collected_activation[wrapper_idx]))
+            self._fwd_hook_handles[self._fwd_hook_id].append(handle)
+        return self._fwd_hook_id
 
-            layer.module.register_forward_hook(_hook)
-        return self.bound_model
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+       """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
 
     def get_mask(self, base_mask, activations, num_prune):
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def calc_mask(self, layer, config):
+    def calc_mask(self, wrapper, wrapper_idx, **kwargs):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion which is calculated from the activation are masked.
 
         Parameters
         ----------
-        layer : LayerInfo
+        wrapper : Module
             the layer to instrument the compression operation
-        config : dict
-            layer's pruning config
 
         Returns
         -------
         dict
             dictionary for storing masks
         """
-
-        weight = layer.module.weight.data
-        op_name = layer.name
-        op_type = layer.type
+        weight = wrapper.module.weight.data
+        op_type = wrapper.type
+        config = wrapper.config
         assert 0 <= config.get('sparsity') < 1, "sparsity must in the range [0, 1)"
         assert op_type in ['Conv2d'], "only support Conv2d"
         assert op_type in config.get('op_types')
-        if op_name in self.mask_calculated_ops:
-            assert op_name in self.mask_dict
-            return self.mask_dict.get(op_name)
+
+        if wrapper.if_calculated:
+            return None
+
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
-        if hasattr(layer.module, 'bias') and layer.module.bias is not None:
-            mask_bias = torch.ones(layer.module.bias.size()).type_as(layer.module.bias).detach()
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = torch.ones(wrapper.module.bias.size()).type_as(wrapper.module.bias).detach()
         else:
             mask_bias = None
-        mask = {'weight': mask_weight, 'bias': mask_bias}
+        mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
         try:
             filters = weight.size(0)
             num_prune = int(filters * config.get('sparsity'))
-            if filters < 2 or num_prune < 1 or len(self.collected_activation[layer.name]) < self.statistics_batch_num:
+            acts = self.collected_activation[wrapper_idx]
+            if filters < 2 or num_prune < 1 or len(acts) < self.statistics_batch_num:
                 return mask
-            mask = self.get_mask(mask, self.collected_activation[layer.name], num_prune)
+            mask = self.get_mask(mask, acts, num_prune)
         finally:
-            if len(self.collected_activation[layer.name]) == self.statistics_batch_num:
-                self.mask_dict.update({op_name: mask})
-                self.mask_calculated_ops.add(op_name)
+            if len(acts) >= self.statistics_batch_num:
+                wrapper.if_calculated = True
+                if self.hook_id in self._fwd_hook_handles:
+                    self.remove_activation_collector(self.hook_id)
+
         return mask
 
 
@@ -118,7 +141,7 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
     https://arxiv.org/abs/1607.03250
     """
 
-    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -127,17 +150,19 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
             Num of batches for activation statistics
         """
-        super().__init__(model, config_list, activation, statistics_batch_num)
+        super().__init__(model, config_list, optimizer, activation, statistics_batch_num)
 
     def get_mask(self, base_mask, activations, num_prune):
         """
         Calculate the mask of given layer.
-        Filters with the smallest APoZ(average percentage of zeros) of output activations are masked.
+        Filters with the largest APoZ(average percentage of zeros) of output activations are masked.
 
         Parameters
         ----------
@@ -156,9 +181,9 @@ class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
         apoz = self._calc_apoz(activations)
         prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
         for idx in prune_indices:
-            base_mask['weight'][idx] = 0.
-            if base_mask['bias'] is not None:
-                base_mask['bias'][idx] = 0.
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
         return base_mask
 
     def _calc_apoz(self, activations):
@@ -190,7 +215,7 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
     https://arxiv.org/abs/1611.06440
     """
 
-    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         """
         Parameters
         ----------
@@ -199,12 +224,14 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         activation : str
             Activation function
         statistics_batch_num : int
             Num of batches for activation statistics
         """
-        super().__init__(model, config_list, activation, statistics_batch_num)
+        super().__init__(model, config_list, optimizer, activation, statistics_batch_num)
 
     def get_mask(self, base_mask, activations, num_prune):
         """
@@ -228,9 +255,9 @@ class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
         mean_activation = self._cal_mean_activation(activations)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:
-            base_mask['weight'][idx] = 0.
-            if base_mask['bias'] is not None:
-                base_mask['bias'][idx] = 0.
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
         return base_mask
 
     def _cal_mean_activation(self, activations):

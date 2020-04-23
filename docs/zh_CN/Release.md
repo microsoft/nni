@@ -1,5 +1,132 @@
 # 更改日志
 
+## 发布 1.5 - 4/13/2020
+
+### 新功能和文档
+
+#### 超参优化
+
+* 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/PBTTuner.md)
+* Trial 现在可以返回无穷大和 NaN 结果
+
+#### 神经网络架构搜索
+
+* 新 NAS 算法：[TextNAS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/TextNAS.md)
+* ENAS 和 DARTS 现在可通过网页[可视化](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Visualization.md)。
+
+#### 模型压缩
+
+* 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#gradientrankfilterpruner)
+* 默认情况下，Compressor 会验证配置
+* 重构：可将优化器作为 Pruner 的输入参数，从而更容易支持 DataParallel 和其它迭代剪枝方法。 这是迭代剪枝算法用法上的重大改动。
+* 重构了模型压缩示例
+* 添加了[实现模型压缩算法](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Framework.md)的文档
+
+#### 训练平台
+
+* Kubeflow 现已支持 pytorchjob crd v1 (感谢贡献者 @jiapinai)
+* 实验性的支持 [DLTS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/DLTSMode.md)
+
+#### 文档的整体改进
+
+* 语法、拼写以及措辞上的修改 (感谢贡献者 @AHartNtkn)
+
+### 修复的 Bug
+
+* ENAS 不能使用多个 LSTM 层 (感谢贡献者 @marsggbo)
+* NNI 管理器的计时器无法取消订阅 (感谢贡献者 @guilhermehn)
+* NNI 管理器可能会耗尽内存 (感谢贡献者 @Sundrops)
+* 批处理 Tuner 不支持自定义 Trial （#2075）
+* Experiment 启动失败后，无法终止 (#2080)
+* 非数字的指标会破坏网页界面 (#2278)
+* lottery ticket Pruner 中的 Bug
+* 其它小问题
+
+## 发布 1.4 - 2/19/2020
+
+### 主要功能
+
+#### 神经网络架构搜索
+
+* 支持 [C-DARTS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/CDARTS.md) 算法，并增加对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts)。
+* 初步支持 [ProxylessNAS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/Proxylessnas.md) 以及对应[示例](https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas)
+* 为 NAS 框架增加单元测试
+
+#### 模型压缩
+
+* 为压缩模型增加 DataParallel，并提供相应的 [示例](https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py)
+* 支持压缩模型的[加速](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/ModelSpeedup.md)（试用版）
+
+#### 训练平台
+
+* 通过允许指定 OpenPAI 配置文件路径，来支持完整的 OpenPAI 配置
+* 为新的 OpenPAI 模式（又称，paiK8S）增加示例配置 YAML 文件
+* 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
+
+#### Web 界面
+
+* Web 界面重构：采用 fabric 框架
+
+#### 其它
+
+* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* 支持取消 UNKNOWN 状态的 Trial。
+* 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
+
+### 文档
+
+* 改进 NNI readthedocs 的[目录索引结构](https://nni.readthedocs.io/zh/latest/)
+* 改进 [NAS 文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/NasGuide.md)
+* 改进[新的 OpenPAI 模式的文档](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrainingService/PaiMode.md)
+* 为 [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/QuickStart.md) 和[模型压缩](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/QuickStart.md)增加入门指南
+* 改进支持 [EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrialExample/EfficientNet.md) 的文档
+
+### 修复的 Bug
+
+* 修复在指标数据和 JSON 格式中对 NaN 的支持
+* 修复搜索空间 `randint` 类型的 out-of-range Bug
+* 修复模型压缩中导出 ONNX 模型时的错误张量设备的 Bug
+* 修复新 OpenPAI 模式（又称，paiK8S）下，错误处理 nnimanagerIP 的 Bug
+
+## 发布 1.3 - 12/30/2019
+
+### 主要功能
+
+#### 支持神经网络架构搜索算法
+
+* [单路径一次性](https://github.com/microsoft/nni/tree/v1.3/examples/nas/spos/)算法和示例
+
+#### 模型压缩算法支持
+
+* [知识蒸馏](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/TrialExample/KDExample.md)算法和使用示例
+* Pruners 
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer)
+
+#### 训练平台
+
+* OpenPAI 的 NFS 支持
+    
+    从 OpenPAI v0.11开始，HDFS 不再用作默认存储，可将 NFS、AzureBlob 或其他存储用作默认存储。 在本次版本中，NNI 扩展了对 OpenPAI 最近改动的支持，可与 OpenPAI v0.11 及后续版本的默认存储集成。
+
+* Kubeflow 更新适配
+    
+    适配 Kubeflow 0.7 对 tf-operator 的新支持。
+
+### 工程（代码和生成自动化）
+
+* 启用 [ESLint](https://eslint.org/) 静态代码分析。
+
+### 小改动和 Bug 修复
+
+* 正确识别内置 Tuner 和定制 Tuner
+* Dispatcher 基类的日志
+* 修复有时 Tuner、Assessor 的失败会终止 Experiment 的 Bug。
+* 修复本机作为远程计算机的[问题](https://github.com/microsoft/nni/issues/1852)
+* SMAC Tuner 中 Trial 配置的去重 [ticket](https://github.com/microsoft/nni/issues/1364)
+
 ## 发布 1.2 - 12/02/2019
 
 ### 主要功能
@@ -62,26 +189,28 @@
 ### 主要功能
 
 * Tuners 和 Assessors
-  
-    - 支持自动特征生成和选择 -Issue#877 -PR #1387 + 提供自动特征接口 + 基于 Beam 搜索的 Tuner + [添加 Pakdd 示例](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
-    - 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
-    - 为 hyperband 支持多阶段 -PR #1257
-- 训练平台
-  
-    -      支持私有 Docker Registry -PR #755
-        
     
-    * 改进
-    * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
-    * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
-    * 优化 NAS 搜索空间 -PR #1393 
+    - 支持自动特征生成和选择 -Issue#877 -PR #1387 
+        + 提供自动特征接口
+        + 基于 Beam 搜索的 Tuner
+        + [增加 Pakdd 示例](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
+    + 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
+    + 为 hyperband 支持多阶段 -PR #1257
++ 训练平台
+    
+    - 支持私有 Docker Registry -PR #755
+        
+        * 改进
+        * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
+        * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
+        * 优化 NAS 搜索空间 -PR #1393 
          + 使用 _type 统一 NAS 搜索空间 -- "mutable_type"e
          + 更新随机搜索 Tuner
-    + 将 gpuNum 设为可选 -Issue #1365
-    + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
-    + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
+        + 将 gpuNum 设为可选 -Issue #1365
+        + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
+        + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
 + Web 门户和用户体验
-  
+    
     - 在 Web 界面的搜索过程中显示最好指标的曲线 -Issue #1218
     - 在多阶段 Experiment 中，显示参数列表的当前值 -Issue1210 -PR #1348
     - 在 AddColumn 中增加 "Intermediate count" 选项。 -Issue #1210
@@ -90,10 +219,11 @@
     - 在命令行中为 nnictl 命令增加详细文档的连接 -Issue #1260
     - 用户体验改进：显示 Error 日志 -Issue #1173
 - 文档
-  
+    
     - 更新文档结构 -Issue #1231
-    - [多阶段文档的改进](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 + 增加配置示例
-    - [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
+    - [多阶段文档的改进](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 
+        + 添加配置示例
+    + [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
 
 ### 修复的 Bug
 
@@ -121,15 +251,17 @@
 * [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
 * 支持多阶段 Experiment
-  
+    
     * 为多阶段 Experiment 增加新的训练平台：pai 模式从 v0.9 开始支持多阶段 Experiment。
-    * 为以下内置 Tuner 增加多阶段的功能： 
-      * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
-  
-    有关详细信息，参考[实现多阶段的 Tuner](AdvancedFeature/MultiPhase.md)。
+    *     为以下内置 Tuner 增加多阶段的功能： 
+            
+        
+        * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
+        
+        有关详细信息，参考[实现多阶段的 Tuner](AdvancedFeature/MultiPhase.md)。
 
 * Web 界面
-  
+    
     * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
     * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](Tutorial/WebUI.md)
     * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
@@ -158,7 +290,7 @@
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * 支持 Kubeflow v1beta2 操作符 
   * 支持 Kubeflow TFJob/PyTorchJob v1beta2
-* [通用 NAS 编程接口](AdvancedFeature/GeneralNasInterfaces.md) 
+* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/zh_CN/GeneralNasInterfaces.md) 
   * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
   * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
   * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
@@ -185,7 +317,7 @@
 
 ### 主要功能
 
-* [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
+* [支持在 Windows 上使用 NNI](Tutorial/InstallationWin.md) 
   * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
   * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
@@ -202,7 +334,7 @@
 * 为 nnictl 提供更友好的错误消息 
   * 为 YAML 文件格式错误提供更有意义的错误信息
 
-### Bug 修复
+### 修复的 Bug
 
 * 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
 * nnictl --version 不能在 make dev-install 下使用
@@ -215,13 +347,13 @@
 * [版本检查](TrainingService/PaiMode.md) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
-  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
 * [分离 Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
   * 增加两个管道来分离 Tuner 和 Assessor 的消息
 * 使日志集合功能可配置
 * 为所有 Trial 增加中间结果的视图
 
-### Bug 修复
+### 修复的 Bug
 
 * [为 OpenPAI 增加 shmMB 配置](https://github.com/microsoft/nni/issues/842)
 * 修复在指标为 dict 时，无法显示任何结果的 Bug。
@@ -277,7 +409,7 @@
 * 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](Assessor/CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
-* 进一步支持 [Weight Sharing（权重共享）](AdvancedFeature/AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
+* [权重共享的](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md)高级支持：为 NAS Tuner 提供权重共享，当前支持 NFS。
 
 #### 改进训练平台
 
@@ -361,12 +493,12 @@
 ### NNICTL 的新功能和更新
 
 * 支持同时运行多个 Experiment。
-  
+    
     在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
-  
-  ```bash
-  nnictl create --port 8081 --config <config file path>
-  ```
+    
+    ```bash
+    nnictl create --port 8081 --config <config file path>
+    ```
 
 * 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Tutorial/Nnictl.md) 查看完整帮助。
 
@@ -375,15 +507,15 @@
 * <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的示例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新示例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
 * 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
-  
-  ```bash
-  git clone -b v0.3 https://github.com/microsoft/nni.git
-  ```
+    
+    ```bash
+    git clone -b v0.3 https://github.com/microsoft/nni.git
+    ```
 
 * **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
-  
+    
     可用类型：
-  
+    
   * int
   * float
   * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
@@ -394,11 +526,11 @@
 
 ### 新示例
 
-* 公共的 NNI Docker 映像：
-  
-  ```bash
-  docker pull msranni/nni:latest
-  ```
+* 公开的 NNI Docker 映像：
+    
+    ```bash
+    docker pull msranni/nni:latest
+    ```
 
 * 新的 Trial 示例：[NNI Sklearn 示例](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
 
