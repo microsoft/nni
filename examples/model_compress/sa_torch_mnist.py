@@ -67,7 +67,8 @@ if __name__ == '__main__':
                         help='Learning rate step gamma (default: 0.7)')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='how many batches to wait before logging training status')
-
+    parser.add_argument('--experiment-data-dir', type=str,
+                        default='examples/model_compress/experiment_data/', help='For saving experiment data')
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
     args = parser.parse_args()
@@ -106,21 +107,21 @@ if __name__ == '__main__':
     # TODO: single item list here
     configure_list = [{
         'sparsity': 0.3,
-        'op_types': ['default'] # module types to prune
+        'op_types': ['default']  # module types to prune
     }]
 
     def evaluator(model):
         return test(model=model, device=device, test_loader=test_loader)
 
     pruner = SimulatedAnnealingPruner(
-        model, configure_list, evaluator=evaluator)
+        model, configure_list, evaluator=evaluator, experiment_data_dir=args.experiment_data_dir)
     pruner.compress()
 
     # TODO: possilbe to test it without exporting & saving the model ?
-    pruner.export_model('model.pth', 'mask.pth')
+    pruner.export_model('{}model.pth'.format(
+        args.experiment_data_dir), '{}mask.pth'.format(args.experiment_data_dir))
     model_pruned = LeNet().to(device)
-    model_pruned.load_state_dict(torch.load('model.pth'))
+    model_pruned.load_state_dict(torch.load(
+        '{}model.pth'.format(args.experiment_data_dir)))
     evaluation_result = evaluator(model_pruned)
     print('Evaluation result : %s' % evaluation_result)
-
-    # TODO: mobilenet/imagenet or RetinaFace
