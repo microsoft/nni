@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os.path as osp
+import subprocess
 import json
 import requests
 import nnicli as nc
@@ -12,6 +13,13 @@ class ITValidator:
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         pass
 
+class ExportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        proc1 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "csv", "-f", "report.csv"])
+        assert proc1.returncode == 0, '`nnictl experiment export -t csv` failed with code %d' % proc1.returncode
+        proc2 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "json", "-f", "report.json"])
+        assert proc2.returncode == 0, '`nnictl experiment export -t json` failed with code %d' % proc2.returncode
 
 class MetricsValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
