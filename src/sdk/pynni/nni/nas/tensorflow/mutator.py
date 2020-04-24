@@ -32,27 +32,24 @@ class Mutator(BaseMutator):
     # TODO: graph
 
     def on_forward_layer_choice(self, mutable, *inputs):
-        def _map_fn(op, *inputs):
-            return op(*inputs)
-
         mask = self._get_decision(mutable)
         assert len(mask) == len(mutable.choices), \
                 'Invalid mask, expected {} to be of length {}.'.format(mask, len(mutable.choices))
-        out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
+        out = self._select_with_mask(lambda choice: choice(*inputs), mutable.choices, mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list):
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \
                 'Invalid mask, expected {} to be of length {}.'.format(mask, mutable.n_candidates)
-        out = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
+        out = self._select_with_mask(lambda tensor: tensor, tensor_list, mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def _select_with_mask(self, map_fn, candidates, mask):
         if mask.dtype.is_bool:
-            out = [map_fn(*cand) for cand, m in zip(candidates, mask) if m]
+            out = [map_fn(cand) for cand, m in zip(candidates, mask) if m]
         elif mask.dtype.is_floating:
-            out = [map_fn(*cand) * m for cand, m in zip(candidates, mask) if m]
+            out = [map_fn(cand) * m for cand, m in zip(candidates, mask) if m]
         else:
             raise ValueError('Unrecognized mask, dtype is {}'.format(mask.dtype.name))
         return out
@@ -69,7 +66,7 @@ class Mutator(BaseMutator):
         if reduction_type == 'mean':
             return sum(tensor_list) / len(tensor_list)
         if reduction_type == 'concat':
-            return tf.concat(tensor_list, axis=1)
+            return tf.concat(tensor_list, axis=0)
         raise ValueError('Unrecognized reduction policy: "{}'.format(reduction_type))
 
     def _get_decision(self, mutable):

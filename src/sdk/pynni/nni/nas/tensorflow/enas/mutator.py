@@ -3,7 +3,7 @@
 
 import tensorflow as tf
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, Embedding, LSTMCell
+from tensorflow.keras.layers import Dense, Embedding, LSTMCell, RNN
 from tensorflow.keras.losses import SparseCategoricalCrossentropy, Reduction
 
 from nni.nas.tensorflow.mutator import Mutator
@@ -11,20 +11,19 @@ from nni.nas.tensorflow.mutables import LayerChoice, InputChoice, MutableScope
 
 
 class StackedLSTMCell(Model):
-    def __init__(self, layers, size, bias):
+    def __init__(self, layers, size):
         super().__init__()
-        self.lstm_num_layers = layers
-        self.lstm_modules = [LSTMCell(units=size, use_bias=bias) for _ in range(layers)]
+        self.lstm_layer_num = layers
+        self._size = size
+        self.lstm_modules = [LSTMCell(units=size, use_bias=False) for _ in range(layers)]
 
-    def call(self, inputs, hidden):
-        prev_c, prev_h = hidden
-        next_c, next_h = [], []
+    def reset_states(self):
+        self._states = [(tf.zeros((1, self._size)), tf.zeros((1, self._size))) for _ in range(self.lstm_layer_num)]
+
+    def call(self, x):
         for i, m in enumerate(self.lstm_modules):
-            curr_c, curr_h = m(inputs, (prev_c[i], prev_h[i]))
-            next_c.append(curr_c)
-            next_h.append(curr_h)
-            inputs = curr_h[-1]
-        return next_c, next_h
+            x, self._states[i] = m(x, self._states[i])
+        return x
 
 
 class EnasMutator(Mutator):
@@ -47,8 +46,7 @@ class EnasMutator(Mutator):
         self.cell_exit_extra_step = cell_exit_extra_step
         self.skip_target = skip_target
         self.branch_bias = branch_bias
-
-        self.lstm = StackedLSTMCell(self.lstm_num_layers, self.lstm_size, False)
+        self.lstm = StackedLSTMCell(lstm_num_layers, lstm_size)
         self.attn_anchor = Dense(self.lstm_size, use_bias=False)
         self.attn_query = Dense(self.lstm_size, use_bias=False)
         self.v_attn = Dense(1, use_bias=False)
@@ -94,56 +92,45 @@ class EnasMutator(Mutator):
             self._choices[mutable.key] = self._sample_input_choice(mutable)
         for child in tree.children:
             self._sample(child)
-        if isinstance(mutable, MutableScope) and mutable.key not in self._anchors_hid:
-            if self.cell_exit_extra_step:
-                self._lstm_next_step()
-            self._mark_anchor(mutable.key)
+        if self.cell_exit_extra_step and isinstance(mutable, MutableScope) and mutable.key not in self._anchors_hid:
+            self._anchors_hid[mutable.key] = self.lstm(self._inputs)
 
     def _initialize(self):
         self._choices = {}
         self._anchors_hid = {}
         self._inputs = tf.Variable(self.g_emb)
-        self._c = [tf.zeros((1, self.lstm_size), dtype=self._inputs.dtype) for _ in range(self.lstm_num_layers)]
+        #self.lstm.build(input_shape=(1, lstm_size))
+        self.lstm.reset_states()
         self._h = [tf.zeros((1, self.lstm_size), dtype=self._inputs.dtype) for _ in range(self.lstm_num_layers)]
         self.sample_log_prob = 0
         self.sample_entropy = 0
         self.sample_skip_penalty = 0
 
-    def _lstm_next_step(self):
-        self._c, self._h = self.lstm(self._inputs, (self._c, self._h))
-
-    def _mark_anchor(self, key):
-        self._anchors_hid[key] = self._h[1]
-
     def _sample_layer_choice(self, mutable):
-        self._lstm_next_step()
-        logit = self.soft(self._h[-1])
+        logit = self.soft(self.lstm(self._inputs))
         if self.temperature is not None:
             logit /= self.temperature
         if self.tanh_constant is not None:
             logit = self.tanh_constant * tf.tanh(logit)
         if mutable.key in self.bias_dict:
             logit += self.bias_dict[mutable.key]
-        branch_id = tf.random.categorical(tf.nn.softmax(logit, axis=-1), 1)
-        branch_id = tf.reshape(branch_id, [-1])
+        branch_id = tf.reshape(tf.random.categorical(tf.nn.softmax(logit, axis=-1), 1), [-1])
         log_prob = self.cross_entropy_loss(branch_id, logit)
         self.sample_log_prob += self.entropy_reduction(log_prob)
-        entropy = log_prob * tf.exp(-log_prob)
+        entropy = log_prob * tf.math.exp(-log_prob)
         self.sample_entropy += self.entropy_reduction(entropy)
         self._inputs = self.embedding(branch_id)
-        ret = tf.cast(tf.one_hot(branch_id, self.max_layer_choice), tf.bool)
-        return tf.reshape(ret, [-1])
+        return tf.reshape(tf.cast(tf.one_hot(branch_id, self.max_layer_choice), tf.bool), -1)
 
     def _sample_input_choice(self, mutable):
         query, anchors = [], []
         for label in mutable.choose_from:
             if label not in self._anchors_hid:
-                self._lstm_next_step()
-                self._mark_anchor(label)
+                self._anchors_hid[label] = self.lstm(self._inputs)
             query.append(self.attn_anchor(self._anchors_hid[label]))
             anchors.append(self._anchors_hid[label])
         query = tf.concat(query, 0)
-        query = tf.tanh(query + self.attn_query(self._h[-1]))
+        query = tf.tanh(query + self.attn_query(anchors[-1]))
         query = self.v_attn(query)
         if self.temperature is not None:
             query /= self.temperature
@@ -158,7 +145,9 @@ class EnasMutator(Mutator):
             kl = tf.reduce_sum(skip_prob * tf.math.log(skip_prob / self.skip_targets))
             self.sample_skip_penalty += kl
             log_prob = self.cross_entropy_loss(skip, logit)
-            self._inputs = (tf.linalg.matmul(skip.float(), tf.concat(anchors, 0)) / (1. + tf.reduce_sum(skip))).unsqueeze(0)
+
+            skip = tf.cast(skip, tf.float32)
+            self._inputs = tf.expand_dims(tf.tensordot(skip, tf.concat(anchors, 0), 1) / (1. + tf.reduce_sum(skip)), 0)
         else:
             assert mutable.n_chosen == 1, "Input choice must select exactly one or any in ENAS."
             logit = tf.reshape(query, [1, -1])

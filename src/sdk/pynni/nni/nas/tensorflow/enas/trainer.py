@@ -18,10 +18,11 @@ log_frequency = 10
 entropy_weight = 0.0001
 skip_weight = 0.8
 baseline_decay = 0.999
-child_steps = 500
+child_steps = 5
 mutator_lr = 0.00035
-mutator_steps_aggregate = 20
-mutator_steps = 50
+mutator_steps_aggregate = 2
+mutator_steps = 5
+aux_weight = 0.4
 test_arc_per_epoch = 1
 
 
@@ -63,8 +64,9 @@ class EnasTrainer:
         meters = []
         for step in range(1, child_steps + 1):
             x, y = next(self.train_loader)
+            self.mutator.reset()
+
             with tf.GradientTape() as tape:
-                tape.watch(x)
                 logits = self.model(x, training=True)
 
                 if isinstance(logits, tuple):
@@ -73,12 +75,12 @@ class EnasTrainer:
                 else:
                     aux_loss = 0.
                 metrics = self.metrics(logits, y)
-                loss = self.loss(logits, y)
-                loss = loss + self.aux_weight * aux_loss
+                loss = self.loss(y, logits)
+                loss = loss + aux_weight * aux_loss
             grads = tape.gradient(loss, self.model.trainable_weights)
-            grads = tf.clip_by_norm(grads, 5.)
+            #grads = tf.clip_by_global_norm(grads, 5.)
             self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
-            meters.append(loss[0])
+            meters.append(loss)
 
             if log_frequency and step % log_frequency == 0:
                 logger.info("Model Epoch [%d/%d] Step [%d/%d]  loss %s", epoch + 1,
@@ -88,17 +90,15 @@ class EnasTrainer:
         meters = defaultdict(list)
         for mutator_step in range(1, mutator_steps + 1):
             with tf.GradientTape() as tape:
-                tape.watch(self.baseline)
                 for step in range(1, mutator_steps_aggregate + 1):
                     x, y = next(self.valid_loader)
-
                     self.mutator.reset()
+
                     logits = self.model(x, training=False)
                     metrics = self.metrics(logits, y)
                     reward = self.reward_function(logits, y)
-                    tape.watch(reward)
-                    reward += entropy_weight * self.mutator.sample_entropy[0]
-                    self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
+                    reward += entropy_weight * self.mutator.sample_entropy
+                    self.baseline = self.baseline * baseline_decay + reward * (1 - baseline_decay)
                     loss = self.mutator.sample_log_prob * (reward - self.baseline)
                     loss += skip_weight * self.mutator.sample_skip_penalty
                     loss /= mutator_steps_aggregate
@@ -116,7 +116,7 @@ class EnasTrainer:
                                     mutator_step, mutator_steps, step, mutator_steps_aggregate)
 
             grads = tape.gradient(loss, self.mutator.trainable_weights)
-            grads = tf.clip_by_norm(grads, 5.)
+            #grads = tf.clip_by_global_norm(grads, 5.)
             self.mutator_optim.apply_gradients(zip(grads, self.mutator.trainable_weights))
 
 
@@ -129,9 +129,9 @@ class EnasTrainer:
                 if isinstance(logits, tuple):
                     logits, _ = logits
                 metrics = self.metrics(logits, y)
-                loss = self.loss(logits, y)
-                loss_list.append(loss[0])
+                loss = self.loss(y, logits)
+                loss_list.append(loss)
 
             logger.info("Test Epoch [%d/%d] Arc [%d/%d] Average loss %s",
                         epoch + 1, self.num_epochs, arc_id + 1, test_arc_per_epoch,
-                        sum(loss_list) / len(loss_list))
+                        sum(loss_list), len(loss_list))

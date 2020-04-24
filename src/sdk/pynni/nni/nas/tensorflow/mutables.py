@@ -5,22 +5,17 @@ import logging
 
 from tensorflow.keras import Model
 
+from .utils import global_mutable_counting
+
 
 _logger = logging.getLogger(__name__)
-
-_counter = 0
-
-def _global_mutable_counting():
-    global _counter
-    _counter += 1
-    return _counter
 
 
 class Mutable(Model):
     def __init__(self, key=None):
         super().__init__()
         if key is None:
-            self._key = '{}_{}'.format(type(self).__name__, _global_mutable_counting())
+            self._key = '{}_{}'.format(type(self).__name__, global_mutable_counting())
         elif isinstance(key, str):
             self._key = key
         else:
@@ -87,7 +82,7 @@ class LayerChoice(Mutable):
         self.reduction = reduction
         self.return_mask = return_mask
 
-    def forward(self, *inputs):
+    def call(self, *inputs):
         out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
         if self.return_mask:
             return out, mask
@@ -116,7 +111,7 @@ class InputChoice(Mutable):
         self.reduction = reduction
         self.return_mask = return_mask
 
-    def forward(self, optional_inputs):
+    def call(self, optional_inputs):
         optional_input_list = optional_inputs
         if isinstance(optional_inputs, dict):
             optional_input_list = [optional_inputs[tag] for tag in self.choose_from]

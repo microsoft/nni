@@ -4,6 +4,7 @@
 from tensorflow.keras import Model
 
 from .mutables import Mutable, MutableScope, InputChoice
+from .utils import StructuredMutableTreeNode
 
 
 class BaseMutator(Model):
@@ -47,8 +48,8 @@ class BaseMutator(Model):
     def undedup_mutables(self):
         return self._structured_mutables.traverse(deduplicate=False)
 
-    def forward(self, *inputs):
-        raise RuntimeError('Forward is undefined for mutators.')
+    def call(self, *inputs):
+        raise RuntimeError('Call is undefined for mutators.')
 
     def __setattr__(self, name, value):
         if name == 'model':
@@ -70,38 +71,3 @@ class BaseMutator(Model):
 
     def export(self):
         raise NotImplementedError
-
-
-# TODO: move to utils
-class StructuredMutableTreeNode:
-    def __init__(self, mutable):
-        self.mutable = mutable
-        self.children = []
-
-    def add_child(self, mutable):
-        self.children.append(StructuredMutableTreeNode(mutable))
-        return self.children[-1]
-
-    def type(self):
-        return type(self.mutable)
-
-    def __iter__(self):
-        return self.traverse()
-
-    def traverse(self, order="pre", deduplicate=True, memo=None):
-        if memo is None:
-            memo = set()
-        assert order in ["pre", "post"]
-        if order == "pre":
-            if self.mutable is not None:
-                if not deduplicate or self.mutable.key not in memo:
-                    memo.add(self.mutable.key)
-                    yield self.mutable
-        for child in self.children:
-            for m in child.traverse(order=order, deduplicate=deduplicate, memo=memo):
-                yield m
-        if order == "post":
-            if self.mutable is not None:
-                if not deduplicate or self.mutable.key not in memo:
-                    memo.add(self.mutable.key)
-                    yield self.mutable
