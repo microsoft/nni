@@ -173,12 +173,12 @@ install-python-modules:
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
 	mkdir -p build
-	ln -sf ../src/sdk/pynni/nni build/nni
-	ln -sf ../src/sdk/pynni/nnicli build/nnicli
-	ln -sf ../tools/nni_annotation build/nni_annotation
-	ln -sf ../tools/nni_cmd build/nni_cmd
-	ln -sf ../tools/nni_trial_tool build/nni_trial_tool
-	ln -sf ../tools/nni_gpu_tool build/nni_gpu_tool
+	ln -sf ../src/sdk/pynni/nni build
+	ln -sf ../src/sdk/pycli/nnicli build
+	ln -sf ../tools/nni_annotation build
+	ln -sf ../tools/nni_cmd build
+	ln -sf ../tools/nni_trial_tool build
+	ln -sf ../tools/nni_gpu_tool build
 	cp setup.py build/
 	cp README.md build/
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' build/setup.py
