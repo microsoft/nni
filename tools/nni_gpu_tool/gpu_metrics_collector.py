@@ -21,8 +21,7 @@ def check_ready_to_run():
         pidList.remove(os.getpid())
         return not pidList
     else:
-        pgrep_output = subprocess.check_output(
-            'pgrep -afu "$(whoami)" \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
+        pgrep_output = subprocess.check_output('pgrep -afu "$(whoami)" \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
         pidList = []
         for pid in pgrep_output.splitlines():
             pid = pid.decode()
@@ -70,8 +69,7 @@ def parse_nvidia_smi_result(smi, outputDir):
                     .getElementsByTagName('memory_util')[0]\
                     .childNodes[0].data.replace("%", "").strip()
                 processes = gpu.getElementsByTagName('processes')
-                runningProNumber = len(
-                    processes[0].getElementsByTagName('process_info'))
+                runningProNumber = len(processes[0].getElementsByTagName('process_info'))
                 gpuInfo['activeProcessNum'] = runningProNumber
 
                 outPut["gpuInfos"].append(gpuInfo)
