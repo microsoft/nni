@@ -266,28 +266,8 @@ def validate_pai_config_path(experiment_config):
     '''validate paiConfigPath field'''
     if experiment_config.get('trainingServicePlatform') == 'pai':
         if experiment_config.get('trial', {}).get('paiConfigPath'):
-            # validate the file format of paiConfigPath, ensure it is yaml format
+            # check if commands exist
             pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
-            if pai_config.get('prerequisites', [{}])[0].get('uri') is None:
-                print_error('Please set image field, or set image uri in your own paiConfig!')
-                exit(1)
-            experiment_config['trial']['image'] = pai_config['prerequisites'][0]['uri']
-            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('gpu') is None:
-                print_error('Please set gpuNum field, or set resourcePerInstance gpu in your own paiConfig!')
-                exit(1)
-            experiment_config['trial']['gpuNum'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['gpu']
-            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('cpu') is None:
-                print_error('Please set cpuNum field, or set resourcePerInstance cpu in your own paiConfig!')
-                exit(1)
-            experiment_config['trial']['cpuNum'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['cpu']
-            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('resourcePerInstance', {}).get('memoryMB', {}) is None:
-                print_error('Please set memoryMB field, or set resourcePerInstance memoryMB in your own paiConfig!')
-                exit(1)
-            experiment_config['trial']['memoryMB'] = pai_config['taskRoles']['taskrole']['resourcePerInstance']['memoryMB']
-            if pai_config.get('extras', {}).get('com.microsoft.pai.runtimeplugin', [{}])[0].get('plugin') is None:
-                print_error('Please set paiStoragePlugin field, or set plugin in your own paiConfig!')
-                exit(1)
-            experiment_config['trial']['paiStoragePlugin'] = pai_config['extras']['com.microsoft.pai.runtimeplugin'][0]['plugin']
             if pai_config.get('taskRoles', {}).get('taskrole', {}).get('commands', [])[0] is None:
                 print_error('Please set paiStoragePlugin field, or set plugin in your own paiConfig!')
                 exit(1)
