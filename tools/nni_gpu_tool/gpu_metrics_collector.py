@@ -69,8 +69,7 @@ def parse_nvidia_smi_result(smi, outputDir):
                     .getElementsByTagName('memory_util')[0]\
                     .childNodes[0].data.replace("%", "").strip()
                 processes = gpu.getElementsByTagName('processes')
-                runningProNumber = len(
-                    processes[0].getElementsByTagName('process_info'))
+                runningProNumber = len(processes[0].getElementsByTagName('process_info'))
                 gpuInfo['activeProcessNum'] = runningProNumber
 
                 outPut["gpuInfos"].append(gpuInfo)
