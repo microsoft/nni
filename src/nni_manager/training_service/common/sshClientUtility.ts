@@ -12,7 +12,7 @@ import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { getRemoteTmpDir, uniqueString, unixPathJoin } from '../../common/utils';
-import { execRemove, tarAdd } from '../common/util';
+import { execRemove, tarAdd } from './util';
 import { RemoteCommandResult } from './remoteMachineData';
 
 /**

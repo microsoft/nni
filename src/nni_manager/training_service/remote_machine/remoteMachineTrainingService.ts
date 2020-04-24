@@ -33,9 +33,9 @@ import {
     RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
     ScheduleResultType, SSHClientManager
-} from './remoteMachineData';
+} from '../common/remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
-import { SSHClientUtility } from './sshClientUtility';
+import { SSHClientUtility } from 'training_service/common/sshClientUtility';
 
 /**
  * Training Service implementation for Remote Machine (Linux)

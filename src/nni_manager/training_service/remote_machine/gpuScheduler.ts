@@ -9,7 +9,7 @@ import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
 import {
     parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, SSHClientManager
-} from './remoteMachineData';
+} from '../common/remoteMachineData';
 
 type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
 

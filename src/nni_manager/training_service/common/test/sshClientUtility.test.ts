@@ -5,9 +5,14 @@
 
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
+
 import { Client } from 'ssh2';
 import { Deferred } from 'ts-deferred';
-import { SSHClientUtility } from '../remote_machine/sshClientUtility';
+import { SSHClientUtility } from '../sshClientUtility';
+import { ShellExecutor } from '../shellExecutor';
+import { prepareUnitTest, cleanupUnitTest } from '../../../common/utils';
 
 const LOCALFILE: string = '/tmp/sshclientUTData';
 const REMOTEFILE: string = '/tmp/sshclientUTData';
@@ -59,20 +64,44 @@ async function getRemoteFileContentLoop(conn: Client): Promise<void> {
 }
 
 describe('sshClientUtility test', () => {
-    let skip: boolean = true;
+    let skip: boolean = false;
     let rmMeta: any;
     try {
         rmMeta = JSON.parse(fs.readFileSync('../../.vscode/rminfo.json', 'utf8'));
+        console.log(rmMeta);
     } catch (err) {
+        console.log(`Please configure rminfo.json to enable remote machine unit test.${err}`);
         skip = true;
     }
 
     before(async () => {
+        chai.should();
+        chai.use(chaiAsPromised);
         await cpp.exec(`echo '1234' > ${LOCALFILE}`);
+        prepareUnitTest();
     });
 
     after(() => {
+        cleanupUnitTest();
         fs.unlinkSync(LOCALFILE);
+    });
+
+    it('Test mkdir', (done) => {
+        if (skip) {
+            done();
+
+            return;
+        }
+        const conn: Client = new Client();
+        conn.on('ready', async () => {
+            const shellExecutor: ShellExecutor = new ShellExecutor(conn);
+            await shellExecutor.initialize();
+            let result = await shellExecutor.createFolder("ut_tmp_folder", false);
+            chai.expect(result).eq(true);
+            result = await shellExecutor.removeFolder("ut_tmp_folder");
+            chai.expect(result).eq(true);
+            done();
+        }).connect(rmMeta);
     });
 
     it('Test SSHClientUtility', (done) => {
