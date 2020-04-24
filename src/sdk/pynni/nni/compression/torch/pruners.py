@@ -4,7 +4,9 @@
 import copy
 import logging
 import torch
+from schema import And, Optional
 from .compressor import Pruner
+from .utils import CompressorSchema
 
 __all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'LotteryTicketPruner']
 
@@ -16,7 +18,22 @@ class LevelPruner(Pruner):
     Prune to an exact pruning level specification
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+        """
+
+        super().__init__(model, config_list, optimizer)
+        self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
         """
         Parameters
         ----------
@@ -25,9 +42,13 @@ class LevelPruner(Pruner):
         config_list : list
             List on pruning configs
         """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
 
-        super().__init__(model, config_list, optimizer)
-        self.set_wrappers_attribute("if_calculated", False)
+        schema.validate(config_list)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -78,11 +99,36 @@ class AGP_Pruner(Pruner):
             Model to be pruned
         config_list : list
             List on pruning configs
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
+
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        """
+        schema = CompressorSchema([{
+            'initial_sparsity': And(float, lambda n: 0 <= n <= 1),
+            'final_sparsity': And(float, lambda n: 0 <= n <= 1),
+            'start_epoch': And(int, lambda n: n >= 0),
+            'end_epoch': And(int, lambda n: n >= 0),
+            'frequency': And(int, lambda n: n > 0),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -166,7 +212,7 @@ class AGP_Pruner(Pruner):
         if epoch > 0:
             self.now_epoch = epoch
             for wrapper in self.get_modules_wrapper():
-                wrapper.if_calculated.copy_(torch.tensor(0)) # pylint: disable=not-callable
+                wrapper.if_calculated = False
 
 class SlimPruner(Pruner):
     """
@@ -176,13 +222,17 @@ class SlimPruner(Pruner):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Parameters
         ----------
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
             support key for each list item:
                 - sparsity: percentage of convolutional filters to be pruned.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
         """
 
         super().__init__(model, config_list, optimizer)
@@ -197,6 +247,24 @@ class SlimPruner(Pruner):
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
         self.set_wrappers_attribute("if_calculated", False)
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            support key for each list item:
+                - sparsity: percentage of convolutional filters to be pruned.
+        """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            'op_types': ['BatchNorm2d'],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -244,7 +312,7 @@ class LotteryTicketPruner(Pruner):
     5. Repeat step 2, 3, and 4.
     """
 
-    def __init__(self, model, config_list, optimizer, lr_scheduler=None, reset_weights=True):
+    def __init__(self, model, config_list, optimizer=None, lr_scheduler=None, reset_weights=True):
         """
         Parameters
         ----------
@@ -261,10 +329,6 @@ class LotteryTicketPruner(Pruner):
         reset_weights : bool
             Whether reset weights and optimizer at the beginning of each round.
         """
-        super().__init__(model, config_list, optimizer)
-        self.curr_prune_iteration = None
-        self.prune_iterations = self._validate_config(config_list)
-
         # save init weights and optimizer
         self.reset_weights = reset_weights
         if self.reset_weights:
@@ -276,16 +340,30 @@ class LotteryTicketPruner(Pruner):
             if lr_scheduler is not None:
                 self._scheduler_state = copy.deepcopy(lr_scheduler.state_dict())
 
-    def _validate_config(self, config_list):
-        prune_iterations = None
-        for config in config_list:
-            assert 'prune_iterations' in config, 'prune_iterations must exist in your config'
-            assert 'sparsity' in config, 'sparsity must exist in your config'
-            if prune_iterations is not None:
-                assert prune_iterations == config[
-                    'prune_iterations'], 'The values of prune_iterations must be equal in your config'
-            prune_iterations = config['prune_iterations']
-        return prune_iterations
+        super().__init__(model, config_list, optimizer)
+        self.curr_prune_iteration = None
+        self.prune_iterations = config_list[0]['prune_iterations']
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            Supported keys:
+                - prune_iterations : The number of rounds for the iterative pruning.
+                - sparsity : The final sparsity when the compression is done.
+        """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            'prune_iterations': And(int, lambda n: n > 0),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
+        assert len(set([x['prune_iterations'] for x in config_list])) == 1, 'The values of prune_iterations must be equal in your config'
 
     def _calc_sparsity(self, sparsity):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)

@@ -19,7 +19,7 @@
   先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
 
   ```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
   ```
@@ -31,7 +31,7 @@
 * 通过克隆源代码下载示例。
 
   ```bash
-  git clone -b v1.3 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   ```
 
 * 运行 MNIST 示例。
@@ -70,7 +70,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
 
 ![概述](../../img/webui_overview_page.png)
 
@@ -106,7 +106,7 @@ You can use these commands to get more information about the experiment
 
 检查 Trial 日志文件来了解详情。
 
-如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
+如果存在 stderr 文件，也需要查看其内容。 两种可能的情况是：
 
 * 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
 * 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
@@ -122,7 +122,7 @@ You can use these commands to get more information about the experiment
 
 注意：
 
-* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
+* 如果遇到 `Segmentation fault` 的错误，请参阅[常见问题](FAQ.md)
 
 
 ## 更多

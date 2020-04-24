@@ -1,11 +1,11 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
     private intermediates: (MetricDataRecord | undefined)[] = [ ];
-    private final: MetricDataRecord | undefined;
+    public final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
     constructor(info?: TrialJobInfo, metrics?: MetricDataRecord[]) {
@@ -55,9 +55,11 @@ class Trial implements TableObj {
         } else if (this.intermediates.length > 0) {
             const temp = this.intermediates[this.intermediates.length - 1];
             if (temp !== undefined) {
-                if (typeof parseMetrics(temp.data) === 'object') {
+                if (isArrayType(parseMetrics(temp.data))) {
+                    return undefined;
+                } else if (typeof parseMetrics(temp.data) === 'object' && parseMetrics(temp.data).hasOwnProperty('default')) {
                     return parseMetrics(temp.data).default;
-                } else {
+                } else if (typeof parseMetrics(temp.data) === 'number') {
                     return parseMetrics(temp.data);
                 }
             } else {
@@ -67,7 +69,6 @@ class Trial implements TableObj {
             return undefined;
         }
     }
-
     /* table obj start */
 
     get tableRecord(): TableRecord {
@@ -210,13 +211,21 @@ class Trial implements TableObj {
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
         if (this.accuracy !== undefined) {
-            return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            if (isNaN(this.accuracy)) {
+                return this.accuracy.toString();
+            } else {
+                return `${formatAccuracy(this.accuracy)} (FINAL)`;
+            }
         } else if (this.intermediates.length === 0) {
             return '--';
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const latest = this.intermediates[this.intermediates.length - 1]!;
-            return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            if (isNaN(metricAccuracy(latest))) {
+                return 'NaN';
+            } else {
+                return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import DefaultMetric from '../public-child/DefaultMetric';
 import Details from './Details';
 import { convertDuration } from '../../static/function';
 import { TRIALS } from '../../static/datamodel';
+import { DETAILTABS } from '../stateless-component/NNItabs';
 import '../../static/style/succTable.scss';
 import '../../static/style/openRow.scss';
 
@@ -55,13 +56,21 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
     }
 
+    tooltipStr = (
+        <div>
+            <p>The experiment is running, please wait for the final metric patiently.</p>
+            <div className="link">You could also find status of trial job with <span>{DETAILTABS}</span> button.</div>
+        </div>
+    );
+
     columns = [
         {
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
             minWidth: 60,
-            maxWidth: 80,
+            maxWidth: 120,
+            isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick
         }, {
@@ -69,7 +78,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'id',
             fieldName: 'id',
             minWidth: 80,
-            maxWidth: 150,
+            maxWidth: 100,
+            isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick
@@ -77,7 +87,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Duration',
             key: 'duration',
             minWidth: 100,
-            maxWidth: 150,
+            maxWidth: 210,
+            isResizable: true,
             fieldName: 'duration',
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -89,8 +100,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }, {
             name: 'Status',
             key: 'status',
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: 140,
+            maxWidth: 210,
+            isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {
                 return (
@@ -101,8 +113,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: 120,
+            maxWidth: 360,
+            isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => {
@@ -120,9 +133,10 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 
     render(): React.ReactNode {
         const { columns, source } = this.state;
+        const isNoneData = (source.length === 0) ? true : false;
+        
         return (
             <div id="succTable">
-                {/* TODO: [style] lineHeight question */}
                 <DetailsList
                     columns={columns}
                     items={source}
@@ -130,7 +144,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     compact={true}
                     onRenderRow={this.onRenderRow}
                     selectionMode={0} // close selector function
+                    className="succTable"
                 />
+                {isNoneData && <div className="succTable-tooltip">{this.tooltipStr}</div>}
             </div>
         );
     }

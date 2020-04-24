@@ -31,7 +31,7 @@ To demonstrate what mutators are for, we need to know how one-shot NAS normally 
 
 Finally, mutators provide a method called `mutator.export()` that export a dict with architectures to the model. Note that currently this dict this a mapping from keys of mutables to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
 
-Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md#trainers) for details.
+Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See [Trainers](./NasReference.md) for details.
 
 ## Implement New Mutators
 
@@ -94,7 +94,7 @@ For advanced usages, e.g., users want to manipulate the way modules in `LayerCho
 
 ## Implemented a Distributed NAS Tuner
 
-Before learning how to write a one-shot NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
+Before learning how to write a distributed NAS tuner, users should first learn how to write a general tuner. read [Customize Tuner](../Tuner/CustomizeTuner.md) for tutorials.
 
 When users call "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate search space file, a search space file like this will be generated:
 

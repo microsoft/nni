@@ -1,0 +1,164 @@
+
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile
+  stopCommand: nnictl stop
+  experimentStatusCheck: True
+  platform: linux darwin win32
+
+testCases:
+
+#########################################################################
+# naive test
+#########################################################################
+
+- name: naive-test
+  configFile: test/config/naive_test/local.yml
+  launchCommand: python3 nni_test/nnitest/naive_test.py --config $configFile
+  experimentStatusCheck: False
+  stopCommand:
+  platform: linux darwin
+
+#########################################################################
+# nni features test
+#########################################################################
+- name: metrics-float
+  configFile: test/config/metrics_test/config.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics.json
+
+- name: metrics-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics_dict.json
+
+- name: nnicli
+  configFile: test/config/examples/sklearn-regression.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
+  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+  validator:
+    class: NnicliValidator
+  platform: linux darwin
+
+- name: multi-thread
+  configFile: test/config/multi_thread/config.yml
+
+- name: multi-phase-batch
+  configFile: test/config/multi_phase/batch.yml
+  config:
+    # for batch tuner, maxTrialNum can not exceed length of search space
+    maxTrialNum: 2
+    trialConcurrency: 2
+
+#########################################################################
+# nni assessor test
+#########################################################################
+- name: assessor-curvefitting
+  configFile: test/config/assessors/curvefitting.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: assessor-medianstop
+  configFile: test/config/assessors/medianstop.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+#########################################################################
+# nni tuners test
+#########################################################################
+- name: tuner-annel
+  configFile: test/config/tuners/anneal.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: tuner-evolution
+  configFile: test/config/tuners/evolution.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: tuner-random
+  configFile: test/config/tuners/random.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: tuner-tpe
+  configFile: test/config/tuners/tpe.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: tuner-batch
+  configFile: test/config/tuners/batch.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space_choices.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 trial_choices.py
+
+- name: tuner-gp
+  configFile: test/config/tuners/gp.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 naive_trial.py
+
+- name: tuner-grid
+  configFile: test/config/tuners/gridsearch.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+    useAnnotation: False
+    searchSpacePath: ../naive_trial/search_space_choices.json
+    trial:
+      codeDir: ../naive_trial
+      command: python3 trial_choices.py

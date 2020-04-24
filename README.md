@@ -25,10 +25,11 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiment new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **NNI v1.4 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **NNI v1.5 has been released! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
-NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms. 
+
+NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms.
 
 Within the following table, we summarized the current NNI capabilities, we are gradually adding new capabilities and we'd love to have your contribution.
 
@@ -105,24 +106,25 @@ Within the following table, we summarized the current NNI capabilities, we are g
           <b>Heuristic search</b>
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>  
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Anneal">Anneal</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>Bayesian optimization</b>
             <ul>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>  
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#BOHB">BOHB</a></li>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#TPE">TPE</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li> 
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#SMAC">SMAC</a></li>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
-            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a> </li>
-            </ul>  
+            <li><a href="docs/en_US/Tuner/BuiltinTuner.md#GPTuner">GP Tuner</a></li>
+            </ul>
           <b>RL Based</b>
           <ul>
             <li><a href="docs/en_US/Tuner/BuiltinTuner.md#PPOTuner">PPO Tuner</a> </li>
           </ul>
         </ul>
           <a href="docs/en_US/NAS/Overview.md">Neural Architecture Search</a>
-          <ul>                        
+          <ul>
             <ul>
               <li><a href="docs/en_US/NAS/ENAS.md">ENAS</a></li>
               <li><a href="docs/en_US/NAS/DARTS.md">DARTS</a></li>
@@ -130,8 +132,9 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/en_US/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
-            </ul>    
+              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
+            </ul>
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
           <ul>
@@ -155,7 +158,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
           <a href="docs/en_US/Assessor/BuiltinAssessor.md">Early Stop Algorithms</a>
           <ul>
           <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>   
+          <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>
           </ul>
       </td>
       <td>
@@ -235,7 +238,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.4 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -288,8 +291,9 @@ You can use these commands to get more information about the experiment
 </table>
 
 ## **Documentation**
-* To learn about what's NNI, read the [NNI Overview](https://nni.readthedocs.io/en/latest/Overview.html). 
-* To get yourself familiar with how to use NNI, read the [documentation](https://nni.readthedocs.io/en/latest/index.html). 
+
+* To learn about what's NNI, read the [NNI Overview](https://nni.readthedocs.io/en/latest/Overview.html).
+* To get yourself familiar with how to use NNI, read the [documentation](https://nni.readthedocs.io/en/latest/index.html).
 * To get started and install NNI on your system, please refer to [Install NNI](https://nni.readthedocs.io/en/latest/installation.html).
 
 ## **Contributing**
@@ -300,6 +304,7 @@ When you submit a pull request, a CLA-bot will automatically determine whether y
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the Code of [Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact opencode@microsoft.com with any additional questions or comments.
 
 After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI developer tutorials to get start:
+
 * We recommend new contributors to start with simple issues: ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
 * [NNI developer environment installation tutorial](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
 * [How to debug](docs/en_US/Tutorial/HowToDebug.md)
@@ -311,15 +316,14 @@ After getting familiar with contribution agreements, you are ready to create you
 
 ## **External Repositories and References**
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
+
 * ### **External Repositories** ###
    * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI 
-   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI 
+   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI
+   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
    * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
-
 * ### **Relevant Articles** ###
-  
   * [Hyper Parameter Optimization Comparison](docs/en_US/CommunitySharings/HpoComparision.md)
   * [Neural Architecture Search Comparison](docs/en_US/CommunitySharings/NasComparision.md)
   * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.md)
@@ -330,11 +334,13 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
   * **Blog (in Chinese)** - [A summary of NNI new capabilities in 2019](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **Feedback**
+
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
 
 ## Related Projects
+
 Targeting at openness and advancing state-of-art technology, [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) had also released few other open source projects.
 
 * [OpenPAI](https://github.com/Microsoft/pai) : an open source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud and hybrid environments in various scale.
