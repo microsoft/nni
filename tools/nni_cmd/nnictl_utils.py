@@ -699,10 +699,11 @@ def export_trials_data(args):
                 content = json.loads(response.text)
                 trial_records = []
                 for record in content:
-                    if not isinstance(record['value'], (float, int)):
-                        formated_record = {**record['parameter'], **json.loads(record['value']), **{'id': record['id']}}
+                    record_value = json.loads(record['value'])
+                    if not isinstance(record_value, (float, int)):
+                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']}}
                     else:
-                        formated_record = {**record['parameter'], **{'reward': record['value'], 'id': record['id']}}
+                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
                     trial_records.append(formated_record)
                 with open(args.path, 'w', newline='') as file:
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
