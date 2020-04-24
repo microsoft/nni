@@ -4,6 +4,7 @@
 import logging
 import math
 import copy
+import json
 import numpy as np
 import torch
 from schema import And, Optional
@@ -33,7 +34,7 @@ class SimulatedAnnealingPruner(Pruner):
     """
 
     def __init__(self, model, config_list, evaluator, optimize_mode='maximize',
-                 start_temperature=100, stop_temperature=20, cool_down_rate=0.5, TMP_MODEL_PATH='model.pth'):
+                 start_temperature=100, stop_temperature=20, cool_down_rate=0.5, TMP_MODEL_PATH='./model.pth'):
         """
         Parameters
         ----------
@@ -79,6 +80,8 @@ class SimulatedAnnealingPruner(Pruner):
         self._best_performance = -np.inf
 
         self._pruning_iteration = 0
+
+        self._pruning_history = []
 
     def validate_config(self, model, config_list):
         """
@@ -128,8 +131,8 @@ class SimulatedAnnealingPruner(Pruner):
         for wrapper in self.get_modules_wrapper():
             op_name = wrapper.name
             num_weights = wrapper.module.weight.data.numel()
-            logger.debug("op_name : %s , num_weights : %s",
-                         op_name, num_weights)
+            logger.info("op_name : %s , num_weights : %s",
+                        op_name, num_weights)
             total_weights += num_weights
 
             if op_name in op_names:
@@ -155,7 +158,7 @@ class SimulatedAnnealingPruner(Pruner):
         Parameters
         ----------
         sparsities : list
-            sorted list of sparsities
+            list of sparsities
 
         Returns
         -------
@@ -163,6 +166,12 @@ class SimulatedAnnealingPruner(Pruner):
             config_list_level for LevelPruner
         '''
         config_list_level = []
+
+        sparsities = sorted(sparsities)
+        self.modules_wrapper = sorted(
+            self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
+
+        # a layer with more weights will have no less pruning rate
         for idx, wrapper in enumerate(self.get_modules_wrapper()):
             config_list_level.append(
                 {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
@@ -174,14 +183,10 @@ class SimulatedAnnealingPruner(Pruner):
 
     def _init_sparsities(self):
         '''
-        Generate config_list for LevelPruner
+        Generate a sorted sparsities vector
         '''
-        # TODO : check
-        # a layer with more weights will have no less pruning rate
         self._sparsities = sorted(np.random.uniform(
             0, 1, len(self.get_modules_wrapper())))
-        self.modules_wrapper = sorted(
-            self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
 
     def _generate_perturbations(self):
         '''
@@ -196,11 +201,6 @@ class SimulatedAnnealingPruner(Pruner):
         perturbation = np.random.uniform(-0.1,
                                          0.1, len(self.get_modules_wrapper()))
         sparsities = np.clip(self._sparsities + perturbation, 0, 1)
-
-        # a layer with more weights will have no less pruning rate
-        for idx, sparsity in enumerate(self._sparsities):
-            if idx > 0 and sparsity > self._sparsities[idx-1]:
-                sparsities[idx] = self._sparsities[idx-1]
 
         return sparsities
 
@@ -258,6 +258,8 @@ class SimulatedAnnealingPruner(Pruner):
                     torch.load(self._TMP_MODEL_PATH))
                 evaluation_result = self._evaluater(self._model_pruned)
 
+                self._pruning_history.append({'config_list':config_list_level, 'performance':evaluation_result})
+
                 if self._optimize_mode is OptimizeMode.Minimize:
                     evaluation_result *= -1
 
@@ -293,5 +295,9 @@ class SimulatedAnnealingPruner(Pruner):
         logger.info('Sparsities generated: %s', self._sparsities)
         logger.info('config_list found for LevelPruner: %s',
                     self._sparsities_2_config_list_level(self._sparsities))
+
+        with open('./pruning_history.txt', 'w') as outfile:
+            json.dump(self._pruning_history, outfile)
+        logger.info('pruning history saved to pruning_history.txt')
 
         return self.bound_model
