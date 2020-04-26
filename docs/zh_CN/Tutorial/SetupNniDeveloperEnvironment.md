@@ -6,55 +6,66 @@
 
 要调试 NNI 源代码，需要 Ubuntu 16.04 或更高版本系统的开发环境，并需要安装 Python 3 以及 pip 3，然后遵循以下步骤。
 
-**1. 克隆源代码**
+### 1. Clone the source code
 
-运行命令
+Run the command
 
     git clone https://github.com/Microsoft/nni.git
     
 
-来克隆源代码
+to clone the source code
 
-**2. 准备调试环境并安装依赖项**
+### 2. Prepare the debug environment and install dependencies**
 
-将目录切换到源码目录，然后运行命令
+Change directory to the source code folder, then run the command
 
     make install-dependencies
     
 
-来安装环境的依赖项工具
+to install the dependent tools for the environment
 
-**3. 生成源代码**
+### 3. Build source code
 
-运行命令
+Run the command
 
     make build
     
 
-来生成源代码
+to build the source code
 
-**4. 将 NNI 安装到开发环境中**
+### 4. Install NNI to development environment
 
-运行命令
+Run the command
 
     make dev-install
     
 
-来安装分发内容到开发环境，并创建 cli 脚本
+to install the distribution content to development environment, and create cli scripts
 
-**5. 检查环境是否正确**
+### 5. Check if the environment is ready
 
-Trial 启动 Experiment 来检查环境。 例如，运行命令
+Now, you can try to start an experiment to check if your environment is ready. For example, run the command
 
     nnictl create --config ~/nni/examples/trials/mnist-tfv1/config.yml
     
 
-并打开网页界面查看
+And open WebUI to check if everything is OK
 
-**6. 重新部署**
+### 6. Redeploy
 
-代码改动后，用**第 3 步**来重新生成代码，改动会立即生效。
+After the code changes, it may need to redeploy. It depends on what kind of code changed.
+
+#### Python
+
+It doesn't need to redeploy, but the nnictl may need to be restarted.
+
+#### TypeScript
+
+* If `src/nni_manager` will be changed, run `yarn watch` continually under this folder. It will rebuild code instantly.
+* If `src/webui` or `src/nasui` is changed, use **step 3** to rebuild code.
+
+The nnictl may need to be restarted.
 
 * * *
 
-最后，希望一切顺利。 参考[贡献](Contributing.md)文档，来了解更多创建拉取请求或问题的指南。
+At last, wish you have a wonderful day. For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](Contributing.md) document.
