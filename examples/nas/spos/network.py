@@ -151,6 +151,5 @@ def load_and_parse_state_dict(filepath="./data/checkpoint-150000.pth.tar"):
     for k, v in checkpoint["state_dict"].items():
         if k.startswith("module."):
             k = k[len("module."):]
-        k = re.sub(r"^(features.\d+).(\d+)", "\\1.choices.\\2", k)
         result[k] = v
     return result
