@@ -44,7 +44,7 @@ class LevelPruner(Pruner):
             List on pruning configs
         """
         schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 <= n <= 1),
+            'sparsity': And(float, lambda n: 0 < n < 1),
             Optional('op_types'): [str],
             Optional('op_names'): [str]
         }], model, logger)
@@ -72,7 +72,10 @@ class LevelPruner(Pruner):
             w_abs = weight.abs()
             k = int(weight.numel() * config['sparsity'])
             if k == 0:
-                return torch.ones(weight.shape).type_as(weight)
+                wrapper.if_calculated = True
+                mask = {'weight_mask':torch.ones(weight.shape).type_as(weight)}
+                return mask
+                # return torch.ones(weight.shape).type_as(weight)
             threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
             mask_weight = torch.gt(w_abs, threshold).type_as(weight)
             mask = {'weight_mask': mask_weight}

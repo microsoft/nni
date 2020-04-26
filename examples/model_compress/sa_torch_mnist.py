@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # TODO: single item list here
     configure_list = [{
-        'sparsity': 0.3,
+        'sparsity': 0.5,
         'op_types': ['default']  # module types to prune
     }]
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         return test(model=model, device=device, test_loader=test_loader)
 
     pruner = SimulatedAnnealingPruner(
-        model, configure_list, evaluator=evaluator, experiment_data_dir=args.experiment_data_dir)
+        model, configure_list, evaluator=evaluator, cool_down_rate=0.9, experiment_data_dir=args.experiment_data_dir)
     pruner.compress()
 
     # TODO: possilbe to test it without exporting & saving the model ?
