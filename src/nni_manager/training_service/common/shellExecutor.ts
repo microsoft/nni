@@ -221,7 +221,6 @@ class ShellExecutor {
         let stdout: string = '';
         let stderr: string = '';
         let exitCode: number;
-        let captureStdOut = false;
 
         const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
@@ -231,9 +230,7 @@ class ShellExecutor {
             }
 
             channel.on('data', (data: any) => {
-                if (captureStdOut) {
-                    stdout += data;
-                }
+                stdout += data;
             });
             channel.on('exit', (code: any) => {
                 exitCode = <number>code;
@@ -254,9 +251,7 @@ class ShellExecutor {
             });
 
             if (useShell) {
-                captureStdOut = true;
                 channel.stdin.write(`${command}\n`);
-                captureStdOut = false;
                 channel.end("exit\n");
             }
 
@@ -266,7 +261,6 @@ class ShellExecutor {
         if (useShell) {
             this.sshClient.shell(callback);
         } else {
-            captureStdOut = true;
             this.sshClient.exec(command!, callback);
         }
 
