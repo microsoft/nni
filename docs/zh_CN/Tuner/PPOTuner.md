@@ -4,7 +4,7 @@
 
 这是一个用于 NNI 神经网络架构搜索（NAS）接口的 Tuner。 它使用了 [ppo 算法](https://arxiv.org/abs/1707.06347)。 此实现继承了 [OpenAI 的 ppo2 实现](https://github.com/openai/baselines/tree/master/baselines/ppo2)的主要逻辑，并为 NAS 场景做了适配。
 
-它能成功调优 [mnist-nas 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas)，结果如下：
+We had successfully tuned the mnist-nas example and has the following result: **NOTE: we are refactoring this example to the latest NAS interface, will publish the example codes after the refactor.**
 
 ![](../../img/ppo_mnist.png)
 
