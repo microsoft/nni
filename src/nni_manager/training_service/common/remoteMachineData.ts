@@ -8,6 +8,7 @@ import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from './gpuData';
+import { ShellExecutor } from './shellExecutor';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -84,100 +85,70 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 }
 
 /**
- * The remote machine ssh client used for trial and gpu detector
- */
-export class SSHClient {
-    private readonly sshClient: Client;
-    private usedConnectionNumber: number; //count the connection number of every client
-    constructor(sshClient: Client, usedConnectionNumber: number) {
-        this.sshClient = sshClient;
-        this.usedConnectionNumber = usedConnectionNumber;
-    }
-
-    public get getSSHClientInstance(): Client {
-        return this.sshClient;
-    }
-
-    public get getUsedConnectionNumber(): number {
-        return this.usedConnectionNumber;
-    }
-
-    public addUsedConnectionNumber(): void {
-        this.usedConnectionNumber += 1;
-    }
-
-    public minusUsedConnectionNumber(): void {
-        this.usedConnectionNumber -= 1;
-    }
-}
-
-/**
  * The remote machine ssh client manager
  */
 export class SSHClientManager {
-    private readonly sshClientArray: SSHClient[];
+    private readonly sshExecutorArray: ShellExecutor[];
     private readonly maxTrialNumberPerConnection: number;
     private readonly rmMeta: RemoteMachineMeta;
-    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+    constructor(sshExecutorArray: ShellExecutor[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
         this.rmMeta = rmMeta;
-        this.sshClientArray = sshClientArray;
+        this.sshExecutorArray = sshExecutorArray;
         this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
     }
 
     /**
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
-    public async getAvailableSSHClient(): Promise<Client> {
-        const deferred: Deferred<Client> = new Deferred<Client>();
-        for (const index of this.sshClientArray.keys()) {
-            const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
+    public async getAvailableSshExecutor(): Promise<ShellExecutor> {
+        for (const index of this.sshExecutorArray.keys()) {
+            const connectionNumber: number = this.sshExecutorArray[index].getUsedConnectionNumber;
             if (connectionNumber < this.maxTrialNumberPerConnection) {
-                this.sshClientArray[index].addUsedConnectionNumber();
-                deferred.resolve(this.sshClientArray[index].getSSHClientInstance);
+                this.sshExecutorArray[index].addUsedConnectionNumber();
 
-                return deferred.promise;
+                return this.sshExecutorArray[index];
             }
         }
 
         //init a new ssh client if could not get an available one
-        return this.initNewSSHClient();
+        return await this.initNewSSHClient();
     }
 
     /**
      * add a new ssh client to sshClientArray
      * @param sshClient SSH Client
      */
-    public addNewSSHClient(client: Client): void {
-        this.sshClientArray.push(new SSHClient(client, 1));
+    public addNewSSHClient(executor: ShellExecutor): void {
+        this.sshExecutorArray.push(executor);
     }
 
     /**
      * first ssh client instance is used for gpu collector and host job
      */
-    public getFirstSSHClient(): Client {
-        return this.sshClientArray[0].getSSHClientInstance;
+    public getFirstSshExecutor(): ShellExecutor {
+        return this.sshExecutorArray[0];
     }
 
     /**
      * close all of ssh client
      */
     public closeAllSSHClient(): void {
-        for (const sshClient of this.sshClientArray) {
+        for (const sshClient of this.sshExecutorArray) {
             sshClient.getSSHClientInstance.end();
         }
     }
 
     /**
      * retrieve resource, minus a number for given ssh client
-     * @param client SSH Client
+     * @param executor SSH Client
      */
-    public releaseConnection(client: Client | undefined): void {
-        if (client === undefined) {
+    public releaseConnection(executor: ShellExecutor | undefined): void {
+        if (executor === undefined) {
             throw new Error(`could not release a undefined ssh client`);
         }
-        for (const index of this.sshClientArray.keys()) {
-            if (this.sshClientArray[index].getSSHClientInstance === client) {
-                this.sshClientArray[index].minusUsedConnectionNumber();
+        for (const index of this.sshExecutorArray.keys()) {
+            if (this.sshExecutorArray[index] === executor) {
+                this.sshExecutorArray[index].minusUsedConnectionNumber();
                 break;
             }
         }
@@ -186,8 +157,8 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    private initNewSSHClient(): Promise<Client> {
-        const deferred: Deferred<Client> = new Deferred<Client>();
+    private async initNewSSHClient(): Promise<ShellExecutor> {
+        const deferred: Deferred<ShellExecutor> = new Deferred<ShellExecutor>();
         const conn: Client = new Client();
         const connectConfig: ConnectConfig = {
             host: this.rmMeta.ip,
@@ -208,9 +179,11 @@ export class SSHClientManager {
         } else {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
-        conn.on('ready', () => {
-            this.addNewSSHClient(conn);
-            deferred.resolve(conn);
+        conn.on('ready', async () => {
+            let executor = new ShellExecutor(conn);
+            await executor.initialize();
+            this.addNewSSHClient(executor);
+            deferred.resolve(executor);
         })
           .on('error', (err: Error) => {
             // SSH connection error, reject with error message
