@@ -128,7 +128,7 @@ class Mutator(BaseMutator):
             result["mutable"][mutable.key].append(path)
         return result
 
-    def on_forward_layer_choice(self, mutable, *inputs):
+    def on_forward_layer_choice(self, mutable, *args, **kwargs):
         """
         On default, this method retrieves the decision obtained previously, and select certain operations.
         Only operations with non-zero weight will be executed. The results will be added to a list.
@@ -138,7 +138,9 @@ class Mutator(BaseMutator):
         ----------
         mutable : LayerChoice
             Layer choice module.
-        inputs : list of torch.Tensor
+        args : list of torch.Tensor
+            Inputs
+        kwargs : dict
             Inputs
 
         Returns
@@ -148,16 +150,16 @@ class Mutator(BaseMutator):
         """
         if self._connect_all:
             return self._all_connect_tensor_reduction(mutable.reduction,
-                                                      [op(*inputs) for op in mutable.choices]), \
+                                                      [op(*args, **kwargs) for op in mutable.choices]), \
                 torch.ones(mutable.length)
 
-        def _map_fn(op, *inputs):
-            return op(*inputs)
+        def _map_fn(op, args, kwargs):
+            return op(*args, **kwargs)
 
         mask = self._get_decision(mutable)
         assert len(mask) == len(mutable.choices), \
             "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable.choices))
-        out = self._select_with_mask(_map_fn, [(choice, *inputs) for choice in mutable.choices], mask)
+        out = self._select_with_mask(_map_fn, [(choice, args, kwargs) for choice in mutable.choices], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list):
