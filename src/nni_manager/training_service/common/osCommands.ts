@@ -10,9 +10,6 @@ abstract class OsCommands {
     protected pathSpliter: string = '/';
     protected multiplePathSpliter: RegExp = new RegExp(`\\${this.pathSpliter}{2,}`);
 
-    constructor() {
-    }
-
     public abstract createFolder(folderName: string, sharedFolder: boolean): string;
     public abstract allowPermission(isRecursive: boolean, ...folders: string[]): string;
     public abstract removeFolder(folderName: string, isRecursive: boolean, isForce: boolean): string;
@@ -22,7 +19,7 @@ abstract class OsCommands {
     public abstract isProcessAliveProcessOutput(result: RemoteCommandResult): boolean;
     public abstract killChildProcesses(pidFileName: string): string;
     public abstract extractFile(tarFileName: string, targetFolder: string): string;
-    public abstract executeScript(script:string, isFile: boolean): string;
+    public abstract executeScript(script: string, isFile: boolean): string;
 
     public joinPath(...paths: string[]): string {
         let dir: string = paths.filter((path: any) => path !== '').join(this.pathSpliter);

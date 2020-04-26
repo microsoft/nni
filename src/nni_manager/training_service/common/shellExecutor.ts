@@ -16,8 +16,6 @@ import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { execRemove, tarAdd } from './util';
 import { getRemoteTmpDir, uniqueString, unixPathJoin } from '../../common/utils';
-// import { MethodNotImplementedError } from "common/errors";
-import { promises } from "fs";
 
 class ShellExecutor {
 
@@ -52,7 +50,7 @@ class ShellExecutor {
 
     public async initialize(): Promise<void> {
         // check OS type: windows or else
-        let result = await this.execute("ver");
+        const result = await this.execute("ver");
         if (result.exitCode == 0 && result.stdout.search("Windows") > -1) {
             // not implement Windows commands yet.
             throw new Error("not implement Windows commands yet.");
@@ -62,35 +60,35 @@ class ShellExecutor {
     }
 
     public async createFolder(folderName: string, sharedFolder: boolean = false): Promise<boolean> {
-        const commandText = this.osCommands!.createFolder(folderName, sharedFolder);
+        const commandText = this.osCommands && this.osCommands.createFolder(folderName, sharedFolder);
         const commandResult = await this.execute(commandText);
         const result = commandResult.exitCode >= 0;
         return result;
     }
 
     public async allowPermission(isRecursive: boolean = false, ...folders: string[]): Promise<boolean> {
-        const commandText = this.osCommands!.allowPermission(isRecursive, ...folders);
+        const commandText = this.osCommands && this.osCommands.allowPermission(isRecursive, ...folders);
         const commandResult = await this.execute(commandText);
         const result = commandResult.exitCode >= 0;
         return result;
     }
 
     public async removeFolder(folderName: string, isRecursive: boolean = false, isForce: boolean = true): Promise<boolean> {
-        const commandText = this.osCommands!.removeFolder(folderName, isRecursive, isForce);
+        const commandText = this.osCommands && this.osCommands.removeFolder(folderName, isRecursive, isForce);
         const commandResult = await this.execute(commandText);
         const result = commandResult.exitCode >= 0;
         return result;
     }
 
-    public async removeFiles(folderOrFileName: string, filePattern: string = "", isRecursive: boolean = false): Promise<boolean> {
-        const commandText = this.osCommands!.removeFiles(folderOrFileName, filePattern);
+    public async removeFiles(folderOrFileName: string, filePattern: string = ""): Promise<boolean> {
+        const commandText = this.osCommands && this.osCommands.removeFiles(folderOrFileName, filePattern);
         const commandResult = await this.execute(commandText);
         const result = commandResult.exitCode >= 0;
         return result;
     }
 
     public async readLastLines(fileName: string, lineCount: number = 1): Promise<string> {
-        const commandText = this.osCommands!.readLastLines(fileName, lineCount);
+        const commandText = this.osCommands && this.osCommands.readLastLines(fileName, lineCount);
         const commandResult = await this.execute(commandText);
         let result: string = "";
         if (commandResult !== undefined && commandResult.stdout !== undefined && commandResult.stdout.length > 0) {
@@ -100,28 +98,27 @@ class ShellExecutor {
     }
 
     public async isProcessAlive(pidFileName: string): Promise<boolean> {
-        const commandText = this.osCommands!.isProcessAliveCommand(pidFileName);
+        const commandText = this.osCommands && this.osCommands.isProcessAliveCommand(pidFileName);
         const commandResult = await this.execute(commandText);
-        const result = this.osCommands!.isProcessAliveProcessOutput(commandResult);
-        return result;
+        const result = this.osCommands && this.osCommands.isProcessAliveProcessOutput(commandResult);
+        return result !== undefined ? result : false;
     }
 
     public async killChildProcesses(pidFileName: string): Promise<boolean> {
-        const commandText = this.osCommands!.killChildProcesses(pidFileName);
+        const commandText = this.osCommands && this.osCommands.killChildProcesses(pidFileName);
         const commandResult = await this.execute(commandText);
         return commandResult.exitCode == 0;
     }
 
     public async extractFile(tarFileName: string, targetFolder: string): Promise<boolean> {
-        const commandText = this.osCommands!.extractFile(tarFileName, targetFolder);
+        const commandText = this.osCommands && this.osCommands.extractFile(tarFileName, targetFolder);
         const commandResult = await this.execute(commandText);
         return commandResult.exitCode == 0;
     }
 
     public async executeScript(script: string, isFile: boolean, isInteractive: boolean = false): Promise<boolean> {
-        const commandText = this.osCommands!.executeScript(script, isFile);
-        let commandResult: RemoteCommandResult;
-        commandResult = await this.execute(commandText, undefined, isInteractive);
+        const commandText = this.osCommands && this.osCommands.executeScript(script, isFile);
+        const commandResult = await this.execute(commandText, undefined, isInteractive);
         return commandResult.exitCode == 0;
     }
 
@@ -261,7 +258,7 @@ class ShellExecutor {
         if (useShell) {
             this.sshClient.shell(callback);
         } else {
-            this.sshClient.exec(command!, callback);
+            this.sshClient.exec(command !== undefined ? command : "", callback);
         }
 
         return deferred.promise;

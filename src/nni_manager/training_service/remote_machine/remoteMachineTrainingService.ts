@@ -29,7 +29,7 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execCopydir, execMkdir, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
-    RemoteCommandResult, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
+    REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
     ScheduleResultType, SSHClientManager
 } from '../common/remoteMachineData';
@@ -147,7 +147,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const jobs: TrialJobDetail[] = [];
         const deferred: Deferred<TrialJobDetail[]> = new Deferred<TrialJobDetail[]>();
 
-        for (const [key, value] of this.trialJobsMap) {
+        for (const [key,] of this.trialJobsMap) {
             jobs.push(await this.getTrialJob(key));
         }
         deferred.resolve(jobs);
@@ -351,7 +351,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Get culster metadata
      * @param key metadata key
      */
-    public getClusterMetadata(key: string): Promise<string> {
+    public getClusterMetadata(): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
 
         return deferred.promise;
@@ -437,7 +437,7 @@ class RemoteMachineTrainingService implements TrainingService {
         executor.executeScript(script, false, true);
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
-            async (tick: number) => {
+            async () => {
                 const cmdresult = await executor.readLastLines(unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics'));
                 if (cmdresult !== "") {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
@@ -583,7 +583,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRmMetaByHost(host: string): RemoteMachineMeta {
-        for (const [rmMeta, client] of this.machineSSHManagerMap.entries()) {
+        for (const [rmMeta,] of this.machineSSHManagerMap.entries()) {
             if (rmMeta.ip === host) {
                 return rmMeta;
             }

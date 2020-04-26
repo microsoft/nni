@@ -180,7 +180,7 @@ export class SSHClientManager {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
         conn.on('ready', async () => {
-            let executor = new ShellExecutor(conn);
+            const executor = new ShellExecutor(conn);
             await executor.initialize();
             this.addNewSSHClient(executor);
             deferred.resolve(executor);
