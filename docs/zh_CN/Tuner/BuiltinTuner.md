@@ -21,6 +21,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 | [**BOHB**](#BOHB)                        | BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 [参考论文](https://arxiv.org/abs/1807.01774)                                                                    |
 | [**GP Tuner**](#GPTuner)                 | Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)，[Github 库](https://github.com/fmfn/BayesianOptimization)                                                                             |
 | [**PPO Tuner**](#PPOTuner)               | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347)                                                                                                                                                                                                                     |
+| [**PBT Tuner**](#PBTTuner)               | PBT Tuner 是一种简单的异步优化算法，在固定的计算资源下，它能有效的联合优化一组模型及其超参来最大化性能。 [参考论文](https://arxiv.org/abs/1711.09846v1)                                                                                                                                                                                          |
 
 ## 用法
 
@@ -451,6 +452,36 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
+
+<a name="PBTTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
+
+> 内置 Tuner 名称：**PBTTuner**
+
+**建议场景**
+
+Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 它通过周期性的从较好的模型中继承权重来继续探索，这样所需的计算资源相对较少。 使用 PBTTuner，用户最终可以得到训练好的模型，而不是需要从头训练的配置。 这是因为模型权重会在搜索过程中周期性的继承。 PBT 也可作为训练的方法。 如果不需要配置，只需要好的模型，PBTTuner 是不错的选择。 [查看详情](./PBTTuner.md)
+
+**classArgs 要求：**
+
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **all_checkpoint_dir** (*str, 可选, 默认为 None*) - Trial 保存读取检查点的目录，如果不指定，其为 "~/nni/checkpoint/<exp-id>"。 注意，如果 Experiment 不是本机模式，用户需要提供能被所有 Trial 所访问的共享存储。
+* **population_size** (*int, 可选, 默认为 10*) - 种群的 Trial 数量。 每个步骤有此数量的 Trial。 在 NNI 的实现中，一步表示每个 Trial 运行一定次数 Epoch，此 Epoch 的数量由用户来指定。
+* **factors** (*tuple, 可选, 默认为 (1.2, 0.8)*) - 超参变动量的因子。
+* **fraction** (*float, 可选, 默认为 0.2*) - 选择的最低和最高 Trial 的比例。
+
+**示例**
+
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: PBTTuner
+  classArgs:
+    optimize_mode: maximize
+```
+
+注意，要使用此 Tuner，Trial 代码也需要相应的修改，参考 [PBTTuner 文档](./PBTTuner.md)了解详情。
 
 ## **参考和反馈**
 

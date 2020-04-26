@@ -6,15 +6,15 @@ import torchvision
 import torchvision.transforms as transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.darts import DartsTrainer
+from nni.nas.pytorch.enas import EnasTrainer
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = LayerChoice([nn.Conv2d(3, 6, 3, padding=1), nn.Conv2d(3, 6, 5, padding=2)])
+        self.conv1 = LayerChoice([nn.Conv2d(3, 6, 3, padding=1), nn.Conv2d(3, 6, 3, padding=1), nn.Conv2d(3, 6, 5, padding=2)])
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = LayerChoice([nn.Conv2d(6, 16, 3, padding=1), nn.Conv2d(6, 16, 5, padding=2)])
+        self.conv2 = LayerChoice([nn.Conv2d(6, 16, 3, padding=1), nn.Conv2d(3, 6, 3, padding=1), nn.Conv2d(6, 16, 5, padding=2)])
         self.conv3 = nn.Conv2d(16, 16, 1)
 
         self.skipconnect = InputChoice(n_candidates=1)
@@ -59,14 +59,16 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-    trainer = DartsTrainer(net,
+    trainer = EnasTrainer(net,
                            loss=criterion,
                            metrics=accuracy,
+                           reward_function=accuracy,
                            optimizer=optimizer,
                            num_epochs=2,
                            dataset_train=dataset_train,
                            dataset_valid=dataset_valid,
                            batch_size=64,
                            log_frequency=10)
+    trainer.enable_visualization()
     trainer.train()
     trainer.export("checkpoint.json")

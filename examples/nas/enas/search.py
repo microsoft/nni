@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     parser.add_argument("--epochs", default=None, type=int, help="Number of epochs (default: macro 310, micro 150)")
+    parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
@@ -55,4 +56,6 @@ if __name__ == "__main__":
                                dataset_valid=dataset_valid,
                                log_frequency=args.log_frequency,
                                mutator=mutator)
+    if args.visualization:
+        trainer.enable_visualization()
     trainer.train()

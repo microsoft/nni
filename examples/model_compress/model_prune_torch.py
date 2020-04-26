@@ -27,7 +27,7 @@ prune_config = {
         'model_name': 'naive',
         'pruner_class': AGP_Pruner,
         'config_list': [{
-            'initial_sparsity': 0,
+            'initial_sparsity': 0.,
             'final_sparsity': 0.8,
             'start_epoch': 0,
             'end_epoch': 10,
