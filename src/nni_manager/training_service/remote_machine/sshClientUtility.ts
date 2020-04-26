@@ -58,7 +58,7 @@ export namespace SSHClientUtility {
      * @param command the command to execute remotely
      * @param client SSH Client
      */
-    export function remoteExeCommand(command: string, client: Client): Promise<RemoteCommandResult> {
+    export function remoteExeCommand(command: string, client: Client, useShell: boolean = false): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
         log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred: Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
@@ -66,30 +66,42 @@ export namespace SSHClientUtility {
         let stderr: string = '';
         let exitCode: number;
 
-        client.exec(command, (err: Error, channel: ClientChannel) => {
+        const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
                 log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
-
                 return;
             }
 
-            channel.on('data', (data: any, dataStderr: any) => {
-                if (dataStderr !== undefined && dataStderr !== null) {
-                    stderr += data.toString();
-                } else {
-                    stdout += data.toString();
-                }
-            })
-              .on('exit', (code: any, signal: any) => {
+            channel.on('data', (data: any) => {
+                stdout += data;
+            });
+            channel.on('exit', (code: any) => {
                 exitCode = <number>code;
+                log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
                 deferred.resolve({
-                    stdout : stdout,
-                    stderr : stderr,
-                    exitCode : exitCode
+                    stdout: stdout,
+                    stderr: stderr,
+                    exitCode: exitCode
                 });
             });
-        });
+            channel.stderr.on('data', function (data) {
+                stderr += data;
+            });
+
+            if (useShell) {
+                channel.stdin.write(`${command}\n`);
+                channel.end("exit\n");
+            }
+
+            return;
+        };
+
+        if (useShell) {
+            client.shell(callback);
+        } else {
+            client.exec(command, callback);
+        }
 
         return deferred.promise;
     }
@@ -120,7 +132,7 @@ export namespace SSHClientUtility {
         sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 getLogger()
-                  .error(`getRemoteFileContent: ${err.message}`);
+                    .error(`getRemoteFileContent: ${err.message}`);
                 deferred.reject(new Error(`SFTP error: ${err.message}`));
 
                 return;
@@ -132,18 +144,18 @@ export namespace SSHClientUtility {
                 sftpStream.on('data', (data: Buffer | string) => {
                     dataBuffer += data;
                 })
-                  .on('error', (streamErr: Error) => {
-                    sftp.end();
-                    deferred.reject(new NNIError(NNIErrorNames.NOT_FOUND, streamErr.message));
-                })
-                  .on('end', () => {
-                    // sftp connection need to be released manually once operation is done
-                    sftp.end();
-                    deferred.resolve(dataBuffer);
-                });
+                    .on('error', (streamErr: Error) => {
+                        sftp.end();
+                        deferred.reject(new NNIError(NNIErrorNames.NOT_FOUND, streamErr.message));
+                    })
+                    .on('end', () => {
+                        // sftp connection need to be released manually once operation is done
+                        sftp.end();
+                        deferred.resolve(dataBuffer);
+                    });
             } catch (error) {
                 getLogger()
-                  .error(`getRemoteFileContent: ${error.message}`);
+                    .error(`getRemoteFileContent: ${error.message}`);
                 sftp.end();
                 deferred.reject(new Error(`SFTP error: ${error.message}`));
             }
