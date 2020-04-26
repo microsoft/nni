@@ -175,7 +175,7 @@ class RemoteMachineTrainingService implements TrainingService {
             if (trialJob.rmMeta === undefined) {
                 throw new Error(`rmMeta not set for submitted job ${trialJobId}`);
             }
-            const sshClient: Client | undefined  = this.trialSSHClientMap.get(trialJob.id);
+            const sshClient: Client | undefined = this.trialSSHClientMap.get(trialJob.id);
             if (sshClient === undefined) {
                 throw new Error(`Invalid job id: ${trialJobId}, cannot find ssh client`);
             }
@@ -324,7 +324,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 }
                 // codeDir is not a valid directory, throw Error
                 if (!fs.lstatSync(remoteMachineTrailConfig.codeDir)
-                  .isDirectory()) {
+                    .isDirectory()) {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
 
@@ -442,7 +442,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
         //Begin to execute gpu_metrics_collection scripts
         const script = getGpuMetricsCollectorBashScriptContent(remoteGpuScriptCollectorDir);
-        SSHClientUtility.remoteExeCommand(`bash -c '${script}'`, conn);
+        SSHClientUtility.remoteExeCommand(`bash -c '${script}'`, conn, true);
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
             async (tick: number) => {
@@ -513,7 +513,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async launchTrialOnScheduledMachine(trialJobId: string, trialWorkingFolder: string, form: TrialJobApplicationForm,
-                                                rmScheduleInfo: RemoteMachineScheduleInfo): Promise<void> {
+        rmScheduleInfo: RemoteMachineScheduleInfo): Promise<void> {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
@@ -588,7 +588,7 @@ class RemoteMachineTrainingService implements TrainingService {
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(trialLocalTempFolder, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
-        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
+        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient, true);
     }
 
     private getRmMetaByHost(host: string): RemoteMachineMeta {
@@ -612,7 +612,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 const trailReturnCode: string = await SSHClientUtility.getRemoteFileContent(trialReturnCodeFilePath, sshClient);
                 this.log.debug(`trailjob ${trialJob.id} return code: ${trailReturnCode}`);
                 const match: RegExpMatchArray | null = trailReturnCode.trim()
-                  .match(/^(\d+)\s+(\d+)$/);
+                    .match(/^(\d+)\s+(\d+)$/);
                 if (match !== null) {
                     const { 1: code, 2: timestamp } = match;
                     // Update trial job's status based on result code

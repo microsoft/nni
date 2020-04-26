@@ -203,7 +203,7 @@ class ClassicMutator(Mutator):
             # for now we only generate flattened search space
             if isinstance(mutable, LayerChoice):
                 key = mutable.key
-                val = [repr(choice) for choice in mutable.choices]
+                val = mutable.names
                 search_space[key] = {"_type": LAYER_CHOICE, "_value": val}
             elif isinstance(mutable, InputChoice):
                 key = mutable.key

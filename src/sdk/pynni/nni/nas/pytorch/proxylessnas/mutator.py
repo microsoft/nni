@@ -317,7 +317,7 @@ class ProxylessNasMutator(BaseMutator):
             self.mutable_list.append(mutable)
             mutable.registered_module = MixedOp(mutable)
 
-    def on_forward_layer_choice(self, mutable, *inputs):
+    def on_forward_layer_choice(self, mutable, *args, **kwargs):
         """
         Callback of layer choice forward. This function defines the forward
         logic of the input mutable. So mutable is only interface, its real
@@ -327,7 +327,9 @@ class ProxylessNasMutator(BaseMutator):
         ----------
         mutable: LayerChoice
             forward logic of this input mutable
-        inputs: list of torch.Tensor
+        args: list of torch.Tensor
+            inputs of this mutable
+        kwargs: dict
             inputs of this mutable
 
         Returns
@@ -339,7 +341,7 @@ class ProxylessNasMutator(BaseMutator):
         """
         # FIXME: return mask, to be consistent with other algorithms
         idx = mutable.registered_module.active_op_index
-        return mutable.registered_module(mutable, *inputs), idx
+        return mutable.registered_module(mutable, *args, **kwargs), idx
 
     def reset_binary_gates(self):
         """
