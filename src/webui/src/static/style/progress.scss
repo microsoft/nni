@@ -48,6 +48,12 @@
       margin-left: 6px;
     }
   }
+
+  &-info{
+    margin-left: 4px;
+    position: relative;
+    top: 2px;
+  }
 }
 
 /* basic experiment message style */
@@ -100,4 +106,8 @@
     padding: 0;
     border: 2px solid #e6e6e6;
     border-radius: 0 12px 12px 0 !important;
+}
+
+.cursor, .cursor:hover{
+  cursor: pointer;
 }
