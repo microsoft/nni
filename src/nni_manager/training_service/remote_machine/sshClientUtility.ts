@@ -65,7 +65,6 @@ export namespace SSHClientUtility {
         let stdout: string = '';
         let stderr: string = '';
         let exitCode: number;
-        let captureStdOut = false;
 
         const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
@@ -75,9 +74,7 @@ export namespace SSHClientUtility {
             }
 
             channel.on('data', (data: any) => {
-                if (captureStdOut) {
-                    stdout += data;
-                }
+                stdout += data;
             });
             channel.on('exit', (code: any) => {
                 exitCode = <number>code;
@@ -93,9 +90,7 @@ export namespace SSHClientUtility {
             });
 
             if (useShell) {
-                captureStdOut = true;
                 channel.stdin.write(`${command}\n`);
-                captureStdOut = false;
                 channel.end("exit\n");
             }
 
@@ -105,7 +100,6 @@ export namespace SSHClientUtility {
         if (useShell) {
             client.shell(callback);
         } else {
-            captureStdOut = true;
             client.exec(command, callback);
         }
 
