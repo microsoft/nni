@@ -98,6 +98,6 @@ describe('Unit Test for linuxCommands', () => {
 
     it('executeScript', async () => {
         chai.expect(linuxCommands.executeScript("test.sh", true)).to.equal("bash 'test.sh'");
-        chai.expect(linuxCommands.executeScript("test script'", false)).to.equal("bash -c 'test script\\\''");
+        chai.expect(linuxCommands.executeScript("test script'\"", false)).to.equal(`bash -c \"test script'\\""`);
     })
 });
