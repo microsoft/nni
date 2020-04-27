@@ -5,7 +5,6 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs';
 import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import { LinuxCommands } from '../extends/linuxCommands';

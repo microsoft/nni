@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import { GPUInfo, GPUSummary } from './gpuData';
+import { GPUInfo, GPUSummary } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
 
 /**

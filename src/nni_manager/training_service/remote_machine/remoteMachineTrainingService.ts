@@ -32,9 +32,9 @@ import {
     REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
     ScheduleResultType, SSHClientManager
-} from '../common/remoteMachineData';
+} from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
-import { ShellExecutor } from 'training_service/common/shellExecutor';
+import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 
 /**
  * Training Service implementation for Remote Machine (Linux)

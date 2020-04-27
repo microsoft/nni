@@ -14,7 +14,7 @@ import { OsCommands } from "./osCommands";
 import { LinuxCommands } from "./extends/linuxCommands";
 import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { execRemove, tarAdd } from './util';
+import { execRemove, tarAdd } from '../common/util';
 import { getRemoteTmpDir, uniqueString, unixPathJoin } from '../../common/utils';
 
 class ShellExecutor {

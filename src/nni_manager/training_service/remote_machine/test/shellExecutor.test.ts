@@ -9,7 +9,6 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { Client } from 'ssh2';
-import { Deferred } from 'ts-deferred';
 import { ShellExecutor } from '../shellExecutor';
 import { prepareUnitTest, cleanupUnitTest } from '../../../common/utils';
 
