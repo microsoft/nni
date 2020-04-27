@@ -41,17 +41,17 @@ class LinuxCommands extends OsCommands {
 
     public removeFiles(folderName: string, filePattern: string): string {
         const files = this.joinPath(folderName, filePattern);
-        const command = `rm ${files}`;
+        const command = `rm '${files}'`;
         return command;
     }
 
     public readLastLines(fileName: string, lineCount: number = 1): string {
-        const command = `tail -n ${lineCount} ${fileName}`;
+        const command = `tail -n ${lineCount} '${fileName}'`;
         return command;
     }
 
     public isProcessAliveCommand(pidFileName: string): string {
-        const command = `kill -0 \`cat ${pidFileName}\``;
+        const command = `kill -0 \`cat '${pidFileName}'\``;
         return command;
     }
 
@@ -64,21 +64,22 @@ class LinuxCommands extends OsCommands {
     }
 
     public killChildProcesses(pidFileName: string): string {
-        const command = `pkill -P \`cat ${pidFileName}\``;
+        const command = `pkill -P \`cat '${pidFileName}'\``;
         return command;
     }
 
     public extractFile(tarFileName: string, targetFolder: string): string {
-        const command = `tar -oxzf ${tarFileName} -C ${targetFolder}`;
+        const command = `tar -oxzf '${tarFileName}' -C '${targetFolder}'`;
         return command;
     }
 
     public executeScript(script: string, isFile: boolean): string {
         let command: string;
         if (isFile) {
-            command = `bash ${script}`;
+            command = `bash '${script}'`;
         } else {
-            command = `bash -c ${script}`;
+            script = script.replace('\'', '\\\'');
+            command = `bash -c '${script}'`;
         }
         return command;
     }
