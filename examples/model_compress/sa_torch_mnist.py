@@ -30,12 +30,12 @@ def train(args, model, device, train_loader, optimizer, epoch):
                 100. * batch_idx / len(train_loader), loss.item()))
 
 
-def test(model, device, test_loader):
+def test(model, device, val_loader):
     model.eval()
     test_loss = 0
     correct = 0
     with torch.no_grad():
-        for data, target in test_loader:
+        for data, target in val_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
             # sum up batch loss
@@ -44,11 +44,11 @@ def test(model, device, test_loader):
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    test_loss /= len(test_loader.dataset)
-    accuracy = correct / len(test_loader.dataset)
+    test_loss /= len(val_loader.dataset)
+    accuracy = correct / len(val_loader.dataset)
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset), 100. * accuracy))
+        test_loss, correct, len(val_loader.dataset), 100. * accuracy))
 
     return accuracy
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
-    test_loader = torch.utils.data.DataLoader(
+    val_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
+        test(model, device, val_loader)
         scheduler.step()
 
     if args.save_model:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     }]
 
     def evaluator(model):
-        return test(model=model, device=device, test_loader=test_loader)
+        return test(model=model, device=device, val_loader=val_loader)
 
     pruner = SimulatedAnnealingPruner(
         model, configure_list, evaluator=evaluator, cool_down_rate=0.9, experiment_data_dir=args.experiment_data_dir)

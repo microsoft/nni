@@ -154,7 +154,6 @@ class SimulatedAnnealingPruner(Pruner):
 
         num_weights = sorted(num_weights)
         sparsities = sorted(sparsities)
-        logger.info("sparsities before rescalling:%s", sparsities)
 
         total_weights = 0
         total_weights_pruned = 0
@@ -167,7 +166,6 @@ class SimulatedAnnealingPruner(Pruner):
 
         # rescale the sparsities
         sparsities = np.asarray(sparsities)*scale
-        logger.info("sparsities after rescalling:%s", sparsities)
 
         return sparsities
 
@@ -184,9 +182,9 @@ class SimulatedAnnealingPruner(Pruner):
             sparsities = self._rescale_sparsities(
                 sparsities, target_sparsity=self.config_list[0]['sparsity'])
 
-            if sparsities[0] > 0 and sparsities[-1] < 1:
-                self._sparsities = sparsities
+            if sparsities[0] >= 0 and sparsities[-1] < 1:
                 logger.info('Initial sparsities generated : %s', sparsities)
+                self._sparsities = sparsities
                 break
 
     def _generate_perturbations(self):
@@ -208,16 +206,16 @@ class SimulatedAnnealingPruner(Pruner):
         while True:
             perturbation = np.random.uniform(-magnitude,
                                              magnitude, len(self.get_modules_wrapper()))
-            sparsities = self._sparsities + perturbation
+            sparsities = np.clip(0, self._sparsities + perturbation, None)
+            logger.info("sparsities before rescalling:%s", sparsities)
 
             sparsities = self._rescale_sparsities(
                 sparsities, target_sparsity=self.config_list[0]['sparsity'])
+            logger.info("sparsities after rescalling:%s", sparsities)
 
-            if sparsities[0] > 0 and sparsities[-1] < 1:
+            if sparsities[0] >= 0 and sparsities[-1] < 1:
                 logger.info("Sparsities perturbated:%s", sparsities)
                 return sparsities
-
-        return sparsities
 
     def _set_modules_wrapper(self, modules_wrapper):
         """
