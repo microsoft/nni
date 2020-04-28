@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from nni.graph_utils import TorchGraph
+from nni.graph_utils import build_module_graph
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
 
@@ -53,7 +53,7 @@ class ModelSpeedup:
         self.bound_model = model
         self.masks = torch.load(masks_file, map_location)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
-        self.torch_graph = TorchGraph(model, dummy_input)
+        self.torch_graph = build_module_graph(model, dummy_input)
 
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
         """

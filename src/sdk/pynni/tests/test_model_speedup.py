@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import math
 from unittest import TestCase, main
 
-from nni.graph_utils import TorchGraph
+from nni.graph_utils import build_module_graph
 from nni.compression.torch import L1FilterPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
@@ -57,7 +57,7 @@ class BigModel(torch.nn.Module):
 class SpeedupTestCase(TestCase):
     def test_build_graph(self):
         big_model = BigModel()
-        g = TorchGraph(big_model, torch.randn(2, 1, 28, 28))
+        g = build_module_graph(big_model, torch.randn(2, 1, 28, 28))
         print(g.name_to_gnode.keys())
         leaf_modules = set([
             'backbone1.conv1', 'backbone2.bn1', 'backbone2.bn2', 'backbone2.conv1',

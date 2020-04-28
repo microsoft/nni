@@ -8,9 +8,133 @@ import re
 from collections import defaultdict
 import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
+from tensorboard.compat.proto.config_pb2 import RunMetadata
+from tensorboard.compat.proto.graph_pb2 import GraphDef
+from tensorboard.compat.proto.step_stats_pb2 import StepStats, DeviceStepStats
+from tensorboard.compat.proto.versions_pb2 import VersionDef
+
+CLASSTYPE_KIND = 'ClassType'
+GETATTR_KIND = 'prim::GetAttr'
 
 _logger = logging.getLogger(__name__)
 
+def build_module_graph(model, dummy_input):
+    return TorchModuleGraph(model, dummy_input)
+
+def build_graph(model, dummy_input, verbose=False):
+    g = TorchProtoGraph(model, dummy_input, verbose)
+    return g.graph_def, g.stepstats
+
+class TorchGraph:
+    """
+    This class is to extract pytorch model topology graph by tracing
+    """
+    def __init__(self, model, dummy_input):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            The model user wants to speed up
+        dummy_input : pytorch tensor
+            The dummy input for ```jit.trace```, users should put it on right device before pass in
+        """
+        assert torch.__version__ >= '1.3.1'
+
+        self.bound_model = model
+        self._trace(model, dummy_input)
+
+    def _trace(self, model, dummy_input):
+        with torch.onnx.set_training(model, False):
+            self.trace = torch.jit.trace(model, dummy_input)
+            torch._C._jit_pass_inline(self.trace.graph)
+
+class TorchProtoGraph(TorchGraph):
+    def __init__(self, model, dummy_input, verbose=False):
+        super().__init__(model, dummy_input)
+        list_of_nodes = self.parse(self.trace.graph, self.trace, dummy_input)
+        if verbose:
+            print(self.trace.graph)
+        self.stepstats = RunMetadata(step_stats=StepStats(dev_stats=[DeviceStepStats(device="/device:CPU:0")]))
+        self.graph_def = GraphDef(node=list_of_nodes, versions=VersionDef(producer=22))
+
+    def parse(self, graph, trace, args=None, omit_useless_nodes=True):
+        """This method parses an optimized PyTorch model graph and produces
+        a list of nodes and node stats for eventual conversion to TensorBoard
+        protobuf format.
+
+        Args:
+        graph (PyTorch module): The model graph to be parsed.
+        trace (PyTorch JIT TracedModule): The model trace to be parsed.
+        args (tuple): input tensor[s] for the model.
+        omit_useless_nodes (boolean): Whether to remove nodes from the graph.
+        """
+        n_inputs = len(args)
+
+        scope = {}
+        nodes_py = GraphPy()
+        for node in graph.inputs():
+            if omit_useless_nodes:
+                if len(node.uses()) == 0:  # number of user of the node (= number of outputs/ fanout)
+                    continue
+
+            if node.type().kind() != CLASSTYPE_KIND:
+                nodes_py.append(NodePyIO(node, 'input'))
+
+        attr_to_scope = dict()
+        node_to_name = lambda d: str(d).split(":")[0].strip()
+        for node in graph.nodes():
+            if node.kind() == GETATTR_KIND:
+                attr_name = node.s('name')
+                node_name = node_to_name(node)
+                parent = node.input().node()
+                if parent.kind() == GETATTR_KIND:  # If the parent node is not the top-level "self" node
+                    parent_attr_name = parent.s('name')
+                    parent_scope = attr_to_scope[node_to_name(parent)]
+                    attr_scope = parent_scope.split('/')[-1]
+                    attr_to_scope[node_name] = '{}/{}.{}'.format(parent_scope, attr_scope, attr_name)
+                else:
+                    attr_to_scope[node_name] = '__module.{}'.format(attr_name)
+                # We don't need classtype nodes; scope will provide this information
+                if node.output().type().kind() != CLASSTYPE_KIND:
+                    node_py = NodePyOP(node)
+                    node_py.scopeName = attr_to_scope[node_name]
+                    nodes_py.append(node_py)
+            else:
+                nodes_py.append(NodePyOP(node))
+
+        for i, node in enumerate(graph.outputs()):  # Create sink nodes for output ops
+            node_py = NodePyIO(node, 'output')
+            node_py.debugName = "output.{}".format(i + 1)
+            node_py.inputs = [node.debugName()]
+            nodes_py.append(node_py)
+
+        def parse_traced_name(module_name):
+            prefix = 'TracedModule['
+            suffix = ']'
+            if module_name.startswith(prefix) and module_name.endswith(suffix):
+                module_name = module_name[len(prefix):-len(suffix)]
+            return module_name
+
+        alias_to_name = dict()
+        base_name = parse_traced_name(trace._name)
+        for name, module in trace.named_modules(prefix='__module'):
+            mod_name = parse_traced_name(module._name)
+            attr_name = name.split('.')[-1]
+            alias_to_name[name] = '{}[{}]'.format(mod_name, attr_name)
+
+        for node in nodes_py.nodes_op:
+            module_aliases = node.scopeName.split('/')[-1].split('.')
+            module_name = ''
+            for i, alias in enumerate(module_aliases):
+                if i == 0:
+                    module_name = alias
+                    node.scopeName = base_name
+                else:
+                    module_name += '.' + alias
+                    node.scopeName += '/' + (alias_to_name[module_name] if module_name in alias_to_name else alias)
+
+        nodes_py.populate_namespace_from_OP_to_IO()
+        return nodes_py.to_proto()
 
 class NodePyGroup(NodePy):
     def __init__(self, name, node_type, op_type, node_cpps, input_to_node=None,
@@ -61,32 +185,13 @@ class NodePyGroup(NodePy):
             self.name, self.type, self.op_type, self.sub_node_names(), self.inputs, self.outputs
         )
 
-class TorchGraph:
-    """
-    This class is to extract pytorch model topology graph by tracing
-    """
 
+class TorchModuleGraph(TorchGraph):
     def __init__(self, model, dummy_input):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model user wants to speed up
-        dummy_input : pytorch tensor
-            The dummy input for ```jit.trace```, users should put it on right device before pass in
-        """
-        assert torch.__version__ >= '1.3.1'
-        self.bound_model = model
+        super().__init__(model, dummy_input)
         self.g_nodes = list()
         self.global_count = 0
-
-        self._trace(model, dummy_input)
         self.name_to_gnode, self.input_to_gnode, self.output_to_gnode = self._build_graph()
-
-    def _trace(self, model, dummy_input):
-        with torch.onnx.set_training(model, False):
-            self.trace = torch.jit.trace(model, dummy_input)
-            torch._C._jit_pass_inline(self.trace.graph)
 
     def _build_index_for_gnodes(self, g_nodes):
         """
