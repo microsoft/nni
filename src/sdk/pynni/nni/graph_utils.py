@@ -185,7 +185,6 @@ class NodePyGroup(NodePy):
 class TorchModuleGraph(TorchGraph):
     def __init__(self, model, dummy_input):
         super().__init__(model, dummy_input)
-        self.g_nodes = list()
         self.global_count = 0
         self.name_to_node, self.input_to_node, self.output_to_node = self._build_graph()
 
