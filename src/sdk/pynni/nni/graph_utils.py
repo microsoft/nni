@@ -369,7 +369,7 @@ class TorchModuleGraph(TorchGraph):
         graph = self.trace.graph
         _logger.debug(graph)
         # build output mapping, from output debugName to its node
-        output_to_node = {x.debugName(): n for n in graph.nodes() for x in n.outputs()}        
+        output_to_node = {x.debugName(): n for n in graph.nodes() for x in n.outputs()}
         # build input mapping, from input debugName to its node
         input_to_node = {x.debugName(): n for n in graph.nodes() for x in n.inputs()}
         # build module mapping, from module name to all nodes (as list) under this module scope
