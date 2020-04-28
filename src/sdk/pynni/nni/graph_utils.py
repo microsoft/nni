@@ -25,6 +25,13 @@ def build_graph(model, dummy_input, verbose=False):
     g = TorchProtoGraph(model, dummy_input, verbose)
     return g.graph_def, g.stepstats
 
+def parse_traced_name(module_name):
+    prefix = 'TracedModule['
+    suffix = ']'
+    if module_name.startswith(prefix) and module_name.endswith(suffix):
+        module_name = module_name[len(prefix):-len(suffix)]
+    return module_name
+
 class TorchGraph:
     """
     This class is to extract pytorch model topology graph by tracing
@@ -103,13 +110,6 @@ class TorchProtoGraph(TorchGraph):
             node_py.debugName = "output.{}".format(i + 1)
             node_py.inputs = [node.debugName()]
             nodes_py.append(node_py)
-
-        def parse_traced_name(module_name):
-            prefix = 'TracedModule['
-            suffix = ']'
-            if module_name.startswith(prefix) and module_name.endswith(suffix):
-                module_name = module_name[len(prefix):-len(suffix)]
-            return module_name
 
         alias_to_name = dict()
         base_name = parse_traced_name(trace._name)
@@ -296,13 +296,6 @@ class TorchModuleGraph(TorchGraph):
             key: module name
             value: type of the module
         """
-        def parse_traced_name(module_name):
-            prefix = 'TracedModule['
-            suffix = ']'
-            if module_name.startswith(prefix) and module_name.endswith(suffix):
-                module_name = module_name[len(prefix):-len(suffix)]
-            return module_name
-
         module_to_type = dict()
         for name, module in self.trace.named_modules():
             module_to_type[name] = parse_traced_name(module._name)
