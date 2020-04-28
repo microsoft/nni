@@ -68,7 +68,7 @@ class SimulatedAnnealingPruner(Pruner):
 
         super().__init__(model, config_list)
 
-        self._evaluater = evaluator
+        self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for SA algorithm
@@ -269,7 +269,7 @@ class SimulatedAnnealingPruner(Pruner):
                 level_pruner.export_model(self._TMP_MODEL_PATH)
                 self._model_pruned.load_state_dict(
                     torch.load(self._TMP_MODEL_PATH))
-                evaluation_result = self._evaluater(self._model_pruned)
+                evaluation_result = self._evaluator(self._model_pruned)
 
                 self._pruning_history.append(
                     {'sparsity': self._sparsity, 'performance': evaluation_result, 'config_list': config_list_level})
