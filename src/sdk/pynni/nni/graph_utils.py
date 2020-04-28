@@ -141,37 +141,35 @@ class NodePyGroup(NodePy):
         self.op_type = op_type
         self.type = node_type
         self.nodes = []
-        self.input_to_node = input_to_node
-        self.output_to_node = output_to_node
-        self.graph = graph
+        self.auxiliary = None
         self.add_nodes(node_cpps)
         if node_type == 'module':
-            self.set_io()
+            self.set_io(input_to_node, output_to_node, graph)
         else:
             self.inputs = inputs
             self.outputs = outputs
 
     def add_nodes(self, node_cpps):
-        cpp_node_names = []
         for node_cpp in node_cpps:
             nodepy = NodePyOP(node_cpp)
             nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
             self.nodes.append(nodepy)
-            cpp_node_names.append(nodepy.name)
 
-    def set_io(self):
+    def set_io(self, input_to_node, output_to_node, graph):
         self.inputs, self.outputs = [], []
         for n in self.node_cpps:
             for i in n.inputs():
-                if not i.debugName() in self.output_to_node and i in self.graph.inputs():
-                    self.inputs.append(i.debugName())
-                elif self.output_to_node[i.debugName()] not in self.node_cpps:
-                    self.inputs.append(i.debugName())
+                name = i.debugName()
+                if not name in output_to_node and i in graph.inputs():
+                    self.inputs.append(name)
+                elif output_to_node[name] not in self.node_cpps:
+                    self.inputs.append(name)
             for o in n.outputs():
-                if not o.debugName() in self.input_to_node and o in self.graph.outputs():
-                    self.outputs.append(o.debugName())
-                elif self.input_to_node[o.debugName()] not in self.node_cpps:
-                    self.outputs.append(o.debugName())
+                name = o.debugName()
+                if not name in input_to_node and o in graph.outputs():
+                    self.outputs.append(name)
+                elif input_to_node[name] not in self.node_cpps:
+                    self.outputs.append(name)
 
     def sub_node_names(self):
         return [x.name for x in self.nodes]
