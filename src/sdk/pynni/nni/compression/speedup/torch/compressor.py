@@ -70,13 +70,13 @@ class ModelSpeedup:
         Parameters
         ----------
         module_name : str
-            The name of the GNode
+            The name of the node
         mask : tensor of mask or ModuleMasks
-            Mask of the weights in this GNode (i.e., module)
+            Mask of the weights in this node (i.e., module)
         in_shape : ModuleMasks
-            Input shape of this GNode
+            Input shape of this node
         out_shape : ModuleMasks
-            Output shape of this GNode
+            Output shape of this node
         """
         input_cmask = output_cmask = None
         if module_name in self.inferred_masks:
@@ -85,7 +85,7 @@ class ModelSpeedup:
             module_masks = ModuleMasks(module_name)
             self.inferred_masks[module_name] = module_masks
 
-        m_type = self.torch_graph.name_to_gnode[module_name].op_type
+        m_type = self.torch_graph.name_to_node[module_name].op_type
         _logger.debug("infer mask of module %s with op_type %s", module_name, m_type)
         if mask is not None:
             _logger.debug("mask is not None")
@@ -103,7 +103,7 @@ class ModelSpeedup:
             if m_type == 'aten::view':
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
-                                                          self.torch_graph.name_to_gnode[module_name].auxiliary)
+                                                          self.torch_graph.name_to_node[module_name].auxiliary)
             else:
                 output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
@@ -140,7 +140,7 @@ class ModelSpeedup:
         is that ```func``` should be not required to be replaced.
         """
         for module_name in self.inferred_masks:
-            g_node = self.torch_graph.name_to_gnode[module_name]
+            g_node = self.torch_graph.name_to_node[module_name]
             _logger.debug("replace %s, in %s type, with op_type %s",
                           module_name, g_node.type, g_node.op_type)
             if g_node.type == 'module':
@@ -155,7 +155,7 @@ class ModelSpeedup:
                 _logger.info("Warning: cannot replace (name: %s, op_type: %s) which is func type",
                              module_name, g_node.op_type)
             else:
-                raise RuntimeError("Unsupported GNode type: {}".format(g_node.type))
+                raise RuntimeError("Unsupported node type: {}".format(g_node.type))
 
     def speedup_model(self):
         """
