@@ -5,48 +5,61 @@
 import logging
 import queue
 import re
+from collections import defaultdict
 import torch
+from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
 
 _logger = logging.getLogger(__name__)
 
 
-class GNode:
-    """
-    It is used to represent a node in model graph, in this graph a module is a node,
-    a function out of module (in ```forward``` function) could also be a node.
-    """
-    def __init__(self, node_name, node_type, op_type, inputs, outputs, nodes):
-        """
-        Parameters
-        ----------
-        node_name : str
-            It is module name if the node is a module, it is ```scope_name.node_kind.seq``` if it is a func
-        node_type : str
-            It only has two options: `module` or `func`
-        op_type : str
-            The operation type of the module or func
-        inputs : list of str
-            All the inputs of this node, each element is debugName of one input
-        outputs : list of str
-            All the outputs of this node, each element is debugName of one output
-        nodes : list of node
-            All the trace graph nodes included in this module or func
-        """
-        self.name = node_name
-        self.type = node_type
+class NodePyGroup(NodePy):
+    def __init__(self, name, node_type, op_type, node_cpps, input_to_node=None,
+                 output_to_node=None, graph=None, inputs=None, outputs=None):
+        super(NodePyGroup, self).__init__(name, [])
+        self.node_cpps = node_cpps
+        self.name = name
         self.op_type = op_type
-        self.inputs = inputs
-        self.outputs = outputs
-        self.nodes = nodes
-        # store supplementary information for different op types
-        # for example, for ```view``` it stores the shape of its input and output
-        self.auxiliary = None
+        self.type = node_type
+        self.nodes = []
+        self.input_to_node = input_to_node
+        self.output_to_node = output_to_node
+        self.graph = graph
+        self.add_nodes(node_cpps)
+        if node_type == 'module':
+            self.set_io()
+        else:
+            self.inputs = inputs
+            self.outputs = outputs
+
+    def add_nodes(self, node_cpps):
+        cpp_node_names = []
+        for node_cpp in node_cpps:
+            nodepy = NodePyOP(node_cpp)
+            nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
+            self.nodes.append(nodepy)
+            cpp_node_names.append(nodepy.name)
+
+    def set_io(self):
+        self.inputs, self.outputs = [], []
+        for n in self.node_cpps:
+            for i in n.inputs():
+                if not i.debugName() in self.output_to_node and i in self.graph.inputs():
+                    self.inputs.append(i.debugName())
+                elif self.output_to_node[i.debugName()] not in self.node_cpps:
+                    self.inputs.append(i.debugName())
+            for o in n.outputs():
+                if not o.debugName() in self.input_to_node and o in self.graph.outputs():
+                    self.outputs.append(o.debugName())
+                elif self.input_to_node[o.debugName()] not in self.node_cpps:
+                    self.outputs.append(o.debugName())
+
+    def sub_node_names(self):
+        return [x.name for x in self.nodes]
 
     def __repr__(self):
-        return 'name: {}, type: {}, op_type: {}: auxiliary: {}, inputs: {}, outputs: {}'.format(
-            self.name, self.type, self.op_type, self.auxiliary, self.inputs, self.outputs
+        return 'name: {}, type: {}, op_type: {}, sub_nodes: {}, inputs: {}, outputs: {}'.format(
+            self.name, self.type, self.op_type, self.sub_node_names(), self.inputs, self.outputs
         )
-
 
 class TorchGraph:
     """
@@ -161,8 +174,8 @@ class TorchGraph:
                     inputs.append(input_name)
         for output in node.outputs():
             outputs.append(output.debugName())
-        g_node = GNode(node_name, 'func', op_type, inputs, outputs, node_group)
-        return g_node
+        nodepy = NodePyGroup(node_name, 'func', op_type, node_group, inputs=inputs, outputs=outputs)
+        return nodepy
 
     def _extract_shape_info(self, node):
         """
@@ -269,79 +282,42 @@ class TorchGraph:
             use output (its name) to index g_nodes,
             key: output, value: g_node that generates this output
         """
+        omit_useless_nodes = True
         graph = self.trace.graph
         _logger.debug(graph)
         # build output mapping, from output debugName to its node
-        output_to_node = dict()
+        output_to_node = {x.debugName(): n for n in graph.nodes() for x in n.outputs()}        
         # build input mapping, from input debugName to its node
-        input_to_node = dict()
+        input_to_node = {x.debugName(): n for n in graph.nodes() for x in n.inputs()}
         # build module mapping, from module name to all nodes (as list) under this module scope
-        module_to_nodes = dict()
+        module_to_nodes = defaultdict(list)
         # the mapping of function (non-module in forward) to nodes, key is scope name
-        func_to_nodes = dict()
+        func_to_nodes = defaultdict(list)
 
-        graph_inputs = list()
-        graph_outputs = list()
-        for _input in graph.inputs():
-            graph_inputs.append(_input.debugName())
-        for output in graph.outputs():
-            graph_outputs.append(output.debugName())
+        nodes_py = GraphPy()
+        for node in graph.inputs():
+            if omit_useless_nodes:
+                if len(node.uses()) == 0:  # number of user of the node (= number of outputs/ fanout)
+                    continue
+
+            if node.type().kind() != 'ClassType':
+                nodes_py.append(NodePyIO(node, 'input'))
 
         self.leaf_modules = self._extract_leaf_modules()
         module_to_type = self._extract_module_types()
-        _logger.debug(self.leaf_modules)
 
         for node in graph.nodes():
-            # populate output_to_node and input_to_node
-            for output in node.outputs():
-                output_name = output.debugName()
-                output_to_node[output_name] = node
-            for _input in node.inputs():
-                input_name = _input.debugName()
-                input_to_node[input_name] = node
-            scope_name = node.scopeName()
-            module_name = self._get_module_name(scope_name)
-            # if module_name is empty, it is not a module
-            if not module_name in self.leaf_modules:
-                if module_name == '':
-                    continue
-                else:
-                    if module_name in func_to_nodes:
-                        func_to_nodes[module_name].append(node)
-                    else:
-                        func_to_nodes[module_name] = [node]
-            else:
-                if module_name in module_to_nodes:
-                    module_to_nodes[module_name].append(node)
-                else:
-                    module_to_nodes[module_name] = [node]
+            module_name = self._get_module_name(node.scopeName())
+            if module_name in self.leaf_modules:
+                module_to_nodes[module_name].append(node)
+            elif module_name != '':
+                func_to_nodes[module_name].append(node)
 
-        # construct GNode from module
-        for module_name, nodes in module_to_nodes.items():
-            inputs = set()
-            outputs = set()
-            for node in nodes:
-                for output in node.outputs():
-                    outputs.add(output.debugName())
-                for _input in node.inputs():
-                    inputs.add(_input.debugName())
-            m_inputs = list()
-            m_outputs = list()
-            for output in outputs:
-                # TODO: one input could be the input of multiple nodes
-                if not output in input_to_node and output in graph_outputs:
-                    m_outputs.append(output)
-                elif not input_to_node[output] in nodes:
-                    m_outputs.append(output)
-            for _input in inputs:
-                if not _input in output_to_node and _input in graph_inputs:
-                    m_inputs.append(_input)
-                elif not output_to_node[_input] in nodes:
-                    m_inputs.append(_input)
-            if module_name == '':
-                _logger.warning("module_name is empty string")
-            g_node = GNode(module_name, 'module', module_to_type[module_name], m_inputs, m_outputs, nodes)
-            self.g_nodes.append(g_node)
+        for module_name, node_cpps in module_to_nodes.items():
+            node_group = NodePyGroup(
+                module_name, 'module', module_to_type[module_name], node_cpps, input_to_node, output_to_node, graph)
+            print('node_group:', node_group)
+            nodes_py.nodes_op.append(node_group)
 
         # each scope_name may have multiple funcs, we split them and create GNode for each of them
         for scope_name, nodes in func_to_nodes.items():
@@ -353,13 +329,18 @@ class TorchGraph:
             # for each non prim node, expand it has a GNode
             for node in non_prim_nodes:
                 g_node = self._expand_non_prim_node(node, nodes, input_to_node, output_to_node)
-                self.g_nodes.append(g_node)
+                nodes_py.nodes_op.append(g_node)
                 # get shape infor for view (aten::view) func
                 if g_node.op_type == 'aten::view':
                     g_node.auxiliary = self._extract_shape_info(node)
 
+        for i, node in enumerate(graph.outputs()):  # Create sink nodes for output ops
+            node_py = NodePyIO(node, 'output')
+            nodes_py.append(node_py)
+
+        self.nodes_py = nodes_py
         # build index for g_nodes
-        name_to_gnode, input_to_gnode, output_to_gnode = self._build_index_for_gnodes(self.g_nodes)
+        name_to_gnode, input_to_gnode, output_to_gnode = self._build_index_for_gnodes(self.nodes_py.nodes_op)
 
         return name_to_gnode, input_to_gnode, output_to_gnode
 
