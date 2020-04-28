@@ -4,7 +4,7 @@
 import logging
 import math
 import copy
-import json
+import csv
 import numpy as np
 import torch
 from schema import And, Optional
@@ -77,6 +77,8 @@ class SimulatedAnnealingPruner(Pruner):
         self._cool_down_rate = cool_down_rate
         self._perturbation_magnitude = perturbation_magnitude
 
+        # overall pruning rate
+        self._sparsity = config_list[0]['sparsity']
         # pruning rates of the layers
         self._sparsities = None
 
@@ -180,7 +182,7 @@ class SimulatedAnnealingPruner(Pruner):
                 0, 1, len(self.get_modules_wrapper())))
 
             sparsities = self._rescale_sparsities(
-                sparsities, target_sparsity=self.config_list[0]['sparsity'])
+                sparsities, target_sparsity=self._sparsity)
 
             if sparsities[0] >= 0 and sparsities[-1] < 1:
                 logger.info('Initial sparsities generated : %s', sparsities)
@@ -210,7 +212,7 @@ class SimulatedAnnealingPruner(Pruner):
             logger.info("sparsities before rescalling:%s", sparsities)
 
             sparsities = self._rescale_sparsities(
-                sparsities, target_sparsity=self.config_list[0]['sparsity'])
+                sparsities, target_sparsity=self._sparsity)
             logger.info("sparsities after rescalling:%s", sparsities)
 
             if sparsities[0] >= 0 and sparsities[-1] < 1:
@@ -270,7 +272,7 @@ class SimulatedAnnealingPruner(Pruner):
                 evaluation_result = self._evaluater(self._model_pruned)
 
                 self._pruning_history.append(
-                    {'performance': evaluation_result, 'config_list': config_list_level, })
+                    {'sparsity': self._sparsity, 'performance': evaluation_result, 'config_list': config_list_level})
 
                 if self._optimize_mode is OptimizeMode.Minimize:
                     evaluation_result *= -1
@@ -308,8 +310,11 @@ class SimulatedAnnealingPruner(Pruner):
         logger.info('config_list found for LevelPruner: %s',
                     self._sparsities_2_config_list_level(self._sparsities))
 
-        with open('{}pruning_history.txt'.format(self._experiment_data_dir), 'w') as outfile:
-            json.dump(self._pruning_history, outfile)
-        logger.info('pruning history saved to pruning_history.txt')
+        with open('{}pruning_history.csv'.format(self._experiment_data_dir), 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
+            writer.writeheader()
+            for item in self._pruning_history:
+                writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : item['config_list']})
+        logger.info('pruning history saved to pruning_history.csv')
 
         return self.bound_model

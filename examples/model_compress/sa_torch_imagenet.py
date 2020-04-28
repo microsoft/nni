@@ -1,33 +1,17 @@
 from __future__ import print_function
 
 import argparse
-import torch
-import torch.nn.functional as F
-import torch.utils.data
-import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.optim.lr_scheduler import StepLR
 
-from models.mnist.lenet import LeNet
+import torch
+import torch.utils.data
+from torchvision import datasets, transforms
+import torch.nn.functional as F
+import torchvision.models as models
+
 from nni.compression.torch import SimulatedAnnealingPruner
 
-MODEL_DIR = "mnist_lenet.pt"
+MODEL_DIR = "imagenet_mobilenet.pt"
 DATA_DIR = '../data'
-
-
-def train(args, model, device, train_loader, optimizer, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
 
 
 def test(model, device, val_loader):
@@ -35,7 +19,7 @@ def test(model, device, val_loader):
     test_loss = 0
     correct = 0
     with torch.no_grad():
-        for data, target in val_loader:
+        for batch_idx, (data, target) in enumerate(val_loader):
             data, target = data.to(device), target.to(device)
             output = model(data)
             # sum up batch loss
@@ -43,6 +27,9 @@ def test(model, device, val_loader):
             # get the index of the max log-probability
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
+
+            if batch_idx % args.log_interval == 0:
+                print('Validating... {} / {}'.format(batch_idx*len(data), len(val_loader.dataset)))
 
     test_loss /= len(val_loader.dataset)
     accuracy = correct / len(val_loader.dataset)
@@ -55,9 +42,11 @@ def test(model, device, val_loader):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+    parser.add_argument('--num_classes', type=int, default=1000, metavar='N',
+                        help='number of classes (default 1000)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=1, metavar='N',  # TODO:14
                         help='number of epochs to train (default: 14)')
@@ -65,48 +54,36 @@ if __name__ == '__main__':
                         help='learning rate (default: 1.0)')
     parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
                         help='Learning rate step gamma (default: 0.7)')
-    parser.add_argument('--log-interval', type=int, default=200, metavar='N',
+    parser.add_argument('--log-interval', type=int, default=50, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--experiment-data-dir', type=str,
                         default='examples/model_compress/experiment_data/', help='For saving experiment data')
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
     args = parser.parse_args()
-
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
     }
 
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    valdir = '/datasets/imagenet/val'
     val_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+        datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            normalize,
         ])),
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
+        batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = LeNet().to(device)
-    optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+    model = models.mobilenet_v2(pretrained=True).to(device)
 
-    scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        test(model, device, val_loader)
-        scheduler.step()
+    test(model, device, val_loader)
 
-    if args.save_model:
-        torch.save(model.state_dict(), MODEL_DIR)
-
-    # TODO: single item list here
     configure_list = [{
-        'sparsity': 0.5,
+        'sparsity': 0.3,
         'op_types': ['default']  # module types to prune
     }]
 
@@ -114,13 +91,12 @@ if __name__ == '__main__':
         return test(model=model, device=device, val_loader=val_loader)
 
     pruner = SimulatedAnnealingPruner(
-        model, configure_list, evaluator=evaluator, cool_down_rate=0.5, experiment_data_dir=args.experiment_data_dir)
+        model, configure_list, evaluator=evaluator, cool_down_rate=0.9, experiment_data_dir=args.experiment_data_dir)
     pruner.compress()
 
-    # TODO: possilbe to test it without exporting & saving the model ?
     pruner.export_model('{}model.pth'.format(
         args.experiment_data_dir), '{}mask.pth'.format(args.experiment_data_dir))
-    model_pruned = LeNet().to(device)
+    model_pruned = models.mobilenet_v2().to(device)
     model_pruned.load_state_dict(torch.load(
         '{}model.pth'.format(args.experiment_data_dir)))
     evaluation_result = evaluator(model_pruned)
