@@ -284,21 +284,6 @@ class TorchModuleGraph(TorchGraph):
 
         return leaf_nodes
 
-    def _extract_module_types(self):
-        """
-        Extract types (such as 'Conv2d', 'Linear') of model's each sub module and put them in a dict.
-
-        Returns
-        -------
-        dict
-            key: module name
-            value: type of the module
-        """
-        module_to_type = dict()
-        for name, module in self.trace.named_modules():
-            module_to_type[name] = parse_traced_name(module._name)
-        return module_to_type
-
     def _get_module_name(self, scope_name):
         """
         Retrieve module name from scope name.
@@ -373,7 +358,7 @@ class TorchModuleGraph(TorchGraph):
                 nodes_py.append(NodePyIO(node, 'input'))
 
         self.leaf_modules = self._extract_leaf_modules()
-        module_to_type = self._extract_module_types()
+        module_to_type = {name: parse_traced_name(module._name) for name, module in self.trace.named_modules()}
 
         for node in graph.nodes():
             module_name = self._get_module_name(node.scopeName())
@@ -385,7 +370,7 @@ class TorchModuleGraph(TorchGraph):
         for module_name, node_cpps in module_to_nodes.items():
             node_group = NodePyGroup(
                 module_name, 'module', module_to_type[module_name], node_cpps, input_to_node, output_to_node, graph)
-            print('node_group:', node_group)
+            _logger.debug('node_group: %s', node_group)
             nodes_py.nodes_op.append(node_group)
 
         # each scope_name may have multiple funcs, we split them and create node for each of them
