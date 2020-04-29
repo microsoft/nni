@@ -7,6 +7,7 @@ import torch
 
 from .mutables import InputChoice, LayerChoice, MutableScope
 from .mutator import Mutator
+from .utils import to_list
 
 
 class FixedArchitecture(Mutator):
@@ -26,7 +27,6 @@ class FixedArchitecture(Mutator):
     def __init__(self, model, fixed_arc, strict=True):
         super().__init__(model)
         self._fixed_arc = fixed_arc
-        self._fixed_arc = self._encode_tensor(self._fixed_arc)
 
         mutable_keys = set([mutable.key for mutable in self.mutables if not isinstance(mutable, MutableScope)])
         fixed_arc_keys = set(self._fixed_arc.keys())
@@ -37,16 +37,21 @@ class FixedArchitecture(Mutator):
         self._fixed_arc = self._convert_human_readable_architecture(self._fixed_arc)
 
     def _convert_human_readable_architecture(self, human_arc):
+        result_arc = {k: to_list(v) for k, v in human_arc.items()}  # there could be tensors, numpy arrays, etc.
         # First, convert non-list to list.
-        result_arc = {k: v if isinstance(v, list) else [v] for k, v in human_arc}
+        result_arc = {k: v if isinstance(v, list) else [v] for k, v in result_arc.items()}
         # Second, infer which ones are multi-hot arrays and which ones are in human-readable format.
         # This is non-trivial, since if an array in [0, 1], we cannot know for sure it means [false, true] or [true, true].
         # Here, we assume an multihot array has to be a boolean array or a float array and matches the length.
         for mutable in self.mutables:
+            if mutable.key not in result_arc:
+                continue  # skip silently
             choice_arr = result_arc[mutable.key]
             if all(isinstance(v, bool) for v in choice_arr) or all(isinstance(v, float) for v in choice_arr):
-                # multihot, do nothing
-                continue
+                if (isinstance(mutable, LayerChoice) and len(mutable) == len(choice_arr)) or \
+                        (isinstance(mutable, InputChoice) and mutable.n_candidates == len(choice_arr)):
+                    # multihot, do nothing
+                    continue
             if isinstance(mutable, LayerChoice):
                 choice_arr = [mutable.names.index(val) if isinstance(val, str) else val for val in choice_arr]
                 choice_arr = [i in choice_arr for i in range(len(mutable))]
@@ -67,16 +72,6 @@ class FixedArchitecture(Mutator):
         Always returns the fixed architecture.
         """
         return self._fixed_arc
-
-    def _encode_tensor(self, data):
-        if isinstance(data, list):
-            if all(map(lambda o: isinstance(o, bool), data)):
-                return torch.tensor(data, dtype=torch.bool)  # pylint: disable=not-callable
-            else:
-                return torch.tensor(data, dtype=torch.float)  # pylint: disable=not-callable
-        if isinstance(data, dict):
-            return {k: self._encode_tensor(v) for k, v in data.items()}
-        return data
 
 
 def apply_fixed_architecture(model, fixed_arc):

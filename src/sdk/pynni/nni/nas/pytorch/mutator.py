@@ -63,38 +63,10 @@ class Mutator(BaseMutator):
         sampled = self.sample_final()
         result = dict()
         for mutable in self.mutables:
-            # Assert the existence of mutable.key in returned architecture.
-            # Also check if there is anything extra.
-            multihot_list = to_list(sampled.pop(mutable.key))
-            converted = None
-            # If it's a boolean array, we can do optimization.
-            if all([t == 0 or t == 1 for t in multihot_list]):
-                if isinstance(mutable, LayerChoice):
-                    assert len(multihot_list) == len(mutable), \
-                        "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
-                            % (mutable.key, multihot_list)
-                    # check if all modules have different names
-                    if len(set(mutable.names)) == len(mutable):
-                        converted = [name for i, name in enumerate(mutable.names) if multihot_list[i]]
-                    else:
-                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
-                if isinstance(mutable, InputChoice):
-                    assert len(multihot_list) == mutable.n_candidates, \
-                        "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
-                            % (mutable.key, multihot_list)
-                    # check if all input candidates have different names
-                    if len(set(mutable.choose_from)) == mutable.n_candidates:
-                        converted = [name for i, name in enumerate(mutable.choose_from) if multihot_list[i]]
-                    else:
-                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
-            if converted is not None:
-                # if only one element, then remove the bracket
-                if len(converted) == 1:
-                    converted = converted[0]
-            else:
-                # do nothing
-                converted = multihot_list
-            result[mutable.key] = converted
+            if not isinstance(mutable, (LayerChoice, InputChoice)):
+                # not supported as built-in
+                continue
+            result[mutable.key] = self._convert_mutable_decision(mutable, sampled.pop(mutable.key))
         if sampled:
             raise ValueError("Unexpected keys returned from 'sample_final()': %s", list(sampled.keys()))
         return result
@@ -196,9 +168,9 @@ class Mutator(BaseMutator):
             return op(*args, **kwargs)
 
         mask = self._get_decision(mutable)
-        assert len(mask) == len(mutable.choices), \
-            "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable.choices))
-        out = self._select_with_mask(_map_fn, [(choice, args, kwargs) for choice in mutable.choices], mask)
+        assert len(mask) == len(mutable), \
+            "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable))
+        out, mask = self._select_with_mask(_map_fn, [(choice, args, kwargs) for choice in mutable], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list):
@@ -224,17 +196,23 @@ class Mutator(BaseMutator):
         mask = self._get_decision(mutable)
         assert len(mask) == mutable.n_candidates, \
             "Invalid mask, expected {} to be of length {}.".format(mask, mutable.n_candidates)
-        out = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
+        out, mask = self._select_with_mask(lambda x: x, [(t,) for t in tensor_list], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def _select_with_mask(self, map_fn, candidates, mask):
-        if "BoolTensor" in mask.type():
+        if (isinstance(mask, list) and len(mask) >= 1 and isinstance(mask[0], bool)) or \
+                (isinstance(mask, np.ndarray) and mask.dtype == np.bool) or \
+                "BoolTensor" in mask.type():
             out = [map_fn(*cand) for cand, m in zip(candidates, mask) if m]
-        elif "FloatTensor" in mask.type():
+        elif (isinstance(mask, list) and len(mask) >= 1 and isinstance(mask[0], (float, int))) or \
+                (isinstance(mask, np.ndarray) and mask.dtype in (np.float32, np.float64, np.int32, np.int64)) or \
+                "FloatTensor" in mask.type():
             out = [map_fn(*cand) * m for cand, m in zip(candidates, mask) if m]
         else:
-            raise ValueError("Unrecognized mask")
-        return out
+            raise ValueError("Unrecognized mask '%s'" % mask)
+        if not torch.is_tensor(mask):
+            mask = torch.tensor(mask)
+        return out, mask
 
     def _tensor_reduction(self, reduction_type, tensor_list):
         if reduction_type == "none":
@@ -276,3 +254,37 @@ class Mutator(BaseMutator):
         result = self._cache[mutable.key]
         logger.debug("Decision %s: %s", mutable.key, result)
         return result
+
+    def _convert_mutable_decision(self, mutable, sampled):
+        # Assert the existence of mutable.key in returned architecture.
+        # Also check if there is anything extra.
+        multihot_list = to_list(sampled)
+        converted = None
+        # If it's a boolean array, we can do optimization.
+        if all([t == 0 or t == 1 for t in multihot_list]):
+            if isinstance(mutable, LayerChoice):
+                assert len(multihot_list) == len(mutable), \
+                    "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                        % (mutable.key, multihot_list)
+                # check if all modules have different names and they indeed have names
+                if len(set(mutable.names)) == len(mutable) and not all(d.isdigit() for d in mutable.names):
+                    converted = [name for i, name in enumerate(mutable.names) if multihot_list[i]]
+                else:
+                    converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+            if isinstance(mutable, InputChoice):
+                assert len(multihot_list) == mutable.n_candidates, \
+                    "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                        % (mutable.key, multihot_list)
+                # check if all input candidates have different names
+                if len(set(mutable.choose_from)) == mutable.n_candidates:
+                    converted = [name for i, name in enumerate(mutable.choose_from) if multihot_list[i]]
+                else:
+                    converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+        if converted is not None:
+            # if only one element, then remove the bracket
+            if len(converted) == 1:
+                converted = converted[0]
+        else:
+            # do nothing
+            converted = multihot_list
+        return converted

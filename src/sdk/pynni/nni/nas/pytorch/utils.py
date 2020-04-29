@@ -53,7 +53,7 @@ def to_list(arr):
         return arr.tolist()
     if isinstance(arr, (list, tuple)):
         return list(arr)
-    raise TypeError("Unrecognized list %s of type '%s'" % (arr, type(arr)))
+    return arr
 
 
 class AverageMeterGroup:
