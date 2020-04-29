@@ -7,7 +7,9 @@ from collections import defaultdict
 import numpy as np
 import torch
 
-from nni.nas.pytorch.base_mutator import BaseMutator
+from .base_mutator import BaseMutator
+from .mutables import LayerChoice, InputChoice
+from .utils import to_list
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +60,44 @@ class Mutator(BaseMutator):
         dict
             A mapping from key of mutables to decisions.
         """
-        return self.sample_final()
+        sampled = self.sample_final()
+        result = dict()
+        for mutable in self.mutables:
+            # Assert the existence of mutable.key in returned architecture.
+            # Also check if there is anything extra.
+            multihot_list = to_list(sampled.pop(mutable.key))
+            converted = None
+            # If it's a boolean array, we can do optimization.
+            if all([t == 0 or t == 1 for t in multihot_list]):
+                if isinstance(mutable, LayerChoice):
+                    assert len(multihot_list) == len(mutable), \
+                        "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                            % (mutable.key, multihot_list)
+                    # check if all modules have different names
+                    if len(set(mutable.names)) == len(mutable):
+                        converted = [name for i, name in enumerate(mutable.names) if multihot_list[i]]
+                    else:
+                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+                if isinstance(mutable, InputChoice):
+                    assert len(multihot_list) == mutable.n_candidates, \
+                        "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                            % (mutable.key, multihot_list)
+                    # check if all input candidates have different names
+                    if len(set(mutable.choose_from)) == mutable.n_candidates:
+                        converted = [name for i, name in enumerate(mutable.choose_from) if multihot_list[i]]
+                    else:
+                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+            if converted is not None:
+                # if only one element, then remove the bracket
+                if len(converted) == 1:
+                    converted = converted[0]
+            else:
+                # do nothing
+                converted = multihot_list
+            result[mutable.key] = converted
+        if sampled:
+            raise ValueError("Unexpected keys returned from 'sample_final()': %s", list(sampled.keys()))
+        return result
 
     def status(self):
         """
