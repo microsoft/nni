@@ -92,8 +92,11 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Required key. Set the mount path in your container used in PAI.
 * paiStoragePlugin
     * Optional key. Set the storage plugin name used in PAI. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+* command  
+    * Optional key. Set the commands used in PAI container.
 * paiConfigPath
     * Optional key. Set the file path of pai job configuration, the file is in yaml format.
+    If users set paiConfigPath in NNI's configuration file, the `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` filed will lose efficacy, and configurations from `paiConfigPath` will take effect. Notice that if users set `paiConfigPath`, NNI will check the validation of `commands` under  `taskRoles/taskRole/commands`.
 
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
