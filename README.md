@@ -339,6 +339,9 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
+* Join NNI user group by scanning the QR code below through Wechat:
+
+![Image text](https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png)
 
 ## Related Projects
 
