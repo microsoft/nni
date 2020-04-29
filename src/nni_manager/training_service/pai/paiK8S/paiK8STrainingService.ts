@@ -145,9 +145,9 @@ class PAIK8STrainingService extends PAITrainingService {
         const jobName = `nni_exp_${this.experimentId}_trial_${trialJobId}`
         let paiJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
-                paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                paiJobConfig.name = jobName;
-                paiJobConfig.taskRoles.taskrole.commands = [command]
+            paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+            paiJobConfig.name = jobName;
+            paiJobConfig.taskRoles.taskrole.commands = [command];
         } else {
             paiJobConfig = {
                 protocolVersion: 2, 
@@ -190,7 +190,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 }
             }
             if (this.paiTrialConfig.virtualCluster) {
-                paiJobConfig.defaults=  {
+                paiJobConfig.defaults = {
                     virtualCluster: this.paiTrialConfig.virtualCluster
                 }
             }

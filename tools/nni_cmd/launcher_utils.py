@@ -268,7 +268,7 @@ def validate_pai_config_path(experiment_config):
         if experiment_config.get('trial', {}).get('paiConfigPath'):
             # check if commands exist
             pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
-            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('commands', [])[0] is None:
+            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('commands', [None])[0] is None:
                 print_error('Please set paiStoragePlugin field, or set plugin in your own paiConfig!')
                 exit(1)
             experiment_config['trial']['command'] = pai_config['taskRoles']['taskrole']['commands'][0]
