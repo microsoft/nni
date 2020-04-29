@@ -96,7 +96,13 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Optional key. Set the commands used in PAI container.
 * paiConfigPath
     * Optional key. Set the file path of pai job configuration, the file is in yaml format.
-    If users set paiConfigPath in NNI's configuration file, the `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` filed will lose efficacy, and configurations from `paiConfigPath` will take effect. If users set multiple taskRoles in PAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error.
+    If users set paiConfigPath in NNI's configuration file, the `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` filed will be replaced by configurations from `paiConfigPath`.   
+    ```
+    Note:
+
+      1.  If users set multiple taskRoles in PAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error. 
+      2. The job name in PAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}
+    ```  
 
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
