@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import os
 import math
 import copy
 import csv
@@ -64,7 +65,8 @@ class SimulatedAnnealingPruner(Pruner):
         self._model_pruned = copy.deepcopy(model)
 
         self._experiment_data_dir = experiment_data_dir
-        self._TMP_MODEL_PATH = '{}model.pth'.format(self._experiment_data_dir)
+        self._TMP_MODEL_PATH = os.path.join(self._experiment_data_dir, 'model.pth')
+        self._PRUNING_HISTORY_PATH = os.path.join(self._experiment_data_dir, 'pruning_history.csv')
 
         super().__init__(model, config_list)
 
@@ -310,11 +312,11 @@ class SimulatedAnnealingPruner(Pruner):
         logger.info('config_list found for LevelPruner: %s',
                     self._sparsities_2_config_list_level(self._sparsities))
 
-        with open('{}pruning_history.csv'.format(self._experiment_data_dir), 'w') as csvfile:
+        with open(self._PRUNING_HISTORY_PATH, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
             writer.writeheader()
             for item in self._pruning_history:
                 writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : item['config_list']})
-        logger.info('pruning history saved to pruning_history.csv')
+        logger.info('pruning history saved to %s', self._PRUNING_HISTORY_PATH)
 
         return self.bound_model

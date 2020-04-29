@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import argparse
-
+import os
 import torch
 import torch.utils.data
 from torchvision import datasets, transforms
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     test(model, device, val_loader)
 
     configure_list = [{
-        'sparsity': 0.3,
+        'sparsity': 0.4,
         'op_types': ['default']  # module types to prune
     }]
 
@@ -94,10 +94,8 @@ if __name__ == '__main__':
         model, configure_list, evaluator=evaluator, cool_down_rate=0.9, experiment_data_dir=args.experiment_data_dir)
     pruner.compress()
 
-    pruner.export_model('{}model.pth'.format(
-        args.experiment_data_dir), '{}mask.pth'.format(args.experiment_data_dir))
+    pruner.export_model(os.path.join(args.experiment_data_dir, 'model.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
     model_pruned = models.mobilenet_v2().to(device)
-    model_pruned.load_state_dict(torch.load(
-        '{}model.pth'.format(args.experiment_data_dir)))
+    model_pruned.load_state_dict(torch.load(os.path.join(args.experiment_data_dir, 'model.pth')))
     evaluation_result = evaluator(model_pruned)
     print('Evaluation result : %s' % evaluation_result)

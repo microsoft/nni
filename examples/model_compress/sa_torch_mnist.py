@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import os
 import torch
 import torch.nn.functional as F
 import torch.utils.data
@@ -118,10 +119,8 @@ if __name__ == '__main__':
     pruner.compress()
 
     # TODO: possilbe to test it without exporting & saving the model ?
-    pruner.export_model('{}model.pth'.format(
-        args.experiment_data_dir), '{}mask.pth'.format(args.experiment_data_dir))
+    pruner.export_model(os.path.join(args.experiment_data_dir, 'model.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
     model_pruned = LeNet().to(device)
-    model_pruned.load_state_dict(torch.load(
-        '{}model.pth'.format(args.experiment_data_dir)))
+    model_pruned.load_state_dict(torch.load(os.path.join(args.experiment_data_dir, 'model.pth')))
     evaluation_result = evaluator(model_pruned)
     print('Evaluation result : %s' % evaluation_result)
