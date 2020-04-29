@@ -266,12 +266,12 @@ def validate_pai_config_path(experiment_config):
     '''validate paiConfigPath field'''
     if experiment_config.get('trainingServicePlatform') == 'pai':
         if experiment_config.get('trial', {}).get('paiConfigPath'):
-            # check if commands exist
+            # validate commands
             pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
-            if pai_config.get('taskRoles', {}).get('taskrole', {}).get('commands', [None])[0] is None:
-                print_error('Please set paiStoragePlugin field, or set plugin in your own paiConfig!')
+            taskRoles_dict = pai_config.get('taskRoles', {})
+            if len(taskRoles_dict) == 0:
+                print_error('Please set taskRoles in paiConfigPath config file!')
                 exit(1)
-            experiment_config['trial']['command'] = pai_config['taskRoles']['taskrole']['commands'][0]
         else:
             pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
             for trial_field in pai_trial_fields_required_list:

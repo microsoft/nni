@@ -96,7 +96,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Optional key. Set the commands used in PAI container.
 * paiConfigPath
     * Optional key. Set the file path of pai job configuration, the file is in yaml format.
-    If users set paiConfigPath in NNI's configuration file, the `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` filed will lose efficacy, and configurations from `paiConfigPath` will take effect. Notice that if users set `paiConfigPath`, NNI will check the validation of `commands` under  `taskRoles/taskRole/commands`.
+    If users set paiConfigPath in NNI's configuration file, the `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` filed will lose efficacy, and configurations from `paiConfigPath` will take effect. If users set multiple taskRoles in PAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error.
 
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
@@ -106,6 +106,12 @@ nnictl create --config exp_pai.yml
 to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`.
 You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
 ![](../../img/nni_pai_joblist.jpg)
+
+
+
+<center class="half">
+    <img src="https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png?raw=true" />
+</center>
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
