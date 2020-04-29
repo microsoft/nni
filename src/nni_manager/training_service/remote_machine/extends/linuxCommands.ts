@@ -57,7 +57,7 @@ class LinuxCommands extends OsCommands {
 
     public isProcessAliveProcessOutput(commandResult: RemoteCommandResult): boolean {
         let result = true;
-        if (commandResult.exitCode > 0) {
+        if (commandResult.exitCode !== 0) {
             result = false;
         }
         return result;

@@ -351,7 +351,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Get culster metadata
      * @param key metadata key
      */
-    public async getClusterMetadata(_key: string): Promise<string> {
+    public async getClusterMetadata(key: string): Promise<string> {
         return "";
     }
 
@@ -581,7 +581,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRmMetaByHost(host: string): RemoteMachineMeta {
-        for (const [rmMeta,] of this.machineSSHManagerMap.entries()) {
+        for (const rmMeta of this.machineSSHManagerMap.keys()) {
             if (rmMeta.ip === host) {
                 return rmMeta;
             }
