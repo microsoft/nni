@@ -6,6 +6,7 @@ import os
 import math
 import copy
 import csv
+import json
 import numpy as np
 import torch
 from schema import And, Optional
@@ -316,7 +317,7 @@ class SimulatedAnnealingPruner(Pruner):
             writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
             writer.writeheader()
             for item in self._pruning_history:
-                writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : item['config_list']})
+                writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : json.dumps(item['config_list'])})
         logger.info('pruning history saved to %s', self._PRUNING_HISTORY_PATH)
 
         return self.bound_model
