@@ -351,10 +351,8 @@ class RemoteMachineTrainingService implements TrainingService {
      * Get culster metadata
      * @param key metadata key
      */
-    public getClusterMetadata(): Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
-
-        return deferred.promise;
+    public async getClusterMetadata(_key: string): Promise<string> {
+        return "";
     }
 
     /**
