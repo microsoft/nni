@@ -336,6 +336,9 @@ You can use these commands to get more information about the experiment
 * 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
 * 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问。
+* 在 NNI 用户交流群中参与讨论，请使用微信扫码加入。
+
+![Image text](https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png)
 
 ## 相关项目
 
