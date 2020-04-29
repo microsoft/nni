@@ -133,8 +133,7 @@ class TorchProtoGraph(TorchGraph):
         return nodes_py.to_proto()
 
 class NodePyGroup(NodePy):
-    def __init__(self, name, node_type, op_type, node_cpps, input_to_node=None,
-                 output_to_node=None, graph=None, inputs=None, outputs=None):
+    def __init__(self, name, node_type, op_type, node_cpps, inputs=None, outputs=None):
         super(NodePyGroup, self).__init__(name, [])
         self.node_cpps = node_cpps
         self.name = name
@@ -143,33 +142,14 @@ class NodePyGroup(NodePy):
         self.nodes = []
         self.auxiliary = None
         self.add_nodes(node_cpps)
-        if node_type == 'module':
-            self.set_io(input_to_node, output_to_node, graph)
-        else:
-            self.inputs = inputs
-            self.outputs = outputs
+        self.inputs = inputs
+        self.outputs = outputs
 
     def add_nodes(self, node_cpps):
         for node_cpp in node_cpps:
             nodepy = NodePyOP(node_cpp)
             nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
             self.nodes.append(nodepy)
-
-    def set_io(self, input_to_node, output_to_node, graph):
-        self.inputs, self.outputs = [], []
-        for n in self.node_cpps:
-            for i in n.inputs():
-                name = i.debugName()
-                if not name in output_to_node and i in graph.inputs():
-                    self.inputs.append(name)
-                elif output_to_node[name] not in self.node_cpps:
-                    self.inputs.append(name)
-            for o in n.outputs():
-                name = o.debugName()
-                if not name in input_to_node and o in graph.outputs():
-                    self.outputs.append(name)
-                elif input_to_node[name] not in self.node_cpps:
-                    self.outputs.append(name)
 
     def sub_node_names(self):
         return [x.name for x in self.nodes]
@@ -238,6 +218,26 @@ class TorchModuleGraph(TorchGraph):
             outputs.append(output.debugName())
         nodepy = NodePyGroup(node_name, 'func', op_type, node_group, inputs=inputs, outputs=outputs)
         return nodepy
+
+    def _build_module_node_group(self, module_name, op_type, node_cpps, input_to_node, output_to_node):
+        graph = self.trace.graph
+        inputs, outputs = [], []
+        for n in node_cpps:
+            for i in n.inputs():
+                name = i.debugName()
+                if not name in output_to_node and i in graph.inputs():
+                    inputs.append(name)
+                elif output_to_node[name] not in node_cpps:
+                    inputs.append(name)
+            for o in n.outputs():
+                name = o.debugName()
+                if not name in input_to_node and o in graph.outputs():
+                    outputs.append(name)
+                elif input_to_node[name] not in node_cpps:
+                    outputs.append(name)
+
+        return NodePyGroup(module_name, 'module', op_type, node_cpps, inputs, outputs)
+
 
     def _extract_shape_info(self, node):
         """
@@ -360,6 +360,7 @@ class TorchModuleGraph(TorchGraph):
         self.leaf_modules = self._extract_leaf_modules()
         module_to_type = {name: parse_traced_name(module._name) for name, module in self.trace.named_modules()}
 
+        # associate module name with their trace graph nodes
         for node in graph.nodes():
             module_name = self._get_module_name(node.scopeName())
             if module_name in self.leaf_modules:
@@ -367,13 +368,16 @@ class TorchModuleGraph(TorchGraph):
             elif module_name != '':
                 func_to_nodes[module_name].append(node)
 
+        # build node group for module
         for module_name, node_cpps in module_to_nodes.items():
-            node_group = NodePyGroup(
-                module_name, 'module', module_to_type[module_name], node_cpps, input_to_node, output_to_node, graph)
+            node_group = self._build_module_node_group(
+                module_name, module_to_type[module_name], node_cpps, input_to_node, output_to_node
+            )
             _logger.debug('node_group: %s', node_group)
             nodes_py.nodes_op.append(node_group)
 
         # each scope_name may have multiple funcs, we split them and create node for each of them
+        # build node group for torch.nn.functional
         for _, nodes in func_to_nodes.items():
             # extract non prim:: nodes
             non_prim_nodes = list()
@@ -382,11 +386,11 @@ class TorchModuleGraph(TorchGraph):
                     non_prim_nodes.append(node)
             # for each non prim node, expand it
             for node in non_prim_nodes:
-                node_py = self._expand_non_prim_node(node, nodes, input_to_node, output_to_node)
-                nodes_py.nodes_op.append(node_py)
+                node_group = self._expand_non_prim_node(node, nodes, input_to_node, output_to_node)
+                nodes_py.nodes_op.append(node_group)
                 # get shape infor for view (aten::view) func
-                if node_py.op_type == 'aten::view':
-                    node_py.auxiliary = self._extract_shape_info(node)
+                if node_group.op_type == 'aten::view':
+                    node_group.auxiliary = self._extract_shape_info(node)
 
         for node in graph.outputs():  # Create sink nodes for output ops
             node_py = NodePyIO(node, 'output')
