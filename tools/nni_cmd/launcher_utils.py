@@ -268,8 +268,8 @@ def validate_pai_config_path(experiment_config):
         if experiment_config.get('trial', {}).get('paiConfigPath'):
             # validate commands
             pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
-            taskRoles_dict = pai_config.get('taskRoles', {})
-            if len(taskRoles_dict) == 0:
+            taskRoles_dict = pai_config.get('taskRoles')
+            if not taskRoles_dict:
                 print_error('Please set taskRoles in paiConfigPath config file!')
                 exit(1)
         else:
