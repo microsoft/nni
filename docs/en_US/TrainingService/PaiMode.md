@@ -116,10 +116,6 @@ You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
 
 
 
-<center class="half">
-    <img src="https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png?raw=true" />
-</center>
-
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
