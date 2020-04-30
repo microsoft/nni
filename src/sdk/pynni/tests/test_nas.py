@@ -103,6 +103,11 @@ class NasTestCase(TestCase):
             get_and_apply_next_architecture(model)
             self.iterative_sample_and_forward(model)
 
+    def test_proxylessnas(self):
+        model = self.model_module.LayerChoiceOnlySearchSpace(self)
+        get_and_apply_next_architecture(model)
+        self.iterative_sample_and_forward(model)
+
     def test_layer_choice(self):
         for i in range(2):
             for j in range(2):
