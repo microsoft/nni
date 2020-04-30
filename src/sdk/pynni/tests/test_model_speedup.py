@@ -9,7 +9,6 @@ import torch.nn.functional as F
 import math
 from unittest import TestCase, main
 
-from nni.graph_utils import build_module_graph
 from nni.compression.torch import L1FilterPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
@@ -55,22 +54,6 @@ class BigModel(torch.nn.Module):
 
 
 class SpeedupTestCase(TestCase):
-    def test_build_graph(self):
-        big_model = BigModel()
-        g = build_module_graph(big_model, torch.randn(2, 1, 28, 28))
-        print(g.name_to_node.keys())
-        leaf_modules = set([
-            'backbone1.conv1', 'backbone2.bn1', 'backbone2.bn2', 'backbone2.conv1',
-            'backbone2.conv2', 'backbone2.fc1', 'backbone2.fc2', 'fc3'
-        ])
-
-        assert set(g.leaf_modules) == leaf_modules
-        assert not leaf_modules - set(g.name_to_node.keys())
-        assert g.find_successors('backbone2.conv1') == ['backbone2.bn1']
-        assert g.find_successors('backbone2.conv2') == ['backbone2.bn2']
-        assert g.find_predecessors('backbone2.bn1') == ['backbone2.conv1']
-        assert g.find_predecessors('backbone2.bn2') == ['backbone2.conv2']
-
     def test_speedup(self):
         SPARSITY = 0.5
         config_list = [{
