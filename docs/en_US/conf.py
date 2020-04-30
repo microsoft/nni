@@ -45,6 +45,7 @@ extensions = [
     'sphinx_markdown_tables',
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
 ]
 
 # Add mock modules
