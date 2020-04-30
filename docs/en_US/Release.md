@@ -206,7 +206,7 @@
 
 * Documentation
     - Update the docs structure  -Issue #1231
-    - [Multi phase document improvement](AdvancedFeature/MultiPhase.md)   -Issue #1233  -PR #1242
+    - (deprecated) Multi phase document improvement   -Issue #1233  -PR #1242
          + Add configuration example
     - [WebUI description improvement](Tutorial/WebUI.md)  -PR #1419
 
@@ -234,12 +234,10 @@
     * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md) 
 
-* Multiphase experiment supports
+* (deprecated) Multiphase experiment supports
     * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
     * Added multiphase capability for the following builtin tuners: 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
-    
-    For details, please refer to [Write a tuner that leverages multi-phase](AdvancedFeature/MultiPhase.md)
 
 * Web Portal
     * Enable trial comparation in Web Portal. For details, refer to [View trials status](Tutorial/WebUI.md)
@@ -549,4 +547,3 @@ Initial release of Neural Network Intelligence (NNI).
   * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu
 * Others
   * Support simple GPU job scheduling
-
