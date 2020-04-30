@@ -31,7 +31,7 @@ import { GPUScheduler } from './gpuScheduler';
 import {
     REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
-    ScheduleResultType, SSHClientManager
+    ScheduleResultType, ExecutorManager
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
@@ -41,10 +41,10 @@ import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
  */
 @component.Singleton
 class RemoteMachineTrainingService implements TrainingService {
-    private readonly machineSSHManagerMap: Map<RemoteMachineMeta, SSHClientManager>; //machine ssh client map
-    private readonly trialExecutorMap: Map<string, ShellExecutor>; //trial ssh client map
+    private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
+    private readonly trialExecutorMap: Map<string, ShellExecutor>; //trial excutor map
     private readonly trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
-    private readonly MAX_TRIAL_NUMBER_PER_SSHCONNECTION: number = 5; // every ssh client has a max trial concurrency number
+    private readonly MAX_TRIAL_NUMBER_PER_EXECUTOR: number = 5; // every excutor has a max trial concurrency number
     private readonly expRootDir: string;
     private readonly remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
@@ -67,7 +67,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialExecutorMap = new Map<string, ShellExecutor>();
-        this.machineSSHManagerMap = new Map<RemoteMachineMeta, SSHClientManager>();
+        this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
@@ -110,18 +110,18 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     /**
-     * give trial a ssh connection
+     * give trial an executor
      * @param trial remote machine trial job detail
      */
-    public async allocateSSHClientForTrial(trial: RemoteMachineTrialJobDetail): Promise<void> {
+    public async allocateExecutorForTrial(trial: RemoteMachineTrialJobDetail): Promise<void> {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        const sshClientManager: SSHClientManager | undefined = this.machineSSHManagerMap.get(trial.rmMeta);
-        if (sshClientManager === undefined) {
-            throw new Error(`sshClientManager not initialized`);
+        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(trial.rmMeta);
+        if (executorManager === undefined) {
+            throw new Error(`executorManager not initialized`);
         }
-        const shellExecutor: ShellExecutor = await sshClientManager.getAvailableSshExecutor();
+        const shellExecutor: ShellExecutor = await executorManager.getAvailableExecutor();
         this.trialExecutorMap.set(trial.id, shellExecutor);
     }
 
@@ -129,15 +129,15 @@ class RemoteMachineTrainingService implements TrainingService {
      * If a trial is finished, release the connection resource
      * @param trial remote machine trial job detail
      */
-    public releaseTrialSSHClient(trial: RemoteMachineTrialJobDetail): void {
+    public releaseTrialExecutor(trial: RemoteMachineTrialJobDetail): void {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        const sshClientManager: SSHClientManager | undefined = this.machineSSHManagerMap.get(trial.rmMeta);
-        if (sshClientManager === undefined) {
-            throw new Error(`sshClientManager not initialized`);
+        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(trial.rmMeta);
+        if (executorManager === undefined) {
+            throw new Error(`executorManager not initialized`);
         }
-        sshClientManager.releaseConnection(this.trialExecutorMap.get(trial.id));
+        executorManager.releaseConnection(this.trialExecutorMap.get(trial.id));
     }
 
     /**
@@ -166,13 +166,13 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         //TO DO: add another job status, and design new job status change logic
         if (trialJob.status === 'RUNNING' || trialJob.status === 'UNKNOWN') {
-            // Get ssh client where the job is running
+            // Get executor where the job is running
             if (trialJob.rmMeta === undefined) {
                 throw new Error(`rmMeta not set for submitted job ${trialJobId}`);
             }
             const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJob.id);
             if (executor === undefined) {
-                throw new Error(`Invalid job id: ${trialJobId}, cannot find ssh client`);
+                throw new Error(`Invalid job id: ${trialJobId}, cannot find executor`);
             }
 
             return this.updateTrialJobStatus(trialJob, executor);
@@ -261,16 +261,16 @@ class RemoteMachineTrainingService implements TrainingService {
             this.jobQueue.splice(index, 1);
         }
 
-        // Get ssh client where the job is running
+        // Get executor where the job is running
         if (trialJob.rmMeta !== undefined) {
             // If the trial job is already scheduled, check its status and kill the trial process in remote machine
             const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJob.id);
             if (executor === undefined) {
-                throw new Error(`Invalid job id ${trialJobId}, cannot find ssh client`);
+                throw new Error(`Invalid job id ${trialJobId}, cannot find executor`);
             }
 
             if (trialJob.status === 'UNKNOWN') {
-                this.releaseTrialSSHClient(trialJob);
+                this.releaseTrialExecutor(trialJob);
                 trialJob.status = 'USER_CANCELED';
                 return
             }
@@ -280,7 +280,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await executor.killChildProcesses(jobpidPath);
-                this.releaseTrialSSHClient(trialJob);
+                this.releaseTrialExecutor(trialJob);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -295,7 +295,7 @@ class RemoteMachineTrainingService implements TrainingService {
     /**
      * Set culster metadata
      * @param key metadata key
-     * //1. MACHINE_LIST -- create ssh client connect of machine list
+     * //1. MACHINE_LIST -- create executor of machine list
      * //2. TRIAL_CONFIG -- trial configuration
      * @param value metadata value
      */
@@ -306,7 +306,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
-                this.gpuScheduler = new GPUScheduler(this.machineSSHManagerMap);
+                this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -382,14 +382,14 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     private async cleanupConnections(): Promise<void> {
         try {
-            for (const [rmMeta, sshClientManager] of this.machineSSHManagerMap.entries()) {
+            for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
                 const jobpidPath: string = unixPathJoin(this.getRemoteScriptsPath(rmMeta.username), 'pid');
-                const executor: ShellExecutor | undefined = sshClientManager.getFirstSshExecutor();
+                const executor: ShellExecutor | undefined = executorManager.getFirstExecutor();
                 if (executor !== undefined) {
                     await executor.killChildProcesses(jobpidPath);
                     await executor.removeFolder(this.getRemoteScriptsPath(rmMeta.username));
                 }
-                sshClientManager.closeAllSSHClient();
+                executorManager.closeAllExecutor();
             }
         } catch (error) {
             //ignore error, this function is called to cleanup remote connections when experiment is stopping
@@ -408,10 +408,10 @@ class RemoteMachineTrainingService implements TrainingService {
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
-            const sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
-            const sshClient: ShellExecutor = await sshClientManager.getAvailableSshExecutor();
-            this.machineSSHManagerMap.set(rmMeta, sshClientManager);
-            await this.initRemoteMachineOnConnected(rmMeta, sshClient);
+            const executorManager: ExecutorManager = new ExecutorManager([], this.MAX_TRIAL_NUMBER_PER_EXECUTOR, rmMeta);
+            const executor: ShellExecutor = await executorManager.getAvailableExecutor();
+            this.machineExecutorManagerMap.set(rmMeta, executorManager);
+            await this.initRemoteMachineOnConnected(rmMeta, executor);
             if (++connectedRMNum === rmMetaList.length) {
                 deferred.resolve();
             }
@@ -421,7 +421,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {
-        // Create root working directory after ssh connection is ready
+        // Create root working directory after executor is ready
         const nniRootDir: string = unixPathJoin(getRemoteTmpDir(this.remoteOS), 'nni');
         await executor.createFolder(this.remoteExpRootDir);
 
@@ -467,7 +467,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             return deferred.promise;
         }
-        // get an ssh client from scheduler
+        // get an executor from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
             const errorMessage: string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
@@ -481,7 +481,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
-            await this.allocateSSHClientForTrial(trialJobDetail);
+            await this.allocateExecutorForTrial(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
                 trialJobId, trialWorkingFolder, trialJobDetail.form, rmScheduleInfo);
 
@@ -581,7 +581,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRmMetaByHost(host: string): RemoteMachineMeta {
-        for (const rmMeta of this.machineSSHManagerMap.keys()) {
+        for (const rmMeta of this.machineExecutorManagerMap.keys()) {
             if (rmMeta.ip === host) {
                 return rmMeta;
             }
@@ -616,7 +616,7 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
-                    this.releaseTrialSSHClient(trialJob);
+                    this.releaseTrialExecutor(trialJob);
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }

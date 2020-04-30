@@ -57,42 +57,30 @@ describe('ShellExecutor test', () => {
         fs.unlinkSync(LOCALFILE);
     });
 
-    it('Test mkdir', (done) => {
+    it('Test mkdir', async () => {
         if (skip) {
-            done();
-
             return;
         }
-        const conn: Client = new Client();
-        conn.on('ready', async () => {
-            const shellExecutor: ShellExecutor = new ShellExecutor(conn);
-            await shellExecutor.initialize();
-            let result = await shellExecutor.createFolder(REMOTEFOLDER, false);
-            chai.expect(result).eq(true);
-            result = await shellExecutor.removeFolder(REMOTEFOLDER);
-            chai.expect(result).eq(true);
-            done();
-        }).connect(rmMeta);
+        const shellExecutor: ShellExecutor = new ShellExecutor();
+        await shellExecutor.initialize(rmMeta);
+        let result = await shellExecutor.createFolder(REMOTEFOLDER, false);
+        chai.expect(result).eq(true);
+        result = await shellExecutor.removeFolder(REMOTEFOLDER);
+        chai.expect(result).eq(true);
     });
 
-    it('Test ShellExecutor', (done) => {
+    it('Test ShellExecutor', async () => {
         if (skip) {
-            done();
-
             return;
         }
-        const conn: Client = new Client();
-        conn.on('ready', async () => {
-            const shellExecutor: ShellExecutor = new ShellExecutor(conn);
-            await shellExecutor.initialize();
-            await copyFile(shellExecutor);
-            await Promise.all([
-                copyFileToRemoteLoop(shellExecutor),
-                copyFileToRemoteLoop(shellExecutor),
-                copyFileToRemoteLoop(shellExecutor),
-                getRemoteFileContentLoop(shellExecutor)
-            ]);
-            done();
-        }).connect(rmMeta);
+        const shellExecutor: ShellExecutor = new ShellExecutor();
+        await shellExecutor.initialize(rmMeta);
+        await copyFile(shellExecutor);
+        await Promise.all([
+            copyFileToRemoteLoop(shellExecutor),
+            copyFileToRemoteLoop(shellExecutor),
+            copyFileToRemoteLoop(shellExecutor),
+            getRemoteFileContentLoop(shellExecutor)
+        ]);
     });
 });
