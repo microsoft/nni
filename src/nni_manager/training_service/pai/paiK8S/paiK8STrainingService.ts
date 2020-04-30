@@ -100,12 +100,15 @@ class PAIK8STrainingService extends PAITrainingService {
         }
     }
     
-    //TODO: update trial parameters
+    // update trial parameters for multi-phase
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
         }
+        // Write file content ( parameter.cfg ) to working folders
+        await this.writeParameterFile(trialJobDetail.logPath, form.hyperParameters);
+
         return trialJobDetail;
     }
 
@@ -230,24 +233,20 @@ class PAIK8STrainingService extends PAITrainingService {
         this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
 
         // Step 1. Prepare PAI job configuration
-        const trialLocalFolder: string = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, trialJobId);
         //create trial local working folder locally.
-        await execMkdir(trialLocalFolder);
+        await execMkdir(trialJobDetail.logPath);
 
         const runScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local files
-        await fs.promises.writeFile(path.join(trialLocalFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialJobDetail.logPath, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local working folders
         if (trialJobDetail.form !== undefined) {
-            await fs.promises.writeFile(
-                path.join(trialLocalFolder, generateParamFileName(trialJobDetail.form.hyperParameters)),
-                trialJobDetail.form.hyperParameters.value, { encoding: 'utf8' }
-            );
+            await this.writeParameterFile(trialJobDetail.logPath, trialJobDetail.form.hyperParameters);
         }
 
         //Copy codeDir files to local working folder
-        await execCopydir(this.paiTrialConfig.codeDir, trialLocalFolder);
+        await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
         
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
@@ -297,6 +296,11 @@ class PAIK8STrainingService extends PAITrainingService {
         });
 
         return deferred.promise;
+    }
+
+    private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
+        const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
+        await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
     }
 }
 
