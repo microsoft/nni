@@ -12,11 +12,12 @@ import inspect
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
+sys.path.insert(0, parentdir)
 
 from models.mnist.lenet import LeNet
-from models.Pytorch_Retinaface.models.retinaface import RetinaFace
-from models.Pytorch_Retinaface.data import cfg_mnet, cfg_re50
+# from models.Pytorch_Retinaface.models.retinaface import RetinaFace
+# from models.Pytorch_Retinaface.data import cfg_mnet, cfg_re50
+
 
 def get_config_lists(files):
     pruning_histories = []
@@ -34,7 +35,7 @@ def get_config_lists(files):
         config_list = history.loc[idx, 'config_list']
         config_lists.append(json.loads(config_list))
 
-    return config_lists, overall_sparsities
+    return config_lists, overall_sparsities, performances
 
 
 def get_original_op(model):
@@ -67,14 +68,14 @@ def draw(model):
         files = ['lenet/pruning_history.csv']
         model = LeNet()
     elif model == 'mobilenet_v2':
-        files = ['mobilenet/pruning_history_01.csv', 'mobilenet/pruning_history_03.csv', 'mobilenet/pruning_history_04.csv','mobilenet/pruning_history_05.csv']
+        files = ['mobilenet/pruning_history_01.csv', 'mobilenet/pruning_history_03.csv', 'mobilenet/pruning_history_04.csv', 'mobilenet/pruning_history_05.csv']
         model = models.mobilenet_v2()
-    elif model == 'retinaface':
-        files = ['retinaface/pruning_history_01.csv', 'retinaface/pruning_history_03.csv']
-        cfg = cfg_mnet
-        model = RetinaFace(cfg=cfg, phase='test')
+    # elif model == 'retinaface':
+    #     files = ['retinaface/pruning_history_01.csv', 'retinaface/pruning_history_03.csv']
+    #     cfg = cfg_mnet
+    #     model = RetinaFace(cfg=cfg, phase='test')
 
-    config_lists, overall_sparsities = get_config_lists(files)
+    config_lists, overall_sparsities, performances = get_config_lists(files)
 
     fig, axs = plt.subplots(3, 1, constrained_layout=True)
     fig.suptitle("Sparsities distribution ")
@@ -93,7 +94,7 @@ def draw(model):
             i = op_names_original.index(op_name)
             sparsities[i] = config['sparsity']
         axs[1].plot(op_names_original, sparsities,
-                    label='sparsity: {}'.format(overall_sparsities[idx]))
+                    label='sparsity: {}, performance: {}'.format(overall_sparsities[idx], performances[idx]))
     axs[1].set_title('original order')
     axs[1].legend()
 
