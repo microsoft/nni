@@ -338,8 +338,12 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
-* Join NNI WeChat user group:
-![Image text](https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png)
+
+Join IM discussion groups:
+|Gitter||WeChat|
+|----|----|----|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://user-images.githubusercontent.com/39592018/80665762-f06f2a00-8acc-11ea-8d22-e461e68e2d9b.png)|
+
 
 ## Related Projects
 
