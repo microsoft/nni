@@ -335,12 +335,10 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
   * **Blog (in Chinese)** - [A summary of NNI new capabilities in 2019](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **Feedback**
-
-* Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
-* Join NNI user group by scanning the QR code below through Wechat:
-
+* Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
+* Join NNI WeChat user group:
 ![Image text](https://github.com/JSong-Jia/NNI-Student-Program-2020/blob/master/QR%20Code.png)
 
 ## Related Projects
