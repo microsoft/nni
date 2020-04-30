@@ -69,7 +69,7 @@ function loadTrialJobEvent(row: any): TrialJobEventRecord {
 function loadMetricData(row: any): MetricDataRecord {
     return {
         timestamp: row.timestamp,
-        trialJobId: row.trialJobId,
+        trialJobId: `${row.trialJobId}-${row.parameterId}`,
         parameterId: row.parameterId,
         type: row.type,
         sequence: row.sequence,
@@ -178,6 +178,10 @@ class SqlDB implements Database {
     public queryTrialJobEvent(trialJobId?: string, event?: TrialJobEvent): Promise<TrialJobEventRecord[]> {
         let sql: string = '';
         let args: any[] | undefined;
+        let jobId: string | undefined;
+        if (trialJobId && trialJobId.search("-") > 0) {
+            jobId = trialJobId.split("-")[0];
+        }
         if (trialJobId === undefined && event === undefined) {
             sql = 'select * from TrialJobEvent';
         } else if (trialJobId === undefined) {
@@ -185,10 +189,10 @@ class SqlDB implements Database {
             args = [event];
         } else if (event === undefined) {
             sql = 'select * from TrialJobEvent where trialJobId=?';
-            args = [trialJobId];
+            args = [jobId];
         } else {
             sql = 'select * from TrialJobEvent where trialJobId=? and event=?';
-            args = [trialJobId, event];
+            args = [jobId, event];
         }
 
         this.log.trace(`queryTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
@@ -215,17 +219,21 @@ class SqlDB implements Database {
     public queryMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         let sql: string = '';
         let args: any[] | undefined;
+        let jobId, parameterId: string | undefined;
+        if (trialJobId) {
+            [jobId, parameterId] = trialJobId.split("-");
+        }
         if (metricType === undefined && trialJobId === undefined) {
             sql = 'select * from MetricData';
         } else if (trialJobId === undefined) {
             sql = 'select * from MetricData where type=?';
             args = [metricType];
         } else if (metricType === undefined) {
-            sql = 'select * from MetricData where trialJobId=?';
-            args = [trialJobId];
+            sql = 'select * from MetricData where trialJobId=? and parameterId=?';
+            args = [jobId, parameterId];
         } else {
-            sql = 'select * from MetricData where trialJobId=? and type=?';
-            args = [trialJobId, metricType];
+            sql = 'select * from MetricData where trialJobId=? and parameterId=? and type=?';
+            args = [jobId, parameterId, metricType];
         }
 
         this.log.trace(`queryMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);

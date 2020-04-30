@@ -10,9 +10,23 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             ret.get(metric.trialJobId)!.push(metric);
         } else {
-            ret.set(metric.trialJobId, [ metric ]);
+            ret.set(metric.trialJobId, [metric]);
         }
     }
+    // to compatiable with multi-trial in same job, fix offset of sequence
+    ret.forEach((trialMetrics) => {
+        let minSequenceNumber = Number.POSITIVE_INFINITY;
+        trialMetrics.map((item) => {
+            if (item.sequence < minSequenceNumber && item.type !== "FINAL") {
+                minSequenceNumber = item.sequence;
+            }
+        });
+        trialMetrics.map((item) => {
+            if (item.type !== "FINAL") {
+                item.sequence -= minSequenceNumber;
+            }
+        });
+    });
     return ret;
 }
 
@@ -31,7 +45,7 @@ class TrialManager {
     }
 
     public async update(lastTime?: boolean): Promise<boolean> {
-        const [ infoUpdated, metricUpdated ] = await Promise.all([ this.updateInfo(), this.updateMetrics(lastTime) ]);
+        const [infoUpdated, metricUpdated] = await Promise.all([this.updateInfo(), this.updateMetrics(lastTime)]);
         return infoUpdated || metricUpdated;
     }
 
@@ -71,14 +85,14 @@ class TrialManager {
 
     public countStatus(): Map<string, number> {
         const cnt = new Map<string, number>([
-            [ 'UNKNOWN', 0 ],
-            [ 'WAITING', 0 ],
-            [ 'RUNNING', 0 ],
-            [ 'SUCCEEDED', 0 ],
-            [ 'FAILED', 0 ],
-            [ 'USER_CANCELED', 0 ],
-            [ 'SYS_CANCELED', 0 ],
-            [ 'EARLY_STOPPED', 0 ],
+            ['UNKNOWN', 0],
+            ['WAITING', 0],
+            ['RUNNING', 0],
+            ['SUCCEEDED', 0],
+            ['FAILED', 0],
+            ['USER_CANCELED', 0],
+            ['SYS_CANCELED', 0],
+            ['EARLY_STOPPED', 0],
         ]);
         for (const trial of this.trials.values()) {
             if (trial.initialized()) {
@@ -146,7 +160,7 @@ class TrialManager {
 
     private doUpdateMetrics(allMetrics: MetricDataRecord[], latestOnly: boolean): boolean {
         let updated = false;
-        for (const [ trialId, metrics ] of groupMetricsByTrial(allMetrics).entries()) {
+        for (const [trialId, metrics] of groupMetricsByTrial(allMetrics).entries()) {
             if (this.trials.has(trialId)) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const trial = this.trials.get(trialId)!;

@@ -241,7 +241,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
-            const otherkeys: string[] = [ ];
+            const otherkeys: string[] = [];
             if (res.data.length !== 0) {
                 // just add type=number keys
                 const intermediateMetrics = parseMetrics(res.data[0].data);
@@ -426,8 +426,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
     // when user click [Add Column] need to use the function
     private initTableColumnList = (columnList: string[]): IColumn[] => {
         // const { columnList } = this.props;
-        // [supportCustomizedTrial: true]
-        const supportCustomizedTrial = (EXPERIMENT.multiPhase === true) ? false : true;
         const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
         const showColumn: IColumn[] = [];
         for (const item of columnList) {
@@ -494,20 +492,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             <KillJob trial={record} />
                                     }
                                     {/* Add a new trial-customized trial */}
-                                    {
-                                        supportCustomizedTrial
-                                            ?
-                                            <PrimaryButton
-                                                className="detail-button-operation"
-                                                title="Customized trial"
-                                                onClick={this.setCustomizedTrial.bind(this, record.id)}
-                                                disabled={disabledAddCustomizedTrial}
-                                            >
-                                                {copy}
-                                            </PrimaryButton>
-                                            :
-                                            null
-                                    }
+                                    <PrimaryButton
+                                        className="detail-button-operation"
+                                        title="Customized trial"
+                                        onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                        disabled={disabledAddCustomizedTrial}
+                                    >
+                                        {copy}
+                                    </PrimaryButton>
                                 </Stack>
                             );
                         },

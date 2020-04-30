@@ -126,7 +126,6 @@ interface ExperimentParams {
     maxTrialNum: number;
     searchSpace: string;
     trainingServicePlatform: string;
-    multiPhase?: boolean;
     multiThread?: boolean;
     versionCheck?: boolean;
     logCollection?: string;

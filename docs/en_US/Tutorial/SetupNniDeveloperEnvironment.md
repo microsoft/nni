@@ -68,7 +68,8 @@ It doesn't need to redeploy, but the nnictl may need to be restarted.
 #### TypeScript
 
 * If `src/nni_manager` will be changed, run `yarn watch` continually under this folder. It will rebuild code instantly.
-* If `src/webui` or `src/nasui` is changed, use **step 3** to rebuild code.
+* If `src/webui` will be changed, run `yarn start` under this folder, and change `MANAGER_IP` like ``//<Web UI IP>:8080/api/v1/nni`` in `src/start/const.ts`. The web UI will refresh automatically if code is changed.
+* If `src/nasui` is changed, use **step 3** to rebuild code.
 
 The nnictl may need to be restarted.
 
