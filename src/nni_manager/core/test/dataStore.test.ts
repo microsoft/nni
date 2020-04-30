@@ -80,32 +80,34 @@ describe('Unit test for dataStore', () => {
         jobId: string;
         data?: string;
     }[] = [
-        {
-            event: 'WAITING',
-            jobId: '111'
-        },
-        {
-            event: 'WAITING',
-            jobId: '222'
-        },
-        {
-            event: 'RUNNING',
-            jobId: '111'
-        },
-        {
-            event: 'RUNNING',
-            jobId: '222'
-        },
-        {
-            event: 'SUCCEEDED',
-            jobId: '111',
-            data: 'lr: 0.001'
-        },
-        {
-            event: 'FAILED',
-            jobId: '222'
-        }
-    ];
+            {
+                event: 'WAITING',
+                jobId: '111',
+                data: '{"parameter_id":1}'
+            },
+            {
+                event: 'WAITING',
+                jobId: '222',
+                data: '{"parameter_id":2}'
+            },
+            {
+                event: 'RUNNING',
+                jobId: '111'
+            },
+            {
+                event: 'RUNNING',
+                jobId: '222'
+            },
+            {
+                event: 'SUCCEEDED',
+                jobId: '111',
+                data: 'lr: 0.001'
+            },
+            {
+                event: 'FAILED',
+                jobId: '222'
+            }
+        ];
 
     const metricsData: any = [
         {
