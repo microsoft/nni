@@ -333,9 +333,15 @@ You can use these commands to get more information about the experiment
 
 ## **反馈**
 
-* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
 * 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问。
+* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
+
+加入聊天组： 
+
+| Gitter                                                                                                      |   | 微信                                                                                                          |
+| ----------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------------------------------------------- |
+| ![图片](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![图片](https://user-images.githubusercontent.com/39592018/80665762-f06f2a00-8acc-11ea-8d22-e461e68e2d9b.png) |
 
 ## 相关项目
 

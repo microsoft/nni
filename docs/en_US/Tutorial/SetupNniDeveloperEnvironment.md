@@ -16,7 +16,7 @@ git clone https://github.com/Microsoft/nni.git
 
 to clone the source code
 
-### 2. Prepare the debug environment and install dependencies**
+### 2. Prepare the debug environment and install dependencies
 
 Change directory to the source code folder, then run the command
 
