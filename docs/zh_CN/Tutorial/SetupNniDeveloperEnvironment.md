@@ -15,7 +15,7 @@
 
 来克隆源代码
 
-### 2. 准备调试环境并安装依赖项**
+### 2. Prepare the debug environment and install dependencies
 
 将目录切换到源码目录，然后运行命令
 
