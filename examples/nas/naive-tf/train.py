@@ -7,6 +7,8 @@ from tensorflow.keras.optimizers import SGD
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice
 from nni.nas.tensorflow.enas import EnasTrainer
 
+
+# FIXME: TensorFlow complains about lacking gradients for operations not choosen
 tf.get_logger().setLevel('ERROR')
 
 
@@ -73,7 +75,7 @@ if __name__ == '__main__':
     trainer = EnasTrainer(
         net,
         loss=SparseCategoricalCrossentropy(reduction=Reduction.SUM),
-        metrics=accuracy,
+        metrics=lambda *args: {},
         reward_function=accuracy,
         optimizer=SGD(learning_rate=0.001, momentum=0.9),
         batch_size=64,
@@ -84,4 +86,3 @@ if __name__ == '__main__':
     )
 
     trainer.train()
-    #trainer.export('checkpoint')
