@@ -96,10 +96,10 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Optional key. Set the commands used in PAI container.
 * paiConfigPath
     * Optional key. Set the file path of pai job configuration, the file is in yaml format.
-If users set `paiConfigPath` in NNI's configuration file, no need to specify the fields `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` configuration. These fields will use the values from the config file specified by  `paiConfigPath`. 
+    If users set `paiConfigPath` in NNI's configuration file, no need to specify the fields `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` configuration. These fields will use the values from the config file specified by  `paiConfigPath`. 
     ```
     Note:
-      1. The job name in PAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}
+      1. The job name in PAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}.
 
       2.  If users set multiple taskRoles in PAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error. 
 
@@ -113,8 +113,6 @@ nnictl create --config exp_pai.yml
 to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`.
 You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
 ![](../../img/nni_pai_joblist.jpg)
-
-
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
