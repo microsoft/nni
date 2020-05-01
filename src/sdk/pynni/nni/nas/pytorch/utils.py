@@ -129,6 +129,46 @@ class AverageMeter:
         fmtstr = '{name}: {avg' + self.fmt + '}'
         return fmtstr.format(**self.__dict__)
 
+def calc_real_model_size(model, mutator):
+    """
+    Calculate the size of real model
+
+    Parameters
+    ----------
+    model: nn.Module
+    mutator: nni.nas.pytorch.mutator
+    
+    Return:
+        real_size = size_choice + size_non_choice
+    """
+    def size(module):
+        return sum([x.numel() for x in module.parameters()])
+
+    if isinstance(model, torch.nn.DataParallel):
+        model = model.module
+    else:
+        model = model
+    size_choice = 0 # the size of LayerChoice
+    size_non_choice = 0 # the size of normal model part
+
+    # the size of normal model part
+    layerchoices = []
+    for name, module in model.named_modules():
+        if isinstance(module, nni.nas.pytorch.mutables.LayerChoice):
+            layerchoices.append(module)
+    size_non_choice = size(model) - sum([size(lc) for lc in layerchoices])
+
+    # the real size of all LayerChoice
+    for lc in layerchoices:
+        size_ops = []
+        for index, op in enumerate(lc.choices):
+            size_ops.append(sum([p.numel() for p in op.parameters()]))
+        lc_key = lc.key
+        index = np.argmax(mutator.status()[lc_key])
+        size_choice += size_ops[index]
+
+    real_size = size_choice + size_non_choice
+    return real_size
 
 class StructuredMutableTreeNode:
     """
