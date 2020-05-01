@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
 import logging
 from collections import OrderedDict
 
 import torch
+import numpy as np
+import nni
 
 _counter = 0
 
@@ -137,7 +138,7 @@ def calc_real_model_size(model, mutator):
     ----------
     model: nn.Module
     mutator: nni.nas.pytorch.mutator
-    
+
     Return:
         real_size = size_choice + size_non_choice
     """
@@ -153,7 +154,7 @@ def calc_real_model_size(model, mutator):
 
     # the size of normal model part
     layerchoices = []
-    for name, module in model.named_modules():
+    for module in model.modules():
         if isinstance(module, nni.nas.pytorch.mutables.LayerChoice):
             layerchoices.append(module)
     size_non_choice = size(model) - sum([size(lc) for lc in layerchoices])
