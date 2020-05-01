@@ -24,16 +24,18 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
     parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
+    parser.add_argument("--epochs", default=None, type=int, help="Number of epochs (default: macro 310, micro 150)")
+    parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
     if args.search_for == "macro":
         model = GeneralNetwork()
-        num_epochs = 310
+        num_epochs = args.epochs or 310
         mutator = None
     elif args.search_for == "micro":
         model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=True)
-        num_epochs = 150
+        num_epochs = args.epochs or 150
         mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
     else:
         raise AssertionError
@@ -54,4 +56,6 @@ if __name__ == "__main__":
                                dataset_valid=dataset_valid,
                                log_frequency=args.log_frequency,
                                mutator=mutator)
+    if args.visualization:
+        trainer.enable_visualization()
     trainer.train()

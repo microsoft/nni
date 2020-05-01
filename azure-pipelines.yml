@@ -52,24 +52,12 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python3 metrics_test.py
-    displayName: 'Trial job metrics test'
-  - script: |
-      cd test
-      python3 cli_test.py
-    displayName: 'nnicli test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
   - script: |
       cd docs/en_US/
       sphinx-build -M html . _build -W
@@ -101,20 +89,12 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      python3 naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python3 cli_test.py
-    displayName: 'nnicli test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
 
 - job: 'basic_test_pr_Windows'
   pool:
@@ -137,13 +117,9 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test
-      powershell.exe -file unittest.ps1
+      powershell.exe -file scripts/unittest.ps1
     displayName: 'unit test'
   - script: |
       cd test
-      python tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
-    displayName: 'nnicli test'
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'

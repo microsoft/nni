@@ -45,6 +45,7 @@ NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
+NASUI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni/nasui
 
 ## Dependency information
 NNI_DEPENDENCY_FOLDER = /tmp/$(USER)
@@ -132,6 +133,8 @@ clean:
 	-rm -rf src/sdk/pynni/nni_sdk.egg-info
 	-rm -rf src/webui/build
 	-rm -rf src/webui/node_modules
+	-rm -rf src/nasui/build
+	-rm -rf src/nasui/node_modules
 
 # Main targets end
 
@@ -170,12 +173,12 @@ install-python-modules:
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
 	mkdir -p build
-	ln -sf ../src/sdk/pynni/nni build/nni
-	ln -sf ../src/sdk/pynni/nnicli build/nnicli
-	ln -sf ../tools/nni_annotation build/nni_annotation
-	ln -sf ../tools/nni_cmd build/nni_cmd
-	ln -sf ../tools/nni_trial_tool build/nni_trial_tool
-	ln -sf ../tools/nni_gpu_tool build/nni_gpu_tool
+	ln -sf ../src/sdk/pynni/nni build
+	ln -sf ../src/sdk/pycli/nnicli build
+	ln -sf ../tools/nni_annotation build
+	ln -sf ../tools/nni_cmd build
+	ln -sf ../tools/nni_trial_tool build
+	ln -sf ../tools/nni_gpu_tool build
 	cp setup.py build/
 	cp README.md build/
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' build/setup.py
@@ -193,6 +196,11 @@ install-node-modules:
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
 	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
 	cp -r src/webui/build $(NNI_PKG_FOLDER)/static
+	# Install nasui
+	mkdir -p $(NASUI_PKG_FOLDER)
+	cp -rf src/nasui/build $(NASUI_PKG_FOLDER)
+	cp src/nasui/server.js $(NASUI_PKG_FOLDER)
+
 
 .PHONY: dev-install-node-modules
 dev-install-node-modules:
@@ -201,8 +209,12 @@ dev-install-node-modules:
 	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
 	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
-	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
-	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
+	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)
+	ln -sf ${PWD}/src/webui/build -t $(NNI_PKG_FOLDER)
+	mv $(NNI_PKG_FOLDER)/build $(NNI_PKG_FOLDER)/static
+	mkdir -p $(NASUI_PKG_FOLDER)
+	ln -sf ${PWD}/src/nasui/build $(NASUI_PKG_FOLDER)
+	ln -sf ${PWD}/src/nasui/server.js $(NASUI_PKG_FOLDER)
 
 .PHONY: install-scripts
 install-scripts:

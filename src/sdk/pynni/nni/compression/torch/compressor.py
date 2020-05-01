@@ -27,7 +27,7 @@ class Compressor:
     Abstract base PyTorch compressor
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
         """
         Record necessary info in class members
 
@@ -40,6 +40,9 @@ class Compressor:
         optimizer: pytorch optimizer
             optimizer used to train the model
         """
+        assert isinstance(model, torch.nn.Module)
+        self.validate_config(model, config_list)
+
         self.bound_model = model
         self.config_list = config_list
         self.optimizer = optimizer
@@ -54,8 +57,16 @@ class Compressor:
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper.append(wrapper)
+        if not self.modules_wrapper:
+            _logger.warning('Nothing is configured to compress, please check your model and config_list')
 
         self._wrap_model()
+
+    def validate_config(self, model, config_list):
+        """
+        subclass can optionally implement this method to check if config_list if valid
+        """
+        pass
 
     def _detect_modules_to_compress(self):
         """
@@ -65,6 +76,8 @@ class Compressor:
         if self.modules_to_compress is None:
             self.modules_to_compress = []
             for name, module in self.bound_model.named_modules():
+                if module == self.bound_model:
+                    continue
                 layer = LayerInfo(name, module)
                 config = self.select_config(layer)
                 if config is not None:
@@ -235,7 +248,8 @@ class Compressor:
                     task()
                 return output
             return new_step
-        self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+        if self.optimizer is not None:
+            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
 
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
@@ -290,17 +304,18 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer):
+    def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        self.patch_optimizer(self.update_mask)
+        if optimizer is not None:
+            self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()
         return self.bound_model
 
     def update_mask(self):
-        for wrapper in self.get_modules_wrapper():
-            masks = self.calc_mask(wrapper)
+        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+            masks = self.calc_mask(wrapper, wrapper_idx=wrapper_idx)
             if masks is not None:
                 for k in masks:
                     assert hasattr(wrapper, k), "there is no attribute '%s' in wrapper" % k

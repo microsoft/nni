@@ -1,0 +1,22 @@
+jobs:
+- job: 'integration_test_local_windows'
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      powershell.exe -file install.ps1
+    displayName: 'Install nni toolkit via source code'
+  - script: |
+      python -m pip install scikit-learn==0.20.0 --user
+      python -m pip install keras==2.1.6 --user
+      python -m pip install torchvision===0.4.1 torch===1.3.1 -f https://download.pytorch.org/whl/torch_stable.html --user
+      python -m pip install tensorflow-gpu==1.15.2 --user
+    displayName: 'Install dependencies for integration tests'
+  - script: |
+      cd test
+      powershell.exe -file scripts/unittest.ps1
+    displayName: 'unit test'
+  - script: |
+      cd test
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+    displayName: 'Integration tests'

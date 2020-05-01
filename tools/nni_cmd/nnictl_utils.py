@@ -19,7 +19,7 @@ from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
+from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, get_nni_installation_path
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -392,10 +392,13 @@ def webui_url(args):
 def webui_nas(args):
     '''launch nas ui'''
     print_normal('Starting NAS UI...')
-    # TODO: find file path on installing with pypi
-    # TODO: use correct node on win32
     try:
-        cmds = ['node', 'src/nasui/server.js', '--port', str(args.port), '--logdir', args.logdir]
+        entry_dir = get_nni_installation_path()
+        entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
+        node_command = 'node'
+        if sys.platform == 'win32':
+            node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
+        cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
         subprocess.run(cmds)
     except KeyboardInterrupt:
         pass
@@ -696,12 +699,13 @@ def export_trials_data(args):
                 content = json.loads(response.text)
                 trial_records = []
                 for record in content:
-                    if not isinstance(record['value'], (float, int)):
-                        formated_record = {**record['parameter'], **record['value'], **{'id': record['id']}}
+                    record_value = json.loads(record['value'])
+                    if not isinstance(record_value, (float, int)):
+                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']}}
                     else:
-                        formated_record = {**record['parameter'], **{'reward': record['value'], 'id': record['id']}}
+                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
                     trial_records.append(formated_record)
-                with open(args.path, 'w') as file:
+                with open(args.path, 'w', newline='') as file:
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
                     writer.writeheader()
                     writer.writerows(trial_records)
