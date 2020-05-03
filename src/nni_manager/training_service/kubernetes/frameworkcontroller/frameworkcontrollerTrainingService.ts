@@ -190,8 +190,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if (this.fcClusterConfig.storageType === 'azureStorage') {
             const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
                       <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
-            trialJobOutputUrl = await this.uploadFilesToAzureStorage(trialJobId, trialLocalTempFolder, this.fcTrialConfig.codeDir,
-                 azureFrameworkControllerClusterConfig.uploadRetryCount);
+            // trialJobOutputUrl = await this.uploadFilesToAzureStorage(trialJobId, trialLocalTempFolder, this.fcTrialConfig.codeDir,
+            //      azureFrameworkControllerClusterConfig.uploadRetryCount);
         } else if (this.fcClusterConfig.storageType === 'nfs') {
             const nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS =
               <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;

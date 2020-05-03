@@ -180,12 +180,12 @@ export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
     `#!/bin/bash
 export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} \
 NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}
-cd $NNI_SYS_DIR
+cd {6}
 sh install_nni.sh
-echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' \
---nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-echo $? \`date +%s%3N\` >{12}`;
+echo $$ >{7}
+python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip '{9}' --nnimanager_port '{10}' \
+--nni_manager_version '{11}' --log_collection '{12}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
+echo $? \`date +%s%3N\` >{13}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
     `#!/bin/bash

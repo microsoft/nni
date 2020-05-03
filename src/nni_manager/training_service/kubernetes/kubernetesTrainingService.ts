@@ -329,37 +329,30 @@ abstract class KubernetesTrainingService {
         );
         return registrySecretName;
     }
-
-    protected async uploadFilesToAzureStorage(trialJobId: string, trialLocalTempFolder: string, codeDir: string, uploadRetryCount: number | undefined): Promise<string> {
+    
+    /**
+     * upload local directory to azureStorage
+     * @param srcDirectory the source directory of local folder
+     * @param destDirectory the target directory in azure
+     * @param uploadRetryCount the retry time when upload failed
+     */
+    protected async uploadFolderToAzureStorage(srcDirectory: string, destDirectory: string, uploadRetryCount: number | undefined): Promise<boolean> {
         if (this.azureStorageClient === undefined) {
             throw new Error('azureStorageClient is not initialized');
         }
-        let trialJobOutputUrl: string = '';
         let retryCount: number = 1;
         if(uploadRetryCount) {
             retryCount = uploadRetryCount;
         }
-        let resultUploadNNIScript: boolean = false;
-        let resultUploadCodeFile: boolean = false;
+        let uploadSuccess: boolean = false;
         try {
             do {
-                //upload local files, including scripts for running the trial and configuration (e.g., hyperparameters) for the trial, to azure storage
-                if(!resultUploadNNIScript) {
-                    resultUploadNNIScript = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                        `${trialLocalTempFolder}`);
-                }
-                //upload code files to azure storage
-                if(!resultUploadCodeFile) {
-                    resultUploadCodeFile = await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,
-                        `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare,
-                        `${codeDir}`);
-                }
-                if (resultUploadNNIScript && resultUploadCodeFile) {
-                    trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}` + 
-                    `/${path.join('nni', getExperimentId(), trialJobId, 'output')}`;
-                    break;
-                } else {
+                uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
+                    this.azureStorageClient,
+                    `${destDirectory}`, 
+                    this.azureStorageShare,
+                    `${srcDirectory}`);
+                if (!uploadSuccess) {
                     //wait for 5 seconds to re-upload files
                     await delay(5000);
                     this.log.info('Upload failed, Retry: upload files to azure-storage');
@@ -368,12 +361,9 @@ abstract class KubernetesTrainingService {
         } catch (error) {
             this.log.error(error);
             //return a empty url when got error
-            return Promise.resolve("");
+            return Promise.resolve(false);
         }
-        if(!trialJobOutputUrl) {
-            this.log.info(`Retry-count is used up, upload files to azureStorage for trial ${trialJobId} failed!`);
-        }
-        return Promise.resolve(trialJobOutputUrl);
+        return Promise.resolve(uploadSuccess);
     }
      
 }

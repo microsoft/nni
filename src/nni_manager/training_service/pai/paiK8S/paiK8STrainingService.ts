@@ -53,6 +53,9 @@ const deepmerge = require('deepmerge');
 @component.Singleton
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
+    private nniManagerNFSExpCodeDir: string | undefined;
+    private containerNFSExpCodeDir: string | undefined;
+    private copyExpCodeDirPromise?: Promise<void>;
 
     constructor() {
         super();
@@ -84,6 +87,15 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.paiTrialConfig.codeDir);
+                this.containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
+                this.nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
+                await execMkdir(this.nniManagerNFSExpCodeDir);
+                const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+                // Write NNI installation file to local files
+                await fs.promises.writeFile(path.join(this.nniManagerNFSExpCodeDir, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+                        //Copy codeDir files to local working folder
+                this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, this.nniManagerNFSExpCodeDir);
+
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
@@ -230,23 +242,21 @@ class PAIK8STrainingService extends PAITrainingService {
             throw new Error('paiJobRestServer is not initialized');
         }
 
+        // Make sure experiment code files is copied from local to NFS
+        if (this.copyExpCodeDirPromise !== undefined) {
+            await this.copyExpCodeDirPromise;
+        }
+
         this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
 
         // Step 1. Prepare PAI job configuration
         //create trial local working folder locally.
         await execMkdir(trialJobDetail.logPath);
 
-        const runScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-        // Write NNI installation file to local files
-        await fs.promises.writeFile(path.join(trialJobDetail.logPath, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-
         // Write file content ( parameter.cfg ) to local working folders
         if (trialJobDetail.form !== undefined) {
             await this.writeParameterFile(trialJobDetail.logPath, trialJobDetail.form.hyperParameters);
         }
-
-        //Copy codeDir files to local working folder
-        await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
         
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
@@ -259,6 +269,7 @@ class PAIK8STrainingService extends PAITrainingService {
             this.experimentId,
             trialJobDetail.form.sequenceId,
             this.isMultiPhase,
+            this.containerNFSExpCodeDir,
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
@@ -271,7 +282,7 @@ class PAIK8STrainingService extends PAITrainingService {
         
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
         this.log.debug(paiJobConfig);
-        // Step 3. Submit PAI job via Rest call
+        // Step 2. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
