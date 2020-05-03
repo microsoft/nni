@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from nni.graph_utils import build_module_graph
+from nni._graph_utils import build_module_graph
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
 
