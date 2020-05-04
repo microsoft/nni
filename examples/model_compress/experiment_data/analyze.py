@@ -54,7 +54,7 @@ def get_original_op(model):
     return op_names, op_weights
 
 
-def draw(model):
+def draw(args):
     # if model == 'lenet':
     #     files = list(os.walk('lenet'))[0][-1]
     #     model = LeNet()
@@ -64,12 +64,14 @@ def draw(model):
     # elif model == 'retinaface':
     #     files = list(os.walk('retinaface'))[0][-1]
     #     # model = models.mobilenet_v2()
-    if model == 'lenet':
+    if args.model == 'lenet':
         files = ['lenet/pruning_history.csv']
         model = LeNet()
-    elif model == 'mobilenet_v2':
+        notes = 'LeNet, MNIST'
+    elif args.model == 'mobilenet_v2':
         files = ['mobilenet/pruning_history_01.csv', 'mobilenet/pruning_history_03.csv', 'mobilenet/pruning_history_04.csv', 'mobilenet/pruning_history_05.csv']
         model = models.mobilenet_v2()
+        notes = 'MobileNet V2, ImageNet'
     # elif model == 'retinaface':
     #     files = ['retinaface/pruning_history_01.csv', 'retinaface/pruning_history_03.csv']
     #     cfg = cfg_mnet
@@ -77,8 +79,9 @@ def draw(model):
 
     config_lists, overall_sparsities, performances = get_config_lists(files)
 
-    fig, axs = plt.subplots(3, 1, constrained_layout=True)
-    fig.suptitle("Sparsities distribution ")
+    fig, axs = plt.subplots(3, 1, figsize=(15, 15))
+    fig.suptitle("Pruning Sparsities Distribution ({})".format(notes))
+    fig.subplots_adjust(hspace=1)
 
     # Fig 0 : layer weights
     op_names_original, op_weights_original = get_original_op(model)
@@ -94,7 +97,7 @@ def draw(model):
             i = op_names_original.index(op_name)
             sparsities[i] = config['sparsity']
         axs[1].plot(op_names_original, sparsities,
-                    label='sparsity: {}, performance: {}'.format(overall_sparsities[idx], performances[idx]))
+                    label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[1].set_title('original order')
     axs[1].legend()
 
@@ -108,7 +111,7 @@ def draw(model):
             op_names_sorted.append(config['op_names'][0])
 
         axs[2].plot(op_names_sorted, sparsities,
-                    label='sparsity: {}'.format(overall_sparsities[idx]))
+                    label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[2].set_title('Sorted by op weights')
     axs[2].legend()
 
@@ -117,7 +120,7 @@ def draw(model):
         plt.xticks(rotation=90)
 
     # plt.tight_layout()
-    plt.savefig('./sparsities_distribution.png')
+    plt.savefig('./sparsities_distribution_{}.png'.format(args.model))
     plt.close()
 
 
@@ -126,4 +129,4 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='lenet', help='lenet, mobilenet_v2 or retinaface')
     args = parser.parse_args()
 
-    draw(args.model)
+    draw(args)
