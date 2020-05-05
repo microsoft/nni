@@ -74,14 +74,24 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
+
+        // upload code Dir to storage
+        if (this.copyExpCodeDirPromise !== undefined) {
+            await this.copyExpCodeDirPromise;
+        }
+        // upload install_nni.sh to storage
+        if (this.copyInstallScriptsPromise !== undefined) {
+            await this.copyInstallScriptsPromise;
+        }
+
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const kubeflowJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //prepare the runscript
         await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
-        //upload files to sotrage
-        const trialJobOutputUrl: string = await this.uploadFolder(trialLocalTempFolder, );
+        //upload script files to sotrage
+        const trialJobOutputUrl: string = await this.uploadFolder(trialLocalTempFolder, `nni/${getExperimentId()}/${trialJobId}`);
         let initStatus: TrialJobStatus = 'WAITING';
         if (!trialJobOutputUrl) {
             initStatus = 'FAILED';
@@ -152,6 +162,15 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.kubeflowTrialConfig.codeDir);
+                    const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+                    // Write NNI installation file to local files
+                    const expLocalTempFolder: string = path.join(getExperimentRootDir(), 'nni-local');
+                    await cpp.exec(`mkdir -p ${expLocalTempFolder}`);
+                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+                    //upload scripts to storage
+                    this.copyInstallScriptsPromise = this.uploadFolder(expLocalTempFolder, `nni/${getExperimentId()}/nni-code`);
+                    //upload codeDir to storage
+                    this.copyExpCodeDirPromise = this.uploadFolder(this.kubeflowTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
                 } catch (error) {
                     this.log.error(error);
 
@@ -173,9 +192,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
     /**
      * upload local folder to nfs or azureStroage
-     * @param localDirectory the folder path to be uploaded
      */
-    private async uploadFolder(srcDirectory: string, destDirectory: string): Promise<boolean> {
+    private async uploadFolder(srcDirectory: string, destDirectory: string): Promise<string> {
         if (this.kubeflowClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -195,12 +213,13 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, azureKubeflowClusterConfig.uploadRetryCount);
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
+            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
-            await cpp.exec(`mkdir -p ${srcDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${destDirectory}/.`);
-            return true;
+            const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
+            return `nfs://${nfsConfig.server}:${destDirectory}`;
         }
-        return true;
+        return '';
     }
 
     private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string,

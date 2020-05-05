@@ -49,6 +49,9 @@ abstract class KubernetesTrainingService {
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck: boolean = true;
     protected logCollection: string;
+    protected copyExpCodeDirPromise?: Promise<string>;
+    protected copyInstallScriptsPromise?: Promise<string>;
+    protected expContainerCodeFolder: string;
 
     constructor() {
         this.log = getLogger();
@@ -57,6 +60,7 @@ abstract class KubernetesTrainingService {
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
+        this.expContainerCodeFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId, 'nni-code');
         this.genericK8sClient = new GeneralK8sClient();
         this.logCollection = 'none';
     }
@@ -272,11 +276,11 @@ abstract class KubernetesTrainingService {
         const runScript: string = String.Format(
             kubernetesScriptFormat,
             platform,
-            trialJobId,
+            trialWorkingFolder,
             path.join(trialWorkingFolder, 'output', `${roleName}_output`),
             trialJobId,
             getExperimentId(),
-            trialWorkingFolder,
+            this.expContainerCodeFolder,
             trialSequenceId,
             nvidiaScript,
             command,
@@ -336,7 +340,7 @@ abstract class KubernetesTrainingService {
      * @param destDirectory the target directory in azure
      * @param uploadRetryCount the retry time when upload failed
      */
-    protected async uploadFolderToAzureStorage(srcDirectory: string, destDirectory: string, uploadRetryCount: number | undefined): Promise<boolean> {
+    protected async uploadFolderToAzureStorage(srcDirectory: string, destDirectory: string, uploadRetryCount: number | undefined): Promise<string> {
         if (this.azureStorageClient === undefined) {
             throw new Error('azureStorageClient is not initialized');
         }
@@ -345,6 +349,7 @@ abstract class KubernetesTrainingService {
             retryCount = uploadRetryCount;
         }
         let uploadSuccess: boolean = false;
+        let folderUriInAzure = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${destDirectory}`;
         try {
             do {
                 uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
@@ -361,9 +366,9 @@ abstract class KubernetesTrainingService {
         } catch (error) {
             this.log.error(error);
             //return a empty url when got error
-            return Promise.resolve(false);
+            return Promise.resolve('');
         }
-        return Promise.resolve(uploadSuccess);
+        return Promise.resolve(folderUriInAzure);
     }
      
 }

@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -82,7 +83,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
 
         //upload code files
-        const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
+        const trialJobOutputUrl: string = await this.uploadFolder(trialLocalTempFolder, `nni/${getExperimentId()}/${trialJobId}`);
         let initStatus: TrialJobStatus = 'WAITING';
         if (!trialJobOutputUrl) {
             initStatus = 'FAILED';
@@ -151,6 +152,15 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.fcTrialConfig.codeDir);
+                    const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+                    // Write NNI installation file to local files
+                    const expLocalTempFolder: string = path.join(getExperimentRootDir(), 'nni-local');
+                    await cpp.exec(`mkdir -p ${expLocalTempFolder}`);
+                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+                    //upload scripts to storage
+                    this.copyInstallScriptsPromise = this.uploadFolder(expLocalTempFolder, `nni/${getExperimentId()}/nni-code`);
+                    //upload codeDir to storage
+                    this.copyExpCodeDirPromise = this.uploadFolder(this.fcTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
                 } catch (error) {
                     this.log.error(error);
 
@@ -171,41 +181,35 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     /**
-     * upload code files to nfs or azureStroage
-     * @param trialJobId
-     * @param trialLocalTempFolder
-     * return: trialJobOutputUrl
+     * upload local folder to nfs or azureStroage
      */
-    private async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
+    private async uploadFolder(srcDirectory: string, destDirectory: string): Promise<string> {
         if (this.fcClusterConfig === undefined) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
-        if (this.fcTrialConfig === undefined) {
-            throw new Error('Kubeflow trial config is not initialized');
+        if (this.fcClusterConfig === undefined) {
+            throw new Error('Kubeflow Trial config is not initialized');
         }
 
-        let trialJobOutputUrl: string = '';
+        assert(this.fcClusterConfig.storage === undefined
+            || this.fcClusterConfig.storage === 'azureStorage'
+            || this.fcClusterConfig.storage === 'nfs');
 
-        if (this.fcClusterConfig.storageType === 'azureStorage') {
-            const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
-                      <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
-            // trialJobOutputUrl = await this.uploadFilesToAzureStorage(trialJobId, trialLocalTempFolder, this.fcTrialConfig.codeDir,
-            //      azureFrameworkControllerClusterConfig.uploadRetryCount);
-        } else if (this.fcClusterConfig.storageType === 'nfs') {
-            const nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS =
-              <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
-            // Creat work dir for current trial in NFS directory
-            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
-            // Copy code files from local dir to NFS mounted dir
-            await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
-            // Copy codeDir to NFS mounted dir
-            await cpp.exec(`cp -r ${this.fcTrialConfig.codeDir}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
-            const nfsConfig: NFSConfig = nfsFrameworkControllerClusterConfig.nfs;
-            trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`;
+        if (this.fcClusterConfig.storage === 'azureStorage') {
+            if (this.azureStorageClient === undefined) {
+                throw new Error('azureStorageClient is not initialized');
+            }
+            const azureKubeflowClusterConfig: FrameworkControllerClusterConfigAzure = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
+            return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, azureKubeflowClusterConfig.uploadRetryCount);
+        } else if (this.fcClusterConfig.storage === 'nfs' || this.fcClusterConfig.storage === undefined) {
+            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
+            const nfsKubeflowClusterConfig: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
+            const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
+            return `nfs://${nfsConfig.server}:${destDirectory}`;
         }
-
-        return Promise.resolve(trialJobOutputUrl);
+        return '';
     }
 
     /**
