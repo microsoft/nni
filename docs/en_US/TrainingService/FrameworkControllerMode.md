@@ -26,7 +26,7 @@ NNI supports running experiment using [FrameworkController](https://github.com/M
 
 ## Setup FrameworkController
 
-Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. You will need to pass the name of the FrameworkController service account to the NNI Experiment Config.
+Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. [refer](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset)
 
 ## Design
 
