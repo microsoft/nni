@@ -331,9 +331,8 @@ class RemoteMachineTrainingService implements TrainingService {
                     // Generate install.sh file
                     const expLocalTempFolder: string = path.join(this.expRootDir, 'nni-local');
                     await execMkdir(expLocalTempFolder);
-                    const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
                     // Write NNI installation file to local tmp files
-                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
                     // Copy codeDir to remote machine
                     for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
                         const executor: ShellExecutor = await executorManager.getAvailableExecutor();
@@ -505,7 +504,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const trialWorkingFolder: string = unixPathJoin(this.remoteExpRootDir, 'trials', trialJobId);
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
-            let copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(trialJobDetail.rmMeta);
+            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(trialJobDetail.rmMeta);
             if (copyExpCodeDirPromise !== undefined) {
                 await copyExpCodeDirPromise;
             }

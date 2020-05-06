@@ -90,9 +90,8 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
                 this.nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
                 await execMkdir(this.nniManagerNFSExpCodeDir);
-                const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
                 // Write NNI installation file to local files
-                await fs.promises.writeFile(path.join(this.nniManagerNFSExpCodeDir, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+                await fs.promises.writeFile(path.join(this.nniManagerNFSExpCodeDir, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
                 //Copy codeDir files to local working folder
                 this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, this.nniManagerNFSExpCodeDir);
 

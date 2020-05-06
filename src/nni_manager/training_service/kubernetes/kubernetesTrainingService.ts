@@ -349,7 +349,7 @@ abstract class KubernetesTrainingService {
             retryCount = uploadRetryCount;
         }
         let uploadSuccess: boolean = false;
-        let folderUriInAzure = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${destDirectory}`;
+        const folderUriInAzure = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${destDirectory}`;
         try {
             do {
                 uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
