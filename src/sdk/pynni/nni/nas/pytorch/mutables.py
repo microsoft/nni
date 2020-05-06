@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 import logging
+import warnings
+from collections import OrderedDict
 
 import torch.nn as nn
 
@@ -58,9 +60,6 @@ class Mutable(nn.Module):
                                "Or did you apply multiple fixed architectures?")
         self.__dict__["mutator"] = mutator
 
-    def forward(self, *inputs):
-        raise NotImplementedError
-
     @property
     def key(self):
         """
@@ -85,9 +84,6 @@ class Mutable(nn.Module):
                 "Mutator not set for {}. You might have forgotten to initialize and apply your mutator. "
                 "Or did you initialize a mutable on the fly in forward pass? Move to `__init__` "
                 "so that trainer can locate all your mutables. See NNI docs for more details.".format(self))
-
-    def __repr__(self):
-        return "{} ({})".format(self.name, self.key)
 
 
 class MutableScope(Mutable):
@@ -131,7 +127,7 @@ class LayerChoice(Mutable):
 
     Parameters
     ----------
-    op_candidates : list of nn.Module
+    op_candidates : list of nn.Module or OrderedDict
         A module list to be selected from.
     reduction : str
         ``mean``, ``concat``, ``sum`` or ``none``. Policy if multiples are selected.
@@ -145,24 +141,92 @@ class LayerChoice(Mutable):
     Attributes
     ----------
     length : int
-        Number of ops to choose from.
+        Deprecated. Number of ops to choose from. ``len(layer_choice)`` is recommended.
+    names : list of str
+        Names of candidates.
+    choices : list of Module
+        Deprecated. A list of all candidate modules in the layer choice module.
+        ``list(layer_choice)`` is recommended, which will serve the same purpose.
+
+    Notes
+    -----
+    ``op_candidates`` can be a list of modules or a ordered dict of named modules, for example,
+
+    .. code-block:: python
+
+        self.op_choice = LayerChoice(OrderedDict([
+            ("conv3x3", nn.Conv2d(3, 16, 128)),
+            ("conv5x5", nn.Conv2d(5, 16, 128)),
+            ("conv7x7", nn.Conv2d(7, 16, 128))
+        ]))
+
+    Elements in layer choice can be modified or deleted. Use ``del self.op_choice["conv5x5"]`` or
+    ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
     def __init__(self, op_candidates, reduction="sum", return_mask=False, key=None):
         super().__init__(key=key)
-        self.length = len(op_candidates)
-        self.choices = nn.ModuleList(op_candidates)
+        self.names = []
+        if isinstance(op_candidates, OrderedDict):
+            for name, module in op_candidates.items():
+                assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
+                    "Please don't use a reserved name '{}' for your module.".format(name)
+                self.add_module(name, module)
+                self.names.append(name)
+        elif isinstance(op_candidates, list):
+            for i, module in enumerate(op_candidates):
+                self.add_module(str(i), module)
+                self.names.append(str(i))
+        else:
+            raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
         self.reduction = reduction
         self.return_mask = return_mask
 
-    def forward(self, *inputs):
+    def __getitem__(self, idx):
+        if isinstance(idx, str):
+            return self._modules[idx]
+        return list(self)[idx]
+
+    def __setitem__(self, idx, module):
+        key = idx if isinstance(idx, str) else self.names[idx]
+        return setattr(self, key, module)
+
+    def __delitem__(self, idx):
+        if isinstance(idx, slice):
+            for key in self.names[idx]:
+                delattr(self, key)
+        else:
+            if isinstance(idx, str):
+                key, idx = idx, self.names.index(idx)
+            else:
+                key = self.names[idx]
+            delattr(self, key)
+        del self.names[idx]
+
+    @property
+    def length(self):
+        warnings.warn("layer_choice.length is deprecated. Use `len(layer_choice)` instead.", DeprecationWarning)
+        return len(self)
+
+    def __len__(self):
+        return len(self.names)
+
+    def __iter__(self):
+        return map(lambda name: self._modules[name], self.names)
+
+    @property
+    def choices(self):
+        warnings.warn("layer_choice.choices is deprecated. Use `list(layer_choice)` instead.", DeprecationWarning)
+        return list(self)
+
+    def forward(self, *args, **kwargs):
         """
         Returns
         -------
         tuple of tensors
             Output and selection mask. If ``return_mask`` is ``False``, only output is returned.
         """
-        out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
+        out, mask = self.mutator.on_forward_layer_choice(self, *args, **kwargs)
         if self.return_mask:
             return out, mask
         return out
