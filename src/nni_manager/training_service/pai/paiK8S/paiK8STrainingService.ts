@@ -44,7 +44,6 @@ import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 import { PAIJobRestServer } from '../paiJobRestServer';
 
 const yaml = require('js-yaml');
-const deepmerge = require('deepmerge');
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -53,9 +52,11 @@ const deepmerge = require('deepmerge');
 @component.Singleton
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
-
+    private paiJobConfig: undefined;
+    private nniVersion: string | undefined;
     constructor() {
         super();
+        
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -84,9 +85,13 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.paiTrialConfig.codeDir);
+                if (this.paiTrialConfig.paiConfigPath) {
+                    this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+                }
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
+                this.nniVersion = this.versionCheck ? await getVersion() : '';
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.logCollection = value;
@@ -141,72 +146,100 @@ class PAIK8STrainingService extends PAITrainingService {
 
         return trialJobDetail;
     }
-
-    public generateJobConfigInYamlFormat(trialJobId: string, command: string) {
+    
+    private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string) {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const jobName = `nni_exp_${this.experimentId}_trial_${trialJobId}`
-        const paiJobConfig: any = {
-            protocolVersion: 2, 
-            name: jobName,
-            type: 'job',
-            jobRetryCount: 0,
-            prerequisites: [
-              {
-                type: 'dockerimage',
-                uri: this.paiTrialConfig.image,
-                name: 'docker_image_0'
-              }
-            ],
-            taskRoles: {
-                taskrole: {
-                    instances: 1,
-                    completion: {
-                       minFailedInstances: 1,
-                       minSucceededInstances: -1
-                    },
-                    taskRetryCount: 0,
-                    dockerImage: 'docker_image_0',
-                    resourcePerInstance: {
-                        gpu: this.paiTrialConfig.gpuNum,
-                        cpu: this.paiTrialConfig.cpuNum,
-                        memoryMB: this.paiTrialConfig.memoryMB
-                    },
-                    commands: [
-                        command
-                    ]
-                }
-            },
-            extras: {
-                'com.microsoft.pai.runtimeplugin': [
-                    {
-                        plugin: this.paiTrialConfig.paiStoragePlugin
-                    }
-                ],
-                submitFrom: 'submit-job-v2'
-            }
-        }
-        if (this.paiTrialConfig.virtualCluster) {
-            paiJobConfig.defaults=  {
-                virtualCluster: this.paiTrialConfig.virtualCluster
-            }
-        }
+        const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobDetail.id}`;
+        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const nniPaiTrialCommand: string = String.Format(
+            PAI_K8S_TRIAL_COMMAND_FORMAT,
+            `${containerWorkingDir}`,
+            `${containerWorkingDir}/nnioutput`,
+            trialJobDetail.id,
+            this.experimentId,
+            trialJobDetail.form.sequenceId,
+            this.isMultiPhase,
+            command,
+            nniManagerIp,
+            this.paiRestServerPort,
+            this.nniVersion,
+            this.logCollection
+        )
+        .replace(/\r\n|\n|\r/gm, '');
 
-        if (this.paiTrialConfig.paiConfigPath) {
-            try {
-                const additionalPAIConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                //deepmerge(x, y), if an element at the same key is present for both x and y, the value from y will appear in the result.
-                //refer: https://github.com/TehShrike/deepmerge
-                const overwriteMerge = (destinationArray: any, sourceArray: any, options: any) => sourceArray;
-                return yaml.safeDump(deepmerge(additionalPAIConfig, paiJobConfig, { arrayMerge: overwriteMerge }));
-            } catch (error) {
-                this.log.error(`Error occurs during loading and merge ${this.paiTrialConfig.paiConfigPath} : ${error}`);
-            }
-        } else {
-            return yaml.safeDump(paiJobConfig);
+        return nniPaiTrialCommand;
+
+    }
+
+    private generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail) {
+        if (this.paiTrialConfig === undefined) {
+            throw new Error('trial config is not initialized');
         }
-      }
+        const jobName = `nni_exp_${this.experimentId}_trial_${trialJobDetail.id}`
+
+        let nniJobConfig: any = undefined;
+        if (this.paiTrialConfig.paiConfigPath) {
+            nniJobConfig = this.paiJobConfig;
+            nniJobConfig.name = jobName;
+            // Each taskRole will generate new command in NNI's command format
+            // Each command will be formatted to NNI style
+            for(const taskRoleIndex in nniJobConfig.taskRoles) {
+                const commands = nniJobConfig.taskRoles[taskRoleIndex].commands
+                const nniTrialCommand = this.generateNNITrialCommand(trialJobDetail, commands.join(" && ").replace(/(["'$`\\])/g,'\\$1'));
+                nniJobConfig.taskRoles[taskRoleIndex].commands = [nniTrialCommand]
+            }
+            
+        } else {
+            nniJobConfig = {
+                protocolVersion: 2, 
+                name: jobName,
+                type: 'job',
+                jobRetryCount: 0,
+                prerequisites: [
+                  {
+                    type: 'dockerimage',
+                    uri: this.paiTrialConfig.image,
+                    name: 'docker_image_0'
+                  }
+                ],
+                taskRoles: {
+                    taskrole: {
+                        instances: 1,
+                        completion: {
+                           minFailedInstances: 1,
+                           minSucceededInstances: -1
+                        },
+                        taskRetryCount: 0,
+                        dockerImage: 'docker_image_0',
+                        resourcePerInstance: {
+                            gpu: this.paiTrialConfig.gpuNum,
+                            cpu: this.paiTrialConfig.cpuNum,
+                            memoryMB: this.paiTrialConfig.memoryMB
+                        },
+                        commands: [
+                            this.generateNNITrialCommand(trialJobDetail, this.paiTrialConfig.command)
+                        ]
+                    }
+                },
+                extras: {
+                    'com.microsoft.pai.runtimeplugin': [
+                        {
+                            plugin: this.paiTrialConfig.paiStoragePlugin
+                        }
+                    ],
+                    submitFrom: 'submit-job-v2'
+                }
+            }
+            if (this.paiTrialConfig.virtualCluster) {
+                nniJobConfig.defaults = {
+                    virtualCluster: this.paiTrialConfig.virtualCluster
+                }
+            }
+        }
+        return yaml.safeDump(nniJobConfig);
+    }
 
     protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
@@ -247,29 +280,8 @@ class PAIK8STrainingService extends PAITrainingService {
 
         //Copy codeDir files to local working folder
         await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
-        
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
-        const version: string = this.versionCheck ? await getVersion() : '';
-        const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobId}`;
-        const nniPaiTrialCommand: string = String.Format(
-            PAI_K8S_TRIAL_COMMAND_FORMAT,
-            `${containerWorkingDir}`,
-            `${containerWorkingDir}/nnioutput`,
-            trialJobId,
-            this.experimentId,
-            trialJobDetail.form.sequenceId,
-            this.isMultiPhase,
-            this.paiTrialConfig.command,
-            nniManagerIp,
-            this.paiRestServerPort,
-            version,
-            this.logCollection
-        )
-        .replace(/\r\n|\n|\r/gm, '');
-
-        this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
-        
-        const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobId, nniPaiTrialCommand);
+        //Generate Job Configuration in yaml format
+        const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
         this.log.debug(paiJobConfig);
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
