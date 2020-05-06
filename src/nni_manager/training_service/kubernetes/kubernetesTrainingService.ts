@@ -77,7 +77,7 @@ abstract class KubernetesTrainingService {
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
 
-        for (const [key, value] of this.trialJobsMap) {
+        for (const key of this.trialJobsMap.keys()) {
             jobs.push(await this.getTrialJob(key));
         }
 
@@ -107,7 +107,7 @@ abstract class KubernetesTrainingService {
         return false;
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
+    public getClusterMetadata(_key: string): Promise<string> {
         return Promise.resolve('');
     }
 
