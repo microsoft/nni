@@ -90,8 +90,18 @@ paiConfig:
     * 必填。 在 OpenPAI 的容器中设置挂载路径。
 * paiStoragePlugin 
     * 可选。 设置 PAI 中使用的存储插件的名称。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
-* paiConfigPath 
-    * 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。
+* command  
+    * 可选。 Set the commands used in PAI container.
+
+* paiConfigPath
+    
+    * Optional key. Set the file path of pai job configuration, the file is in yaml format. If users set `paiConfigPath` in NNI's configuration file, no need to specify the fields `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` configuration. These fields will use the values from the config file specified by `paiConfigPath`. 
+        Note:
+          1. The job name in PAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}.
+        
+          2.  If users set multiple taskRoles in PAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error. 
+        
+        
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
