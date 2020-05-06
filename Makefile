@@ -173,12 +173,12 @@ install-python-modules:
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
 	mkdir -p build
-	ln -sf ../src/sdk/pynni/nni build
-	ln -sf ../src/sdk/pycli/nnicli build
-	ln -sf ../tools/nni_annotation build
-	ln -sf ../tools/nni_cmd build
-	ln -sf ../tools/nni_trial_tool build
-	ln -sf ../tools/nni_gpu_tool build
+	ln -sfT ../src/sdk/pynni/nni build/nni
+	ln -sfT ../src/sdk/pycli/nnicli build/nnicli
+	ln -sfT ../tools/nni_annotation build/nni_annotation
+	ln -sfT ../tools/nni_cmd build/nni_cmd
+	ln -sfT ../tools/nni_trial_tool build/nni_trial_tool
+	ln -sfT ../tools/nni_gpu_tool build/nni_gpu_tool
 	cp setup.py build/
 	cp README.md build/
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' build/setup.py
@@ -205,16 +205,14 @@ install-node-modules:
 .PHONY: dev-install-node-modules
 dev-install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
-	rm -rf $(NNI_PKG_FOLDER)
-	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
+	ln -sfT ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
 	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(NNI_PKG_FOLDER)/package.json
-	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)
-	ln -sf ${PWD}/src/webui/build -t $(NNI_PKG_FOLDER)
-	mv $(NNI_PKG_FOLDER)/build $(NNI_PKG_FOLDER)/static
+	ln -sfT ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
+	ln -sfT ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
 	mkdir -p $(NASUI_PKG_FOLDER)
-	ln -sf ${PWD}/src/nasui/build $(NASUI_PKG_FOLDER)
-	ln -sf ${PWD}/src/nasui/server.js $(NASUI_PKG_FOLDER)
+	ln -sfT ${PWD}/src/nasui/build $(NASUI_PKG_FOLDER)/build
+	ln -sfT ${PWD}/src/nasui/server.js $(NASUI_PKG_FOLDER)/server.js
 
 .PHONY: install-scripts
 install-scripts:
