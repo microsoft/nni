@@ -77,8 +77,6 @@ class MutableScope(Mutable):
 class LayerChoice(Mutable):
     def __init__(self, op_candidates, reduction='sum', return_mask=False, key=None):
         super().__init__(key=key)
-        self.length = len(op_candidates)
-        self.choices = op_candidates
         self.reduction = reduction
         self.return_mask = return_mask
 
@@ -87,6 +85,21 @@ class LayerChoice(Mutable):
         if self.return_mask:
             return out, mask
         return out
+
+    def __getitem__(self, idx):
+        if isinstance(idx, str):
+            return self._modules[idx]
+        return list(self)[idx]
+
+    def __setitem__(self, idx, module):
+        key = idx if isinstance(idx, str) else self.names[dix]
+        return setattr(self, key, module)
+
+    def __len__(self):
+        return len(self.names)
+
+    def __iter__(self):
+        return map(lambda name: self._modules[name], self.names)
 
 
 class InputChoice(Mutable):

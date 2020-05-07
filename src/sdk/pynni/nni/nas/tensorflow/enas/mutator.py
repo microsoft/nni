@@ -36,12 +36,12 @@ class EnasMutator(Mutator):
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
-                    self.max_layer_choice = mutable.length
-                assert self.max_layer_choice == mutable.length, \
+                    self.max_layer_choice = len(mutable)
+                assert self.max_layer_choice == len(mutable), \
                         "ENAS mutator requires all layer choice have the same number of candidates."
                 if 'reduce' in mutable.key:
                     bias = []
-                    for choice in mutable.choices:
+                    for choice in mutable:
                         if 'conv' in str(type(choice)).lower():
                             bias.append(branch_bias)
                         else:

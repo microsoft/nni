@@ -69,6 +69,6 @@ if __name__ == "__main__":
                            dataset_valid=dataset_valid,
                            batch_size=64,
                            log_frequency=10)
-    trainer.enable_visualization()
+    #trainer.enable_visualization()
     trainer.train()
     trainer.export("checkpoint.json")
