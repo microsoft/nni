@@ -18,8 +18,8 @@ class RandomMutator(Mutator):
         result = dict()
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
-                gen_index = torch.randint(high=mutable.length, size=(1, ))
-                result[mutable.key] = F.one_hot(gen_index, num_classes=mutable.length).view(-1).bool()
+                gen_index = torch.randint(high=len(mutable), size=(1, ))
+                result[mutable.key] = F.one_hot(gen_index, num_classes=len(mutable)).view(-1).bool()
             elif isinstance(mutable, InputChoice):
                 if mutable.n_chosen is None:
                     result[mutable.key] = torch.randint(high=2, size=(mutable.n_candidates,)).view(-1).bool()

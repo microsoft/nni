@@ -61,7 +61,7 @@ class DartsMutator(Mutator):
             if isinstance(mutable, LayerChoice):
                 max_val, index = torch.max(F.softmax(self.choices[mutable.key], dim=-1)[:-1], 0)
                 edges_max[mutable.key] = max_val
-                result[mutable.key] = F.one_hot(index, num_classes=mutable.length).view(-1).bool()
+                result[mutable.key] = F.one_hot(index, num_classes=len(mutable)).view(-1).bool()
         for mutable in self.mutables:
             if isinstance(mutable, InputChoice):
                 if mutable.n_chosen is not None:
