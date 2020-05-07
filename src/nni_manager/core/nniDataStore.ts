@@ -268,14 +268,14 @@ class NNIDataStore implements DataStore {
         return <TrialJobStatus>event;
     }
 
-    private parseHyperParameter(hParamStr: string): any {
-        let hParam: any;
+    private parseMetricData(metricDataString: string): any {
+        let metricData: any;
         try {
-            hParam = JSON.parse(hParamStr);
+            metricData = JSON.parse(metricDataString);
 
-            return hParam;
+            return metricData;
         } catch (err) {
-            this.log.error(`Hyper parameter needs to be in json format: ${hParamStr}`);
+            this.log.error(`Metric data needs to be in json format: ${metricDataString}`);
 
             return undefined;
         }
@@ -342,21 +342,21 @@ class NNIDataStore implements DataStore {
             jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
 
             if (record.data !== undefined && record.data.trim().length > 0) {
-                const hyperParameter: any = this.parseHyperParameter(record.data);
-                if (hyperParameter !== undefined) {
+                const metricData: any = this.parseMetricData(record.data);
+                if (metricData !== undefined) {
                     // update trials here.
-                    const trialId = this.getTrialId(jobInfo.id, hyperParameter);
+                    const trialId = this.getTrialId(jobInfo.id, metricData);
                     let trialInfo: TrialJobInfo | undefined;
                     if (trialMap.has(trialId)) {
                         trialInfo = trialMap.get(trialId);
                         if (trialInfo && trialInfo.hyperParameters) {
-                            trialInfo.hyperParameters.push(JSON.stringify(hyperParameter));
+                            trialInfo.hyperParameters.push(record.data);
                         }
                     } else {
                         trialInfo = {
                             id: trialId,
                             status: this.getJobStatusByLatestEvent('RUNNING', record.event),
-                            hyperParameters: [JSON.stringify(hyperParameter)],
+                            hyperParameters: [record.data],
                             startTime: record.timestamp,
                             sequenceId: sequenceId++
                         };
