@@ -1,5 +1,5 @@
 '''
-Given the config_list of LevelPruner, Prune the original model & fine tune it 
+Given the config_list of LevelPruner, Prune the original model & fine tune it
 '''
 from __future__ import print_function
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder('{}/train'.format(args.data_dir)),
+        datasets.ImageFolder('{}/train'.format(args.data_dir),
                              transform=transforms.Compose([
                                  transforms.Resize(256),
                                  transforms.CenterCrop(224),
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder('{}/val'.format(args.data_dir))),
+        datasets.ImageFolder('{}/val'.format(args.data_dir),
                              transform=transforms.Compose([
                                  transforms.Resize(256),
                                  transforms.CenterCrop(224),
