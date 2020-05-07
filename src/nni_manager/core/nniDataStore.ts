@@ -290,6 +290,7 @@ class NNIDataStore implements DataStore {
         const jobTrialMap: Map<string, string[]> = new Map();
 
         // assume data is stored by time ASC order
+        let trialNumber = 0;
         for (const record of trialJobEvents) {
             let jobInfo: TrialJobInfo | undefined;
             if (record.trialJobId === undefined || record.trialJobId.length < 1) {
@@ -357,7 +358,7 @@ class NNIDataStore implements DataStore {
                             status: this.getJobStatusByLatestEvent('RUNNING', record.event),
                             hyperParameters: [record.data],
                             startTime: record.timestamp,
-                            sequenceId: record.sequenceId
+                            sequenceId: trialNumber++
                         };
                         trialMap.set(trialId, trialInfo);
                     }
