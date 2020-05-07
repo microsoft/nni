@@ -8,8 +8,15 @@ import { RemoteCommandResult } from "./remoteMachineData";
 abstract class OsCommands {
 
     protected pathSpliter: string = '/';
-    protected multiplePathSpliter: RegExp = new RegExp(`\\${this.pathSpliter}{2,}`);
+    protected multiplePathSpliter: RegExp = new RegExp(`${this.pathSpliter}{2,}`);
 
+    public abstract getScriptExt(): string;
+    public abstract generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
+        trialSequenceId: string, isMultiPhase: boolean, jobIdFileName: string,
+        command: string, nniManagerAddress: string, nniManagerPort: number,
+        nniManagerVersion: string, logCollection: string, codeFile: string,
+        cudaVisibleSetting: string): string;
+    public abstract getTempPath(): string;
     public abstract createFolder(folderName: string, sharedFolder: boolean): string;
     public abstract allowPermission(isRecursive: boolean, ...folders: string[]): string;
     public abstract removeFolder(folderName: string, isRecursive: boolean, isForce: boolean): string;

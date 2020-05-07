@@ -266,7 +266,7 @@ class NNIManager implements Manager {
         const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
             timeoutId = setTimeout(
                 () => { reject(new Error('TrainingService setClusterMetadata timeout. Please check your config file.')); },
-                10000);
+                30000);
         });
         await Promise.race([delay1, this.trainingService.setClusterMetadata(key, value)]).finally(() => {
             clearTimeout(timeoutId);

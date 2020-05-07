@@ -13,18 +13,27 @@ import { RemoteCommandResult, RemoteMachineMeta } from "./remoteMachineData";
 import * as stream from 'stream';
 import { OsCommands } from "./osCommands";
 import { LinuxCommands } from "./extends/linuxCommands";
+import { WindowsCommands } from './extends/windowsCommands';
 import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { execRemove, tarAdd } from '../common/util';
-import { getRemoteTmpDir, uniqueString, unixPathJoin } from '../../common/utils';
+import { uniqueString } from '../../common/utils';
 
 class ShellExecutor {
-    private sshClient: Client = new Client();
+    private readonly lineBreaker = new RegExp(`[\r\n]+`);
+
     private osCommands: OsCommands | undefined;
     private usedConnectionNumber: number = 0; //count the connection number of every client
+    private readonly sshClient: Client;
+    private readonly log: Logger;
+    private username: string = "";
+    private tempPath: string = "";
+    private isWindows: boolean = false;
 
-    protected pathSpliter: string = '/';
-    protected multiplePathSpliter: RegExp = new RegExp(`\\${this.pathSpliter}{2,}`);
+    constructor() {
+        this.log = getLogger();
+        this.sshClient = new Client();
+    }
 
     public async initialize(rmMeta: RemoteMachineMeta): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
@@ -35,6 +44,7 @@ class ShellExecutor {
             username: rmMeta.username,
             tryKeyboard: true
         };
+        this.username = rmMeta.username;
         if (rmMeta.passwd !== undefined) {
             connectConfig.password = rmMeta.passwd;
         } else if (rmMeta.sshKeyPath !== undefined) {
@@ -53,16 +63,21 @@ class ShellExecutor {
             // check OS type: windows or else
             const result = await this.execute("ver");
             if (result.exitCode == 0 && result.stdout.search("Windows") > -1) {
-                // not implement Windows commands yet.
-                throw new Error("not implement Windows commands yet.");
+                this.osCommands = new WindowsCommands();
+                this.isWindows = true;
             } else {
                 this.osCommands = new LinuxCommands();
             }
+            // parse temp folder to expand possible environment variables.
+            const commandText = this.osCommands && this.osCommands.getTempPath();
+            const commandResult = await this.execute(commandText);
+            this.tempPath = commandResult.stdout.replace(this.lineBreaker, "");
+
             deferred.resolve();
         }).on('error', (err: Error) => {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
-        }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
+        }).on("keyboard-interactive", (_name, _instructions, _lang, _prompts, finish) => {
             finish([rmMeta.passwd]);
         }).connect(connectConfig);
 
@@ -83,6 +98,51 @@ class ShellExecutor {
 
     public minusUsedConnectionNumber(): void {
         this.usedConnectionNumber -= 1;
+    }
+
+    public getScriptName(mainName: string): string {
+        if (this.osCommands === undefined) {
+            throw new Error("osCommands must be initialized!");
+        }
+        return `${mainName}.${this.osCommands.getScriptExt()}`;
+    }
+
+    public generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
+        trialSequenceId: string, isMultiPhase: boolean,
+        command: string, nniManagerAddress: string, nniManagerPort: number,
+        nniManagerVersion: string, logCollection: string, cudaVisibleSetting: string): string {
+        if (this.osCommands === undefined) {
+            throw new Error("osCommands must be initialized!");
+        }
+        const jobIdFileName = this.joinPath(workingDirectory, '.nni', 'jobpid');
+        const codeFile = this.joinPath(workingDirectory, '.nni', 'code');
+
+        return this.osCommands.generateStartScript(workingDirectory, trialJobId, experimentId,
+            trialSequenceId, isMultiPhase, jobIdFileName,
+            command, nniManagerAddress, nniManagerPort,
+            nniManagerVersion, logCollection, codeFile, cudaVisibleSetting);
+    }
+
+    public getTempPath(): string {
+        if (this.tempPath === "") {
+            throw new Error("tempPath must be initialized!");
+        }
+        return this.tempPath;
+    }
+
+    public getRemoteScriptsPath(): string {
+        return this.joinPath(this.tempPath, this.username, 'nni', 'scripts');
+    }
+
+    public getRemoteExperimentRootDir(experimentId: string): string {
+        return this.joinPath(this.tempPath, 'nni', 'experiments', experimentId);
+    }
+
+    public joinPath(...paths: string[]): string {
+        if (!this.osCommands) {
+            throw new Error("osCommands must be initialized!");
+        }
+        return this.osCommands.joinPath(...paths);
     }
 
     public async createFolder(folderName: string, sharedFolder: boolean = false): Promise<boolean> {
@@ -154,13 +214,12 @@ class ShellExecutor {
      * @param remoteFilePath the target path in remote machine
      */
     public async copyFileToRemote(localFilePath: string, remoteFilePath: string): Promise<boolean> {
-        const log: Logger = getLogger();
-        log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
+        this.log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
 
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
-                log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
+                this.log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
                 deferred.reject(err);
 
                 return;
@@ -185,10 +244,13 @@ class ShellExecutor {
      * @param remoteDirectory remote directory
      * @param sshClient SSH client
      */
-    public async copyDirectoryToRemote(localDirectory: string, remoteDirectory: string, remoteOS: string): Promise<void> {
+    public async copyDirectoryToRemote(localDirectory: string, remoteDirectory: string): Promise<void> {
         const tmpSuffix: string = uniqueString(5);
         const localTarPath: string = path.join(os.tmpdir(), `nni_tmp_local_${tmpSuffix}.tar.gz`);
-        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), `nni_tmp_remote_${tmpSuffix}.tar.gz`);
+        if (!this.osCommands) {
+            throw new Error("osCommands must be initialized!");
+        }
+        const remoteTarPath: string = this.osCommands.joinPath(this.tempPath, `nni_tmp_remote_${tmpSuffix}.tar.gz`);
 
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);
@@ -238,16 +300,17 @@ class ShellExecutor {
     }
 
     private async execute(command: string | undefined, processOutput: ((input: RemoteCommandResult) => RemoteCommandResult) | undefined = undefined, useShell: boolean = false): Promise<RemoteCommandResult> {
-        const log: Logger = getLogger();
-        log.debug(`remoteExeCommand: command: [${command}]`);
+        this.log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred: Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
         let stderr: string = '';
         let exitCode: number;
 
+        // Windows always uses shell, and it needs to disable to get it works.
+        useShell = useShell && !this.isWindows;
         const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
-                log.error(`remoteExeCommand: ${err.message}`);
+                this.log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
                 return;
             }
@@ -257,7 +320,7 @@ class ShellExecutor {
             });
             channel.on('exit', (code: any) => {
                 exitCode = <number>code;
-                log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
+                this.log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
                 let result = {
                     stdout: stdout,
                     stderr: stderr,

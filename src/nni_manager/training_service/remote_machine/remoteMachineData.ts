@@ -6,6 +6,7 @@
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
+import { Logger, getLogger } from '../../common/log';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -88,7 +89,9 @@ export class ExecutorManager {
     private readonly executorArray: ShellExecutor[];
     private readonly maxTrialNumberPerConnection: number;
     private readonly rmMeta: RemoteMachineMeta;
+    private readonly log: Logger;
     constructor(executorArray: ShellExecutor[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+        this.log = getLogger();
         this.rmMeta = rmMeta;
         this.executorArray = executorArray;
         this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
@@ -175,21 +178,3 @@ export enum ScheduleResultType {
     // Cannot match requirement even if all GPU are a
     REQUIRE_EXCEED_TOTAL
 }
-
-export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
-    `#!/bin/bash
-export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} \
-NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}
-cd $NNI_SYS_DIR
-sh install_nni.sh
-echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' \
---nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-echo $? \`date +%s%3N\` >{12}`;
-
-export const HOST_JOB_SHELL_FORMAT: string =
-    `#!/bin/bash
-cd {0}
-echo $$ >{1}
-eval {2} >stdout 2>stderr
-echo $? \`date +%s%3N\` >{3}`;
