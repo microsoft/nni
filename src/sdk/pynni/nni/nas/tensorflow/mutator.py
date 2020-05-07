@@ -33,9 +33,9 @@ class Mutator(BaseMutator):
 
     def on_forward_layer_choice(self, mutable, *inputs):
         mask = self._get_decision(mutable)
-        assert len(mask) == len(mutable.choices), \
-                'Invalid mask, expected {} to be of length {}.'.format(mask, len(mutable.choices))
-        out = self._select_with_mask(lambda choice: choice(*inputs), mutable.choices, mask)
+        assert len(mask) == len(mutable), \
+                'Invalid mask, expected {} to be of length {}.'.format(mask, len(mutable))
+        out = self._select_with_mask(lambda choice: choice(*inputs), mutable, mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list):

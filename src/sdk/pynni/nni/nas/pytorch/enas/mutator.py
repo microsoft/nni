@@ -125,6 +125,7 @@ class EnasMutator(Mutator):
         self._choices = dict()
         self._anchors_hid = dict()
         self._inputs = self.g_emb.data
+        print(self._inputs)
         self._c = [torch.zeros((1, self.lstm_size),
                                dtype=self._inputs.dtype,
                                device=self._inputs.device) for _ in range(self.lstm_num_layers)]
