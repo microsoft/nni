@@ -19,7 +19,6 @@
 
 'use strict';
 
-import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 // tslint:disable-next-line:no-implicit-dependencies
@@ -29,11 +28,13 @@ import * as component from '../../../common/component';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    HyperParameters, NNIManagerIpConfig,
+    TrialJobApplicationForm, TrialJobDetail
 } from '../../../common/trainingService';
-import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../../common/utils';
+import {
+    generateParamFileName,
+    getIPV4Address, getVersion, uniqueString
+} from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir, execCopydir } from '../../common/util';
@@ -56,7 +57,7 @@ class PAIK8STrainingService extends PAITrainingService {
     private nniVersion: string | undefined;
     constructor() {
         super();
-        
+
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -69,10 +70,10 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if(this.paiClusterConfig.passWord) {
+                if (this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
-                } else if(this.paiClusterConfig.token) {
+                } else if (this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
                 }
                 break;
@@ -104,7 +105,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.log.error(`Uknown key: ${key}`);
         }
     }
-    
+
     // update trial parameters for multi-phase
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -146,8 +147,8 @@ class PAIK8STrainingService extends PAITrainingService {
 
         return trialJobDetail;
     }
-    
-    private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string) {
+
+    private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string): string {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
@@ -167,13 +168,13 @@ class PAIK8STrainingService extends PAITrainingService {
             this.nniVersion,
             this.logCollection
         )
-        .replace(/\r\n|\n|\r/gm, '');
+            .replace(/\r\n|\n|\r/gm, '');
 
         return nniPaiTrialCommand;
 
     }
 
-    private generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail) {
+    private generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail): any {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
@@ -185,31 +186,31 @@ class PAIK8STrainingService extends PAITrainingService {
             nniJobConfig.name = jobName;
             // Each taskRole will generate new command in NNI's command format
             // Each command will be formatted to NNI style
-            for(const taskRoleIndex in nniJobConfig.taskRoles) {
+            for (const taskRoleIndex in nniJobConfig.taskRoles) {
                 const commands = nniJobConfig.taskRoles[taskRoleIndex].commands
-                const nniTrialCommand = this.generateNNITrialCommand(trialJobDetail, commands.join(" && ").replace(/(["'$`\\])/g,'\\$1'));
+                const nniTrialCommand = this.generateNNITrialCommand(trialJobDetail, commands.join(" && ").replace(/(["'$`\\])/g, '\\$1'));
                 nniJobConfig.taskRoles[taskRoleIndex].commands = [nniTrialCommand]
             }
-            
+
         } else {
             nniJobConfig = {
-                protocolVersion: 2, 
+                protocolVersion: 2,
                 name: jobName,
                 type: 'job',
                 jobRetryCount: 0,
                 prerequisites: [
-                  {
-                    type: 'dockerimage',
-                    uri: this.paiTrialConfig.image,
-                    name: 'docker_image_0'
-                  }
+                    {
+                        type: 'dockerimage',
+                        uri: this.paiTrialConfig.image,
+                        name: 'docker_image_0'
+                    }
                 ],
                 taskRoles: {
                     taskrole: {
                         instances: 1,
                         completion: {
-                           minFailedInstances: 1,
-                           minSucceededInstances: -1
+                            minFailedInstances: 1,
+                            minSucceededInstances: -1
                         },
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',

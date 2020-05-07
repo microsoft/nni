@@ -131,7 +131,7 @@ class DLTSTrainingService implements TrainingService {
     private async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
             const updateDLTSTrialJobs: Promise<void>[] = [];
-            for (const [trialJobId, dltsTrialJob] of this.trialJobsMap) {
+            for (const dltsTrialJob of this.trialJobsMap.values()) {
                 updateDLTSTrialJobs.push(this.getDLTSTrialJobInfo(dltsTrialJob));
             }
     
@@ -405,7 +405,7 @@ class DLTSTrainingService implements TrainingService {
         }
     }
 
-    public async getClusterMetadata(key: string): Promise<string> {
+    public async getClusterMetadata(_key: string): Promise<string> {
         return '';
     }
 
@@ -545,7 +545,7 @@ class DLTSTrainingService implements TrainingService {
             body: parameterFileMeta
         };
         await new Promise((resolve, reject) => {
-            request(req, (err: Error, res: request.Response) => {
+            request(req, (err: Error, _res: request.Response) => {
                 if (err) {
                     reject(err);
                 } else {
