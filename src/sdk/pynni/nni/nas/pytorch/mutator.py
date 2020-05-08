@@ -150,16 +150,16 @@ class Mutator(BaseMutator):
         """
         if self._connect_all:
             return self._all_connect_tensor_reduction(mutable.reduction,
-                                                      [op(*args, **kwargs) for op in mutable.choices]), \
-                torch.ones(mutable.length)
+                                                      [op(*args, **kwargs) for op in mutable]), \
+                torch.ones(len(mutable))
 
         def _map_fn(op, args, kwargs):
             return op(*args, **kwargs)
 
         mask = self._get_decision(mutable)
-        assert len(mask) == len(mutable.choices), \
-            "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable.choices))
-        out = self._select_with_mask(_map_fn, [(choice, args, kwargs) for choice in mutable.choices], mask)
+        assert len(mask) == len(mutable), \
+            "Invalid mask, expected {} to be of length {}.".format(mask, len(mutable))
+        out = self._select_with_mask(_map_fn, [(choice, args, kwargs) for choice in mutable], mask)
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def on_forward_input_choice(self, mutable, tensor_list):
