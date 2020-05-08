@@ -3,27 +3,21 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as component from '../../common/component';
 
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
-import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService,
+    NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../common/utils';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execMkdir, validateCodeDir } from '../common/util';
+import { delay } from '../../common/utils';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
-import { PAIJobRestServer, ParameterFileMeta } from './paiJobRestServer';
+import { PAIJobRestServer } from './paiJobRestServer';
 import { PAIClusterConfig, PAITrialJobDetail } from './paiConfig';
 
 /**
@@ -39,7 +33,7 @@ abstract class PAITrainingService implements TrainingService {
     protected paiClusterConfig?: PAIClusterConfig;
     protected readonly jobQueue: string[];
     protected stopping: boolean = false;
-    protected paiToken? : string;
+    protected paiToken?: string;
     protected paiTokenUpdateTime?: number;
     protected readonly paiTokenUpdateInterval: number;
     protected readonly experimentId!: string;
@@ -81,15 +75,15 @@ abstract class PAITrainingService implements TrainingService {
         this.log.info('PAI training service exit.');
     }
 
-    public async submitTrialJob(form: TrialJobApplicationForm): Promise<any> {
+    public async submitTrialJob(_form: TrialJobApplicationForm): Promise<any> {
         throw new Error('Not implemented!');
     }
 
-    public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+    public async updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         throw new Error('Not implemented!');
     }
 
-    protected async submitTrialJobToPAI(trialJobId: string): Promise<boolean> {
+    protected async submitTrialJobToPAI(_trialJobId: string): Promise<boolean> {
         throw new Error('Not implemented!');
     }
 
@@ -109,14 +103,14 @@ abstract class PAITrainingService implements TrainingService {
         }
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
         throw new Error('Not implemented!');
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
 
-        for (const [key, value] of this.trialJobsMap) {
+        for (const key of this.trialJobsMap.keys()) {
             jobs.push(await this.getTrialJob(key));
         }
 
@@ -150,7 +144,7 @@ abstract class PAITrainingService implements TrainingService {
     }
 
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail: PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             return Promise.reject(new Error(`cancelTrialJob: trial job id ${trialJobId} not found`));
         }
@@ -169,10 +163,10 @@ abstract class PAITrainingService implements TrainingService {
 
         const stopJobRequest: request.Options = {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
-/jobs/${trialJobDetail.paiJobName}/executionType`, 
+/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
-            body: {value: 'STOP'},
+            body: { value: 'STOP' },
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${this.paiToken}`
@@ -183,11 +177,11 @@ abstract class PAITrainingService implements TrainingService {
         trialJobDetail.isEarlyStopped = isEarlyStopped;
         const deferred: Deferred<void> = new Deferred<void>();
 
-        request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
+        request(stopJobRequest, (error: Error, response: request.Response, _body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject((error !== undefined && error !== null) ? error.message :
-                 `Stop trial failed, http code: ${response.statusCode}`);
+                    `Stop trial failed, http code: ${response.statusCode}`);
             } else {
                 deferred.resolve();
             }
@@ -196,7 +190,7 @@ abstract class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
+    public getClusterMetadata(_key: string): Promise<string> {
         throw new Error('Not implemented!');
     }
 
@@ -236,7 +230,7 @@ abstract class PAITrainingService implements TrainingService {
 
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            if(this.paiClusterConfig && this.paiClusterConfig.passWord) {
+            if (this.paiClusterConfig && this.paiClusterConfig.passWord) {
                 try {
                     await this.updatePaiToken();
                 } catch (error) {
@@ -302,7 +296,7 @@ abstract class PAITrainingService implements TrainingService {
         });
 
         let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
+        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
             // Set timeout and reject the promise once reach timeout (5 seconds)
             timeoutId = setTimeout(
                 () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
