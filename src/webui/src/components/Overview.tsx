@@ -29,7 +29,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     constructor(props: OverviewProps) {
         super(props);
         this.state = {
-            trialConcurrency: EXPERIMENT.trialConcurrency,
+            trialConcurrency: EXPERIMENT.trialConcurrency
         };
     }
 

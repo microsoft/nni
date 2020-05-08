@@ -14,7 +14,6 @@ interface AppState {
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
     isillegalFinal: boolean;
     expWarningMessage: string;
-    // bestTrialEntries: string | number; // for overview page: best trial entreis
     bestTrialEntries: string; // for overview page: best trial entreis
 }
 
@@ -95,7 +94,6 @@ class App extends React.Component<{}, AppState> {
         this.setState({ metricGraphMode: val });
     }
 
-    // changeEntries = (entries: string | number): void => {
     changeEntries = (entries: string): void => {
         this.setState({bestTrialEntries: entries});
     }
