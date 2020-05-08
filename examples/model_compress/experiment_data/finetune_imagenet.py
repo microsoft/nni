@@ -104,7 +104,8 @@ if __name__ == '__main__':
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder('{}/train'.format(args.data_dir),
+        datasets.ImageNet(args.data_dir, split='train',
+        # datasets.ImageFolder('{}/train'.format(args.data_dir),
                              transform=transforms.Compose([
                                  transforms.Resize(256),
                                  transforms.CenterCrop(224),
@@ -114,7 +115,8 @@ if __name__ == '__main__':
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder('{}/val'.format(args.data_dir),
+        datasets.ImageNet(args.data_dir, split='val',
+        # datasets.ImageFolder('{}/val'.format(args.data_dir),
                              transform=transforms.Compose([
                                  transforms.Resize(256),
                                  transforms.CenterCrop(224),
