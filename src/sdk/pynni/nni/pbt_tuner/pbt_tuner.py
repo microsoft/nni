@@ -356,6 +356,16 @@ class PBTTuner(Tuner):
 
     def trial_end(self, parameter_id, success, **kwargs):
         """
+        Deal with trial failure
+
+        Parameters
+        ----------
+        parameter_id : int
+            Unique identifier for hyper-parameters used by this trial.
+        success : bool
+            True if the trial successfully completed; False if failed or terminated.
+        **kwargs
+            Unstable parameters which should be ignored by normal users.
         """
         if success:
             return
@@ -372,6 +382,15 @@ class PBTTuner(Tuner):
 
     def import_data(self, data):
         """
+        Parameters
+        ----------
+        data : json obj
+            imported data records
+
+        Returns
+        -------
+        int
+            the start epoch number after data imported, only used for unittest
         """
         if self.running:
             logger.warning("Do not support importing data in the middle of experiment")
