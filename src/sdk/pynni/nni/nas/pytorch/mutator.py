@@ -211,7 +211,7 @@ class Mutator(BaseMutator):
         else:
             raise ValueError("Unrecognized mask '%s'" % mask)
         if not torch.is_tensor(mask):
-            mask = torch.tensor(mask)
+            mask = torch.tensor(mask)  # pylint: disable=not-callable
         return out, mask
 
     def _tensor_reduction(self, reduction_type, tensor_list):

@@ -3,8 +3,6 @@
 
 import json
 
-import torch
-
 from .mutables import InputChoice, LayerChoice, MutableScope
 from .mutator import Mutator
 from .utils import to_list
@@ -38,7 +36,8 @@ class FixedArchitecture(Mutator):
 
     def _convert_human_readable_architecture(self, human_arc):
         result_arc = {k: to_list(v) for k, v in human_arc.items()}  # there could be tensors, numpy arrays, etc.
-        # First, convert non-list to list.
+        # First, convert non-list to list, because there could be {"op1": 0} or {"op1": "conv"},
+        # which means {"op1": [0, ]} ir {"op1": ["conv", ]}
         result_arc = {k: v if isinstance(v, list) else [v] for k, v in result_arc.items()}
         # Second, infer which ones are multi-hot arrays and which ones are in human-readable format.
         # This is non-trivial, since if an array in [0, 1], we cannot know for sure it means [false, true] or [true, true].
