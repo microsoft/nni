@@ -1,0 +1,42 @@
+protocolVersion: 2
+name: finetune05
+type: job
+jobRetryCount: 0
+prerequisites:
+  - type: dockerimage
+    uri: 'openpai/standard:python_3.6-pytorch_1.4.0-gpu'
+    name: docker_image_0
+taskRoles:
+  taskrole:
+    instances: 1
+    completion:
+      minFailedInstances: 1
+      minSucceededInstances: -1
+    taskRetryCount: 0
+    dockerImage: docker_image_0
+    resourcePerInstance:
+      gpu: 1
+      cpu: 4
+      memoryMB: 8192
+    commands:
+      - apt update
+      - apt install -y nfs-common
+      - mkdir /mnt/nfs-storage
+      - 'mount -t nfs 10.151.40.36:/ /mnt/nfs-storage'
+      - python3 -m pip install nni
+      - git clone -b sapruner https://github.com/suiguoxin/nni/ && cd nni && chmod +x ./install.sh && ./install.sh  
+      - cd examples/model_compress/experiment_data
+      - python3 finetune_imagenet.py --data-dir /mnt/nfs-storage/users/sgx/imagenet --history-file 'mobilenet/pruning_history_05.csv' 
+defaults:
+  virtualCluster: default
+extras:
+  com.microsoft.pai.runtimeplugin:
+    - plugin: ssh
+      parameters:
+        jobssh: true
+        userssh:
+          type: custom
+          value: >-
+            ssh-rsa
+            AAAAB3NzaC1yc2EAAAADAQABAAACAQDj0VbJa5ekhI6Htuf/9hkXaYZkDv9BRVuYFKvckjQ0Z552NcFX8Dtl8n2hM/+KY8HP5guYfB4xOOq1373y9HIIRoRU2aa2zlUKzEP+5HggawRXU5Qwy9+EHvTJwfCKh6WHIeoiU5APJ1XZD7RuFeA0y5dDwdHYIfyZNEJVmNolb5yYT7RRGpCJXTIPWNP9+WwAmflRqR3kitPhwbT7SU9btBidXmEczQJI+kjZGnky2CuSDElstWhP10AAya1vlc4KHf3EQ362mM7k8s14wNUeHLK8k6mFGG0FNSWiw2spqtlHDuFWfWeu3xNnt4B7wtmHc1k7Aom7jyxqfDXE4jKNGuPafe9xyvgzyUyWRHzRKUHpADAuMBZbvw4acVdWWVfiE0ve5uMqRDgiT+7HBEjTb6DJclgOURAQtSJZXdcfEvuvHnXSzFay3ng57dpTrlEVCdKl5w/OCuuZxtLSbjOyLx6hDtLI/G2CMLrjpylcHfqUHqDEq9Iws6EO5W7lQnu0i2tv0/mG1jpfp1h2KyzMHU1zTVxOfU/CqH3QmQc7GvTbN+HtMpiecpSSxEd8dwYw32dH4VO3SClXTO+3dzh+oHXeFOWidceTLwBszy8B2Z0v+2IGmvisPiFzM0jj84Z2xpUHGnP1Ocq/cOHRNFp3WH4oXXMtIc8Rc8M+uuWeSQ==
+            suiguoxin@gmail.com
