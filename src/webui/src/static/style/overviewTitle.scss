@@ -11,7 +11,7 @@ $iconPaddingVal: 14px;
     width: 100%;
     height: 38px;
     padding: 0 $iconPaddingVal;
-    background: $titleBgcolor;
+    background: #fff;
 
     img{
         height: 22px;
@@ -40,7 +40,9 @@ $iconPaddingVal: 14px;
 }
 
 .top10bg{
+    /*
     background-color: $titleBgcolor;
+    */
 
     .top10Title{
         width: 160px;

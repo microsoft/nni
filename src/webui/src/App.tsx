@@ -14,6 +14,8 @@ interface AppState {
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
     isillegalFinal: boolean;
     expWarningMessage: string;
+    // bestTrialEntries: string | number; // for overview page: best trial entreis
+    bestTrialEntries: string; // for overview page: best trial entreis
 }
 
 class App extends React.Component<{}, AppState> {
@@ -30,7 +32,8 @@ class App extends React.Component<{}, AppState> {
             trialsUpdateBroadcast: 0,
             metricGraphMode: 'max',
             isillegalFinal: false,
-            expWarningMessage: ''
+            expWarningMessage: '',
+            bestTrialEntries: '10'
         };
     }
 
@@ -92,9 +95,14 @@ class App extends React.Component<{}, AppState> {
         this.setState({ metricGraphMode: val });
     }
 
+    // changeEntries = (entries: string | number): void => {
+    changeEntries = (entries: string): void => {
+        this.setState({bestTrialEntries: entries});
+    }
+
     render(): React.ReactNode {
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
-            metricGraphMode, isillegalFinal, expWarningMessage 
+            metricGraphMode, isillegalFinal, expWarningMessage, bestTrialEntries
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
@@ -106,7 +114,8 @@ class App extends React.Component<{}, AppState> {
                     columnList, changeColumn: this.changeColumn,
                     experimentUpdateBroadcast,
                     trialsUpdateBroadcast,
-                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode
+                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
+                    bestTrialEntries, changeEntries: this.changeEntries
             })
         );
 

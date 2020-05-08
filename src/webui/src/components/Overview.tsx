@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, IStackTokens } from 'office-ui-fabric-react';
+import { Stack, IStackTokens, Dropdown } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
 import Title1 from './overview/Title1';
@@ -15,8 +15,10 @@ import '../static/style/logPath.scss';
 interface OverviewProps {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
+    bestTrialEntries: string;
     metricGraphMode: 'max' | 'min';
     changeMetricGraphMode: (val: 'max' | 'min') => void;
+    changeEntries: (entries: string) => void;
 }
 
 interface OverviewState {
@@ -27,7 +29,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     constructor(props: OverviewProps) {
         super(props);
         this.state = {
-            trialConcurrency: EXPERIMENT.trialConcurrency
+            trialConcurrency: EXPERIMENT.trialConcurrency,
         };
     }
 
@@ -48,9 +50,17 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         this.setState({ trialConcurrency: val });
     }
 
+    // updateEntries = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
+    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+        if (item !== undefined) {
+            this.props.changeEntries(item.key);
+        }
+    }
+
     render(): React.ReactNode {
+
         const { trialConcurrency } = this.state;
-        const { experimentUpdateBroadcast, metricGraphMode } = this.props;
+        const { experimentUpdateBroadcast, metricGraphMode, bestTrialEntries } = this.props;
         const searchSpace = this.convertSearchSpace();
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -58,21 +68,29 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
 
-        const titleMaxbgcolor = (metricGraphMode === 'max' ? '#999' : '#b3b3b3');
-        const titleMinbgcolor = (metricGraphMode === 'min' ? '#999' : '#b3b3b3');
+        const titleMaxbgcolor = (metricGraphMode === 'max' ? '#333' : '#b3b3b3');
+        const titleMinbgcolor = (metricGraphMode === 'min' ? '#333' : '#b3b3b3');
 
         const stackTokens: IStackTokens = {
             childrenGap: 30,
         };
+
+        const entriesOption = [
+            { key: '10', text: 'Display top 10 trials' },
+            { key: '20', text: 'Display top 20 trials' },
+            { key: '30', text: 'Display top 30 trials' },
+            { key: '50', text: 'Display top 50 trials' },
+            { key: '100', text: 'Display top 100 trials' }
+        ];
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Stack>
+                <Stack className="bottomBgcolor">
                     <Title1 text="Experiment" icon="11.png" />
                     <BasicInfo experimentUpdateBroadcast={experimentUpdateBroadcast} />
                 </Stack>
 
-                <Stack horizontal className="overMessage">
+                <Stack horizontal className="overMessage bottomBgcolor">
                     {/* status block */}
                     <Stack.Item grow className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
@@ -84,13 +102,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         />
                     </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Stack.Item grow styles={{root: {width: 450}}} className="overviewBoder">
+                    <Stack.Item grow styles={{ root: { width: 450 } }} className="overviewBoder searchSpaceLeftRight">
                         <Title1 text="Search space" icon="10.png" />
                         <Stack className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Stack>
                     </Stack.Item>
-                    <Stack.Item grow styles={{root: {width: 450}}}>
+                    <Stack.Item grow styles={{ root: { width: 450 } }}>
                         <Title1 text="Config" icon="4.png" />
                         <Stack className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
@@ -104,31 +122,39 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     </Stack.Item>
                 </Stack>
 
-                <Stack>
-                    <Stack horizontal className="top10bg">
+                <Stack style={{backgroundColor: '#fff'}}>
+                    <Stack horizontal className="top10bg" style={{position: 'relative'}}>
                         <div
                             className="title"
                             onClick={this.clickMaxTop}
                         >
-                            <Title1 text="Top10 Maximal trials" icon="max.png" bgcolor={titleMaxbgcolor} />
+                            <Title1 text="Top Maximal trials" icon="max.png" bgcolor={titleMaxbgcolor} />
                         </div>
                         <div
                             className="title minTitle"
                             onClick={this.clickMinTop}
                         >
-                            <Title1 text="Top10 Minimal trials" icon="min.png" bgcolor={titleMinbgcolor} />
+                            <Title1 text="Top Minimal trials" icon="min.png" bgcolor={titleMinbgcolor} />
+                        </div>
+                        <div style={{position: 'absolute', right: 52, top: 6}}>
+                            <Dropdown
+                                selectedKey={bestTrialEntries}
+                                options={entriesOption}
+                                onChange={this.updateEntries}
+                                styles={{ root: { width: 170 } }}
+                            />
                         </div>
                     </Stack>
                     <Stack horizontal tokens={stackTokens}>
-                        <div style={{ width: '40%', position: 'relative'}}>
+                        <div style={{ width: '40%', position: 'relative' }}>
                             <Accuracy
                                 accuracyData={accuracyGraphData}
                                 accNodata={noDataMessage}
                                 height={404}
                             />
                         </div>
-                        <div style={{ width: '60%'}}>
-                        <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                        <div style={{ width: '60%' }}>
+                            <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
                         </div>
                     </Stack>
                 </Stack>
@@ -155,10 +181,16 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
 
     private findBestTrials(): Trial[] {
         const bestTrials = TRIALS.sort();
+        const { bestTrialEntries } = this.props;
         if (this.props.metricGraphMode === 'max') {
-            bestTrials.reverse().splice(10);
+            // use entries instead of specific number
+            if (typeof bestTrialEntries === 'string') {
+                bestTrials.reverse().splice(JSON.parse(bestTrialEntries));
+            }
         } else {
-            bestTrials.splice(10);
+            if (typeof bestTrialEntries === 'string') {
+                bestTrials.splice(JSON.parse(bestTrialEntries));
+            }
         }
         return bestTrials;
     }
