@@ -229,4 +229,4 @@ class TrialManager {
     }
 }
 
-export { TrialManager, groupMetricsByTrial };
+export { TrialManager };
