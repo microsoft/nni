@@ -161,8 +161,8 @@ class Mutator(BaseMutator):
         """
         if self._connect_all:
             return self._all_connect_tensor_reduction(mutable.reduction,
-                                                      [op(*args, **kwargs) for op in mutable.choices]), \
-                torch.ones(mutable.length)
+                                                      [op(*args, **kwargs) for op in mutable]), \
+                torch.ones(len(mutable))
 
         def _map_fn(op, args, kwargs):
             return op(*args, **kwargs)
