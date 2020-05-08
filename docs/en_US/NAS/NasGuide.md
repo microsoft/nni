@@ -156,12 +156,12 @@ model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to one-hot or multi-hot representation of choices. For example
+The JSON is simply a mapping from mutable keys to choices. For example
 
 ```json
 {
-    "LayerChoice1": [false, true, false, false],
-    "InputChoice2": [true, true, false]
+    "LayerChoice1": "conv5x5",
+    "InputChoice2": [1, 2],
 }
 ```
 
