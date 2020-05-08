@@ -60,7 +60,7 @@ class NNIRestHandler {
         this.exportData(router);
 
         // Express-joi-validator configuration
-        router.use((err: any, req: Request, res: Response, next: any) => {
+        router.use((err: any, _req: Request, res: Response, _next: any) => {
             if (err.isBoom) {
                 this.log.error(err.output.payload);
 

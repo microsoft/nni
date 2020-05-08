@@ -32,3 +32,8 @@ Please fill this for deployment related issues:
 **need to update document(yes/no)**:
 
 **Anything else we need to know**:
+
+**Log message**:
+ - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory) : 
+
+ - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) : 

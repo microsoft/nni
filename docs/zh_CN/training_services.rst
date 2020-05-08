@@ -9,4 +9,4 @@ NNI 支持的训练平台介绍
     OpenPAI Yarn 模式<./TrainingService/PaiYarnMode>
     Kubeflow<./TrainingService/KubeflowMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
-    OpenPAI<./TrainingService/DLTSMode>
+    DLTS<./TrainingService/DLTSMode>
