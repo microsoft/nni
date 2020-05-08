@@ -27,15 +27,11 @@ class ProtocolTestCase(TestCase):
         send(CommandType.NewTrialJob, '你好')
         self.assertEqual(out_file.getvalue(), 'TR000006你好'.encode('utf8'))
 
-    # TODO: disabled for hotfix
-    #def test_send_too_large(self):
-    #    _prepare_send()
-    #    exception = None
-    #    try:
-    #        send(CommandType.NewTrialJob, ' ' * 1000000)
-    #    except AssertionError as e:
-    #        exception = e
-    #    self.assertIsNotNone(exception)
+    def test_send_long(self):
+        out_file = _prepare_send()
+        send(CommandType.NewTrialJob, 'x' * 2000000)
+        expected = 'TREXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_E000002xx'
+        self.assertEqual(out_file.getvalue(), expected.encode('utf8'))
 
     def test_receive_en(self):
         _prepare_receive(b'IN000005hello')
@@ -49,6 +45,11 @@ class ProtocolTestCase(TestCase):
         self.assertIs(command, CommandType.Initialize)
         self.assertEqual(data, '世界')
 
+    def test_receive_long(self):
+        msg = 'INEXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_E000002xx'
+        _prepare_receive(msg.encode('utf8'))
+        command, data = receive()
+        self.assertEqual(data, 'x' * 2000000)
 
 if __name__ == '__main__':
     main()

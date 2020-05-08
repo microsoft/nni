@@ -25,9 +25,6 @@ class CommandType(Enum):
     NoMoreTrialJobs = b'NO'
     KillTrialJob = b'KI'
 
-    _Continue = b'_C'
-    _End = b'_E'
-
 _lock = threading.Lock()
 try:
     _in_file = open(3, 'rb')
@@ -37,6 +34,10 @@ except OSError:
     logging.getLogger(__name__).warning(_msg)
 
 _max_msg_len = 999999
+_meta_cmd_len = b'EXCEED'
+
+_MetaCommand_Continue = b'_C'
+_MetaCommand_End = b'_E'
 
 def send(command, data):
     """Send command to Training Service.
@@ -50,13 +51,18 @@ def send(command, data):
         logging.getLogger(__name__).debug('Sending command %s, data: [%s]', command.value, data)
         if len(data) <= _max_msg_len:
             msg = b'%b%06d%b' % (command.value, len(data), data)
-        else:
-            msg = b'%b______%b' % (command.value, data[:_max_msg_len])
+
+        else:  # split
+            # first part
+            msg = b'%b%b%b' % (command.value, _meta_cmd_len, data[:_max_msg_len])
             data = data[_max_msg_len:]
+            # other parts
             while len(data) > _max_msg_len:
-                msg += b'_C999999%b' % data[:_max_msg_len]
+                msg += b'%b%b%b' % (_MetaCommand_Continue, _meta_cmd_len, data[:_max_msg_len])
                 data = data[_max_msg_len:]
-            msg += b'_E%06d%b' % (len(data), data)
+            # last part
+            msg += b'%b%06d%b' % (_MetaCommand_End, len(data), data)
+
         _out_file.write(msg)
         _out_file.flush()
     finally:
@@ -74,17 +80,19 @@ def receive():
         logging.getLogger(__name__).debug('Pipe EOF encountered')
         return None, None
     command = CommandType(header[:2])
-    length = header[2:]
-    if length == b'______':
+    length = header[2:8]
+    if length == _meta_cmd_len:  # splitted command
         data = _in_file.read(_max_msg_len)
         while True:
-            ctrl_cmd = _in_file.read(2)
+            meta_cmd = _in_file.read(2)
             length = _in_file.read(6)
-            data += _in_file.read(int(length))
-            if ctrl_cmd == '_E':
+            if meta_cmd == _MetaCommand_End:
+                data += _in_file.read(int(length))
                 break
-            elif ctrl_cmd != '_C':
-                raise RuntimeError('Unexpected splitted command header %s', ctrl_cmd)
+            else:
+                assert meta_cmd == _MetaCommand_Continue
+                assert length == _meta_cmd_len
+                data += _in_file.read(_max_msg_len)
     else:
         data = _in_file.read(int(length))
     data = data.decode('utf8')

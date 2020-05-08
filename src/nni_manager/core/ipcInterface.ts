@@ -15,6 +15,10 @@ import * as CommandType from './commands';
 const ipcOutgoingFd: number = 3;
 const ipcIncomingFd: number = 4;
 
+const MetaCommandContinue = '_C';
+const MetaCommandEnd = '_E';
+const MetaCommandLength = 'EXCEED';
+
 /**
  * Encode a command
  * @param commandType a command type defined in 'core/commands'
@@ -23,30 +27,58 @@ const ipcIncomingFd: number = 4;
  */
 function encodeCommand(commandType: string, content: string): Buffer {
     let contentBuffer: Buffer = Buffer.from(content);
+
     if (contentBuffer.length <= 999_999) {
-        if (commandType === '_C')
-            commandType = '_E';
         const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
         return Buffer.concat([Buffer.from(commandType), contentLengthBuffer, contentBuffer]);
-    } else {
-        let buffer: Buffer = Buffer.concat([Buffer.from(commandType + '______'), contentBuffer.slice(0, 999_999)]);
+
+    } else {  // split
+        // first part
+        let buffer: Buffer = Buffer.concat([Buffer.from(commandType + MetaCommandLength), contentBuffer.slice(0, 999_999)]);
         contentBuffer = contentBuffer.slice(999_999);
+
         while (contentBuffer.length > 999_999) {
-            buffer = Buffer.concat([buffer, Buffer.from('_C999999'), contentBuffer.slice(0, 999_999)]);
+            buffer = Buffer.concat([buffer, Buffer.from(MetaCommandContinue + '999999'), contentBuffer.slice(0, 999_999)]);
             contentBuffer = contentBuffer.slice(999_999);
         }
+
         const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
-        return Buffer.concat([buffer, Buffer.from('_E'), contentLengthBuffer, contentBuffer]);
+        return Buffer.concat([buffer, Buffer.from(MetaCommandEnd), contentLengthBuffer, contentBuffer]);
     }
 }
 
 /**
- * Decode a command
+ * Decode a command.
  * @param Buffer binary incoming data
  * @returns a tuple of (success, commandType, content, remain)
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
+function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
+    // eslint-disable-next-line prefer-const
+    let [success, commandType, content, remain] = decodeSingleCommand(data);
+    if (!success || (commandType !== MetaCommandContinue && commandType !== MetaCommandEnd)) {
+        return [success, commandType, content, remain];
+    }
+
+    let metaCommand: string;
+    let newContent: string;
+    while (true) {
+        [success, metaCommand, newContent, remain] = decodeSingleCommand(remain);
+        if (!success) {
+            return [false, '', '', data];
+        }
+        content += newContent;
+        if (metaCommand === MetaCommandEnd) {
+            return [true, commandType, content, remain];
+        }
+        if (metaCommand !== MetaCommandContinue) {
+            throw new Error('Unexpected splitted command: ' + continueCommand);
+        }
+    }
+}
+
+// If a command exceeds 999999 length and was splitted, this function returns one part
 function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
@@ -54,9 +86,8 @@ function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
     let commandType: string = data.slice(0, 2).toString();
     const lengthString: string = data.slice(2, 8).toString();
     let contentLength: number;
-    if (lengthString === '______') {
+    if (lengthString === MetaCommandLength) {
         contentLength = 999_999;
-        commandType += '_';  // TODO: dirty hotfix here
     } else {
         contentLength = parseInt(lengthString, 10);
     }
@@ -67,30 +98,6 @@ function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
     const remain: Buffer = data.slice(contentLength + 8);
 
     return [true, commandType, content, remain];
-}
-
-function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
-    // eslint-disable-next-line prefer-const
-    let [success, commandType, content, remain] = decodeSingleCommand(data);
-    if (!success || commandType[2] !== '_') {
-        return [success, commandType, content, remain];
-    }
-
-    let continueCommand: string;
-    let newContent: string;
-    while (true) {
-        [success, continueCommand, newContent, remain] = decodeSingleCommand(remain);
-        if (!success) {
-            return [false, '', '', data];
-        }
-        content += newContent;
-        if (continueCommand === '_E') {
-            return [true, commandType, content, remain];
-        }
-        if (continueCommand !== '_C') {
-            throw new Error('Unexpected splitted command: ' + continueCommand);
-        }
-    }
 }
 
 class IpcInterface {

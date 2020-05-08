@@ -54,13 +54,8 @@ function runProcess(): Promise<Error | null> {
     // Command #2: ok
     dispatcher.sendCommand('ME', '123');
 
-    // Command #3: too long
-    // TODO: disabled for hotfix
-    //try {
-    //    dispatcher.sendCommand('ME', 'x'.repeat(1_000_000));
-    //} catch (error) {
-    //    commandTooLong = error;
-    //}
+    // Command #3: ok
+    dispatcher.sendCommand('ME', 'x'.repeat(2_000_000));
 
     // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command
     try {
@@ -83,35 +78,29 @@ describe('core/protocol', (): void => {
         cleanupUnitTest();
     });
 
-    it('should have sent 2 successful commands', (): void => {
-        assert.equal(sentCommands.length, 3);
-        assert.equal(sentCommands[2], '');
+    it('should have sent 3 successful commands', (): void => {
+        assert.equal(sentCommands.length, 4);
+        assert.equal(sentCommands[3], '');
     });
 
     it('sendCommand() should work without content', (): void => {
-        assert.equal(sentCommands[0], '(\'IN\', \'\')');
+        assert.equal(sentCommands[0], "('IN', '')");
     });
 
     it('sendCommand() should work with content', (): void => {
-        assert.equal(sentCommands[1], '(\'ME\', \'123\')');
+        assert.equal(sentCommands[1], "('ME', '123')");
     });
 
-    //it('sendCommand() should throw on too long command', (): void => {
-    //    if (commandTooLong === undefined) {
-    //        assert.fail('Should throw error')
-    //    } else {
-    //        const err: Error | undefined = (<NNIError>commandTooLong).cause;
-    //        assert(err && err.name === 'RangeError');
-    //        assert(err && err.message === 'Command too long');
-    //    }
-    //});
+    it('sendCommand() should work with long command', (): void => {
+        assert.equal(sentCommands[2], `('ME', ${'x'.repeat(2_000_000)}')`);
+    });
 
     it('sendCommand() should throw on wrong command type', (): void => {
         assert.equal((<Error>rejectCommandType).name, 'AssertionError [ERR_ASSERTION]');
     });
 
-    it('should have received 3 commands', (): void => {
-        assert.equal(receivedCommands.length, 3);
+    it('should have received 4 commands', (): void => {
+        assert.equal(receivedCommands.length, 4);
     });
 
     it('onCommand() should work without content', (): void => {
