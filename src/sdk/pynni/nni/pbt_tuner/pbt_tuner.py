@@ -378,31 +378,35 @@ class PBTTuner(Tuner):
             return
         # the following is for experiment resume
         _completed_num = 0
-        epoch_data_dict = {} # key: epoch num, value: list of configurations
+        epoch_data_dict = {}
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
+            logger.info("Process data record %s / %s", _completed_num, len(data))
+            _completed_num += 1
             # simply validate data format
-            assert "parameter" in trial_info
             _params = trial_info["parameter"]
-            assert "value" in trial_info
             _value = trial_info['value']
+            # assign fake value for failed trials
             if not _value:
-                # assign fake value for failed trials
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 _value = float('inf') if self.optimize_mode == OptimizeMode.Minimize else float('-inf')
             _value = extract_scalar_reward(_value)
+            if 'save_checkpoint_dir' not in _params:
+                logger.warning("Invalid data record: save_checkpoint_dir is missing, abandon data import.")
+                return
             epoch_num = int(os.path.basename(_params['save_checkpoint_dir']))
             if epoch_num not in epoch_data_dict:
                 epoch_data_dict[epoch_num] = []
             epoch_data_dict[epoch_num].append((_params, _value))
         if not epoch_data_dict:
+            logger.warning("No valid epochs, abandon data import.")
             return
         # figure out start epoch for resume
         max_epoch_num = max(epoch_data_dict, key=int)
         if len(epoch_data_dict[max_epoch_num]) < self.population_size:
-            max_epoch_num = max_epoch_num - 1
+            max_epoch_num -= 1
         # If there is no a single complete round, no data to import, start from scratch
         if max_epoch_num < 0:
+            logger.warning("No completed epoch, abandon data import.")
             return
         assert len(epoch_data_dict[max_epoch_num]) == self.population_size
         # check existence of trial save checkpoint dir
@@ -417,5 +421,6 @@ class PBTTuner(Tuner):
             checkpoint_dir = os.path.dirname(params['save_checkpoint_dir'])
             self.finished.append(TrialInfo(checkpoint_dir=checkpoint_dir, hyper_parameters=params, score=value))
         self._proceed_next_epoch()
-        logger.info("Successfully import data to PBT tuner, total data: %d, imported data: %d.", len(data), _completed_num)
+        logger.info("Successfully import data to PBT tuner, total data: %d, imported data: %d.", len(data), self.population_size)
         logger.info("Start from epoch %d ...", self.epoch)
+        return self.epoch # return for test
