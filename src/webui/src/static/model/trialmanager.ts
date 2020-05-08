@@ -6,11 +6,13 @@ import { Trial } from './trial';
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
     for (const metric of metrics) {
-        if (ret.has(metric.trialJobId)) {
+        const trialId = `${metric.trialJobId}-${metric.parameterId}`;
+        metric.trialId = trialId;
+        if (ret.has(trialId)) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ret.get(metric.trialJobId)!.push(metric);
+            ret.get(trialId)!.push(metric);
         } else {
-            ret.set(metric.trialJobId, [metric]);
+            ret.set(trialId, [metric]);
         }
     }
     // to compatiable with multi-trial in same job, fix offset of sequence
@@ -103,19 +105,71 @@ class TrialManager {
         return cnt;
     }
 
+    public static expandJobsToTrials(jobs: TrialJobInfo[]): TrialJobInfo[] {
+        const trials: TrialJobInfo[] = [];
+
+        for (const jobInfo of jobs as TrialJobInfo[]) {
+            if (jobInfo.hyperParameters) {
+                let trial: TrialJobInfo | undefined;
+                let lastTrial: TrialJobInfo | undefined;
+                for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
+                    const hyperParameters = jobInfo.hyperParameters[i]
+                    const hpObject = JSON.parse(hyperParameters);
+                    const parameterId = hpObject["parameter_id"];
+                    trial = {
+                        id: `${jobInfo.id}-${parameterId}`,
+                        jobId: jobInfo.id,
+                        parameterId: parameterId,
+                        sequenceId: parameterId,
+                        status: "SUCCEEDED",
+                        startTime: jobInfo.startTime,
+                        endTime: jobInfo.startTime,
+                        hyperParameters: [hyperParameters],
+                        logPath: jobInfo.logPath,
+                        stderrPath: jobInfo.stderrPath,
+                    };
+                    if (jobInfo.finalMetricData) {
+                        for (const metricData of jobInfo.finalMetricData) {
+                            if (metricData.parameterId == parameterId) {
+                                trial.finalMetricData = [metricData];
+                                trial.endTime = metricData.timestamp;
+                                break;
+                            }
+                        }
+                    }
+                    if (lastTrial) {
+                        trial.startTime = lastTrial.endTime;
+                    } else {
+                        trial.startTime = jobInfo.startTime;
+                    }
+                    lastTrial = trial;
+                    trials.push(trial);
+                }
+                if (lastTrial !== undefined) {
+                    lastTrial.status = jobInfo.status;
+                    lastTrial.endTime = jobInfo.endTime;
+                }
+            } else {
+                trials.push(jobInfo);
+            }
+        }
+        return trials;
+    }
+
     private async updateInfo(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
         let updated = false;
         if (response.status === 200) {
-            for (const info of response.data as TrialJobInfo[]) {
-                if (this.trials.has(info.id)) {
+            const newTrials = TrialManager.expandJobsToTrials(response.data);
+            for (const trialInfo of newTrials as TrialJobInfo[]) {
+                if (this.trials.has(trialInfo.id)) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    updated = this.trials.get(info.id)!.updateTrialJobInfo(info) || updated;
+                    updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
                 } else {
-                    this.trials.set(info.id, new Trial(info, undefined));
+                    this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
                     updated = true;
                 }
-                this.maxSequenceId = Math.max(this.maxSequenceId, info.sequenceId);
+                this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
             }
             this.infoInitialized = true;
         }
@@ -175,4 +229,4 @@ class TrialManager {
     }
 }
 
-export { TrialManager };
+export { TrialManager, groupMetricsByTrial };

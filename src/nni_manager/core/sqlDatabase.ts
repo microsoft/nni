@@ -69,7 +69,7 @@ function loadTrialJobEvent(row: any): TrialJobEventRecord {
 function loadMetricData(row: any): MetricDataRecord {
     return {
         timestamp: row.timestamp,
-        trialJobId: `${row.trialJobId}-${row.parameterId}`,
+        trialJobId: row.trialJobId,
         parameterId: row.parameterId,
         type: row.type,
         sequence: row.sequence,
@@ -98,7 +98,7 @@ class SqlDB implements Database {
                 this.resolve(this.initTask, err);
             } else {
                 if (createNew) {
-                    this.db.exec(createTables, (error: Error | null) => {
+                    this.db.exec(createTables, (_error: Error | null) => {
                         this.resolve(this.initTask, err);
                     });
                 } else {
@@ -178,10 +178,6 @@ class SqlDB implements Database {
     public queryTrialJobEvent(trialJobId?: string, event?: TrialJobEvent): Promise<TrialJobEventRecord[]> {
         let sql: string = '';
         let args: any[] | undefined;
-        let jobId: string | undefined;
-        if (trialJobId && trialJobId.search("-") > 0) {
-            jobId = trialJobId.split("-")[0];
-        }
         if (trialJobId === undefined && event === undefined) {
             sql = 'select * from TrialJobEvent';
         } else if (trialJobId === undefined) {
@@ -189,10 +185,10 @@ class SqlDB implements Database {
             args = [event];
         } else if (event === undefined) {
             sql = 'select * from TrialJobEvent where trialJobId=?';
-            args = [jobId];
+            args = [trialJobId];
         } else {
             sql = 'select * from TrialJobEvent where trialJobId=? and event=?';
-            args = [jobId, event];
+            args = [trialJobId, event];
         }
 
         this.log.trace(`queryTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
@@ -219,21 +215,17 @@ class SqlDB implements Database {
     public queryMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         let sql: string = '';
         let args: any[] | undefined;
-        let jobId, parameterId: string | undefined;
-        if (trialJobId) {
-            [jobId, parameterId] = trialJobId.split("-");
-        }
         if (metricType === undefined && trialJobId === undefined) {
             sql = 'select * from MetricData';
         } else if (trialJobId === undefined) {
             sql = 'select * from MetricData where type=?';
             args = [metricType];
         } else if (metricType === undefined) {
-            sql = 'select * from MetricData where trialJobId=? and parameterId=?';
-            args = [jobId, parameterId];
+            sql = 'select * from MetricData where trialJobId=?';
+            args = [trialJobId];
         } else {
-            sql = 'select * from MetricData where trialJobId=? and parameterId=? and type=?';
-            args = [jobId, parameterId, metricType];
+            sql = 'select * from MetricData where trialJobId=? and type=?';
+            args = [trialJobId, metricType];
         }
 
         this.log.trace(`queryMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);

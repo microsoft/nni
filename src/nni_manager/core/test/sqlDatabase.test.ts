@@ -70,15 +70,6 @@ const metrics: MetricDataRecord[] = [
     { timestamp: Date.now(), trialJobId: 'C', parameterId: '2', type: 'FINAL', sequence: 0, data: 2.2 }         // 5
 ];
 
-const loadedMetrics: MetricDataRecord[] = [
-    { timestamp: Date.now(), trialJobId: 'A-1', parameterId: '1', type: 'PERIODICAL', sequence: 0, data: 1.1 },   // 0
-    { timestamp: Date.now(), trialJobId: 'B-2', parameterId: '2', type: 'PERIODICAL', sequence: 0, data: 2.1 },   // 1
-    { timestamp: Date.now(), trialJobId: 'A-1', parameterId: '1', type: 'PERIODICAL', sequence: 1, data: 1.2 },   // 2
-    { timestamp: Date.now(), trialJobId: 'A-1', parameterId: '1', type: 'FINAL', sequence: 0, data: 1.3 },        // 3
-    { timestamp: Date.now(), trialJobId: 'C-2', parameterId: '2', type: 'PERIODICAL', sequence: 1, data: 2.1 },   // 4
-    { timestamp: Date.now(), trialJobId: 'C-2', parameterId: '2', type: 'FINAL', sequence: 0, data: 2.2 }         // 5
-];
-
 function assertRecordEqual(record: any, value: any): void {
     assert.ok(record.timestamp > new Date(2018, 6, 1).getTime());
     assert.ok(record.timestamp < Date.now());
@@ -145,28 +136,28 @@ describe('core/sqlDatabase', () => {
     });
 
     it('queryTrialJobEventByEvent with trialJobId', async () => {
-        const records: TrialJobEventRecord[] = await (<SqlDB>db).queryTrialJobEvent('A-1', 'RUNNING');
+        const records: TrialJobEventRecord[] = await (<SqlDB>db).queryTrialJobEvent('A', 'RUNNING');
         assertRecordsEqual(records, events, [3]);
     });
 
     it('queryTrialJobEventById', async () => {
-        const records: TrialJobEventRecord[] = await (<SqlDB>db).queryTrialJobEvent('B-2');
+        const records: TrialJobEventRecord[] = await (<SqlDB>db).queryTrialJobEvent('B');
         assertRecordsEqual(records, events, [1, 2]);
     });
 
     it('queryMetricDataByType without trialJobId', async () => {
         const records: MetricDataRecord[] = await (<SqlDB>db).queryMetricData(undefined, 'FINAL');
-        assertRecordsEqual(records, loadedMetrics, [3, 5]);
+        assertRecordsEqual(records, metrics, [3, 5]);
     });
 
     it('queryMetricDataByType with trialJobId', async () => {
-        const records: MetricDataRecord[] = await (<SqlDB>db).queryMetricData('A-1', 'PERIODICAL');
-        assertRecordsEqual(records, loadedMetrics, [0, 2]);
+        const records: MetricDataRecord[] = await (<SqlDB>db).queryMetricData('A', 'PERIODICAL');
+        assertRecordsEqual(records, metrics, [0, 2]);
     });
 
     it('queryMetricDataById', async () => {
-        const records: MetricDataRecord[] = await (<SqlDB>db).queryMetricData('B-2');
-        assertRecordsEqual(records, loadedMetrics, [1]);
+        const records: MetricDataRecord[] = await (<SqlDB>db).queryMetricData('B');
+        assertRecordsEqual(records, metrics, [1]);
     });
 
     it('empty result', async () => {
