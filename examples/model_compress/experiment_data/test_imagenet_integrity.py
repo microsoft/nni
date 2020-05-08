@@ -13,7 +13,6 @@ from torchvision import datasets, transforms
 import torch.nn.functional as F
 import torchvision.models as models
 
-from nni.compression.torch import LevelPruner
 
 MODEL_DIR = "imagenet_mobilenet.pt"
 DATA_DIR = '../data'
@@ -64,8 +63,6 @@ def test(model, device, val_loader):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 
-    parser.add_argument('--history-file', type=str,
-                        default='mobilenet/pruning_history_05.csv', metavar='F')
     parser.add_argument('--data-dir', type=str,
                         default='/datasets/imagenet_arc/', metavar='F')
 
