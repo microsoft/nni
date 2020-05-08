@@ -68,10 +68,6 @@ tuner:
 
 Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. [Detailed Description](./HyperoptTuner.md)
 
-**classArgs Requirements:**
-
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-
 **Example Configuration:**
 
 ```yaml
