@@ -584,7 +584,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 const trialReturnCode: string = await executor.getRemoteFileContent(trialReturnCodeFilePath);
                 this.log.debug(`trailjob ${trialJob.id} return code: ${trialReturnCode}`);
                 const match: RegExpMatchArray | null = trialReturnCode.trim()
-                    .match(/^(\d+)\s+(\d+)$/);
+                    .match(/^-?(\d+)\s+(\d+)$/);
                 if (match !== null) {
                     const { 1: code, 2: timestamp } = match;
                     // Update trial job's status based on result code

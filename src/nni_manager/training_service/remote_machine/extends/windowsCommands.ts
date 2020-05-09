@@ -104,12 +104,15 @@ class WindowsCommands extends OsCommands {
     }
 
     public killChildProcesses(pidFileName: string): string {
-        const command = `powershell taskkill /PID (type "${pidFileName}") /T /F`;
+        const command = `powershell "$ppid=(type ${pidFileName}); function Kill-Tree {Param([int]$subppid);` +
+            `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $subppid } | ForEach-Object { Kill-Tree $_.ProcessId }; ` +
+            `if ($subppid -ne $ppid){Stop-Process -Id $subppid}}` +
+            `kill-tree $ppid"`;
         return command;
     }
 
     public extractFile(tarFileName: string, targetFolder: string): string {
-        const command = `tar -oxzf "${tarFileName}" -C "${targetFolder}"`;
+        const command = `tar -xf "${tarFileName}" -C "${targetFolder}"`;
         return command;
     }
 
