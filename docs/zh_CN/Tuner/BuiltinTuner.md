@@ -67,7 +67,7 @@ tuner:
 
 随机搜索，可用于每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 如果要均衡的探索搜索空间，它也很有用。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -83,7 +83,7 @@ tuner:
 
 > 名称：**Anneal**
 
-**Suggested scenario**
+**建议场景**
 
 Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
 
