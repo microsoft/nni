@@ -287,7 +287,7 @@ pai_trial_schema = {
         'codeDir': setPathCheck('codeDir'),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
-        'command': setType('command', str),
+        Optional('command'): setType('command', str),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
         Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
         Optional('memoryMB'): setType('memoryMB', int),
