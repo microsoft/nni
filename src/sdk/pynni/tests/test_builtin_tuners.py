@@ -191,8 +191,8 @@ class BuiltinTunersTestCase(TestCase):
         epoch = tuner.import_data(data)
         self.assertEqual(epoch, 1)
         logger.info("Imported data successfully at the beginning")
-        # ===import another data at the beginning, test the case when there is an incompleted epoch===
         shutil.rmtree(all_checkpoint_dir)
+        # ===import another data at the beginning, test the case when there is an incompleted epoch===
         tuner = PBTTuner(
             all_checkpoint_dir=all_checkpoint_dir,
             population_size=population_size
@@ -213,6 +213,7 @@ class BuiltinTunersTestCase(TestCase):
         epoch = tuner.import_data(data)
         self.assertEqual(epoch, 1)
         logger.info("Imported data successfully at the beginning with incomplete epoch")
+        shutil.rmtree(all_checkpoint_dir)
 
     def import_data_test(self, tuner_factory, stype="choice_str"):
         """
