@@ -142,7 +142,28 @@ class TorchProtoGraph(TorchGraph):
         return nodes_py.to_proto()
 
 class NodePyGroup(NodePy):
+    """
+    This class is used to represent a graph node which consists of multiple jit traced nodes. In a pytorch trace graph,
+    there are multiple nodes are traced for one torch.nn.Module object, we group them together to form a single node to
+    represent the torch.nn.Module object. We also group some functional call trace nodes together to form a new node.
+    """
     def __init__(self, name, node_type, op_type, node_cpps, inputs=None, outputs=None):
+        """
+        Parameters:
+        -----------
+        name: str
+            node name, such as `conv1`, `backbone.classifier`
+        node_type: str
+            `module` or `func`
+        op_type: str
+            operation type, such as `Conv2d`, `aten::view`
+        node_cpps: list of torch._C.Node
+            jit trace nodes which are included in this new node
+        inputs: list of str
+            All the inputs of this node, each element is debugName of one input
+        outputs: list of str
+            All the outputs of this node, each element is debugName of one output
+        """
         super(NodePyGroup, self).__init__(name, [])
         self.node_cpps = node_cpps
         self.name = name
@@ -171,7 +192,7 @@ class NodePyGroup(NodePy):
 
 class TorchModuleGraph(TorchGraph):
     """
-    Generates model graph for module shape inference
+    Generates model graph, each node is created from single or multiple jit trace nodes.
     """
     def __init__(self, model, dummy_input):
         super().__init__(model, dummy_input)
