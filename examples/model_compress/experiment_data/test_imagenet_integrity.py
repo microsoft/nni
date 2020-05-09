@@ -1,5 +1,5 @@
 '''
-Given the config_list of LevelPruner, Prune the original model & fine tune it
+test imageNet integrity
 '''
 from __future__ import print_function
 
@@ -13,10 +13,6 @@ from torchvision import datasets, transforms
 import torch.nn.functional as F
 import torch.nn as nn
 import torchvision.models as models
-
-
-MODEL_DIR = "imagenet_mobilenet.pt"
-DATA_DIR = '../data'
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -67,7 +63,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 
     parser.add_argument('--data-dir', type=str,
-                        default='/datasets/imagenet/', metavar='F')
+                        default='/datasets/imagenet_test/', metavar='F')
 
     parser.add_argument('--num_classes', type=int, default=1000, metavar='N',
                         help='number of classes (default 1000)')
@@ -94,26 +90,27 @@ if __name__ == '__main__':
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    train_loader = torch.utils.data.DataLoader(
-        # datasets.ImageNet(args.data_dir, split='train',
-        datasets.ImageFolder(os.path.join(args.data_dir, 'train'),
+    # train_loader = torch.utils.data.DataLoader(
+    #     datasets.ImageNet(args.data_dir, split='train',
+    #                       # datasets.ImageFolder(os.path.join(args.data_dir, 'train'),
+    #                       transform=transforms.Compose([
+    #                           transforms.RandomResizedCrop(224),
+    #                           transforms.RandomHorizontalFlip(),
+    #                           transforms.ToTensor(),
+    #                           normalize,
+    #                       ])),
+    #     batch_size=args.batch_size, shuffle=True, **kwargs)
+
+    val_loader = torch.utils.data.DataLoader(
+        datasets.ImageNet(args.data_dir, split='val',
+        # datasets.ImageFolder('{}val'.format(args.data_dir),
                              transform=transforms.Compose([
-                                 transforms.RandomResizedCrop(224),
-                                 transforms.RandomHorizontalFlip(),
+                                 transforms.Resize(256),
+                                 transforms.CenterCrop(224),
                                  transforms.ToTensor(),
                                  normalize,
                              ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
-
-    # val_loader = torch.utils.data.DataLoader(
-    #     datasets.ImageFolder('{}val'.format(args.data_dir),
-    #                          transform=transforms.Compose([
-    #                              transforms.Resize(256),
-    #                              transforms.CenterCrop(224),
-    #                              transforms.ToTensor(),
-    #                              normalize,
-    #                          ])),
-    #     batch_size=args.test_batch_size, shuffle=True, **kwargs)
+        batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -122,13 +119,13 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
                                 momentum=0.9,
                                 weight_decay=4e-5)
-    for epoch in range(1):
-        train(args, model, device,
-              train_loader, optimizer, epoch)
+    # for epoch in range(1):
+    #     train(args, model, device,
+    #           train_loader, optimizer, epoch)
         # test(model, device, val_loader)
 
     def evaluator(model):
         return test(model=model, device=device, val_loader=val_loader)
 
-    # evaluation_result = evaluator(model)
-    # print('Evaluation result (fine tuned): %s' % evaluation_result)
+    evaluation_result = evaluator(model)
+    print('Evaluation result (fine tuned): %s' % evaluation_result)
