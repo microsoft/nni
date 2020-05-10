@@ -9,7 +9,7 @@ import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { TableRecord } from '../../static/interface';
+import { TableRecord, TrialJobInfo } from '../../static/interface';
 import Details from '../overview/Details';
 import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
 import Compare from '../Modals/Compare';
@@ -231,18 +231,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
         )
     };
 
-    showIntermediateModal = async (id: string, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
+    showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.jobId}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
-            const otherkeys: string[] = [ ];
-            if (res.data.length !== 0) {
+            const otherkeys: string[] = [];
+            // One trial job may contains multiple parameter id
+            // only show current trial's metric data
+            const metricDatas = res.data.filter(item => {
+                return item.parameterId == record.parameterId;
+            });
+            if (metricDatas.length !== 0) {
                 // just add type=number keys
                 const intermediateMetrics = parseMetrics(res.data[0].data);
                 for (const key in intermediateMetrics) {
@@ -252,9 +257,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 }
             }
             // intermediateArr just store default val
-            Object.keys(res.data).map(item => {
-                if (res.data[item].type === 'PERIODICAL') {
-                    const temp = parseMetrics(res.data[item].data);
+            metricDatas.map(item => {
+
+                if (item.type === 'PERIODICAL') {
+                    const temp = parseMetrics(item.data);
                     if (typeof temp === 'object') {
                         intermediateArr.push(temp[intermediateKey]);
                     } else {
@@ -262,12 +268,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 }
             });
-            const intermediate = intermediateGraphOption(intermediateArr, id);
+            const intermediate = intermediateGraphOption(intermediateArr, record.id);
             this.setState({
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                intermediateId: id
+                intermediateId: record.id
             });
         }
         this.setState({ modalVisible: true });
@@ -426,8 +432,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
     // when user click [Add Column] need to use the function
     private initTableColumnList = (columnList: string[]): IColumn[] => {
         // const { columnList } = this.props;
-        // [supportCustomizedTrial: true]
-        const supportCustomizedTrial = (EXPERIMENT.multiPhase === true) ? false : true;
         const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
         const showColumn: IColumn[] = [];
         for (const item of columnList) {
@@ -479,7 +483,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     <PrimaryButton
                                         className="detail-button-operation"
                                         title="Intermediate"
-                                        onClick={this.showIntermediateModal.bind(this, record.id)}
+                                        onClick={this.showIntermediateModal.bind(this, record)}
                                     >
                                         {LineChart}
                                     </PrimaryButton>
@@ -494,20 +498,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                             <KillJob trial={record} />
                                     }
                                     {/* Add a new trial-customized trial */}
-                                    {
-                                        supportCustomizedTrial
-                                            ?
-                                            <PrimaryButton
-                                                className="detail-button-operation"
-                                                title="Customized trial"
-                                                onClick={this.setCustomizedTrial.bind(this, record.id)}
-                                                disabled={disabledAddCustomizedTrial}
-                                            >
-                                                {copy}
-                                            </PrimaryButton>
-                                            :
-                                            null
-                                    }
+                                    <PrimaryButton
+                                        className="detail-button-operation"
+                                        title="Customized trial"
+                                        onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                        disabled={disabledAddCustomizedTrial}
+                                    >
+                                        {copy}
+                                    </PrimaryButton>
                                 </Stack>
                             );
                         },
