@@ -3,7 +3,6 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig';
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
 export class PAIClusterConfig {
