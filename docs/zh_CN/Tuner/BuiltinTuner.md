@@ -381,21 +381,21 @@ advisor:
 
 **建议场景**
 
-作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [Detailed Description](./GPTuner.md)
+作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 然后，由于需要反转 Gram 矩阵，GP Tuner 的计算复杂度以 *O(N^3)* 的速度增长，因此不适合于需要大量 Trial 的情形。 [详细说明](./GPTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The utility function (acquisition function). 'ei', 'ucb', and 'poi' correspond to 'Expected Improvement', 'Upper Confidence Bound', and 'Probability of Improvement', respectively. 
-* **kappa** (*float, optional, default = 5*) - Used by the 'ucb' utility function. The bigger `kappa` is, the more exploratory the tuner will be.
-* **xi** (*float, optional, default = 0*) - Used by the 'ei' and 'poi' utility functions. The bigger `xi` is, the more exploratory the tuner will be.
-* **nu** (*float, optional, default = 2.5*) - Used to specify the Matern kernel. The smaller nu, the less smooth the approximated function is.
-* **alpha** (*float, optional, default = 1e-6*) - Used to specify the Gaussian Process Regressor. Larger values correspond to an increased noise level in the observations.
-* **cold_start_num** (*int, optional, default = 10*) - Number of random explorations to perform before the Gaussian Process. Random exploration can help by diversifying the exploration space.
-* **selection_num_warm_up** (*int, optional, default = 1e5*) - Number of random points to evaluate when getting the point which maximizes the acquisition function.
-* **selection_num_starting_points** (*int, optional, default = 250*) - Number of times to run L-BFGS-B from a random starting point after the warmup.
+* **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。 
+* **kappa** (*float, 可选, 默认值为 5*) - 用于 'ucb' 函数。 `kappa` 越大， Tuner 的探索性越强。
+* **xi** (*float, 可选, 默认为 0*) - 用于 'ei' 和 'poi' 工具函数。 `xi` 越大， Tuner 的探索性越强。
+* **nu** (*float, 可选, 默认为 2.5*) - 用于指定 Matern 核。 nu 越小，近似函数的平滑度越低。
+* **alpha** (*float, 可选, 默认值为 1e-6*) - 用于高斯过程回归器。 值越大，表示观察中的噪声水平越高。
+* **cold_start_num** (*int, 可选, 默认值为 10*) - 在高斯过程前执行随机探索的数量。 随机探索可帮助提高探索空间的广泛性。
+* **selection_num_warm_up** (*int, 可选, 默认为 1e5*) - 用于获得最大采集函数而评估的随机点数量。
+* **selection_num_starting_points** (*int, 可选, 默认为 250*) - 预热后，从随机七十点运行 L-BFGS-B 的次数。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -419,27 +419,27 @@ tuner:
 
 > 内置 Tuner 名称：**PPOTuner**
 
-Note that the only acceptable types within the search space is `mutable_layer`. `optional_input_size` can only be 0, 1, or [0, 1].
+搜索空间类型仅支持 `mutable_layer`。 `optional_input_size` 只能是 0, 1, 或 [0, 1]。
 
-**Suggested scenario**
+**建议场景**
 
-PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) example. [See details](./PPOTuner.md)
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 PPOTuner 可用于使用 NNI NAS 接口进行的神经网络结构搜索。 一般来说，尽管 PPO 算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 当有大量可用的计算资源时，才建议使用此 Tuner。 可以在简单的任务上尝试，如 [mnist-nas](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nas) 示例。 [查看详细信息](./PPOTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will try to maximize metrics. 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **trials_per_update** (*int, optional, default = 20*) - The number of trials to be used for one update. It must be divisible by minibatch_size. `trials_per_update` is recommended to be an exact multiple of `trialConcurrency` for better concurrency of trials.
-* **epochs_per_update** (*int, optional, default = 4*) - The number of epochs for one update.
-* **minibatch_size** (*int, optional, default = 4*) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that trials_per_update must be divisible by minibatch_size.
-* **ent_coef** (*float, optional, default = 0.0*) - Policy entropy coefficient in the optimization objective.
-* **lr** (*float, optional, default = 3e-4*) - Learning rate of the model (lstm network); constant.
-* **vf_coef** (*float, optional, default = 0.5*) - Value function loss coefficient in the optimization objective.
-* **max_grad_norm** (*float, optional, default = 0.5*) - Gradient norm clipping coefficient.
-* **gamma** (*float, optional, default = 0.99*) - Discounting factor.
-* **lam** (*float, optional, default = 0.95*) - Advantage estimation discounting factor (lambda in the paper).
-* **cliprange** (*float, optional, default = 0.2*) - Cliprange in the PPO algorithm, constant.
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 `trials_per_update` 设为 `trialConcurrency` 的倍数，以提高 Trial 的并发效率。
+* **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
+* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
+* **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
+* **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
+* **vf_coef** (*float, 可选, 默认为 0.5*) - Value function loss coefficient in the optimization objective.
+* **max_grad_norm** (*float, 可选, 默认为 0.5*) - Gradient norm clipping coefficient.
+* **gamma** (*float, 可选, 默认为 0.99*) - Discounting factor.
+* **lam** (*float, 可选, 默认为 0.95*) - Advantage estimation discounting factor (论文中的 lambda).
+* **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -455,19 +455,19 @@ tuner:
 
 > 内置 Tuner 名称：**PBTTuner**
 
-**Suggested scenario**
+**建议场景**
 
-Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [See details](./PBTTuner.md)
+Population Based Training (PBT，基于种群的训练)，将并扩展并行搜索方法和顺序优化方法连接在了一起。 它通过周期性的从较好的模型中继承权重来继续探索，这样所需的计算资源相对较少。 使用 PBTTuner，用户最终可以得到训练好的模型，而不是需要从头训练的配置。 这是因为模型权重会在搜索过程中周期性的继承。 PBT 也可作为训练的方法。 如果不需要配置，只需要好的模型，PBTTuner 是不错的选择。 [查看详情](./PBTTuner.md)
 
-**classArgs requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **all_checkpoint_dir** (*str, optional, default = None*) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/<exp-id>". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
-* **population_size** (*int, optional, default = 10*) - Number of trials in a population. Each step has this number of trials. In our implementation, one step is running each trial by specific training epochs set by users.
-* **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
-* **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
+* **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **all_checkpoint_dir** (*str, 可选, 默认为 None*) - Trial 保存读取检查点的目录，如果不指定，其为 "~/nni/checkpoint/<exp-id>". 注意，如果 Experiment 不是本机模式，用户需要提供能被所有 Trial 所访问的共享存储。
+* **population_size** (*int, 可选, 默认为 10*) - 种群的 Trial 数量。 每个步骤有此数量的 Trial。 在 NNI 的实现中，一步表示每个 Trial 运行一定次数 Epoch，此 Epoch 的数量由用户来指定。
+* **factors** (*tuple, 可选, 默认为 (1.2, 0.8)*) - 超参变动量的因子。
+* **fraction** (*float, 可选, 默认为 0.2*) - 选择的最低和最高 Trial 的比例。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -477,12 +477,12 @@ tuner:
     optimize_mode: maximize
 ```
 
-Note that, to use this tuner, your trial code should be modified accordingly, please refer to [the document of PBTTuner](./PBTTuner.md) for details.
+注意，要使用此 Tuner，Trial 代码也需要相应的修改，参考 [PBTTuner 文档](./PBTTuner.md)了解详情。
 
 ## **参考和反馈**
 
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/FeatureEngineering/Overview.md);
-* To know more about [NAS with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解 NNI 中[特征工程的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/FeatureEngineering/Overview.md)；
+* 了解 NNI 中[ NAS 的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Overview.md)；
+* 了解 NNI 中[模型自动压缩的更多信息](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Overview.md)；
