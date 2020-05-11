@@ -378,19 +378,19 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 如果使用定制 Assessor，则为必需。 相对于 **codeDir** 的文件路径。
 
-Specifies the name of assessor file.
+指定 Assessor 文件的名称。
 
 #### className
 
-如果使用定制 Assessor，则为必需。 String.
+如果使用定制 Assessor，则为必需。 字符串。
 
-Specifies the name of assessor class.
+指定 Assessor 类的名称。
 
 #### classArgs
 
-Optional. Key-value pairs. Default: empty.
+可选。 键值对。 默认值：空。
 
-Specifies the arguments of assessor algorithm.
+指定 Assessor 算法的参数。
 
 ### advisor
 
