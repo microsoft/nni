@@ -28,7 +28,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.4'
+release = 'v1.5'
 
 # -- General configuration ---------------------------------------------------
 
@@ -45,6 +45,7 @@ extensions = [
     'sphinx_markdown_tables',
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
 ]
 
 # Add mock modules

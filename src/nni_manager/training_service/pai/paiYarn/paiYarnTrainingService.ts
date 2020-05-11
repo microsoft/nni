@@ -8,24 +8,22 @@ import * as path from 'path';
 import * as request from 'request';
 import * as component from '../../../common/component';
 
-import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    HyperParameters, NNIManagerIpConfig,
+    TrialJobApplicationForm, TrialJobDetail
 } from '../../../common/trainingService';
-import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../../common/utils';
+import {
+    generateParamFileName,
+    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin
+} from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../../common/util';
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIJobConfig, PAITaskRole } from './paiYarnConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_TRIAL_COMMAND_FORMAT } from './paiYarnData';
-import { PAIJobInfoCollector } from '../paiJobInfoCollector';
 import { PAITrainingService } from '../paiTrainingService';
 import { PAIClusterConfig, PAITrialJobDetail } from '../paiConfig';
 
@@ -65,7 +63,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             PAI_LOG_PATH_FORMAT,
             this.paiClusterConfig.host,
             hdfsOutputDir
-            );
+        );
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -99,13 +97,13 @@ class PAIYarnTrainingService extends PAITrainingService {
                     port: 80,
                     path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
-                    
+
                 });
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if(this.paiClusterConfig.passWord) {
+                if (this.paiClusterConfig.passWord) {
                     // Get PAI authentication token
                     await this.updatePaiToken();
-                } else if(this.paiClusterConfig.token) {
+                } else if (this.paiClusterConfig.token) {
                     this.paiToken = this.paiClusterConfig.token;
                 } else {
                     throw new Error('pai cluster config format error, please set password or token!');
@@ -121,14 +119,14 @@ class PAIYarnTrainingService extends PAITrainingService {
 
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.paiTrialConfig.codeDir);
-           
+
                 // Copy experiment files from local folder to HDFS
                 this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(
                     this.paiTrialConfig.codeDir,
                     HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
                     this.hdfsClient
                 );
-                
+
                 // Upload authFile to hdfs
                 if (this.paiTrialConfig.authFile) {
                     this.authFileHdfsPath = unixPathJoin(HDFSClientUtility.hdfsExpRootDir(this.paiClusterConfig.userName), 'authFile');
@@ -224,7 +222,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             version,
             this.logCollection
         )
-        .replace(/\r\n|\n|\r/gm, '');
+            .replace(/\r\n|\n|\r/gm, '');
 
         this.log.info(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles: PAITaskRole[] = [
@@ -283,10 +281,11 @@ class PAIYarnTrainingService extends PAITrainingService {
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
-        request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
+        request(submitJobRequest, (error: Error, response: request.Response, _body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
-                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
-                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body.message}`;
+                const errorMessage: string = (error !== undefined && error !== null) ? error.message : 
+                `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body.message}`;
+                this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
                 deferred.resolve(true);
             } else {
@@ -343,7 +342,7 @@ class PAIYarnTrainingService extends PAITrainingService {
             json: true,
             body: parameterFileMeta
         };
-        request(req, (err: Error, res: request.Response) => {
+        request(req, (err: Error, _res: request.Response) => {
             if (err) {
                 deferred.reject(err);
             } else {

@@ -47,8 +47,6 @@ tuner:
     population_size: 10
 ```
 
-### Limitations
-
-The current implementation only supports search space types in `float`, including `uniform`, `normal`. The support of other search space types is ongoing.
+### Limitation
 
 Importing data has not been supported yet.

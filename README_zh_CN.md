@@ -10,7 +10,7 @@
 
 **NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.md)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.md)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.md)以及[模型压缩](docs/zh_CN/Compressor/Overview.md)。
 
-NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)，以及其它云服务。
+NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)， [DLWorkspace (又称 DLTS)](docs/zh_CN/TrainingService/DLTSMode.md) 和其它云服务。
 
 ## **使用场景**
 
@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **NNI v1.4 已发布！ &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **[NNI v1.5 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -102,6 +102,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Evolution">Naïve Evolution（朴素进化）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
             <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#PBTTuner">PBT</a></li>
           </ul>
           <b>贝叶斯优化</b>
             <ul>
@@ -125,7 +126,8 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/NAS/CDARTS.md">CDARTS</a></li>
               <li><a href="docs/zh_CN/NAS/SPOS.md">SPOS</a></li>
               <li><a href="docs/zh_CN/NAS/Proxylessnas.md">ProxylessNAS</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li>
+              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
+              <li><a href="docs/zh_CN/NAS/TextNAS.md">TextNAS</a></li>
             </ul>
           </ul>
           <a href="docs/zh_CN/Compressor/Overview.md">模型压缩</a>
@@ -162,6 +164,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
             </ul>
+            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>        
       </ul>
       </td>
     </tr>
@@ -230,7 +233,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
    
    ```bash
-   git clone -b v1.4 https://github.com/Microsoft/nni.git
+   git clone -b v1.5 https://github.com/Microsoft/nni.git
    ```
 
 * 运行 MNIST 示例。

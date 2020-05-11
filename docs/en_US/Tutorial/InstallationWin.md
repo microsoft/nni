@@ -19,7 +19,7 @@ Anaconda or Miniconda is highly recommended to manage multiple Python environmen
   Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
 
   ```bash
-  git clone -b v1.4 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
   ```
@@ -31,7 +31,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.4 https://github.com/Microsoft/nni.git
+  git clone -b v1.5 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

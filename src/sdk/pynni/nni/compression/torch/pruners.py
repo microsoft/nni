@@ -329,10 +329,6 @@ class LotteryTicketPruner(Pruner):
         reset_weights : bool
             Whether reset weights and optimizer at the beginning of each round.
         """
-        super().__init__(model, config_list, optimizer)
-        self.curr_prune_iteration = None
-        self.prune_iterations = config_list[0]['prune_iterations']
-
         # save init weights and optimizer
         self.reset_weights = reset_weights
         if self.reset_weights:
@@ -343,6 +339,10 @@ class LotteryTicketPruner(Pruner):
             self._lr_scheduler = lr_scheduler
             if lr_scheduler is not None:
                 self._scheduler_state = copy.deepcopy(lr_scheduler.state_dict())
+
+        super().__init__(model, config_list, optimizer)
+        self.curr_prune_iteration = None
+        self.prune_iterations = config_list[0]['prune_iterations']
 
     def validate_config(self, model, config_list):
         """
