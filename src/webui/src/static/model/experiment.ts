@@ -66,10 +66,6 @@ class Experiment {
         return !!(this.profile.params.logCollection && this.profile.params.logCollection !== 'none');
     }
 
-    get multiPhase(): boolean {
-        return !!(this.profile.params.multiPhase);
-    }
-
     get status(): string {
         if (!this.statusField) {
             throw Error('Experiment status not initialized');
