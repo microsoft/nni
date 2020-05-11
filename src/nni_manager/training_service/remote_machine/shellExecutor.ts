@@ -242,7 +242,6 @@ class ShellExecutor {
      * Copy files and directories in local directory recursively to remote directory
      * @param localDirectory local diretory
      * @param remoteDirectory remote directory
-     * @param sshClient SSH client
      */
     public async copyDirectoryToRemote(localDirectory: string, remoteDirectory: string): Promise<void> {
         const tmpSuffix: string = uniqueString(5);
