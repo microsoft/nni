@@ -2,10 +2,14 @@
 # Licensed under the MIT license.
 
 import json
+import logging
 
 from .mutables import InputChoice, LayerChoice, MutableScope
 from .mutator import Mutator
 from .utils import to_list
+
+
+_logger = logging.getLogger(__name__)
 
 
 class FixedArchitecture(Mutator):
@@ -73,6 +77,32 @@ class FixedArchitecture(Mutator):
         """
         return self._fixed_arc
 
+    def replace_layer_choice(self, module=None, prefix=""):
+        """
+        Replace layer choices with selected candidates.
+        Skip those with weighted choices or multiple choices.
+
+        Parameters
+        ----------
+        module : nn.Module
+            Module to be processed.
+        prefix : str
+            Module name under global namespace.
+        """
+        if module is None:
+            module = self.model
+        for name, mutable in module.named_children():
+            global_name = (prefix + "." if prefix else "") + name
+            if isinstance(mutable, LayerChoice):
+                chosen = self._fixed_arc[mutable.key]
+                if sum(chosen) == 1 and max(chosen) == 1:
+                    # sum is one, max is one, there has to be an only one
+                    # this is compatible with both integer arrays, boolean arrays and float arrays
+                    _logger.info("Replacing %s with candidate number %d.", global_name, chosen.index(1))
+                    setattr(module, name, mutable[chosen.index(1)])
+            else:
+                self.replace_layer_choice(mutable, global_name)
+
 
 def apply_fixed_architecture(model, fixed_arc):
     """
@@ -96,4 +126,7 @@ def apply_fixed_architecture(model, fixed_arc):
             fixed_arc = json.load(f)
     architecture = FixedArchitecture(model, fixed_arc)
     architecture.reset()
+
+    # for the convenience of parameters counting
+    architecture.replace_layer_choice()
     return architecture
