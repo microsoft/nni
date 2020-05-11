@@ -200,6 +200,24 @@ class Mutator(BaseMutator):
         return self._tensor_reduction(mutable.reduction, out), mask
 
     def _select_with_mask(self, map_fn, candidates, mask):
+        """
+        Select masked tensors and return a list of tensors.
+
+        Parameters
+        ----------
+        map_fn : function
+            Convert candidates to target candidates. Can be simply identity.
+        candidates : list of torch.Tensor
+            Tensor list to apply the decision on.
+        mask : list-like object
+            Can be a list, an numpy array or a tensor (recommended). Needs to
+            have the same length as ``candidates``.
+
+        Returns
+        -------
+        tuple of list of torch.Tensor and torch.Tensor
+            Output and mask.
+        """
         if (isinstance(mask, list) and len(mask) >= 1 and isinstance(mask[0], bool)) or \
                 (isinstance(mask, np.ndarray) and mask.dtype == np.bool) or \
                 "BoolTensor" in mask.type():

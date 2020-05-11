@@ -32,9 +32,10 @@ class FixedArchitecture(Mutator):
             raise RuntimeError("Unexpected keys found in fixed architecture: {}.".format(fixed_arc_keys - mutable_keys))
         if mutable_keys - fixed_arc_keys:
             raise RuntimeError("Missing keys in fixed architecture: {}.".format(mutable_keys - fixed_arc_keys))
-        self._fixed_arc = self._convert_human_readable_architecture(self._fixed_arc)
+        self._fixed_arc = self._from_human_readable_architecture(self._fixed_arc)
 
-    def _convert_human_readable_architecture(self, human_arc):
+    def _from_human_readable_architecture(self, human_arc):
+        # convert from an exported architecture
         result_arc = {k: to_list(v) for k, v in human_arc.items()}  # there could be tensors, numpy arrays, etc.
         # First, convert non-list to list, because there could be {"op1": 0} or {"op1": "conv"},
         # which means {"op1": [0, ]} ir {"op1": ["conv", ]}
