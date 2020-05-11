@@ -66,7 +66,7 @@ class Mutator(BaseMutator):
             if not isinstance(mutable, (LayerChoice, InputChoice)):
                 # not supported as built-in
                 continue
-            result[mutable.key] = self._convert_mutable_decision(mutable, sampled.pop(mutable.key))
+            result[mutable.key] = self._convert_mutable_decision_to_human_readable(mutable, sampled.pop(mutable.key))
         if sampled:
             raise ValueError("Unexpected keys returned from 'sample_final()': %s", list(sampled.keys()))
         return result
@@ -273,7 +273,7 @@ class Mutator(BaseMutator):
         logger.debug("Decision %s: %s", mutable.key, result)
         return result
 
-    def _convert_mutable_decision(self, mutable, sampled):
+    def _convert_mutable_decision_to_human_readable(self, mutable, sampled):
         # Assert the existence of mutable.key in returned architecture.
         # Also check if there is anything extra.
         multihot_list = to_list(sampled)
