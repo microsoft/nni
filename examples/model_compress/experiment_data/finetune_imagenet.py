@@ -11,21 +11,21 @@ import torch
 import torch.utils.data
 from torchvision import datasets, transforms
 import torch.nn.functional as F
+import torch.nn as nn
 import torchvision.models as models
 
 from nni.compression.torch import LevelPruner
 
-MODEL_DIR = "imagenet_mobilenet.pt"
-DATA_DIR = '../data'
-
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
+    criterion = nn.CrossEntropyLoss()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = criterion(output, target)
+
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -34,7 +34,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
                 100. * batch_idx / len(train_loader), loss.item()))
 
 
-def test(model, device, val_loader):
+def test(model, device, criterion, train_loaderval_loader):
     model.eval()
     test_loss = 0
     correct = 0
@@ -104,25 +104,23 @@ if __name__ == '__main__':
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
-        # datasets.ImageFolder('{}/train'.format(args.data_dir),
-        datasets.ImageNet(args.data_dir, split='train',
-                          transform=transforms.Compose([
-                              transforms.Resize(256),
-                              transforms.CenterCrop(224),
-                              transforms.ToTensor(),
-                              normalize,
-                          ])),
+        datasets.ImageFolder(os.path.join(args.data_dir, 'train'),
+                             transform=transforms.Compose([
+                                 transforms.RandomResizedCrop(224),
+                                 transforms.RandomHorizontalFlip(),
+                                 transforms.ToTensor(),
+                                 normalize,
+                             ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     val_loader = torch.utils.data.DataLoader(
-        # datasets.ImageFolder('{}/val'.format(args.data_dir),
-        datasets.ImageNet(args.data_dir, split='val',
-                          transform=transforms.Compose([
-                              transforms.Resize(256),
-                              transforms.CenterCrop(224),
-                              transforms.ToTensor(),
-                              normalize,
-                          ])),
+        datasets.ImageFolder(os.path.join(args.data_dir, 'val'),
+                             transform=transforms.Compose([
+                                 transforms.Resize(256),
+                                 transforms.CenterCrop(224),
+                                 transforms.ToTensor(),
+                                 normalize,
+                             ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     torch.manual_seed(0)
@@ -142,7 +140,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
                                 momentum=0.9,
                                 weight_decay=4e-5)
-    for epoch in range(10):
+    for epoch in range(5):
         train(args, model_masked, device,
               train_loader, optimizer, epoch)
         test(model, device, val_loader)

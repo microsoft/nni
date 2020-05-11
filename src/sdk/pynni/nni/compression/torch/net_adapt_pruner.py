@@ -20,7 +20,7 @@ from .utils import CompressorSchema
 
 __all__ = ['NetAdaptPruner']
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class NetAdaptPruner(Pruner):
@@ -108,7 +108,7 @@ class NetAdaptPruner(Pruner):
         schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
             Optional('op_types'): [str],
-        }], model, logger)
+        }], model, _logger)
 
         schema.validate(config_list)
 
@@ -181,7 +181,7 @@ class NetAdaptPruner(Pruner):
         Generate a sorted sparsities vector
         '''
         # repeatedly generate a distribution until satisfies the overall sparsity requirement
-        logger.info('Gererating sparsities...')
+        _logger.info('Gererating sparsities...')
         while True:
             sparsities = sorted(np.random.uniform(
                 0, 1, len(self.get_modules_wrapper())))
@@ -190,7 +190,7 @@ class NetAdaptPruner(Pruner):
                 sparsities, target_sparsity=self._sparsity)
 
             if sparsities[0] >= 0 and sparsities[-1] < 1:
-                logger.info('Initial sparsities generated : %s', sparsities)
+                _logger.info('Initial sparsities generated : %s', sparsities)
                 self._sparsities = sparsities
                 break
 
@@ -203,25 +203,25 @@ class NetAdaptPruner(Pruner):
         list
             perturbated sparsities
         '''
-        logger.info("Gererating perturbations to the current sparsities...")
+        _logger.info("Gererating perturbations to the current sparsities...")
 
         # decrease magnitude with current temperature
         magnitude = self._current_temperature / \
             self._start_temperature * self._perturbation_magnitude
-        logger.info('current perturation magnitude:%s', magnitude)
+        _logger.info('current perturation magnitude:%s', magnitude)
 
         while True:
             perturbation = np.random.uniform(-magnitude,
                                              magnitude, len(self.get_modules_wrapper()))
             sparsities = np.clip(0, self._sparsities + perturbation, None)
-            logger.info("sparsities before rescalling:%s", sparsities)
+            _logger.debug("sparsities before rescalling:%s", sparsities)
 
             sparsities = self._rescale_sparsities(
                 sparsities, target_sparsity=self._sparsity)
-            logger.info("sparsities after rescalling:%s", sparsities)
+            _logger.debug("sparsities after rescalling:%s", sparsities)
 
             if sparsities[0] >= 0 and sparsities[-1] < 1:
-                logger.info("Sparsities perturbated:%s", sparsities)
+                _logger.info("Sparsities perturbated:%s", sparsities)
                 return sparsities
 
     def _set_modules_wrapper(self, modules_wrapper):
@@ -247,7 +247,7 @@ class NetAdaptPruner(Pruner):
         torch.nn.Module
             model with specified modules compressed.
         """
-        logger.info('Starting Simulated Annealing Compression...')
+        _logger.info('Starting Simulated Annealing Compression...')
 
         # initiaze a randomized action
         self._init_sparsities()
@@ -255,15 +255,15 @@ class NetAdaptPruner(Pruner):
         # stop condition
         self._current_temperature = self._start_temperature
         while self._current_temperature > self._stop_temperature:
-            logger.info('Pruning iteration: %d', self._pruning_iteration)
-            logger.info('Current temperature: %d, Stop temperature: %d',
+            _logger.info('Pruning iteration: %d', self._pruning_iteration)
+            _logger.info('Current temperature: %d, Stop temperature: %d',
                         self._current_temperature, self._stop_temperature)
             while True:
                 # generate perturbation
                 sparsities_perturbated = self._generate_perturbations()
                 config_list_level = self._sparsities_2_config_list_level(
                     sparsities_perturbated)
-                logger.info("config_list for LevelPruner generated: %s",
+                _logger.info("config_list for LevelPruner generated: %s",
                             config_list_level)
 
                 # fast evaluation
@@ -309,10 +309,10 @@ class NetAdaptPruner(Pruner):
             self._current_temperature *= self._cool_down_rate
             self._pruning_iteration += 1
 
-        logger.info('----------Compression finished--------------')
-        logger.info('Best performance: %s', self._best_performance)
-        logger.info('Sparsities generated: %s', self._sparsities)
-        logger.info('config_list found for LevelPruner: %s',
+        _logger.info('----------Compression finished--------------')
+        _logger.info('Best performance: %s', self._best_performance)
+        _logger.info('Sparsities generated: %s', self._sparsities)
+        _logger.info('config_list found for LevelPruner: %s',
                     self._sparsities_2_config_list_level(self._sparsities))
 
         with open(self._PRUNING_HISTORY_PATH, 'w') as csvfile:
@@ -320,6 +320,6 @@ class NetAdaptPruner(Pruner):
             writer.writeheader()
             for item in self._pruning_history:
                 writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : json.dumps(item['config_list'])})
-        logger.info('pruning history saved to %s', self._PRUNING_HISTORY_PATH)
+        _logger.info('pruning history saved to %s', self._PRUNING_HISTORY_PATH)
 
         return self.bound_model

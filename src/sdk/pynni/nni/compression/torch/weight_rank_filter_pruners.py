@@ -44,7 +44,7 @@ class WeightRankFilterPruner(Pruner):
                 - sparsity: percentage of convolutional filters to be pruned.
        """
         schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+            'sparsity': And(float, lambda n: 0 <= n < 1),
             Optional('op_types'): ['Conv2d'],
             Optional('op_names'): [str]
         }], model, logger)
