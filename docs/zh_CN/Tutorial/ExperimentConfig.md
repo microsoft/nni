@@ -85,25 +85,25 @@ experimentName:
 trialConcurrency:
 maxExecDuration:
 maxTrialNum:
-#choice: local, remote, pai, kubeflow
+# 可选项: local, remote, pai, kubeflow
 trainingServicePlatform:
 searchSpacePath:
-#choice: true, false, default: false
+# 可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+# 可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  # 可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    # 可选项: maximize, minimize
     optimize_mode:
   gpuIndices:
 trial:
   command:
   codeDir:
   gpuNum:
-#machineList can be empty if the platform is local
+# 在本机模式下，machineList 可为空
 machineList:
   - ip:
     port:
@@ -114,79 +114,81 @@ machineList:
 - **使用 Assessor**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-searchSpacePath:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuIndices:
+  gpuIndices: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
+  gpuIndices: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuIndices: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
 - **使用 Annotation**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-#choice: true, false, default: false
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+#可选项: true, false, 默认值: false
 useAnnotation:
-#choice: true, false, default: false
+#可选项: true, false, 默认值: false
 multiThread:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuIndices:
+  gpuIndices: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
+  gpuIndices: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuIndices: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
@@ -278,103 +280,103 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 可选。 布尔。 默认值：false。
 
-Enable multi-thread mode for dispatcher. If multiThread is enabled, dispatcher will start a thread to process each command from NNI Manager.
+为 Dispatcher 启用多线程模式。 如果启用了 multiThread，Dispatcher 将启动一个线程来处理来自 NNI 管理器的每个命令。
 
 ### nniManagerIp
 
-可选。 String. Default: eth0 device IP.
+可选。 字符串。 默认值：eth0 设备的 IP。
 
-Set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+设置运行 NNI 管理器进程的计算机的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
 
-Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, **nniManagerIp** is recommended to set explicitly.
+注意: 可在 NNI 管理器机器上运行 `ifconfig` 来检查 eth0 是否存在。 如果没有，建议显式设置 **nniManagerIp**。
 
 ### logDir
 
-Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+可选。 目录的路径。 默认值：`<user home directory>/nni/experiment`。
 
-Configures the directory to store logs and data of the experiment.
+配置目录以存储 Experiment 的日志和数据。
 
 ### logLevel
 
-可选。 String. Default: `info`.
+可选。 字符串。 默认值：`info`。
 
-Sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+设置 Experiment 的日志级别。 可设置的日志级别包括：`trace`, `debug`, `info`, `warning`, `error`, `fatal`。
 
 ### logCollection
 
-可选。 `http` or `none`. Default: `none`.
+可选。 `http` 或 `none`。 默认值：`none`。
 
-Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+设置在remote、pai、kubeflow、frameworkcontroller 平台中收集日志的方式。 日志支持两种设置，一种是通过 `http`，让 Trial 将日志通过 POST 方法发回日志，这种方法会减慢 trialKeeper 的速度。 另一种方法是 `none`，Trial 不将日志回传回来，仅仅回传 Job 的指标。 如果日志较大，可将此参数设置为 `none`。
 
 ### tuner
 
-Required.
+必填。
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**, **classFileName**, **className** and **classArgs** are needed. *Users must choose exactly one way.*
+指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
 #### builtinTunerName
 
-Required if using built-in tuners. String.
+如果使用内置 Tuner，则为必需。 字符串。
 
-Specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+指定系统 Tuner 的名称, NNI SDK 提供的各种 Tuner 的[说明](../Tuner/BuiltinTuner.md)。
 
 #### codeDir
 
-Required if using customized tuners. Path relative to the location of config file.
+如果使用定制 Tuner，则为必需。 相对于配置文件位置的路径。
 
-Specifies the directory of tuner code.
+指定 Tuner 代码的目录。
 
 #### classFileName
 
-如果使用定制 Tuner，则为必需。 File path relative to **codeDir**.
+如果使用定制 Tuner，则为必需。 相对于 **codeDir** 的文件路径。
 
-Specifies the name of tuner file.
+指定 Tuner 文件的名称。
 
 #### className
 
-如果使用定制 Tuner，则为必需。 String.
+如果使用定制 Tuner，则为必需。 字符串。
 
-Specifies the name of tuner class.
+指定 Tuner 的名称。
 
 #### classArgs
 
-Optional. Key-value pairs. Default: empty.
+可选。 键值对。 默认值：空。
 
-Specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
+指定 Tuner 算法的参数。 参考[此文件](../Tuner/BuiltinTuner.md)来了解内置 Tuner 的配置参数。
 
 #### gpuIndices
 
-可选。 String. 默认值：空。
+可选。 字符串。 默认值：空。
 
-Specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
+指定 Tuner 进程可以使用的 GPU。 可以指定单个或多个 GPU 索引。 多个 GPU 索引用逗号 `,` 分隔。 例如，`1` 或 `0,1,3`。 如果未设置该字段，则 Tuner 将找不到 GPU（设置 `CUDA_VISIBLE_DEVICES` 成空字符串）。
 
 #### includeIntermediateResults
 
-可选。 Bool. Default: false.
+可选。 布尔。 默认值：false。
 
-If **includeIntermediateResults** is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
+如果 **includeIntermediateResults** 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。
 
 ### assessor
 
-Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**, **classFileName**, **className** and **classArgs**. *Users must choose exactly one way.*
+指定 Assessor 算法以运行 Experiment。 与 Tuner 类似，有两种设置 Assessor 的方法。 一种方法是使用 NNI SDK 提供的 Assessor。 用户需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
-By default, there is no assessor enabled.
+默认情况下，未启用任何 Assessor。
 
 #### builtinAssessorName
 
-Required if using built-in assessors. String.
+如果使用内置 Assessor，则为必需。 字符串。
 
-Specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
+指定内置 Assessor 的名称，NNI SDK 提供的 Assessor 可参考[这里](../Assessor/BuiltinAssessor.md)。
 
 #### codeDir
 
-Required if using customized assessors. Path relative to the location of config file.
+如果使用定制 Assessor，则为必需。 相对于配置文件位置的路径。
 
-Specifies the directory of assessor code.
+指定 Assessor 代码的目录。
 
 #### classFileName
 
-如果使用定制 Assessor，则为必需。 File path relative to **codeDir**.
+如果使用定制 Assessor，则为必需。 相对于 **codeDir** 的文件路径。
 
 Specifies the name of assessor file.
 
@@ -508,7 +510,7 @@ Only applicable if **trainingServicePlatform** is set to `local`, otherwise ther
 
 Optional. String. Default: none.
 
-Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
+用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引。 Multiple GPU indices should be separated with comma (`,`), such as `1` or `0,1,3`. By default, all GPUs available will be used.
 
 #### maxTrialNumPerGpu
 
