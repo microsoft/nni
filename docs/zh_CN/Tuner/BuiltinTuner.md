@@ -85,13 +85,13 @@ tuner:
 
 **建议场景**
 
-Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
+退火算法，用于每个 Trial 的时间不长，并且有足够的计算资源（与随机搜索基本相同）。 当搜索空间中的变量可以从某些先前的分布中采样时，它也很有用。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -109,17 +109,17 @@ tuner:
 
 > 名称：**Evolution**
 
-**Suggested scenario**
+**建议场景**
 
-Its computational resource requirements are relatively high. Specifically, it requires a large initial population to avoid falling into a local optimum. If your trial is short or leverages assessor, this tuner is a good choice. It is also suggested when your trial code supports weight transfer; that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training process. [Detailed Description](./EvolutionTuner.md)
+其计算资源要求相对较高。 特别是，它需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-* **population_size** (*int value (should > 0), optional, default = 20*) - the initial size of the population (trial num) in the evolution tuner. It's suggested that `population_size` be much larger than `concurrency` so users can get the most out of the algorithm (and at least `concurrency`, or the tuner will fail on its first generation of parameters).
+* **population_size** (*int 类型 (需要大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的初始种群（Trial 数量）。 建议 `population_size` 比 `concurrency` 取值更大，这样能充分利用算法（至少要等于 `concurrency`，否则 Tuner 在生成第一代参数的时候就会失败）。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -138,26 +138,26 @@ tuner:
 
 > 名称：**SMAC**
 
-**Please note that SMAC doesn't support running on Windows currently. For the specific reason, please refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[GitHub issue](https://github.com/automl/SMAC3/issues/483)。**
 
-**Installation**
+**安装**
 
-SMAC needs to be installed by following command before the first usage. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
+SMAC 在第一次使用前，必须用下面的命令先安装。 注意：SMAC 依赖于 `swig`，Ubuntu 下可通过 `apt` 命令来安装 `swig`。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner that can be tried in various scenarios and is suggested when computational resources are limited. It is optimized for discrete hyperparameters, thus, it's suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。 [详细说明](./SmacTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **config_dedup** (*True or False, optional, default = False*) - If True, the tuner will not generate a configuration that has been already generated. If False, a configuration may be generated twice, but it is rare for a relatively large search space.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **config_dedup** (*True 或 False, 可选, 默认为 False*) - 如果为 True，则 Tuner 不会生成重复的配置。 如果为 False，则配置可能会重复生成，但对于相对较大的搜索空间，此概率较小。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -175,11 +175,11 @@ tuner:
 
 > 名称：BatchTuner
 
-**Suggested scenario**
+**建议场景**
 
-If the configurations you want to try have been decided beforehand, you can list them in search space file (using `choice`) and run them using batch tuner. [Detailed Description](./BatchTuner.md)
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。 [详细说明](./BatchTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -189,7 +189,7 @@ tuner:
 
 <br />
 
-Note that the search space for BatchTuner should look like:
+注意，BatchTuner 的搜索空间如下所示：
 
 ```json
 {
@@ -206,7 +206,7 @@ Note that the search space for BatchTuner should look like:
 }
 ```
 
-The search space file should include the high-level key `combine_params`. The type of params in the search space must be `choice` and the `values` must include all the combined params values.
+搜索空间文件使用了高层的键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要的参数组合。
 
 <a name="GridSearch"></a>
 
@@ -214,13 +214,13 @@ The search space file should include the high-level key `combine_params`. The ty
 
 > 名称：**Grid Search**
 
-**Suggested scenario**
+**建议场景**
 
-Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `randint`。
 
-This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. [Detailed Description](./GridsearchTuner.md)
+当搜索空间较小时，建议这样做。 建议使用在可以穷尽整个搜索空间的情况下。 [详细说明](./GridsearchTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -236,17 +236,17 @@ tuner:
 
 > 名称：**Hyperband**
 
-**Suggested scenario**
+**建议场景**
 
-This is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. For example, when models that are more accurate early on in training are also more accurate later on. [Detailed Description](./HyperbandAdvisor.md)
+当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 例如，当训练初期更准确的模型在以后也更准确的情况下。 [详细说明](./HyperbandAdvisor.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **R** (*int, optional, default = 60*) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
-* **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials.
+* **R** (*int, 可选, 默认为 60*) - 分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
+* **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -266,23 +266,23 @@ advisor:
 
 > 名称：**NetworkMorphism**
 
-**Installation**
+**安装**
 
-NetworkMorphism requires [PyTorch](https://pytorch.org/get-started/locally) and [Keras](https://keras.io/#installation), so users should install them first. The corresponding requirements file is [here](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt).
+NetworkMorphism 需要先安装 [PyTorch](https://pytorch.org/get-started/locally) 和 [Keras](https://keras.io/#installation) 才能使用。 对应的 requirements 文件在[这里](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt)。
 
-**Suggested scenario**
+**建议场景**
 
-This is suggested when you want to apply deep learning methods to your task but you have no idea how to choose or design a network. You may modify this [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate, or optimizer. Currently, this tuner only supports the computer vision domain. [Detailed Description](./NetworkmorphismTuner.md)
+需要将深度学习方法应用到自己的任务上，但不清楚该如何选择或设计网络。 可修改[示例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 当前，此 Tuner 仅支持视觉领域。 [详细说明](./NetworkmorphismTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **task** (*('cv'), optional, default = 'cv'*) - The domain of the experiment. For now, this tuner only supports the computer vision (CV) domain.
-* **input_width** (*int, optional, default = 32*) - input image width
-* **input_channel** (*int, optional, default = 3*) - input image channel
-* **n_output_node** (*int, optional, default = 10*) - number of classes
+* **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域。 当前，此 Tuner 仅支持计算机视觉（cv）领域。
+* **input_width** (*int, 可选, 默认为 = 32*) - 输入图像的宽度
+* **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
+* **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -304,17 +304,17 @@ tuner:
 
 > 名称：**MetisTuner**
 
-Note that the only acceptable types of search space types are `quniform`, `uniform`, `randint`, and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on subsequent trials. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) on the use of Metis. Users only need to send the final result, such as `accuracy`, to the tuner by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。 [详细说明](./MetisTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -328,38 +328,38 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
 
 > 名称：**BOHB**
 
-**Installation**
+**安装**
 
-BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package. ConfigSpace can be installed using the following command.
+BOHB Advisor 需要 [ConfigSpace](https://github.com/automl/ConfigSpace) 包。 可以使用以下命令安装 ConfigSpace。
 
 ```bash
 nnictl package install --name=BOHB
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to Hyperband, BOHB is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. In this case, it may converge to a better configuration than Hyperband due to its usage of Bayesian optimization. [Detailed Description](./BohbAdvisor.md)
+与 Hyperband 类似，当计算资源有限但搜索空间相对较大时，建议使用 BOHB。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下，由于使用贝叶斯优化，它可能会收敛到比 Hyperband 更好的配置。 [详细说明](./BohbAdvisor.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will try to maximize metrics. If 'minimize', tuner will try to minimize metrics.
-* **min_budget** (*int, optional, default = 1*) - The smallest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be positive.
-* **max_budget** (*int, optional, default = 3*) - The largest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be larger than min_budget.
-* **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
-* **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1; when the number of completed trials in this budget is equal to or larger than `max{dim+1, min_points_in_model}`, BOHB will start to build a KDE model of this budget then use said KDE model to guide configuration selection. Needs to be positive. (dim means the number of hyperparameters in search space)
-* **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99) of the observations which are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then the top 15% of points will be used for building the good points models "l(x)". The remaining 85% of points will be used for building the bad point models "g(x)".
-* **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64). In this case, we will sample "num_samples" points and compare the result of l(x)/g(x). Then we will return the one with the maximum l(x)/g(x) value as the next configuration if the optimize_mode is `maximize`. Otherwise, we return the smallest one.
-* **random_fraction**(*float, optional, default = 0.33*): fraction of purely random configurations that are sampled from the prior without the model.
-* **bandwidth_factor**(*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
-* **min_bandwidth**(*float, optional, default = 0.001*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **min_budget** (*整数, 可选项, 默认值为 1*) - 运行一个试验给予的最低计算资源（budget），这里的计算资源通常使用mini-batches 或者 epochs。 该参数必须为正数。
+* **max_budget** (*整数, 可选项, 默认值为 3*) - 运行一个试验给予的最大计算资源（budget），这里的计算资源通常使用 mini-batches 或者 epochs。 该参数必须大于“min_budget”。
+* **eta** (*整数, 可选项, 默认值为3*) - 在每次迭代中，执行完整的“连续减半”算法。 在这里，当一个使用相同计算资源的子集结束后，选择表现前 1/eta 好的参数，给予更高的优先级，进入下一轮比较（会获得更多计算资源）。 该参数必须大于等于 2。
+* **min_points_in_model**(*整数, 可选项, 默认值为None*): 建立核密度估计（KDE）要求的最小观察到的点。 默认值 None 表示 dim+1，当在该计算资源（budget）下试验过的参数已经大于等于`max{dim+1, min_points_in_model}` 时，BOHB 将会开始建立这个计算资源（budget）下对应的核密度估计（KDE）模型，然后用这个模型来指导参数的选取。 该参数必须为正数。 (dim 表示搜索空间中超参的数量)
+* **top_n_percent**(*整数, 可选, 默认值为 15*): 认为观察点为好点的百分数 (在 1 到 99 之间)。 区分表现好的点与坏的点是为了建立树形核密度估计模型。 例如，如果有 100 个观察到的 Trial，top_n_percent 为 15，则前 15% 的点将用于构建好点模型 "l(x)"。 其余 85% 的点将用于构建坏点模型 "g(x)"。
+* **num_samples** (*整数, 可选项, 默认值为64*): 用于优化 EI 值的采样个数（默认值为64）。 在这种情况下，将对 "num_samples" 点进行采样，并比较 l(x)/g(x) 的结果。 然后，如果 optimize_mode 是 `maximize`，就会返回其中 l(x)/g(x) 值最大的点作为下一个配置参数。 否则，使用值最小的点。
+* **random_fraction**(*浮点数, 可选项, 默认值为0.33*): 使用模型的先验（通常是均匀）来随机采样的比例。
+* **bandwidth_factor**(*浮点数, 可选, 默认值为 3.0 *): 为了鼓励多样性，把优化 EI 的点加宽，即把 KDE 中采样的点乘以这个因子，从而增加 KDE 中的带宽。 如果不熟悉 KDE，建议使用默认值。
+* **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议使用默认值。
 
-*Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
+*请注意，浮点类型当前仅支持十进制表示。 必须使用 0.333 而不是 1/3 ，0.001 而不是 1e-3。*
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 advisor:
@@ -377,11 +377,11 @@ advisor:
 
 > 名称：**GPTuner**
 
-Note that the only acceptable types within the search space are `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`, and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
+注意，搜索空间接受的类型包括 `randint`, `uniform`, `quniform`, `loguniform`, `qloguniform`，以及数值的 `choice`。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
-**Suggested scenario**
+**建议场景**
 
-As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, GP Tuner uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) to solve and common tools can be employed to solve it. Therefore, GP Tuner is most adequate for situations where the function to be optimized is very expensive to evaluate. GP can be used when computational resources are limited. However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [Detailed Description](./GPTuner.md)
+作为序列的基于模型的全局优化（SMBO）算法，GP Tuner 使用了代理优化问题（找到采集函数的最大值）。虽然这仍然是个难题，但成本更低（从计算的角度来看），并且有通用的工具。 因此，GP Tuner 适合于函数的优化成本非常高时来使用。 GP 也可在计算资源非常有限时使用。 However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. [Detailed Description](./GPTuner.md)
 
 **classArgs Requirements:**
 
