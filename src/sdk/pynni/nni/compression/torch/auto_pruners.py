@@ -12,10 +12,11 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from .compressor import Pruner
+from .compressor import Pruner, LayerInfo
 from .pruners import LevelPruner
 from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
+from .utils import get_layers_no_dependency
 
 
 __all__ = ['SimulatedAnnealingPruner']
@@ -93,6 +94,25 @@ class SimulatedAnnealingPruner(Pruner):
 
         self._experiment_data_dir = experiment_data_dir
 
+    def _detect_modules_to_compress(self):
+        """
+        redefine this function, consider only the layers without dependencies
+        """
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            for name, module in self.bound_model.named_modules():
+                if module == self.bound_model:
+                    continue
+                # consider only the layers without dependencies
+                model_name = self._model_to_prune.__class__.__name__
+                if name not in get_layers_no_dependency(model_name):
+                    continue
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+        return self.modules_to_compress
+
 
     def validate_config(self, model, config_list):
         """
@@ -135,7 +155,7 @@ class SimulatedAnnealingPruner(Pruner):
         # a layer with more weights will have no less pruning rate
         for idx, wrapper in enumerate(self.get_modules_wrapper()):
             # L1Filter Pruner requires to specify op_types
-            if self._pruning_mode == 'channel': 
+            if self._pruning_mode == 'channel':
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_types': ['Conv2d'], 'op_names': [wrapper.name]})
             elif self._pruning_mode == 'fine_grained':
@@ -326,16 +346,15 @@ class SimulatedAnnealingPruner(Pruner):
 
         # save search history
         with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=[
-                                    'sparsity', 'performance', 'config_list'])
+            writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
             writer.writeheader()
             for item in self._search_history:
                 writer.writerow({'sparsity': item['sparsity'], 'performance': item['performance'], 'config_list': json.dumps(
                     item['config_list'])})
 
+        # save best config found and best performance
         if self._optimize_mode is OptimizeMode.Minimize:
             self._best_performance *= -1
-        # save best config found and best performance TODO: *-1 minimize
         with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
             json.dump({
                 'performance': self._best_performance,

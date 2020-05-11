@@ -3,18 +3,17 @@
 
 import logging
 import os
-import math
 import copy
 import csv
 import json
 import numpy as np
-import torch
 from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
 from .compressor import Pruner
 from .pruners import LevelPruner
+from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
 
 
@@ -27,18 +26,17 @@ class NetAdaptPruner(Pruner):
     """
     This is a Pytorch implementation of NetAdapt compression algorithm.
 
-    While Res_i > Bud: 
+    While Res_i > Bud:
         1. Con = Res_i - delta_Res
         2. for every layer:
             Choose Num Filters to prune
-            Choose which filter to prunee (l2)
+            Choose which filter to prunee (l1)
             Short-term fine tune the pruned model
         3. Pick the best layer to prune
     Long-term fine tune
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, optimize_mode='maximize',
-                 start_temperature=100, stop_temperature=20, cool_down_rate=0.5, perturbation_magnitude=0.35, experiment_data_dir='./'):
+    def __init__(self, model, config_list, trainer, evaluator, optimize_mode='maximize', experiment_data_dir='./'):
         """
         Parameters
         ----------
@@ -52,40 +50,28 @@ class NetAdaptPruner(Pruner):
             function to evaluate the pruned model
         optimize_mode : string
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        start_temperature : float
-            Simualated Annealing related parameter
-        stop_temperature : float
-            Simualated Annealing related parameter
-        cool_down_rate : float
-            Simualated Annealing related parameter
-        perturbation_magnitude : float
-            initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
         experiment_data_dir : string
             PATH to save experiment data
         """
         # models used for iterative pruning and evaluation
         self._model_to_prune = copy.deepcopy(model)
-        self._model_pruned = copy.deepcopy(model)
-
-        self._experiment_data_dir = experiment_data_dir
-        self._TMP_MODEL_PATH = os.path.join(self._experiment_data_dir, 'model.pth')
-        self._PRUNING_HISTORY_PATH = os.path.join(self._experiment_data_dir, 'pruning_history.csv')
 
         super().__init__(model, config_list)
 
+        self._experiment_data_dir = experiment_data_dir
+
+        # TODO: optimizer
+        self._trainer = trainer
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
 
-        # hyper parameters for SA algorithm
-        self._start_temperature = start_temperature
-        self._stop_temperature = stop_temperature
-        self._cool_down_rate = cool_down_rate
-        self._perturbation_magnitude = perturbation_magnitude
+        # hyper parameters for NetAdapt algorithm
 
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
         # pruning rates of the layers
-        self._sparsities = None
+        self._curr_sparsity = 1
+        self._delta_sparsity = 0.1
 
         # init current performance & best performance
         self._current_performance = -np.inf
@@ -93,6 +79,8 @@ class NetAdaptPruner(Pruner):
 
         self._pruning_iteration = 0
         self._pruning_history = []
+
+        self._config_list_level = []
 
     def validate_config(self, model, config_list):
         """
@@ -112,118 +100,6 @@ class NetAdaptPruner(Pruner):
 
         schema.validate(config_list)
 
-    def _sparsities_2_config_list_level(self, sparsities):
-        '''
-        convert sparsities vector into config_list_level for LevelPruner
-
-        Parameters
-        ----------
-        sparsities : list
-            list of sparsities
-
-        Returns
-        -------
-        list of dict
-            config_list_level for LevelPruner
-        '''
-        config_list_level = []
-
-        sparsities = sorted(sparsities)
-        self.modules_wrapper = sorted(
-            self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
-
-        # a layer with more weights will have no less pruning rate
-        for idx, wrapper in enumerate(self.get_modules_wrapper()):
-            config_list_level.append(
-                {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
-
-        return config_list_level
-
-    def _rescale_sparsities(self, sparsities, target_sparsity):
-        '''
-        Rescale the sparsities list to satisfy the target overall sparsity
-
-        Parameters
-        ----------
-        sparsities : list
-
-        target_sparsity : float
-            the target overall sparsity
-
-        Returns
-        -------
-        list
-            the rescaled sparsities
-        '''
-        num_weights = []
-        for wrapper in self.get_modules_wrapper():
-            num_weights.append(wrapper.module.weight.data.numel())
-
-        num_weights = sorted(num_weights)
-        sparsities = sorted(sparsities)
-
-        total_weights = 0
-        total_weights_pruned = 0
-
-        # calculate the scale
-        for idx, num_weight in enumerate(num_weights):
-            total_weights += num_weight
-            total_weights_pruned += int(num_weight*sparsities[idx])
-        scale = target_sparsity / (total_weights_pruned/total_weights)
-
-        # rescale the sparsities
-        sparsities = np.asarray(sparsities)*scale
-
-        return sparsities
-
-    def _init_sparsities(self):
-        '''
-        Generate a sorted sparsities vector
-        '''
-        # repeatedly generate a distribution until satisfies the overall sparsity requirement
-        _logger.info('Gererating sparsities...')
-        while True:
-            sparsities = sorted(np.random.uniform(
-                0, 1, len(self.get_modules_wrapper())))
-
-            sparsities = self._rescale_sparsities(
-                sparsities, target_sparsity=self._sparsity)
-
-            if sparsities[0] >= 0 and sparsities[-1] < 1:
-                _logger.info('Initial sparsities generated : %s', sparsities)
-                self._sparsities = sparsities
-                break
-
-    def _generate_perturbations(self):
-        '''
-        Generate perturbation to the current sparsities distribution.
-
-        Returns:
-        --------
-        list
-            perturbated sparsities
-        '''
-        _logger.info("Gererating perturbations to the current sparsities...")
-
-        # decrease magnitude with current temperature
-        magnitude = self._current_temperature / \
-            self._start_temperature * self._perturbation_magnitude
-        _logger.info('current perturation magnitude:%s', magnitude)
-
-        while True:
-            perturbation = np.random.uniform(-magnitude,
-                                             magnitude, len(self.get_modules_wrapper()))
-            sparsities = np.clip(0, self._sparsities + perturbation, None)
-            _logger.debug("sparsities before rescalling:%s", sparsities)
-
-            sparsities = self._rescale_sparsities(
-                sparsities, target_sparsity=self._sparsity)
-            _logger.debug("sparsities after rescalling:%s", sparsities)
-
-            if sparsities[0] >= 0 and sparsities[-1] < 1:
-                _logger.info("Sparsities perturbated:%s", sparsities)
-                return sparsities
-
     def _set_modules_wrapper(self, modules_wrapper):
         """
         To obtain all the wrapped modules.
@@ -238,88 +114,113 @@ class NetAdaptPruner(Pruner):
     def calc_mask(self, wrapper, **kwargs):
         return None
 
+    def _get_delta_num_weights(self):
+        num_weights = []
+        for wrapper in self.get_modules_wrapper():
+            num_weights.append(wrapper.module.weight.data.numel())
+
+        delta_num_weights = self._delta_sparsity * sum(num_weights)
+
+        return delta_num_weights
+
+    def _add_config_list(self, config_list, op_name, sparsity):
+        flag = False
+        for i, (sparsity, op_names) in enumerate(config_list):
+            if op_name in op_names:
+                self._config_list_level[i] = (
+                    sparsity + sparsities[idx], op_names[i])
+            if not flag:
+                self._config_list_level.append(
+                    {'sparsity': sparsities[idx], 'op_names': [layers[idx]]})
+
+
     def compress(self):
         """
-        Compress the model with Simulated Annealing.
+        Compress the model.
 
         Returns
         -------
         torch.nn.Module
             model with specified modules compressed.
         """
-        _logger.info('Starting Simulated Annealing Compression...')
+        _logger.info('Starting NetAdapt Compression...')
 
-        # initiaze a randomized action
-        self._init_sparsities()
-
-        # stop condition
-        self._current_temperature = self._start_temperature
-        while self._current_temperature > self._stop_temperature:
+        while self._curr_sparsity > self._sparsity:
             _logger.info('Pruning iteration: %d', self._pruning_iteration)
-            _logger.info('Current temperature: %d, Stop temperature: %d',
-                        self._current_temperature, self._stop_temperature)
-            while True:
-                # generate perturbation
-                sparsities_perturbated = self._generate_perturbations()
-                config_list_level = self._sparsities_2_config_list_level(
-                    sparsities_perturbated)
-                _logger.info("config_list for LevelPruner generated: %s",
-                            config_list_level)
 
-                # fast evaluation
-                level_pruner = LevelPruner(
-                    model=copy.deepcopy(self._model_to_prune), config_list=config_list_level)
-                level_pruner.compress()
+            # Con = Res_i - delta_Res
+            self._target_sparsity = self._curr_sparsity - self._delta_sparsity
+            delta_num_weights = self._get_delta_num_weights()
 
-                level_pruner.export_model(self._TMP_MODEL_PATH)
-                self._model_pruned.load_state_dict(
-                    torch.load(self._TMP_MODEL_PATH))
-                evaluation_result = self._evaluator(self._model_pruned)
+            # lists to store the performances of pruning different layers
+            layers = []
+            performances = []
+            sparsities = []
 
-                self._pruning_history.append(
-                    {'sparsity': self._sparsity, 'performance': evaluation_result, 'config_list': config_list_level})
+            for wrapper in self.get_modules_wrapper():
+                # Choose Num Filters to prune
+                # TODO: check related layers
+                weight_mask = wrapper.weight_mask
+                sparsity = (weight_mask.numel() - weight_mask.sum().item() -
+                            delta_num_weights) / weight_mask.numel()
 
-                if self._optimize_mode is OptimizeMode.Minimize:
-                    evaluation_result *= -1
+                if sparsity <= 0:
+                    _logger.info(
+                        'This layer has no enough weights remained to prune')
+                    continue
 
-                # if better evaluation result, then accept the perturbation
-                if evaluation_result > self._current_performance:
-                    self._current_performance = evaluation_result
-                    self._sparsities = sparsities_perturbated
-                    # save best performance and best params
-                    if evaluation_result > self._best_performance:
-                        self._best_performance = evaluation_result
-                        # if SimulatedAnnealingTuner is used seperately, return the overall best sparsities
-                        # else return current sparsities
-                        self._set_modules_wrapper(
-                            level_pruner.get_modules_wrapper())
-                    break
-                # if not, accept with probability e^(-deltaE/current_temperature)
-                else:
-                    delta_E = np.abs(evaluation_result -
-                                     self._current_performance)
-                    probability = math.exp(-1 * delta_E /
-                                           self._current_temperature)
-                    if np.random.uniform(0, 1) < probability:
-                        self._current_performance = evaluation_result
-                        self._sparsities = sparsities_perturbated
-                        break
+                # Choose which filter to prune (l1)
+                config_list = [
+                    {'sparsity': sparsity, 'op_names': [wrapper.name]}]
+                pruner = LevelPruner(copy.deepcopy(self._model_to_prune), config_list)
+                model_masked = pruner.compress()
 
-            # cool down
-            self._current_temperature *= self._cool_down_rate
-            self._pruning_iteration += 1
+                # Short-term fine tune the pruned model
+                self.trainer(model_masked)
+
+                perf = self.evaluator(model_masked)
+
+                layers.append(wrapper.name)
+                sparsities.append(sparsity)
+                performances.append(perf)
+
+            # 3. Pick the best layer to prune
+            if self._optimize_mode is OptimizeMode.Minimize:
+                idx = performances.index(min(performances))
+            else:
+                idx = performances.index(max(performances))
+
+            flag = False
+            for i, (sparsity, op_names) in enumerate(self._config_list_level):
+                if layers[idx] in op_names:
+                    self._config_list_level[i] = (
+                        sparsity + sparsities[idx], op_names[i])
+            if not flag:
+                self._config_list_level.append(
+                    {'sparsity': sparsities[idx], 'op_names': [layers[idx]]})
 
         _logger.info('----------Compression finished--------------')
-        _logger.info('Best performance: %s', self._best_performance)
-        _logger.info('Sparsities generated: %s', self._sparsities)
-        _logger.info('config_list found for LevelPruner: %s',
-                    self._sparsities_2_config_list_level(self._sparsities))
+        _logger.info('config_list generated: %s', self._config_list_level)
 
-        with open(self._PRUNING_HISTORY_PATH, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
+        # save search history
+        with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=[
+                'sparsity', 'performance', 'config_list'])
             writer.writeheader()
-            for item in self._pruning_history:
-                writer.writerow({'sparsity' : item['sparsity'], 'performance' : item['performance'], 'config_list' : json.dumps(item['config_list'])})
-        _logger.info('pruning history saved to %s', self._PRUNING_HISTORY_PATH)
+            for item in self._search_history:
+                writer.writerow({'sparsity': item['sparsity'], 'performance': item['performance'], 'config_list': json.dumps(
+                    item['config_list'])})
+
+        # save best config found and best performance
+        if self._optimize_mode is OptimizeMode.Minimize:
+            self._best_performance *= -1
+        with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
+            json.dump({
+                'performance': self._best_performance,
+                'config_list': json.dumps(self._best_config_list)
+            }, jsonfile)
+
+        _logger.info('search history and result saved to foler : %s',
+                     self._experiment_data_dir)
 
         return self.bound_model
