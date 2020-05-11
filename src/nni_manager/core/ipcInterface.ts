@@ -73,7 +73,7 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
             return [true, commandType, content, remain];
         }
         if (metaCommand !== MetaCommandContinue) {
-            throw new Error('Unexpected splitted command: ' + continueCommand);
+            throw new Error('Unexpected splitted command: ' + metaCommand);
         }
     }
 }
