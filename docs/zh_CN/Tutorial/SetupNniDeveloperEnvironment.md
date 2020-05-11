@@ -61,9 +61,9 @@ Trial 启动 Experiment 来检查环境。 例如，运行命令
 
 #### TypeScript
 
-* If `src/nni_manager` is changed, run `yarn watch` continually under this folder. 它将实时重建代码。 The nnictl may need to be restarted to reload NNI manager.
-* If `src/webui` or `src/nasui` are changed, run `yarn start` under the corresponding folder. The web UI will refresh automatically if code is changed.
+* 如果要更改 `src/nni_manager`，运行 `yarn watch` 可持续编译改动。 它将实时重建代码。 可能需要重新启动 nnictl 来重新加载 NNI 管理器。
+* 如果改动了 `src/webui` 或 `src/nasui`，在相应目录下运行 `yarn start`。 Web 界面会在代码修改后自动刷新。
 
 * * *
 
-At last, wish you have a wonderful day. For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](Contributing.md) document.
+最后，希望一切顺利。 参考[贡献](Contributing.md)文档，来了解更多创建拉取请求或问题的指南。
