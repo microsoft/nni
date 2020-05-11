@@ -46,6 +46,10 @@ class WindowsCommands extends OsCommands {
             powershell -command "(((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0"))" >> ${codeFile}`;
     }
 
+    public generateGpuStatsScript(scriptFolder: string): string {
+        return `powershell "$env:METRIC_OUTPUT_DIR=${scriptFolder};$app = Start-Process python -ArgumentList \`"-m nni_gpu_tool.gpu_metrics_collector\`" -passthru -NoNewWindow;Write $app.ID | Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8"`;
+    }
+
     public getTempPath(): string {
         return "echo %TEMP%";
     }

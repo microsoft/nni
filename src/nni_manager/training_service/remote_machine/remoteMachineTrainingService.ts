@@ -426,7 +426,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await executor.allowPermission(false, nniRootDir, `${nniRootDir}/*`, `${nniRootDir}/scripts/*`);
 
         //Begin to execute gpu_metrics_collection scripts
-        const script = getGpuMetricsCollectorBashScriptContent(remoteGpuScriptCollectorDir);
+        const script = executor.generateGpuStatsScript();
         executor.executeScript(script, false, true);
 
         const disposable: Rx.IDisposable = this.timer.subscribe(

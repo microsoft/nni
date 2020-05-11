@@ -16,6 +16,7 @@ abstract class OsCommands {
         command: string, nniManagerAddress: string, nniManagerPort: number,
         nniManagerVersion: string, logCollection: string, codeFile: string,
         cudaVisibleSetting: string): string;
+    public abstract generateGpuStatsScript(scriptFolder: string): string;
     public abstract getTempPath(): string;
     public abstract createFolder(folderName: string, sharedFolder: boolean): string;
     public abstract allowPermission(isRecursive: boolean, ...folders: string[]): string;

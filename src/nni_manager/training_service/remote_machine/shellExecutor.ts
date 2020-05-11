@@ -123,6 +123,13 @@ class ShellExecutor {
             nniManagerVersion, logCollection, codeFile, cudaVisibleSetting);
     }
 
+    public generateGpuStatsScript(): string {
+        if (this.osCommands === undefined) {
+            throw new Error("osCommands must be initialized!");
+        }
+        return this.osCommands.generateGpuStatsScript(this.getRemoteScriptsPath());
+    }
+
     public getTempPath(): string {
         if (this.tempPath === "") {
             throw new Error("tempPath must be initialized!");

@@ -29,6 +29,10 @@ class LinuxCommands extends OsCommands {
             echo $? \`date +%s%3N\` >${codeFile}`;
     }
 
+    public generateGpuStatsScript(scriptFolder: string): string {
+        return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni_gpu_tool.gpu_metrics_collector`;
+    }
+
     public getTempPath(): string {
         return "echo /tmp";
     }
