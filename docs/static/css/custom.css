@@ -34,6 +34,21 @@
     margin-top: 24px;
 }
 
+/* document body width */
+.wy-nav-content{
+    max-width: 90% !important;
+}
+
+/* nni logo bgcolor */
+.wy-side-nav-search{
+    background-color: black;
+}
+
+/* document body font-family */
+.wy-body-for-nav{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 .wy-nav-content ul li{
     list-style: disc;
     margin-bottom: 12px;
