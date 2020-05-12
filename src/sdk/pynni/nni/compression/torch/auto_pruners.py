@@ -37,7 +37,7 @@ class SimulatedAnnealingPruner(Pruner):
     """
 
     def __init__(self, model, config_list, evaluator, optimize_mode='maximize', pruning_mode='channel',
-                 start_temperature=100, stop_temperature=20, cool_down_rate=0.5, perturbation_magnitude=0.35, experiment_data_dir='./'):
+                 start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35, experiment_data_dir='./'):
         """
         Parameters
         ----------

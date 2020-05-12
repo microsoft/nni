@@ -13,7 +13,7 @@ from nni.utils import OptimizeMode
 
 from .compressor import Pruner
 from .pruners import LevelPruner
-from .weight_rank_filter_pruners import L1FilterPruner
+# from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
 
 
@@ -26,6 +26,7 @@ class NetAdaptPruner(Pruner):
     """
     This is a Pytorch implementation of NetAdapt compression algorithm.
 
+    The pruning procedure can be described as follows:
     While Res_i > Bud:
         1. Con = Res_i - delta_Res
         2. for every layer:
@@ -46,11 +47,13 @@ class NetAdaptPruner(Pruner):
             Supported keys:
                 - sparsity : The final sparsity when the compression is done.
                 - op_type : The operation type to prune.
+        trainer : function
+            function to fine tune the pruned model
         evaluator : function
             function to evaluate the pruned model
-        optimize_mode : string
+        optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        experiment_data_dir : string
+        experiment_data_dir : str
             PATH to save experiment data
         """
         # models used for iterative pruning and evaluation
