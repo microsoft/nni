@@ -79,8 +79,9 @@ class FixedArchitecture(Mutator):
 
     def replace_layer_choice(self, module=None, prefix=""):
         """
-        Replace layer choices with selected candidates.
-        Skip those with weighted choices or multiple choices.
+        Replace layer choices with selected candidates. It's done with best effort.
+        In case of weighted choices or multiple choices. if some of the choices on weighted with zero, delete them.
+        If single choice, replace the module with a normal module.
 
         Parameters
         ----------
@@ -95,11 +96,14 @@ class FixedArchitecture(Mutator):
             global_name = (prefix + "." if prefix else "") + name
             if isinstance(mutable, LayerChoice):
                 chosen = self._fixed_arc[mutable.key]
-                if sum(chosen) == 1 and max(chosen) == 1:
+                if sum(chosen) == 1 and max(chosen) == 1 and not mutable.return_mask:
                     # sum is one, max is one, there has to be an only one
                     # this is compatible with both integer arrays, boolean arrays and float arrays
                     _logger.info("Replacing %s with candidate number %d.", global_name, chosen.index(1))
                     setattr(module, name, mutable[chosen.index(1)])
+                for ch, n in zip(chosen, mutable.names):
+                    if ch == 0:
+                        setattr(mutable, n, None)
             else:
                 self.replace_layer_choice(mutable, global_name)
 
