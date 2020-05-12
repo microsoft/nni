@@ -142,53 +142,54 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     </Pivot>
                 </div>
                 {/* trial table list */}
-                <Stack horizontal className="panelTitle">
-                    <span style={{ marginRight: 12 }}>{tableListIcon}</span>
-                    <span>Trial jobs</span>
-                </Stack>
-                <Stack horizontal className="allList">
-                    <StackItem grow={50}>
-                        <DefaultButton
-                            text="Compare"
-                            className="allList-compare"
-                            // use child-component tableList's function, the function is in child-component.
-                            onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
-                        />
-                    </StackItem>
-                    <StackItem grow={50}>
-                        <Stack horizontal horizontalAlign="end" className="allList">
+                <div style={{ backgroundColor: '#fff' }}>
+                    <Stack horizontal className="panelTitle" style={{ marginTop: 10 }}>
+                        <span style={{ marginRight: 12 }}>{tableListIcon}</span>
+                        <span>Trial jobs</span>
+                    </Stack>
+                    <Stack horizontal className="allList">
+                        <StackItem grow={50}>
                             <DefaultButton
-                                className="allList-button-gap"
-                                text="Add column"
-                                onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
+                                text="Compare"
+                                className="allList-compare"
+                                // use child-component tableList's function, the function is in child-component.
+                                onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
                             />
-                            <Dropdown
-                                selectedKey={searchType}
-                                options={searchOptions}
-                                onChange={this.updateSearchFilterType}
-                                styles={{ root: { width: 150 } }}
-                            />
-                            <input
-                                type="text"
-                                className="allList-search-input"
-                                placeholder={`Search by ${this.state.searchType}`}
-                                onChange={this.searchTrial}
-                                style={{ width: 230 }}
-                                ref={(text): any => (this.searchInput) = text}
-                            />
-                        </Stack>
-
-                    </StackItem>
-                </Stack>
-                <TableList
-                    pageSize={tablePageSize}
-                    tableSource={source.map(trial => trial.tableRecord)}
-                    columnList={columnList}
-                    changeColumn={changeColumn}
-                    trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
-                    // TODO: change any to specific type
-                    ref={(tabList): any => this.tableList = tabList}
-                />
+                        </StackItem>
+                        <StackItem grow={50}>
+                            <Stack horizontal horizontalAlign="end" className="allList">
+                                <DefaultButton
+                                    className="allList-button-gap"
+                                    text="Add column"
+                                    onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
+                                />
+                                <Dropdown
+                                    selectedKey={searchType}
+                                    options={searchOptions}
+                                    onChange={this.updateSearchFilterType}
+                                    styles={{ root: { width: 150 } }}
+                                />
+                                <input
+                                    type="text"
+                                    className="allList-search-input"
+                                    placeholder={`Search by ${this.state.searchType}`}
+                                    onChange={this.searchTrial}
+                                    style={{ width: 230 }}
+                                    ref={(text): any => (this.searchInput) = text}
+                                />
+                            </Stack>
+                        </StackItem>
+                    </Stack>
+                    <TableList
+                        pageSize={tablePageSize}
+                        tableSource={source.map(trial => trial.tableRecord)}
+                        columnList={columnList}
+                        changeColumn={changeColumn}
+                        trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
+                        // TODO: change any to specific type
+                        ref={(tabList): any => this.tableList = tabList}
+                    />
+                </div>
             </div>
         );
     }

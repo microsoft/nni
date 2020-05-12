@@ -2,7 +2,10 @@
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-const MANAGER_IP = `/api/v1/nni`;
+let MANAGER_IP = `/api/v1/nni`;
+if (process.env.NODE_ENV == "development") {
+    MANAGER_IP = `//${window.location.hostname}:8080` + MANAGER_IP;
+}
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
 const trialJobStatus = [
@@ -34,9 +37,11 @@ const OPERATION = 'Operation';
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', OPERATION];
 // all choice column !dictory final
 const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
-'Intermediate result', 'Default', OPERATION];
+    'Intermediate result', 'Default', OPERATION];
+const CONCURRENCYTOOLTIP = 'Trial concurrency is the number of trials running concurrently.';
+
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro, WEBUIDOC,
     CONTROLTYPE, MONACO, COLUMN, DRAWEROPTION, OPERATION,
-    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE,
+    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE, CONCURRENCYTOOLTIP
 };

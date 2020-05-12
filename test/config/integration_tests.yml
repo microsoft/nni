@@ -77,6 +77,14 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics.json
 
+- name: export-float
+  configFile: test/config/metrics_test/config.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: ExportValidator 
+
 - name: metrics-dict
   configFile: test/config/metrics_test/config_dict_metrics.yml
   config:
@@ -86,6 +94,14 @@ testCases:
     class: MetricsValidator
     kwargs:
       expected_result_file: expected_metrics_dict.json
+
+- name: export-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: ExportValidator 
 
 - name: nnicli
   configFile: test/config/examples/sklearn-regression.yml
