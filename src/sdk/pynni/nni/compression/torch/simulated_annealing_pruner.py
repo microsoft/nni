@@ -190,6 +190,8 @@ class SimulatedAnnealingPruner(Pruner):
         for idx, num_weight in enumerate(num_weights):
             total_weights += num_weight
             total_weights_pruned += int(num_weight*sparsities[idx])
+        if total_weights_pruned = 0:
+            return None
         scale = target_sparsity / (total_weights_pruned/total_weights)
 
         # rescale the sparsities
@@ -210,7 +212,7 @@ class SimulatedAnnealingPruner(Pruner):
             sparsities = self._rescale_sparsities(
                 sparsities, target_sparsity=self._sparsity)
 
-            if sparsities[0] >= 0 and sparsities[-1] < 1:
+            if sparsities is not None and sparsities[0] >= 0 and sparsities[-1] < 1:
                 _logger.info('Initial sparsities generated : %s', sparsities)
                 self._sparsities = sparsities
                 break
@@ -241,7 +243,7 @@ class SimulatedAnnealingPruner(Pruner):
                 sparsities, target_sparsity=self._sparsity)
             _logger.debug("sparsities after rescalling:%s", sparsities)
 
-            if sparsities[0] >= 0 and sparsities[-1] < 1:
+            if sparsities is not None and sparsities[0] >= 0 and sparsities[-1] < 1:
                 _logger.info("Sparsities perturbated:%s", sparsities)
                 return sparsities
 
