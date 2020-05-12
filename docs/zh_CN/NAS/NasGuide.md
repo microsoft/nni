@@ -155,7 +155,7 @@ model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to choices. Choices can be expressed in:
+The JSON is simply a mapping from mutable keys to choices. choice 可以为：
 
 * A string: select the candidate with corresponding name.
 * A number: select the candidate with corresponding index.
@@ -163,7 +163,7 @@ The JSON is simply a mapping from mutable keys to choices. Choices can be expres
 * A list of number: select the candidates with corresponding indices.
 * A list of boolean values: a multi-hot array.
 
-For example,
+例如：
 
 ```json
 {
@@ -175,6 +175,6 @@ For example,
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. However, this is also a model with redundant parameters and this may cause problems when trying to count the number of parameters in the model. For deeper reasons and possible workarounds, see [Trainers](./NasReference.md).
+应用后，模型会被固定，并准备好进行最终训练。 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 好的方面是，可以在搜索阶段直接读取来自超网络的检查点，并开始重新训练。 但是，这也造成模型有冗余的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
 
-Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
+也可参考 [DARTS](./DARTS.md) 的重新训练代码。
