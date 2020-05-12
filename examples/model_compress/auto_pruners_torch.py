@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
-from nni.compression.torch import SimulatedAnnealingPruner
+from nni.compression.torch import SimulatedAnnealingPruner, NetAdaptPruner
 
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
@@ -53,8 +53,11 @@ def test(model, device, criterion, val_loader):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch Example for SimulatedAnnealingPruner')
+    parser = argparse.ArgumentParser(
+        description='PyTorch Example for SimulatedAnnealingPruner')
 
+    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner', metavar='P',
+                        help='pruner to use, SimulatedAnnealingPruner or NetAdaptPruner')
     parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
                         help='pruning mode, channel or fine_grained')
     parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
@@ -75,7 +78,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=1, metavar='N',  # TODO:14
                         help='number of epochs to train (default: 14)')
@@ -147,6 +150,20 @@ if __name__ == '__main__':
     elif args.dataset == 'imagenet':
         model = models.mobilenet_v2(pretrained=True).to(device)
 
+    def fine_tuner(model, epochs):
+        if args.dataset == 'mnist':
+            optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+        elif args.dataset == 'imagenet':
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+                                        momentum=0.9,
+                                        weight_decay=4e-5)
+        for epoch in range(epochs):
+            train(args, model, device, train_loader,
+                  criterion, optimizer, epoch)
+
+    def short_term_fine_tuner(model):
+        return fine_tuner(model, epochs=1)
+
     def evaluator(model):
         return test(model, device, criterion, val_loader)
 
@@ -167,8 +184,16 @@ if __name__ == '__main__':
         'op_types': op_types
     }]
 
-    pruner = SimulatedAnnealingPruner(
-        model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
+    if args.pruner == 'SimulatedAnnealingPruner':
+        pruner = SimulatedAnnealingPruner(
+            model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
+    elif args.pruner == 'NetAdaptPruner':
+        pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
+                                pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
+    else:
+        raise ValueError(
+            "Please use SimulatedAnnealingPruner or NetAdaptPruner in this example.")
+
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
     print('Evaluation result (masked model): %s' % evaluation_result)

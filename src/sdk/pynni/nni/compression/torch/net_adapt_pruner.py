@@ -34,7 +34,7 @@ class NetAdaptPruner(Pruner):
     Long-term fine tune
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, optimize_mode='maximize', experiment_data_dir='./'):
+    def __init__(self, model, config_list, evaluator, fine_tuner, optimize_mode='maximize', pruning_mode='channel', experiment_data_dir='./'):
         """
         Parameters
         ----------
@@ -44,12 +44,14 @@ class NetAdaptPruner(Pruner):
             Supported keys:
                 - sparsity : The final sparsity when the compression is done.
                 - op_type : The operation type to prune.
-        trainer : function
-            function to fine tune the pruned model
         evaluator : function
             function to evaluate the pruned model
+        fine_tuner : function
+            function to fine tune the pruned model
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
+        pruning_mode : str
+            'channel' or 'fine_grained, by default 'channel'
         experiment_data_dir : str
             PATH to save experiment data
         """
@@ -58,7 +60,7 @@ class NetAdaptPruner(Pruner):
 
         super().__init__(model, config_list)
 
-        self._trainer = trainer
+        self._fine_tuner = fine_tuner
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
 
@@ -175,9 +177,8 @@ class NetAdaptPruner(Pruner):
                     self._model_to_prune), config_list)
                 model_masked = pruner.compress()
 
-                # TODO: check fine tune method, optimizer
                 # Short-term fine tune the pruned model
-                self.trainer(model_masked)
+                self._fine_tuner(model_masked)
 
                 perf = self.evaluator(model_masked)
 
