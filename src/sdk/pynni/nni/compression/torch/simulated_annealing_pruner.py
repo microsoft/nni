@@ -190,7 +190,7 @@ class SimulatedAnnealingPruner(Pruner):
         for idx, num_weight in enumerate(num_weights):
             total_weights += num_weight
             total_weights_pruned += int(num_weight*sparsities[idx])
-        if total_weights_pruned = 0:
+        if total_weights_pruned == 0:
             return None
         scale = target_sparsity / (total_weights_pruned/total_weights)
 

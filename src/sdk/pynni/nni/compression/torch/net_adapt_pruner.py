@@ -58,7 +58,6 @@ class NetAdaptPruner(Pruner):
 
         super().__init__(model, config_list)
 
-        # TODO: optimizer
         self._trainer = trainer
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
@@ -114,18 +113,20 @@ class NetAdaptPruner(Pruner):
     def calc_mask(self, wrapper, **kwargs):
         return None
 
-    def _append_config_list(self, op_name, sparsity):
+    def _update_config_list(self, config_list, op_name, sparsity):
         '''
-        append (sparsity, op_name) to original config_list
+        update sparsity of op_name
         '''
-        for idx, (sparsity_ori, op_names) in enumerate(self._config_list):
+        config_list_updated = copy.deepcopy(config_list)
+        for idx, (_, op_names) in enumerate(config_list_updated):
             if op_name in op_names:
-                self._config_list[idx]['sparsity'] = sparsity_ori + sparsity
-                return
+                config_list_updated[idx]['sparsity'] = sparsity
+                return config_list_updated
 
         # if op_name is not in self._config_list, create a new json item
-        self._config_list.append(
+        config_list_updated.append(
             {'sparsity': sparsity, 'op_names': [op_name]})
+        return config_list_updated
 
     def compress(self):
         """
@@ -148,7 +149,7 @@ class NetAdaptPruner(Pruner):
             # calculate target sparsity of this round
             target_sparsity = current_sparsity - self._delta_sparsity
 
-            # lists to store the performances of pruning different layers
+            # lists to store testing result of pruning different layers
             op_names = []
             performances = []
             sparsities = []
@@ -157,9 +158,9 @@ class NetAdaptPruner(Pruner):
                 # Choose Num Filters to prune
                 # TODO: check related layers
                 weight_mask = wrapper.weight_mask
-                # TODO: fix
 
-                sparsity = (weight_mask.numel() - weight_mask.sum().item() -
+                # sparsity of this layer needs to satisfy the requirement
+                sparsity = (weight_mask.sum().item() -
                             self._delta_num_weights) / weight_mask.numel()
 
                 if sparsity <= 0:
@@ -168,9 +169,8 @@ class NetAdaptPruner(Pruner):
                     continue
 
                 # Choose which filter to prune (l1)
-                # TODO: use total config list
-                config_list = [
-                    {'sparsity': sparsity, 'op_names': [wrapper.name]}]
+                config_list = self._update_config_list(
+                    self._config_list, wrapper.name, sparsity)
                 pruner = LevelPruner(copy.deepcopy(
                     self._model_to_prune), config_list)
                 model_masked = pruner.compress()
@@ -196,7 +196,8 @@ class NetAdaptPruner(Pruner):
                 latest_performance = max(performances)
             idx = performances.index(latest_performance)
 
-            self._append_config_list(sparsities[idx], op_names[idx])
+            self._config_list = self._update_config_list(
+                self._config_list, sparsities[idx], op_names[idx])
 
             current_sparsity = target_sparsity
             _logger.info('Pruning iteration %d, layer %s seleted with additional sparsity %s pruned, latest performance : %s, current overall sparsity : %s',
