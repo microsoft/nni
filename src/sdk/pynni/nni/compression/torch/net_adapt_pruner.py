@@ -11,7 +11,7 @@ from nni.utils import OptimizeMode
 
 from .compressor import Pruner
 from .pruners import LevelPruner
-# from .weight_rank_filter_pruners import L1FilterPruner
+from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
 
 
@@ -63,10 +63,10 @@ class NetAdaptPruner(Pruner):
         self._fine_tuner = fine_tuner
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
+        self._pruning_mode = pruning_mode
 
         # hyper parameters for NetAdapt algorithm
         self._delta_sparsity = 0.1
-        self._get_delta_num_weights()
 
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
@@ -76,12 +76,15 @@ class NetAdaptPruner(Pruner):
 
         self._experiment_data_dir = experiment_data_dir
 
-    def _get_delta_num_weights(self):
+    def _get_delta_num_weights(self, iteration):
         num_weights = []
         for wrapper in self.get_modules_wrapper():
             num_weights.append(wrapper.module.weight.data.numel())
 
-        self._delta_num_weights = self._delta_sparsity * sum(num_weights)
+        delta_num_weights = self._delta_sparsity * \
+            sum(num_weights) * (iteration+1)
+
+        return delta_num_weights
 
     def validate_config(self, model, config_list):
         """
@@ -120,14 +123,18 @@ class NetAdaptPruner(Pruner):
         update sparsity of op_name
         '''
         config_list_updated = copy.deepcopy(config_list)
-        for idx, (_, op_names) in enumerate(config_list_updated):
-            if op_name in op_names:
+        for idx, item in enumerate(config_list):
+            if op_name in item['op_names']:
                 config_list_updated[idx]['sparsity'] = sparsity
                 return config_list_updated
 
         # if op_name is not in self._config_list, create a new json item
-        config_list_updated.append(
-            {'sparsity': sparsity, 'op_names': [op_name]})
+        if self._pruning_mode == 'channel':
+            config_list_updated.append(
+                {'sparsity': sparsity, 'op_types': ['Conv2d'], 'op_names': [op_name]})
+        elif self._pruning_mode == 'fine_grained':
+            config_list_updated.append(
+                {'sparsity': sparsity, 'op_names': [op_name]})
         return config_list_updated
 
     def compress(self):
@@ -142,14 +149,15 @@ class NetAdaptPruner(Pruner):
         _logger.info('Starting NetAdapt Compression...')
 
         pruning_iteration = 0
-        current_sparsity = 1
+        current_sparsity = 0
 
         # stop condition
-        while current_sparsity > self._sparsity:
+        while current_sparsity < self._sparsity:
             _logger.info('Pruning iteration: %d', pruning_iteration)
 
             # calculate target sparsity of this round
-            target_sparsity = current_sparsity - self._delta_sparsity
+            target_sparsity = current_sparsity + self._delta_sparsity
+            delta_num_weights = self._get_delta_num_weights(pruning_iteration)
 
             # lists to store testing result of pruning different layers
             op_names = []
@@ -159,28 +167,34 @@ class NetAdaptPruner(Pruner):
             for wrapper in self.get_modules_wrapper():
                 # Choose Num Filters to prune
                 # TODO: check related layers
-                weight_mask = wrapper.weight_mask
-
-                # sparsity of this layer needs to satisfy the requirement
-                sparsity = (weight_mask.sum().item() -
-                            self._delta_num_weights) / weight_mask.numel()
+                # sparsity that this layer needs to prune to satisfy the requirement
+                sparsity = (wrapper.weight_mask.numel() -
+                            delta_num_weights) / wrapper.weight_mask.numel()
 
                 if sparsity <= 0:
                     _logger.info(
-                        'This layer has no enough weights remained to prune')
+                        'Layer %s has no enough weights remained to prune', wrapper.name)
                     continue
 
                 # Choose which filter to prune (l1)
                 config_list = self._update_config_list(
                     self._config_list, wrapper.name, sparsity)
-                pruner = LevelPruner(copy.deepcopy(
-                    self._model_to_prune), config_list)
+
+                if self._pruning_mode == 'channel':
+                    pruner = L1FilterPruner(copy.deepcopy(
+                        self._model_to_prune), config_list)
+                elif self._pruning_mode == 'fine_grained':
+                    pruner = LevelPruner(copy.deepcopy(
+                        self._model_to_prune), config_list)
                 model_masked = pruner.compress()
 
                 # Short-term fine tune the pruned model
+                # TODO: check if model_masked is used repeatedly
                 self._fine_tuner(model_masked)
 
-                perf = self.evaluator(model_masked)
+                perf = self._evaluator(model_masked)
+                _logger.info(
+                    "Layer : %s, evaluation result after short-term fine tuning : %s", wrapper.name, perf)
 
                 op_names.append(wrapper.name)
                 sparsities.append(sparsity)
@@ -198,14 +212,19 @@ class NetAdaptPruner(Pruner):
             idx = performances.index(latest_performance)
 
             self._config_list = self._update_config_list(
-                self._config_list, sparsities[idx], op_names[idx])
+                self._config_list, op_names[idx], sparsities[idx])
 
             current_sparsity = target_sparsity
-            _logger.info('Pruning iteration %d, layer %s seleted with additional sparsity %s pruned, latest performance : %s, current overall sparsity : %s',
+            _logger.info('Pruning iteration %d, layer %s seleted with sparsity %s, latest performance : %s, current overall sparsity : %s',
                          pruning_iteration, op_names[idx], sparsities[idx], latest_performance, current_sparsity)
             pruning_iteration += 1
 
+        # save the pruned model
+        self._set_modules_wrapper(pruner.get_modules_wrapper())
+        self._wrap_model()
         self._final_performance = latest_performance
+        # TODO: check bound_model parameter
+
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list)
 
