@@ -328,18 +328,11 @@ class RemoteMachineTrainingService implements TrainingService {
                 try {
                     // Validate to make sure codeDir doesn't have too many files
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
-                    // Generate install.sh file
-                    const expLocalTempFolder: string = path.join(this.expRootDir, 'nni-local');
-                    await execMkdir(expLocalTempFolder);
-                    // Write NNI installation file to local tmp files
-                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
                     // Copy codeDir to remote machine
                     for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
                         const executor: ShellExecutor = await executorManager.getAvailableExecutor();
                         if (executor !== undefined) {
                             await executor.createFolder(this.remoteExpCodeDir);
-                            // Copy install_nni.sh to remote machine
-                            await executor.copyDirectoryToRemote(expLocalTempFolder, this.remoteExpCodeDir, this.remoteOS);
                             this.machineCopyExpCodeDirPromiseMap.set(
                                 rmMeta,
                                 executor.copyDirectoryToRemote(remoteMachineTrailConfig.codeDir, this.remoteExpCodeDir, this.remoteOS)
@@ -594,6 +587,8 @@ class RemoteMachineTrainingService implements TrainingService {
 
         //create tmp trial working folder locally.
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
+        // Write install_nni.sh
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptTrialContent, { encoding: 'utf8' });
         await this.writeParameterFile(trialJobId, form.hyperParameters);

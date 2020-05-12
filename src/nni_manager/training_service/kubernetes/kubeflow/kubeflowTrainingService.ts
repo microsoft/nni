@@ -79,10 +79,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         if (this.copyExpCodeDirPromise !== undefined) {
             await this.copyExpCodeDirPromise;
         }
-        // upload install_nni.sh to storage
-        if (this.copyInstallScriptsPromise !== undefined) {
-            await this.copyInstallScriptsPromise;
-        }
 
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
@@ -162,13 +158,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.kubeflowTrialConfig.codeDir);
-                    const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-                    // Write NNI installation file to local files
-                    const expLocalTempFolder: string = path.join(getExperimentRootDir(), 'nni-local');
-                    await cpp.exec(`mkdir -p ${expLocalTempFolder}`);
-                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
-                    //upload scripts to storage
-                    this.copyInstallScriptsPromise = this.uploadFolder(expLocalTempFolder, `nni/${getExperimentId()}/nni-code`);
                     //upload codeDir to storage
                     this.copyExpCodeDirPromise = this.uploadFolder(this.kubeflowTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
                 } catch (error) {

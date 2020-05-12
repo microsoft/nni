@@ -475,12 +475,16 @@ class LocalTrainingService implements TrainingService {
     private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
+            script.push(`Copy-Item $NNI_CODE_DIR\\* -Destination $NNI_SYS_DIR -Recurse`);
+            script.push(`cd $NNI_SYS_DIR`);
             script.push(
                 `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
+            script.push(`cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR`);
+            script.push(`cd $NNI_SYS_DIR`);
             script.push(`eval ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
@@ -508,7 +512,6 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         }
-        runScriptContent.push(`cd '${this.localTrialConfig.codeDir}'`);
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }

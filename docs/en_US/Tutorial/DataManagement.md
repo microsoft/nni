@@ -1,6 +1,6 @@
 # Data Management in NNI
 ## overview
-In NNI's experiments, users should specify a `codeDir` configuration, this configuration contains the code files and data files, NNI will use data in this folder to start trial jobs. Generally, trial jobs will share same `codeDir` folder in NNI, and do not write their own data to this folder to keep original data is not changed. 
+In NNI's experiments, users should specify a `codeDir` configuration, this configuration contains the code files and data files, NNI will use data in this folder to start trial jobs. Before a trial is launched, NNI will copy files in `codeDir` to trial's working folder, every trial job has its own working folder and do not share `codeDir`. 
 
 ## environment variable
 NNI has environment variables including `$NNI_CODE_DIR`, `$NNI_SYS_DIR` and `$NNI_OUTPUT_DIR` to specify different data path. Users could get these environment variables from their python code, for example:
@@ -10,18 +10,10 @@ print(os.environ['NNI_OUTPUT_DIR'])
 ```
 
 1. `$NNI_CODE_DIR`.  
-    `$NNI_CODE_DIR` is a path which stores users' code data, trial jobs share same code in this path.
+    `$NNI_CODE_DIR` is a path which stores users' code data, trial job could use this folder as a sharing folder.
 2. `$NNI_SYS_DIR`.  
-    `$NNI_SYS_DIR`  is a path which stores trial jobs' metirc file and parameter file.
+    `$NNI_SYS_DIR`  is a path which stores trial jobs' metirc file and parameter file, this folder is working directory of a trial, and contains trial job's code files which copied from `$NNI_CODE_DIR`.
 3. `$NNI_OUTPUT_DIR`.  
     `NNI_OUTPUT_DIR`  is a path which stores trial jobs' output file, including `stdout`, `stderr` etc.
 
 ![](../../img/nni_data_management.jpg)
-
-
-## local platform
-In local platform, NNI will use `codeDir` folder which user specified directly.Every trial job will share same `codeDir` folder, and does not write output data to this folder. 
-## remote platform
-In remote platform, NNI will upload `codeDir` to different remtoe machines, the trial jobs in these machine could share the `codeDir` folder.
-## PAI, Kubeflow, FrameworkController
-In these platforms NNI will upload data in `codeDir` to storage, and different trial jobs will mount this folder to their container. 

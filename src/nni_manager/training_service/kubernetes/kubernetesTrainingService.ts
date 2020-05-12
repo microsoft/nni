@@ -50,7 +50,6 @@ abstract class KubernetesTrainingService {
     protected versionCheck: boolean = true;
     protected logCollection: string;
     protected copyExpCodeDirPromise?: Promise<string>;
-    protected copyInstallScriptsPromise?: Promise<string>;
     protected expContainerCodeFolder: string;
 
     constructor() {

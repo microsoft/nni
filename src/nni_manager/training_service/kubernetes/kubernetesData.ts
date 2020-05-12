@@ -49,7 +49,8 @@ export NNI_TRIAL_SEQ_ID={6}
 {7}
 mkdir -p $NNI_SYS_DIR
 mkdir -p $NNI_OUTPUT_DIR
-cd $NNI_CODE_DIR
+cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
+cd $NNI_SYS_DIR
 sh install_nni.sh
 python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} \
 --nni_manager_version '{11}' --log_collection '{12}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`;

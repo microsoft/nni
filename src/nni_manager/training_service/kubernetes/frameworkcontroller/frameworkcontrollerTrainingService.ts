@@ -73,6 +73,11 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
 
+        // upload code Dir to storage
+        if (this.copyExpCodeDirPromise !== undefined) {
+            await this.copyExpCodeDirPromise;
+        }
+
         const trialJobId: string = uniqueString(5);
         // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
@@ -152,13 +157,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.fcTrialConfig.codeDir);
-                    const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-                    // Write NNI installation file to local files
-                    const expLocalTempFolder: string = path.join(getExperimentRootDir(), 'nni-local');
-                    await cpp.exec(`mkdir -p ${expLocalTempFolder}`);
-                    await fs.promises.writeFile(path.join(expLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
-                    //upload scripts to storage
-                    this.copyInstallScriptsPromise = this.uploadFolder(expLocalTempFolder, `nni/${getExperimentId()}/nni-code`);
                     //upload codeDir to storage
                     this.copyExpCodeDirPromise = this.uploadFolder(this.fcTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
                 } catch (error) {

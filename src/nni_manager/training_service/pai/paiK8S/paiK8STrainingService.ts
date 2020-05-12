@@ -53,8 +53,6 @@ const deepmerge = require('deepmerge');
 @component.Singleton
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
-    private nniManagerNFSExpCodeDir: string | undefined;
-    private containerNFSExpCodeDir: string | undefined;
     private copyExpCodeDirPromise?: Promise<void>;
 
     constructor() {
@@ -87,13 +85,11 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.paiTrialConfig.codeDir);
-                this.containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
-                this.nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
-                await execMkdir(this.nniManagerNFSExpCodeDir);
-                // Write NNI installation file to local files
-                await fs.promises.writeFile(path.join(this.nniManagerNFSExpCodeDir, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+                
+                const nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
+                await execMkdir(nniManagerNFSExpCodeDir);
                 //Copy codeDir files to local working folder
-                this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, this.nniManagerNFSExpCodeDir);
+                this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, nniManagerNFSExpCodeDir);
 
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
@@ -251,6 +247,8 @@ class PAIK8STrainingService extends PAITrainingService {
         // Step 1. Prepare PAI job configuration
         //create trial local working folder locally.
         await execMkdir(trialJobDetail.logPath);
+        // Write NNI installation file to local files
+        await fs.promises.writeFile(path.join(trialJobDetail.logPath, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local working folders
         if (trialJobDetail.form !== undefined) {
@@ -260,6 +258,7 @@ class PAIK8STrainingService extends PAITrainingService {
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobId}`;
+        const containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
         const nniPaiTrialCommand: string = String.Format(
             PAI_K8S_TRIAL_COMMAND_FORMAT,
             `${containerWorkingDir}`,
@@ -268,7 +267,7 @@ class PAIK8STrainingService extends PAITrainingService {
             this.experimentId,
             trialJobDetail.form.sequenceId,
             this.isMultiPhase,
-            this.containerNFSExpCodeDir,
+            containerNFSExpCodeDir,
             this.paiTrialConfig.command,
             nniManagerIp,
             this.paiRestServerPort,
