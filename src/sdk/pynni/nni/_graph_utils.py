@@ -185,8 +185,8 @@ class NodePyGroup(NodePy):
         return [x.name for x in self.nodes]
 
     def __repr__(self):
-        return 'name: {}, type: {}, op_type: {}, sub_nodes: {}, inputs: {}, outputs: {}'.format(
-            self.name, self.type, self.op_type, self.sub_node_names(), self.inputs, self.outputs
+        return 'name: {}, type: {}, op_type: {}, sub_nodes: {}, inputs: {}, outputs: {}, aux: {}'.format(
+            self.name, self.type, self.op_type, self.sub_node_names(), self.inputs, self.outputs, self.auxiliary
         )
 
 
@@ -309,12 +309,24 @@ class TorchModuleGraph(TorchGraph):
         list
             a list of scope name of all the leaf modules
         """
+        def is_parent(name1, name2):
+            """
+            check if name1 is parent node of name2, for example:
+            name1: aa.bb,  name2: aa.bb.cc,  return True
+            name1: aa.b,  name2: aa.bb, return False
+            """
+            parts1, parts2 = name1.split('.'), name2.split('.')
+            if len(parts1) >= len(parts2):
+                return False
+            for i in range(len(parts1)):
+                if parts2[i] != parts1[i]:
+                    return False
+            return True
         module_names = sorted([x[0] for x in self.trace.named_modules() if x[0]])
         leaf_nodes = []
         for i, name in enumerate(module_names):
-            if (i + 1 >= len(module_names) or not module_names[i + 1].startswith(name)):
+            if i + 1 >= len(module_names) or not is_parent(name, module_names[i + 1]):
                 leaf_nodes.append(name)
-
         return leaf_nodes
 
     def _get_module_name(self, scope_name):
@@ -398,8 +410,8 @@ class TorchModuleGraph(TorchGraph):
             module_name = self._get_module_name(node.scopeName())
             if module_name in self.leaf_modules:
                 module_to_nodes[module_name].append(node)
-            elif module_name != '':
-                func_to_nodes[module_name].append(node)
+            else:
+                func_to_nodes[node.scopeName()].append(node)
 
         # build node group for module
         for module_name, node_cpps in module_to_nodes.items():
@@ -422,9 +434,8 @@ class TorchModuleGraph(TorchGraph):
                 node_group = self._expand_non_prim_node(node, nodes, input_to_node, output_to_node)
                 nodes_py.nodes_op.append(node_group)
                 # get shape infor for view (aten::view) func
-                if node_group.op_type == 'aten::view':
+                if node_group.op_type in ['aten::view', 'aten::flatten']:
                     node_group.auxiliary = self._extract_shape_info(node)
-
         for node in graph.outputs():  # Create sink nodes for output ops
             node_py = NodePyIO(node, 'output')
             nodes_py.append(node_py)
