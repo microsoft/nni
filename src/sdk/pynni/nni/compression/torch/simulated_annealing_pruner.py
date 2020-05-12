@@ -19,8 +19,6 @@ from .utils import CompressorSchema
 from .utils import get_layers_no_dependency
 
 
-__all__ = ['SimulatedAnnealingPruner']
-
 _logger = logging.getLogger(__name__)
 
 
@@ -89,7 +87,6 @@ class SimulatedAnnealingPruner(Pruner):
         self._best_performance = -np.inf
         self._best_config_list = []
 
-        self._pruning_iteration = 0
         self._search_history = []
 
         self._experiment_data_dir = experiment_data_dir
@@ -112,7 +109,6 @@ class SimulatedAnnealingPruner(Pruner):
                 if config is not None:
                     self.modules_to_compress.append((layer, config))
         return self.modules_to_compress
-
 
     def validate_config(self, model, config_list):
         """
@@ -276,12 +272,13 @@ class SimulatedAnnealingPruner(Pruner):
         _logger.info('Starting Simulated Annealing Compression...')
 
         # initiaze a randomized action
+        pruning_iteration = 0
         self._init_sparsities()
 
         # stop condition
         self._current_temperature = self._start_temperature
         while self._current_temperature > self._stop_temperature:
-            _logger.info('Pruning iteration: %d', self._pruning_iteration)
+            _logger.info('Pruning iteration: %d', pruning_iteration)
             _logger.info('Current temperature: %d, Stop temperature: %d',
                          self._current_temperature, self._stop_temperature)
             while True:
@@ -337,7 +334,7 @@ class SimulatedAnnealingPruner(Pruner):
 
             # cool down
             self._current_temperature *= self._cool_down_rate
-            self._pruning_iteration += 1
+            pruning_iteration += 1
 
         _logger.info('----------Compression finished--------------')
         _logger.info('Best performance: %s', self._best_performance)
@@ -346,7 +343,8 @@ class SimulatedAnnealingPruner(Pruner):
 
         # save search history
         with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
+            writer = csv.DictWriter(csvfile, fieldnames=[
+                                    'sparsity', 'performance', 'config_list'])
             writer.writeheader()
             for item in self._search_history:
                 writer.writerow({'sparsity': item['sparsity'], 'performance': item['performance'], 'config_list': json.dumps(

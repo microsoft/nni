@@ -42,12 +42,12 @@ RUN python3 -m pip --no-cache-dir install \
 #
 # Tensorflow 1.10.0
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
+# RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
 #
 # Keras 2.1.6
 #
-RUN python3 -m pip --no-cache-dir install Keras==2.1.6
+# RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
 #
 # PyTorch

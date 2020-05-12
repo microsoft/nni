@@ -4,9 +4,7 @@
 import logging
 import os
 import copy
-import csv
 import json
-import numpy as np
 from schema import And, Optional
 
 from nni.utils import OptimizeMode
@@ -17,9 +15,8 @@ from .pruners import LevelPruner
 from .utils import CompressorSchema
 
 
-__all__ = ['NetAdaptPruner']
-
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.DEBUG)
 
 
 class NetAdaptPruner(Pruner):
@@ -61,29 +58,29 @@ class NetAdaptPruner(Pruner):
 
         super().__init__(model, config_list)
 
-        self._experiment_data_dir = experiment_data_dir
-
         # TODO: optimizer
         self._trainer = trainer
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for NetAdapt algorithm
+        self._delta_sparsity = 0.1
+        self._get_delta_num_weights()
 
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
-        # pruning rates of the layers
-        self._curr_sparsity = 1
-        self._delta_sparsity = 0.1
 
-        # init current performance & best performance
-        self._current_performance = -np.inf
-        self._best_performance = -np.inf
+        # config_list
+        self._config_list = []
 
-        self._pruning_iteration = 0
-        self._pruning_history = []
+        self._experiment_data_dir = experiment_data_dir
 
-        self._config_list_level = []
+    def _get_delta_num_weights(self):
+        num_weights = []
+        for wrapper in self.get_modules_wrapper():
+            num_weights.append(wrapper.module.weight.data.numel())
+
+        self._delta_num_weights = self._delta_sparsity * sum(num_weights)
 
     def validate_config(self, model, config_list):
         """
@@ -117,25 +114,18 @@ class NetAdaptPruner(Pruner):
     def calc_mask(self, wrapper, **kwargs):
         return None
 
-    def _get_delta_num_weights(self):
-        num_weights = []
-        for wrapper in self.get_modules_wrapper():
-            num_weights.append(wrapper.module.weight.data.numel())
-
-        delta_num_weights = self._delta_sparsity * sum(num_weights)
-
-        return delta_num_weights
-
-    def _add_config_list(self, config_list, op_name, sparsity):
-        flag = False
-        for i, (sparsity, op_names) in enumerate(config_list):
+    def _append_config_list(self, op_name, sparsity):
+        '''
+        append (sparsity, op_name) to original config_list
+        '''
+        for idx, (sparsity_ori, op_names) in enumerate(self._config_list):
             if op_name in op_names:
-                self._config_list_level[i] = (
-                    sparsity + sparsities[idx], op_names[i])
-            if not flag:
-                self._config_list_level.append(
-                    {'sparsity': sparsities[idx], 'op_names': [layers[idx]]})
+                self._config_list[idx]['sparsity'] = sparsity_ori + sparsity
+                return
 
+        # if op_name is not in self._config_list, create a new json item
+        self._config_list.append(
+            {'sparsity': sparsity, 'op_names': [op_name]})
 
     def compress(self):
         """
@@ -148,15 +138,18 @@ class NetAdaptPruner(Pruner):
         """
         _logger.info('Starting NetAdapt Compression...')
 
-        while self._curr_sparsity > self._sparsity:
-            _logger.info('Pruning iteration: %d', self._pruning_iteration)
+        pruning_iteration = 0
+        current_sparsity = 1
 
-            # Con = Res_i - delta_Res
-            self._target_sparsity = self._curr_sparsity - self._delta_sparsity
-            delta_num_weights = self._get_delta_num_weights()
+        # stop condition
+        while current_sparsity > self._sparsity:
+            _logger.info('Pruning iteration: %d', pruning_iteration)
+
+            # calculate target sparsity of this round
+            target_sparsity = current_sparsity - self._delta_sparsity
 
             # lists to store the performances of pruning different layers
-            layers = []
+            op_names = []
             performances = []
             sparsities = []
 
@@ -164,8 +157,10 @@ class NetAdaptPruner(Pruner):
                 # Choose Num Filters to prune
                 # TODO: check related layers
                 weight_mask = wrapper.weight_mask
+                # TODO: fix
+
                 sparsity = (weight_mask.numel() - weight_mask.sum().item() -
-                            delta_num_weights) / weight_mask.numel()
+                            self._delta_num_weights) / weight_mask.numel()
 
                 if sparsity <= 0:
                     _logger.info(
@@ -173,54 +168,50 @@ class NetAdaptPruner(Pruner):
                     continue
 
                 # Choose which filter to prune (l1)
+                # TODO: use total config list
                 config_list = [
                     {'sparsity': sparsity, 'op_names': [wrapper.name]}]
-                pruner = LevelPruner(copy.deepcopy(self._model_to_prune), config_list)
+                pruner = LevelPruner(copy.deepcopy(
+                    self._model_to_prune), config_list)
                 model_masked = pruner.compress()
 
+                # TODO: check fine tune method, optimizer
                 # Short-term fine tune the pruned model
                 self.trainer(model_masked)
 
                 perf = self.evaluator(model_masked)
 
-                layers.append(wrapper.name)
+                op_names.append(wrapper.name)
                 sparsities.append(sparsity)
                 performances.append(perf)
 
             # 3. Pick the best layer to prune
+            if not performances:
+                _logger.info("No more layers to prune.")
+                break
+
             if self._optimize_mode is OptimizeMode.Minimize:
-                idx = performances.index(min(performances))
+                latest_performance = min(performances)
             else:
-                idx = performances.index(max(performances))
+                latest_performance = max(performances)
+            idx = performances.index(latest_performance)
 
-            flag = False
-            for i, (sparsity, op_names) in enumerate(self._config_list_level):
-                if layers[idx] in op_names:
-                    self._config_list_level[i] = (
-                        sparsity + sparsities[idx], op_names[i])
-            if not flag:
-                self._config_list_level.append(
-                    {'sparsity': sparsities[idx], 'op_names': [layers[idx]]})
+            self._append_config_list(sparsities[idx], op_names[idx])
 
+            current_sparsity = target_sparsity
+            _logger.info('Pruning iteration %d, layer %s seleted with additional sparsity %s pruned, latest performance : %s, current overall sparsity : %s',
+                         pruning_iteration, op_names[idx], sparsities[idx], latest_performance, current_sparsity)
+            pruning_iteration += 1
+
+        self._final_performance = latest_performance
         _logger.info('----------Compression finished--------------')
-        _logger.info('config_list generated: %s', self._config_list_level)
-
-        # save pruning procedure
-        with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=[
-                'sparsity', 'performance', 'config_list'])
-            writer.writeheader()
-            for item in self._search_history:
-                writer.writerow({'sparsity': item['sparsity'], 'performance': item['performance'], 'config_list': json.dumps(
-                    item['config_list'])})
+        _logger.info('config_list generated: %s', self._config_list)
 
         # save best config found and best performance
-        if self._optimize_mode is OptimizeMode.Minimize:
-            self._best_performance *= -1
         with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
             json.dump({
-                'performance': self._best_performance,
-                'config_list': json.dumps(self._best_config_list)
+                'performance': self._final_performance,
+                'config_list': json.dumps(self._config_list)
             }, jsonfile)
 
         _logger.info('search history and result saved to foler : %s',

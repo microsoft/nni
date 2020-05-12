@@ -3,10 +3,10 @@
 
 from .compressor import Compressor, Pruner, Quantizer
 from .pruners import *
-from .auto_pruners import *
-from .net_adapt_pruner import *
 from .weight_rank_filter_pruners import *
 from .activation_rank_filter_pruners import *
 from .quantizers import *
 from .apply_compression import apply_compression_results
 from .gradient_rank_filter_pruners import *
+from .simulated_annealing_pruner import SimulatedAnnealingPruner
+from .net_adapt_pruner import NetAdaptPruner

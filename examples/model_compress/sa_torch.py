@@ -57,6 +57,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
                         help='pruning mode, channel or fine_grained')
+    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
+                        help='cool down rate')
     parser.add_argument('--sparsity', type=float, default=0.1, metavar='S',
                         help='overall target sparsity')
 
@@ -166,7 +168,7 @@ if __name__ == '__main__':
     }]
 
     pruner = SimulatedAnnealingPruner(
-        model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=0.5, experiment_data_dir=args.experiment_data_dir)
+        model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
     print('Evaluation result (masked model): %s' % evaluation_result)
