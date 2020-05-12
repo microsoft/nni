@@ -202,7 +202,7 @@ class NetAdaptPruner(Pruner):
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list_level)
 
-        # save search history
+        # save pruning procedure
         with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=[
                 'sparsity', 'performance', 'config_list'])

@@ -38,7 +38,6 @@ def test(model, device, criterion, val_loader):
             data, target = data.to(device), target.to(device)
             output = model(data)
             # sum up batch loss
-            # test_loss += F.nll_loss(output, target, reduction='sum').item()
             test_loss += criterion(output, target).item()
             # get the index of the max log-probability
             pred = output.argmax(dim=1, keepdim=True)
@@ -54,7 +53,7 @@ def test(model, device, criterion, val_loader):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+    parser = argparse.ArgumentParser(description='PyTorch Example for SimulatedAnnealingPruner')
 
     parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
                         help='pruning mode, channel or fine_grained')
@@ -63,12 +62,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
                         help='dataset to use, mnist or imagenet (default MNIST)')
-    parser.add_argument('--data-dir', type=str,
-                        default='/datasets/', metavar='F')
     parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
                         help='Whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
                         help='epochs to fine tune')
+    parser.add_argument('--data-dir', type=str,
+                        default='/datasets/', metavar='F')
     parser.add_argument('--experiment-data-dir', type=str,
                         default='./', help='For saving experiment data')
 
@@ -86,7 +85,6 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
-
     args = parser.parse_args()
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
@@ -156,10 +154,15 @@ if __name__ == '__main__':
     print('Evaluation result (original model): %s' % evaluation_result)
     result['original'] = evaluation_result
 
+    # module types to prune, only "Conv2d" supported for channel pruning
+    if args.pruning_mode == 'channel':
+        op_types = ['Conv2d']
+    elif args.pruning_mode == 'fine_grained':
+        op_types = ['default']
+
     config_list = [{
         'sparsity': args.sparsity,
-        # module types to prune, only "Conv2d" supported for channel pruning
-        'op_types': ['Conv2d']
+        'op_types': op_types
     }]
 
     pruner = SimulatedAnnealingPruner(

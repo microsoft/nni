@@ -24,8 +24,8 @@ taskRoles:
       - mkdir /mnt/nfs-storage
       - 'mount -t nfs 10.151.40.36:/ /mnt/nfs-storage'
       - apt install libxrender1 libsm6 libxext6 libgtk2.0-dev cython -y
-      - 'cd / && git clone -b sapruner https://github.com/suiguoxin/nni/'
-      - cd nni && python3 examples/model_compress/sa_torch.py --pruning-mode channel sparsity 0.1 --dataset imagenet --data-dir /mnt/nfs-storage/users/imagenet --fine-tune-epochs 10 --experiment-data-dir /mnt/nfs-storage/users/experiment_data/01
+      - cd / && git clone -b sapruner https://github.com/suiguoxin/nni/
+      - cd nni && python3 examples/model_compress/sa_torch.py --pruning-mode channel --sparsity 0.1 --dataset imagenet --fine-tune True --fine-tune-epochs 10 --data-dir /mnt/nfs-storage/users/imagenet --experiment-data-dir /mnt/nfs-storage/users/experiment_data/01
 defaults:
   virtualCluster: default
 extras:
