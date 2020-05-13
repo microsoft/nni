@@ -20,6 +20,7 @@ from .utils import get_layers_no_dependency
 
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.DEBUG)
 
 
 class SimulatedAnnealingPruner(Pruner):
@@ -97,11 +98,13 @@ class SimulatedAnnealingPruner(Pruner):
         """
         if self.modules_to_compress is None:
             self.modules_to_compress = []
+             # consider only the layers without dependencies
+            model_name = self._model_to_prune.__class__.__name__
+            ops_no_dependency = get_layers_no_dependency(model_name)
+            _logger.debug("layers no dependency: %s", ops_no_dependency)
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
                     continue
-                # consider only the layers without dependencies
-                model_name = self._model_to_prune.__class__.__name__
                 if name not in get_layers_no_dependency(model_name):
                     continue
                 layer = LayerInfo(name, module)
@@ -257,7 +260,6 @@ class SimulatedAnnealingPruner(Pruner):
             a list of the wrapped modules
         """
         self.modules_wrapper = copy.deepcopy(modules_wrapper)
-        # self.modules_wrapper = modules_wrapper
 
     def calc_mask(self, wrapper, **kwargs):
         return None
