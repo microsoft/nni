@@ -85,14 +85,6 @@ testCases:
   validator:
     class: ExportValidator 
 
-- name: export-zero-trial
-  configFile: test/config/metrics_test/config_failure.yml
-  config:
-    maxTrialNum: 1
-    trialConcurrency: 1
-  validator:
-    class: ExportValidator
-
 - name: metrics-dict
   configFile: test/config/metrics_test/config_dict_metrics.yml
   config:
