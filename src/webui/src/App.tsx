@@ -127,6 +127,7 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
+                        {/* if /trial-jobs api has error filed, show error message */}
                         {TRIALS.jobListError() && <div className="warning">
                             <MessageInfo info={TRIALS.getJobErrorMessage()} typeInfo="error" />
                         </div>}
@@ -157,6 +158,7 @@ class App extends React.Component<{}, AppState> {
             this.firstLoad = false;
         }
 
+        // experiment status and /trial-jobs api's status could decide website update
         if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
             this.setState({ interval: 0 });

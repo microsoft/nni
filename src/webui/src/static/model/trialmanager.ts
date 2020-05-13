@@ -39,8 +39,8 @@ class TrialManager {
     private maxSequenceId: number = 0;
     private doingBatchUpdate: boolean = false;
     private batchUpdatedAfterReading: boolean = false;
-    private isJobListError: boolean = false;
-    private jobErrorMessage: string = '';
+    private isJobListError: boolean = false; // trial-jobs api error filed
+    private jobErrorMessage: string = ''; // trial-jobs error message
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -158,26 +158,33 @@ class TrialManager {
         return trials;
     }
 
+    // if this.jobListError = true, show trial error message
     public jobListError(): boolean {
         return this.isJobListError;
     }
 
+    // trial error message's content
     public getJobErrorMessage(): string {
         return this.jobErrorMessage;
     }
 
     private async updateInfo(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
+        // test example for /trial-jobs error
         // const response = { data: { error: 'balabala' }, status: 200 };
         let updated = false;
         if (response.status === 200) {
             // trial jobs list error
             if (response.data.error !== undefined) {
                 // return true; will stuck in an endless loop
+                // know /trial-jobs api is error
                 this.isJobListError = true;
+                // get /trial-jobs api's error message
                 this.jobErrorMessage = response.data.error;
+                // refresh page
                 updated = true;
             } else {
+                // /trial-jobs api is good.
                 const newTrials = TrialManager.expandJobsToTrials(response.data as any);
                 for (const trialInfo of newTrials as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
