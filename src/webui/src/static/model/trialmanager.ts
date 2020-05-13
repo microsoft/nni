@@ -39,6 +39,8 @@ class TrialManager {
     private maxSequenceId: number = 0;
     private doingBatchUpdate: boolean = false;
     private batchUpdatedAfterReading: boolean = false;
+    private isJobListError: boolean = false;
+    private jobErrorMessage: string = '';
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -156,20 +158,37 @@ class TrialManager {
         return trials;
     }
 
+    public jobListError(): boolean {
+        return this.isJobListError;
+    }
+
+    public getJobErrorMessage(): string {
+        return this.jobErrorMessage;
+    }
+
     private async updateInfo(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
+        // const response = { data: { error: 'balabala' }, status: 200 };
         let updated = false;
         if (response.status === 200) {
-            const newTrials = TrialManager.expandJobsToTrials(response.data);
-            for (const trialInfo of newTrials as TrialJobInfo[]) {
-                if (this.trials.has(trialInfo.id)) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
-                } else {
-                    this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
-                    updated = true;
+            // trial jobs list error
+            if (response.data.error !== undefined) {
+                // return true; will stuck in an endless loop
+                this.isJobListError = true;
+                this.jobErrorMessage = response.data.error;
+                updated = true;
+            } else {
+                const newTrials = TrialManager.expandJobsToTrials(response.data as any);
+                for (const trialInfo of newTrials as TrialJobInfo[]) {
+                    if (this.trials.has(trialInfo.id)) {
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
+                    } else {
+                        this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
+                        updated = true;
+                    }
+                    this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
                 }
-                this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
             }
             this.infoInitialized = true;
         }

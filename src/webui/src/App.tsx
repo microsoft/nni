@@ -49,8 +49,8 @@ class App extends React.Component<{}, AppState> {
     }
 
     getFinalDataFormat = (): void => {
-        for(let i = 0; this.state.isillegalFinal === false; i++){
-            if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
+        for (let i = 0; this.state.isillegalFinal === false; i++) {
+            if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
                 if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
@@ -71,14 +71,14 @@ class App extends React.Component<{}, AppState> {
     }
 
     changeInterval = (interval: number): void => {
-        
+
         window.clearTimeout(this.timerId);
         if (interval === 0) {
-            return;   
+            return;
         }
         // setState will trigger page refresh at once.
         // setState is asyc, interval not update to (this.state.interval) at once.
-        this.setState({interval}, () => {
+        this.setState({ interval }, () => {
             this.firstLoad = true;
             this.refresh();
         });
@@ -96,7 +96,7 @@ class App extends React.Component<{}, AppState> {
 
     // overview best trial module
     changeEntries = (entries: string): void => {
-        this.setState({bestTrialEntries: entries});
+        this.setState({ bestTrialEntries: entries });
     }
 
     render(): React.ReactNode {
@@ -127,6 +127,9 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
+                        {TRIALS.jobListError() && <div className="warning">
+                            <MessageInfo info={TRIALS.getJobErrorMessage()} typeInfo="error" />
+                        </div>}
                         {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}
@@ -149,18 +152,19 @@ class App extends React.Component<{}, AppState> {
             if (trialsUpdated) {
                 this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
             }
+
         } else {
             this.firstLoad = false;
         }
 
-        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
             this.setState({ interval: 0 });
             this.lastRefresh();
             return;
         }
 
-        this.timerId =  window.setTimeout(this.refresh, this.state.interval * 1000);
+        this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
 
     }
 
