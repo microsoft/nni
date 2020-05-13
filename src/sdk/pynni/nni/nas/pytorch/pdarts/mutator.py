@@ -55,7 +55,8 @@ class PdartsMutator(DartsMutator):
                             del module[index]
                 assert len(module) <= len(choices), "Failed to remove dropped choices."
 
-    def sample_final(self):
+    def export(self):
+        # Cannot rely on super().export() because P-DARTS has deleted some of the choices and has misaligned length.
         results = super().sample_final()
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):

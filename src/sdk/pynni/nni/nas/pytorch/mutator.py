@@ -281,25 +281,23 @@ class Mutator(BaseMutator):
         # If it's a boolean array, we can do optimization.
         if all([t == 0 or t == 1 for t in multihot_list]):
             if isinstance(mutable, LayerChoice):
-                if len(multihot_list) != len(mutable):
-                    logger.warning("Results returned from 'sample_final()' (%s: %s) either too short or too long. Mutable length is %d. "
-                                   "The result is preserved in case this is your intention.", mutable.key, multihot_list, len(mutable))
+                assert len(multihot_list) == len(mutable), \
+                    "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                        % (mutable.key, multihot_list)
+                # check if all modules have different names and they indeed have names
+                if len(set(mutable.names)) == len(mutable) and not all(d.isdigit() for d in mutable.names):
+                    converted = [name for i, name in enumerate(mutable.names) if multihot_list[i]]
                 else:
-                    # check if all modules have different names and they indeed have names
-                    if len(set(mutable.names)) == len(mutable) and not all(d.isdigit() for d in mutable.names):
-                        converted = [name for i, name in enumerate(mutable.names) if multihot_list[i]]
-                    else:
-                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+                    converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
             if isinstance(mutable, InputChoice):
-                if len(multihot_list) != mutable.n_candidates:
-                    logger.warning("Results returned from 'sample_final()' (%s: %s) either too short or too long. Mutable length is %d. "
-                                   "The result is preserved in case this is your intention.", mutable.key, multihot_list, len(mutable))
+                assert len(multihot_list) == mutable.n_candidates, \
+                    "Results returned from 'sample_final()' (%s: %s) either too short or too long." \
+                        % (mutable.key, multihot_list)
+                # check if all input candidates have different names
+                if len(set(mutable.choose_from)) == mutable.n_candidates:
+                    converted = [name for i, name in enumerate(mutable.choose_from) if multihot_list[i]]
                 else:
-                    # check if all input candidates have different names
-                    if len(set(mutable.choose_from)) == mutable.n_candidates:
-                        converted = [name for i, name in enumerate(mutable.choose_from) if multihot_list[i]]
-                    else:
-                        converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
+                    converted = [i for i in range(len(multihot_list)) if multihot_list[i]]
         if converted is not None:
             # if only one element, then remove the bracket
             if len(converted) == 1:
