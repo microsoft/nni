@@ -198,7 +198,21 @@ class TrialManager {
                 }
             }
             this.infoInitialized = true;
+        } else {
+            switch (response.status) {
+                case 404:
+                    this.jobErrorMessage = '404 error';
+                    break;
+                case 403:
+                    this.jobErrorMessage = '403 error, resource unavailable';
+                    break;
+                case 500:
+                    this.jobErrorMessage = response.data.error;
+                    break;
+            }
+            updated = true;
         }
+
         return updated;
     }
 
