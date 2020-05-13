@@ -437,7 +437,7 @@ class RemoteMachineTrainingService implements TrainingService {
         executor.executeScript(script, false, true);
         // the timer is trigger in 1 second, it causes multiple runs on server.
         // So reduce it's freqeunce, only allow one of it run.
-        const collectingCount = [true];
+        const collectingCount: boolean[] = [];
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
             async () => {
