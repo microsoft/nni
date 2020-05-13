@@ -16,7 +16,6 @@ const ipcOutgoingFd: number = 3;
 const ipcIncomingFd: number = 4;
 
 const MetaCommandContinue = '_C';
-const MetaCommandEnd = '_E';
 const MetaCommandLength = 'EXCEED';
 
 /**
@@ -38,17 +37,35 @@ function encodeCommand(commandType: string, content: string): Buffer {
         contentBuffer = contentBuffer.slice(999_999);
 
         while (contentBuffer.length > 999_999) {
-            buffer = Buffer.concat([buffer, Buffer.from(MetaCommandContinue + '999999'), contentBuffer.slice(0, 999_999)]);
+            buffer = Buffer.concat([buffer, Buffer.from(MetaCommandContinue + MetaCommandLength), contentBuffer.slice(0, 999_999)]);
             contentBuffer = contentBuffer.slice(999_999);
         }
 
         const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
-        return Buffer.concat([buffer, Buffer.from(MetaCommandEnd), contentLengthBuffer, contentBuffer]);
+        return Buffer.concat([buffer, Buffer.from(MetaCommandContinue), contentLengthBuffer, contentBuffer]);
     }
 }
 
+// If a command exceeds 999999 length and was splitted, this function returns one part
+// returns: [success, commandType, contentPart, remainingData, lengthExceeded]
+function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer, boolean] {
+    if (data.length < 8) {
+        return [false, '', '', data, false];
+    }
+    const commandType: string = data.slice(0, 2).toString();
+    const lengthString: string = data.slice(2, 8).toString();
+    const exceed: boolean = (lengthString === MetaCommandLength);
+    const contentLength: number = (exceed ? 999_999 : parseInt(lengthString, 10);
+    if (data.length < contentLength + 8) {
+        return [false, '', '', data, false];
+    }
+    const content: string = data.slice(8, contentLength + 8).toString();
+    const remain: Buffer = data.slice(contentLength + 8);
+    return [true, commandType, content, remain, exceed];
+}
+
 /**
- * Decode a command.
+ * Decode a command
  * @param Buffer binary incoming data
  * @returns a tuple of (success, commandType, content, remain)
  *          success: true if the buffer contains at least one complete command; otherwise false
@@ -56,15 +73,16 @@ function encodeCommand(commandType: string, content: string): Buffer {
  */
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     // eslint-disable-next-line prefer-const
-    let [success, commandType, content, remain] = decodeSingleCommand(data);
-    if (!success || (commandType !== MetaCommandContinue && commandType !== MetaCommandEnd)) {
+    let [success, commandType, content, remain, splitted] = decodeSingleCommand(data);
+    if (!success || !splitted) {
         return [success, commandType, content, remain];
     }
+    // elsewise, the "single command" is complete but the whole command is splitted
 
     let metaCommand: string;
     let newContent: string;
     while (true) {
-        [success, metaCommand, newContent, remain] = decodeSingleCommand(remain);
+        [success, metaCommand, newContent, remain, splitted] = decodeSingleCommand(remain);
         if (!success) {
             return [false, '', '', data];
         }
@@ -76,28 +94,6 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
             throw new Error('Unexpected splitted command: ' + metaCommand);
         }
     }
-}
-
-// If a command exceeds 999999 length and was splitted, this function returns one part
-function decodeSingleCommand(data: Buffer): [boolean, string, string, Buffer] {
-    if (data.length < 8) {
-        return [false, '', '', data];
-    }
-    let commandType: string = data.slice(0, 2).toString();
-    const lengthString: string = data.slice(2, 8).toString();
-    let contentLength: number;
-    if (lengthString === MetaCommandLength) {
-        contentLength = 999_999;
-    } else {
-        contentLength = parseInt(lengthString, 10);
-    }
-    if (data.length < contentLength + 8) {
-        return [false, '', '', data];
-    }
-    const content: string = data.slice(8, contentLength + 8).toString();
-    const remain: Buffer = data.slice(contentLength + 8);
-
-    return [true, commandType, content, remain];
 }
 
 class IpcInterface {

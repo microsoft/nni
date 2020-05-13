@@ -30,7 +30,7 @@ class ProtocolTestCase(TestCase):
     def test_send_long(self):
         out_file = _prepare_send()
         send(CommandType.NewTrialJob, 'x' * 2000000)
-        expected = 'TREXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_E000002xx'
+        expected = 'TREXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_C000002xx'
         self.assertEqual(out_file.getvalue(), expected.encode('utf8'))
 
     def test_receive_en(self):
@@ -46,7 +46,7 @@ class ProtocolTestCase(TestCase):
         self.assertEqual(data, '世界')
 
     def test_receive_long(self):
-        msg = 'INEXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_E000002xx'
+        msg = 'INEXCEED' + ('x' * 999999) + '_CEXCEED' + ('x' * 999999) + '_C000002xx'
         _prepare_receive(msg.encode('utf8'))
         command, data = receive()
         self.assertEqual(data, 'x' * 2000000)

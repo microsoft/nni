@@ -35,9 +35,7 @@ except OSError:
 
 _max_msg_len = 999999
 _meta_cmd_len = b'EXCEED'
-
 _MetaCommand_Continue = b'_C'
-_MetaCommand_End = b'_E'
 
 def send(command, data):
     """Send command to Training Service.
@@ -61,7 +59,7 @@ def send(command, data):
                 msg += b'%b%b%b' % (_MetaCommand_Continue, _meta_cmd_len, data[:_max_msg_len])
                 data = data[_max_msg_len:]
             # last part
-            msg += b'%b%06d%b' % (_MetaCommand_End, len(data), data)
+            msg += b'%b%06d%b' % (_MetaCommand_Continue, len(data), data)
 
         _out_file.write(msg)
         _out_file.flush()
@@ -86,13 +84,12 @@ def receive():
         while True:
             meta_cmd = _in_file.read(2)
             length = _in_file.read(6)
-            if meta_cmd == _MetaCommand_End:
+            assert meta_cmd == _MetaCommand_Continue
+            if length == _meta_cmd_len:
+                data += _in_file.read(_max_msg_len)
+            else:
                 data += _in_file.read(int(length))
                 break
-            else:
-                assert meta_cmd == _MetaCommand_Continue
-                assert length == _meta_cmd_len
-                data += _in_file.read(_max_msg_len)
     else:
         data = _in_file.read(int(length))
     data = data.decode('utf8')
