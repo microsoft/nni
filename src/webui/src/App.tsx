@@ -131,6 +131,12 @@ class App extends React.Component<{}, AppState> {
                         {TRIALS.jobListError() && <div className="warning">
                             <MessageInfo info={TRIALS.getJobErrorMessage()} typeInfo="error" />
                         </div>}
+                        {EXPERIMENT.experimentError() && <div className="warning">
+                            <MessageInfo info={EXPERIMENT.getExperimentMessage()} typeInfo="error" />
+                        </div>}
+                        {EXPERIMENT.statusError() && <div className="warning">
+                            <MessageInfo info={EXPERIMENT.getStatusMessage()} typeInfo="error" />
+                        </div>}
                         {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}

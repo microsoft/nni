@@ -171,8 +171,9 @@ class TrialManager {
     private async updateInfo(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
         // test example for /trial-jobs error
-        // const response = { data: { error: 'balabala' }, status: 200 };
+        // const response = { data: { error: 'some errors' }, status: 200 };
         let updated = false;
+
         if (response.status === 200) {
             // trial jobs list error
             if (response.data.error !== undefined) {
@@ -197,22 +198,13 @@ class TrialManager {
                     this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
                 }
             }
-            this.infoInitialized = true;
+            
         } else {
-            switch (response.status) {
-                case 404:
-                    this.jobErrorMessage = '404 error';
-                    break;
-                case 403:
-                    this.jobErrorMessage = '403 error, resource unavailable';
-                    break;
-                case 500:
-                    this.jobErrorMessage = response.data.error;
-                    break;
-            }
+            this.isJobListError = true;
+            this.jobErrorMessage = `${response.status} error`;
             updated = true;
         }
-
+        this.infoInitialized = true;
         return updated;
     }
 
