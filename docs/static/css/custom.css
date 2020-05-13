@@ -45,7 +45,7 @@
 }
 
 /* document body font-family */
-.wy-body-for-nav{
+.wy-body-for-nav, h1, h2, h3, h4, h5, h6, div, p, ul, li, a{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
