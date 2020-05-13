@@ -25,7 +25,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
+import { execCopydir, execMkdir, validateCodeDir } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
     RemoteMachineMeta,
@@ -40,10 +40,10 @@ import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
  */
 @component.Singleton
 class RemoteMachineTrainingService implements TrainingService {
+    private readonly initExecutorId = "initConnection";
     private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
-    private readonly trialExecutorMap: Map<string, ShellExecutor>; //trial excutor map
+    private readonly trialExecutorManagerMap: Map<string, ExecutorManager>; //trial excutor map
     private readonly trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
-    private readonly MAX_TRIAL_NUMBER_PER_EXECUTOR: number = 5; // every excutor has a max trial concurrency number
     private readonly expRootDir: string;
     private trialConfig: TrialConfig | undefined;
     private gpuScheduler?: GPUScheduler;
@@ -61,7 +61,7 @@ class RemoteMachineTrainingService implements TrainingService {
     constructor(@component.Inject timer: ObservableTimer) {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
-        this.trialExecutorMap = new Map<string, ShellExecutor>();
+        this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
@@ -99,14 +99,14 @@ class RemoteMachineTrainingService implements TrainingService {
             }
             await delay(3000);
         }
-        this.log.info('Remote machine training service exit.');
+        this.log.info('RemoteMachineTrainingService run loop exited.');
     }
 
     /**
      * give trial an executor
      * @param trial remote machine trial job detail
      */
-    public async allocateExecutorForTrial(trial: RemoteMachineTrialJobDetail): Promise<ShellExecutor> {
+    public allocateExecutorManagerForTrial(trial: RemoteMachineTrialJobDetail): void {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
@@ -114,26 +114,18 @@ class RemoteMachineTrainingService implements TrainingService {
         if (executorManager === undefined) {
             throw new Error(`executorManager not initialized`);
         }
-        const executor: ShellExecutor = await executorManager.getAvailableExecutor();
-
-        this.trialExecutorMap.set(trial.id, executor);
-
-        return executor;
+        this.trialExecutorManagerMap.set(trial.id, executorManager);
     }
 
     /**
      * If a trial is finished, release the connection resource
      * @param trial remote machine trial job detail
      */
-    public releaseTrialExecutor(trial: RemoteMachineTrialJobDetail): void {
+    public releaseTrialResource(trial: RemoteMachineTrialJobDetail): void {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(trial.rmMeta);
-        if (executorManager === undefined) {
-            throw new Error(`executorManager not initialized`);
-        }
-        executorManager.releaseConnection(this.trialExecutorMap.get(trial.id));
+        this.releaseExecutor(trial.id);
     }
 
     /**
@@ -166,10 +158,7 @@ class RemoteMachineTrainingService implements TrainingService {
             if (trialJob.rmMeta === undefined) {
                 throw new Error(`rmMeta not set for submitted job ${trialJobId}`);
             }
-            const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJob.id);
-            if (executor === undefined) {
-                throw new Error(`Invalid job id: ${trialJobId}, cannot find executor`);
-            }
+            const executor = await this.getExecutor(trialJob.id);
 
             return this.updateTrialJobStatus(trialJob, executor);
         } else {
@@ -259,13 +248,10 @@ class RemoteMachineTrainingService implements TrainingService {
         // Get executor where the job is running
         if (trialJob.rmMeta !== undefined) {
             // If the trial job is already scheduled, check its status and kill the trial process in remote machine
-            const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJob.id);
-            if (executor === undefined) {
-                throw new Error(`Invalid job id ${trialJobId}, cannot find executor`);
-            }
+            const executor = await this.getExecutor(trialJob.id);
 
             if (trialJob.status === 'UNKNOWN') {
-                this.releaseTrialExecutor(trialJob);
+                this.releaseTrialResource(trialJob);
                 trialJob.status = 'USER_CANCELED';
                 return
             }
@@ -275,10 +261,10 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await executor.killChildProcesses(jobpidPath);
-                this.releaseTrialExecutor(trialJob);
+                this.releaseTrialResource(trialJob);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
-                this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
+                this.log.error(`remoteTrainingService.cancelTrialJob: ${error}`);
             }
         } else {
             // Job is not scheduled yet, set status to 'USER_CANCELLED' directly
@@ -356,7 +342,23 @@ class RemoteMachineTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
-        await Promise.race([delay(10000), this.cleanupConnections()]);
+        await this.cleanupConnections();
+    }
+
+    private async getExecutor(trialId: string): Promise<ShellExecutor> {
+        const executorManager = this.trialExecutorManagerMap.get(trialId);
+        if (executorManager === undefined) {
+            throw new Error(`ExecutorManager is not assigned for trial ${trialId}`);
+        }
+        return await executorManager.getExecutor(trialId);
+    }
+
+    private releaseExecutor(trialId: string): void {
+        const executorManager = this.trialExecutorManagerMap.get(trialId);
+        if (executorManager === undefined) {
+            throw new Error(`ExecutorManager is not assigned for trial ${trialId}`);
+        }
+        executorManager.releaseExecutor(trialId);
     }
 
     /**
@@ -378,20 +380,18 @@ class RemoteMachineTrainingService implements TrainingService {
     private async cleanupConnections(): Promise<void> {
         try {
             for (const executorManager of this.machineExecutorManagerMap.values()) {
-                const executor: ShellExecutor | undefined = executorManager.getFirstExecutor();
+                const executor = await executorManager.getExecutor(this.initExecutorId);
                 if (executor !== undefined) {
-                    const jobpidPath: string = executor.joinPath(executor.getRemoteScriptsPath(), 'pid');
-                    await executor.killChildProcesses(jobpidPath);
-                    await executor.removeFolder(executor.getRemoteScriptsPath());
+                    this.log.info(`killing gpu metric collector on ${executor.name}`);
+                    const gpuJobPidPath: string = executor.joinPath(executor.getRemoteScriptsPath(), 'pid');
+                    await executor.killChildProcesses(gpuJobPidPath);
                 }
-                executorManager.closeAllExecutor();
+                executorManager.releaseAllExecutor();
             }
         } catch (error) {
             //ignore error, this function is called to cleanup remote connections when experiment is stopping
             this.log.error(`Cleanup connection exception, error is ${error}`);
         }
-
-        return Promise.resolve();
     }
 
     private async setupConnections(machineList: string): Promise<void> {
@@ -403,10 +403,14 @@ class RemoteMachineTrainingService implements TrainingService {
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
-            const executorManager: ExecutorManager = new ExecutorManager([], this.MAX_TRIAL_NUMBER_PER_EXECUTOR, rmMeta);
-            const executor: ShellExecutor = await executorManager.getAvailableExecutor();
+            const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
+            this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
+            const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
+            this.log.debug(`reached ${executor.name}`);
             this.machineExecutorManagerMap.set(rmMeta, executorManager);
+            this.log.debug(`initializing ${executor.name}`);
             await this.initRemoteMachineOnConnected(rmMeta, executor);
+            this.log.info(`connected to ${executor.name}`);
             if (++connectedRMNum === rmMetaList.length) {
                 deferred.resolve();
             }
@@ -422,22 +426,32 @@ class RemoteMachineTrainingService implements TrainingService {
 
         // the directory to store temp scripts in remote machine
         const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath();
+
+        // clean up previous result.
+        await executor.removeFolder(executor.getRemoteScriptsPath(), true);
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
         await executor.allowPermission(false, nniRootDir, `${nniRootDir}/*`, `${nniRootDir}/scripts/*`);
 
         //Begin to execute gpu_metrics_collection scripts
         const script = executor.generateGpuStatsScript();
         executor.executeScript(script, false, true);
+        // the timer is trigger in 1 second, it causes multiple runs on server.
+        // So reduce it's freqeunce, only allow one of it run.
+        const collectingCount = [true];
 
         const disposable: Rx.IDisposable = this.timer.subscribe(
             async () => {
-                const cmdresult = await executor.readLastLines(executor.joinPath(remoteGpuScriptCollectorDir, 'gpu_metrics'));
-                if (cmdresult !== "") {
-                    rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
-                    if (rmMeta.gpuSummary.gpuCount === 0) {
-                        this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
-                        this.timer.unsubscribe(disposable);
+                if (collectingCount.length == 0) {
+                    collectingCount.push(true);
+                    const cmdresult = await executor.readLastLines(executor.joinPath(remoteGpuScriptCollectorDir, 'gpu_metrics'));
+                    if (cmdresult !== "") {
+                        rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
+                        if (rmMeta.gpuSummary.gpuCount === 0) {
+                            this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
+                            this.timer.unsubscribe(disposable);
+                        }
                     }
+                    collectingCount.pop();
                 }
             }
         );
@@ -475,7 +489,8 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
-            const executor = await this.allocateExecutorForTrial(trialJobDetail);
+            this.allocateExecutorManagerForTrial(trialJobDetail);
+            const executor = await this.getExecutor(trialJobDetail.id);
 
             trialJobDetail.workingDirectory = executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 'trials', trialJobDetail.id);
 
@@ -504,13 +519,7 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error('trial config is not initialized');
         }
         const cudaVisibleDevice: string = rmScheduleInfo.cudaVisibleDevice;
-        const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJobId);
-        if (executor === undefined) {
-            assert(false, 'ShellExecutor is undefined.');
-
-            // for lint
-            return;
-        }
+        const executor = await this.getExecutor(trialJobId);
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`Can not get trial job detail for job: ${trialJobId}`);
@@ -599,13 +608,13 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
-                    this.releaseTrialExecutor(trialJob);
+                    this.releaseTrialResource(trialJob);
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
             deferred.resolve(trialJob);
         } catch (error) {
-            this.log.error(`Update job status exception, error is ${error.message}`);
+            this.log.debug(`(Ignorable mostly)Update job status exception, error is ${error.message}`);
             if (error instanceof NNIError && error.name === NNIErrorNames.NOT_FOUND) {
                 deferred.resolve(trialJob);
             } else {
@@ -631,10 +640,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
-        const executor: ShellExecutor | undefined = this.trialExecutorMap.get(trialJobId);
-        if (executor === undefined) {
-            throw new Error('ShellExecutor is undefined.');
-        }
+        const executor = await this.getExecutor(trialJobId);
 
         const trialWorkingFolder: string = executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 'trials', trialJobId);
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);

@@ -6,7 +6,6 @@
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
-import { Logger, getLogger } from '../../common/log';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -86,80 +85,85 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
  * The remote machine executor manager
  */
 export class ExecutorManager {
-    private readonly executorArray: ShellExecutor[];
-    private readonly maxTrialNumberPerConnection: number;
+    private readonly executorMap: Map<string, ShellExecutor> = new Map<string, ShellExecutor>();
     private readonly rmMeta: RemoteMachineMeta;
-    private readonly log: Logger;
-    constructor(executorArray: ShellExecutor[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
-        this.log = getLogger();
+
+    private executors: ShellExecutor[] = [];
+
+    constructor(rmMeta: RemoteMachineMeta) {
         this.rmMeta = rmMeta;
-        this.executorArray = executorArray;
-        this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
     }
 
-    /**
-     * find a available executor, if no executor available, return a new one
-     */
-    public async getAvailableExecutor(): Promise<ShellExecutor> {
-        for (const index of this.executorArray.keys()) {
-            const connectionNumber: number = this.executorArray[index].getUsedConnectionNumber;
-            if (connectionNumber < this.maxTrialNumberPerConnection) {
-                this.executorArray[index].addUsedConnectionNumber();
+    public async getExecutor(id: string): Promise<ShellExecutor> {
+        let isFound = false;
+        let executor: ShellExecutor | undefined;
 
-                return this.executorArray[index];
+        // already assigned
+        if (this.executorMap.has(id)) {
+            executor = this.executorMap.get(id);
+            if (executor === undefined) {
+                throw new Error("executor shouldn't be undefined before return!");
             }
+            return executor;
         }
 
+        for (const candidateExecutor of this.executors) {
+            if (candidateExecutor.addUsage()) {
+                isFound = true;
+                executor = candidateExecutor;
+                break;
+            }
+        }
+        if (!isFound) {
+            executor = await this.createShellExecutor();
+        }
+
+        if (executor === undefined) {
+            throw new Error("executor shouldn't be undefined before set!");
+        }
+        this.executorMap.set(id, executor);
+
         //init a new executor if could not get an available one
-        return await this.initNewShellExecutor();
-    }
-
-    /**
-     * add a new executor to executorArray
-     * @param executor ShellExecutor
-     */
-    public addNewShellExecutor(executor: ShellExecutor): void {
-        this.executorArray.push(executor);
-    }
-
-    /**
-     * first executor instance is used for gpu collector and host job
-     */
-    public getFirstExecutor(): ShellExecutor {
-        return this.executorArray[0];
+        if (executor === undefined) {
+            throw new Error("executor shouldn't be undefined before return!");
+        }
+        return executor;
     }
 
     /**
      * close all of executor
      */
-    public closeAllExecutor(): void {
-        for (const executor of this.executorArray) {
+    public releaseAllExecutor(): void {
+        this.executorMap.clear();
+        for (const executor of this.executors) {
             executor.close();
         }
+        this.executors = [];
     }
 
     /**
      * retrieve resource, minus a number for given executor
      * @param executor executor
      */
-    public releaseConnection(executor: ShellExecutor | undefined): void {
+    public releaseExecutor(id: string): void {
+        const executor = this.executorMap.get(id);
         if (executor === undefined) {
-            throw new Error(`could not release a undefined executor`);
+            throw new Error(`executor for ${id} is not found`);
         }
-        for (const index of this.executorArray.keys()) {
-            if (this.executorArray[index] === executor) {
-                this.executorArray[index].minusUsedConnectionNumber();
-                break;
-            }
-        }
+        executor.releaseUsage();
+        this.executorMap.delete(id);
     }
 
     /**
      * Create a new connection executor and initialize it
      */
-    private async initNewShellExecutor(): Promise<ShellExecutor> {
+    private async createShellExecutor(): Promise<ShellExecutor> {
         const executor = new ShellExecutor();
         await executor.initialize(this.rmMeta);
+        if (!executor.addUsage()) {
+            throw new Error("failed to add usage on new created Executor! It's a wired bug!");
+        }
+        this.executors.push(executor);
         return executor;
     }
 }

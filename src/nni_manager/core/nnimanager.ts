@@ -368,7 +368,7 @@ class NNIManager implements Manager {
             CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
-        const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
+        const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
@@ -436,7 +436,9 @@ class NNIManager implements Manager {
         }
         await killPid(this.dispatcherPid);
         const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
-        // TO DO: to promise all
+
+        // DON'T try to make it in parallel, the training service may not handle it well.
+        // If there is performance concern, consider to support batch cancellation on training service.
         for (const trialJob of trialJobList) {
             if (trialJob.status === 'RUNNING' ||
                 trialJob.status === 'WAITING') {
@@ -444,7 +446,7 @@ class NNIManager implements Manager {
                     this.log.info(`cancelTrialJob: ${trialJob.id}`);
                     await this.trainingService.cancelTrialJob(trialJob.id);
                 } catch (error) {
-                    // pid does not exist, do nothing here
+                    this.log.debug(`ignorable error on cancel trial ${trialJob.id}. ${error}`);
                 }
             }
         }

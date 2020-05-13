@@ -22,9 +22,9 @@ class LinuxCommands extends OsCommands {
             NNI_EXP_ID=${experimentId} NNI_TRIAL_SEQ_ID=${trialSequenceId} export MULTI_PHASE=${isMultiPhase}
             cd $NNI_SYS_DIR
             sh install_nni.sh
-            echo $$ >${jobIdFileName}
             python3 -m nni_trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
+                --job_id_file ${jobIdFileName} \
                 --log_collection '${logCollection}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
             echo $? \`date +%s%3N\` >${codeFile}`;
     }
@@ -95,9 +95,18 @@ class LinuxCommands extends OsCommands {
 
     public killChildProcesses(pidFileName: string): string {
         // prevent trialkeeper to be killed, so it can save exit code.
-        const command = `pids=\`pgrep -g \\\`cat '${pidFileName}'\\\` | grep -v \\\`cat '${pidFileName}'\\\` | paste -sd " " -\`
-            echo killing $pids
-            kill $pids`
+        const command = `list_descendants ()
+                {
+                local children=$(ps -o pid= --ppid "$1")
+
+                for pid in $children
+                do
+                    list_descendants "$pid"
+                done
+
+                echo "$children"
+                }
+            kill $(list_descendants \`cat '${pidFileName}'\`)`
         return command;
     }
 

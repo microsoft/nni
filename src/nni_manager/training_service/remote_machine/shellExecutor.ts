@@ -4,31 +4,35 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import * as fs from 'fs';
-import { Client, ClientChannel, SFTPWrapper, ConnectConfig } from 'ssh2';
-import { Deferred } from "ts-deferred";
-import { RemoteCommandResult, RemoteMachineMeta } from "./remoteMachineData";
+import { Client, ClientChannel, ConnectConfig, SFTPWrapper } from 'ssh2';
 import * as stream from 'stream';
-import { OsCommands } from "./osCommands";
+import { Deferred } from "ts-deferred";
+import { getLogger, Logger } from '../../common/log';
+import { uniqueString } from '../../common/utils';
+import { execRemove, tarAdd } from '../common/util';
 import { LinuxCommands } from "./extends/linuxCommands";
 import { WindowsCommands } from './extends/windowsCommands';
-import { getLogger, Logger } from '../../common/log';
+import { OsCommands } from "./osCommands";
+import { RemoteCommandResult, RemoteMachineMeta } from "./remoteMachineData";
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { execRemove, tarAdd } from '../common/util';
-import { uniqueString } from '../../common/utils';
 
 class ShellExecutor {
+    public name: string = "";
+
     private readonly lineBreaker = new RegExp(`[\r\n]+`);
+    private readonly maxUsageCount = 1;
 
     private osCommands: OsCommands | undefined;
-    private usedConnectionNumber: number = 0; //count the connection number of every client
+    private usedCount: number = 0; //count the connection number of every client
     private readonly sshClient: Client;
     private readonly log: Logger;
     private username: string = "";
     private tempPath: string = "";
     private isWindows: boolean = false;
+    private channelDefaultOutputs: string[] = [];
 
     constructor() {
         this.log = getLogger();
@@ -42,9 +46,10 @@ class ShellExecutor {
             host: rmMeta.ip,
             port: rmMeta.port,
             username: rmMeta.username,
-            tryKeyboard: true
+            tryKeyboard: true,
         };
         this.username = rmMeta.username;
+        this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
         if (rmMeta.passwd !== undefined) {
             connectConfig.password = rmMeta.passwd;
         } else if (rmMeta.sshKeyPath !== undefined) {
@@ -59,12 +64,25 @@ class ShellExecutor {
         } else {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
+
         this.sshClient.on('ready', async () => {
             // check OS type: windows or else
             const result = await this.execute("ver");
             if (result.exitCode == 0 && result.stdout.search("Windows") > -1) {
                 this.osCommands = new WindowsCommands();
                 this.isWindows = true;
+
+                // detect default output and trying to remove it under windows.
+                // Anaconda has this kind of output.
+                let defaultResult = await this.execute("");
+                if (defaultResult.stdout !== "") {
+                    this.channelDefaultOutputs.push(defaultResult.stdout);
+                }
+                defaultResult = await this.execute("powershell -command \"\"");
+                if (defaultResult.stdout !== "") {
+                    this.channelDefaultOutputs.push(defaultResult.stdout);
+                }
+                this.log.debug(`set channelDefaultOutput to "${this.channelDefaultOutputs}"`);
             } else {
                 this.osCommands = new LinuxCommands();
             }
@@ -88,16 +106,36 @@ class ShellExecutor {
         this.sshClient.end();
     }
 
+    public addUsage(): boolean {
+        let isAddedSuccess = false;
+        if (this.usedCount < this.maxUsageCount) {
+            this.usedCount++;
+            isAddedSuccess = true;
+        }
+        return isAddedSuccess;
+    }
+
+    public releaseUsage(): boolean {
+        let canBeReleased = false;
+        if (this.usedCount > 0) {
+            this.usedCount--;
+        }
+        if (this.usedCount == 0) {
+            canBeReleased = true;
+        }
+        return canBeReleased;
+    }
+
     public get getUsedConnectionNumber(): number {
-        return this.usedConnectionNumber;
+        return this.usedCount;
     }
 
     public addUsedConnectionNumber(): void {
-        this.usedConnectionNumber += 1;
+        this.usedCount += 1;
     }
 
     public minusUsedConnectionNumber(): void {
-        this.usedConnectionNumber -= 1;
+        this.usedCount -= 1;
     }
 
     public getScriptName(mainName: string): string {
@@ -155,28 +193,28 @@ class ShellExecutor {
     public async createFolder(folderName: string, sharedFolder: boolean = false): Promise<boolean> {
         const commandText = this.osCommands && this.osCommands.createFolder(folderName, sharedFolder);
         const commandResult = await this.execute(commandText);
-        const result = commandResult.exitCode >= 0;
+        const result = commandResult.exitCode == 0;
         return result;
     }
 
     public async allowPermission(isRecursive: boolean = false, ...folders: string[]): Promise<boolean> {
         const commandText = this.osCommands && this.osCommands.allowPermission(isRecursive, ...folders);
         const commandResult = await this.execute(commandText);
-        const result = commandResult.exitCode >= 0;
+        const result = commandResult.exitCode == 0;
         return result;
     }
 
     public async removeFolder(folderName: string, isRecursive: boolean = false, isForce: boolean = true): Promise<boolean> {
         const commandText = this.osCommands && this.osCommands.removeFolder(folderName, isRecursive, isForce);
         const commandResult = await this.execute(commandText);
-        const result = commandResult.exitCode >= 0;
+        const result = commandResult.exitCode == 0;
         return result;
     }
 
     public async removeFiles(folderOrFileName: string, filePattern: string = ""): Promise<boolean> {
         const commandText = this.osCommands && this.osCommands.removeFiles(folderOrFileName, filePattern);
         const commandResult = await this.execute(commandText);
-        const result = commandResult.exitCode >= 0;
+        const result = commandResult.exitCode == 0;
         return result;
     }
 
@@ -209,10 +247,10 @@ class ShellExecutor {
         return commandResult.exitCode == 0;
     }
 
-    public async executeScript(script: string, isFile: boolean, isInteractive: boolean = false): Promise<boolean> {
+    public async executeScript(script: string, isFile: boolean = false, isInteractive: boolean = false): Promise<RemoteCommandResult> {
         const commandText = this.osCommands && this.osCommands.executeScript(script, isFile);
         const commandResult = await this.execute(commandText, undefined, isInteractive);
-        return commandResult.exitCode == 0;
+        return commandResult;
     }
 
     /**
@@ -226,7 +264,7 @@ class ShellExecutor {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
-                this.log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
+                this.log.error(`copyFileToRemote: ${err}`);
                 deferred.reject(err);
 
                 return;
@@ -235,6 +273,7 @@ class ShellExecutor {
             sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr: Error) => {
                 sftp.end();
                 if (fastPutErr !== undefined && fastPutErr !== null) {
+                    this.log.error(`copyFileToRemote fastPutErr: ${fastPutErr}, ${localFilePath}, ${remoteFilePath}`);
                     deferred.reject(fastPutErr);
                 } else {
                     deferred.resolve(true);
@@ -269,12 +308,12 @@ class ShellExecutor {
     }
 
     public async getRemoteFileContent(filePath: string): Promise<string> {
+        this.log.debug(`getRemoteFileContent: filePath: ${filePath}`);
         const deferred: Deferred<string> = new Deferred<string>();
         this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
-                getLogger()
-                    .error(`getRemoteFileContent: ${err.message}`);
-                deferred.reject(new Error(`SFTP error: ${err.message}`));
+                this.log.error(`getRemoteFileContent sftp: ${err}`);
+                deferred.reject(new Error(`SFTP error: ${err}`));
 
                 return;
             }
@@ -292,11 +331,11 @@ class ShellExecutor {
                     .on('end', () => {
                         // sftp connection need to be released manually once operation is done
                         sftp.end();
+                        this.log.debug(`getRemoteFileContent end: dataBuffer: ${dataBuffer}`);
                         deferred.resolve(dataBuffer);
                     });
             } catch (error) {
-                getLogger()
-                    .error(`getRemoteFileContent: ${error.message}`);
+                this.log.error(`getRemoteFileContent: ${error.message}`);
                 sftp.end();
                 deferred.reject(new Error(`SFTP error: ${error.message}`));
             }
@@ -326,9 +365,24 @@ class ShellExecutor {
             });
             channel.on('exit', (code: any) => {
                 exitCode = <number>code;
-                this.log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
+
+                // remove default output to get stdout correct.
+                let modifiedStdout = stdout;
+                if (this.channelDefaultOutputs.length > 0) {
+                    this.channelDefaultOutputs.forEach(defaultOutput => {
+                        if (modifiedStdout.startsWith(defaultOutput)) {
+                            if (modifiedStdout.length > defaultOutput.length) {
+                                modifiedStdout = modifiedStdout.substr(defaultOutput.length);
+                            } else if (modifiedStdout.length === defaultOutput.length) {
+                                modifiedStdout = "";
+                            }
+                        }
+                    });
+                }
+
+                this.log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${modifiedStdout}\nstderr: ${stderr}`);
                 let result = {
-                    stdout: stdout,
+                    stdout: modifiedStdout,
                     stderr: stderr,
                     exitCode: exitCode
                 };
@@ -338,7 +392,7 @@ class ShellExecutor {
                 }
                 deferred.resolve(result);
             });
-            channel.stderr.on('data', function (data) {
+            channel.stderr.on('data', function (data: any) {
                 stderr += data;
             });
 

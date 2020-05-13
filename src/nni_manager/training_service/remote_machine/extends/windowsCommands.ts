@@ -35,19 +35,16 @@ class WindowsCommands extends OsCommands {
                 python -m pip install --user --upgrade nni
             )
 
-            echo save process id
-            powershell (Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId >${jobIdFileName}
-
             echo starting script
-            python -m nni_trial_tool.trial_keeper --trial_command "${command}" --nnimanager_ip "${nniManagerAddress}" --nnimanager_port "${nniManagerPort}" --nni_manager_version "${nniManagerVersion}" --log_collection "${logCollection}" 1>%NNI_OUTPUT_DIR%/trialkeeper_stdout 2>%NNI_OUTPUT_DIR%/trialkeeper_stderr
+            python -m nni_trial_tool.trial_keeper --trial_command "${command}" --nnimanager_ip "${nniManagerAddress}" --nnimanager_port "${nniManagerPort}" --nni_manager_version "${nniManagerVersion}" --log_collection "${logCollection}" --job_id_file ${jobIdFileName} 1>%NNI_OUTPUT_DIR%/trialkeeper_stdout 2>%NNI_OUTPUT_DIR%/trialkeeper_stderr
 
-            echo save exit code and time
+            echo save exit code(%ERRORLEVEL%) and time
             echo|set /p="%ERRORLEVEL% " > ${codeFile}
-            powershell -command "(((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0"))" >> ${codeFile}`;
+            powershell -command "Write (((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0")) | Out-file ${codeFile} -Append -NoNewline -encoding utf8"`;
     }
 
     public generateGpuStatsScript(scriptFolder: string): string {
-        return `powershell "$env:METRIC_OUTPUT_DIR=${scriptFolder};$app = Start-Process python -ArgumentList \`"-m nni_gpu_tool.gpu_metrics_collector\`" -passthru -NoNewWindow;Write $app.ID | Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8"`;
+        return `powershell -command $env:METRIC_OUTPUT_DIR='${scriptFolder}';$app = Start-Process -FilePath python -NoNewWindow -passthru -ArgumentList '-m nni_gpu_tool.gpu_metrics_collector' -RedirectStandardOutput ${scriptFolder}\\scriptstdout -RedirectStandardError ${scriptFolder}\\scriptstderr;Write $PID ^| Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8;wait-process $app.ID`;
     }
 
     public getTempPath(): string {
@@ -76,10 +73,10 @@ class WindowsCommands extends OsCommands {
     public removeFolder(folderName: string, isRecursive: boolean = false, isForce: boolean = true): string {
         let flags = '';
         if (isForce || isRecursive) {
-            flags = `-${isRecursive ? 's' : ''}${isForce ? 'q' : ''} `;
+            flags = `${isRecursive ? ' /s' : ''}${isForce ? ' /q' : ''}`;
         }
 
-        const command = `rmdir ${flags}"${folderName}"`;
+        const command = `rmdir${flags} "${folderName}"`;
         return command;
     }
 
@@ -120,13 +117,8 @@ class WindowsCommands extends OsCommands {
         return command;
     }
 
-    public executeScript(script: string, isFile: boolean): string {
-        let command: string;
-        if (isFile) {
-            command = `${script}`;
-        } else {
-            command = `cmd /c ${script}`;
-        }
+    public executeScript(script: string, _isFile: boolean): string {
+        const command = `${script}`;
         return command;
     }
 }
