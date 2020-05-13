@@ -26,7 +26,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
+import { execMkdir, validateCodeDir, getGpuMetricsCollectorBashScriptContent } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
     REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineMeta,
@@ -35,7 +35,6 @@ import {
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
-import { threadId } from 'worker_threads';
 
 /**
  * Training Service implementation for Remote Machine (Linux)

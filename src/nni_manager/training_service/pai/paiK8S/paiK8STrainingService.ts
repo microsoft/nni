@@ -79,7 +79,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 }
                 break;
 
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
                     break;
@@ -95,6 +95,7 @@ class PAIK8STrainingService extends PAITrainingService {
                     this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 }
                 break;
+            }
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 this.nniVersion = this.versionCheck ? await getVersion() : '';
