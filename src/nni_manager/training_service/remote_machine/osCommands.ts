@@ -8,7 +8,8 @@ import { RemoteCommandResult } from "./remoteMachineData";
 abstract class OsCommands {
 
     protected pathSpliter: string = '/';
-    protected multiplePathSpliter: RegExp = new RegExp(`${this.pathSpliter}{2,}`);
+    protected multiplePathSpliter: RegExp = new RegExp(`[\\\\/]{2,}`);
+    protected normalizePath: RegExp = new RegExp(`[\\\\/]`);
 
     public abstract getScriptExt(): string;
     public abstract generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
@@ -34,6 +35,9 @@ abstract class OsCommands {
         if (dir === '') {
             dir = '.';
         } else {
+            // normalize
+            dir = dir.replace(this.normalizePath, this.pathSpliter);
+            // reduce duplicate ones
             dir = dir.replace(this.multiplePathSpliter, this.pathSpliter);
         }
         return dir;

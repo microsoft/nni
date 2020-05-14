@@ -9,7 +9,6 @@ import { RemoteCommandResult } from "../remoteMachineData";
 class WindowsCommands extends OsCommands {
 
     protected pathSpliter: string = '\\';
-    protected multiplePathSpliter: RegExp = new RegExp(`\\${this.pathSpliter}{2,}`);
 
     public getScriptExt(): string {
         return "cmd";
@@ -65,7 +64,7 @@ class WindowsCommands extends OsCommands {
         let commands: string = "";
 
         folders.forEach(folder => {
-            commands += `ICACLS "${folder}" /grant "Users":F ${isRecursive ? "/T" : ""}\r\n`
+            commands += `ICACLS "${folder}" /grant "Users":F${isRecursive ? " /T" : ""}\r\n`
         });
         return commands;
     }
