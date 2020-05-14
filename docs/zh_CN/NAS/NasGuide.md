@@ -148,20 +148,20 @@ nni.report_final_result(acc)  # 报告所选架构的性能
 
 ### 使用导出的架构重新训练
 
-搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 我们发现搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
+搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，这些算法为重新训练实现了新的模型。 实际上搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
 
 ```python
 model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to choices. choice 可以为：
+此 JSON 是从 Mutable 键值到 Choice 的映射。 Choice 可为：
 
-* A string: select the candidate with corresponding name.
-* A number: select the candidate with corresponding index.
-* A list of string: select the candidates with corresponding names.
-* A list of number: select the candidates with corresponding indices.
-* A list of boolean values: a multi-hot array.
+* string: 根据名称来指定候选项。
+* number: 根据索引来指定候选项。
+* string 数组: 根据名称来指定候选项。
+* number 数组: 根据索引来指定候选项。
+* boolean 数组: 可直接选定多项的数组。
 
 例如：
 
