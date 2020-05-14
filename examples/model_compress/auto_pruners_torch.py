@@ -6,7 +6,6 @@ import json
 import torch
 import torch.nn as nn
 import torch.utils.data
-import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms, models
 
@@ -65,8 +64,9 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
                         help='overall target sparsity')
 
+    # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
     parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
-                        help='dataset to use, mnist or imagenet (default MNIST)')
+                        help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
     parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
                         help='Whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
@@ -111,6 +111,25 @@ if __name__ == '__main__':
                            ])),
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
         criterion = nn.NLLLoss()
+    elif args.dataset == 'cifar10':
+        normalize = transforms.Normalize(
+            (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        train_loader = torch.utils.data.DataLoader(
+            datasets.CIFAR10(args.data_dir, train=True, transform=transforms.Compose([
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomCrop(32, 4),
+                transforms.ToTensor(),
+                normalize,
+            ]), download=True),
+            batch_size=args.batch_size, shuffle=True, **kwargs)
+
+        val_loader = torch.utils.data.DataLoader(
+            datasets.CIFAR10(args.data_dir, train=False, transform=transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ])),
+            batch_size=args.batch_size, shuffle=False, **kwargs)
+        criterion = nn.CrossEntropyLoss()
     elif args.dataset == 'imagenet':
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
@@ -140,9 +159,19 @@ if __name__ == '__main__':
 
     if args.dataset == 'mnist':
         model = LeNet().to(device)
-        optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
-
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
         scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+        for epoch in range(args.epochs):
+            train(args, model, device, train_loader,
+                  criterion, optimizer, epoch)
+            scheduler.step()
+    elif args.dataset == 'cifar10':
+        model = models.vgg16(pretrained=False, num_classes=10).to(device)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+                                    momentum=0.9,
+                                    weight_decay=5e-4)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)], gamma=0.1)
         for epoch in range(args.epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
@@ -152,11 +181,16 @@ if __name__ == '__main__':
 
     def fine_tuner(model, epochs):
         if args.dataset == 'mnist':
-            optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
-        elif args.dataset == 'imagenet':
+            optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
+        elif args.dataset == 'cifar10':
             optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
                                         momentum=0.9,
-                                        weight_decay=4e-5)
+                                        weight_decay=5e-4)
+        elif args.dataset == 'imagenet':
+            # TODO: decay lr
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+                                        momentum=0.9,
+                                        weight_decay=5e-4)
         for epoch in range(epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
@@ -202,17 +236,25 @@ if __name__ == '__main__':
     if args.fine_tune:
         if args.dataset == 'mnist':
             for epoch in range(args.fine_tune_epochs):
-                optimizer = optim.Adadelta(
+                optimizer = torch.optim.Adadelta(
                     model_masked.parameters(), lr=args.lr)
                 train(args, model_masked, device,
                       train_loader, criterion, optimizer, epoch)
                 test(model_masked, device, criterion, val_loader)
                 scheduler.step()
+        if args.dataset == 'cifar10':
+            for epoch in range(args.fine_tune_epochs):
+                optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.05,
+                                            momentum=0.9,
+                                            weight_decay=5e-4)
+                train(args, model_masked, device,
+                      train_loader, criterion, optimizer, epoch)
+                test(model_masked, device, criterion, val_loader)
         elif args.dataset == 'imagenet':
             for epoch in range(args.fine_tune_epochs):
                 optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.05,
                                             momentum=0.9,
-                                            weight_decay=4e-5)
+                                            weight_decay=5e-4)
                 train(args, model_masked, device,
                       train_loader, criterion, optimizer, epoch)
                 test(model_masked, device, criterion, val_loader)
