@@ -16,11 +16,26 @@ The OS of remote machines supports `Linux`, `Windows 10`, and `Windows Server 20
 
 ### Linux
 
-* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on each machine.
+* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on the remote machine.
 
 ### Windows
 
-* Follow [installation](../Tutorial/InstallationWin.md) to install NNI on each machine.
+* Follow [installation](../Tutorial/InstallationWin.md) to install NNI on the remote machine.
+
+* Install and start `OpenSSH Server`.
+
+  1. Open `Settings` app on Windows.
+
+  2. Click `Apps`, then click `Optional features`.
+
+  3. Click `Add a feature`, search and select `OpenSSH Server`, and then click `Install`.
+
+  4. Once it's installed, run below command to start and set to automatic start.
+
+  ```bat
+  sc config sshd start=auto
+  net start sshd
+  ```
 
 * Make sure remote account is administrator, so that it can stop running trials.
 
