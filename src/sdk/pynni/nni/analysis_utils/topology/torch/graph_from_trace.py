@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import re
 import torch
 import logging
@@ -5,7 +8,7 @@ import torch.nn as nn
 import torch.jit as jit
 from torch.utils.tensorboard._pytorch_graph import CLASSTYPE_KIND, GETATTR_KIND
 
-__all__ = ["PyNode", "Graph_Builder"]
+__all__ = ["PyNode", "GraphBuilder"]
 
 TUPLE_UNPACK = 'prim::TupleUnpack'
 
@@ -22,24 +25,24 @@ class PyNode:
                 self.isTensor = True
                 self.shape = self.cnode.type().sizes()
         if self.isOp:
-            self.name = cnode.scopeName()
+            scopename = cnode.scopeName()
+            scopename = re.split('/', scopename)
+            # note, the scopeName of node may be empty
+            self.name = scopename[-1] if len(scopename) > 0 else ''
             # remove the __module prefix
             if self.name.startswith('__module.'):
                 self.name = self.name[len('__module.'):]
 
     def __str__(self):
         if self.isTensor:
-            name = 'Tensor: {}'.format(self.shape)
+            _str = 'Tensor: {}'.format(self.shape)
         elif self.isOp:
-            name = self.cnode.kind()
-            name = re.split('::', name)[1]
-            scope = self.cnode.scopeName()
-            scope = re.split('/', scope)
-            if len(scope) > 0:
-                name = scope[-1] + '\nType: ' + name
+            op_type = self.cnode.kind()
+            op_type = re.split('::', op_type)[1]
+            _str = self.name + '\nType: ' + op_type
         else:
-            name = str(self.cnode.type())
-        return name
+            _str = str(self.cnode.type())
+        return _str
 
     def parents(self):
         if self.isOp:
@@ -48,14 +51,23 @@ class PyNode:
             return [self.cnode.node()]
 
 
-class Graph_Builder:
+class GraphBuilder:
     def __init__(self, model, data):
         """
-            input:
-                model: model to build the network architecture
-                data:  input data for the model
-            We build the network architecture  graph according the graph
-            in the scriptmodule.
+        We build the network architecture graph according the graph
+        in the scriptmodule. However, the original graph from jit.trace
+        has lots of detailed information which make the graph complicated
+        and hard to understand. So we also store a copy of the network 
+        architecture in the self.forward_edge. We will simplify the network 
+        architecure (such as unpack_tuple, etc) stored in self.forward_edge 
+        to make the graph more clear.
+        Parameters
+        ----------
+            model: 
+                The model to build the network architecture.
+            data:  
+                The sample input data for the model.
+
         """
         self.model = model
         self.data = data
@@ -74,6 +86,7 @@ class Graph_Builder:
         """
         jit.trace also traces the tuple creation and unpack, which makes 
         the grapgh complex and difficult to understand. Therefore, we 
+        unpack the tuple handly to make the graph clear.
         """
         for node in self.graph.nodes():
             if node.kind() == TUPLE_UNPACK:
@@ -92,6 +105,10 @@ class Graph_Builder:
                         self.forward_edge[out_tensors[i]])
 
     def build_graph(self):
+        """
+        Copy the architecture information from the traced_model into
+        forward_edge.
+        """
         for node in self.graph.nodes():
             self.c2py[node] = PyNode(node)
             for input in node.inputs():
@@ -111,10 +128,16 @@ class Graph_Builder:
 
     def visual_traverse(self, curnode, graph, lastnode):
         """"
-        Input:
-            curnode: current visiting node(tensor/module)
-            graph: the handle of the Dgraph
-            lastnode: the last visited node
+        Traverse the network and draw the nodes and edges
+        at the same time.
+        Parameters
+        ----------
+            curnode: 
+                Current visiting node(tensor/module).
+            graph: 
+                The handle of the Dgraph.
+            lastnode: 
+                The last visited node.
         """
         if curnode in self.visited:
             if lastnode is not None:
@@ -135,11 +158,16 @@ class Graph_Builder:
     def visualization(self, filename, format='jpg'):
         """
         visualize the network architecture automaticlly.
-        Input:
-            filename: the filename of the saved image file
-            format: the output format
-            debug: if enable the debug mode
+        Parameters
+        ----------
+            filename: 
+                The filename of the saved image file.
+            format: 
+                The output format.
         """
+        # TODO and detailed mode for the visualization function
+        # in which the graph will also contain all the weights/bias
+        # information.
         import graphviz
         graph = graphviz.Digraph(format=format)
         self.visited.clear()

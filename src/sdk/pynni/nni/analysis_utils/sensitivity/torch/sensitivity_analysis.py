@@ -19,7 +19,7 @@ SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
 class SensitivityAnalysis:
     def __init__(self, model, val_func, ratio_step=0.1):
-        # TODO Speedup by ratio_threshold or list 
+        # TODO Speedup by ratio_threshold or list
         # TODO l1 or l2 seted here
         """
         Perform sensitivity analysis for this model.

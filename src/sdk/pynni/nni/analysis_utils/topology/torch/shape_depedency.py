@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import csv
 import torch
 import queue
 import logging
@@ -11,30 +15,47 @@ CONV_TYPE = 'aten::_convolution'
 logger = logging.getLogger('Shape_Depedency')
 
 
-class Prune_Check:
+class ChannelDepedency:
     def __init__(self, model, data):
         """
-            Input: 
-                model: model to be pruned
-                data: example input data to trace the network architecture
+        This model analyze the channel depedencis between the conv
+        layers in a model.
+
+        Parameters
+        ---------- 
+            model: 
+                The model to be analyzed.
+            data: 
+                The example input data to trace the network architecture.
         """
-        self.graph_builder = Graph_Builder(model, data)
+        self.graph_builder = GraphBuilder(model, data)
         self.cnodes = list(self.graph_builder.graph.nodes())
         self.graph = self.graph_builder.graph
         self.forward_edge = self.graph_builder.forward_edge
         self.c2py = self.graph_builder.c2py
         self.depedency = {}
         self.build_channel_depedency()
-        self.visited = set()
+        
 
     def get_parent_convs(self, node):
+        """
+        Find the nearest father conv layers for the target node.
+
+        Parameters
+        ---------
+            node:
+                target node.
+    
+        Returns
+        -------
+            parent_convs:
+                nearest father conv layers for the target worknode.
+        """
         parent_convs = []
         queue = []
         queue.append(node)
         while len(queue) > 0:
             curnode = queue.pop(0)
-            print(curnode)
-            print()
             if curnode in self.c2py and self.c2py[curnode].isOp \
                     and curnode.kind() == CONV_TYPE:
                 # find the first met conv
@@ -49,6 +70,10 @@ class Prune_Check:
         return parent_convs
 
     def build_channel_depedency(self):
+        """
+            Build the channel depedency for the conv layers
+            in the model.
+        """
         for node in self.cnodes:
             parent_convs = []
             if 'add' in node.kind():
@@ -69,16 +94,25 @@ class Prune_Check:
 
     def filter_prune_check(self, ratios):
         """
-        input:
-            ratios: the prune ratios for the layers
-            ratios is the dict, in which the keys are 
-            the names of the target layer and the values
-            are the prune ratio for the corresponding layers
-            For example:
-            ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
-            Note: the name of the layers should looks like 
-            the names that model.named_modules() functions 
-            returns.
+        According to the channel depedencies between the conv
+        layers, check if the filter pruning ratio for the conv 
+        layers is legal.
+
+        Parameters
+        ---------
+            ratios: 
+                the prune ratios for the layers. %ratios is a dict, 
+                in which the keys are the names of the target layer 
+                and the values are the prune ratio for the corresponding 
+                layers. For example:
+                ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
+                Note: the name of the layers should looks like 
+                the names that model.named_modules() functions 
+                returns.
+
+        Returns
+        -------
+            True/False
         """
 
         for node in self.cnodes:
@@ -93,3 +127,30 @@ class Prune_Check:
                     elif ratios[self.c2py[node].name] != ratios[self.c2py[other].name]:
                         return False
         return True
+
+    def export(self, filepath):
+        """    
+        export the channel depedencies as a csv file.
+        """
+        header = ['Depedency Set', 'Convolutional Layers']
+        setid = 0
+        visited = set()
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for node in self.cnodes:
+                if node.kind() != CONV_TYPE or node in visited:
+                    continue
+                setid += 1
+                row = ['Set %d' % setid]
+                if node not in self.depedency:
+                    visited.add(node)
+                    row.append(self.c2py[node].name)
+                else:
+                    for other in self.depedency[node]:
+                        visited.add(other)
+                        row.append(self.c2py[other].name)
+                csv_w.writerow(row)
+
+
+
