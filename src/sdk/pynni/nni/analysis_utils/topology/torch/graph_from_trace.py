@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 import re
+import os
+import csv
 import torch
 import logging
 import torch.nn as nn
@@ -13,6 +15,7 @@ __all__ = ["PyNode", "GraphBuilder"]
 TUPLE_UNPACK = 'prim::TupleUnpack'
 
 logger = logging.getLogger('Graph_From_Trace')
+
 
 class PyNode:
     def __init__(self, cnode, isValue=False):
@@ -126,7 +129,7 @@ class GraphBuilder:
                 else:
                     self.forward_edge[node] = [output]
 
-    def visual_traverse(self, curnode, graph, lastnode):
+    def visual_traverse(self, curnode, graph, lastnode, cfg):
         """"
         Traverse the network and draw the nodes and edges
         at the same time.
@@ -138,24 +141,36 @@ class GraphBuilder:
                 The handle of the Dgraph.
             lastnode: 
                 The last visited node.
+            cfg:
+                Dict object to specify the rendering 
+                configuration for operation node.
+                key is the name of the operation,
+                value is a also a dict. For example,
+                {'conv1': {'shape':'box', 'color':'red'}} 
         """
         if curnode in self.visited:
             if lastnode is not None:
                 graph.edge(str(id(lastnode)), str(id(curnode)))
             return
         self.visited.add(curnode)
-        name = str(self.c2py[curnode])
+        tmp_str = str(self.c2py[curnode])
         if self.c2py[curnode].isOp:
-            graph.node(str(id(curnode)), name, shape='ellipse', color='orange')
+            name = self.c2py[curnode].name
+            # default render configuration
+            render_cfg = {'shape': 'ellipse', 'style': 'solid'}
+            if name in cfg:
+                render_cfg = cfg[name]
+            graph.node(str(id(curnode)), tmp_str, **render_cfg)
         else:
-            graph.node(str(id(curnode)), name, shape='box', color='lightblue')
+            graph.node(str(id(curnode)), tmp_str, shape='box',
+                       color='lightblue', style='dashed')
         if lastnode is not None:
             graph.edge(str(id(lastnode)), str(id(curnode)))
         if curnode in self.forward_edge:
             for _next in self.forward_edge[curnode]:
-                self.visual_traverse(_next, graph, curnode)
+                self.visual_traverse(_next, graph, curnode, cfg)
 
-    def visualization(self, filename, format='jpg'):
+    def base_visualization(self, filename, format='jpg', cfg=None):
         """
         visualize the network architecture automaticlly.
         Parameters
@@ -168,11 +183,65 @@ class GraphBuilder:
         # TODO and detailed mode for the visualization function
         # in which the graph will also contain all the weights/bias
         # information.
+        if not cfg:
+            cfg = {}
         import graphviz
         graph = graphviz.Digraph(format=format)
         self.visited.clear()
         for input in self.graph.inputs():
             if input.type().kind() == CLASSTYPE_KIND:
                 continue
-            self.visual_traverse(input, graph, None)
+            self.visual_traverse(input, graph, None, cfg)
         graph.render(filename)
+
+    def visualize_with_flops(self, filepath, format, flops_file):
+        assert os.path.exists(flops_file)
+        f_handle = open(flops_file, 'r')
+        csv_r = csv.reader(f_handle)
+        flops = {}
+        # skip the header of the csv file
+        header = next(csv_r)
+        for row in csv_r:
+            if(len(row) == 2):
+                layername = row[0]
+                _flops = float(row[1])
+                flops[layername] = _flops
+
+        f_handle.close()
+        # Divide the flops of the layers into 11 levels
+        # We use the 'rdylgn11 color scheme' to present
+        # the number of the flops, in which we have 11 colors
+        # range from green to red.
+        _min_flops = min(flops.values())
+        _max_flops = max(flops.values())
+        color_scheme_count = 9
+        flops_step = (_max_flops - _min_flops) / (color_scheme_count-1)
+
+        cfgs = {}
+        for layername in flops:
+            flops_level = (flops[layername] - _min_flops) / flops_step
+            # flops_level = color_scheme_count - int(round(flops_level))
+            flops_level = int(round(flops_level)) + 1
+            render_cfg = render_cfg = {'shape': 'ellipse',
+                                       'fillcolor': "/reds9/"+str(flops_level), 'style': 'filled'}
+            cfgs[layername] = render_cfg
+        self.base_visualization(filepath, format=format, cfg=cfgs)
+
+    def visualize_with_depedency(self, filepath, format, depedency_file):
+        assert os.path.exists(depedency_file)
+
+    def visualize_with_sensitivity(self, filepath, format, sensitivity_file):
+        assert os.path.exists(sensitivity_file)
+
+    def visualization(self, filename, format='jpg',
+                      flops_file=None,
+                      sensitivity_file=None,
+                      depedency_file=None):
+
+        # First, visualize the network architecture only
+        self.base_visualization(filename, format=format)
+        # if the flops file is specified, we also render
+        # a image with the flops information.
+        if flops_file is not None:
+            flops_img = filename + '_flops'
+            self.visualize_with_flops(flops_img, format, flops_file)
