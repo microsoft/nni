@@ -229,6 +229,33 @@ class GraphBuilder:
 
     def visualize_with_depedency(self, filepath, format, depedency_file):
         assert os.path.exists(depedency_file)
+        f_handle = open(depedency_file, 'r')
+        csv_r = csv.reader(f_handle)
+        # skip the header of the csv file
+        header = next(csv_r)
+        depedency_sets = []
+        for row in csv_r:
+            tmp_set = set()
+            for i in range(1, len(row)):
+                tmp_set.add(row[i])
+            depedency_sets.append(tmp_set)
+        f_handle.close()
+        # Create the render configs, assign the same color for the
+        # same depedency set
+        cfgs = {}
+        colorid = 0
+        for tmp_set in depedency_sets:
+            if len(tmp_set) == 1:
+                # This layer has no depedency
+                continue
+            colorid = (colorid + 1) % 12
+            str_color = "/paired12/%d" % (colorid + 1)
+            for layername in tmp_set:
+                render_cfg = {'shape': 'ellipse',
+                              'fillcolor': str_color, 'style': 'filled'}
+                cfgs[layername] = render_cfg
+        self.base_visualization(filepath, format=format, cfg=cfgs)
+
 
     def visualize_with_sensitivity(self, filepath, format, sensitivity_file):
         assert os.path.exists(sensitivity_file)
@@ -245,3 +272,8 @@ class GraphBuilder:
         if flops_file is not None:
             flops_img = filename + '_flops'
             self.visualize_with_flops(flops_img, format, flops_file)
+
+        if depedency_file is not None:
+            depedency_img = filename + '_depedency'
+            self.visualize_with_depedency(
+                depedency_img, format, depedency_file)
