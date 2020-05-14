@@ -256,8 +256,8 @@ class RemoteMachineTrainingService implements TrainingService {
             const executor = await this.getExecutor(trialJob.id);
 
             if (trialJob.status === 'UNKNOWN') {
-                this.releaseTrialResource(trialJob);
                 trialJob.status = 'USER_CANCELED';
+                this.releaseTrialResource(trialJob);
                 return
             }
 
