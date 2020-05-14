@@ -162,11 +162,11 @@ class ShellExecutor {
             nniManagerVersion, logCollection, codeFile, cudaVisibleSetting);
     }
 
-    public generateGpuStatsScript(): string {
+    public generateGpuStatsScript(experimentId: string): string {
         if (this.osCommands === undefined) {
             throw new Error("osCommands must be initialized!");
         }
-        return this.osCommands.generateGpuStatsScript(this.getRemoteScriptsPath());
+        return this.osCommands.generateGpuStatsScript(this.getRemoteScriptsPath(experimentId));
     }
 
     public getTempPath(): string {
@@ -176,8 +176,8 @@ class ShellExecutor {
         return this.tempPath;
     }
 
-    public getRemoteScriptsPath(): string {
-        return this.joinPath(this.tempPath, this.username, 'nni', 'scripts');
+    public getRemoteScriptsPath(experimentId: string): string {
+        return this.joinPath(this.getRemoteExperimentRootDir(experimentId), 'scripts');
     }
 
     public getRemoteExperimentRootDir(experimentId: string): string {

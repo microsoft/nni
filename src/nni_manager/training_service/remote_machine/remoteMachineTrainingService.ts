@@ -129,8 +129,8 @@ class RemoteMachineTrainingService implements TrainingService {
         if (executorManager === undefined) {
             throw new Error(`ExecutorManager is not assigned for trial ${trial.id}`);
         }
+        // Note, it still keep reference in trialExecutorManagerMap, as there may be following requests from nni manager.
         executorManager.releaseExecutor(trial.id);
-        this.trialExecutorManagerMap.delete(trial.id);
     }
 
     /**
@@ -380,7 +380,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 const executor = await executorManager.getExecutor(this.initExecutorId);
                 if (executor !== undefined) {
                     this.log.info(`killing gpu metric collector on ${executor.name}`);
-                    const gpuJobPidPath: string = executor.joinPath(executor.getRemoteScriptsPath(), 'pid');
+                    const gpuJobPidPath: string = executor.joinPath(executor.getRemoteScriptsPath(getExperimentId()), 'pid');
                     await executor.killChildProcesses(gpuJobPidPath);
                 }
                 executorManager.releaseAllExecutor();
@@ -422,15 +422,14 @@ class RemoteMachineTrainingService implements TrainingService {
         await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
 
         // the directory to store temp scripts in remote machine
-        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath();
+        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath(getExperimentId());
 
         // clean up previous result.
-        await executor.removeFolder(executor.getRemoteScriptsPath(), true);
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
         await executor.allowPermission(false, nniRootDir, `${nniRootDir}/*`, `${nniRootDir}/scripts/*`);
 
         //Begin to execute gpu_metrics_collection scripts
-        const script = executor.generateGpuStatsScript();
+        const script = executor.generateGpuStatsScript(getExperimentId());
         executor.executeScript(script, false, true);
         // the timer is trigger in 1 second, it causes multiple runs on server.
         // So reduce it's freqeunce, only allow one of it run.
