@@ -76,7 +76,8 @@ class ShellExecutor {
                 // Anaconda has this kind of output.
                 let defaultResult = await this.execute("");
                 if (defaultResult.stdout !== "") {
-                    this.channelDefaultOutputs.push(defaultResult.stdout);
+                    deferred.reject(new Error(`The windows remote node shouldn't output welcome message, below content should be removed from the command window! \n` +
+                        `${defaultResult.stdout}`));
                 }
                 defaultResult = await this.execute("powershell -command \"\"");
                 if (defaultResult.stdout !== "") {
@@ -259,12 +260,13 @@ class ShellExecutor {
      * @param remoteFilePath the target path in remote machine
      */
     public async copyFileToRemote(localFilePath: string, remoteFilePath: string): Promise<boolean> {
-        this.log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
+        const commandIndex = randomInt(10000);
+        this.log.debug(`copyFileToRemote(${commandIndex}): localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
 
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
-                this.log.error(`copyFileToRemote: ${err}`);
+                this.log.error(`copyFileToRemote(${commandIndex}): ${err}`);
                 deferred.reject(err);
 
                 return;
@@ -273,7 +275,7 @@ class ShellExecutor {
             sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr: Error) => {
                 sftp.end();
                 if (fastPutErr !== undefined && fastPutErr !== null) {
-                    this.log.error(`copyFileToRemote fastPutErr: ${fastPutErr}, ${localFilePath}, ${remoteFilePath}`);
+                    this.log.error(`copyFileToRemote(${commandIndex}) fastPutErr: ${fastPutErr}, ${localFilePath}, ${remoteFilePath}`);
                     deferred.reject(fastPutErr);
                 } else {
                     deferred.resolve(true);
@@ -308,11 +310,12 @@ class ShellExecutor {
     }
 
     public async getRemoteFileContent(filePath: string): Promise<string> {
-        this.log.debug(`getRemoteFileContent: filePath: ${filePath}`);
+        const commandIndex = randomInt(10000);
+        this.log.debug(`getRemoteFileContent(${commandIndex}): filePath: ${filePath}`);
         const deferred: Deferred<string> = new Deferred<string>();
         this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
-                this.log.error(`getRemoteFileContent sftp: ${err}`);
+                this.log.error(`getRemoteFileContent(${commandIndex}) sftp: ${err}`);
                 deferred.reject(new Error(`SFTP error: ${err}`));
 
                 return;
@@ -331,11 +334,10 @@ class ShellExecutor {
                     .on('end', () => {
                         // sftp connection need to be released manually once operation is done
                         sftp.end();
-                        this.log.debug(`getRemoteFileContent end: dataBuffer: ${dataBuffer}`);
                         deferred.resolve(dataBuffer);
                     });
             } catch (error) {
-                this.log.error(`getRemoteFileContent: ${error.message}`);
+                this.log.error(`getRemoteFileContent(${commandIndex}): ${error.message}`);
                 sftp.end();
                 deferred.reject(new Error(`SFTP error: ${error.message}`));
             }

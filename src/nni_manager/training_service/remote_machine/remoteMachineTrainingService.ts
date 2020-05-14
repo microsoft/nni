@@ -125,7 +125,12 @@ class RemoteMachineTrainingService implements TrainingService {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        this.releaseExecutor(trial.id);
+        const executorManager = this.trialExecutorManagerMap.get(trial.id);
+        if (executorManager === undefined) {
+            throw new Error(`ExecutorManager is not assigned for trial ${trial.id}`);
+        }
+        executorManager.releaseExecutor(trial.id);
+        this.trialExecutorManagerMap.delete(trial.id);
     }
 
     /**
@@ -351,14 +356,6 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error(`ExecutorManager is not assigned for trial ${trialId}`);
         }
         return await executorManager.getExecutor(trialId);
-    }
-
-    private releaseExecutor(trialId: string): void {
-        const executorManager = this.trialExecutorManagerMap.get(trialId);
-        if (executorManager === undefined) {
-            throw new Error(`ExecutorManager is not assigned for trial ${trialId}`);
-        }
-        executorManager.releaseExecutor(trialId);
     }
 
     /**
