@@ -360,7 +360,7 @@ class SimulatedAnnealingPruner(Pruner):
             self._best_performance *= -1
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
-        with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
+        with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w+') as jsonfile:
             json.dump({
                 'performance': self._best_performance,
                 'config_list': json.dumps(self._best_config_list)
