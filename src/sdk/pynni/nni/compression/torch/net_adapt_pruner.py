@@ -56,7 +56,7 @@ class NetAdaptPruner(Pruner):
             PATH to save experiment data
         """
         # models used for iterative pruning and evaluation
-        self._model_to_prune = copy.deepcopy(model)
+        self._original_model = copy.deepcopy(model)
 
         super().__init__(model, config_list)
 
@@ -113,14 +113,14 @@ class NetAdaptPruner(Pruner):
         list
             a list of the wrapped modules
         """
-        self.modules_wrapper = modules_wrapper
+        self.modules_wrapper = copy.deepcopy(modules_wrapper)
 
     def calc_mask(self, wrapper, **kwargs):
         return None
 
     def _update_config_list(self, config_list, op_name, sparsity):
         '''
-        update sparsity of op_name
+        update sparsity of op_name in config_list
         '''
         config_list_updated = copy.deepcopy(config_list)
         for idx, item in enumerate(config_list):
@@ -159,19 +159,16 @@ class NetAdaptPruner(Pruner):
             target_sparsity = current_sparsity + self._delta_sparsity
             delta_num_weights = self._get_delta_num_weights(pruning_iteration)
 
-            # lists to store testing result of pruning different layers
-            op_names = []
-            performances = []
-            sparsities = []
+            # variable store the best result of one iteration
+            best_layer = {}
 
             for wrapper in self.get_modules_wrapper():
                 # Choose Num Filters to prune
                 # TODO: check related layers
                 # sparsity that this layer needs to prune to satisfy the requirement
-                sparsity = (wrapper.weight_mask.numel() -
-                            delta_num_weights) / wrapper.weight_mask.numel()
+                sparsity = delta_num_weights / wrapper.weight_mask.numel()
 
-                if sparsity <= 0:
+                if sparsity >= 1:
                     _logger.info(
                         'Layer %s has no enough weights remained to prune', wrapper.name)
                     continue
@@ -179,56 +176,67 @@ class NetAdaptPruner(Pruner):
                 # Choose which filter to prune (l1)
                 config_list = self._update_config_list(
                     self._config_list, wrapper.name, sparsity)
+                _logger.info("config_list used : %s", config_list)
 
                 if self._pruning_mode == 'channel':
                     pruner = L1FilterPruner(copy.deepcopy(
-                        self._model_to_prune), config_list)
+                        self._original_model), config_list)
                 elif self._pruning_mode == 'fine_grained':
                     pruner = LevelPruner(copy.deepcopy(
-                        self._model_to_prune), config_list)
+                        self._original_model), config_list)
                 model_masked = pruner.compress()
 
+                performance = self._evaluator(model_masked)
+                _logger.info(
+                    "Layer : %s, evaluation result before fine tuning : %s", wrapper.name, performance)
                 # Short-term fine tune the pruned model
-                # TODO: check if model_masked is used repeatedly
                 self._fine_tuner(model_masked)
 
-                perf = self._evaluator(model_masked)
+                performance = self._evaluator(model_masked)
                 _logger.info(
-                    "Layer : %s, evaluation result after short-term fine tuning : %s", wrapper.name, perf)
+                    "Layer : %s, evaluation result after short-term fine tuning : %s", wrapper.name, performance)
 
-                op_names.append(wrapper.name)
-                sparsities.append(sparsity)
-                performances.append(perf)
+                if not best_layer or (self._optimize_mode is OptimizeMode.Maximize and performance > best_layer['performance']) or (self._optimize_mode is OptimizeMode.Minimize and performance < best_layer['performance']):
+                    _logger.debug("updating best layer to %s...", wrapper.name)
+                    best_layer = {
+                        'op_name': wrapper.name,
+                        'sparsity': sparsity,
+                        'performance': performance
+                    }
+                    # update bound model
+                    # TODO: why set modules_wrapper doesn't work ?
+                    self.bound_model = model_masked
+                    # self._set_modules_wrapper(pruner.get_modules_wrapper())
+                    # self._wrap_model()
 
             # 3. Pick the best layer to prune
-            if not performances:
+            if not best_layer:
                 _logger.info("No more layers to prune.")
                 break
 
-            if self._optimize_mode is OptimizeMode.Minimize:
-                latest_performance = min(performances)
-            else:
-                latest_performance = max(performances)
-            idx = performances.index(latest_performance)
-
             self._config_list = self._update_config_list(
-                self._config_list, op_names[idx], sparsities[idx])
+                self._config_list, best_layer['op_name'], best_layer['sparsity'])
 
             current_sparsity = target_sparsity
-            _logger.info('Pruning iteration %d, layer %s seleted with sparsity %s, latest performance : %s, current overall sparsity : %s',
-                         pruning_iteration, op_names[idx], sparsities[idx], latest_performance, current_sparsity)
+            _logger.info('Pruning iteration %d finished. Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, current overall sparsity : %s',
+                         pruning_iteration, best_layer['op_name'], best_layer['sparsity'], best_layer['performance'], current_sparsity)
             pruning_iteration += 1
 
-        # save the pruned model
-        self._set_modules_wrapper(pruner.get_modules_wrapper())
-        self._wrap_model()
-        self._final_performance = latest_performance
-        # TODO: check bound_model parameter
+            # update bound model after each iteration
+            # _logger.debug("Updating bound model...")
+            # self._set_modules_wrapper(best_layer['modules_wrapper'])
+            # self._wrap_model()
+            self._final_performance = best_layer['performance']
 
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list)
 
+        _logger.debug("Performance (bound model): %s",
+                      self._evaluator(self.bound_model))
+
         # save best config found and best performance
+        if not os.path.exists(self._experiment_data_dir):
+            os.makedirs(self._experiment_data_dir)
         with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
             json.dump({
                 'performance': self._final_performance,

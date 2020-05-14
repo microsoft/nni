@@ -65,15 +65,16 @@ class SimulatedAnnealingPruner(Pruner):
         """
         # original model
         self._model_to_prune = copy.deepcopy(model)
+        self._pruning_mode = pruning_mode
 
         super().__init__(model, config_list)
 
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
-        self._pruning_mode = pruning_mode
 
         # hyper parameters for SA algorithm
         self._start_temperature = start_temperature
+        self._current_temperature = start_temperature
         self._stop_temperature = stop_temperature
         self._cool_down_rate = cool_down_rate
         self._perturbation_magnitude = perturbation_magnitude
@@ -101,11 +102,11 @@ class SimulatedAnnealingPruner(Pruner):
              # consider only the layers without dependencies
             model_name = self._model_to_prune.__class__.__name__
             ops_no_dependency = get_layers_no_dependency(model_name)
-            _logger.debug("layers no dependency: %s", ops_no_dependency)
+
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
                     continue
-                if name not in get_layers_no_dependency(model_name):
+                if self._pruning_mode == 'channel' and model_name in ['MobileNetV2', 'RetinaFace'] and name not in ops_no_dependency:
                     continue
                 layer = LayerInfo(name, module)
                 config = self.select_config(layer)
@@ -357,6 +358,8 @@ class SimulatedAnnealingPruner(Pruner):
         # save best config found and best performance
         if self._optimize_mode is OptimizeMode.Minimize:
             self._best_performance *= -1
+        if not os.path.exists(self._experiment_data_dir):
+            os.makedirs(self._experiment_data_dir)
         with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
             json.dump({
                 'performance': self._best_performance,

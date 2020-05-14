@@ -1,16 +1,14 @@
-from __future__ import print_function
+# from __future__ import print_function
 
 import argparse
 import os
 import json
 import torch
-import torch.nn as nn
-import torch.utils.data
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
-from nni.compression.torch import SimulatedAnnealingPruner, NetAdaptPruner
+from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner
 
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
@@ -56,7 +54,7 @@ if __name__ == '__main__':
         description='PyTorch Example for SimulatedAnnealingPruner')
 
     parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner', metavar='P',
-                        help='pruner to use, SimulatedAnnealingPruner or NetAdaptPruner')
+                        help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
     parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
                         help='pruning mode, channel or fine_grained')
     parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
@@ -82,10 +80,6 @@ if __name__ == '__main__':
                         help='input batch size for testing (default: 64)')
     parser.add_argument('--epochs', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 14)')
-    parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
-                        help='learning rate (default: 1.0)')
-    parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
-                        help='Learning rate step gamma (default: 0.7)')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=False,
@@ -110,7 +104,7 @@ if __name__ == '__main__':
                                transforms.Normalize((0.1307,), (0.3081,))
                            ])),
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
-        criterion = nn.NLLLoss()
+        criterion = torch.nn.NLLLoss()
     elif args.dataset == 'cifar10':
         normalize = transforms.Normalize(
             (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
@@ -129,7 +123,7 @@ if __name__ == '__main__':
                 normalize,
             ])),
             batch_size=args.batch_size, shuffle=False, **kwargs)
-        criterion = nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss()
     elif args.dataset == 'imagenet':
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
@@ -152,15 +146,15 @@ if __name__ == '__main__':
                                      normalize,
                                  ])),
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
-        criterion = nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss()
 
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if args.dataset == 'mnist':
         model = LeNet().to(device)
-        optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
-        scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
+        scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
         for epoch in range(args.epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
@@ -170,7 +164,7 @@ if __name__ == '__main__':
         optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
                                     momentum=0.9,
                                     weight_decay=5e-4)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        scheduler = MultiStepLR(
             optimizer, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)], gamma=0.1)
         for epoch in range(args.epochs):
             train(args, model, device, train_loader,
@@ -181,7 +175,7 @@ if __name__ == '__main__':
 
     def fine_tuner(model, epochs):
         if args.dataset == 'mnist':
-            optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
+            optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
         elif args.dataset == 'cifar10':
             optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
                                         momentum=0.9,
@@ -218,6 +212,9 @@ if __name__ == '__main__':
         'op_types': op_types
     }]
 
+    if args.pruner == 'L1FilterPruner':
+        pruner = L1FilterPruner(
+            model, config_list)
     if args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
@@ -235,20 +232,23 @@ if __name__ == '__main__':
 
     if args.fine_tune:
         if args.dataset == 'mnist':
+            optimizer = torch.optim.Adadelta(
+                model_masked.parameters(), lr=1)
+            scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
             for epoch in range(args.fine_tune_epochs):
-                optimizer = torch.optim.Adadelta(
-                    model_masked.parameters(), lr=args.lr)
                 train(args, model_masked, device,
                       train_loader, criterion, optimizer, epoch)
                 test(model_masked, device, criterion, val_loader)
                 scheduler.step()
         if args.dataset == 'cifar10':
+            optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.01,
+                                        momentum=0.9,
+                                        weight_decay=5e-4)
+            scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
             for epoch in range(args.fine_tune_epochs):
-                optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.05,
-                                            momentum=0.9,
-                                            weight_decay=5e-4)
                 train(args, model_masked, device,
                       train_loader, criterion, optimizer, epoch)
+                scheduler.step()
                 test(model_masked, device, criterion, val_loader)
         elif args.dataset == 'imagenet':
             for epoch in range(args.fine_tune_epochs):
@@ -263,5 +263,7 @@ if __name__ == '__main__':
     print('Evaluation result (fine tuned): %s' % evaluation_result)
     result['finetuned'] = evaluation_result
 
-    with open(os.path.join(args.experiment_data_dir, 'performance.json'), 'w') as f:
+    if not os.path.exists(args.experiment_data_dir):
+        os.makedirs(args.experiment_data_dir)
+    with open(os.path.join(args.experiment_data_dir, 'performance.json'), 'w+') as f:
         json.dump(result, f)
