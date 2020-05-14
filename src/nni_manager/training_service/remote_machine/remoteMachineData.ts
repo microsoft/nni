@@ -123,7 +123,7 @@ export class ExecutorManager {
         }
         this.executorMap.set(id, executor);
 
-        //init a new executor if could not get an available one
+        // init a new executor if no free one.
         if (executor === undefined) {
             throw new Error("executor shouldn't be undefined before return!");
         }

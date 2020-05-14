@@ -11,7 +11,7 @@ import { Client, ClientChannel, ConnectConfig, SFTPWrapper } from 'ssh2';
 import * as stream from 'stream';
 import { Deferred } from "ts-deferred";
 import { getLogger, Logger } from '../../common/log';
-import { uniqueString } from '../../common/utils';
+import { uniqueString, randomInt } from '../../common/utils';
 import { execRemove, tarAdd } from '../common/util';
 import { LinuxCommands } from "./extends/linuxCommands";
 import { WindowsCommands } from './extends/windowsCommands';
@@ -345,17 +345,20 @@ class ShellExecutor {
     }
 
     private async execute(command: string | undefined, processOutput: ((input: RemoteCommandResult) => RemoteCommandResult) | undefined = undefined, useShell: boolean = false): Promise<RemoteCommandResult> {
-        this.log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred: Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
         let stderr: string = '';
         let exitCode: number;
 
+        const commandIndex = randomInt(10000);
+        this.log.debug(`remoteExeCommand(${commandIndex}): [${command}]`);
+
         // Windows always uses shell, and it needs to disable to get it works.
         useShell = useShell && !this.isWindows;
+
         const callback = (err: Error, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
-                this.log.error(`remoteExeCommand: ${err.message}`);
+                this.log.error(`remoteExeCommand(${commandIndex}): ${err.message}`);
                 deferred.reject(err);
                 return;
             }
@@ -380,7 +383,7 @@ class ShellExecutor {
                     });
                 }
 
-                this.log.debug(`remoteExeCommand exit(${exitCode})\nstdout: ${modifiedStdout}\nstderr: ${stderr}`);
+                this.log.debug(`remoteExeCommand(${commandIndex}) exit(${exitCode})\nstdout: ${modifiedStdout}\nstderr: ${stderr}`);
                 let result = {
                     stdout: modifiedStdout,
                     stderr: stderr,

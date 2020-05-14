@@ -446,7 +446,7 @@ class NNIManager implements Manager {
                     this.log.info(`cancelTrialJob: ${trialJob.id}`);
                     await this.trainingService.cancelTrialJob(trialJob.id);
                 } catch (error) {
-                    this.log.debug(`ignorable error on cancel trial ${trialJob.id}. ${error}`);
+                    this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
                 }
             }
         }
