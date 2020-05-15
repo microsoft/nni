@@ -1,0 +1,250 @@
+node {
+  name: "input/input.1"
+  op: "IO Node"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 5
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "output/output.1"
+  op: "IO Node"
+  input: "MyModule/ModuleList[module]/Linear[1]/46"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/bias/35"
+  op: "prim::GetAttr"
+  input: "MyModule/ModuleList[module]/Linear[0]/weight/26"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  bias }"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/weight/36"
+  op: "prim::GetAttr"
+  input: "MyModule/ModuleList[module]/Linear[0]/weight/26"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  weight }"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/37"
+  op: "aten::t"
+  input: "MyModule/ModuleList[module]/Linear[0]/weight/36"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 5
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/38"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/39"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[0]/input"
+  op: "aten::addmm"
+  input: "MyModule/ModuleList[module]/Linear[0]/bias/35"
+  input: "input/input.1"
+  input: "MyModule/ModuleList[module]/Linear[0]/37"
+  input: "MyModule/ModuleList[module]/Linear[0]/38"
+  input: "MyModule/ModuleList[module]/Linear[0]/39"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/bias/41"
+  op: "prim::GetAttr"
+  input: "MyModule/ModuleList[module]/Linear[1]/weight/30"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  bias }"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/weight/42"
+  op: "prim::GetAttr"
+  input: "MyModule/ModuleList[module]/Linear[1]/weight/30"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  weight }"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/43"
+  op: "aten::t"
+  input: "MyModule/ModuleList[module]/Linear[1]/weight/42"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 3
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/44"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/45"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/ModuleList[module]/Linear[1]/46"
+  op: "aten::addmm"
+  input: "MyModule/ModuleList[module]/Linear[1]/bias/41"
+  input: "MyModule/ModuleList[module]/Linear[0]/input"
+  input: "MyModule/ModuleList[module]/Linear[1]/43"
+  input: "MyModule/ModuleList[module]/Linear[1]/44"
+  input: "MyModule/ModuleList[module]/Linear[1]/45"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+versions {
+  producer: 22
+}
