@@ -475,8 +475,8 @@ class LocalTrainingService implements TrainingService {
     private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
-            script.push(`Copy-Item $NNI_CODE_DIR\\* -Destination $NNI_SYS_DIR -Recurse`);
-            script.push(`cd $NNI_SYS_DIR`);
+            script.push(`Copy-Item $env:NNI_CODE_DIR\\* -Destination $env:NNI_SYS_DIR -Recurse`);
+            script.push(`cd $env:NNI_SYS_DIR`);
             script.push(
                 `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
