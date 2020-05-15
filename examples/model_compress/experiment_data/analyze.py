@@ -16,9 +16,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from models.mnist.lenet import LeNet
 
-# from models.Pytorch_Retinaface.models.retinaface import RetinaFace
-# from models.Pytorch_Retinaface.data import cfg_mnet, cfg_re50
-
 
 def get_config_lists_from_pruning_history(files):
     pruning_histories = []
@@ -46,13 +43,22 @@ def get_config_lists_from_search_result(files):
     for f in files:
         with open(f, 'r') as jsonfile:
             j = json.load(jsonfile)
-            # print(j)
-            # print(j['performance'])
-            # print(j['config_list'])
             performances.append(j['performance'])
             config_lists.append(json.loads(j['config_list']))
 
     return config_lists, performances
+
+
+def get_performances_fine_tuned(files):
+    performances = []
+
+    for f in files:
+        with open(f, 'r') as jsonfile:
+            j = json.load(jsonfile)
+            performances.append(j['finetuned'])
+
+    return performances
+
 
 
 def get_original_op(model):
@@ -99,8 +105,21 @@ def draw(args):
         config_lists, performances = get_config_lists_from_search_result(
             files)
         overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
-        performances_fine_tuned_2_epochs = [
+        fine_tune_epochs = 3
+        performances_fine_tuned = [
             0.43526, 0.43616, 0.41408, 0.38422, 0.39246]
+    elif args.model == 'vgg16' and args.pruning_mode == 'channel':
+        files = ['cifar10_sapruner_channel/01/search_result.json', 'cifar10_sapruner_channel/02/search_result.json',
+                 'cifar10_sapruner_channel/03/search_result.json', 'cifar10_sapruner_channel/04/search_result.json', 'cifar10_sapruner_channel/05/search_result.json']
+        model = models.vgg16()
+        notes = 'VGG16, CIFAR10, SAPruner, channel pruning'
+        config_lists, performances = get_config_lists_from_search_result(
+            files)
+        overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
+        fine_tune_epochs = 50
+        files = ['cifar10_sapruner_channel/01/performance.json', 'cifar10_sapruner_channel/02/performance.json',
+                 'cifar10_sapruner_channel/03/performance.json', 'cifar10_sapruner_channel/04/performance.json', 'cifar10_sapruner_channel/05/performance.json']
+        performances_fine_tuned = get_performances_fine_tuned(files)
 
     fig, axs = plt.subplots(3, 1, figsize=(15, 15))
     fig.suptitle("Pruning Sparsities Distribution ({})".format(notes))
@@ -120,7 +139,7 @@ def draw(args):
             i = op_names_original.index(op_name)
             sparsities[i] = config['sparsity']
         axs[1].plot(op_names_original, sparsities,
-                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (3 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance ({} epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], fine_tune_epochs, performances_fine_tuned[idx]))
         # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[1].set_title('original order')
     axs[1].legend()
@@ -135,7 +154,7 @@ def draw(args):
             op_names_sorted.append(config['op_names'][0])
 
         axs[2].plot(op_names_sorted, sparsities,
-                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (3 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance ({} epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], fine_tune_epochs, performances_fine_tuned[idx]))
         # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[2].set_title('Sorted by op weights')
     axs[2].legend()

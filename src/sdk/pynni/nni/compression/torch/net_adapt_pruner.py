@@ -156,7 +156,9 @@ class NetAdaptPruner(Pruner):
                 num_weights += module.weight.data.numel()
                 flag_found = True
             # TODO: skip Functional ops, dropout, activation...
-            # TODO: what about max pooling ?
+            # skip Dropout2d
+            if flag_found and type(module).__name__ in ['Dropout2d']:
+                continue
             if flag_found and type(module).__name__ in ['Conv2d', 'Linear']:
                 num_weights += module.weight.data.numel()
                 break
