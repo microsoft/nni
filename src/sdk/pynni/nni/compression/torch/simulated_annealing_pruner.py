@@ -301,8 +301,8 @@ class SimulatedAnnealingPruner(Pruner):
                 elif self._pruning_mode == 'fine_grained':
                     pruner = LevelPruner(
                         model=copy.deepcopy(self._model_to_prune), config_list=config_list)
-                model_pruned = pruner.compress()
-                evaluation_result = self._evaluator(model_pruned)
+                model_masked = pruner.compress()
+                evaluation_result = self._evaluator(model_masked)
 
                 self._search_history.append(
                     {'sparsity': self._sparsity, 'performance': evaluation_result, 'config_list': config_list})
@@ -324,7 +324,7 @@ class SimulatedAnnealingPruner(Pruner):
                         # else return current sparsities
                         self._set_modules_wrapper(
                             pruner.get_modules_wrapper())
-                        self._wrap_model()
+                        self.bound_model = model_masked
                     break
                 # if not, accept with probability e^(-deltaE/current_temperature)
                 else:

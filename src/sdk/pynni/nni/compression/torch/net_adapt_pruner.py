@@ -57,13 +57,13 @@ class NetAdaptPruner(Pruner):
         """
         # models used for iterative pruning and evaluation
         self._original_model = copy.deepcopy(model)
+        self._pruning_mode = pruning_mode
 
         super().__init__(model, config_list)
 
         self._fine_tuner = fine_tuner
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
-        self._pruning_mode = pruning_mode
 
         # hyper parameters for NetAdapt algorithm
         self._delta_sparsity = 0.1
@@ -137,6 +137,9 @@ class NetAdaptPruner(Pruner):
                 {'sparsity': sparsity, 'op_names': [op_name]})
         return config_list_updated
 
+    def _calc_related_weights(self, op_name, sparsity):
+
+    
     def compress(self):
         """
         Compress the model.
@@ -163,17 +166,15 @@ class NetAdaptPruner(Pruner):
             best_layer = {}
 
             for wrapper in self.get_modules_wrapper():
-                # Choose Num Filters to prune
                 # TODO: check related layers
-                # sparsity that this layer needs to prune to satisfy the requirement
-                sparsity = delta_num_weights / wrapper.weight_mask.numel()
-
-                if sparsity >= 1:
+                # TODO: check sum()``
+                if delta_num_weights > wrapper.weight_mask.sum().item():
                     _logger.info(
                         'Layer %s has no enough weights remained to prune', wrapper.name)
                     continue
 
-                # Choose which filter to prune (l1)
+                # sparsity that this layer needs to prune to satisfy the requirement
+                sparsity = delta_num_weights / wrapper.weight_mask.numel()
                 config_list = self._update_config_list(
                     self._config_list, wrapper.name, sparsity)
                 _logger.info("config_list used : %s", config_list)
@@ -203,11 +204,9 @@ class NetAdaptPruner(Pruner):
                         'sparsity': sparsity,
                         'performance': performance
                     }
-                    # update bound model
-                    # TODO: why set modules_wrapper doesn't work ?
+                    # update bound model and modules_wrapper
                     self.bound_model = model_masked
-                    # self._set_modules_wrapper(pruner.get_modules_wrapper())
-                    # self._wrap_model()
+                    self._set_modules_wrapper(pruner.get_modules_wrapper())
 
             # 3. Pick the best layer to prune
             if not best_layer:
@@ -222,17 +221,12 @@ class NetAdaptPruner(Pruner):
                          pruning_iteration, best_layer['op_name'], best_layer['sparsity'], best_layer['performance'], current_sparsity)
             pruning_iteration += 1
 
-            # update bound model after each iteration
-            # _logger.debug("Updating bound model...")
-            # self._set_modules_wrapper(best_layer['modules_wrapper'])
-            # self._wrap_model()
             self._final_performance = best_layer['performance']
 
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list)
-
-        _logger.debug("Performance (bound model): %s",
-                      self._evaluator(self.bound_model))
+        _logger.info("Performance after pruning: %s", self._final_performance)
+        _logger.info("Masked sparsity: %s", current_sparsity)
 
         # save best config found and best performance
         if not os.path.exists(self._experiment_data_dir):
