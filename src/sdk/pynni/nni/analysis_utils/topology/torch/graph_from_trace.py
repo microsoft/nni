@@ -256,15 +256,39 @@ class GraphBuilder:
                 cfgs[layername] = render_cfg
         self.base_visualization(filepath, format=format, cfg=cfgs)
 
-
     def visualize_with_sensitivity(self, filepath, format, sensitivity_file):
         assert os.path.exists(sensitivity_file)
         f_handle = open(sensitivity_file, 'r')
         csv_r = csv.reader(f_handle)
         header = next(csv_r)
+        # sparsities is ordered in sensitivity analysis
         sparsities = [float(x) for x in header[1:]]
-        
+        sensitivity = {}
+        for row in csv_r:
+            layername = row[0]
+            accs = [float(_acc) for _acc in row[1:]]
+            sensitivity[layername] = accs
         f_handle.close()
+        # Note: Due to the early stop in SensitivityAnalysis, the number of
+        # accuracies of different sparsities may be different. The earlier
+        # the layers stops, the higher the sensitivity is.
+        cfgs = {}
+        color_scheme_count = 9
+        for layername in sensitivity:
+            _max = sparsities[len(sensitivity[layername]) - 1]
+            _max_all = max(sparsities)
+            level = 1.0 - (_max / _max_all)  # [0, 1]
+            level = int(color_scheme_count * level)  # [0, 9]
+            print(layername, level)
+            print(sensitivity[layername])
+            # color number start from 1
+            if level == 0:
+                level = 1
+            str_color = "/reds9/%d" % level
+            render_cfg = {'shape': 'ellipse',
+                          'fillcolor': str_color, 'style': 'filled'}
+            cfgs[layername] = render_cfg
+        self.base_visualization(filepath, format=format, cfg=cfgs)
 
     def visualization(self, filename, format='jpg',
                       flops_file=None,
@@ -283,3 +307,8 @@ class GraphBuilder:
             depedency_img = filename + '_depedency'
             self.visualize_with_depedency(
                 depedency_img, format, depedency_file)
+
+        if sensitivity_file is not None:
+            sensitivity_img = filename + '_sensitivity'
+            self.visualize_with_sensitivity(
+                sensitivity_img, format, sensitivity_file)
