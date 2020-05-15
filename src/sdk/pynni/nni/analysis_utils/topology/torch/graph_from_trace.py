@@ -227,26 +227,26 @@ class GraphBuilder:
             cfgs[layername] = render_cfg
         self.base_visualization(filepath, format=format, cfg=cfgs)
 
-    def visualize_with_depedency(self, filepath, format, depedency_file):
-        assert os.path.exists(depedency_file)
-        f_handle = open(depedency_file, 'r')
+    def visualize_with_dependency(self, filepath, format, dependency_file):
+        assert os.path.exists(dependency_file)
+        f_handle = open(dependency_file, 'r')
         csv_r = csv.reader(f_handle)
         # skip the header of the csv file
         header = next(csv_r)
-        depedency_sets = []
+        dependency_sets = []
         for row in csv_r:
             tmp_set = set()
             for i in range(1, len(row)):
                 tmp_set.add(row[i])
-            depedency_sets.append(tmp_set)
+            dependency_sets.append(tmp_set)
         f_handle.close()
         # Create the render configs, assign the same color for the
-        # same depedency set
+        # same dependency set
         cfgs = {}
         colorid = 0
-        for tmp_set in depedency_sets:
+        for tmp_set in dependency_sets:
             if len(tmp_set) == 1:
-                # This layer has no depedency
+                # This layer has no dependency
                 continue
             colorid = (colorid + 1) % 12
             str_color = "/paired12/%d" % (colorid + 1)
@@ -279,8 +279,6 @@ class GraphBuilder:
             _max_all = max(sparsities)
             level = 1.0 - (_max / _max_all)  # [0, 1]
             level = int(color_scheme_count * level)  # [0, 9]
-            print(layername, level)
-            print(sensitivity[layername])
             # color number start from 1
             if level == 0:
                 level = 1
@@ -293,7 +291,7 @@ class GraphBuilder:
     def visualization(self, filename, format='jpg',
                       flops_file=None,
                       sensitivity_file=None,
-                      depedency_file=None):
+                      dependency_file=None):
 
         # First, visualize the network architecture only
         self.base_visualization(filename, format=format)
@@ -303,10 +301,10 @@ class GraphBuilder:
             flops_img = filename + '_flops'
             self.visualize_with_flops(flops_img, format, flops_file)
 
-        if depedency_file is not None:
-            depedency_img = filename + '_depedency'
-            self.visualize_with_depedency(
-                depedency_img, format, depedency_file)
+        if dependency_file is not None:
+            dependency_img = filename + '_dependency'
+            self.visualize_with_dependency(
+                dependency_img, format, dependency_file)
 
         if sensitivity_file is not None:
             sensitivity_img = filename + '_sensitivity'

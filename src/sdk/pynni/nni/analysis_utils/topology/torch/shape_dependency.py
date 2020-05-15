@@ -12,13 +12,13 @@ from .graph_from_trace import *
 
 CONV_TYPE = 'aten::_convolution'
 
-logger = logging.getLogger('Shape_Depedency')
+logger = logging.getLogger('Shape_Dependency')
 
 
-class ChannelDepedency:
+class ChannelDependency:
     def __init__(self, model, data):
         """
-        This model analyze the channel depedencis between the conv
+        This model analyze the channel dependencis between the conv
         layers in a model.
 
         Parameters
@@ -33,8 +33,8 @@ class ChannelDepedency:
         self.graph = self.graph_builder.graph
         self.forward_edge = self.graph_builder.forward_edge
         self.c2py = self.graph_builder.c2py
-        self.depedency = {}
-        self.build_channel_depedency()
+        self.dependency = {}
+        self.build_channel_dependency()
         
 
     def get_parent_convs(self, node):
@@ -69,9 +69,9 @@ class ChannelDepedency:
                     queue.append(parent)
         return parent_convs
 
-    def build_channel_depedency(self):
+    def build_channel_dependency(self):
         """
-            Build the channel depedency for the conv layers
+            Build the channel dependency for the conv layers
             in the model.
         """
         for node in self.cnodes:
@@ -83,18 +83,18 @@ class ChannelDepedency:
                 # N * C * H * W
                 if cat_dim != 1:
                     parent_convs = self.get_parent_convs(node)
-            depedency_set = set(parent_convs)
-            # merge the depedencies
+            dependency_set = set(parent_convs)
+            # merge the dependencies
             for node in parent_convs:
-                if node in self.depedency:
-                    depedency_set.update(self.depedency[node])
-            # save the depedencies
-            for node in depedency_set:
-                self.depedency[node] = depedency_set
+                if node in self.dependency:
+                    dependency_set.update(self.dependency[node])
+            # save the dependencies
+            for node in dependency_set:
+                self.dependency[node] = dependency_set
 
     def filter_prune_check(self, ratios):
         """
-        According to the channel depedencies between the conv
+        According to the channel dependencies between the conv
         layers, check if the filter pruning ratio for the conv 
         layers is legal.
 
@@ -117,11 +117,11 @@ class ChannelDepedency:
 
         for node in self.cnodes:
             if node.kind() == CONV_TYPE and self.c2py[node].name in ratios:
-                if node not in self.depedency:
-                    # this layer has no depedency on other layers
+                if node not in self.dependency:
+                    # this layer has no dependency on other layers
                     # it's legal to set any prune ratio between 0 and 1
                     continue
-                for other in self.depedency[node]:
+                for other in self.dependency[node]:
                     if self.c2py[other].name not in ratios:
                         return False
                     elif ratios[self.c2py[node].name] != ratios[self.c2py[other].name]:
@@ -130,9 +130,9 @@ class ChannelDepedency:
 
     def export(self, filepath):
         """    
-        export the channel depedencies as a csv file.
+        export the channel dependencies as a csv file.
         """
-        header = ['Depedency Set', 'Convolutional Layers']
+        header = ['Dependency Set', 'Convolutional Layers']
         setid = 0
         visited = set()
         with open(filepath, 'w') as csvf:
@@ -143,11 +143,11 @@ class ChannelDepedency:
                     continue
                 setid += 1
                 row = ['Set %d' % setid]
-                if node not in self.depedency:
+                if node not in self.dependency:
                     visited.add(node)
                     row.append(self.c2py[node].name)
                 else:
-                    for other in self.depedency[node]:
+                    for other in self.dependency[node]:
                         visited.add(other)
                         row.append(self.c2py[other].name)
                 csv_w.writerow(row)
