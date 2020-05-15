@@ -72,3 +72,11 @@ def _get_pip_install():
             (sys.platform != "win32" and os.getuid() != 0):  # on unix and not running in root
         ret.append("--user")  # not in virtualenv or conda
     return ret
+
+def call_pip_install(source):
+    call(_get_pip_install() + [source])
+
+def call_pip_uninstall(module_name):
+    python = "python" if sys.platform == "win32" else "python3"
+    cmd = [python, "-m", "pip", "uninstall", module_name]
+    call(cmd)

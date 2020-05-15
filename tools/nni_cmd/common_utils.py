@@ -84,9 +84,8 @@ def check_tensorboard_version():
         print_error('import tensorboard error!')
         exit(1)
 
-def get_nni_installation_path():
-    ''' Find nni lib from the following locations in order
-    Return nni root directory if it exists
+def get_nni_installation_parent_dir():
+    ''' Find nni installation parent directory
     '''
     def try_installation_path_sequentially(*sitepackages):
         '''Try different installation path sequentially util nni is found.
@@ -118,9 +117,18 @@ def get_nni_installation_path():
         else:
             python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
 
-    if python_dir:
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+    return python_dir
+
+def get_nni_installation_path():
+    ''' Find nni installation directory
+    '''
+    parent_dir = get_nni_installation_parent_dir()
+    if parent_dir:
+        entry_file = os.path.join(parent_dir, 'nni', 'main.js')
         if os.path.isfile(entry_file):
-            return os.path.join(python_dir, 'nni')
+            return os.path.join(parent_dir, 'nni')
     print_error('Fail to find nni under python library')
     exit(1)
+
+def get_nni_config_dir():
+    return os.path.join(get_nni_installation_path(), 'config')
