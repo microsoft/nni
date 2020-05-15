@@ -24,7 +24,7 @@ taskRoles:
       - mkdir /mnt/nfs-storage
       - 'mount -t nfs 10.151.40.36:/ /mnt/nfs-storage'
       - git clone -b sapruner https://github.com/suiguoxin/nni/
-      - cd nni && python3 examples/model_compress/sa_torch.py --epochs 200 --pruner SimulatedAnnealingPruner --pruning-mode channel --cool-down-rate 0.9 --sparsity 0.1 --dataset cifar10 --fine-tune True --fine-tune-epochs 50 --data-dir /mnt/nfs-storage/users/sgx/cifar10 --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/cifar10/01
+      - cd nni && python3 examples/model_compress/sa_torch.py --epochs 100 --pruner SimulatedAnnealingPruner --pruning-mode channel --cool-down-rate 0.9 --sparsity 0.1 --dataset cifar10 --fine-tune True --fine-tune-epochs 50 --data-dir /mnt/nfs-storage/users/sgx/cifar10 --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/cifar10/01
       # - cd nni && python3 examples/model_compress/sa_torch.py --pruner NetAdaptPruner --pruning-mode channel --cool-down-rate 0.9 --sparsity 0.1 --dataset imagenet --fine-tune True --fine-tune-epochs 10 --data-dir /mnt/nfs-storage/users/sgx/imagenet --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/01
       # - cd nni && python3 examples/model_compress/sa_torch.py --pruner NetAdaptPruner --pruning-mode channel --cool-down-rate 0.3 --sparsity 0.1 --dataset mnist --fine-tune True --fine-tune-epochs 10 --data-dir /mnt/nfs-storage/users/sgx/mnist --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/mnist/01
 defaults:

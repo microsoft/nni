@@ -161,7 +161,7 @@ if __name__ == '__main__':
             scheduler.step()
     elif args.dataset == 'cifar10':
         model = models.vgg16(pretrained=False, num_classes=10).to(device)
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                     momentum=0.9,
                                     weight_decay=5e-4)
         scheduler = MultiStepLR(
@@ -182,7 +182,7 @@ if __name__ == '__main__':
                                         weight_decay=5e-4)
         elif args.dataset == 'imagenet':
             # TODO: decay lr
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                         momentum=0.9,
                                         weight_decay=5e-4)
         for epoch in range(epochs):
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(
             model, config_list)
-    if args.pruner == 'SimulatedAnnealingPruner':
+    elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'NetAdaptPruner':
@@ -223,7 +223,7 @@ if __name__ == '__main__':
                                 pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
-            "Please use SimulatedAnnealingPruner or NetAdaptPruner in this example.")
+            "Please use L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner in this example.")
 
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)

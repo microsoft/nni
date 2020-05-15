@@ -1,3 +1,4 @@
+from models.mnist.lenet import LeNet
 import argparse
 import json
 import pandas as pd
@@ -10,16 +11,16 @@ import os
 import sys
 import inspect
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+currentdir = os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from models.mnist.lenet import LeNet
 # from models.Pytorch_Retinaface.models.retinaface import RetinaFace
 # from models.Pytorch_Retinaface.data import cfg_mnet, cfg_re50
 
 
-def get_config_lists(files):
+def get_config_lists_from_pruning_history(files):
     pruning_histories = []
     performances = []
     config_lists = []
@@ -36,6 +37,22 @@ def get_config_lists(files):
         config_lists.append(json.loads(config_list))
 
     return config_lists, overall_sparsities, performances
+
+
+def get_config_lists_from_search_result(files):
+    performances = []
+    config_lists = []
+
+    for f in files:
+        with open(f, 'r') as jsonfile:
+            j = json.load(jsonfile)
+            # print(j)
+            # print(j['performance'])
+            # print(j['config_list'])
+            performances.append(j['performance'])
+            config_lists.append(json.loads(j['config_list']))
+
+    return config_lists, performances
 
 
 def get_original_op(model):
@@ -61,23 +78,29 @@ def draw(args):
     # elif model == 'mobilenet_v2':
     #     files = list(os.walk('mobilenet'))[0][-1]
     #     model = models.mobilenet_v2()
-    # elif model == 'retinaface':
-    #     files = list(os.walk('retinaface'))[0][-1]
-    #     # model = models.mobilenet_v2()
     if args.model == 'lenet':
         files = ['lenet/pruning_history.csv']
         model = LeNet()
-        notes = 'LeNet, MNIST'
-    elif args.model == 'mobilenet_v2':
-        files = ['mobilenet/pruning_history_01.csv', 'mobilenet/pruning_history_03.csv', 'mobilenet/pruning_history_04.csv', 'mobilenet/pruning_history_05.csv']
+        notes = 'LeNet, MNIST, SAPruner, fine-grained'
+        config_lists, overall_sparsities, performances = get_config_lists_from_pruning_history(
+            files)
+    elif args.model == 'mobilenet_v2' and args.pruning_mode == 'fine-grained':
+        files = ['mobilenet_sapruner_fine_grained/pruning_history_01.csv', 'mobilenet_sapruner_fine_grained/pruning_history_03.csv',
+                 'mobilenet_sapruner_fine_grained/pruning_history_04.csv', 'mobilenet_sapruner_fine_grained/pruning_history_05.csv']
         model = models.mobilenet_v2()
-        notes = 'MobileNet V2, ImageNet'
-    # elif model == 'retinaface':
-    #     files = ['retinaface/pruning_history_01.csv', 'retinaface/pruning_history_03.csv']
-    #     cfg = cfg_mnet
-    #     model = RetinaFace(cfg=cfg, phase='test')
-
-    config_lists, overall_sparsities, performances = get_config_lists(files)
+        notes = 'MobileNet V2, ImageNet, SAPruner, fine-grained'
+        config_lists, overall_sparsities, performances = get_config_lists_from_pruning_history(
+            files)
+    elif args.model == 'mobilenet_v2' and args.pruning_mode == 'channel':
+        files = ['imagenet_sapruner_channel/search_result_01.json', 'imagenet_sapruner_channel/search_result_02.json',
+                 'imagenet_sapruner_channel/search_result_03.json', 'imagenet_sapruner_channel/search_result_04.json', 'imagenet_sapruner_channel/search_result_05.json']
+        model = models.mobilenet_v2()
+        notes = 'MobileNet V2, ImageNet, SAPruner, channel pruning'
+        config_lists, performances = get_config_lists_from_search_result(
+            files)
+        overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
+        performances_fine_tuned_2_epochs = [
+            0.41520, 0.42104, 0.38554, 0.34844, 0.35696]
 
     fig, axs = plt.subplots(3, 1, figsize=(15, 15))
     fig.suptitle("Pruning Sparsities Distribution ({})".format(notes))
@@ -97,7 +120,8 @@ def draw(args):
             i = op_names_original.index(op_name)
             sparsities[i] = config['sparsity']
         axs[1].plot(op_names_original, sparsities,
-                    label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (2 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+        # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[1].set_title('original order')
     axs[1].legend()
 
@@ -111,7 +135,8 @@ def draw(args):
             op_names_sorted.append(config['op_names'][0])
 
         axs[2].plot(op_names_sorted, sparsities,
-                    label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (2 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+        # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[2].set_title('Sorted by op weights')
     axs[2].legend()
 
@@ -120,13 +145,17 @@ def draw(args):
         plt.xticks(rotation=90)
 
     # plt.tight_layout()
-    plt.savefig('./sparsities_distribution_{}.png'.format(args.model))
+    plt.savefig(
+        './sparsities_distribution_{}_{}.png'.format(args.model, args.pruning_mode))
     plt.close()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--model', type=str, default='lenet', help='lenet, mobilenet_v2 or retinaface')
+    parser.add_argument('--model', type=str, default='lenet',
+                        help='lenet, mobilenet_v2 or retinaface')
+    parser.add_argument('--pruning-mode', type=str, default='channel',
+                        help='channel, or fine-grained')
     args = parser.parse_args()
 
     draw(args)
