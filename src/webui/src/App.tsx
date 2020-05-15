@@ -106,15 +106,22 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
+        const errorList = [
+            { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
+            { errorWhere: EXPERIMENT.experimentError(), errorMessage: EXPERIMENT.getExperimentMessage() },
+            { errorWhere: EXPERIMENT.statusError(), errorMessage: EXPERIMENT.getStatusMessage() },
+            { errorWhere: TRIALS.MetricDataError(), errorMessage: TRIALS.getMetricDataErrorMessage() },
+            { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
+        ];
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
                 child as React.ReactElement<any>, {
-                    interval,
-                    columnList, changeColumn: this.changeColumn,
-                    experimentUpdateBroadcast,
-                    trialsUpdateBroadcast,
-                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
-                    bestTrialEntries, changeEntries: this.changeEntries
+                interval,
+                columnList, changeColumn: this.changeColumn,
+                experimentUpdateBroadcast,
+                trialsUpdateBroadcast,
+                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
+                bestTrialEntries, changeEntries: this.changeEntries
             })
         );
 
@@ -127,16 +134,16 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
-                        {/* if /trial-jobs api has error filed, show error message */}
-                        {TRIALS.jobListError() && <div className="warning">
-                            <MessageInfo info={TRIALS.getJobErrorMessage()} typeInfo="error" />
-                        </div>}
-                        {EXPERIMENT.experimentError() && <div className="warning">
-                            <MessageInfo info={EXPERIMENT.getExperimentMessage()} typeInfo="error" />
-                        </div>}
-                        {EXPERIMENT.statusError() && <div className="warning">
-                            <MessageInfo info={EXPERIMENT.getStatusMessage()} typeInfo="error" />
-                        </div>}
+                        {/* if api has error field, show error message */}
+                        {
+                            errorList.map(item => {
+                                {
+                                    item.errorWhere && <div className="warning">
+                                        <MessageInfo info={item.errorMessage} typeInfo="error" />
+                                    </div>
+                                }
+                            })
+                        }
                         {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}

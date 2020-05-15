@@ -41,9 +41,16 @@ class TrialManager {
     private batchUpdatedAfterReading: boolean = false;
     private isJobListError: boolean = false; // trial-jobs api error filed
     private jobErrorMessage: string = ''; // trial-jobs error message
+    private isMetricdataError: boolean = false; // metric-data api error filed
+    private MetricdataErrorMessage: string = ''; // metric-data error message
+    private isLatestMetricdataError: boolean = false; // metric-data-latest api error filed
+    private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
+            if (this.isMetricdataError) {
+                return;
+            }
             await this.update();
         }
     }
@@ -158,14 +165,34 @@ class TrialManager {
         return trials;
     }
 
-    // if this.jobListError = true, show trial error message
+    // if this.jobListError = true, show trial error message [/trial-jobs]
     public jobListError(): boolean {
         return this.isJobListError;
     }
 
-    // trial error message's content
+    // trial error message's content [/trial-jobs]
     public getJobErrorMessage(): string {
         return this.jobErrorMessage;
+    }
+
+    // [/metric-data]
+    public MetricDataError(): boolean {
+        return this.isMetricdataError;
+    }
+
+    // [/metric-data]
+    public getMetricDataErrorMessage(): string {
+        return this.MetricdataErrorMessage;
+    }
+
+    // [/metric-data-latest]
+    public latestMetricDataError(): boolean {
+        return this.isLatestMetricdataError;
+    }
+
+    // [/metric-data-latest]
+    public getLatestMetricDataErrorMessage(): string {
+        return this.latestMetricdataErrorMessage;
     }
 
     private async updateInfo(): Promise<boolean> {
@@ -198,10 +225,9 @@ class TrialManager {
                     this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
                 }
             }
-            
         } else {
             this.isJobListError = true;
-            this.jobErrorMessage = `${response.status} error`;
+            this.jobErrorMessage = `API /trial-jobs ${response.status} error`;
             updated = true;
         }
         this.infoInitialized = true;
@@ -221,12 +247,45 @@ class TrialManager {
 
     private async updateAllMetrics(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/metric-data`);
-        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+        // const response = { data: { error: 'metric-data api error' }, status: 200 };
+        if (response.status === 200) {
+            if (response.data.error !== undefined) {
+                this.isMetricdataError = true;
+                this.MetricdataErrorMessage = response.data.error;
+                this.doUpdateMetrics([], false);
+                return true;
+            } else {
+                // return this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+                return this.doUpdateMetrics(response.data as any, false);
+            }
+        } else {
+            this.isMetricdataError = true;
+            this.MetricdataErrorMessage = `API /metric-data ${response.status} error`;
+            this.doUpdateMetrics([], false);
+            return true;
+        }
     }
-
+    
     private async updateLatestMetrics(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/metric-data-latest`);
-        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], true);
+        // const response = { data: { error: 'metric-data-latest api error' }, status: 200 };
+
+        if (response.status === 200) {
+            if (response.data.error !== undefined) {
+                this.isLatestMetricdataError = true;
+                this.latestMetricdataErrorMessage = response.data.error;
+                this.doUpdateMetrics([], true);
+                return true;
+            } else {
+                // return this.doUpdateMetrics(response.data as MetricDataRecord[], true);
+                return this.doUpdateMetrics(response.data as any, true);
+            }
+        } else {
+            this.isLatestMetricdataError = true;
+            this.latestMetricdataErrorMessage = `API /metric-data-latest ${response.status} error`;
+            this.doUpdateMetrics([], true);
+            return true;
+        }
     }
 
     private async updateManyMetrics(): Promise<void> {
