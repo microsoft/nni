@@ -47,7 +47,7 @@
 
 /* document body font-family */
 .wy-body-for-nav, h1, h2, h3, h4, h5, h6, div, p, ul, li, a{
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Lato", segoe ui, "proxima-nova","Helvetica Neue",Arial,sans-serif;
 }
 
 .wy-nav-content ul li{
