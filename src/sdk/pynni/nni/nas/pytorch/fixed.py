@@ -101,9 +101,11 @@ class FixedArchitecture(Mutator):
                     # this is compatible with both integer arrays, boolean arrays and float arrays
                     _logger.info("Replacing %s with candidate number %d.", global_name, chosen.index(1))
                     setattr(module, name, mutable[chosen.index(1)])
-                for ch, n in zip(chosen, mutable.names):
-                    if ch == 0:
-                        setattr(mutable, n, None)
+                else:
+                    # remove unused parameters
+                    for ch, n in zip(chosen, mutable.names):
+                        if ch == 0:
+                            setattr(mutable, n, None)
             else:
                 self.replace_layer_choice(mutable, global_name)
 
