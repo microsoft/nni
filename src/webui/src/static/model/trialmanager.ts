@@ -45,6 +45,8 @@ class TrialManager {
     private MetricdataErrorMessage: string = ''; // metric-data error message
     private isLatestMetricdataError: boolean = false; // metric-data-latest api error filed
     private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
+    private isMetricdataRangeError: boolean = false; // metric-data-range api error filed
+    private metricdataRangeErrorMessage: string = ''; // metric-data-latest error message
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -195,6 +197,14 @@ class TrialManager {
         return this.latestMetricdataErrorMessage;
     }
 
+    public metricDataRangeError(): boolean {
+        return this.isMetricdataRangeError;
+    }
+
+    public metricDataRangeErrorMessage(): string {
+        return this.metricdataRangeErrorMessage;
+    }
+
     private async updateInfo(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
         // test example for /trial-jobs error
@@ -265,7 +275,7 @@ class TrialManager {
             return true;
         }
     }
-    
+
     private async updateLatestMetrics(): Promise<boolean> {
         const response = await axios.get(`${MANAGER_IP}/metric-data-latest`);
         // const response = { data: { error: 'metric-data-latest api error' }, status: 200 };
@@ -293,11 +303,22 @@ class TrialManager {
             return;
         }
         this.doingBatchUpdate = true;
-        for (let i = 0; i < this.maxSequenceId; i += METRIC_GROUP_UPDATE_SIZE) {
+        for (let i = 0; i < this.maxSequenceId && this.isMetricdataRangeError === false; i += METRIC_GROUP_UPDATE_SIZE) {
             const response = await axios.get(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`);
+            // const response = { data: { error: 'metric-data-range api error' }, status: 200 };
+
             if (response.status === 200) {
-                const updated = this.doUpdateMetrics(response.data as MetricDataRecord[], false);
-                this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
+                if (response.data.error !== undefined) {
+                    this.isMetricdataRangeError = true;
+                    this.metricdataRangeErrorMessage = response.data.error;
+                } else {
+                    // const updated = this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+                    const updated = this.doUpdateMetrics(response.data as any, false);
+                    this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
+                }
+            } else {
+                this.isMetricdataRangeError = true;
+                this.metricdataRangeErrorMessage = `API /metric-data-range ${response.status} error`;
             }
         }
         this.doingBatchUpdate = false;

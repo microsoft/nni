@@ -106,13 +106,16 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
+        
         const errorList = [
             { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
             { errorWhere: EXPERIMENT.experimentError(), errorMessage: EXPERIMENT.getExperimentMessage() },
             { errorWhere: EXPERIMENT.statusError(), errorMessage: EXPERIMENT.getStatusMessage() },
             { errorWhere: TRIALS.MetricDataError(), errorMessage: TRIALS.getMetricDataErrorMessage() },
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
+            { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
+
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
                 child as React.ReactElement<any>, {
@@ -136,12 +139,12 @@ class App extends React.Component<{}, AppState> {
                     <Stack className="content">
                         {/* if api has error field, show error message */}
                         {
-                            errorList.map(item => {
-                                {
-                                    item.errorWhere && <div className="warning">
+                            errorList.map((item, key) => {
+                                return (
+                                    item.errorWhere && <div key={key} className="warning">
                                         <MessageInfo info={item.errorMessage} typeInfo="error" />
                                     </div>
-                                }
+                                );
                             })
                         }
                         {isillegalFinal && <div className="warning">
