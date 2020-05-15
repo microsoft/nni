@@ -49,46 +49,11 @@ def test(model, device, criterion, val_loader):
     return accuracy
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='PyTorch Example for SimulatedAnnealingPruner')
-
-    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner', metavar='P',
-                        help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
-    parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
-                        help='pruning mode, channel or fine_grained')
-    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
-                        help='cool down rate')
-    parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
-                        help='overall target sparsity')
-
-    # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
-    parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
-                        help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
-    parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
-                        help='Whether to fine-tune the pruned model')
-    parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
-                        help='epochs to fine tune')
-    parser.add_argument('--data-dir', type=str,
-                        default='/datasets/', metavar='F')
-    parser.add_argument('--experiment-data-dir', type=str,
-                        default='./', help='For saving experiment data')
-
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                        help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
-                        help='input batch size for testing (default: 64)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
-                        help='number of epochs to train (default: 14)')
-    parser.add_argument('--log-interval', type=int, default=200, metavar='N',
-                        help='how many batches to wait before logging training status')
-    parser.add_argument('--save-model', action='store_true', default=False,
-                        help='For Saving the current Model')
-    args = parser.parse_args()
-
+def main(args):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
     }
 
+    # prepare dataset
     if args.dataset == 'mnist':
         train_loader = torch.utils.data.DataLoader(
             datasets.MNIST(args.data_dir, train=True, download=True,
@@ -159,6 +124,8 @@ if __name__ == '__main__':
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
+        torch.save(model.state_dict(), os.path.join(
+            args.experiment_data_dir, 'model_trained.pth'))
     elif args.dataset == 'cifar10':
         model = models.vgg16(pretrained=False, num_classes=10).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
@@ -170,6 +137,10 @@ if __name__ == '__main__':
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
+        if args.save_model:
+            torch.save(model.state_dict(), os.path.join(
+                args.experiment_data_dir, 'model_trained.pth'))
+            print('Model trained saved to %s', args.experiment_data_dir)
     elif args.dataset == 'imagenet':
         model = models.mobilenet_v2(pretrained=True).to(device)
 
@@ -230,6 +201,11 @@ if __name__ == '__main__':
     print('Evaluation result (masked model): %s' % evaluation_result)
     result['pruned'] = evaluation_result
 
+    if args.save_model:
+        pruner.export_model(os.path.join(args.experiment_data_dir, 'model_masked.pth'), os.path.join(
+            args.experiment_data_dir, 'mask.pth'))
+        print('Masked model saved to %s', args.experiment_data_dir)
+
     if args.fine_tune:
         if args.dataset == 'mnist':
             optimizer = torch.optim.Adadelta(
@@ -263,7 +239,53 @@ if __name__ == '__main__':
     print('Evaluation result (fine tuned): %s' % evaluation_result)
     result['finetuned'] = evaluation_result
 
-    if not os.path.exists(args.experiment_data_dir):
-        os.makedirs(args.experiment_data_dir)
+    if args.save_model:
+        pruner.export_model(os.path.join(
+            args.experiment_data_dir, 'model_fine_tuned.pth'))
+        print('Fined tuned model saved to %s', args.experiment_data_dir)
+
     with open(os.path.join(args.experiment_data_dir, 'performance.json'), 'w+') as f:
         json.dump(result, f)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='PyTorch Example for SimulatedAnnealingPruner')
+
+    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner', metavar='P',
+                        help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
+    parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
+                        help='pruning mode, channel or fine_grained')
+    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
+                        help='cool down rate')
+    parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
+                        help='overall target sparsity')
+
+    # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
+    parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
+                        help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
+    parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
+                        help='Whether to fine-tune the pruned model')
+    parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
+                        help='epochs to fine tune')
+    parser.add_argument('--data-dir', type=str,
+                        default='/datasets/', metavar='F')
+    parser.add_argument('--experiment-data-dir', type=str,
+                        default='./', help='For saving experiment data')
+
+    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+                        help='input batch size for training (default: 64)')
+    parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
+                        help='input batch size for testing (default: 64)')
+    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+                        help='number of epochs to train (default: 14)')
+    parser.add_argument('--log-interval', type=int, default=200, metavar='N',
+                        help='how many batches to wait before logging training status')
+    parser.add_argument('--save-model', type=bool, default=True,
+                        help='For Saving the current Model')
+    args = parser.parse_args()
+
+    if not os.path.exists(args.experiment_data_dir):
+        os.makedirs(args.experiment_data_dir)
+
+    main(args)

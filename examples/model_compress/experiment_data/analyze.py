@@ -1,4 +1,3 @@
-from models.mnist.lenet import LeNet
 import argparse
 import json
 import pandas as pd
@@ -15,6 +14,7 @@ currentdir = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
+from models.mnist.lenet import LeNet
 
 # from models.Pytorch_Retinaface.models.retinaface import RetinaFace
 # from models.Pytorch_Retinaface.data import cfg_mnet, cfg_re50
@@ -100,7 +100,7 @@ def draw(args):
             files)
         overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
         performances_fine_tuned_2_epochs = [
-            0.41520, 0.42104, 0.38554, 0.34844, 0.35696]
+            0.43526, 0.43616, 0.41408, 0.38422, 0.39246]
 
     fig, axs = plt.subplots(3, 1, figsize=(15, 15))
     fig.suptitle("Pruning Sparsities Distribution ({})".format(notes))
@@ -120,7 +120,7 @@ def draw(args):
             i = op_names_original.index(op_name)
             sparsities[i] = config['sparsity']
         axs[1].plot(op_names_original, sparsities,
-                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (2 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (3 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
         # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[1].set_title('original order')
     axs[1].legend()
@@ -135,7 +135,7 @@ def draw(args):
             op_names_sorted.append(config['op_names'][0])
 
         axs[2].plot(op_names_sorted, sparsities,
-                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (2 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
+                    label='sparsity: {}, performance: {:.4f}, fine-tuned performance (3 epochs): {:.4f}'.format(overall_sparsities[idx], performances[idx], performances_fine_tuned_2_epochs[idx]))
         # label='sparsity: {}, performance: {:.4f}'.format(overall_sparsities[idx], performances[idx]))
     axs[2].set_title('Sorted by op weights')
     axs[2].legend()
