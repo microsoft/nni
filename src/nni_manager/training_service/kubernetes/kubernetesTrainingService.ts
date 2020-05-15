@@ -348,7 +348,7 @@ abstract class KubernetesTrainingService {
             retryCount = uploadRetryCount;
         }
         let uploadSuccess: boolean = false;
-        const folderUriInAzure = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${destDirectory}`;
+        let folderUriInAzure = '';
         try {
             do {
                 uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
@@ -360,6 +360,9 @@ abstract class KubernetesTrainingService {
                     //wait for 5 seconds to re-upload files
                     await delay(5000);
                     this.log.info('Upload failed, Retry: upload files to azure-storage');
+                } else {
+                    folderUriInAzure = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${destDirectory}`;
+                    break;
                 }
             } while (retryCount-- >= 0)
         } catch (error) {

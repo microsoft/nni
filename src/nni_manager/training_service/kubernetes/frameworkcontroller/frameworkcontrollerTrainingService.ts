@@ -73,7 +73,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
 
-        // upload code Dir to storage
+        // wait upload of code Dir to finish
         if (this.copyExpCodeDirPromise !== undefined) {
             await this.copyExpCodeDirPromise;
         }
@@ -87,7 +87,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         this.generateContainerPort();
         await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
 
-        //upload code files
+        //wait upload of script files to finish
         const trialJobOutputUrl: string = await this.uploadFolder(trialLocalTempFolder, `nni/${getExperimentId()}/${trialJobId}`);
         let initStatus: TrialJobStatus = 'WAITING';
         if (!trialJobOutputUrl) {
@@ -186,10 +186,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
-        if (this.fcClusterConfig === undefined) {
-            throw new Error('Kubeflow Trial config is not initialized');
-        }
-
         assert(this.fcClusterConfig.storage === undefined
             || this.fcClusterConfig.storage === 'azureStorage'
             || this.fcClusterConfig.storage === 'nfs');
@@ -198,13 +194,13 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             if (this.azureStorageClient === undefined) {
                 throw new Error('azureStorageClient is not initialized');
             }
-            const azureKubeflowClusterConfig: FrameworkControllerClusterConfigAzure = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
-            return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, azureKubeflowClusterConfig.uploadRetryCount);
+            const fcClusterConfigAzure: FrameworkControllerClusterConfigAzure = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
+            return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, fcClusterConfigAzure.uploadRetryCount);
         } else if (this.fcClusterConfig.storage === 'nfs' || this.fcClusterConfig.storage === undefined) {
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
             await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
-            const nfsKubeflowClusterConfig: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
-            const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
+            const fcClusterConfigNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
+            const nfsConfig: NFSConfig = fcClusterConfigNFS.nfs;
             return `nfs://${nfsConfig.server}:${destDirectory}`;
         }
         return '';

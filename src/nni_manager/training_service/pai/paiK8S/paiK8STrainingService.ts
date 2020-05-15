@@ -157,7 +157,8 @@ class PAIK8STrainingService extends PAITrainingService {
     private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string): string {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
-        }const containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
+        }
+        const containerNFSExpCodeDir = path.join(this.paiTrialConfig.containerNFSMountPath, this.experimentId, 'nni-code');
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobDetail.id}`;
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const nniPaiTrialCommand: string = String.Format(
