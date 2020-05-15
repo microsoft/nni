@@ -21,7 +21,7 @@ class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-
+    
     constructor(props: {}) {
         super(props);
         this.state = {

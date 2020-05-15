@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { MANAGER_IP } from '../const';
 import { ExperimentProfile, NNIManagerStatus } from '../interface';
+import { requestAxios } from '../function';
 
 function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProfile): boolean {
     if (!profile1 || !profile2) {
@@ -48,42 +49,30 @@ class Experiment {
     }
 
     public async update(): Promise<boolean> {
-        const profilePromise = axios.get(`${MANAGER_IP}/experiment`);
-        const statusPromise = axios.get(`${MANAGER_IP}/check-status`);
-        const [profileResponse, statusResponse] = await Promise.all([profilePromise, statusPromise]);
-        // const profileResponse = { data: { error: 'profileResponse error' }, status: 200 };
-        // const statusResponse = { data: { error: 'statusResponse error' }, status: 200 };
         let updated = false;
 
-        if (statusResponse.status === 200) {
-            if (statusResponse.data.error !== undefined) {
-                this.isStatusError = true;
-                this.statusErrorMessage = statusResponse.data.error;
-                updated = true;
-            } else {
-                updated = JSON.stringify(this.statusField) === JSON.stringify(statusResponse.data);
-                this.statusField = statusResponse.data as any;
-            }
-        } else {
-            this.isStatusError = true;
-            this.statusErrorMessage = `${statusResponse.status} error`;
-            updated = true;
-        }
-
-        if (profileResponse.status === 200) {
-            if (profileResponse.data.error !== undefined) {
+        await requestAxios(`${MANAGER_IP}/experiment`)
+            .then(data => {
+                updated = updated || compareProfiles(this.profileField, data);
+                this.profileField = data;
+            })
+            .catch(error => {
                 this.isexperimentError = true;
-                this.experimentErrorMessage = profileResponse.data.error;
+                this.experimentErrorMessage = `${error.message}`;
                 updated = true;
-            } else {
-                updated = updated || compareProfiles(this.profileField, profileResponse.data as any);
-                this.profileField = profileResponse.data as any;
-            }
-        } else {
-            this.isexperimentError = true;
-            this.experimentErrorMessage = `${profileResponse.status} error`;
-            updated = true;
-        }
+            });
+
+        await requestAxios(`${MANAGER_IP}/check-status`)
+            .then(data => {
+                updated = JSON.stringify(this.statusField) === JSON.stringify(data);
+                this.statusField = data;
+            })
+            .catch(error => {
+                this.isStatusError = true;
+                this.statusErrorMessage = `${error.message}`;
+                updated = true;
+            });
+
         return updated;
     }
 

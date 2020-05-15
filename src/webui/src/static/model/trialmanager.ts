@@ -2,6 +2,7 @@ import axios from 'axios';
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
 import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
+import { requestAxios } from '../function';
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
@@ -206,24 +207,11 @@ class TrialManager {
     }
 
     private async updateInfo(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
-        // test example for /trial-jobs error
-        // const response = { data: { error: 'some errors' }, status: 200 };
-        let updated = false;
 
-        if (response.status === 200) {
-            // trial jobs list error
-            if (response.data.error !== undefined) {
-                // return true; will stuck in an endless loop
-                // know /trial-jobs api is error
-                this.isJobListError = true;
-                // get /trial-jobs api's error message
-                this.jobErrorMessage = response.data.error;
-                // refresh page
-                updated = true;
-            } else {
-                // /trial-jobs api is good.
-                const newTrials = TrialManager.expandJobsToTrials(response.data as any);
+        let updated = false;
+        requestAxios(`${MANAGER_IP}/trial-jobs`).
+            then(data => {
+                const newTrials = TrialManager.expandJobsToTrials(data as any);
                 for (const trialInfo of newTrials as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -234,14 +222,16 @@ class TrialManager {
                     }
                     this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
                 }
-            }
-        } else {
-            this.isJobListError = true;
-            this.jobErrorMessage = `API /trial-jobs ${response.status} error`;
-            updated = true;
-        }
-        this.infoInitialized = true;
-        return updated;
+                this.infoInitialized = true;
+            })
+            .catch(error => {
+                this.isJobListError = true;
+                this.jobErrorMessage = error.message;
+                this.infoInitialized = true;
+                updated = true;
+            });
+
+            return updated;
     }
 
     private async updateMetrics(lastTime?: boolean): Promise<boolean> {
@@ -256,46 +246,25 @@ class TrialManager {
     }
 
     private async updateAllMetrics(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/metric-data`);
-        // const response = { data: { error: 'metric-data api error' }, status: 200 };
-        if (response.status === 200) {
-            if (response.data.error !== undefined) {
+        return requestAxios(`${MANAGER_IP}/metric-data`).
+            then(data => this.doUpdateMetrics(data as any, false))
+            .catch(error => {
                 this.isMetricdataError = true;
-                this.MetricdataErrorMessage = response.data.error;
+                this.MetricdataErrorMessage = `${error.message}`;
                 this.doUpdateMetrics([], false);
                 return true;
-            } else {
-                // return this.doUpdateMetrics(response.data as MetricDataRecord[], false);
-                return this.doUpdateMetrics(response.data as any, false);
-            }
-        } else {
-            this.isMetricdataError = true;
-            this.MetricdataErrorMessage = `API /metric-data ${response.status} error`;
-            this.doUpdateMetrics([], false);
-            return true;
-        }
+            });
     }
 
     private async updateLatestMetrics(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/metric-data-latest`);
-        // const response = { data: { error: 'metric-data-latest api error' }, status: 200 };
-
-        if (response.status === 200) {
-            if (response.data.error !== undefined) {
+        return requestAxios(`${MANAGER_IP}/metric-data-latest`).
+            then(data => this.doUpdateMetrics(data as any, true))
+            .catch(error => {
                 this.isLatestMetricdataError = true;
-                this.latestMetricdataErrorMessage = response.data.error;
+                this.latestMetricdataErrorMessage = `${error.message}`;
                 this.doUpdateMetrics([], true);
                 return true;
-            } else {
-                // return this.doUpdateMetrics(response.data as MetricDataRecord[], true);
-                return this.doUpdateMetrics(response.data as any, true);
-            }
-        } else {
-            this.isLatestMetricdataError = true;
-            this.latestMetricdataErrorMessage = `API /metric-data-latest ${response.status} error`;
-            this.doUpdateMetrics([], true);
-            return true;
-        }
+            });
     }
 
     private async updateManyMetrics(): Promise<void> {
@@ -304,22 +273,15 @@ class TrialManager {
         }
         this.doingBatchUpdate = true;
         for (let i = 0; i < this.maxSequenceId && this.isMetricdataRangeError === false; i += METRIC_GROUP_UPDATE_SIZE) {
-            const response = await axios.get(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`);
-            // const response = { data: { error: 'metric-data-range api error' }, status: 200 };
-
-            if (response.status === 200) {
-                if (response.data.error !== undefined) {
-                    this.isMetricdataRangeError = true;
-                    this.metricdataRangeErrorMessage = response.data.error;
-                } else {
-                    // const updated = this.doUpdateMetrics(response.data as MetricDataRecord[], false);
-                    const updated = this.doUpdateMetrics(response.data as any, false);
+            requestAxios(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`)
+                .then(data => {
+                    const updated = this.doUpdateMetrics(data as any, false);
                     this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
-                }
-            } else {
-                this.isMetricdataRangeError = true;
-                this.metricdataRangeErrorMessage = `API /metric-data-range ${response.status} error`;
-            }
+                })
+                .catch(error => {
+                    this.isMetricdataRangeError = true;
+                    this.metricdataRangeErrorMessage = `${error.message}`;
+                });
         }
         this.doingBatchUpdate = false;
     }
