@@ -76,13 +76,12 @@ class NetAdaptPruner(Pruner):
 
         self._experiment_data_dir = experiment_data_dir
 
-    def _get_delta_num_weights(self, iteration):
-        num_weights = []
+    def _get_delta_num_weights(self):
+        num_weights = 0
         for wrapper in self.get_modules_wrapper():
-            num_weights.append(wrapper.module.weight.data.numel())
+            num_weights += wrapper.weight_mask.numel()
 
-        delta_num_weights = self._delta_sparsity * \
-            sum(num_weights) * (iteration+1)
+        delta_num_weights = self._delta_sparsity * num_weights
 
         return delta_num_weights
 
@@ -137,9 +136,32 @@ class NetAdaptPruner(Pruner):
                 {'sparsity': sparsity, 'op_names': [op_name]})
         return config_list_updated
 
-    def _calc_related_weights(self, op_name, sparsity):
+    def _calc_related_weights(self, op_name):
+        '''
+        Calculate total number weights of the op and the next op, applicable only for models without dependencies among ops
 
-    
+        Parameters
+        ----------
+        op_name : str
+
+        Returns
+        -------
+        int
+            total weights of all the op and the next op
+        '''
+        num_weights = 0
+        flag_found = False
+        for name, module in self._original_model.named_modules():
+            if name == op_name:
+                num_weights += module.weight.data.numel()
+                flag_found = True
+            # TODO: skip Functional ops, dropout, activation...
+            # TODO: what about max pooling ?
+            if flag_found and type(module).__name__ in ['Conv2d', 'Linear']:
+                num_weights += module.weight.data.numel()
+                break
+        return num_weights
+
     def compress(self):
         """
         Compress the model.
@@ -160,23 +182,34 @@ class NetAdaptPruner(Pruner):
 
             # calculate target sparsity of this round
             target_sparsity = current_sparsity + self._delta_sparsity
-            delta_num_weights = self._get_delta_num_weights(pruning_iteration)
+            delta_num_weights = self._get_delta_num_weights()
 
             # variable store the best result of one iteration
             best_layer = {}
 
             for wrapper in self.get_modules_wrapper():
-                # TODO: check related layers
-                # TODO: check sum()``
-                if delta_num_weights > wrapper.weight_mask.sum().item():
+                _logger.debug("op weights : %s", wrapper.weight_mask.numel())
+                _logger.debug("op left weights : %s",
+                              wrapper.weight_mask.sum().item())
+                _logger.debug("related weights : %s",
+                              self._calc_related_weights(wrapper.name))
+
+                current_op_sparsity = 1 - wrapper.weight_mask.sum().item() / \
+                    wrapper.weight_mask.numel()
+                _logger.debug("current op sparsity : %s", current_op_sparsity)
+
+                # sparsity that this layer needs to prune to satisfy the requirement
+                target_op_sparsity = current_op_sparsity + \
+                    delta_num_weights / \
+                    self._calc_related_weights(wrapper.name)
+
+                if target_op_sparsity >= 1:
                     _logger.info(
                         'Layer %s has no enough weights remained to prune', wrapper.name)
                     continue
 
-                # sparsity that this layer needs to prune to satisfy the requirement
-                sparsity = delta_num_weights / wrapper.weight_mask.numel()
                 config_list = self._update_config_list(
-                    self._config_list, wrapper.name, sparsity)
+                    self._config_list, wrapper.name, target_op_sparsity)
                 _logger.info("config_list used : %s", config_list)
 
                 if self._pruning_mode == 'channel':
@@ -201,7 +234,7 @@ class NetAdaptPruner(Pruner):
                     _logger.debug("updating best layer to %s...", wrapper.name)
                     best_layer = {
                         'op_name': wrapper.name,
-                        'sparsity': sparsity,
+                        'sparsity': target_op_sparsity,
                         'performance': performance
                     }
                     # update bound model and modules_wrapper

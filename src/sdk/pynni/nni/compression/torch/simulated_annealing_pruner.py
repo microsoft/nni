@@ -99,7 +99,7 @@ class SimulatedAnnealingPruner(Pruner):
         """
         if self.modules_to_compress is None:
             self.modules_to_compress = []
-             # consider only the layers without dependencies
+            # consider only the layers without dependencies
             model_name = self._model_to_prune.__class__.__name__
             ops_no_dependency = get_layers_no_dependency(model_name)
 
