@@ -259,6 +259,12 @@ class GraphBuilder:
 
     def visualize_with_sensitivity(self, filepath, format, sensitivity_file):
         assert os.path.exists(sensitivity_file)
+        f_handle = open(sensitivity_file, 'r')
+        csv_r = csv.reader(f_handle)
+        header = next(csv_r)
+        sparsities = [float(x) for x in header[1:]]
+        
+        f_handle.close()
 
     def visualization(self, filename, format='jpg',
                       flops_file=None,

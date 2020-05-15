@@ -4,7 +4,8 @@
 import os
 import torch
 import copy
-import json
+import csv
+import logging
 import numpy as np
 import torch.nn as nn
 from collections import OrderedDict
@@ -16,9 +17,13 @@ from nni.compression.torch import L2FilterPruner
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
+logger = logging.getLogger('Sensitivity_Analysis')
+logger.setLevel(logging.INFO)
+
+
 
 class SensitivityAnalysis:
-    def __init__(self, model, val_func, ratio_step=0.1):
+    def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop=None):
         # TODO Speedup by ratio_threshold or list
         # TODO l1 or l2 seted here
         """
@@ -33,16 +38,35 @@ class SensitivityAnalysis:
                 , therefore the user need to cover this part by themselves.
                 val_func take the model as the first input parameter, and 
                 return the accuracy as output.
-            ratio_step: 
-                the step to change the prune ratio during the analysis
+            sparsities: 
+                The sparsity list provided by users.
+            prune_type:
+                The pruner type used to prune the conv layers, default is 'l1',
+                and 'l2', 'fine-grained' is also supported.
+            early_stop:
+                If this flag is set, the sensitivity analysis
+                for a conv layer will early stop when the accuracy
+                drop already reach the value of early_stop (0.05 for example).
+
         """
         self.model = model
         self.val_func = val_func
-        self.ratio_step = ratio_step
         self.target_layer = OrderedDict()
         self.ori_state_dict = copy.deepcopy(self.model.state_dict())
         self.target_layer = {}
         self.sensitivities = {}
+        if sparsities is not None:
+            self.sparsities = sorted(sparsities)
+        else:
+            self.sparsities = np.arange(0.1, 1.0, 0.1)
+        self.sparsities = [np.round(x, 2) for x in self.sparsities]
+        self.Pruner = L1FilterPruner
+        if prune_type == 'l2':
+            self.Pruner = L2FilterPruner
+        elif prune_type == 'fine-grained':
+            self.Pruner = LevelPruner
+        self.early_stop = early_stop
+        self.ori_acc = None  # original accuracy for the model
         # already_pruned is for the iterative sensitivity analysis
         # For example, sensitivity_pruner iteratively prune the target
         # model according to the sensitivity. After each round of
@@ -62,7 +86,7 @@ class SensitivityAnalysis:
                     self.target_layer[name] = submodel
                     self.already_pruned[name] = 0
 
-    def analysis(self, start=0, end=None, type='l1'):
+    def analysis(self, start=0, end=None):
         """
         This function analyze the sensitivity to pruning for 
         each conv layer in the target model.
@@ -77,8 +101,6 @@ class SensitivityAnalysis:
                 Layer index of the sensitivity analysis start
             end:  
                 Layer index of the sensitivity analysis end
-            type: 
-                Prune type of the Conv layers (l1/l2)
 
         Returns
         -------
@@ -90,29 +112,41 @@ class SensitivityAnalysis:
             end = self.layers_count
         assert start >= 0 and end <= self.layers_count
         assert start <= end
+        if self.ori_acc is None:
+            self.ori_acc = self.val_func(self.model)
         namelist = list(self.target_layer.keys())
         for layerid in range(start, end):
             name = namelist[layerid]
-            self.sensitivities[name] = {}
-            for prune_ratio in np.arange(self.ratio_step, 1.0, self.ratio_step):
-                print('PruneRatio: ', prune_ratio)
-                prune_ratio = np.round(prune_ratio, 2)
+            self.sensitivities[name] = { 0.0 : self.ori_acc}
+            for sparsity in self.sparsities:
                 # Calculate the actual prune ratio based on the already pruned ratio
-                prune_ratio = (
-                    1.0 - self.already_pruned[name]) * prune_ratio + self.already_pruned[name]
-                cfg = [{'sparsity': prune_ratio, 'op_names': [
+                sparsity = (
+                    1.0 - self.already_pruned[name]) * sparsity + self.already_pruned[name]
+                # TODO In current L1/L2 Filter Pruner, the 'op_types' is still necessary
+                # I think the L1/L2 Pruner should specify the op_types automaticlly
+                # according to the op_names
+                cfg = [{'sparsity': sparsity, 'op_names': [
                     name], 'op_types': ['Conv2d']}]
-                pruner = L1FilterPruner(self.model, cfg)
+                pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
                 val_acc = self.val_func(self.model)
-                self.sensitivities[name][prune_ratio] = val_acc
+                logger.info('Layer: %s Sparsity: %.2f Accuracy: %.4f' %
+                            (name, sparsity, val_acc))
+
+                self.sensitivities[name][sparsity] = val_acc
                 pruner._unwrap_model()
-                # TODO outside the ratio loop
-                # reset the weights pruned by the pruner
-                self.model.load_state_dict(self.ori_state_dict)
-                # print('Reset')
-                # print(self.val_func(self.model))
                 del pruner
+                # if the accuracy drop already reach the 'early_stop'
+                if self.early_stop is not None:
+                    if val_acc + self.early_stop < self.ori_acc:
+                        break
+
+            # reset the weights pruned by the pruner, because
+            # out sparsities is sorted, so we donnot need to reset
+            # weight of the layer when the sparsity changes, instead,
+            # we only need reset the weight when the pruning layer changes.
+            self.model.load_state_dict(self.ori_state_dict)
+
         return self.sensitivities
 
     def visualization(self, outdir, merge=False):
@@ -173,18 +207,25 @@ class SensitivityAnalysis:
 
     def export(self, filepath):
         """
-        #TODO CSV
         Export the results of the sensitivity analysis
-        to a json file.
+        to a csv file.
 
         Parameters
         ----------
             filepath:
                 Path of the output file
         """
-        # TODO csv
-        with open(filepath, 'w') as jf:
-            json.dump(self.sensitivities, jf, indent=4)
+        str_sparsities = [str(x) for x in self.sparsities]
+        header = ['layername'] + str_sparsities
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf)
+            csv_w.writerow(header)
+            for layername in self.sensitivities:
+                row = []
+                row.append(layername)
+                for sparsity in sorted(self.sensitivities[layername].keys()):
+                    row.append(self.sensitivities[layername][sparsity])
+                csv_w.writerow(row)
 
     def update_already_pruned(self, layername, ratio):
         """
