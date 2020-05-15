@@ -104,7 +104,7 @@ class FixedArchitecture(Mutator):
                 else:
                     # remove unused parameters
                     for ch, n in zip(chosen, mutable.names):
-                        if ch == 0:
+                        if ch == 0 and not isinstance(ch, float):
                             setattr(mutable, n, None)
             else:
                 self.replace_layer_choice(mutable, global_name)
