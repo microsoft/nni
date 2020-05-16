@@ -21,17 +21,22 @@ def get_all_builtin_names(algo_type):
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
     merged_dict = _get_merged_builtin_dict()
 
-    if algo_type is None:
+    if algo_type is None and builtin_name is None:
         return merged_dict
 
-    assert algo_type in ALGO_TYPES
+    if algo_type:
+        assert algo_type in ALGO_TYPES
+        metas = merged_dict[algo_type]
+    else:
+        metas = merged_dict['tuners'] + merged_dict['assessors'] + merged_dict['advisors']
 
-    if not builtin_name:
-        return merged_dict[builtin_name]
+    if builtin_name:
+        for m in metas:
+            if m['name'] == builtin_name:
+                return m
+    else:
+        return metas
 
-    for m in merged_dict[algo_type]:
-        if m['name'] == builtin_name:
-            return m
     return None
 
 def get_python_dir(sitepackages_path):
@@ -94,9 +99,16 @@ def get_package_config_path():
         os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, 'installed_packages.yml')
 
+def get_installed_package_meta(algo_type, builtin_name):
+    assert algo_type in ALGO_TYPES
+    config = read_installed_package_meta()
+    for meta in config[algo_type]:
+        if meta['name'] == builtin_name:
+            return meta
+    return None
+
 def read_installed_package_meta():
     config_file = get_package_config_path()
-    print(config_file)
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.Loader)

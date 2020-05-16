@@ -4,7 +4,7 @@
 import os
 import pkginfo
 import nni
-from nni.package_utils import read_installed_package_meta, write_package_meta, get_builtin_algo_meta
+from nni.package_utils import read_installed_package_meta, get_installed_package_meta, write_package_meta, get_builtin_algo_meta
 
 from .constants import PACKAGE_REQUIREMENTS, PACKAGE_META
 from .common_utils import print_error
@@ -43,17 +43,29 @@ def package_install(args):
 def package_uninstall(args):
     '''uninstall packages'''
     print(args)
-    call_pip_uninstall(args.source)
+    meta = get_installed_package_meta(args.type+'s', args.name)
+    if meta is None:
+        print_error('package {} not found'.format(args.name))
+        return
+    if 'installed_package' in meta:
+        call_pip_uninstall(meta['installed_package'])
     remove_package_meta_data(args.name, args.type)
 
 def package_show(args):
     '''show all packages'''
     print(args)
-    print(get_builtin_algo_meta())
+    meta = get_builtin_algo_meta(builtin_name=args.name)
+    if meta:
+        print(meta)
+    else:
+        print_error('package {} not found'.format(args.name))
 
 def package_list(args):
     '''show all packages'''
-    print(get_builtin_algo_meta())
+    if args.all:
+        print(get_builtin_algo_meta())
+    else:
+        print(read_installed_package_meta())
 
 def save_package_meta_data(meta_data):
     assert meta_data['type'] in PACKAGE_TYPES
@@ -65,10 +77,13 @@ def save_package_meta_data(meta_data):
     if meta_data['name'] in [x['name'] for x in config[meta_data['type']+'s']]:
         raise ValueError('name %s already installed' % meta_data['name'])
 
-    config[meta_data['type']+'s'].append({
+    package_meta = {
         'name': meta_data['name'],
         'class_name': meta_data['class_name']
-    })
+    }
+    if 'package_name' in meta_data:
+        package_meta['installed_package'] = meta_data['package_name']
+    config[meta_data['type']+'s'].append(package_meta)
     write_package_meta(config)
 
 def remove_package_meta_data(name, class_type):
@@ -101,7 +116,9 @@ def get_nni_meta(source):
 
     classifiers = pkg.classifiers
     print(classifiers)
-    return parse_classifiers(classifiers)
+    meta = parse_classifiers(classifiers)
+    meta['package_name'] = pkg.name
+    return meta
 
 def parse_classifiers(classifiers):
     parts = []

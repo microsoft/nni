@@ -12,7 +12,7 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
                           get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
-from .package_management import package_install, package_show, package_list
+from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
 init(autoreset=True)
@@ -199,11 +199,20 @@ def parse_args():
     parser_package_install.add_argument('source', nargs='?', help='installation source, can be a directory or whl file')
     parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed', required=False)
     parser_package_install.set_defaults(func=package_install)
+
+    parser_package_uninstall = parser_package_subparsers.add_parser('uninstall', help='uninstall packages')
+    parser_package_uninstall.add_argument('--name', '-n', dest='name', help='package name to be uninstalled')
+    parser_package_uninstall.add_argument(
+        '--type', '-t', dest='type', choices=['tuner', 'assessor', 'advisor'], help='package type to be uninstalled'
+    )
+    parser_package_uninstall.set_defaults(func=package_uninstall)
+
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
-    parser_package_show.add_argument('id', nargs='?', help='the id of experiment')
+    parser_package_show.add_argument('name', nargs='?', help='builtin name of the package')
     parser_package_show.set_defaults(func=package_show)
-    
+
     parser_package_list = parser_package_subparsers.add_parser('list', help='list installed packages')
+    parser_package_list.add_argument('--all', action='store_true', help='list all builtin packages')
     parser_package_list.set_defaults(func=package_list)
 
     #parse tensorboard command
