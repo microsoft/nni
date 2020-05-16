@@ -209,8 +209,8 @@ class TrialManager {
     private async updateInfo(): Promise<boolean> {
 
         let updated = false;
-        requestAxios(`${MANAGER_IP}/trial-jobs`).
-            then(data => {
+        requestAxios(`${MANAGER_IP}/trial-jobs`)
+            .then(data => {
                 const newTrials = TrialManager.expandJobsToTrials(data as any);
                 for (const trialInfo of newTrials as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
@@ -246,8 +246,8 @@ class TrialManager {
     }
 
     private async updateAllMetrics(): Promise<boolean> {
-        return requestAxios(`${MANAGER_IP}/metric-data`).
-            then(data => this.doUpdateMetrics(data as any, false))
+        return requestAxios(`${MANAGER_IP}/metric-data`)
+            .then(data => this.doUpdateMetrics(data as any, false))
             .catch(error => {
                 this.isMetricdataError = true;
                 this.MetricdataErrorMessage = `${error.message}`;
@@ -257,8 +257,8 @@ class TrialManager {
     }
 
     private async updateLatestMetrics(): Promise<boolean> {
-        return requestAxios(`${MANAGER_IP}/metric-data-latest`).
-            then(data => this.doUpdateMetrics(data as any, true))
+        return requestAxios(`${MANAGER_IP}/metric-data-latest`)
+            .then(data => this.doUpdateMetrics(data as any, true))
             .catch(error => {
                 this.isLatestMetricdataError = true;
                 this.latestMetricdataErrorMessage = `${error.message}`;
