@@ -10,8 +10,7 @@ import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni_annotation import expand_annotations, generate_search_space
-from nni.constants import ModuleName, AdvisorModuleName
-from nni.package_utils import get_nni_installation_path
+from nni.package_utils import get_builtin_module_class_name, get_nni_installation_path
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
@@ -393,10 +392,10 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
         package_name = experiment_config['tuner']['builtinTunerName']
-        module_name = ModuleName.get(package_name)
+        module_name, _ = get_builtin_module_class_name('tuners', package_name)
     elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
         package_name = experiment_config['advisor']['builtinAdvisorName']
-        module_name = AdvisorModuleName.get(package_name)
+        module_name, _ = get_builtin_module_class_name('advisors', package_name)
     if package_name and module_name:
         try:
             stdout_full_path, stderr_full_path = get_log_path(config_file_name)

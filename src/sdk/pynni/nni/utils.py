@@ -216,3 +216,7 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
     else:
         y = copy.deepcopy(x)
     return y
+
+class ClassArgsValidator(object):
+    def validate_class_args(self, **kwargs):
+        pass
