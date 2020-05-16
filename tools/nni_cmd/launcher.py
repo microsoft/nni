@@ -11,12 +11,14 @@ import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni_annotation import expand_annotations, generate_search_space
 from nni.constants import ModuleName, AdvisorModuleName
+from nni.package_utils import get_nni_installation_path
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
-                          detect_port, get_user, get_nni_installation_path
+                          detect_port, get_user
+
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
@@ -52,6 +54,9 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
     print_normal('Starting restful server...')
 
     entry_dir = get_nni_installation_path()
+    if (not entry_dir) or (not os.path.exists(entry_dir)):
+        print_error('Fail to find nni under python library')
+        exit(1)
     entry_file = os.path.join(entry_dir, 'main.js')
 
     node_command = 'node'

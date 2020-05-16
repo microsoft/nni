@@ -2,92 +2,78 @@
 # Licensed under the MIT license.
 
 import os
-from collections import defaultdict
-import zipfile
+import pkginfo
 import nni
-import ruamel.yaml as yaml
+from nni.package_utils import read_installed_package_meta, write_package_meta, get_builtin_algo_meta
 
-from .constants import PACKAGE_REQUIREMENTS
-from .common_utils import print_error, get_nni_config_dir
+from .constants import PACKAGE_REQUIREMENTS, PACKAGE_META
+from .common_utils import print_error
 from .command_utils import install_requirements_command, call_pip_install, call_pip_uninstall
 
-NNI_META_FILE = 'nni_config.yml'
+PACKAGE_TYPES = ['tuner', 'assessor', 'advisor']
 
-def process_install(package_name):
-    if PACKAGE_REQUIREMENTS.get(package_name) is None:
-        print_error('{0} is not supported!' % package_name)
-    else:
-        requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name])
-        install_requirements_command(requirements_path)
+def install_by_name(package_name):
+    if package_name not in PACKAGE_META:
+        print_error('{} is not supported!'.format(package_name))
+        return -1
+
+    requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name], 'requirements.txt')
+    assert os.path.exists(requirements_path)
+
+    return install_requirements_command(requirements_path)
 
 def package_install(args):
     '''install packages'''
     print(args)
-    #process_install(args.name)
-    if not validate_install_source(args.source):
-        return
-    call_pip_install(args.source)
+
+    if args.name:
+        ret_code = install_by_name(args.name)
+        if ret_code == 0:
+            package_meta = {}
+            package_meta['type'] = PACKAGE_META[args.name]['type']
+            package_meta['name'] = args.name
+            package_meta['class_name'] = PACKAGE_META[args.name]['class_name']
+            save_package_meta_data(package_meta)
+    else:
+        package_meta = get_nni_meta(args.source)
+        if package_meta:
+            if call_pip_install(args.source) == 0:
+                save_package_meta_data(package_meta)
 
 def package_uninstall(args):
-    '''install packages'''
+    '''uninstall packages'''
     print(args)
-    #process_install(args.name)
     call_pip_uninstall(args.source)
+    remove_package_meta_data(args.name, args.type)
 
 def package_show(args):
     '''show all packages'''
-    #print(' '.join(PACKAGE_REQUIREMENTS.keys()))
     print(args)
+    print(get_builtin_algo_meta())
 
 def package_list(args):
     '''show all packages'''
-    print(' '.join(PACKAGE_REQUIREMENTS.keys()))
-    print(get_nni_config_dir())
-
-    meta = {
-        'type': 'tuner',
-        'name': 'mytuner',
-        'class_name': 'mypackage.mytuner'
-    }
-    #save_package_meta_data(meta)
-    remove_package_meta_data('mytuner', 'tuner')
-
-def get_package_config_path():
-    config_dir = get_nni_config_dir()
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir, exist_ok=True)
-    return os.path.join(config_dir, 'installed_packages.yml')
-
-def read_package_config():
-    config_file = get_package_config_path()
-    if os.path.exists(config_file):
-        with open(config_file, 'r') as f:
-            config = yaml.load(f, Loader=yaml.Loader)
-    else:
-        config = defaultdict(list)
-    return config
-
-def write_package_config(config):
-    config_file = get_package_config_path()
-    with open(config_file, 'w') as f:
-        f.write(yaml.dump(dict(config), default_flow_style=False))
+    print(get_builtin_algo_meta())
 
 def save_package_meta_data(meta_data):
-    assert meta_data['type'] in ['tuner', 'assessor', 'advisor']
+    assert meta_data['type'] in PACKAGE_TYPES
     assert 'name' in meta_data
     assert 'class_name' in meta_data
 
-    config = read_package_config()
+    config = read_installed_package_meta()
 
     if meta_data['name'] in [x['name'] for x in config[meta_data['type']+'s']]:
         raise ValueError('name %s already installed' % meta_data['name'])
 
-    config[meta_data['type']+'s'].append(meta_data)
-    write_package_config(config)
+    config[meta_data['type']+'s'].append({
+        'name': meta_data['name'],
+        'class_name': meta_data['class_name']
+    })
+    write_package_meta(config)
 
 def remove_package_meta_data(name, class_type):
-    assert class_type in ['tuner', 'assessor', 'advisor']
-    config = read_package_config()
+    assert class_type in PACKAGE_TYPES
+    config = read_installed_package_meta()
 
     updated = False
     for meta in config[class_type +'s']:
@@ -95,37 +81,42 @@ def remove_package_meta_data(name, class_type):
             config[class_type +'s'].remove(meta)
             updated = True
     if updated:
-        write_package_config(config)
+        write_package_meta(config)
 
-def validate_install_source(source):
-    """
-    The source should be a valid pip installation source and it contains nni_config.yml.
-    """
-    def check_meta_data(meta):
-        print(meta)
-        return True
-
+def get_nni_meta(source):
     if not os.path.exists(source):
         print_error('{} does not exist'.format(source))
-        return False
+        return None
+
     if os.path.isdir(source):
         if not os.path.exists(os.path.join(source, 'setup.py')):
             print_error('setup.py not found')
-            return False
-        if not os.path.exists(os.path.join(source, NNI_META_FILE)):
-            print_error('{} not found'.format(NNI_META_FILE))
-            return False
-        with open(os.path.join(source, NNI_META_FILE)) as f:
-            meta = yaml.load(f, Loader=yaml.Loader)
-            return check_meta_data(meta)
+            return None
+        pkg = pkginfo.Develop(source)
     else:
         if not source.endswith('.whl'):
-            print_error('File name {} must ends with \'.whl\'')
+            print_error('File name {} must ends with \'.whl\''.format(source))
             return False
-        with zipfile.ZipFile(source) as whl_file:
-            print(whl_file.namelist())
-            with whl_file.open(NNI_META_FILE) as meta_file:
-                meta = yaml.load(meta_file, Loader=yaml.Loader)
-                return check_meta_data(meta)
+        pkg = pkginfo.Wheel(source)
 
-    return False
+    classifiers = pkg.classifiers
+    print(classifiers)
+    return parse_classifiers(classifiers)
+
+def parse_classifiers(classifiers):
+    parts = []
+    for c in classifiers:
+        if c.startswith('NNI Package'):
+            parts = [x.strip() for x in c.split('::')]
+            break
+    if len(parts) < 4 or not all(parts):
+        raise ValueError('Can not find correct NNI meta data in package classifiers.')
+    meta = {
+        'type': parts[1],
+        'name': parts[2],
+        'class_name': parts[3]
+    }
+    if len(parts) >= 5:
+        meta['validator_class_name'] = parts[4]
+
+    return meta

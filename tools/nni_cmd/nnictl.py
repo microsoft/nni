@@ -196,8 +196,8 @@ def parse_args():
     # add subparsers for parser_package
     parser_package_subparsers = parser_package.add_subparsers()
     parser_package_install = parser_package_subparsers.add_parser('install', help='install packages')
-    parser_package_install.add_argument('source', help='installation source, can be a directory or whl file')
-    #parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed', required=False)
+    parser_package_install.add_argument('source', nargs='?', help='installation source, can be a directory or whl file')
+    parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed', required=False)
     parser_package_install.set_defaults(func=package_install)
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
     parser_package_show.add_argument('id', nargs='?', help='the id of experiment')

@@ -16,7 +16,8 @@ setuptools.setup(
         'astor',
         'schema',
         'PythonWebHDFS',
-        'colorama'
+        'colorama',
+        'pkginfo'
     ],
 
     author = 'Microsoft NNI Team',

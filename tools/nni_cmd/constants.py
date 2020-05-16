@@ -68,6 +68,24 @@ PACKAGE_REQUIREMENTS = {
     'PPOTuner': 'ppo_tuner'
 }
 
+PACKAGE_META = {
+    'SMAC': {
+        'type': 'tuner',
+        'class_name': 'nni.smac_tuner.smac_tuner.SMACTuner',
+        'code_sub_dir': 'smac_tuner'
+    },
+    'BOHB': {
+        'type': 'advisor',
+        'class_name': 'nni.bohb_advisor.bohb_advisor.BOHB',
+        'code_sub_dir': 'bohb_advisor'
+    },
+    'PPOTuner': {
+        'type': 'tuner',
+        'class_name': 'nni.ppo_tuner.ppo_tuner.PPOTuner',
+        'code_sub_dir': 'ppo_tuner'
+    }
+}
+
 TUNERS_SUPPORTING_IMPORT_DATA = {
     'TPE',
     'Anneal',
