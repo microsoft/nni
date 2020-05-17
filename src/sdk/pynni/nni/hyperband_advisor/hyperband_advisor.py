@@ -12,6 +12,9 @@ import sys
 
 import json_tricks
 import numpy as np
+from schema import Schema, Optional
+
+from nni import ClassArgsValidator
 from nni.common import multi_phase_enabled
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.protocol import CommandType, send
@@ -249,6 +252,13 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+class HyperbandClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('R'): int,
+            Optional('eta'): int
+        }).validate(kwargs)
 
 class Hyperband(MsgDispatcherBase):
     """Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.

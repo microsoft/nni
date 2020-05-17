@@ -183,9 +183,9 @@ def _add_index(in_x, parameter):
 class HyperoptClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         Schema({
-            Optional('optimize_mode'): lambda m: m in ['optimize_mode', 'maximize', 'minimize'],
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
             Optional('parallel_optimize'): bool,
-            Optional('constant_liar_type'): lambda c: c in ['constant_liar_type', 'min', 'max', 'mean']
+            Optional('constant_liar_type'): self.choices('constant_liar_type', 'min', 'max', 'mean')
         }).validate(kwargs)
 
 class HyperoptTuner(Tuner):

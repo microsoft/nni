@@ -9,10 +9,11 @@ import sys
 import math
 import logging
 import json_tricks
-
+from schema import Schema, Optional
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
+from nni import ClassArgsValidator
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.utils import OptimizeMode, MetricType, extract_scalar_reward
@@ -230,6 +231,20 @@ class Bracket:
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+class BOHBClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('min_budget'): self.range('min_budget', int, 0, 9999),
+            Optional('max_budget'): self.range('max_budget', int, 0, 9999),
+            Optional('eta'): self.range('eta', int, 0, 9999),
+            Optional('min_points_in_model'): self.range('min_points_in_model', int, 0, 9999),
+            Optional('top_n_percent'): self.range('top_n_percent', int, 1, 99),
+            Optional('num_samples'): self.range('num_samples', int, 1, 9999),
+            Optional('random_fraction'): self.range('random_fraction', float, 0, 9999),
+            Optional('bandwidth_factor'): self.range('bandwidth_factor', float, 0, 9999),
+            Optional('min_bandwidth'): self.range('min_bandwidth', float, 0, 9999),
+        }).validate(kwargs)
 
 class BOHB(MsgDispatcherBase):
     """

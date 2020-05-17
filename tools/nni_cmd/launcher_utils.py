@@ -8,7 +8,7 @@ from schema import Schema
 from nni.package_utils import create_validator_instance
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
                            DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
-                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
+                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict, AlgoSchema
 from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
@@ -146,6 +146,11 @@ def validate_kubeflow_operators(experiment_config):
                 print_error('please set storage type!')
                 exit(1)
 
+def validate_algo(experiment_config):
+    for algo_type in ['tuner', 'assessor', 'advisor']:
+        if experiment_config.get(algo_type):
+            AlgoSchema().validate(experiment_config[algo_type], algo_type)
+
 def validate_class_args(experiment_config):
     validation_data = []
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
@@ -156,7 +161,7 @@ def validate_class_args(experiment_config):
         validation_data.append((validator, experiment_config['advisor'].get('classArgs')))
     if experiment_config.get('assessor') and experiment_config['assessor'].get('builtinAssessorName'):
         validator = create_validator_instance('assessors', experiment_config['assessor']['builtinAssessorName'])
-        validation_data.append((validator, experiment_config['advisor'].get('classArgs')))
+        validation_data.append((validator, experiment_config['assessor'].get('classArgs')))
 
     for validator, class_args in validation_data:
         if validator and class_args:
@@ -190,7 +195,8 @@ def validate_common_content(experiment_config):
         'assessor': 'builtinAssessorName'
     }
     try:
-        validate_class_args(experiment_config)
+        validate_algo(experiment_config)
+        #validate_class_args(experiment_config)
         schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
         for separate_key in separate_schema_dict.keys():
             if experiment_config.get(separate_key):

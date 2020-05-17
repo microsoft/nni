@@ -17,7 +17,8 @@ def get_all_builtin_names(algo_type):
     assert algo_type in ALGO_TYPES
     merged_dict = _get_merged_builtin_dict()
 
-    return [x['name'] for x in merged_dict[algo_type]]
+    builtin_names = [x['name'] for x in merged_dict[algo_type]]
+    return builtin_names
 
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
     merged_dict = _get_merged_builtin_dict()
@@ -57,7 +58,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
 def create_validator_instance(algo_type, builtin_name):
     assert algo_type in ALGO_TYPES
     meta = get_builtin_algo_meta(algo_type, builtin_name)
-    if not meta:
+    if not meta or 'class_args_validator' not in meta:
         return None
     module_name, class_name = _parse_full_class_name(meta['class_args_validator'])
     class_module = importlib.import_module(module_name)

@@ -10,10 +10,12 @@ See :class:`GPTuner` for details.
 import warnings
 import logging
 import numpy as np
+from schema import Schema, Optional
 
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -22,6 +24,19 @@ from .util import UtilityFunction, acq_max
 
 logger = logging.getLogger("GP_Tuner_AutoML")
 
+class GPClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('utility'): self.choices('utility', 'ei', 'ucb', 'poi'),
+            Optional('kappa'): float,
+            Optional('xi'): float,
+            Optional('nu'): float,
+            Optional('alpha'): float,
+            Optional('cold_start_num'): int,
+            Optional('selection_num_warm_up'):  int,
+            Optional('selection_num_starting_points'):  int,
+        }).validate(kwargs)
 
 class GPTuner(Tuner):
     """

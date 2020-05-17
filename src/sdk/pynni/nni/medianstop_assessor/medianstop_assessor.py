@@ -2,10 +2,20 @@
 # Licensed under the MIT license.
 
 import logging
+from schema import Schema, Optional
+
+from nni import ClassArgsValidator
 from nni.assessor import Assessor, AssessResult
 from nni.utils import extract_scalar_history
 
 logger = logging.getLogger('medianstop_Assessor')
+
+class MedianstopClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('start_step'): self.range('start_step', int, 0, 9999),
+        }).validate(kwargs)
 
 class MedianstopAssessor(Assessor):
     """MedianstopAssessor is The median stopping rule stops a pending trial X at step S

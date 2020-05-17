@@ -6,6 +6,7 @@ import copy
 import functools
 from enum import Enum, unique
 import json_tricks
+from schema import And
 
 from . import parameter_expressions
 from .common import init_logger
@@ -220,3 +221,12 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
 class ClassArgsValidator(object):
     def validate_class_args(self, **kwargs):
         pass
+
+    def choices(self, key, *args):
+        return And(lambda n: n in args, error='%s should be in [%s]!' % (key, str(args)))
+
+    def range(self, key, keyType, start, end):
+        return And(
+            And(keyType, error='%s should be %s type!' % (key, keyType.__name__)),
+            And(lambda n: start <= n <= end, error='%s should be in range of (%s, %s)!' % (key, start, end))
+        )

@@ -2,7 +2,8 @@
 # Licensed under the MIT license.
 
 import os
-from schema import Schema, And, Optional, Regex, Or
+from schema import Schema, And, Optional, Regex, Or, SchemaError
+from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
 
 
@@ -53,6 +54,86 @@ common_schema = {
         Optional('useActiveGpu'): setType('useActiveGpu', bool)
     }
 }
+
+class AlgoSchema:
+    def __init__(self):
+        self.algo_schema = {
+            Optional('codeDir'): setPathCheck('codeDir'),
+            Optional('classFileName'): setType('classFileName', str),
+            Optional('className'): setType('className', str),
+            Optional('classArgs'): dict,
+            Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        }
+        self.builtin_name_schema = {
+            'tuner': {
+                Optional('builtinTunerName'): And(
+                    lambda n: n in get_all_builtin_names('tuners'),
+                    error='builtinTunerName should be in {}'.format(get_all_builtin_names('tuners')))
+            },
+            'assessor': {
+                Optional('builtinAssessorName'): And(
+                    lambda n: n in get_all_builtin_names('assessors'),
+                    error='builtinAssessorName should be in {}'.format(get_all_builtin_names('assessors')))
+            },
+            'advisor': {
+                Optional('builtinAdvisorName'): And(
+                    lambda n: n in get_all_builtin_names('advisors'),
+                    error='builtinAdvisorName should be in {}'.format(get_all_builtin_names('advisors')))
+            }
+        }
+        self.builtin_keys = {
+            'tuner': 'builtinTunerName',
+            'assessor': 'builtinAssessorName',
+            'advisor': 'builtinAdvisorName'
+        }
+        self.customized_keys = set(['codeDir', 'classFileName', 'className'])
+
+    def validate_class_args(self, class_args, algo_type, builtin_name):
+        if not builtin_name or not class_args:
+            return
+        meta = get_builtin_algo_meta(algo_type+'s', builtin_name)
+        if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
+            raise SchemaError('classArgs is not allowed.')
+
+        validator = create_validator_instance(algo_type+'s', builtin_name)
+        if validator:
+            try:
+                print('validating:', validator, class_args)
+                validator.validate_class_args(**class_args)
+            except Exception as e:
+                raise SchemaError(str(e))
+
+    def missing_customized_keys(self, data):
+        return self.customized_keys - set(data.keys())
+
+    def validate_extras(self, data, algo_type):
+        builtin_key = self.builtin_keys[algo_type]
+        if (builtin_key in data) and (set(data.keys()) & self.customized_keys):
+            raise SchemaError('{} and {} cannot be specified at the same time.'.format(
+                builtin_key, set(data.keys()) & self.customized_keys
+            ))
+
+        if self.missing_customized_keys(data) and builtin_key not in data:
+            raise SchemaError('Either customized {} ({}) or builtin {} ({}) must be set.'.format(
+                algo_type, self.customized_keys, algo_type, builtin_key))
+
+        if not self.missing_customized_keys(data):
+            class_file_name = os.path.join(data['codeDir'], data['classFileName'])
+            if not os.path.isfile(class_file_name):
+                raise SchemaError('classFileName {} not found.'.format(class_file_name))
+
+        builtin_name = data.get(builtin_key)
+        class_args = data.get('classArgs')
+        self.validate_class_args(class_args, algo_type, builtin_name)
+
+    def validate(self, data, algo_type):
+        assert algo_type in ['tuner', 'assessor', 'advisor']
+        self.algo_schema.update(self.builtin_name_schema[algo_type])
+        Schema(self.algo_schema).validate(data)
+        self.validate_extras(data, algo_type)
+
+
 tuner_schema_dict = {
     'Anneal': {
         'builtinTunerName': 'Anneal',

@@ -10,8 +10,10 @@ import copy
 import logging
 import numpy as np
 from gym import spaces
+from schema import Schema, Optional
 
 import nni
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -285,6 +287,21 @@ class PPOModel:
                 mbstates = states[mbenvinds]
                 self.model.train(lrnow, cliprangenow, *slices, mbstates)
 
+class PPOClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('trials_per_update'): self.range('trials_per_update', int, 0, 99999),
+            Optional('epochs_per_update'): self.range('epochs_per_update', int, 0, 99999),
+            Optional('minibatch_size'): self.range('minibatch_size', int, 0, 99999),
+            Optional('ent_coef'): float,
+            Optional('lr'): float,
+            Optional('vf_coef'): float,
+            Optional('max_grad_norm'): float,
+            Optional('gamma'):  float,
+            Optional('lam'):  float,
+            Optional('cliprange'): float,
+        }).validate(kwargs)
 
 class PPOTuner(Tuner):
     """

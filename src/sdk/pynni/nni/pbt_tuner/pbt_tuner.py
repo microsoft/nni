@@ -6,8 +6,10 @@ import logging
 import os
 import random
 import numpy as np
+from schema import Schema, Optional
 
 import nni
+from nni import ClassArgsValidator
 import nni.parameter_expressions
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
@@ -157,6 +159,15 @@ class TrialInfo:
     def clean_id(self):
         self.parameter_id = None
 
+class PBTClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('all_checkpoint_dir'): str,
+            Optional('population_size'): self.range('population_size', int, 0, 99999),
+            Optional('factors'): float,
+            Optional('fraction'): float,
+        }).validate(kwargs)
 
 class PBTTuner(Tuner):
     def __init__(self, optimize_mode="maximize", all_checkpoint_dir=None, population_size=10, factor=0.2,
