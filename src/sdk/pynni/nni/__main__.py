@@ -2,11 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import sys
 import argparse
 import logging
 import json
-import importlib
 import base64
 
 from .common import enable_multi_thread, enable_multi_phase

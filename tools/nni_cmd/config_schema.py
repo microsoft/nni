@@ -65,28 +65,15 @@ class AlgoSchema:
             Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
         }
-        self.builtin_name_schema = {
-            'tuner': {
-                Optional('builtinTunerName'): And(
-                    lambda n: n in get_all_builtin_names('tuners'),
-                    error='builtinTunerName should be in {}'.format(get_all_builtin_names('tuners')))
-            },
-            'assessor': {
-                Optional('builtinAssessorName'): And(
-                    lambda n: n in get_all_builtin_names('assessors'),
-                    error='builtinAssessorName should be in {}'.format(get_all_builtin_names('assessors')))
-            },
-            'advisor': {
-                Optional('builtinAdvisorName'): And(
-                    lambda n: n in get_all_builtin_names('advisors'),
-                    error='builtinAdvisorName should be in {}'.format(get_all_builtin_names('advisors')))
-            }
-        }
         self.builtin_keys = {
             'tuner': 'builtinTunerName',
             'assessor': 'builtinAssessorName',
             'advisor': 'builtinAdvisorName'
         }
+        self.builtin_name_schema = {}
+        for k, n in self.builtin_keys.items():
+            self.builtin_name_schema[k] = {Optional(n): setChoice(n, *get_all_builtin_names(k+'s'))}
+
         self.customized_keys = set(['codeDir', 'classFileName', 'className'])
 
     def validate_class_args(self, class_args, algo_type, builtin_name):
@@ -133,189 +120,6 @@ class AlgoSchema:
         Schema(self.algo_schema).validate(data)
         self.validate_extras(data, algo_type)
 
-
-tuner_schema_dict = {
-    'Anneal': {
-        'builtinTunerName': 'Anneal',
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'SMAC': {
-        'builtinTunerName': 'SMAC',
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('config_dedup'): setType('config_dedup', bool)
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    ('Evolution'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'Evolution'),
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    ('BatchTuner', 'GridSearch', 'Random'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'TPE': {
-        'builtinTunerName': 'TPE',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('parallel_optimize'): setType('parallel_optimize', bool),
-            Optional('constant_liar_type'): setChoice('constant_liar_type', 'min', 'max', 'mean')
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'NetworkMorphism': {
-        'builtinTunerName': 'NetworkMorphism',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('task'): setChoice('task', 'cv', 'nlp', 'common'),
-            Optional('input_width'): setType('input_width', int),
-            Optional('input_channel'): setType('input_channel', int),
-            Optional('n_output_node'): setType('n_output_node', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'MetisTuner': {
-        'builtinTunerName': 'MetisTuner',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('no_resampling'): setType('no_resampling', bool),
-            Optional('no_candidates'): setType('no_candidates', bool),
-            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
-            Optional('cold_start_num'): setType('cold_start_num', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'GPTuner': {
-        'builtinTunerName': 'GPTuner',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('utility'): setChoice('utility', 'ei', 'ucb', 'poi'),
-            Optional('kappa'): setType('kappa', float),
-            Optional('xi'): setType('xi', float),
-            Optional('nu'): setType('nu', float),
-            Optional('alpha'): setType('alpha', float),
-            Optional('cold_start_num'): setType('cold_start_num', int),
-            Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
-            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'PPOTuner': {
-        'builtinTunerName': 'PPOTuner',
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('trials_per_update'): setNumberRange('trials_per_update', int, 0, 99999),
-            Optional('epochs_per_update'): setNumberRange('epochs_per_update', int, 0, 99999),
-            Optional('minibatch_size'): setNumberRange('minibatch_size', int, 0, 99999),
-            Optional('ent_coef'): setType('ent_coef', float),
-            Optional('lr'): setType('lr', float),
-            Optional('vf_coef'): setType('vf_coef', float),
-            Optional('max_grad_norm'): setType('max_grad_norm', float),
-            Optional('gamma'): setType('gamma', float),
-            Optional('lam'): setType('lam', float),
-            Optional('cliprange'): setType('cliprange', float),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'PBTTuner': {
-        'builtinTunerName': 'PBTTuner',
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('all_checkpoint_dir'): setType('all_checkpoint_dir', str),
-            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
-            Optional('factors'): setType('factors', tuple),
-            Optional('fraction'): setType('fraction', float),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'customized': {
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    }
-}
-
-advisor_schema_dict = {
-    'Hyperband':{
-        'builtinAdvisorName': Or('Hyperband'),
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('R'): setType('R', int),
-            Optional('eta'): setType('eta', int)
-        },
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'BOHB':{
-        'builtinAdvisorName': Or('BOHB'),
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
-            Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
-            Optional('eta'):setNumberRange('eta', int, 0, 9999),
-            Optional('min_points_in_model'): setNumberRange('min_points_in_model', int, 0, 9999),
-            Optional('top_n_percent'): setNumberRange('top_n_percent', int, 1, 99),
-            Optional('num_samples'): setNumberRange('num_samples', int, 1, 9999),
-            Optional('random_fraction'): setNumberRange('random_fraction', float, 0, 9999),
-            Optional('bandwidth_factor'): setNumberRange('bandwidth_factor', float, 0, 9999),
-            Optional('min_bandwidth'): setNumberRange('min_bandwidth', float, 0, 9999),
-        },
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'customized':{
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    }
-}
-
-assessor_schema_dict = {
-    'Medianstop': {
-        'builtinAssessorName': 'Medianstop',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-        },
-    },
-    'Curvefitting': {
-        'builtinAssessorName': 'Curvefitting',
-        Optional('classArgs'): {
-            'epoch_num': setNumberRange('epoch_num', int, 0, 9999),
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-            Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
-            Optional('gap'): setNumberRange('gap', int, 1, 9999),
-        },
-    },
-    'customized': {
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
-    }
-}
 
 common_trial_schema = {
     'trial':{

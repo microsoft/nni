@@ -7,8 +7,7 @@ from schema import SchemaError
 from schema import Schema
 from nni.package_utils import create_validator_instance
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
-                           DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
-                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict, AlgoSchema
+                           DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, AlgoSchema
 from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
@@ -146,27 +145,6 @@ def validate_kubeflow_operators(experiment_config):
                 print_error('please set storage type!')
                 exit(1)
 
-def validate_algo(experiment_config):
-    for algo_type in ['tuner', 'assessor', 'advisor']:
-        if experiment_config.get(algo_type):
-            AlgoSchema().validate(experiment_config[algo_type], algo_type)
-
-def validate_class_args(experiment_config):
-    validation_data = []
-    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
-        validator = create_validator_instance('tuners', experiment_config['tuner']['builtinTunerName'])
-        validation_data.append((validator, experiment_config['tuner'].get('classArgs')))
-    if experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
-        validator = create_validator_instance('advisors', experiment_config['advisor']['builtinTunerName'])
-        validation_data.append((validator, experiment_config['advisor'].get('classArgs')))
-    if experiment_config.get('assessor') and experiment_config['assessor'].get('builtinAssessorName'):
-        validator = create_validator_instance('assessors', experiment_config['assessor']['builtinAssessorName'])
-        validation_data.append((validator, experiment_config['assessor'].get('classArgs')))
-
-    for validator, class_args in validation_data:
-        if validator and class_args:
-            validator.validate_class_args(**class_args)
-
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
@@ -184,34 +162,13 @@ def validate_common_content(experiment_config):
         'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA,
         'dlts': DLTS_CONFIG_SCHEMA,
         }
-    separate_schema_dict = {
-        'tuner': tuner_schema_dict,
-        'advisor': advisor_schema_dict,
-        'assessor': assessor_schema_dict
-    }
-    separate_builtInName_dict = {
-        'tuner': 'builtinTunerName',
-        'advisor': 'builtinAdvisorName',
-        'assessor': 'builtinAssessorName'
-    }
+
     try:
-        validate_algo(experiment_config)
-        #validate_class_args(experiment_config)
         schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
-        for separate_key in separate_schema_dict.keys():
-            if experiment_config.get(separate_key):
-                if experiment_config[separate_key].get(separate_builtInName_dict[separate_key]):
-                    validate = False
-                    for key in separate_schema_dict[separate_key].keys():
-                        if key.__contains__(experiment_config[separate_key][separate_builtInName_dict[separate_key]]):
-                            Schema({**separate_schema_dict[separate_key][key]}).validate(experiment_config[separate_key])
-                            validate = True
-                            break
-                    if not validate:
-                        print_error('%s %s error!' % (separate_key, separate_builtInName_dict[separate_key]))
-                        exit(1)
-                else:
-                    Schema({**separate_schema_dict[separate_key]['customized']}).validate(experiment_config[separate_key])
+        for algo_type in ['tuner', 'assessor', 'advisor']:
+            if experiment_config.get(algo_type):
+                AlgoSchema().validate(experiment_config[algo_type], algo_type)
+
     except SchemaError as error:
         print_error('Your config file is not correct, please check your config file content!')
         print_error(error.code)
@@ -226,39 +183,6 @@ def validate_common_content(experiment_config):
         for index in range(len(experiment_config['machineList'])):
             if experiment_config['machineList'][index].get('port') is None:
                 experiment_config['machineList'][index]['port'] = 22
-
-def validate_customized_file(experiment_config, spec_key):
-    '''
-    check whether the file of customized tuner/assessor/advisor exists
-    spec_key: 'tuner', 'assessor', 'advisor'
-    '''
-    if experiment_config[spec_key].get('codeDir') and \
-        experiment_config[spec_key].get('classFileName') and \
-        experiment_config[spec_key].get('className'):
-        if not os.path.exists(os.path.join(
-                experiment_config[spec_key]['codeDir'],
-                experiment_config[spec_key]['classFileName'])):
-            print_error('%s file directory is not valid!'%(spec_key))
-            exit(1)
-    else:
-        print_error('%s file directory is not valid!'%(spec_key))
-        exit(1)
-
-def parse_tuner_content(experiment_config):
-    '''Validate whether tuner in experiment_config is valid'''
-    if not experiment_config['tuner'].get('builtinTunerName'):
-        validate_customized_file(experiment_config, 'tuner')
-
-def parse_assessor_content(experiment_config):
-    '''Validate whether assessor in experiment_config is valid'''
-    if experiment_config.get('assessor'):
-        if not experiment_config['assessor'].get('builtinAssessorName'):
-            validate_customized_file(experiment_config, 'assessor')
-
-def parse_advisor_content(experiment_config):
-    '''Validate whether advisor in experiment_config is valid'''
-    if not experiment_config['advisor'].get('builtinAdvisorName'):
-        validate_customized_file(experiment_config, 'advisor')
 
 def validate_annotation_content(experiment_config, spec_key, builtin_name):
     '''
@@ -331,11 +255,8 @@ def validate_all_content(experiment_config, config_path):
         if experiment_config.get('assessor') or experiment_config.get('tuner'):
             print_error('advisor could not be set with assessor or tuner simultaneously!')
             exit(1)
-        parse_advisor_content(experiment_config)
         validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
     else:
         if not experiment_config.get('tuner'):
             raise Exception('Please provide tuner spec!')
-        parse_tuner_content(experiment_config)
-        parse_assessor_content(experiment_config)
         validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
