@@ -6,7 +6,7 @@ import pkginfo
 import nni
 from nni.package_utils import read_installed_package_meta, get_installed_package_meta, write_package_meta, get_builtin_algo_meta
 
-from .constants import PACKAGE_REQUIREMENTS, PACKAGE_META
+from .constants import PACKAGE_META
 from .common_utils import print_error
 from .command_utils import install_requirements_command, call_pip_install, call_pip_uninstall
 
@@ -17,15 +17,13 @@ def install_by_name(package_name):
         print_error('{} is not supported!'.format(package_name))
         return -1
 
-    requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name], 'requirements.txt')
+    requirements_path = os.path.join(nni.__path__[0], PACKAGE_META[package_name]['code_sub_dir'], 'requirements.txt')
     assert os.path.exists(requirements_path)
 
     return install_requirements_command(requirements_path)
 
 def package_install(args):
     '''install packages'''
-    print(args)
-
     if args.name:
         ret_code = install_by_name(args.name)
         if ret_code == 0:
@@ -33,6 +31,7 @@ def package_install(args):
             package_meta['type'] = PACKAGE_META[args.name]['type']
             package_meta['name'] = args.name
             package_meta['class_name'] = PACKAGE_META[args.name]['class_name']
+            package_meta['class_args_validator'] = PACKAGE_META[args.name]['class_args_validator']
             save_package_meta_data(package_meta)
     else:
         package_meta = get_nni_meta(args.source)
@@ -42,8 +41,7 @@ def package_install(args):
 
 def package_uninstall(args):
     '''uninstall packages'''
-    print(args)
-    meta = get_installed_package_meta(args.type+'s', args.name)
+    meta = get_installed_package_meta(None, args.name)
     if meta is None:
         print_error('package {} not found'.format(args.name))
         return
@@ -52,16 +50,16 @@ def package_uninstall(args):
     remove_package_meta_data(args.name, args.type)
 
 def package_show(args):
-    '''show all packages'''
-    print(args)
-    meta = get_builtin_algo_meta(builtin_name=args.name)
+    '''show specified packages'''
+    builtin_name = args.name[0]
+    meta = get_builtin_algo_meta(builtin_name=builtin_name)
     if meta:
         print(meta)
     else:
-        print_error('package {} not found'.format(args.name))
+        print_error('package {} not found'.format(builtin_name))
 
 def package_list(args):
-    '''show all packages'''
+    '''list all packages'''
     if args.all:
         print(get_builtin_algo_meta())
     else:
@@ -77,10 +75,7 @@ def save_package_meta_data(meta_data):
     if meta_data['name'] in [x['name'] for x in config[meta_data['type']+'s']]:
         raise ValueError('name %s already installed' % meta_data['name'])
 
-    package_meta = {
-        'name': meta_data['name'],
-        'class_name': meta_data['class_name']
-    }
+    package_meta = {k: meta_data[k] for k in ['name', 'class_name', 'class_args_validator'] if k in meta_data}
     if 'package_name' in meta_data:
         package_meta['installed_package'] = meta_data['package_name']
     config[meta_data['type']+'s'].append(package_meta)
@@ -115,7 +110,6 @@ def get_nni_meta(source):
         pkg = pkginfo.Wheel(source)
 
     classifiers = pkg.classifiers
-    print(classifiers)
     meta = parse_classifiers(classifiers)
     meta['package_name'] = pkg.name
     return meta
@@ -134,6 +128,6 @@ def parse_classifiers(classifiers):
         'class_name': parts[3]
     }
     if len(parts) >= 5:
-        meta['validator_class_name'] = parts[4]
+        meta['class_args_validator'] = parts[4]
 
     return meta

@@ -201,14 +201,11 @@ def parse_args():
     parser_package_install.set_defaults(func=package_install)
 
     parser_package_uninstall = parser_package_subparsers.add_parser('uninstall', help='uninstall packages')
-    parser_package_uninstall.add_argument('--name', '-n', dest='name', help='package name to be uninstalled')
-    parser_package_uninstall.add_argument(
-        '--type', '-t', dest='type', choices=['tuner', 'assessor', 'advisor'], help='package type to be uninstalled'
-    )
+    parser_package_uninstall.add_argument('name', nargs=1, help='package name to be uninstalled')
     parser_package_uninstall.set_defaults(func=package_uninstall)
 
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
-    parser_package_show.add_argument('name', nargs='?', help='builtin name of the package')
+    parser_package_show.add_argument('name', nargs=1, help='builtin name of the package')
     parser_package_show.set_defaults(func=package_show)
 
     parser_package_list = parser_package_subparsers.add_parser('list', help='list installed packages')

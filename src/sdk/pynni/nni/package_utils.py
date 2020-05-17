@@ -31,7 +31,6 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
         metas = merged_dict[algo_type]
     else:
         metas = merged_dict['tuners'] + merged_dict['assessors'] + merged_dict['advisors']
-
     if builtin_name:
         for m in metas:
             if m['name'] == builtin_name:
@@ -185,9 +184,17 @@ def get_package_config_path():
     return os.path.join(config_dir, 'installed_packages.yml')
 
 def get_installed_package_meta(algo_type, builtin_name):
-    assert algo_type in ALGO_TYPES
+    if algo_type:
+        assert algo_type in ALGO_TYPES
     config = read_installed_package_meta()
-    for meta in config[algo_type]:
+
+    candidates = []
+    if algo_type:
+        candidates = config[algo_type]
+    else:
+        for algo_type in ALGO_TYPES:
+            candidates.extend(config[algo_type])
+    for meta in candidates:
         if meta['name'] == builtin_name:
             return meta
     return None

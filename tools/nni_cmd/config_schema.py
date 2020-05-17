@@ -86,7 +86,6 @@ class AlgoSchema:
         validator = create_validator_instance(algo_type+'s', builtin_name)
         if validator:
             try:
-                print('validating:', validator, class_args)
                 validator.validate_class_args(**class_args)
             except Exception as e:
                 raise SchemaError(str(e))
