@@ -10,9 +10,9 @@ import logging
 import random
 import statistics
 import warnings
-from schema import Schema, Optional
 from multiprocessing.dummy import Pool as ThreadPool
 import numpy as np
+from schema import Schema, Optional
 
 from nni import ClassArgsValidator
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
