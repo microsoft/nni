@@ -4,8 +4,6 @@
 import os
 import json
 from schema import SchemaError
-from schema import Schema
-from nni.package_utils import create_validator_instance
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
                            DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, AlgoSchema
 from .common_utils import print_error, print_warning, print_normal, get_yml_content
