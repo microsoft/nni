@@ -30,7 +30,7 @@ print('elapsed time: ', time.time() - start)
 ```
 完整示例参考[这里](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)
 
-NOTE: The current implementation supports PyTorch 1.3.1 or newer.
+注意：当前支持 PyTorch 1.3.1 或更高版本。
 
 ## 局限性
 
