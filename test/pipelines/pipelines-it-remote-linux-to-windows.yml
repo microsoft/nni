@@ -36,7 +36,7 @@ jobs:
           set -e
           cd test
           python3 nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
-          --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+          --remote_port $(remote_port) --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
           cat config/training_service.yml
           PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
         displayName: "integration test"
