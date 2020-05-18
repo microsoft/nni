@@ -102,6 +102,9 @@ class FixedArchitecture(Mutator):
                     _logger.info("Replacing %s with candidate number %d.", global_name, chosen.index(1))
                     setattr(module, name, mutable[chosen.index(1)])
                 else:
+                    if mutable.return_mask:
+                        _logger.info("`return_mask` flag of %s is true. As it relies on the behavior of LayerChoice, " \
+                                     "LayerChoice will not be replaced.")
                     # remove unused parameters
                     for ch, n in zip(chosen, mutable.names):
                         if ch == 0 and not isinstance(ch, float):
