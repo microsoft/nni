@@ -39,6 +39,11 @@ interface TableListProps {
     trialsUpdateBroadcast: number;
 }
 
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
+}
+
 interface TableListState {
     intermediateOption: object;
     modalVisible: boolean;
@@ -60,8 +65,8 @@ interface TableListState {
     tableColumns: IColumn[];
     allColumnList: string[];
     tableSourceForSort: Array<TableRecord>;
+    sortMessage: SortInfo;
 }
-
 
 class TableList extends React.Component<TableListProps, TableListState> {
 
@@ -91,7 +96,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalIntermediateHeight: window.innerHeight,
             tableColumns: this.initTableColumnList(this.props.columnList),
             allColumnList: this.getAllColumnKeys(),
-            tableSourceForSort: this.props.tableSource
+            tableSourceForSort: this.props.tableSource,
+            sortMessage: { field: '', isDescend: false }
         };
     }
 
@@ -114,19 +120,29 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const newItems = this.copyAndSort(tableSource, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             tableColumns: newColumns,
-            tableSourceForSort: newItems
+            tableSourceForSort: newItems,
+            sortMessage: { field: getColumn.key, isDescend: currColumn.isSortedDescending }
         });
+
     };
 
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
         const key = columnKey as keyof T;
-        return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
+        return items.slice(0).sort(function (a: T, b: T): any {
+            if (a[key] === undefined) {
+                return 1;
+            }
+            if (b[key] === undefined) {
+                return -1;
+            }
+            return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+        });
     }
 
     AccuracyColumnConfig: any = {
         name: 'Default metric',
         className: 'leftTitle',
-        key: 'accuracy',
+        key: 'latestAccuracy',
         fieldName: 'latestAccuracy',
         minWidth: 200,
         maxWidth: 300,
@@ -143,7 +159,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         minWidth: 80,
         maxWidth: 240,
         className: 'tableHead',
-        data: 'string',
+        data: 'number',
         onColumnClick: this.onColumnClick,
     };
 
@@ -566,10 +582,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
-            isShowCustomizedModal, copyTrialId, intermediateOption
+            isShowCustomizedModal, copyTrialId, intermediateOption, sortMessage
         } = this.state;
         const { columnList } = this.props;
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
+        if (sortMessage.field !== '') {
+            tableSource.sort(function (a, b): any {
+                if (a[sortMessage.field] === undefined) {
+                    return 1;
+                }
+                if (b[sortMessage.field] === undefined) {
+                    return -1;
+                }
+                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
+            });
+        }
         return (
             <Stack>
                 <div id="tableList">
