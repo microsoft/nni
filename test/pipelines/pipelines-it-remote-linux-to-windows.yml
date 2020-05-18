@@ -45,4 +45,5 @@ jobs:
           sshEndpoint: $(end_point)
           runOptions: commands
           commands: rmdir /s /q /tmp/nnitest/$(Build.BuildId)
+        condition: always()
         displayName: "clean up on remote server"
