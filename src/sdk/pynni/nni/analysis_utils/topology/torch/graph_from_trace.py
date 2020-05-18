@@ -74,6 +74,8 @@ class GraphBuilder:
         """
         self.model = model
         self.data = data
+        # set to the evaluation mode
+        self.model.eval()
         self.traced_model = jit.trace(model, data)
         self.forward_edge = {}
         self.graph = self.traced_model.graph
