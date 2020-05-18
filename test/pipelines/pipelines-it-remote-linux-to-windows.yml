@@ -6,6 +6,7 @@ jobs:
       - task: CopyFilesOverSSH@0
         inputs:
           sshEndpoint: $(end_point)
+          contents: '** \n !.git \n !docs'
           targetFolder: /tmp/nnitest/$(Build.BuildId)
           overwrite: true
         displayName: "Copy all files to remote machine"
@@ -14,7 +15,7 @@ jobs:
         inputs:
           sshEndpoint: $(end_point)
           runOptions: commands
-          commands: activate l2w & powershell.exe -file uninstall.ps1 & powershell.exe -file install.ps1
+          commands: cd /tmp/nnitest/$(Build.BuildId) & activate l2w & powershell.exe -file uninstall.ps1 & powershell.exe -file install.ps1
         displayName: "install on remote windows"
       - script: python3 -m pip install --upgrade pip setuptools --user
         displayName: "Install python tools"
@@ -35,3 +36,9 @@ jobs:
           cat config/training_service.yml
           PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
         displayName: "integration test"
+      - task: SSH@0
+        inputs:
+          sshEndpoint: $(end_point)
+          runOptions: commands
+          commands: rmdir /s /q /tmp/nnitest/$(Build.BuildId)
+        displayName: "clean up on remote server"
