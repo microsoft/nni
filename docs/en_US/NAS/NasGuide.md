@@ -176,7 +176,7 @@ For example,
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules will be pruned.
+After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules are pruned.
 
 Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
 
