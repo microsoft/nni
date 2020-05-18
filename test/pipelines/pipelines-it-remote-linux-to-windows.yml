@@ -1,0 +1,37 @@
+jobs:
+  - job: "integration_test_remote_linux_to_linux"
+    timeoutInMinutes: 120
+
+    steps:
+      - task: CopyFilesOverSSH@0
+        inputs:
+          sshEndpoint: $(end_point)
+          targetFolder: /tmp/nnitest/$(Build.BuildId)
+          overwrite: true
+        displayName: "Copy all files to remote machine"
+        timeoutInMinutes: 10
+      - task: SSH@0
+        inputs:
+          sshEndpoint: $(end_point)
+          runOptions: commands
+          commands: activate l2w & powershell.exe -file uninstall.ps1 & powershell.exe -file install.ps1
+        displayName: "install on remote windows"
+      - script: python3 -m pip install --upgrade pip setuptools --user
+        displayName: "Install python tools"
+      - script: |
+          make clean
+          make easy-install
+        displayName: "Install nni via source code"
+      - script: |
+          sudo apt-get install swig -y
+          PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
+          PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
+        displayName: "Install dependencies for integration tests in remote mode"
+      - script: |
+          set -e
+          cd test
+          python3 nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
+          --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+          cat config/training_service.yml
+          PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+        displayName: "integration test"
