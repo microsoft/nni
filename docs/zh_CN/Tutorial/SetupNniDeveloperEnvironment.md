@@ -1,12 +1,12 @@
-# Setup NNI development environment
+# 设置 NNI 开发环境
 
-NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python3 64bit.
+NNI 开发环境支持安装 Python 3 64 位的 Ubuntu 1604 （及以上）和 Windows 10。
 
-## Installation
+## 安装
 
-The installation steps are similar with installing from source code. But the installation links to code directory, so that code changes can be applied to installation as easy as possible.
+安装步骤与从源代码安装类似。 但是安装过程会链接到代码目录，以便代码改动能更方便的直接使用。
 
-### 1. Clone source code
+### 1. 克隆源代码
 
 ```bash
 git clone https://github.com/Microsoft/nni.git
