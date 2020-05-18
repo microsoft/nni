@@ -23,13 +23,12 @@ class ShellExecutor {
     public name: string = "";
 
     private readonly lineBreaker = new RegExp(`[\r\n]+`);
-    private readonly maxUsageCount = 1;
+    private readonly maxUsageCount = 5;
 
     private osCommands: OsCommands | undefined;
     private usedCount: number = 0; //count the connection number of every client
     private readonly sshClient: Client;
     private readonly log: Logger;
-    private username: string = "";
     private tempPath: string = "";
     private isWindows: boolean = false;
     private channelDefaultOutputs: string[] = [];
@@ -48,7 +47,6 @@ class ShellExecutor {
             username: rmMeta.username,
             tryKeyboard: true,
         };
-        this.username = rmMeta.username;
         this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
         if (rmMeta.passwd !== undefined) {
             connectConfig.password = rmMeta.passwd;
