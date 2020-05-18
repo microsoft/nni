@@ -18,7 +18,7 @@ class MessageInfo extends React.Component<MessageInfoProps, {}> {
         return (
             <MessageBar
                 messageBarType={MessageBarType[typeInfo]}
-                isMultiline={false}
+                isMultiline={true}
                 className={className}
             >
                 {info}
