@@ -148,7 +148,7 @@ def main(args):
         if args.dataset == 'mnist':
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
         elif args.dataset == 'cifar10':
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.05,
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                         momentum=0.9,
                                         weight_decay=5e-4)
         elif args.dataset == 'imagenet':
@@ -256,10 +256,15 @@ if __name__ == '__main__':
                         help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
     parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
                         help='pruning mode, channel or fine_grained')
-    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
-                        help='cool down rate')
     parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
                         help='overall target sparsity')
+
+    # param for SimulatedAnnealingPruner
+    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
+                        help='cool down rate')
+    # param for NetAdaptPruner
+    parser.add_argument('--pruning-step', type=float, default=0.05, metavar='P',
+                        help='pruning_step of NetAdaptPruner')
 
     # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
     parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',

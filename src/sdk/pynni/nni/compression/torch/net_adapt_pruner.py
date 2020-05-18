@@ -36,7 +36,7 @@ class NetAdaptPruner(Pruner):
     Long-term fine tune
     """
 
-    def __init__(self, model, config_list, evaluator, fine_tuner, optimize_mode='maximize', pruning_mode='channel', experiment_data_dir='./'):
+    def __init__(self, model, config_list, evaluator, fine_tuner, optimize_mode='maximize', pruning_mode='channel', pruning_step=0.05, experiment_data_dir='./'):
         """
         Parameters
         ----------
@@ -68,7 +68,7 @@ class NetAdaptPruner(Pruner):
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for NetAdapt algorithm
-        self._delta_sparsity = 0.1
+        self._pruning_step = pruning_step
 
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
@@ -139,7 +139,7 @@ class NetAdaptPruner(Pruner):
         return num_weights
 
     def _get_delta_num_weights(self):
-        delta_num_weights = self._delta_sparsity * self._total_num_weights
+        delta_num_weights = self._pruning_step * self._total_num_weights
 
         return delta_num_weights
 
@@ -207,6 +207,12 @@ class NetAdaptPruner(Pruner):
             if wrapper.name == op_name:
                 return wrapper.weight_mask.sum().item()
 
+    def _get_op_sparsity(self, op_name):
+        for config in self._config_list:
+            if 'op_names' in config and op_name in config['op_names']:
+                return config['sparsity']
+        return 0
+
     def _calc_related_weights(self, op_name):
         '''
         Calculate total number weights of the op and the next op, applicable only for models without dependencies among ops
@@ -222,25 +228,42 @@ class NetAdaptPruner(Pruner):
         '''
         num_weights = 0
         flag_found = False
+        previous_name = None
+        previous_module = None
+
         for name, module in self._model_to_prune.named_modules():
+            if module == self.bound_model:
+                continue
             if not flag_found and name == op_name:
                 _logger.debug("original module found: %s", name)
-                num_weights += module.weight.data.numel()
+                num_weights = module.weight.data.numel()
+
+                # consider filter pruned in this op caused by previous op's channel pruning
+                if previous_module and type(module).__name__ in ['Conv2d'] and type(previous_module).__name__ in ['Conv2d']:
+                    sparsity_previous_op = self._get_op_sparsity(previous_name)
+                    if sparsity_previous_op:
+                        _logger.debug(
+                            "decrease op's weights by %s due to previous op %s's channel pruning...", sparsity_previous_op, name)
+                        num_weights *= (1-sparsity_previous_op)
+
                 flag_found = True
                 continue
-            # TODO: skip Functional ops, dropout, activation...
-            # TODO: calc MaxPooling
+            # TODO: check Functional ops, dropout, activation...
             # skip Dropout2d
             if flag_found and type(module).__name__ in ['Dropout2d']:
                 continue
             if flag_found and type(module).__name__ in ['Conv2d', 'Linear']:
                 _logger.debug("related module found: %s", name)
                 # channel/filter pruning crossing is considered here, so only the num_weights after channel pruning is valuable
+                # TODO: fine-grained not supported
                 if name in self._op_names_to_compress:
                     num_weights += self._get_op_num_weights_remained(name)
                 else:
                     num_weights += module.weight.data.numel()
                 break
+            previous_name = name
+            previous_module = module
+
         return num_weights
 
     def compress(self):
@@ -262,7 +285,7 @@ class NetAdaptPruner(Pruner):
             _logger.info('Pruning iteration: %d', pruning_iteration)
 
             # calculate target sparsity of this round
-            target_sparsity = current_sparsity + self._delta_sparsity
+            target_sparsity = current_sparsity + self._pruning_step
             delta_num_weights = self._get_delta_num_weights()
 
             # variable to store the info of the best layer found in this iteration
@@ -270,10 +293,10 @@ class NetAdaptPruner(Pruner):
 
             for wrapper in self.get_modules_wrapper():
                 _logger.debug("op name : %s", wrapper.name)
-                _logger.debug("op weights : %s", wrapper.weight_mask.numel())
-                _logger.debug("op left weights : %s",
+                _logger.debug("op weights : %d", wrapper.weight_mask.numel())
+                _logger.debug("op left weights : %d",
                               wrapper.weight_mask.sum().item())
-                _logger.debug("related weights : %s",
+                _logger.debug("related weights : %d",
                               self._calc_related_weights(wrapper.name))
 
                 current_op_sparsity = 1 - wrapper.weight_mask.sum().item() / \
@@ -285,9 +308,7 @@ class NetAdaptPruner(Pruner):
                     delta_num_weights / \
                     self._calc_related_weights(wrapper.name)
 
-                # TODO: issue: the formula depends on Pruning mode and int/float
-                # round the target_op_sparsity to real op_sparsity base on the op shape
-
+                # TODO: round the target_op_sparsity to real op_sparsity base on the op shape
                 if target_op_sparsity >= 1:
                     _logger.info(
                         'Layer %s has no enough weights (remained) to prune', wrapper.name)
@@ -337,11 +358,11 @@ class NetAdaptPruner(Pruner):
                 break
 
             # Pick the best layer to prune, update iterative information
-            # updata config_list
+            # update config_list
             self._config_list = self._update_config_list(
                 self._config_list, best_layer['op_name'], best_layer['sparsity'])
 
-            # updata weights parameters
+            # update weights parameters
             self._model_to_prune.load_state_dict(
                 torch.load(self._tmp_model_path))
 
