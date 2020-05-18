@@ -17,8 +17,8 @@ jobs:
       - task: SSH@0
         inputs:
           sshEndpoint: $(end_point)
-          runOptions: inline
-          inline: activate l2w & cd "/tmp/nnitest/$(Build.BuildId)" & powershell.exe -file ./uninstall.ps1;powershell.exe -file ./install.ps1
+          runOptions: commands
+          commands: activate l2w & cd "/tmp/nnitest/$(Build.BuildId)" & powershell.exe -file ./uninstall.ps1 & powershell.exe -file ./install.ps1
           failOnStdErr: false
         displayName: "install on remote windows"
       - script: python3 -m pip install --upgrade pip setuptools --user
