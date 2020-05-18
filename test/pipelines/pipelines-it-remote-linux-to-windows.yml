@@ -3,12 +3,14 @@ jobs:
     timeoutInMinutes: 120
 
     steps:
+      - script: make clean
+        displayName: "clean nni source code"
       - task: CopyFilesOverSSH@0
         inputs:
           sshEndpoint: $(end_point)
           contents: |
             **
-            !dist/**
+            !**/dist/**
             !**/node_modules/**
           targetFolder: /tmp/nnitest/$(Build.BuildId)
           overwrite: true
@@ -23,9 +25,7 @@ jobs:
         displayName: "install on remote windows"
       - script: python3 -m pip install --upgrade pip setuptools --user
         displayName: "Install python tools"
-      - script: |
-          make clean
-          make easy-install
+      - script: make easy-install
         displayName: "Install nni via source code"
       - script: |
           sudo apt-get install swig -y
