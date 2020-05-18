@@ -8,7 +8,7 @@ jobs:
           sshEndpoint: $(end_point)
           contents: |
             **
-            !(.git|docs)
+            !(.git|docs)/**
           targetFolder: /tmp/nnitest/$(Build.BuildId)
           overwrite: true
         displayName: "Copy all files to remote machine"
@@ -17,7 +17,12 @@ jobs:
         inputs:
           sshEndpoint: $(end_point)
           runOptions: commands
-          commands: cd /tmp/nnitest/$(Build.BuildId) & activate l2w & powershell.exe -file uninstall.ps1 & powershell.exe -file install.ps1
+          commands: |
+            activate l2w
+            cd /tmp/nnitest/$(Build.BuildId)
+            powershell.exe -file uninstall.ps1
+            powershell.exe -file install.ps1
+          failOnStdErr: false
         displayName: "install on remote windows"
       - script: python3 -m pip install --upgrade pip setuptools --user
         displayName: "Install python tools"
