@@ -58,7 +58,6 @@ testCases:
     trialConcurrency: 1
     trial:
       command: python3 main.py --epochs 1 --batches 1
-      gpuNum: 0
 
 - name: nested-ss
   configFile: test/config/examples/mnist-nested-search-space.yml
