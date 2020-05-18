@@ -10,6 +10,7 @@ jobs:
             **
             !.git/**
             !docs/**
+            !**/node_modules/**
           targetFolder: /tmp/nnitest/$(Build.BuildId)
           overwrite: true
         displayName: "Copy all files to remote machine"
