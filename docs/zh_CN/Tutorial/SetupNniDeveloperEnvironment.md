@@ -15,7 +15,7 @@
 
 来克隆源代码
 
-### 2. 准备调试环境并安装依赖项**
+### 2. 准备调试环境并安装依赖项
 
 将目录切换到源码目录，然后运行命令
 
@@ -61,10 +61,8 @@ Trial 启动 Experiment 来检查环境。 例如，运行命令
 
 #### TypeScript
 
-* 如果要更改 `src/nni_manager`，运行 `yarn watch` 可持续编译改动。 它将实时重建代码。
-* 如果更改了 `src/webui` 或 `src/nasui` ，请使用 **第 3 步** 来重建代码。
-
-可能需要重新启动 nnictl。
+* 如果要更改 `src/nni_manager`，运行 `yarn watch` 可持续编译改动。 它将实时重建代码。 可能需要重新启动 nnictl 来重新加载 NNI 管理器。
+* 如果改动了 `src/webui` 或 `src/nasui`，在相应目录下运行 `yarn start`。 Web 界面会在代码修改后自动刷新。
 
 * * *
 
