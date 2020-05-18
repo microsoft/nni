@@ -10,10 +10,11 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from .compressor import Pruner
+from .compressor import Pruner, LayerInfo
 from .pruners import LevelPruner
 from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
+from .utils import get_layers_no_dependency
 
 
 _logger = logging.getLogger(__name__)
@@ -46,9 +47,9 @@ class NetAdaptPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
                 - op_type : The operation type to prune.
         evaluator : function
-            function to evaluate the pruned model
+            function to evaluate the masked model
         fine_tuner : function
-            function to fine tune the pruned model
+            function to short-term fine tune the masked model
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
         pruning_mode : str
@@ -76,15 +77,69 @@ class NetAdaptPruner(Pruner):
         self._config_list = []
 
         self._experiment_data_dir = experiment_data_dir
+        if not os.path.exists(self._experiment_data_dir):
+            os.makedirs(self._experiment_data_dir)
+
         self._tmp_model_path = os.path.join(
             self._experiment_data_dir, 'tmp_model.pth')
 
-    def _get_delta_num_weights(self):
-        num_weights = 0
-        for wrapper in self.get_modules_wrapper():
-            num_weights += wrapper.weight_mask.numel()
+        self._total_num_weights = self._get_total_num_weights()
 
-        delta_num_weights = self._delta_sparsity * num_weights
+    def _detect_modules_to_compress(self):
+        """
+        redefine this function, consider only the layers without dependencies
+        """
+        self._op_names_to_compress = []
+        if self.modules_to_compress is None:
+            self.modules_to_compress = []
+            # consider only the layers without dependencies
+            model_name = self._model_to_prune.__class__.__name__
+            ops_no_dependency = get_layers_no_dependency(model_name)
+
+            for name, module in self.bound_model.named_modules():
+                if module == self.bound_model:
+                    continue
+                if self._pruning_mode == 'channel' and model_name in ['MobileNetV2', 'RetinaFace'] and name not in ops_no_dependency:
+                    continue
+                layer = LayerInfo(name, module)
+                config = self.select_config(layer)
+                if config is not None:
+                    self.modules_to_compress.append((layer, config))
+                    self._op_names_to_compress.append(name)
+        return self.modules_to_compress
+
+    def _get_total_num_weights(self, count_non_prunable_ops=True):
+        '''
+        calculate the total number of weights
+
+        Parameters
+        ----------
+        count_non_prunable_ops : bool
+            indicate if non prunable ops should be considerd
+
+        Returns
+        -------
+        int
+            total weights of all the op considered
+        '''
+        num_weights = 0
+        if count_non_prunable_ops:
+            pruner = LevelPruner(
+                copy.deepcopy(self._model_to_prune), [{'sparsity': 0.1, 'op_types': ['default']}])
+            modules_wrapper = pruner.get_modules_wrapper()
+        else:
+            modules_wrapper = self.get_modules_wrapper()
+
+        for wrapper in modules_wrapper:
+            _logger.debug("num_weights of op %s: %d",
+                          wrapper.name, wrapper.module.weight.data.numel())
+            num_weights += wrapper.module.weight.data.numel()
+        _logger.info("Total num weights: %d", num_weights)
+
+        return num_weights
+
+    def _get_delta_num_weights(self):
+        delta_num_weights = self._delta_sparsity * self._total_num_weights
 
         return delta_num_weights
 
@@ -139,6 +194,19 @@ class NetAdaptPruner(Pruner):
                 {'sparsity': sparsity, 'op_names': [op_name]})
         return config_list_updated
 
+    def _get_op_num_weights_remained(self, op_name):
+        '''
+        Get the number of weights remained after channel pruning with current sparsity
+
+        Returns
+        -------
+        int
+            remained number of weights of the op
+        '''
+        for wrapper in self.get_modules_wrapper():
+            if wrapper.name == op_name:
+                return wrapper.weight_mask.sum().item()
+
     def _calc_related_weights(self, op_name):
         '''
         Calculate total number weights of the op and the next op, applicable only for models without dependencies among ops
@@ -150,7 +218,7 @@ class NetAdaptPruner(Pruner):
         Returns
         -------
         int
-            total weights of all the op and the next op
+            total number of all the realted (current and the next) op weights 
         '''
         num_weights = 0
         flag_found = False
@@ -167,7 +235,11 @@ class NetAdaptPruner(Pruner):
                 continue
             if flag_found and type(module).__name__ in ['Conv2d', 'Linear']:
                 _logger.debug("related module found: %s", name)
-                num_weights += module.weight.data.numel()
+                # channel/filter pruning crossing is considered here, so only the num_weights after channel pruning is valuable
+                if name in self._op_names_to_compress:
+                    num_weights += self._get_op_num_weights_remained(name)
+                else:
+                    num_weights += module.weight.data.numel()
                 break
         return num_weights
 
@@ -209,11 +281,12 @@ class NetAdaptPruner(Pruner):
                 _logger.debug("current op sparsity : %s", current_op_sparsity)
 
                 # sparsity that this layer needs to prune to satisfy the requirement
-                # TODO: issue: the formula depends on Pruning mode and int/float
-                # TODO: sparsity use total weights num
                 target_op_sparsity = current_op_sparsity + \
                     delta_num_weights / \
                     self._calc_related_weights(wrapper.name)
+
+                # TODO: issue: the formula depends on Pruning mode and int/float
+                # round the target_op_sparsity to real op_sparsity base on the op shape
 
                 if target_op_sparsity >= 1:
                     _logger.info(
@@ -294,8 +367,6 @@ class NetAdaptPruner(Pruner):
         _logger.info("Masked sparsity: %.6f", current_sparsity)
 
         # save best config found and best performance
-        if not os.path.exists(self._experiment_data_dir):
-            os.makedirs(self._experiment_data_dir)
         with open(os.path.join(self._experiment_data_dir, 'search_result.json'), 'w') as jsonfile:
             json.dump({
                 'performance': self._final_performance,
