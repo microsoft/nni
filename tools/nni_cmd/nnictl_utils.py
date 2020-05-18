@@ -705,6 +705,9 @@ def export_trials_data(args):
                     else:
                         formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
                     trial_records.append(formated_record)
+                if not trial_records:
+                    print_error('No trial results collected! Please check your trial log...')
+                    exit(0)
                 with open(args.path, 'w', newline='') as file:
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
                     writer.writeheader()

@@ -159,6 +159,62 @@ class BuiltinTunersTestCase(TestCase):
             logger.info("Full supported search space: %s", full_supported_search_space)
             self.search_space_test_one(tuner_factory, full_supported_search_space)
 
+    def import_data_test_for_pbt(self):
+        """
+        test1: import data with complete epoch
+        test2: import data with incomplete epoch
+        """
+        search_space = {
+            "choice_str": {
+                "_type": "choice",
+                "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"]
+            }
+        }
+        all_checkpoint_dir = os.path.expanduser("~/nni/checkpoint/test/")
+        population_size = 4
+        # ===import data at the beginning===
+        tuner = PBTTuner(
+            all_checkpoint_dir=all_checkpoint_dir,
+            population_size=population_size
+        )
+        self.assertIsInstance(tuner, Tuner)
+        tuner.update_search_space(search_space)
+        save_dirs = [os.path.join(all_checkpoint_dir, str(i), str(0)) for i in range(population_size)]
+        # create save checkpoint directory
+        for save_dir in save_dirs:
+            os.makedirs(save_dir, exist_ok=True)
+        # for simplicity, omit "load_checkpoint_dir"
+        data = [{"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[0]}, "value": 1.1},
+                {"parameter": {"choice_str": "dog", "save_checkpoint_dir": save_dirs[1]}, "value": {"default": 1.2, "tmp": 2}},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[2]}, "value": 11},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[3]}, "value": 7}]
+        epoch = tuner.import_data(data)
+        self.assertEqual(epoch, 1)
+        logger.info("Imported data successfully at the beginning")
+        shutil.rmtree(all_checkpoint_dir)
+        # ===import another data at the beginning, test the case when there is an incompleted epoch===
+        tuner = PBTTuner(
+            all_checkpoint_dir=all_checkpoint_dir,
+            population_size=population_size
+        )
+        self.assertIsInstance(tuner, Tuner)
+        tuner.update_search_space(search_space)
+        for i in range(population_size - 1):
+            save_dirs.append(os.path.join(all_checkpoint_dir, str(i), str(1)))
+        for save_dir in save_dirs:
+            os.makedirs(save_dir, exist_ok=True)
+        data = [{"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[0]}, "value": 1.1},
+                {"parameter": {"choice_str": "dog", "save_checkpoint_dir": save_dirs[1]}, "value": {"default": 1.2, "tmp": 2}},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[2]}, "value": 11},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[3]}, "value": 7},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[4]}, "value": 1.1},
+                {"parameter": {"choice_str": "dog", "save_checkpoint_dir": save_dirs[5]}, "value": {"default": 1.2, "tmp": 2}},
+                {"parameter": {"choice_str": "cat", "save_checkpoint_dir": save_dirs[6]}, "value": 11}]
+        epoch = tuner.import_data(data)
+        self.assertEqual(epoch, 1)
+        logger.info("Imported data successfully at the beginning with incomplete epoch")
+        shutil.rmtree(all_checkpoint_dir)
+
     def import_data_test(self, tuner_factory, stype="choice_str"):
         """
         import data at the beginning with number value and dict value
@@ -297,6 +353,7 @@ class BuiltinTunersTestCase(TestCase):
             all_checkpoint_dir=os.path.expanduser("~/nni/checkpoint/test/"),
             population_size=100
         ))
+        self.import_data_test_for_pbt()
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
