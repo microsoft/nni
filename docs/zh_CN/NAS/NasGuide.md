@@ -175,6 +175,6 @@ apply_fixed_architecture(model, "model_dir/final_architecture.json")
 }
 ```
 
-应用后，模型会被固定，并准备好进行最终训练。 虽然它可能包含了更多的参数，但可作为单个模型来使用。 这各有利弊。 好的方面是，可以在搜索阶段直接读取来自超网络的检查点，并开始重新训练。 但是，这也造成模型有冗余的参数，在计算模型所包含的参数数量时，可能会不准确。 更多深层次原因和解决方法可参考 [Trainer](./NasReference.md)。
+应用后，模型会被固定，并准备好进行最终训练。 The model works as a single model, and unused parameters and modules are pruned.
 
 也可参考 [DARTS](./DARTS.md) 的重新训练代码。
