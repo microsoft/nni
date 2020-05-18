@@ -81,12 +81,23 @@ class LayerChoice(Mutable):
         self.choices = op_candidates
         self.reduction = reduction
         self.return_mask = return_mask
+        self._built = False
 
     def call(self, *inputs):
+        if not self._built:
+            for op in self.choices:
+                if len(inputs) > 1:  # FIXME: not tested
+                    op.build([inp.shape for inp in inputs])
+                elif len(inputs) == 1:
+                    op.build(inputs[0].shape)
+            self._built = True
         out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
         if self.return_mask:
             return out, mask
         return out
+
+    def __len__(self):
+        return len(self.choices)
 
 
 class InputChoice(Mutable):
