@@ -5,6 +5,7 @@ import logging
 import os
 import copy
 import json
+import torch
 from schema import And, Optional
 
 from nni.utils import OptimizeMode
@@ -56,7 +57,7 @@ class NetAdaptPruner(Pruner):
             PATH to save experiment data
         """
         # models used for iterative pruning and evaluation
-        self._original_model = copy.deepcopy(model)
+        self._model_to_prune = copy.deepcopy(model)
         self._pruning_mode = pruning_mode
 
         super().__init__(model, config_list)
@@ -75,6 +76,8 @@ class NetAdaptPruner(Pruner):
         self._config_list = []
 
         self._experiment_data_dir = experiment_data_dir
+        self._tmp_model_path = os.path.join(
+            self._experiment_data_dir, 'tmp_model.pth')
 
     def _get_delta_num_weights(self):
         num_weights = 0
@@ -151,15 +154,19 @@ class NetAdaptPruner(Pruner):
         '''
         num_weights = 0
         flag_found = False
-        for name, module in self._original_model.named_modules():
-            if name == op_name:
+        for name, module in self._model_to_prune.named_modules():
+            if not flag_found and name == op_name:
+                _logger.debug("original module found: %s", name)
                 num_weights += module.weight.data.numel()
                 flag_found = True
+                continue
             # TODO: skip Functional ops, dropout, activation...
+            # TODO: calc MaxPooling
             # skip Dropout2d
             if flag_found and type(module).__name__ in ['Dropout2d']:
                 continue
             if flag_found and type(module).__name__ in ['Conv2d', 'Linear']:
+                _logger.debug("related module found: %s", name)
                 num_weights += module.weight.data.numel()
                 break
         return num_weights
@@ -186,10 +193,11 @@ class NetAdaptPruner(Pruner):
             target_sparsity = current_sparsity + self._delta_sparsity
             delta_num_weights = self._get_delta_num_weights()
 
-            # variable store the best result of one iteration
+            # variable to store the info of the best layer found in this iteration
             best_layer = {}
 
             for wrapper in self.get_modules_wrapper():
+                _logger.debug("op name : %s", wrapper.name)
                 _logger.debug("op weights : %s", wrapper.weight_mask.numel())
                 _logger.debug("op left weights : %s",
                               wrapper.weight_mask.sum().item())
@@ -201,13 +209,15 @@ class NetAdaptPruner(Pruner):
                 _logger.debug("current op sparsity : %s", current_op_sparsity)
 
                 # sparsity that this layer needs to prune to satisfy the requirement
+                # TODO: issue: the formula depends on Pruning mode and int/float
+                # TODO: sparsity use total weights num
                 target_op_sparsity = current_op_sparsity + \
                     delta_num_weights / \
                     self._calc_related_weights(wrapper.name)
 
                 if target_op_sparsity >= 1:
                     _logger.info(
-                        'Layer %s has no enough weights remained to prune', wrapper.name)
+                        'Layer %s has no enough weights (remained) to prune', wrapper.name)
                     continue
 
                 config_list = self._update_config_list(
@@ -216,10 +226,10 @@ class NetAdaptPruner(Pruner):
 
                 if self._pruning_mode == 'channel':
                     pruner = L1FilterPruner(copy.deepcopy(
-                        self._original_model), config_list)
+                        self._model_to_prune), config_list)
                 elif self._pruning_mode == 'fine_grained':
                     pruner = LevelPruner(copy.deepcopy(
-                        self._original_model), config_list)
+                        self._model_to_prune), config_list)
                 model_masked = pruner.compress()
 
                 performance = self._evaluator(model_masked)
@@ -234,22 +244,39 @@ class NetAdaptPruner(Pruner):
 
                 if not best_layer or (self._optimize_mode is OptimizeMode.Maximize and performance > best_layer['performance']) or (self._optimize_mode is OptimizeMode.Minimize and performance < best_layer['performance']):
                     _logger.debug("updating best layer to %s...", wrapper.name)
+                    # find weight mask of this layer
+                    for w in pruner.get_modules_wrapper():
+                        if w.name == wrapper.name:
+                            weight_mask = w.weight_mask
+                            break
                     best_layer = {
                         'op_name': wrapper.name,
                         'sparsity': target_op_sparsity,
-                        'performance': performance
+                        'performance': performance,
+                        'weight_mask': weight_mask
                     }
-                    # update bound model and modules_wrapper
-                    self.bound_model = model_masked
-                    self._set_modules_wrapper(pruner.get_modules_wrapper())
 
-            # 3. Pick the best layer to prune
+                    # save model weights
+                    pruner.export_model(self._tmp_model_path)
+
             if not best_layer:
                 _logger.info("No more layers to prune.")
                 break
 
+            # Pick the best layer to prune, update iterative information
+            # updata config_list
             self._config_list = self._update_config_list(
                 self._config_list, best_layer['op_name'], best_layer['sparsity'])
+
+            # updata weights parameters
+            self._model_to_prune.load_state_dict(
+                torch.load(self._tmp_model_path))
+
+            # update mask of the chosen op
+            for wrapper in self.get_modules_wrapper():
+                if wrapper.name == best_layer['op_name']:
+                    setattr(wrapper, 'weight_mask', best_layer['weight_mask'])
+                    break
 
             current_sparsity = target_sparsity
             _logger.info('Pruning iteration %d finished. Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, current overall sparsity : %s',
@@ -258,10 +285,13 @@ class NetAdaptPruner(Pruner):
 
             self._final_performance = best_layer['performance']
 
+        # load weights parameters
+        self.load_model_state_dict(torch.load(self._tmp_model_path))
+
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list)
         _logger.info("Performance after pruning: %s", self._final_performance)
-        _logger.info("Masked sparsity: %s", current_sparsity)
+        _logger.info("Masked sparsity: %.6f", current_sparsity)
 
         # save best config found and best performance
         if not os.path.exists(self._experiment_data_dir):
