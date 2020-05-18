@@ -175,6 +175,6 @@ apply_fixed_architecture(model, "model_dir/final_architecture.json")
 }
 ```
 
-应用后，模型会被固定，并准备好进行最终训练。 The model works as a single model, and unused parameters and modules are pruned.
+应用后，模型会被固定，并准备好进行最终训练。 该模型作为单独的模型来工作，未使用的参数和模块已被剪除。
 
 也可参考 [DARTS](./DARTS.md) 的重新训练代码。
