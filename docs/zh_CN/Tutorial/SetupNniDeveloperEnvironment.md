@@ -1,69 +1,58 @@
-**设置 NNI 开发环境**
+# Setup NNI development environment
 
-===
+NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python3 64bit.
 
-## 调试 NNI 源代码的最佳实践
+## Installation
 
-要调试 NNI 源代码，需要 Ubuntu 16.04 或更高版本系统的开发环境，并需要安装 Python 3 以及 pip 3，然后遵循以下步骤。
+The installation steps are similar with installing from source code. But the installation links to code directory, so that code changes can be applied to installation as easy as possible.
 
-### 1. 克隆源代码
+### 1. Clone source code
 
-运行命令
+```bash
+git clone https://github.com/Microsoft/nni.git
+```
 
-    git clone https://github.com/Microsoft/nni.git
-    
+Note, if you want to contribute code back, it needs to fork your own NNI repo, and clone from there.
 
-来克隆源代码
+### 2. Install from source code
 
-### 2. 准备调试环境并安装依赖项
+#### Ubuntu
 
-将目录切换到源码目录，然后运行命令
+```bash
+make dev-easy-install
+```
 
-    make install-dependencies
-    
+#### Windows
 
-来安装环境的依赖项工具
+```bat
+powershell -ExecutionPolicy Bypass -file install.ps1 -Development
+```
 
-### 3. 生成源代码
+### 3. Check if the environment is ready
 
-运行命令
+Now, you can try to start an experiment to check if your environment is ready. For example, run the command
 
-    make build
-    
+```bash
+nnictl create --config examples/trials/mnist-tfv1/config.yml
+```
 
-来生成源代码
+And open WebUI to check if everything is OK
 
-### 4. 将 NNI 安装到开发环境中
-
-运行命令
-
-    make dev-install
-    
-
-来安装分发内容到开发环境，并创建 cli 脚本
-
-### 5. 检查环境是否正确
-
-Trial 启动 Experiment 来检查环境。 例如，运行命令
-
-    nnictl create --config ~/nni/examples/trials/mnist-tfv1/config.yml
-    
-
-并打开网页界面查看
-
-### 6. 重新部署
-
-代码更改后，可能需要重新部署。 这取决于更改了哪种代码。
+### 4. Reload changes
 
 #### Python
 
-不需要重新部署，但可能需要重新启动 nnictl。
+Nothing to do, the code is already linked to package folders.
 
 #### TypeScript
 
-* 如果要更改 `src/nni_manager`，运行 `yarn watch` 可持续编译改动。 它将实时重建代码。 可能需要重新启动 nnictl 来重新加载 NNI 管理器。
+* If `src/nni_manager` is changed, run `yarn watch` under this folder. It will watch and build code continually. The `nnictl` need to be restarted to reload NNI manager.
 * 如果改动了 `src/webui` 或 `src/nasui`，在相应目录下运行 `yarn start`。 Web 界面会在代码修改后自动刷新。
 
-* * *
+### 5. Submit Pull Request
 
-最后，希望一切顺利。 参考[贡献](Contributing.md)文档，来了解更多创建拉取请求或问题的指南。
+All changes are merged to master branch from your forked repo. The description of Pull Request must be meaningful, and useful.
+
+We will review the changes as soon as possible. Once it passes review, we will merge it to master branch.
+
+For more contribution guidelines and coding styles, you can refer to the [contributing document](Contributing.md).
