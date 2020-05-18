@@ -1,5 +1,5 @@
 jobs:
-  - job: initialCode
+  - job: "integration_test_remote_linux_to_windows"
     timeoutInMinutes: 120
     steps:
       - script: make clean
@@ -15,10 +15,6 @@ jobs:
           overwrite: true
         displayName: "Copy all files to remote machine"
         timeoutInMinutes: 10
-  - job: prepareRemote
-    timeoutInMinutes: 120
-    dependsOn: initialCode
-    steps:
       - task: SSH@0
         inputs:
           sshEndpoint: $(end_point)
@@ -26,10 +22,6 @@ jobs:
           commands: cd "\tmp\nnitest\$(Build.BuildId)" && powershell.exe -command "conda activate l2w | .\uninstall.ps1 | .\install.ps1"
           failOnStdErr: false
         displayName: "install on remote windows"
-  - job: prepareLocal
-    timeoutInMinutes: 120
-    dependsOn: initialCode
-    steps:
       - script: python3 -m pip install --upgrade pip setuptools --user
         displayName: "Install python tools"
       - script: make easy-install
@@ -39,12 +31,6 @@ jobs:
           PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
           PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
         displayName: "Install dependencies for integration tests in remote mode"
-  - job: runTest
-    timeoutInMinutes: 120
-    dependsOn:
-    - prepareLocal
-    - prepareRemote
-    steps:
       - script: |
           set -e
           cd test
@@ -53,11 +39,6 @@ jobs:
           cat config/training_service.yml
           PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
         displayName: "integration test"
-  - job: cleanUp
-    timeoutInMinutes: 120
-    condition: always()
-    dependsOn: runTest
-    steps:
       - task: SSH@0
         inputs:
           sshEndpoint: $(end_point)
