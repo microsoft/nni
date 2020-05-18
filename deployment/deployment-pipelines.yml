@@ -34,17 +34,6 @@ jobs:
     condition: eq( variables['build_type'], 'release' )
     displayName: 'Validate release version number and branch tag'
 
-  - script: |
-      export SDK_VERSION=`python3 -c 'import nni; print(nni.__version__)'`
-      echo $SDK_VERSION
-      if [[ $SDK_VERSION = $(build_version) ]]; then
-        echo 'SDK version match build version'
-      else
-        echo 'SDK version does not match build version'
-        exit 1
-      fi
-    displayName: 'Validate SDK version'
-
 
 - job: 'Build_upload_nni_ubuntu'
   dependsOn: version_number_validation
