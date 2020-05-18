@@ -31,7 +31,7 @@ taskRoles:
       # - cd nni && python3 examples/model_compress/auto_pruners_torch.py --epochs 1 --pruner NetAdaptPruner --pruning-mode channel --pruning-step 0.05 --sparsity 0.1 --dataset mnist --fine-tune True --fine-tune-epochs 10 --data-dir /mnt/nfs-storage/users/sgx/mnist --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/mnist/NetAdapt/01
       
       # NetAdaptPruner, channel, Cifar10, vgg16
-      # - cd nni && python3 examples/model_compress/auto_pruners_torch.py --epochs 100 --pruner NetAdaptPruner --pruning-mode channel --pruning-step 0.05 --sparsity 0.1 --dataset imagenet --fine-tune True --fine-tune-epochs 50 --data-dir /mnt/nfs-storage/users/sgx/cifar10 --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/cifar10/NetAdapt/01
+      # - cd nni && python3 examples/model_compress/auto_pruners_torch.py --epochs 100 --pruner NetAdaptPruner --pruning-mode channel --pruning-step 0.05 --sparsity 0.1 --dataset cifar10 --fine-tune True --fine-tune-epochs 50 --data-dir /mnt/nfs-storage/users/sgx/cifar10 --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/cifar10/NetAdapt/01
       
       # NetAdaptPruner, channel, imagenet, MobileNetV2
       # - cd nni && python3 examples/model_compress/auto_pruners_torch.py --pruner NetAdaptPruner --pruning-mode channel --pruning-step 0.05 --sparsity 0.1 --dataset imagenet --fine-tune True --fine-tune-epochs 10 --data-dir /mnt/nfs-storage/users/sgx/imagenet --experiment-data-dir /mnt/nfs-storage/users/sgx/experiment_data/imagenet/NetAdapt/01

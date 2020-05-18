@@ -1,4 +1,8 @@
-# from __future__ import print_function
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+'''
+Examples for automatic pruners
+'''
 
 import argparse
 import os
