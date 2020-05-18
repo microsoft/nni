@@ -338,6 +338,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
+* Discuss on NNI [WeChat](https://weixin.qq.com/g/AYLNTZLZGLE3cu2A)
 
 Join IM discussion groups:
 |Gitter||WeChat|
