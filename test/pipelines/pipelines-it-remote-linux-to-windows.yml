@@ -18,7 +18,7 @@ jobs:
         inputs:
           sshEndpoint: $(end_point)
           runOptions: commands
-          commands: cd "/tmp/nnitest/$(Build.BuildId)" & powershell.exe -command "conda activate l2w; .\uninstall.ps1 & .\install.ps1"
+          commands: cd "\tmp\nnitest\$(Build.BuildId)" & powershell.exe -command "conda activate l2w; .\uninstall.ps1 ; .\install.ps1"
           failOnStdErr: false
         displayName: "install on remote windows"
       - script: python3 -m pip install --upgrade pip setuptools --user
@@ -44,6 +44,6 @@ jobs:
         inputs:
           sshEndpoint: $(end_point)
           runOptions: commands
-          commands: rmdir /s /q "\\?\tmp\nnitest\$(Build.BuildId)"
+          commands: rmdir /s /q "\\?\c:\tmp\nnitest\$(Build.BuildId)"
         condition: always()
         displayName: "clean up on remote server"
