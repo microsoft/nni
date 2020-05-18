@@ -83,6 +83,9 @@ class CoarseMask:
                                                             cmask.mask_index[i])
         return self.mask_index
 
+    def __repr__(self):
+        return 'mask_index: {}'.format(self.mask_index)
+
 class ModuleMasks:
     """
     The masks of a module, including the masks for weights, inputs, output
@@ -128,6 +131,11 @@ class ModuleMasks:
         """
         self.output_mask = mask
 
+    def __repr__(self):
+        return 'input_mask: {}, output_mask: {}, param_masks: {}'.format(
+            self.input_mask, self.output_mask, self.param_masks
+        )
+
 """
 Infer input and output shape of a module/function from its weight mask
 """
@@ -147,8 +155,10 @@ infer_from_inshape = {
     'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'AdaptiveAvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
     'aten::view': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
+    'aten::flatten': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape), # support only start_dim=1
     'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask),
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask)
 }
