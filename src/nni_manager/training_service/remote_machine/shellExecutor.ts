@@ -82,13 +82,16 @@ class ShellExecutor {
                     this.channelDefaultOutputs.push(defaultResult.stdout);
                 }
                 this.log.debug(`set channelDefaultOutput to "${this.channelDefaultOutputs}"`);
+
+                // parse temp folder to expand possible environment variables.
+                const commandResult = await this.execute("echo %TEMP%");
+                this.tempPath = commandResult.stdout.replace(this.lineBreaker, "");
             } else {
                 this.osCommands = new LinuxCommands();
+                // it's not stable to get tmp path by Linux command, like "echo /tmp" or "ld -d /tmp".
+                // Sometime it returns empty back, so hard code tmp path here.
+                this.tempPath = "/tmp";
             }
-            // parse temp folder to expand possible environment variables.
-            const commandText = this.osCommands && this.osCommands.getTempPath();
-            const commandResult = await this.execute(commandText);
-            this.tempPath = commandResult.stdout.replace(this.lineBreaker, "");
 
             deferred.resolve();
         }).on('error', (err: Error) => {
@@ -370,8 +373,8 @@ class ShellExecutor {
                 exitCode = <number>code;
 
                 // remove default output to get stdout correct.
-                let modifiedStdout = stdout;
                 if (this.channelDefaultOutputs.length > 0) {
+                    let modifiedStdout = stdout;
                     this.channelDefaultOutputs.forEach(defaultOutput => {
                         if (modifiedStdout.startsWith(defaultOutput)) {
                             if (modifiedStdout.length > defaultOutput.length) {
@@ -381,11 +384,12 @@ class ShellExecutor {
                             }
                         }
                     });
+                    stdout = modifiedStdout;
                 }
 
-                this.log.debug(`remoteExeCommand(${commandIndex}) exit(${exitCode})\nstdout: ${modifiedStdout}\nstderr: ${stderr}`);
+                this.log.debug(`remoteExeCommand(${commandIndex}) exit(${exitCode})\nstdout: ${stdout}\nstderr: ${stderr}`);
                 let result = {
-                    stdout: modifiedStdout,
+                    stdout: stdout,
                     stderr: stderr,
                     exitCode: exitCode
                 };

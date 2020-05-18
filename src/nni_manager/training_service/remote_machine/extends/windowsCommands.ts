@@ -46,10 +46,6 @@ class WindowsCommands extends OsCommands {
         return `powershell -command $env:METRIC_OUTPUT_DIR='${scriptFolder}';$app = Start-Process -FilePath python -NoNewWindow -passthru -ArgumentList '-m nni_gpu_tool.gpu_metrics_collector' -RedirectStandardOutput ${scriptFolder}\\scriptstdout -RedirectStandardError ${scriptFolder}\\scriptstderr;Write $PID ^| Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8;wait-process $app.ID`;
     }
 
-    public getTempPath(): string {
-        return "echo %TEMP%";
-    }
-
     public createFolder(folderName: string, sharedFolder: boolean = false): string {
         let command;
         if (sharedFolder) {

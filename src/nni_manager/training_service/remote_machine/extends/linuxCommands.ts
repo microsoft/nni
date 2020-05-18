@@ -33,10 +33,6 @@ class LinuxCommands extends OsCommands {
         return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni_gpu_tool.gpu_metrics_collector`;
     }
 
-    public getTempPath(): string {
-        return "echo /tmp";
-    }
-
     public createFolder(folderName: string, sharedFolder: boolean = false): string {
         let command;
         if (sharedFolder) {
