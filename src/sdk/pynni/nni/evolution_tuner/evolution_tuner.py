@@ -68,7 +68,7 @@ class Individual:
         self.save_dir = save_dir
         self.info = info
 
-class EvolutionValidator(ClassArgsValidator):
+class EvolutionClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         Schema({
             'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
