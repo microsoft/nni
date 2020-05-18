@@ -12,9 +12,9 @@ NNI 开发环境支持安装 Python 3 64 位的 Ubuntu 1604 （及以上）和 W
 git clone https://github.com/Microsoft/nni.git
 ```
 
-Note, if you want to contribute code back, it needs to fork your own NNI repo, and clone from there.
+注意，如果要贡献代码，需要 Fork 自己的 NNI 代码库并克隆。
 
-### 2. Install from source code
+### 2. 从源代码安装
 
 #### Ubuntu
 
@@ -28,31 +28,31 @@ make dev-easy-install
 powershell -ExecutionPolicy Bypass -file install.ps1 -Development
 ```
 
-### 3. Check if the environment is ready
+### 3. 检查环境是否正确
 
-Now, you can try to start an experiment to check if your environment is ready. For example, run the command
+可通过运行 Experiment，来检查环境。 例如，运行以下命令
 
 ```bash
 nnictl create --config examples/trials/mnist-tfv1/config.yml
 ```
 
-And open WebUI to check if everything is OK
+并打开 Web 界面查看
 
-### 4. Reload changes
+### 4. 重新加载改动
 
 #### Python
 
-Nothing to do, the code is already linked to package folders.
+无需操作，代码已连接到包的安装位置。
 
 #### TypeScript
 
-* If `src/nni_manager` is changed, run `yarn watch` under this folder. It will watch and build code continually. The `nnictl` need to be restarted to reload NNI manager.
+* 如改动了 `src/nni_manager`，在此目录下运行 `yarn watch` 可持续编译改动。 它将持续的监视并编译代码。 可能需要重启 `nnictl` 来重新加载 NNI 管理器。
 * 如果改动了 `src/webui` 或 `src/nasui`，在相应目录下运行 `yarn start`。 Web 界面会在代码修改后自动刷新。
 
-### 5. Submit Pull Request
+### 5. 提交拉取请求
 
-All changes are merged to master branch from your forked repo. The description of Pull Request must be meaningful, and useful.
+所有改动都需要从自己 Fork 的代码库合并到 master 分支上。 拉取请求的描述必须有意义且有用。
 
-We will review the changes as soon as possible. Once it passes review, we will merge it to master branch.
+我们会尽快审查更改。 审查通过后，我们会将代码合并到主分支。
 
-For more contribution guidelines and coding styles, you can refer to the [contributing document](Contributing.md).
+有关更多贡献指南和编码风格，查看[贡献文档](Contributing.md)。
