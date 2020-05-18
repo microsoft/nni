@@ -24,7 +24,7 @@ jobs:
       runOptions: inline
       inline: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi;make build
     continueOnError: true
-    failOnStderr: false
+    failOnStdErr: false
     displayName: 'build nni bdsit_wheel'
   - task: SSH@0
     inputs:
