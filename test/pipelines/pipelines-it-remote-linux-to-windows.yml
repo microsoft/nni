@@ -8,8 +8,7 @@ jobs:
           sshEndpoint: $(end_point)
           contents: |
             **
-            !.git/**
-            !docs/**
+            !dist/**
             !**/node_modules/**
           targetFolder: /tmp/nnitest/$(Build.BuildId)
           overwrite: true
