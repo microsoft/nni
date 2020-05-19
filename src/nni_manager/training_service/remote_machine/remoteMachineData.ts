@@ -114,6 +114,7 @@ export class ExecutorManager {
                 break;
             }
         }
+        // init a new executor if no free one.
         if (!isFound) {
             executor = await this.createShellExecutor();
         }
@@ -123,10 +124,6 @@ export class ExecutorManager {
         }
         this.executorMap.set(id, executor);
 
-        // init a new executor if no free one.
-        if (executor === undefined) {
-            throw new Error("executor shouldn't be undefined before return!");
-        }
         return executor;
     }
 

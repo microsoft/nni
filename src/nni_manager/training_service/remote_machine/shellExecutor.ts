@@ -128,18 +128,6 @@ class ShellExecutor {
         return canBeReleased;
     }
 
-    public get getUsedConnectionNumber(): number {
-        return this.usedCount;
-    }
-
-    public addUsedConnectionNumber(): void {
-        this.usedCount += 1;
-    }
-
-    public minusUsedConnectionNumber(): void {
-        this.usedCount -= 1;
-    }
-
     public getScriptName(mainName: string): string {
         if (this.osCommands === undefined) {
             throw new Error("osCommands must be initialized!");
