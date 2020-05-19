@@ -356,7 +356,7 @@ def validate_code_dir(code_dir):
             ignore_spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, f.read().splitlines())
     total_file_count = 0
     total_file_size = 0
-    pattern = r'^[a-z0-9A-Z._-/]+$'
+    pattern = r'^[a-z0-9A-Z\._\-/]+$'
     for root, _, files in os.walk(code_dir):
         if ignore_spec is not None and ignore_spec.match_file(os.path.relpath(root, code_dir)):
             continue
