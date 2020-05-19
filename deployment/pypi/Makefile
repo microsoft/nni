@@ -47,6 +47,7 @@ build:
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
 	cd $(CWD)nni && $(NNI_YARN) --prod
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)../../src/sdk/pynni/nni/__init__.py
 	cd $(CWD) && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
 	cd $(CWD)
 

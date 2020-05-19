@@ -167,6 +167,7 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 .PHONY: install-python-modules
 install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' src/sdk/pynni/nni/__init__.py
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
 
 .PHONY: dev-install-python-modules
