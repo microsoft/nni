@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 
 import pathspec
 from schema import Schema, SchemaError
@@ -356,6 +357,7 @@ def validate_code_dir(code_dir):
             ignore_spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, f.read().splitlines())
     total_file_count = 0
     total_file_size = 0
+    pattern = r'^[a-z0-9A-Z._-/]+$'
     for root, _, files in os.walk(code_dir):
         if ignore_spec is not None and ignore_spec.match_file(os.path.relpath(root, code_dir)):
             continue
@@ -363,6 +365,9 @@ def validate_code_dir(code_dir):
             full_path = os.path.join(root, filepath)
             if ignore_spec is not None and ignore_spec.match_file(full_path):
                 continue
+            if re.match(pattern, full_path) is None:
+                print_error('File {} failed to match the pattern "{}" and is not supported.'.format(full_path, pattern))
+                exit(1)
             total_file_count += 1
             total_file_size += os.path.getsize(full_path)
     if total_file_count >= 2000 or total_file_size >= 300 * 1024 * 1024:
