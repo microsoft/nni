@@ -99,6 +99,7 @@ def stop_experiment_test(args):
     proc = subprocess.run(['nnictl', 'stop', '--all'])
     assert proc.returncode == 0, '`nnictl stop --all` failed with code %d' % proc.returncode
     wait_for_port_available(8888, 10)
+    wait_for_port_available(8989, 10)
     assert not detect_port(8888) and not detect_port(8989), '`nnictl stop --all` failed to stop experiments'
 
 
