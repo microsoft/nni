@@ -308,7 +308,6 @@ class RemoteMachineTrainingService implements TrainingService {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
 
-                // Validate to make sure codeDir doesn't have too many files
                 try {
                     // Validate to make sure codeDir doesn't have too many files
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
