@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import pandas as pd
 import torchvision.models as models
 import matplotlib.pyplot as plt
@@ -76,7 +77,42 @@ def get_original_op(model):
     return op_names, op_weights
 
 
-def draw(args):
+def plot_performance_comparison(args):
+    # performances = {
+    #     'NetAdaptPruner': [0.8, 0.7, 0.6, 0.5, 0.4],
+    #     'SimulatedAnnealingPruenr': [0.7, 0.6, 0.5, 0.4, 0.3]
+    # }
+    if args.model == 'vgg16':
+        performances = {'original': 0.9298}
+        sparsities = [0.1, 0.2, 0.3]
+        pruners = ['NetAdaptPruner', 'SimulatedAnnealingPruner/channel']
+
+        for pruner in pruners:
+            performances[pruner] = []
+            for sparsity in sparsities:
+                with open(os.path.join('experiment_data/cifar10/', pruner, str(sparsity).replace('.', ''), 'performance.json'), 'r') as jsonfile:
+                    performance = json.load(jsonfile)
+                    performances[pruner].append(performance['finetuned'])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        for pruner in pruners:
+            ax.plot(sparsities, performances[pruner], label=pruner)
+
+        ax.hlines(performances['original'], sparsities[0],
+                  sparsities[-1], linestyles='dashed', label='original model')
+        ax.legend()
+        # ax.set_ylim(0.9, 1)
+
+        plt.xlabel('Sparsity')
+        plt.ylabel('Accuracy')
+        plt.savefig(
+            'experiment_data/performance_comparison_{}.png'.format(args.model))
+        plt.close()
+
+
+def plot_sparsities_distribution(args):
     # if model == 'lenet':
     #     files = list(os.walk('lenet'))[0][-1]
     #     model = LeNet()
@@ -101,9 +137,9 @@ def draw(args):
         config_lists, performances = get_config_lists_from_search_result(
             files)
         overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
-        fine_tune_epochs = 3
+        fine_tune_epochs = 10
         performances_fine_tuned = [
-            0.43526, 0.43616, 0.41408, 0.38422, 0.39246]
+            0.47528, 0.4668, 0.46174, 0.4447, 0.4421]
     elif args.model == 'vgg16' and args.pruner == 'SimulatedAnnealingPruner' and args.pruning_mode == 'channel':
         files = ['experiment_data/cifar10/SimulatedAnnealingPruner/channel/01/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/02/search_result.json',
                  'experiment_data/cifar10/SimulatedAnnealingPruner/channel/03/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/04/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/05/search_result.json']
@@ -187,4 +223,5 @@ if __name__ == '__main__':
                         help='channel, or fine-grained')
     args = parser.parse_args()
 
-    draw(args)
+    # plot_sparsities_distribution(args)
+    plot_performance_comparison(args)
