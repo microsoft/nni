@@ -8,7 +8,6 @@ import * as fs from 'fs';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { Client } from 'ssh2';
 import { ShellExecutor } from '../shellExecutor';
 import { prepareUnitTest, cleanupUnitTest } from '../../../common/utils';
 
@@ -24,7 +23,6 @@ async function copyFile(executor: ShellExecutor): Promise<void> {
 async function copyFileToRemoteLoop(executor: ShellExecutor): Promise<void> {
     const remoteFullName = executor.joinPath(executor.getTempPath(), REMOTEFILE);
     for (let i: number = 0; i < 3; i++) {
-        // console.log(i);
         await executor.copyFileToRemote(LOCALFILE, remoteFullName);
     }
 }
@@ -32,7 +30,6 @@ async function copyFileToRemoteLoop(executor: ShellExecutor): Promise<void> {
 async function getRemoteFileContentLoop(executor: ShellExecutor): Promise<void> {
     const remoteFullName = executor.joinPath(executor.getTempPath(), REMOTEFILE);
     for (let i: number = 0; i < 3; i++) {
-        // console.log(i);
         await executor.getRemoteFileContent(remoteFullName);
     }
 }
