@@ -7,20 +7,18 @@ import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import ignore from 'ignore';
-import * as os from 'os';
 import * as path from 'path';
 import * as tar from 'tar';
 import { String } from 'typescript-string-operations';
-import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
  *
- * @param codeDir codeDir in nni config file
+ * @param _codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
-export async function validateCodeDir(codeDir: string): Promise<number> {
+export async function validateCodeDir(_codeDir: string): Promise<number> {
     // This part is moved to nnictl.
     return 0;
 }
