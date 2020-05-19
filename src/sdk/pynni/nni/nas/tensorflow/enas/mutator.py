@@ -11,16 +11,15 @@ from nni.nas.tensorflow.mutables import LayerChoice, InputChoice, MutableScope
 
 
 class EnasMutator(Mutator):
-    def __init__(self,
-            model,
-            lstm_size=64,
-            lstm_num_layers=1,
-            tanh_constant=1.5,
-            cell_exit_extra_step=False,
-            skip_target=0.4,
-            temperature=None,
-            branch_bias=0.25,
-            entropy_reduction='sum'):
+    def __init__(self, model,
+                 lstm_size=64,
+                 lstm_num_layers=1,
+                 tanh_constant=1.5,
+                 cell_exit_extra_step=False,
+                 skip_target=0.4,
+                 temperature=None,
+                 branch_bias=0.25,
+                 entropy_reduction='sum'):
         super().__init__(model)
         self.tanh_constant = tanh_constant
         self.temperature = temperature
