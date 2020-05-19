@@ -85,78 +85,82 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
  * The remote machine executor manager
  */
 export class ExecutorManager {
-    private readonly executorArray: ShellExecutor[];
-    private readonly maxTrialNumberPerConnection: number;
+    private readonly executorMap: Map<string, ShellExecutor> = new Map<string, ShellExecutor>();
     private readonly rmMeta: RemoteMachineMeta;
-    constructor(executorArray: ShellExecutor[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+
+    private executors: ShellExecutor[] = [];
+
+    constructor(rmMeta: RemoteMachineMeta) {
         this.rmMeta = rmMeta;
-        this.executorArray = executorArray;
-        this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
     }
 
-    /**
-     * find a available executor, if no executor available, return a new one
-     */
-    public async getAvailableExecutor(): Promise<ShellExecutor> {
-        for (const index of this.executorArray.keys()) {
-            const connectionNumber: number = this.executorArray[index].getUsedConnectionNumber;
-            if (connectionNumber < this.maxTrialNumberPerConnection) {
-                this.executorArray[index].addUsedConnectionNumber();
+    public async getExecutor(id: string): Promise<ShellExecutor> {
+        let isFound = false;
+        let executor: ShellExecutor | undefined;
 
-                return this.executorArray[index];
+        // already assigned
+        if (this.executorMap.has(id)) {
+            executor = this.executorMap.get(id);
+            if (executor === undefined) {
+                throw new Error("executor shouldn't be undefined before return!");
             }
+            return executor;
         }
 
-        //init a new executor if could not get an available one
-        return await this.initNewShellExecutor();
-    }
+        for (const candidateExecutor of this.executors) {
+            if (candidateExecutor.addUsage()) {
+                isFound = true;
+                executor = candidateExecutor;
+                break;
+            }
+        }
+        // init a new executor if no free one.
+        if (!isFound) {
+            executor = await this.createShellExecutor();
+        }
 
-    /**
-     * add a new executor to executorArray
-     * @param executor ShellExecutor
-     */
-    public addNewShellExecutor(executor: ShellExecutor): void {
-        this.executorArray.push(executor);
-    }
+        if (executor === undefined) {
+            throw new Error("executor shouldn't be undefined before set!");
+        }
+        this.executorMap.set(id, executor);
 
-    /**
-     * first executor instance is used for gpu collector and host job
-     */
-    public getFirstExecutor(): ShellExecutor {
-        return this.executorArray[0];
+        return executor;
     }
 
     /**
      * close all of executor
      */
-    public closeAllExecutor(): void {
-        for (const executor of this.executorArray) {
+    public releaseAllExecutor(): void {
+        this.executorMap.clear();
+        for (const executor of this.executors) {
             executor.close();
         }
+        this.executors = [];
     }
 
     /**
      * retrieve resource, minus a number for given executor
      * @param executor executor
      */
-    public releaseConnection(executor: ShellExecutor | undefined): void {
+    public releaseExecutor(id: string): void {
+        const executor = this.executorMap.get(id);
         if (executor === undefined) {
-            throw new Error(`could not release a undefined executor`);
+            throw new Error(`executor for ${id} is not found`);
         }
-        for (const index of this.executorArray.keys()) {
-            if (this.executorArray[index] === executor) {
-                this.executorArray[index].minusUsedConnectionNumber();
-                break;
-            }
-        }
+        executor.releaseUsage();
+        this.executorMap.delete(id);
     }
 
     /**
      * Create a new connection executor and initialize it
      */
-    private async initNewShellExecutor(): Promise<ShellExecutor> {
+    private async createShellExecutor(): Promise<ShellExecutor> {
         const executor = new ShellExecutor();
         await executor.initialize(this.rmMeta);
+        if (!executor.addUsage()) {
+            throw new Error("failed to add usage on new created Executor! It's a wired bug!");
+        }
+        this.executors.push(executor);
         return executor;
     }
 }
@@ -175,22 +179,3 @@ export enum ScheduleResultType {
     // Cannot match requirement even if all GPU are a
     REQUIRE_EXCEED_TOTAL
 }
-
-export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
-    `#!/bin/bash
-export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} \
-NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} NNI_CODE_DIR={6} 
-cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
-cd $NNI_SYS_DIR
-sh install_nni.sh
-echo $$ >{7}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip '{9}' --nnimanager_port '{10}' \
---nni_manager_version '{11}' --log_collection '{12}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-echo $? \`date +%s%3N\` >{13}`;
-
-export const HOST_JOB_SHELL_FORMAT: string =
-    `#!/bin/bash
-cd {0}
-echo $$ >{1}
-eval {2} >stdout 2>stderr
-echo $? \`date +%s%3N\` >{3}`;
