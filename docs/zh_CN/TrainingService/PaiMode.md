@@ -8,7 +8,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 步骤 2. 获取 OpenPAI 的令牌。  
 点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_profile.jpg)  
-Click `copy` button in the page to copy a jwt token. ![](../../img/pai_token.jpg)
+点击页面中的 `copy` 按钮来复制 jwt Token。 ![](../../img/pai_token.jpg)
 
 步骤 3. 将 NFS 存储挂载到本机。  
 点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
@@ -38,17 +38,17 @@ Click `copy` button in the page to copy a jwt token. ![](../../img/pai_token.jpg
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: pai
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -65,14 +65,14 @@ trial:
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
   paiStoragePlugin: teamwise_storage
-# Configuration to access OpenPAI Cluster
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
   token: your_pai_token
   host: 10.1.1.1
 ```
 
-Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocol in NNI is `http`, if your PAI's cluster enabled https, please use the uri in `https://10.10.5.1` format.
+注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。 配置文件中的 host 字段是 OpenPAI 作业提交页面的地址，例如：`10.10.5.1`，NNI 中默认协议是 `http`，如果 OpenPAI 集群启用了 https，则需要使用 `https://10.10.5.1` 的格式。
 
 与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 需要额外的配置：
 
