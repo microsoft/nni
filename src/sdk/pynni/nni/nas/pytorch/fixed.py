@@ -2,10 +2,14 @@
 # Licensed under the MIT license.
 
 import json
+import logging
 
 from .mutables import InputChoice, LayerChoice, MutableScope
 from .mutator import Mutator
 from .utils import to_list
+
+
+_logger = logging.getLogger(__name__)
 
 
 class FixedArchitecture(Mutator):
@@ -73,6 +77,41 @@ class FixedArchitecture(Mutator):
         """
         return self._fixed_arc
 
+    def replace_layer_choice(self, module=None, prefix=""):
+        """
+        Replace layer choices with selected candidates. It's done with best effort.
+        In case of weighted choices or multiple choices. if some of the choices on weighted with zero, delete them.
+        If single choice, replace the module with a normal module.
+
+        Parameters
+        ----------
+        module : nn.Module
+            Module to be processed.
+        prefix : str
+            Module name under global namespace.
+        """
+        if module is None:
+            module = self.model
+        for name, mutable in module.named_children():
+            global_name = (prefix + "." if prefix else "") + name
+            if isinstance(mutable, LayerChoice):
+                chosen = self._fixed_arc[mutable.key]
+                if sum(chosen) == 1 and max(chosen) == 1 and not mutable.return_mask:
+                    # sum is one, max is one, there has to be an only one
+                    # this is compatible with both integer arrays, boolean arrays and float arrays
+                    _logger.info("Replacing %s with candidate number %d.", global_name, chosen.index(1))
+                    setattr(module, name, mutable[chosen.index(1)])
+                else:
+                    if mutable.return_mask:
+                        _logger.info("`return_mask` flag of %s is true. As it relies on the behavior of LayerChoice, " \
+                                     "LayerChoice will not be replaced.")
+                    # remove unused parameters
+                    for ch, n in zip(chosen, mutable.names):
+                        if ch == 0 and not isinstance(ch, float):
+                            setattr(mutable, n, None)
+            else:
+                self.replace_layer_choice(mutable, global_name)
+
 
 def apply_fixed_architecture(model, fixed_arc):
     """
@@ -96,4 +135,7 @@ def apply_fixed_architecture(model, fixed_arc):
             fixed_arc = json.load(f)
     architecture = FixedArchitecture(model, fixed_arc)
     architecture.reset()
+
+    # for the convenience of parameters counting
+    architecture.replace_layer_choice()
     return architecture

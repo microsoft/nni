@@ -334,9 +334,11 @@ class LocalTrainingService implements TrainingService {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
                 //Refer https://github.com/Juul/tail-stream/issues/20
-                stream.end(0);
-                stream.emit('end');
-                this.jobStreamMap.delete(trialJob.id);
+                setTimeout(() => {
+                    stream.end(0);
+                    stream.emit('end');
+                    this.jobStreamMap.delete(trialJob.id);
+                }, 5000);
             }
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
