@@ -3,9 +3,7 @@
 {% set title = "Welcome To Neural Network Intelligence !!!"%}
 
 {% block document %}
-<!-- <div class="overview"> -->
 
-<!-- 第一段简介 -->
 <div>
   <b>NNI (Neural Network Intelligence)</b> is a lightweight but powerful toolkit to
   help users <b>automate</b>
@@ -44,9 +42,7 @@
 <!-- nni release to version -->
 <div class="inline">
   <h3>NNI v1.4 has been released!</h3>
-  <a href="#nni-released-reminder">
-    <img width="48" src="_images/release_icon.png">
-  </a>
+  <img width="48" src="_static/img/release_icon.png">
 </div>
 <!-- NNI capabilities in a glance -->
 <div>
@@ -64,7 +60,7 @@
 </div>
 
 <p align="center">
-  <a href="#overview"><img src="_images/overview.svg" /></a>
+  <a href="#overview"><img src="_static/img/overview.svg" /></a>
 </p>
 
 <table class="list">
@@ -108,15 +104,6 @@
         <ul class="firstUl">
           <li><b>Examples</b></li>
           <ul class="circle">
-            <!-- <li><a href="{{ pathto('SupportedFramework_Library') }}">MNIST-pytorch</li></a>
-              <li><a href="examples/trials/mnist-tfv1">MNIST-tensorflow</li></a>
-              <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
-              <li><a href="docs/en_US/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
-              <li><a href="docs/en_US/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
-              <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
-              <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
-              <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br />
-               -->
             <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
             <li><a href="examples/trials/mnist-tfv1">MNIST-tensorflow</li></a>
             <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
@@ -125,8 +112,6 @@
             <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
             <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
             <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br />
-
-
           </ul>
         </ul>
       </td>
@@ -164,15 +149,8 @@
             <li><a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
             <li><a href="{{ pathto('NAS/DARTS') }}">DARTS</a></li>
             <li><a href="{{ pathto('NAS/PDARTS') }}">P-DARTS</a></li>
-            <!-- TODO fix -->
             <li><a href="{{ pathto('NAS/CDARTS') }}">CDARTS</a></li>
             <li><a href="{{ pathto('Tuner/NetworkmorphismTuner') }}">Network Morphism</a> </li>
-
-            <!-- <li><a href="docs/en_US/NAS/Overview.md#enas">ENAS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#darts">DARTS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#p-darts">P-DARTS</a></li>
-              <li><a href="docs/en_US/NAS/Overview.md#cdarts">CDARTS</a></li>
-              <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a> </li> -->
           </ul>
         </ul>
         <a href="{{ pathto('Compressor/Overview') }}">Model Compression</a>
@@ -182,16 +160,11 @@
             <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
             <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
             <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
-            <!-- <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
-              <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
-              <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li> -->
           </ul>
           <b>Quantization</b>
           <ul class="circle">
             <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
             <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
-            <!-- <li><a href="docs/en_US/Compressor/Quantizer.md#qat-quantizer">QAT Quantizer</a></li>
-              <li><a href="docs/en_US/Compressor/Quantizer.md#dorefa-quantizer">DoReFa Quantizer</a></li> -->
           </ul>
         </ul>
         <a href="{{ pathto('FeatureEngineering/Overview') }}">Feature Engineering (Beta)</a>
@@ -203,8 +176,6 @@
         <ul class="circle">
           <li><a href="{{ pathto('FeatureEngineering/BuiltinAssessor') }}">Median Stop</a></li>
           <li><a href="{{ pathto('FeatureEngineering/BuiltinAssessor') }}">Curve Fitting</a></li>
-          <!-- <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
-              <li><a href="docs/en_US/Assessor/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li> -->
         </ul>
       </td>
       <td>
@@ -261,9 +232,9 @@
     <div class="command-intro">Windows</div>
     <div class="command">python -m pip install --upgrade nni</div>
     <p class="topMargin">If you want to try latest code, please <a href="{{ pathto('Tutorial/Installation') }}">install
-        NNI</a> from source code.</p>
-    <!-- TODO: add link for here -->
-    <p>For detail system requirements of NNI, please refer to here for Linux & macOS, and here for Windows.</p>
+        NNI</a> from source code.
+    </p>
+    <p>For detail system requirements of NNI, please refer to <a href="{{ pathto('Tutorial/Installation') }}">here</a> for Linux & macOS, and <a href="{{ pathto('Tutorial/InstallationWin') }}">here</a> for Windows.</p>
   </div>
   <div>
     <p>Note:</p>
@@ -300,7 +271,7 @@
           This message indicates that your experiment has been successfully started.
           You can explore the experiment using the Web UI url.
         </p>
-        <!-- 此处的缩进影响样式！ -->
+        <!-- Indentation affects style！ -->
         <pre class="code">
 INFO: Starting restful server...
 INFO: Successfully started Restful server!
@@ -332,8 +303,8 @@ You can use these commands to get more information about the experiment
         all the submitted trial jobs as shown below. <a href="{{ pathto('Tutorial/WebUI') }}">Here</a> are more Web UI
         pages.
         <div class="ui-img">
-          <img width="48" src="_images/webui_overview_page.png">
-          <img width="48" src="_images/webui_trialdetail_page.png">
+          <img src="_images/webui_overview_page.png">
+          <img src="_images/webui_trialdetail_page.png">
         </div>
   </div>
   </li>
@@ -406,7 +377,6 @@ You can use these commands to get more information about the experiment
 <div>
   <h1 class="title">External Repositories and References</h1>
   <p>With authors' permission, we listed a set of NNI usage examples and relevant articles.</p>
-  <!-- TODO: link for examples readme.md file -->
   <ul>
     <h2>External Repositories</h2>
     <li>Run <a href="https://github.com/microsoft/nni/blob/master/examples/tuners/enas_nni/README.md"></a>ENAS with
@@ -501,5 +471,4 @@ You can use these commands to get more information about the experiment
   <p>The entire codebase is under <a href="https://github.com/microsoft/nni/blob/master/LICENSE">MIT license</a></p>
 </div>
 </div>
-<!-- </div> -->
 {% endblock %}
