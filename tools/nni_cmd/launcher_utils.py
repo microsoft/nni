@@ -162,9 +162,8 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in [
-        'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'
-    ]:
+        experiment_config.get('trainingServicePlatform') not in \
+            ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts']:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
