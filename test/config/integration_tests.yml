@@ -44,6 +44,9 @@ testCases:
 
 - name: mnist-keras
   configFile: test/config/examples/mnist-keras.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 1
 
 - name: mnist-pytorch
   configFile: test/config/examples/mnist-pytorch.yml
