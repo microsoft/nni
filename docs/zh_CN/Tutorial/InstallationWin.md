@@ -1,48 +1,58 @@
 # 在 Windows 上安装
 
-## 安装
+## Prerequires
 
-强烈建议使用 Anaconda 或 Miniconda 来管理多个 Python 环境。
+* Python 3.5 (or above) 64-bit. [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is highly recommended to manage multiple Python environments on Windows.
 
-### 通过 pip 命令安装 NNI
+* If it's a newly installed Python environment, it needs to install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) to support build NNI dependencies like `scikit-learn`.
 
-  先决条件：`python 64-bit >= 3.5`
+    ```bat
+    pip install cython wheel
+    ```
 
-  ```bash
-  python -m pip install --upgrade nni
-  ```
+* git for verifying installation.
 
-### 通过源代码安装 NNI
+## Install NNI
 
-  如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
+In most cases, you can install and upgrade NNI from pip package. It's easy and fast.
 
-  先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
+If you are interested in special or the latest code versions, you can install NNI through source code.
 
-  ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-  ```
+If you want to contribute to NNI, refer to [setup development environment](SetupNniDeveloperEnvironment.md).
 
-## 验证安装
+* From pip package
 
-以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 **TensorFlow 1.x**。
+    ```bat
+    python -m pip install --upgrade nni
+    ```
 
-* 通过克隆源代码下载示例。
+* From source code
 
-  ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
-  ```
+    ```bat
+    git clone -b v1.5 https://github.com/Microsoft/nni.git
+    cd nni
+    powershell -ExecutionPolicy Bypass -file install.ps1
+    ```
 
-* 运行 MNIST 示例。
+## Verify installation
 
-  ```bash
-  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-  ```
+The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
-  注意：在其它示例中，如果 Python3 是通过 `python` 命令启动，需要将每个示例 YAML 文件的 Trial 命令中的 `python3` 改为 `python`。
+* Clone examples within source code.
 
-* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
+    ```bat
+    git clone -b v1.5 https://github.com/Microsoft/nni.git
+    ```
+
+* Run the MNIST example.
+
+    ```bat
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+    ```
+
+    Note:  If you are familiar with other frameworks, you can choose corresponding example under `examples\trials`. It needs to change trial command `python3` to `python` in each example YAML, since default installation has `python.exe`, not `python3.exe` executable.
+
+* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
 ```text
 INFO: Starting restful server...
@@ -70,15 +80,15 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里](../Tutorial/WebUI.md)的更多页面。
+* Open the `Web UI url` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. [Here](../Tutorial/WebUI.md) are more Web UI pages.
 
-![概述](../../img/webui_overview_page.png)
+![overview](../../img/webui_overview_page.png)
 
-![详细说明](../../img/webui_trialdetail_page.png)
+![detail](../../img/webui_trialdetail_page.png)
 
-## 系统需求
+## System requirements
 
-以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
+Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
 
 |          | 推荐配置                                      | 最低配置                                  |
 | -------- | ----------------------------------------- | ------------------------------------- |
@@ -90,50 +100,52 @@ You can use these commands to get more information about the experiment
 | **网络**   | 宽带连接                                      |                                       |
 | **分辨率**  | 1024 x 768 以上                             |                                       |
 
-## 常见问答
+## FAQ
 
-### 安装 NNI 时出现 simplejson 错误
+### simplejson failed when installing NNI
 
-确保安装了 C++ 14.0 编译器。
+Make sure a C++ 14.0 compiler is installed.
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
+### Trial failed with missing DLL in command line or PowerShell
 
-此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
+This error is caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and failure to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
 > ImportError: DLL load failed
 
-### Web 界面上的 Trial 错误
+### Trial failed on webUI
 
-检查 Trial 日志文件来了解详情。
+Please check the trial log file stderr for more details.
 
-如果存在 stderr 文件，也需要查看其内容。 两种可能的情况是：
+If there is a stderr file, please check it. Two possible cases are:
 
-* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
-* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
+* forgetting to change the trial command `python3` to `python` in each experiment YAML.
+* forgetting to install experiment dependencies such as TensorFlow, Keras and so on.
 
-### 无法在 Windows 上使用 BOHB
-确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
+### Fail to use BOHB on Windows
 
-### Windows 上不支持的 Tuner
-当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
+Make sure a C++ 14.0 compiler is installed when trying to run `nnictl package install --name=BOHB` to install the dependencies.
 
-### 将 Windows 服务器用作远程服务器
-目前不支持。
+### Not supported tuner on Windows
 
-注意：
+SMAC is not supported currently; for the specific reason refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
-* 如果遇到 `Segmentation fault` 的错误，请参阅[常见问题](FAQ.md)
+### Use Windows as a remote worker
 
+Refer to [Remote Machine mode](../TrainingService/RemoteMachineMode.md).
 
-## 更多
+### Segmentation fault (core dumped) when installing
 
-* [概述](../Overview.md)
-* [使用命令行工具 nnictl](Nnictl.md)
-* [使用 NNIBoard](WebUI.md)
-* [定制搜索空间](SearchSpaceSpec.md)
-* [配置 Experiment](ExperimentConfig.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
-* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
-* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
-* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
+Refer to [FAQ](FAQ.md).
+
+## Further reading
+
+* [Overview](../Overview.md)
+* [Use command line tool nnictl](Nnictl.md)
+* [Use NNIBoard](WebUI.md)
+* [Define search space](SearchSpaceSpec.md)
+* [Config an experiment](ExperimentConfig.md)
+* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
+* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
