@@ -25,7 +25,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execCopydir, execMkdir, validateCodeDir } from '../common/util';
+import { execMkdir, validateCodeDir } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
     RemoteMachineMeta,
