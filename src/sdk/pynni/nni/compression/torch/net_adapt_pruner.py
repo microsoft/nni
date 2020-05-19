@@ -341,13 +341,14 @@ class NetAdaptPruner(Pruner):
                     # find weight mask of this layer
                     for w in pruner.get_modules_wrapper():
                         if w.name == wrapper.name:
-                            weight_mask = w.weight_mask
+                            masks = {'weight_mask': w.weight_mask,
+                                     'bias_mask': w.bias_mask}
                             break
                     best_layer = {
                         'op_name': wrapper.name,
                         'sparsity': target_op_sparsity,
                         'performance': performance,
-                        'weight_mask': weight_mask
+                        'masks': masks
                     }
 
                     # save model weights
@@ -369,12 +370,14 @@ class NetAdaptPruner(Pruner):
             # update mask of the chosen op
             for wrapper in self.get_modules_wrapper():
                 if wrapper.name == best_layer['op_name']:
-                    setattr(wrapper, 'weight_mask', best_layer['weight_mask'])
+                    for k in masks:
+                        setattr(wrapper, k, masks[k])
                     break
 
             current_sparsity = target_sparsity
-            _logger.info('Pruning iteration %d finished. Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, current overall sparsity : %s',
-                         pruning_iteration, best_layer['op_name'], best_layer['sparsity'], best_layer['performance'], current_sparsity)
+            _logger.info('Pruning iteration %d finished.', pruning_iteration)
+            _logger.info('Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, current overall sparsity : %s',
+                         best_layer['op_name'], best_layer['sparsity'], best_layer['performance'], current_sparsity)
             pruning_iteration += 1
 
             self._final_performance = best_layer['performance']

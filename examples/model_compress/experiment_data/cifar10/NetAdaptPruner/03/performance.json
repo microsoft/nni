@@ -1,1 +1,1 @@
-{"pruned": 0.884, "original": 0.9166, "finetuned": 0.9173}
+{"finetuned": 0.9301, "original": 0.9298, "speedup": 0.9303, "pruned": 0.8926}

@@ -133,8 +133,8 @@ def main(args):
         torch.save(model.state_dict(), os.path.join(
             args.experiment_data_dir, 'model_trained.pth'))
     elif args.dataset == 'cifar10':
-        # model = models.vgg16(pretrained=False, num_classes=10).to(device)
-        model = VGG(depth=16).to(device)
+        model = models.vgg16(pretrained=False, num_classes=10).to(device)
+        # model = VGG(depth=16).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                     momentum=0.9,
                                     weight_decay=5e-4)
@@ -258,9 +258,9 @@ def main(args):
             dummy_input = torch.randn(
                 [args.test_batch_size, 1, 28, 28]).to(device)
         elif args.dataset == 'cifar10':
-            # model = models.vgg16(
-            #     pretrained=False, num_classes=10).to(device)
-            model = VGG(depth=16).to(device)
+            model = models.vgg16(
+                pretrained=False, num_classes=10).to(device)
+            # model = VGG(depth=16).to(device)
             dummy_input = torch.randn(
                 [args.test_batch_size, 3, 32, 32]).to(device)
         elif args.dataset == 'imagenet':

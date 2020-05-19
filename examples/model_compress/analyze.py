@@ -84,8 +84,9 @@ def plot_performance_comparison(args):
     # }
     if args.model == 'vgg16':
         performances = {'original': 0.9298}
-        sparsities = [0.1, 0.2, 0.3]
-        pruners = ['NetAdaptPruner', 'SimulatedAnnealingPruner/channel']
+        sparsities = [0.1, 0.3, 0.5, 0.7, 0.9]
+        pruners = ['L1FilterPruner', 'NetAdaptPruner',
+                   'SimulatedAnnealingPruner/channel']
 
         for pruner in pruners:
             performances[pruner] = []
