@@ -14,7 +14,6 @@ import { NNIError } from '../../common/errors';
 let sentCommands: { [key: string]: string }[] = [];
 const receivedCommands: { [key: string]: string }[] = [];
 
-let commandTooLong: Error | undefined;
 let rejectCommandType: Error | undefined;
 
 function runProcess(): Promise<Error | null> {
@@ -54,14 +53,7 @@ function runProcess(): Promise<Error | null> {
     // Command #2: ok
     dispatcher.sendCommand('ME', '123');
 
-    // Command #3: too long
-    try {
-        dispatcher.sendCommand('ME', 'x'.repeat(1_000_000));
-    } catch (error) {
-        commandTooLong = error;
-    }
-
-    // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command
+    // Command #3: FE is not tuner/assessor command, test the exception type of send non-valid command
     try {
         dispatcher.sendCommand('FE', '1');
     } catch (error) {
@@ -88,21 +80,11 @@ describe('core/protocol', (): void => {
     });
 
     it('sendCommand() should work without content', (): void => {
-        assert.equal(sentCommands[0], '(\'IN\', \'\')');
+        assert.equal(sentCommands[0], "('IN', '')");
     });
 
     it('sendCommand() should work with content', (): void => {
-        assert.equal(sentCommands[1], '(\'ME\', \'123\')');
-    });
-
-    it('sendCommand() should throw on too long command', (): void => {
-        if (commandTooLong === undefined) {
-            assert.fail('Should throw error')
-        } else {
-            const err: Error | undefined = (<NNIError>commandTooLong).cause;
-            assert(err && err.name === 'RangeError');
-            assert(err && err.message === 'Command too long');
-        }
+        assert.equal(sentCommands[1], "('ME', '123')");
     });
 
     it('sendCommand() should throw on wrong command type', (): void => {
