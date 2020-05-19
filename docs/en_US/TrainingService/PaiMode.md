@@ -74,7 +74,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocal in NNI is `http`, if your PAI's cluster is enabled https, please use the uri in `https://10.10.5.1` format.
+Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocol in NNI is `http`, if your PAI's cluster enabled https, please use the uri in `https://10.10.5.1` format.
 
 Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 * cpuNum
