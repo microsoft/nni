@@ -62,6 +62,17 @@ class CompressorSchema:
         self.compressor_schema.validate(data)
 
 
+valid_layer_names_resnet18 = [
+    "layer1.0.conv1",
+    "layer1.1.conv1",
+    "layer2.0.conv1",
+    "layer2.1.conv1",
+    "layer3.0.conv1",
+    "layer3.1.conv1",
+    "layer4.0.conv1",
+    "layer4.1.conv1"
+]
+
 valid_layer_names_mobilenet_v2 = [
     "features.0.0",
     "features.1.conv.0.0",
@@ -163,7 +174,9 @@ valid_layer_names_retinaface = [
 
 
 def get_layers_no_dependency(model):
-    if model == 'MobileNetV2':
+    if model == 'ResNet':
+        return valid_layer_names_resnet18
+    elif model == 'MobileNetV2':
         return valid_layer_names_mobilenet_v2
     elif model == 'RetinaFace':
         return valid_layer_names_retinaface

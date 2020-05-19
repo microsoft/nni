@@ -106,8 +106,9 @@ def plot_performance_comparison(args):
         ax.legend()
         # ax.set_ylim(0.9, 1)
 
+        plt.title('Channel Pruning Comparison on VGG16/CIFAR10')
         plt.xlabel('Sparsity')
-        plt.ylabel('Accuracy')
+        plt.ylabel('Accuracy after fine-tuning')
         plt.savefig(
             'experiment_data/performance_comparison_{}.png'.format(args.model))
         plt.close()

@@ -122,7 +122,7 @@ def main(args):
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    if args.dataset == 'mnist':
+    if args.model == 'LeNet':
         model = LeNet().to(device)
         optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
         scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
@@ -132,7 +132,7 @@ def main(args):
             scheduler.step()
         torch.save(model.state_dict(), os.path.join(
             args.experiment_data_dir, 'model_trained.pth'))
-    elif args.dataset == 'cifar10':
+    elif args.dataset == 'vgg16':
         model = models.vgg16(pretrained=False, num_classes=10).to(device)
         # model = VGG(depth=16).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
@@ -148,7 +148,22 @@ def main(args):
             torch.save(model.state_dict(), os.path.join(
                 args.experiment_data_dir, 'model_trained.pth'))
             print('Model trained saved to %s', args.experiment_data_dir)
-    elif args.dataset == 'imagenet':
+    elif args.model == 'resnet18':
+        model = models.resnet18(pretrained=False, num_classes=10).to(device)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
+                                    momentum=0.9,
+                                    weight_decay=5e-4)
+        scheduler = MultiStepLR(
+            optimizer, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)], gamma=0.1)
+        for epoch in range(args.epochs):
+            train(args, model, device, train_loader,
+                  criterion, optimizer, epoch)
+            scheduler.step()
+        if args.save_model:
+            torch.save(model.state_dict(), os.path.join(
+                args.experiment_data_dir, 'model_trained.pth'))
+            print('Model trained saved to %s', args.experiment_data_dir)
+    elif args.dataset == 'mobilenet_v2':
         model = models.mobilenet_v2(pretrained=True).to(device)
 
     def fine_tuner(model, epochs):
@@ -310,6 +325,8 @@ if __name__ == '__main__':
     # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
     parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
                         help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
+    parser.add_argument('--model', type=str, default='LeNet', metavar='MS',
+                        help='model to use, LeNet, vgg16, resnet18 or mobilenet_v2')
     parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
                         help='Whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
