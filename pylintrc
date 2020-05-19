@@ -46,3 +46,5 @@ ignore-patterns=test*
 
 # List of members which are set dynamically and missed by pylint inference
 generated-members=numpy.*,torch.*,tensorflow.*
+
+ignore-modules=tensorflow
