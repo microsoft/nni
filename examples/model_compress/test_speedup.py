@@ -10,7 +10,7 @@ from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
 from models.mnist.lenet import LeNet
-from nni.compression.torch import LevelPruner
+from nni.compression.torch import LevelPruner, L1FilterPruner
 
 MODEL_DIR = "mnist_lenet.pt"
 DATA_DIR = '../data'
@@ -113,16 +113,18 @@ if __name__ == '__main__':
     def evaluator(model):
         return test(model=model, device=device, val_loader=val_loader)
 
-    pruner = LevelPruner(model, configure_list)
+    pruner = L1FilterPruner(model, configure_list)
     model_pruned = pruner.compress()
 
     evaluation_result = evaluator(model_pruned)
     print('Evaluation result (bound_model): %s' % evaluation_result)
 
     # load & save
-    pruner.export_model(os.path.join(args.experiment_data_dir, 'model.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
+    pruner.export_model(os.path.join(args.experiment_data_dir, 'model.pth'),
+                        os.path.join(args.experiment_data_dir, 'mask.pth'))
     model_pruned = LeNet().to(device)
-    model_pruned.load_state_dict(torch.load(os.path.join(args.experiment_data_dir, 'model.pth')))
+    model_pruned.load_state_dict(torch.load(
+        os.path.join(args.experiment_data_dir, 'model.pth')))
     evaluation_result = evaluator(model_pruned)
     print('Evaluation result (exported_model): %s' % evaluation_result)
 

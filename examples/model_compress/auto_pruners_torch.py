@@ -12,7 +12,9 @@ from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
+from models.cifar10.vgg import VGG
 from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner
+from nni.compression.speedup.torch import ModelSpeedup
 
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
@@ -131,7 +133,8 @@ def main(args):
         torch.save(model.state_dict(), os.path.join(
             args.experiment_data_dir, 'model_trained.pth'))
     elif args.dataset == 'cifar10':
-        model = models.vgg16(pretrained=False, num_classes=10).to(device)
+        # model = models.vgg16(pretrained=False, num_classes=10).to(device)
+        model = VGG(depth=16).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                     momentum=0.9,
                                     weight_decay=5e-4)
@@ -220,7 +223,7 @@ def main(args):
                       train_loader, criterion, optimizer, epoch)
                 test(model_masked, device, criterion, val_loader)
                 scheduler.step()
-        if args.dataset == 'cifar10':
+        elif args.dataset == 'cifar10':
             optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.01,
                                         momentum=0.9,
                                         weight_decay=5e-4)
@@ -245,8 +248,40 @@ def main(args):
 
     if args.save_model:
         pruner.export_model(os.path.join(
-            args.experiment_data_dir, 'model_fine_tuned.pth'))
+            args.experiment_data_dir, 'model_fine_tuned.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
         print('Fined tuned model saved to %s', args.experiment_data_dir)
+
+    # model speed up
+    if args.speed_up:
+        if args.dataset == 'mnist':
+            model = LeNet().to(device)
+            dummy_input = torch.randn(
+                [args.test_batch_size, 1, 28, 28]).to(device)
+        elif args.dataset == 'cifar10':
+            # model = models.vgg16(
+            #     pretrained=False, num_classes=10).to(device)
+            model = VGG(depth=16).to(device)
+            dummy_input = torch.randn(
+                [args.test_batch_size, 3, 32, 32]).to(device)
+        elif args.dataset == 'imagenet':
+            model = models.mobilenet_v2(pretrained=True).to(device)
+            dummy_input = torch.randn(
+                [args.test_batch_size, 3, 32, 32]).to(device)
+
+        model.load_state_dict(torch.load(os.path.join(
+            args.experiment_data_dir, 'model_fine_tuned.pth')))
+
+        masks_file = os.path.join(args.experiment_data_dir, 'mask.pth')
+
+        m_speedup = ModelSpeedup(model, dummy_input, masks_file, device)
+        m_speedup.speedup_model()
+        evaluation_result = evaluator(model)
+        print('Evaluation result (speed up model): %s' % evaluation_result)
+        result['speedup'] = evaluation_result
+
+        torch.save(model.state_dict(), os.path.join(
+            args.experiment_data_dir, 'model_speed_up.pth'))
+        print('Speed up model saved to %s', args.experiment_data_dir)
 
     with open(os.path.join(args.experiment_data_dir, 'performance.json'), 'w+') as f:
         json.dump(result, f)
@@ -262,6 +297,8 @@ if __name__ == '__main__':
                         help='pruning mode, channel or fine_grained')
     parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
                         help='overall target sparsity')
+    parser.add_argument('--speed-up', type=bool, default=True, metavar='S',
+                        help='Whether to speed-up the pruned model')
 
     # param for SimulatedAnnealingPruner
     parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',

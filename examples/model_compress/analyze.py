@@ -5,15 +5,15 @@ import torchvision.models as models
 import matplotlib.pyplot as plt
 
 from nni.compression.torch import LevelPruner
+from models.cifar10.vgg import VGG
 
-import os
-import sys
-import inspect
-
-currentdir = os.path.dirname(os.path.abspath(
-    inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+# import os
+# import sys
+# import inspect
+# currentdir = os.path.dirname(os.path.abspath(
+#     inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.insert(0, parentdir)
 from models.mnist.lenet import LeNet
 
 
@@ -60,7 +60,6 @@ def get_performances_fine_tuned(files):
     return performances
 
 
-
 def get_original_op(model):
     op_names = []
     op_weights = []
@@ -81,9 +80,6 @@ def draw(args):
     # if model == 'lenet':
     #     files = list(os.walk('lenet'))[0][-1]
     #     model = LeNet()
-    # elif model == 'mobilenet_v2':
-    #     files = list(os.walk('mobilenet'))[0][-1]
-    #     model = models.mobilenet_v2()
     if args.model == 'lenet':
         files = ['lenet/pruning_history.csv']
         model = LeNet()
@@ -108,17 +104,29 @@ def draw(args):
         fine_tune_epochs = 3
         performances_fine_tuned = [
             0.43526, 0.43616, 0.41408, 0.38422, 0.39246]
-    elif args.model == 'vgg16' and args.pruning_mode == 'channel':
-        files = ['cifar10_sapruner_channel/01/search_result.json', 'cifar10_sapruner_channel/02/search_result.json',
-                 'cifar10_sapruner_channel/03/search_result.json', 'cifar10_sapruner_channel/04/search_result.json', 'cifar10_sapruner_channel/05/search_result.json']
+    elif args.model == 'vgg16' and args.pruner == 'SimulatedAnnealingPruner' and args.pruning_mode == 'channel':
+        files = ['experiment_data/cifar10/SimulatedAnnealingPruner/channel/01/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/02/search_result.json',
+                 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/03/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/04/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/05/search_result.json']
         model = models.vgg16()
         notes = 'VGG16, CIFAR10, SAPruner, channel pruning'
         config_lists, performances = get_config_lists_from_search_result(
             files)
         overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
         fine_tune_epochs = 50
-        files = ['cifar10_sapruner_channel/01/performance.json', 'cifar10_sapruner_channel/02/performance.json',
-                 'cifar10_sapruner_channel/03/performance.json', 'cifar10_sapruner_channel/04/performance.json', 'cifar10_sapruner_channel/05/performance.json']
+        files = ['experiment_data/cifar10/SimulatedAnnealingPruner/channel/01/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/02/performance.json',
+                 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/03/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/04/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/05/performance.json']
+        performances_fine_tuned = get_performances_fine_tuned(files)
+    elif args.model == 'vgg16' and args.pruner == 'NetAdaptPruner' and args.pruning_mode == 'channel':
+        files = ['experiment_data/cifar10/NetAdaptPruner/01/search_result.json', 'experiment_data/cifar10/NetAdaptPruner/02/search_result.json',
+                 'experiment_data/cifar10/NetAdaptPruner/03/search_result.json']
+        model = models.vgg16()
+        notes = 'VGG16, CIFAR10, SAPruner, channel pruning'
+        config_lists, performances = get_config_lists_from_search_result(
+            files)
+        overall_sparsities = [0.1, 0.2, 0.3]
+        fine_tune_epochs = 50
+        files = ['experiment_data/cifar10/NetAdaptPruner/01/performance.json', 'experiment_data/cifar10/NetAdaptPruner/02/performance.json',
+                 'experiment_data/cifar10/NetAdaptPruner/03/performance.json']
         performances_fine_tuned = get_performances_fine_tuned(files)
 
     fig, axs = plt.subplots(3, 1, figsize=(15, 15))
@@ -165,7 +173,7 @@ def draw(args):
 
     # plt.tight_layout()
     plt.savefig(
-        './sparsities_distribution_{}_{}.png'.format(args.model, args.pruning_mode))
+        'experiment_data/sparsities_distribution_{}_{}_{}.png'.format(args.model, args.pruner, args.pruning_mode))
     plt.close()
 
 
@@ -173,6 +181,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--model', type=str, default='lenet',
                         help='lenet, mobilenet_v2 or retinaface')
+    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner',
+                        help='SimulatedAnnealingPruner')
     parser.add_argument('--pruning-mode', type=str, default='channel',
                         help='channel, or fine-grained')
     args = parser.parse_args()

@@ -381,6 +381,7 @@ class NetAdaptPruner(Pruner):
 
         # load weights parameters
         self.load_model_state_dict(torch.load(self._tmp_model_path))
+        os.remove(self._tmp_model_path)
 
         _logger.info('----------Compression finished--------------')
         _logger.info('config_list generated: %s', self._config_list)
