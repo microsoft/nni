@@ -26,8 +26,8 @@ jobs:
   - job: "runTests"
     timeoutInMinutes: 120
     dependsOn:
-      buildMaster
-      buildWorker
+      - buildMaster
+      - buildWorker
     steps:
       - script: |
           set -e
