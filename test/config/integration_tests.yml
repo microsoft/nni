@@ -38,6 +38,9 @@ testCases:
 
 - name: mnist-tfv1
   configFile: test/config/examples/mnist-tfv1.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 - name: mnist-keras
   configFile: test/config/examples/mnist-keras.yml
