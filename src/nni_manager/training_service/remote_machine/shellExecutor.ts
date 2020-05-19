@@ -189,7 +189,8 @@ class ShellExecutor {
         const tmpSuffix: string = uniqueString(5);
         const localTarPath: string = path.join(os.tmpdir(), `nni_tmp_local_${tmpSuffix}.tar.gz`);
         const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), `nni_tmp_remote_${tmpSuffix}.tar.gz`);
-
+        // Create remote directory
+        await this.createFolder(remoteDirectory);
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);
         // Copy the compressed file to remoteDirectory and delete it

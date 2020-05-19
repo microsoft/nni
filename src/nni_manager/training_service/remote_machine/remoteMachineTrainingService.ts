@@ -331,7 +331,6 @@ class RemoteMachineTrainingService implements TrainingService {
                     for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
                         const executor: ShellExecutor = await executorManager.getAvailableExecutor();
                         if (executor !== undefined) {
-                            await executor.createFolder(this.remoteExpCodeDir);
                             this.machineCopyExpCodeDirPromiseMap.set(
                                 rmMeta,
                                 executor.copyDirectoryToRemote(remoteMachineTrailConfig.codeDir, this.remoteExpCodeDir, this.remoteOS)
