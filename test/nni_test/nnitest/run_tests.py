@@ -168,6 +168,7 @@ def launch_test(config_file, training_service, test_case_config):
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)
     if status != 'DONE' or trial_stats['SUCCEEDED'] + trial_stats['EARLY_STOPPED'] < max_trial_num:
+        print_experiment_log(experiment_id=experiment_id)
         print_trial_job_log(training_service, TRIAL_JOBS_URL)
         raise AssertionError('Failed to finish in maxExecDuration')
 
