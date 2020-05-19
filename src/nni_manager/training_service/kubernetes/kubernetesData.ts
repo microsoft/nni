@@ -39,7 +39,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
 export const kubernetesScriptFormat: string =
 `#!/bin/bash
 export NNI_PLATFORM={0}
-export NNI_SYS_DIR=$PWD/nni/{1}
+export NNI_SYS_DIR={1}
 export NNI_OUTPUT_DIR={2}
 export MULTI_PHASE=false
 export NNI_TRIAL_JOB_ID={3}
@@ -49,7 +49,7 @@ export NNI_TRIAL_SEQ_ID={6}
 {7}
 mkdir -p $NNI_SYS_DIR
 mkdir -p $NNI_OUTPUT_DIR
-cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
+cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
 cd $NNI_SYS_DIR
 sh install_nni.sh
 python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} \
