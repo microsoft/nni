@@ -16,7 +16,8 @@ class WindowsCommands extends OsCommands {
     public generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
         trialSequenceId: string, isMultiPhase: boolean, jobIdFileName: string,
         command: string, nniManagerAddress: string, nniManagerPort: number,
-        nniManagerVersion: string, logCollection: string, codeFile: string, cudaVisibleSetting: string): string {
+        nniManagerVersion: string, logCollection: string, exitCodeFile: string,
+        codeDir: string, cudaVisibleSetting: string): string {
         return `echo off
             set NNI_PLATFORM=remote
             set NNI_SYS_DIR=${workingDirectory}
@@ -25,9 +26,11 @@ class WindowsCommands extends OsCommands {
             set NNI_EXP_ID=${experimentId}
             set NNI_TRIAL_SEQ_ID=${trialSequenceId}
             set MULTI_PHASE=${isMultiPhase}
+            set NNI_CODE_DIR=${codeDir}
             ${cudaVisibleSetting !== "" ? "set " + cudaVisibleSetting : ""}
-            cd %NNI_SYS_DIR%
 
+            robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%
+            cd %NNI_SYS_DIR%
             python -c "import nni" 2>nul
             if not %ERRORLEVEL% EQU 0 (
                 echo installing NNI as exit code of "import nni" is %ERRORLEVEL%
@@ -38,8 +41,8 @@ class WindowsCommands extends OsCommands {
             python -m nni_trial_tool.trial_keeper --trial_command "${command}" --nnimanager_ip "${nniManagerAddress}" --nnimanager_port "${nniManagerPort}" --nni_manager_version "${nniManagerVersion}" --log_collection "${logCollection}" --job_id_file ${jobIdFileName} 1>%NNI_OUTPUT_DIR%/trialkeeper_stdout 2>%NNI_OUTPUT_DIR%/trialkeeper_stderr
 
             echo save exit code(%ERRORLEVEL%) and time
-            echo|set /p="%ERRORLEVEL% " > ${codeFile}
-            powershell -command "Write (((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0")) | Out-file ${codeFile} -Append -NoNewline -encoding utf8"`;
+            echo|set /p="%ERRORLEVEL% " > ${exitCodeFile}
+            powershell -command "Write (((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0")) | Out-file ${exitCodeFile} -Append -NoNewline -encoding utf8"`;
     }
 
     public generateGpuStatsScript(scriptFolder: string): string {

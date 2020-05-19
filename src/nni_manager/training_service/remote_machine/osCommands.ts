@@ -15,8 +15,8 @@ abstract class OsCommands {
     public abstract generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
         trialSequenceId: string, isMultiPhase: boolean, jobIdFileName: string,
         command: string, nniManagerAddress: string, nniManagerPort: number,
-        nniManagerVersion: string, logCollection: string, codeFile: string,
-        cudaVisibleSetting: string): string;
+        nniManagerVersion: string, logCollection: string, exitCodeFile: string,
+        codeDir: string, cudaVisibleSetting: string): string;
     public abstract generateGpuStatsScript(scriptFolder: string): string;
     public abstract createFolder(folderName: string, sharedFolder: boolean): string;
     public abstract allowPermission(isRecursive: boolean, ...folders: string[]): string;

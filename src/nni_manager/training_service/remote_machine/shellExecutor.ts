@@ -155,12 +155,13 @@ class ShellExecutor {
             throw new Error("osCommands must be initialized!");
         }
         const jobIdFileName = this.joinPath(workingDirectory, '.nni', 'jobpid');
-        const codeFile = this.joinPath(workingDirectory, '.nni', 'code');
+        const exitCodeFile = this.joinPath(workingDirectory, '.nni', 'code');
+        const codeDir = this.getRemoteCodePath(experimentId);
 
         return this.osCommands.generateStartScript(workingDirectory, trialJobId, experimentId,
-            trialSequenceId, isMultiPhase, jobIdFileName,
-            command, nniManagerAddress, nniManagerPort,
-            nniManagerVersion, logCollection, codeFile, cudaVisibleSetting);
+            trialSequenceId, isMultiPhase, jobIdFileName, command,
+            nniManagerAddress, nniManagerPort, nniManagerVersion,
+            logCollection, exitCodeFile, codeDir, cudaVisibleSetting);
     }
 
     public generateGpuStatsScript(experimentId: string): string {
@@ -179,6 +180,10 @@ class ShellExecutor {
 
     public getRemoteScriptsPath(experimentId: string): string {
         return this.joinPath(this.getRemoteExperimentRootDir(experimentId), 'scripts');
+    }
+
+    public getRemoteCodePath(experimentId: string): string {
+        return this.joinPath(this.getRemoteExperimentRootDir(experimentId), 'nni-code');
     }
 
     public getRemoteExperimentRootDir(experimentId: string): string {
@@ -300,6 +305,8 @@ class ShellExecutor {
         }
         const remoteTarPath: string = this.osCommands.joinPath(this.tempPath, `nni_tmp_remote_${tmpSuffix}.tar.gz`);
 
+        // Create remote directory
+        await this.createFolder(remoteDirectory);
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);
         // Copy the compressed file to remoteDirectory and delete it

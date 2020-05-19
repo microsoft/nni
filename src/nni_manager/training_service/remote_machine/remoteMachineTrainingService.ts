@@ -42,6 +42,7 @@ import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 class RemoteMachineTrainingService implements TrainingService {
     private readonly initExecutorId = "initConnection";
     private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
+    private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
     private readonly trialExecutorManagerMap: Map<string, ExecutorManager>; //trial excutor map
     private readonly trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
     private readonly expRootDir: string;
@@ -62,6 +63,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
+        this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
@@ -308,7 +310,19 @@ class RemoteMachineTrainingService implements TrainingService {
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
+                    // Validate to make sure codeDir doesn't have too many files
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
+                    // Copy codeDir to remote machine
+                    for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
+                        const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
+                        if (executor !== undefined) {
+                            this.machineCopyExpCodeDirPromiseMap.set(
+                                rmMeta,
+                                executor.copyDirectoryToRemote(remoteMachineTrailConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
+                            );
+                        }
+                    }
+
                 } catch (error) {
                     this.log.error(error);
 
@@ -484,6 +498,10 @@ class RemoteMachineTrainingService implements TrainingService {
             const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
+            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(trialJobDetail.rmMeta);
+            if (copyExpCodeDirPromise !== undefined) {
+                await copyExpCodeDirPromise;
+            }
 
             this.allocateExecutorManagerForTrial(trialJobDetail);
             const executor = await this.getExecutor(trialJobDetail.id);
@@ -563,11 +581,8 @@ class RemoteMachineTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
-        //create tmp trial working folder locally.
-        await execCopydir(this.trialConfig.codeDir, trialLocalTempFolder);
-        const installScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-        // Write NNI installation file to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, executor.getScriptName("install_nni")), installScriptContent, { encoding: 'utf8' });
+        // Write install_nni.sh, it's not used in Windows platform.
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, executor.getScriptName("install_nni")), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, executor.getScriptName("run")), runScriptTrialContent, { encoding: 'utf8' });
         await this.writeParameterFile(trialJobId, form.hyperParameters);

@@ -15,18 +15,22 @@ class LinuxCommands extends OsCommands {
     public generateStartScript(workingDirectory: string, trialJobId: string, experimentId: string,
         trialSequenceId: string, isMultiPhase: boolean, jobIdFileName: string,
         command: string, nniManagerAddress: string, nniManagerPort: number,
-        nniManagerVersion: string, logCollection: string, codeFile: string, cudaVisibleSetting: string): string {
+        nniManagerVersion: string, logCollection: string, exitCodeFile: string,
+        codeDir: string, cudaVisibleSetting: string): string {
 
         return `#!/bin/bash
             export NNI_PLATFORM=remote NNI_SYS_DIR=${workingDirectory} NNI_OUTPUT_DIR=${workingDirectory} NNI_TRIAL_JOB_ID=${trialJobId} \
-            NNI_EXP_ID=${experimentId} NNI_TRIAL_SEQ_ID=${trialSequenceId} export MULTI_PHASE=${isMultiPhase}
+            NNI_EXP_ID=${experimentId} NNI_TRIAL_SEQ_ID=${trialSequenceId} NNI_CODE_DIR=${codeDir}
+            export MULTI_PHASE=${isMultiPhase}
+
+            cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
             cd $NNI_SYS_DIR
             sh install_nni.sh
             python3 -m nni_trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
                 --job_id_file ${jobIdFileName} \
                 --log_collection '${logCollection}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-            echo $? \`date +%s%3N\` >${codeFile}`;
+            echo $? \`date +%s%3N\` >${exitCodeFile}`;
     }
 
     public generateGpuStatsScript(scriptFolder: string): string {
