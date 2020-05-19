@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from collections import defaultdict
 import logging
-from itertools import cycle
 
 import tensorflow as tf
 from tensorflow.data import Dataset
@@ -144,7 +142,8 @@ class EnasTrainer:
                     logits, _ = logits
                 metrics = self.metrics(logits, y)
                 loss = self.loss(y, logits)
-                meters.update({'loss': tf.reduce_mean(loss).numpy()})
+                metrics['loss'] = tf.reduce_mean(loss).numpy()
+                meters.update(metrics)
 
             logger.info("Test Epoch [%d/%d] Arc [%d/%d] Summary  %s",
                         epoch + 1, self.num_epochs, arc_id + 1, test_arc_per_epoch,
