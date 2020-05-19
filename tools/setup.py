@@ -16,7 +16,8 @@ setuptools.setup(
         'astor',
         'schema',
         'PythonWebHDFS',
-        'colorama'
+        'colorama',
+        'pathspec',
     ],
 
     author = 'Microsoft NNI Team',
