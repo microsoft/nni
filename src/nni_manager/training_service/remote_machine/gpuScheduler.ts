@@ -8,7 +8,7 @@ import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
 import {
-    parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, SSHClientManager
+    parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, ExecutorManager
 } from './remoteMachineData';
 
 type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
@@ -18,7 +18,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
  */
 export class GPUScheduler {
 
-    private readonly machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>;
+    private readonly machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>;
     private readonly log: Logger = getLogger();
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
@@ -26,12 +26,12 @@ export class GPUScheduler {
 
     /**
      * Constructor
-     * @param machineSSHClientMap map from remote machine to sshClient
+     * @param machineExecutorMap map from remote machine to executor
      */
-    constructor(machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>) {
-        assert(machineSSHClientMap.size > 0);
-        this.machineSSHClientMap = machineSSHClientMap;
-        this.configuredRMs = Array.from(machineSSHClientMap.keys());
+    constructor(machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>) {
+        assert(machineExecutorMap.size > 0);
+        this.machineExecutorMap = machineExecutorMap;
+        this.configuredRMs = Array.from(machineExecutorMap.keys());
     }
 
     /**
@@ -43,7 +43,7 @@ export class GPUScheduler {
             requiredGPUNum = 0;
         }
         assert(requiredGPUNum >= 0);
-        const allRMs: RemoteMachineMeta[] = Array.from(this.machineSSHClientMap.keys());
+        const allRMs: RemoteMachineMeta[] = Array.from(this.machineExecutorMap.keys());
         assert(allRMs.length > 0);
 
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
@@ -135,7 +135,7 @@ export class GPUScheduler {
      */
     private gpuResourceDetection(): Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
-        this.machineSSHClientMap.forEach((sshClientManager: SSHClientManager, rmMeta: RemoteMachineMeta) => {
+        this.machineExecutorMap.forEach((executorManager: ExecutorManager, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
                 const availableGPUs: GPUInfo[] = [];

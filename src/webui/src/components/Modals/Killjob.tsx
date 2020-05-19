@@ -77,7 +77,7 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
     onKill = (): void => {
         this.setState({ isCalloutVisible: false }, () => {
             const { trial } = this.props;
-            killJob(trial.key, trial.id, trial.status);
+            killJob(trial.key, trial.jobId, trial.status);
         });
     }
 

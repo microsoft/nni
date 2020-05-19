@@ -1,0 +1,309 @@
+node {
+  name: "input/input.1"
+  op: "IO Node"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 5
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "output/output.1"
+  op: "IO Node"
+  input: "input/input.1"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 5
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/bias/49"
+  op: "prim::GetAttr"
+  input: "MyModule/Linear[weight]/weight/35"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  bias }"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/weight/50"
+  op: "prim::GetAttr"
+  input: "MyModule/Linear[weight]/weight/35"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  weight }"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/51"
+  op: "aten::t"
+  input: "MyModule/Linear[weight]/weight/50"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 5
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/52"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/53"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[weight]/54"
+  op: "aten::addmm"
+  input: "MyModule/Linear[weight]/bias/49"
+  input: "input/input.1"
+  input: "MyModule/Linear[weight]/51"
+  input: "MyModule/Linear[weight]/52"
+  input: "MyModule/Linear[weight]/53"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/bias/55"
+  op: "prim::GetAttr"
+  input: "MyModule/Linear[bias]/weight/38"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  bias }"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/weight/56"
+  op: "prim::GetAttr"
+  input: "MyModule/Linear[bias]/weight/38"
+  attr {
+    key: "attr"
+    value {
+      s: "{ name :  weight }"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/57"
+  op: "aten::t"
+  input: "MyModule/Linear[bias]/weight/56"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 5
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/58"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/59"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/Linear[bias]/60"
+  op: "aten::addmm"
+  input: "MyModule/Linear[bias]/bias/55"
+  input: "input/input.1"
+  input: "MyModule/Linear[bias]/57"
+  input: "MyModule/Linear[bias]/58"
+  input: "MyModule/Linear[bias]/59"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/23"
+  op: "prim::ListConstruct"
+  input: "MyModule/Linear[weight]/54"
+  input: "MyModule/Linear[bias]/60"
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/24"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{ value : 1}"
+    }
+  }
+}
+node {
+  name: "MyModule/input"
+  op: "aten::cat"
+  input: "MyModule/23"
+  input: "MyModule/24"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 4
+          }
+          dim {
+            size: 6
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+node {
+  name: "MyModule/61"
+  op: "prim::Constant"
+  attr {
+    key: "attr"
+    value {
+      s: "{}"
+    }
+  }
+}
+versions {
+  producer: 22
+}
