@@ -78,6 +78,8 @@ paiYarn:
 pai:
   nniManagerIp:
   maxExecDuration: 15m
+  maxTrialNum: 1
+  trialConcurrency: 1
   paiConfig:
     host:
     userName:
