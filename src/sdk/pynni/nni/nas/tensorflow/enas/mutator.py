@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import tensorflow as tf
-from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Embedding, LSTMCell, RNN
 from tensorflow.keras.losses import SparseCategoricalCrossentropy, Reduction
 
