@@ -50,6 +50,9 @@ testCases:
 
 - name: mnist-annotation
   configFile: test/config/examples/mnist-annotation.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch.yml
