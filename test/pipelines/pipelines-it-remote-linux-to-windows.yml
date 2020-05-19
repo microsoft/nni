@@ -25,6 +25,9 @@ jobs:
         displayName: "install"
   - job: "runTests"
     timeoutInMinutes: 120
+    dependsOn:
+      buildMaster
+      buildWorker
     steps:
       - script: |
           set -e
