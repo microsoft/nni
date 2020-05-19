@@ -32,7 +32,7 @@ class PdartsMutator(DartsMutator):
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
 
-                switches = self.switches.get(mutable.key, [True for j in range(mutable.length)])
+                switches = self.switches.get(mutable.key, [True for j in range(len(mutable))])
                 choices = self.choices[mutable.key]
 
                 operations_count = np.sum(switches)
@@ -48,14 +48,15 @@ class PdartsMutator(DartsMutator):
             if isinstance(module, LayerChoice):
                 switches = self.switches.get(module.key)
                 choices = self.choices[module.key]
-                if len(module.choices) > len(choices):
+                if len(module) > len(choices):
                     # from last to first, so that it won't effect previous indexes after removed one.
                     for index in range(len(switches)-1, -1, -1):
                         if switches[index] == False:
-                            del(module.choices[index])
-                            module.length -= 1
+                            del module[index]
+                assert len(module) <= len(choices), "Failed to remove dropped choices."
 
-    def sample_final(self):
+    def export(self):
+        # Cannot rely on super().export() because P-DARTS has deleted some of the choices and has misaligned length.
         results = super().sample_final()
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
