@@ -127,7 +127,7 @@ class SensitivityAnalysis:
         namelist = list(self.target_layer.keys())
         for layerid in range(start, end):
             name = namelist[layerid]
-            self.sensitivities[name] = {0.0: self.ori_acc}
+            self.sensitivities[name] = {}
             for sparsity in self.sparsities:
                 # Calculate the actual prune ratio based on the already pruned ratio
                 sparsity = (
@@ -186,6 +186,10 @@ class SensitivityAnalysis:
                 X = list(self.sensitivities[name].keys())
                 X = sorted(X)
                 Y = [self.sensitivities[name][x] for x in X]
+                if 0.00 not in X:
+                    # add the original accuracy into the figure
+                    X = [0.00] + X
+                    Y = [self.ori_acc] + Y
                 plt.figure(figsize=(8, 4))
                 plt.plot(X, Y, marker='*')
                 plt.xlabel('Prune Ratio')
@@ -202,6 +206,10 @@ class SensitivityAnalysis:
                 X = list(self.sensitivities[name].keys())
                 X = sorted(X)
                 Y = [self.sensitivities[name][x] for x in X]
+                if 0.00 not in X:
+                    # add the original accuracy into the figure
+                    X = [0.00] + X
+                    Y = [self.ori_acc] + Y
                 linestyle = LineStyles[styleid % len(LineStyles)]
                 marker = Markers[styleid % len(Markers)]
                 plt.plot(X, Y, label=name, linestyle=linestyle, marker=marker)
