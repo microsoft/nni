@@ -540,7 +540,6 @@ class RemoteMachineTrainingService implements TrainingService {
 
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
 
-        await executor.createFolder(trialJobDetail.workingDirectory);
         await executor.createFolder(executor.joinPath(trialJobDetail.workingDirectory, '.nni'));
 
         // RemoteMachineRunShellFormat is the run shell format string,
