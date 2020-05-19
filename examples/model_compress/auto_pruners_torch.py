@@ -268,17 +268,22 @@ def main(args):
 
     # model speed up
     if args.speed_up:
-        if args.dataset == 'mnist':
+        if args.model == 'LeNet':
             model = LeNet().to(device)
             dummy_input = torch.randn(
                 [args.test_batch_size, 1, 28, 28]).to(device)
-        elif args.dataset == 'cifar10':
+        elif args.model == 'vgg16':
             model = models.vgg16(
                 pretrained=False, num_classes=10).to(device)
             # model = VGG(depth=16).to(device)
             dummy_input = torch.randn(
                 [args.test_batch_size, 3, 32, 32]).to(device)
-        elif args.dataset == 'imagenet':
+        elif args.model == 'resnet18':
+            model = models.resnet18(
+                pretrained=False, num_classes=10).to(device)
+            dummy_input = torch.randn(
+                [args.test_batch_size, 3, 32, 32]).to(device)
+        elif args.model == 'mobilenet_v2':
             model = models.mobilenet_v2(pretrained=True).to(device)
             dummy_input = torch.randn(
                 [args.test_batch_size, 3, 32, 32]).to(device)
