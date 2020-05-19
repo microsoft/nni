@@ -2,21 +2,57 @@
 
 NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称为 `remote` 模式。 这就像一个轻量级的训练平台。 在此模式下，可以从计算机启动 NNI，并将 Trial 并行调度到远程计算机。
 
-## 远程计算机的要求
+The OS of remote machines supports `Linux`, `Windows 10`, and `Windows Server 2019`.
 
-* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/InstallationLinux.md)与 NNI 本机模式相同。
+## Requirements
 
-* 根据[安装文章](../Tutorial/InstallationLinux.md)，在每台计算机上安装 NNI。
+* Make sure the default environment of remote machines meets requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
 
-* 确保远程计算机满足 Trial 代码的环境要求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
+* Make sure remote machines can be accessed through SSH from the machine which runs `nnictl` command. It supports both password and key authentication of SSH. For advanced usages, please refer to [machineList part of configuration](../Tutorial/ExperimentConfig.md).
 
-* 确保远程计算机能被运行 `nnictl` 命令的计算机通过 SSH 访问。 同时支持 SSH 的密码和密钥验证方法。 有关高级用法，参考[配置](../Tutorial/ExperimentConfig.md)的 machineList 部分。
+* Make sure the NNI version on each machine is consistent.
 
-* 确保每台计算机上的 NNI 版本一致。
+* Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called `python3` on Linux, and `python` on Windows.
+
+### Linux
+
+* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on the remote machine.
+
+### Windows
+
+* Follow [installation](../Tutorial/InstallationWin.md) to install NNI on the remote machine.
+
+* Install and start `OpenSSH Server`.
+    
+    1. Open `Settings` app on Windows.
+    
+    2. Click `Apps`, then click `Optional features`.
+    
+    3. Click `Add a feature`, search and select `OpenSSH Server`, and then click `Install`.
+    
+    4. Once it's installed, run below command to start and set to automatic start.
+    
+    ```bat
+    sc config sshd start=auto
+    net start sshd
+    ```
+
+* Make sure remote account is administrator, so that it can stop running trials.
+
+* Make sure there is no welcome message more than default, since it causes ssh2 failed in NodeJs. For example, if you're using Data Science VM on Azure, it needs to remove extra echo commands in `C:\dsvm\tools\setup\welcome.bat`.
+    
+    The output like below is ok, when opening a new command window.
+    
+    ```text
+    Microsoft Windows [Version 10.0.17763.1192]
+    (c) 2018 Microsoft Corporation. All rights reserved.
+    
+    (py37_default) C:\Users\AzureUser>
+    ```
 
 ## 运行 Experiment
 
-例如，有三台机器，可使用用户名和密码登录。
+e.g. there are three machines, which can be logged in with username and password.
 
 | IP       | 用户名 | 密码     |
 | -------- | --- | ------ |
@@ -24,9 +60,9 @@ NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称
 | 10.1.1.2 | bob | bob123 |
 | 10.1.1.3 | bob | bob123 |
 
-在这三台计算机或另一台能访问这些计算机的环境中安装并运行 NNI。
+Install and run NNI on one of those three machines or another machine, which has network access to them.
 
-以 `examples/trials/mnist-annotation` 为例。 示例文件 `examples/trials/mnist-annotation/config_remote.yml` 的内容如下：
+Use `examples/trials/mnist-annotation` as the example. Below is content of `examples/trials/mnist-annotation/config_remote.yml`:
 
 ```yaml
 authorName: default
@@ -66,7 +102,7 @@ machineList:
     passwd: bob123
 ```
 
-`codeDir` 中的文件会自动上传到远程计算机中。 可在 Windows、Linux 或 macOS 上运行以下命令，在远程 Linux 计算机上启动 Trial：
+Files in `codeDir` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
 
 ```bash
 nnictl create --config examples/trials/mnist-annotation/config_remote.yml
