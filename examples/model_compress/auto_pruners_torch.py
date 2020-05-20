@@ -364,9 +364,6 @@ if __name__ == '__main__':
                         help='For Saving the current Model')
     args = parser.parse_args()
 
-    print("args.speed_up:", args.speed_up)
-    print("args.model:", args.model)
-
     if not os.path.exists(args.experiment_data_dir):
         os.makedirs(args.experiment_data_dir)
 
