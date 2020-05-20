@@ -11,7 +11,8 @@ from .graph_from_trace import *
 
 
 CONV_TYPE = 'aten::_convolution'
-
+ADD_TYPES = ['aten::add', 'aten::add_']
+CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 
 
@@ -76,9 +77,9 @@ class ChannelDependency:
         """
         for node in self.cnodes:
             parent_convs = []
-            if 'add' in node.kind():
+            if node.kind() in ADD_TYPES:
                 parent_convs = self.get_parent_convs(node)
-            if 'cat' in node.kind():
+            if node.kind() == CAT_TYPE:
                 cat_dim = list(node.inputs())[1].toIValue()
                 # N * C * H * W
                 if cat_dim != 1:
