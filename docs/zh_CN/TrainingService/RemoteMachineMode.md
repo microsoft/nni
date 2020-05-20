@@ -2,46 +2,46 @@
 
 NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称为 `remote` 模式。 这就像一个轻量级的训练平台。 在此模式下，可以从计算机启动 NNI，并将 Trial 并行调度到远程计算机。
 
-The OS of remote machines supports `Linux`, `Windows 10`, and `Windows Server 2019`.
+远程计算机操作系统支持 `Linux`, `Windows 10`, 和 `Windows Server 2019`。
 
-## Requirements
+## 必需组件
 
-* Make sure the default environment of remote machines meets requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
+* 确保远程计算机的默认环境符合 Trial 代码的需求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
 
-* Make sure remote machines can be accessed through SSH from the machine which runs `nnictl` command. It supports both password and key authentication of SSH. For advanced usages, please refer to [machineList part of configuration](../Tutorial/ExperimentConfig.md).
+* 确保远程计算机能被运行 `nnictl` 命令的计算机通过 SSH 访问。 同时支持 SSH 的密码和密钥验证方法。 有关高级用法，参考[配置](../Tutorial/ExperimentConfig.md)的 machineList 部分。
 
-* Make sure the NNI version on each machine is consistent.
+* 确保每台计算机上的 NNI 版本一致。
 
-* Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called `python3` on Linux, and `python` on Windows.
+* 如果要同时使用远程 Linux 和 Windows，请确保 Trial 的命令与远程操作系统兼容。 例如，Python 3.x 的执行文件在 Linux 下是 `python3`，在 Windows 下是 `python`。
 
 ### Linux
 
-* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on the remote machine.
+* 根据[安装说明](../Tutorial/InstallationLinux.md)，在远程计算机上安装 NNI。
 
 ### Windows
 
-* Follow [installation](../Tutorial/InstallationWin.md) to install NNI on the remote machine.
+* 根据[安装说明](../Tutorial/InstallationWin.md)，在远程计算机上安装 NNI。
 
-* Install and start `OpenSSH Server`.
+* 安装并启动 `OpenSSH Server`。
     
-    1. Open `Settings` app on Windows.
+    1. 打开 Windows 中的`设置`应用。
     
-    2. Click `Apps`, then click `Optional features`.
+    2. 点击`应用程序`，然后点击`可选功能`。
     
-    3. Click `Add a feature`, search and select `OpenSSH Server`, and then click `Install`.
+    3. 点击`添加功能`，搜索并选择 `OpenSSH Server`，然后点击`安装`。
     
-    4. Once it's installed, run below command to start and set to automatic start.
+    4. 安装后，运行下列命令来启动服务并设为自动启动。
     
     ```bat
     sc config sshd start=auto
     net start sshd
     ```
 
-* Make sure remote account is administrator, so that it can stop running trials.
+* 确保远程账户为管理员权限，以便可以停止运行中的 Trial。
 
-* Make sure there is no welcome message more than default, since it causes ssh2 failed in NodeJs. For example, if you're using Data Science VM on Azure, it needs to remove extra echo commands in `C:\dsvm\tools\setup\welcome.bat`.
+* 确保除了默认消息外，没有别的欢迎消息，否则会导致 NodeJS 中的 ssh2 出错。 例如，如果在 Azure 中使用了 Data Science VM，需要删除 `C:\dsvm\tools\setup\welcome.bat` 中的 echo 命令。
     
-    The output like below is ok, when opening a new command window.
+    打开新命令窗口，如果输入如下，则表示正常。
     
     ```text
     Microsoft Windows [Version 10.0.17763.1192]
@@ -52,7 +52,7 @@ The OS of remote machines supports `Linux`, `Windows 10`, and `Windows Server 20
 
 ## 运行 Experiment
 
-e.g. there are three machines, which can be logged in with username and password.
+例如，有三台机器，可使用用户名和密码登录。
 
 | IP       | 用户名 | 密码     |
 | -------- | --- | ------ |
@@ -60,9 +60,9 @@ e.g. there are three machines, which can be logged in with username and password
 | 10.1.1.2 | bob | bob123 |
 | 10.1.1.3 | bob | bob123 |
 
-Install and run NNI on one of those three machines or another machine, which has network access to them.
+在这三台计算机或另一台能访问这些计算机的环境中安装并运行 NNI。
 
-Use `examples/trials/mnist-annotation` as the example. Below is content of `examples/trials/mnist-annotation/config_remote.yml`:
+以 `examples/trials/mnist-annotation` 为例。 示例文件 `examples/trials/mnist-annotation/config_remote.yml` 的内容如下：
 
 ```yaml
 authorName: default
@@ -102,7 +102,7 @@ machineList:
     passwd: bob123
 ```
 
-Files in `codeDir` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
+`codeDir` 中的文件会自动上传到远程计算机中。 可在 Windows、Linux 或 macOS 上运行以下命令，在远程 Linux 计算机上启动 Trial：
 
 ```bash
 nnictl create --config examples/trials/mnist-annotation/config_remote.yml
