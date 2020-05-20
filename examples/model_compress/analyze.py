@@ -7,14 +7,6 @@ import matplotlib.pyplot as plt
 
 from nni.compression.torch import LevelPruner
 from models.cifar10.vgg import VGG
-
-# import os
-# import sys
-# import inspect
-# currentdir = os.path.dirname(os.path.abspath(
-#     inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, parentdir)
 from models.mnist.lenet import LeNet
 
 
@@ -86,32 +78,39 @@ def plot_performance_comparison(args):
         performances = {'original': 0.9298}
         sparsities = [0.1, 0.3, 0.5, 0.7, 0.9]
         pruners = ['L1FilterPruner', 'NetAdaptPruner',
-                   'SimulatedAnnealingPruner/channel']
+                   'SimulatedAnnealingPruner']
 
-        for pruner in pruners:
-            performances[pruner] = []
-            for sparsity in sparsities:
-                with open(os.path.join('experiment_data/cifar10/', pruner, str(sparsity).replace('.', ''), 'performance.json'), 'r') as jsonfile:
-                    performance = json.load(jsonfile)
-                    performances[pruner].append(performance['finetuned'])
+    elif args.model == 'resnet18':
+        performances = {'original': 0.87}
+        sparsities = [0.1, 0.3, 0.5, 0.7, 0.9]
+        pruners = ['L1FilterPruner', 'NetAdaptPruner',
+                   'SimulatedAnnealingPruner']
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+    for pruner in pruners:
+        performances[pruner] = []
+        for sparsity in sparsities:
+            with open(os.path.join('experiment_data/cifar10/', args.model, pruner, str(sparsity).replace('.', ''), 'performance.json'), 'r') as jsonfile:
+                performance = json.load(jsonfile)
+                performances[pruner].append(performance['finetuned'])
 
-        for pruner in pruners:
-            ax.plot(sparsities, performances[pruner], label=pruner)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
 
-        ax.hlines(performances['original'], sparsities[0],
-                  sparsities[-1], linestyles='dashed', label='original model')
-        ax.legend()
-        # ax.set_ylim(0.9, 1)
+    for pruner in pruners:
+        ax.plot(sparsities, performances[pruner], label=pruner)
 
-        plt.title('Channel Pruning Comparison on VGG16/CIFAR10')
-        plt.xlabel('Sparsity')
-        plt.ylabel('Accuracy after fine-tuning')
-        plt.savefig(
-            'experiment_data/performance_comparison_{}.png'.format(args.model))
-        plt.close()
+    ax.hlines(performances['original'], sparsities[0],
+              sparsities[-1], linestyles='dashed', label='original model')
+
+    ax.legend()
+    # ax.set_ylim(0.9, 1)
+
+    plt.title('Channel Pruning Comparison on {}/CIFAR10'.format(args.model))
+    plt.xlabel('Sparsity')
+    plt.ylabel('Accuracy after fine-tuning')
+    plt.savefig(
+        'experiment_data/performance_comparison_{}.png'.format(args.model))
+    plt.close()
 
 
 def plot_sparsities_distribution(args):
@@ -142,29 +141,25 @@ def plot_sparsities_distribution(args):
         fine_tune_epochs = 10
         performances_fine_tuned = [
             0.47528, 0.4668, 0.46174, 0.4447, 0.4421]
-    elif args.model == 'vgg16' and args.pruner == 'SimulatedAnnealingPruner' and args.pruning_mode == 'channel':
-        files = ['experiment_data/cifar10/SimulatedAnnealingPruner/channel/01/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/02/search_result.json',
-                 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/03/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/04/search_result.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/05/search_result.json']
-        model = models.vgg16()
-        notes = 'VGG16, CIFAR10, SAPruner, channel pruning'
+    elif args.model == 'vgg16' or args.model == 'resnet18':
+        overall_sparsities = [0.1, 0.3, 0.5, 0.7, 0.9]
+        files = []
+        for sparsity in overall_sparsities:
+            files.append(os.path.join('experiment_data/cifar10/', args.model,
+                                      args.pruner, str(sparsity).replace('.', ''), 'search_result.json'))
+        if args.model == 'vgg16':
+            model = VGG(depth=16)
+        elif args.model == 'resnet18':
+            model = models.resnet18()
+        notes = '{}, CIFAR10, {}, channel pruning'.format(
+            args.model, args.pruner)
         config_lists, performances = get_config_lists_from_search_result(
             files)
-        overall_sparsities = [0.1, 0.2, 0.3, 0.4, 0.5]
         fine_tune_epochs = 50
-        files = ['experiment_data/cifar10/SimulatedAnnealingPruner/channel/01/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/02/performance.json',
-                 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/03/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/04/performance.json', 'experiment_data/cifar10/SimulatedAnnealingPruner/channel/05/performance.json']
-        performances_fine_tuned = get_performances_fine_tuned(files)
-    elif args.model == 'vgg16' and args.pruner == 'NetAdaptPruner' and args.pruning_mode == 'channel':
-        files = ['experiment_data/cifar10/NetAdaptPruner/01/search_result.json', 'experiment_data/cifar10/NetAdaptPruner/02/search_result.json',
-                 'experiment_data/cifar10/NetAdaptPruner/03/search_result.json']
-        model = models.vgg16()
-        notes = 'VGG16, CIFAR10, SAPruner, channel pruning'
-        config_lists, performances = get_config_lists_from_search_result(
-            files)
-        overall_sparsities = [0.1, 0.2, 0.3]
-        fine_tune_epochs = 50
-        files = ['experiment_data/cifar10/NetAdaptPruner/01/performance.json', 'experiment_data/cifar10/NetAdaptPruner/02/performance.json',
-                 'experiment_data/cifar10/NetAdaptPruner/03/performance.json']
+        files = []
+        for sparsity in overall_sparsities:
+            files.append(os.path.join('experiment_data/cifar10/', args.model,
+                                      args.pruner, str(sparsity).replace('.', ''), 'performance.json'))
         performances_fine_tuned = get_performances_fine_tuned(files)
 
     fig, axs = plt.subplots(3, 1, figsize=(15, 15))
@@ -225,5 +220,5 @@ if __name__ == '__main__':
                         help='channel, or fine-grained')
     args = parser.parse_args()
 
-    # plot_sparsities_distribution(args)
-    plot_performance_comparison(args)
+    plot_sparsities_distribution(args)
+    # plot_performance_comparison(args)
