@@ -1,22 +1,22 @@
 # 在 Windows 上安装
 
-## Prerequires
+## 先决条件
 
-* Python 3.5 (or above) 64-bit. [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is highly recommended to manage multiple Python environments on Windows.
+* Python 3.5（或以上）64 位。 在 Windows 上推荐使用 [Anaconda](https://www.anaconda.com/products/individual) 或 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 来管理多个 Python 环境。
 
-* If it's a newly installed Python environment, it needs to install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) to support build NNI dependencies like `scikit-learn`.
+* 如果是新安装的 Python 环境，需要安装 [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 来支持 NNI 的依赖项，如 `scikit-learn`。
 
     ```bat
     pip install cython wheel
     ```
 
-* git for verifying installation.
+* 安装 git 用于验证安装。
 
-## Install NNI
+## 安装 NNI
 
-In most cases, you can install and upgrade NNI from pip package. It's easy and fast.
+大多数情况下，可以从 pip 包安装和升级 NNI。 这样既方便又快捷。
 
-If you are interested in special or the latest code versions, you can install NNI through source code.
+如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
 
 If you want to contribute to NNI, refer to [setup development environment](SetupNniDeveloperEnvironment.md).
 
