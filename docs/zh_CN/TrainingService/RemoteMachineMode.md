@@ -2,17 +2,53 @@
 
 NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称为 `remote` 模式。 这就像一个轻量级的训练平台。 在此模式下，可以从计算机启动 NNI，并将 Trial 并行调度到远程计算机。
 
-## 远程计算机的要求
+远程计算机操作系统支持 `Linux`, `Windows 10`, 和 `Windows Server 2019`。
 
-* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/InstallationLinux.md)与 NNI 本机模式相同。
+## 必需组件
 
-* 根据[安装文章](../Tutorial/InstallationLinux.md)，在每台计算机上安装 NNI。
-
-* 确保远程计算机满足 Trial 代码的环境要求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
+* 确保远程计算机的默认环境符合 Trial 代码的需求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
 
 * 确保远程计算机能被运行 `nnictl` 命令的计算机通过 SSH 访问。 同时支持 SSH 的密码和密钥验证方法。 有关高级用法，参考[配置](../Tutorial/ExperimentConfig.md)的 machineList 部分。
 
 * 确保每台计算机上的 NNI 版本一致。
+
+* 如果要同时使用远程 Linux 和 Windows，请确保 Trial 的命令与远程操作系统兼容。 例如，Python 3.x 的执行文件在 Linux 下是 `python3`，在 Windows 下是 `python`。
+
+### Linux
+
+* 根据[安装说明](../Tutorial/InstallationLinux.md)，在远程计算机上安装 NNI。
+
+### Windows
+
+* 根据[安装说明](../Tutorial/InstallationWin.md)，在远程计算机上安装 NNI。
+
+* 安装并启动 `OpenSSH Server`。
+    
+    1. 打开 Windows 中的`设置`应用。
+    
+    2. 点击`应用程序`，然后点击`可选功能`。
+    
+    3. 点击`添加功能`，搜索并选择 `OpenSSH Server`，然后点击`安装`。
+    
+    4. 安装后，运行下列命令来启动服务并设为自动启动。
+    
+    ```bat
+    sc config sshd start=auto
+    net start sshd
+    ```
+
+* 确保远程账户为管理员权限，以便可以停止运行中的 Trial。
+
+* 确保除了默认消息外，没有别的欢迎消息，否则会导致 NodeJS 中的 ssh2 出错。 例如，如果在 Azure 中使用了 Data Science VM，需要删除 `C:\dsvm\tools\setup\welcome.bat` 中的 echo 命令。
+    
+    打开新命令窗口，如果输入如下，则表示正常。
+    
+    ```text
+    Microsoft Windows [Version 10.0.17763.1192]
+    (c) 2018 Microsoft Corporation. All rights reserved.
+    
+    (py37_default) C:\Users\AzureUser>
+    ```
 
 ## 运行 Experiment
 
