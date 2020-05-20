@@ -267,6 +267,7 @@ def main(args):
         print('Fined tuned model saved to %s', args.experiment_data_dir)
 
     # model speed up
+    print("args.speed_up: %s", args.speed_up)
     if args.speed_up:
         if args.model == 'LeNet':
             model = LeNet().to(device)
@@ -308,50 +309,63 @@ def main(args):
 
 
 if __name__ == '__main__':
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
+
     parser = argparse.ArgumentParser(
         description='PyTorch Example for SimulatedAnnealingPruner')
 
-    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner', metavar='P',
+    parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner',
                         help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
-    parser.add_argument('--pruning-mode', type=str, default='channel', metavar='P',
+    parser.add_argument('--pruning-mode', type=str, default='channel',
                         help='pruning mode, channel or fine_grained')
-    parser.add_argument('--sparsity', type=float, default=0.3, metavar='S',
+    parser.add_argument('--sparsity', type=float, default=0.3,
                         help='overall target sparsity')
-    parser.add_argument('--speed-up', type=bool, default=True, metavar='S',
+    parser.add_argument('--speed-up', type=str2bool, default=True,
                         help='Whether to speed-up the pruned model')
 
     # param for SimulatedAnnealingPruner
-    parser.add_argument('--cool-down-rate', type=float, default=0.9, metavar='C',
+    parser.add_argument('--cool-down-rate', type=float, default=0.9,
                         help='cool down rate')
     # param for NetAdaptPruner
-    parser.add_argument('--pruning-step', type=float, default=0.05, metavar='P',
+    parser.add_argument('--pruning-step', type=float, default=0.05,
                         help='pruning_step of NetAdaptPruner')
 
     # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
-    parser.add_argument('--dataset', type=str, default='mnist', metavar='DS',
+    parser.add_argument('--dataset', type=str, default='mnist',
                         help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
-    parser.add_argument('--model', type=str, default='LeNet', metavar='MS',
+    parser.add_argument('--model', type=str, default='LeNet',
                         help='model to use, LeNet, vgg16, resnet18 or mobilenet_v2')
-    parser.add_argument('--fine-tune', type=bool, default=True, metavar='F',
+    parser.add_argument('--fine-tune', type=str2bool, default=True,
                         help='Whether to fine-tune the pruned model')
-    parser.add_argument('--fine-tune-epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--fine-tune-epochs', type=int, default=10,
                         help='epochs to fine tune')
     parser.add_argument('--data-dir', type=str,
-                        default='/datasets/', metavar='F')
+                        default='/datasets/')
     parser.add_argument('--experiment-data-dir', type=str,
                         default='./', help='For saving experiment data')
 
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=64,
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=64,
                         help='input batch size for testing (default: 64)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+    parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 14)')
-    parser.add_argument('--log-interval', type=int, default=200, metavar='N',
+    parser.add_argument('--log-interval', type=int, default=200,
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--save-model', type=bool, default=True,
+    parser.add_argument('--save-model', type=str2bool, default=True,
                         help='For Saving the current Model')
     args = parser.parse_args()
+
+    print("args.speed_up:", args.speed_up)
+    print("args.model:", args.model)
 
     if not os.path.exists(args.experiment_data_dir):
         os.makedirs(args.experiment_data_dir)
