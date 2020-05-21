@@ -29,7 +29,7 @@ class ChannelDependency:
             data: 
                 The example input data to trace the network architecture.
         """
-        self.graph_builder = GraphBuilder(model, data)
+        self.graph_builder = VisualGraph(model, data)
         self.cnodes = list(self.graph_builder.graph.nodes())
         self.graph = self.graph_builder.graph
         self.forward_edge = self.graph_builder.forward_edge

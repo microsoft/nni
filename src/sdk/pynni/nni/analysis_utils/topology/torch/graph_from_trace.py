@@ -8,12 +8,11 @@ import torch
 import logging
 import torch.nn as nn
 import torch.jit as jit
-from torch.utils.tensorboard._pytorch_graph import CLASSTYPE_KIND, GETATTR_KIND
 
-__all__ = ["PyNode", "GraphBuilder"]
+__all__ = ["VisualGraph"]
 
 TUPLE_UNPACK = 'prim::TupleUnpack'
-
+CLASSTYPE_KIND = 'ClassType'
 logger = logging.getLogger('Graph_From_Trace')
 
 
@@ -29,9 +28,12 @@ class PyNode:
                 self.shape = self.cnode.type().sizes()
         if self.isOp:
             scopename = cnode.scopeName()
-            scopename = re.split('/', scopename)
-            # note, the scopeName of node may be empty
-            self.name = scopename[-1] if len(scopename) > 0 else ''
+            if torch.__version__ >= '1.4.0':
+                # note, the scopeName of node may be empty
+                scopename = re.split('/', scopename)
+                self.name = scopename[-1] if len(scopename) > 0 else ''
+            else:
+                self.name = '.'.join(re.findall(r'\[(.*?)\]', scopename))
             # remove the __module prefix
             if self.name.startswith('__module.'):
                 self.name = self.name[len('__module.'):]
@@ -54,7 +56,7 @@ class PyNode:
             return [self.cnode.node()]
 
 
-class GraphBuilder:
+class VisualGraph:
     def __init__(self, model, data):
         """
         We build the network architecture graph according the graph
@@ -74,14 +76,11 @@ class GraphBuilder:
         """
         self.model = model
         self.data = data
-        # set to the evaluation mode
-        self.model.eval()
-        self.traced_model = jit.trace(model, data)
-        self.forward_edge = {}
-        self.graph = self.traced_model.graph
-        # Start from pytorch 1.4.0, we need this function to get more
-        # detail information
-        torch._C._jit_pass_inline(self.graph)
+        with torch.onnx.set_training(model, False):
+            self.traced_model = jit.trace(model, data)
+            self.graph = self.traced_model.graph
+            torch._C._jit_pass_inline(self.graph)
+        self.forward_edge = {}        
         self.c2py = {}
         self.visited = set()
         self.build_graph()
