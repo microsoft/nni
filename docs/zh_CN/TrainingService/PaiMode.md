@@ -7,7 +7,8 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
 步骤 2. 获取 OpenPAI 的令牌。  
-点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_token_button.jpg) 找到 token management，复制当前账号的令牌。 ![](../../img/pai_token_profile.jpg)
+点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_profile.jpg)  
+点击页面中的 `copy` 按钮来复制 jwt Token。 ![](../../img/pai_token.jpg)
 
 步骤 3. 将 NFS 存储挂载到本机。  
 点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
@@ -15,7 +16,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 `DEFAULT_STORAGE` 字段是在作业运行起来后，OpenPAI 容器中挂载的路径。 `Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
 例如，使用下列命令：
 
-    sudo mount nfs://gcr-openpai-infra02:/pai/data /local/mnt
+    sudo mount -t nfs4 gcr-openpai-infra02:/pai/data /local/mnt
     
 
 然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
@@ -63,7 +64,7 @@ trial:
   virtualCluster: default
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
-  paiStoragePlugin: team_wise
+  paiStoragePlugin: teamwise_storage
 # 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
@@ -71,7 +72,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。
+注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。 配置文件中的 host 字段是 OpenPAI 作业提交页面的地址，例如：`10.10.5.1`，NNI 中默认协议是 `http`，如果 OpenPAI 集群启用了 https，则需要使用 `https://10.10.5.1` 的格式。
 
 与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 需要额外的配置：
 
