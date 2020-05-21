@@ -215,7 +215,7 @@ def main(args):
             model, config_list)
     elif args.pruner == 'ADMMPruner':
         pruner = ADMMPruner(
-            model, config_list, experiment_data_dir=args.experiment_data_dir)
+            model, config_list, trainer=trainer, experiment_data_dir=args.experiment_data_dir)
 
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)

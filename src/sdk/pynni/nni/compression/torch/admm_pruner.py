@@ -7,6 +7,7 @@ import math
 import copy
 import csv
 import json
+import torch
 import numpy as np
 from schema import And, Optional
 
@@ -28,7 +29,7 @@ class ADMMPruner(Pruner):
 
     """
 
-    def __init__(self, model, config_list, optimize_iterations=30, experiment_data_dir='./'):
+    def __init__(self, model, config_list, trainer, optimize_iterations=30, experiment_data_dir='./'):
         """
         Parameters
         ----------
@@ -38,10 +39,14 @@ class ADMMPruner(Pruner):
             Supported keys:
                 - sparsity : The final sparsity when the compression is done.
                 - op_names : The operation type to prune.
+        trainer : function
+            function used for the first step of ADMM training
         experiment_data_dir : string
             PATH to save experiment data
         """
         super().__init__(model, config_list)
+
+        self._trainer = trainer
 
         self._optimize_iterations = optimize_iterations
 
@@ -66,6 +71,13 @@ class ADMMPruner(Pruner):
 
         schema.validate(config_list)
 
+    def projection(self, weight_arr, percent=10):
+        pcen = np.percentile(abs(weight_arr), percent)
+        print("percentile " + str(pcen))
+        under_threshold = abs(weight_arr) < pcen
+        weight_arr[under_threshold] = 0
+        return weight_arr
+
     def compress(self):
         """
         Compress the model with ADMM.
@@ -78,13 +90,43 @@ class ADMMPruner(Pruner):
         _logger.info('Starting ADMM Compression...')
 
         # initiaze Z, U
+        # Z^0 = W_0
+        # U^0 = 0
 
-        for i in range(self._optimize_iterations):
-            print('Iteration %d', i)
+        Z = []
+        U = []
+        for wrapper in self.get_modules_wrapper():
+            z = wrapper.module.weight.data.copy()  # check , numpy matrix or tensor ?
+            Z.append(z)
+            U.append(np.zeros_like(z))
 
-            # step 1: optimize Z, U
+        for k in range(self._optimize_iterations):
+            print('Iteration %d', k)
+
+            # step 1: optimize W with AdamOptimizer
+            optimizer = torch.nn.optimize.AdamOptimizer(
+                self.bound_model.parameters(), lr=1e-3)
+
+            # TODO: maybe need to define a customized loss
+            # TODO: cross entropy plus sth
+            criterion = torch.nn.CrossEntropyLoss()
+            for _ in range(5000):
+                self._trainer(self.bound_model, optimizer=optimizer,
+                              criterion=criterion)
 
             # step 2: update Z, U
+            # Z^{k+1} = projection(W_{k+1} + U^k)
+            # U^{k+1} = U^k + W_{k+1} - Z^{k+1}
+
+            # TODO: save sparsity in init
+            sparsity = 0
+
+            for idx, wrapper in enumerate(self.get_modules_wrapper()):
+                z = wrapper.module.weight.data.copy()  # check , numpy matrix or tensor ?
+                Z[idx] = self._projection(
+                    wrapper.module.weight.data + U[idx], sparsity)
+                Z.append(z)
+                U.append(np.zeros_like(z))
 
         # apply prune
 
