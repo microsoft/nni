@@ -45,7 +45,7 @@ class SimulatedAnnealingPruner(Pruner):
         config_list : list
             Supported keys:
                 - sparsity : The final sparsity when the compression is done.
-                - op_type : The operation type to prune.
+                - op_types : The operation type to prune.
         evaluator : function
             function to evaluate the pruned model
         optimize_mode : str

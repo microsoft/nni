@@ -10,3 +10,4 @@ from .apply_compression import apply_compression_results
 from .gradient_rank_filter_pruners import *
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
 from .net_adapt_pruner import NetAdaptPruner
+from .admm_pruner import ADMMPruner

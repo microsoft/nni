@@ -1,0 +1,93 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import logging
+import os
+import math
+import copy
+import csv
+import json
+import numpy as np
+from schema import And, Optional
+
+from nni.utils import OptimizeMode
+
+from .compressor import Pruner, LayerInfo
+from .weight_rank_filter_pruners import L1FilterPruner
+from .utils import CompressorSchema
+from .utils import get_layers_no_dependency
+
+
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.DEBUG)
+
+
+class ADMMPruner(Pruner):
+    """
+    This is a Pytorch implementation of ADMM Pruner algorithm.
+
+    """
+
+    def __init__(self, model, config_list, optimize_iterations=30, experiment_data_dir='./'):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            The model to be pruned
+        config_list : list
+            Supported keys:
+                - sparsity : The final sparsity when the compression is done.
+                - op_names : The operation type to prune.
+        experiment_data_dir : string
+            PATH to save experiment data
+        """
+        super().__init__(model, config_list)
+
+        self._optimize_iterations = optimize_iterations
+
+        self._experiment_data_dir = experiment_data_dir
+
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.module
+            Model to be pruned
+        config_list : list
+            Supported keys:
+                - prune_iterations : The number of rounds for the iterative pruning.
+                - sparsity : The final sparsity when the compression is done.
+        """
+        schema = CompressorSchema([{
+            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str],
+        }], model, _logger)
+
+        schema.validate(config_list)
+
+    def compress(self):
+        """
+        Compress the model with ADMM.
+
+        Returns
+        -------
+        torch.nn.Module
+            model with specified modules compressed.
+        """
+        _logger.info('Starting ADMM Compression...')
+
+        # initiaze Z, U
+
+        for i in range(self._optimize_iterations):
+            print('Iteration %d', i)
+
+            # step 1: optimize Z, U
+
+            # step 2: update Z, U
+
+        # apply prune
+
+        _logger.info('----------Compression finished--------------')
+
+        return self.bound_model
