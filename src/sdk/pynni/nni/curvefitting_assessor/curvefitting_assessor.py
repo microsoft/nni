@@ -9,6 +9,7 @@ from .model_factory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
 
+
 class CurvefittingAssessor(Assessor):
     """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
@@ -23,6 +24,7 @@ class CurvefittingAssessor(Assessor):
     threshold : float
         The threshold that we decide to early stop the worse performance curve.
     """
+
     def __init__(self, epoch_num=20, start_step=6, threshold=0.95, gap=1):
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
@@ -99,10 +101,12 @@ class CurvefittingAssessor(Assessor):
             # Predict the final result
             curvemodel = CurveModel(self.target_pos)
             predict_y = curvemodel.predict(scalar_trial_history)
-            logger.info('Prediction done. Trial job id = %s. Predict value = %s', trial_job_id, predict_y)
+            log_message = "Prediction done. Trial job id = {}, Predict value = {}".format(trial_job_id, predict_y)
             if predict_y is None:
-                logger.info('wait for more information to predict precisely')
+                logger.info('%s, wait for more information to predict precisely', log_message)
                 return AssessResult.Good
+            else:
+                logger.info(log_message)
             standard_performance = self.completed_best_performance * self.threshold
 
             end_time = datetime.datetime.now()
