@@ -18,26 +18,16 @@ class CurvefittingAssessor(Assessor):
     ----------
     epoch_num : int
         The total number of epoch
-    optimize_mode : str
-        optimize mode, 'maximize' or 'minimize'
     start_step : int
         only after receiving start_step number of reported intermediate results
     threshold : float
         The threshold that we decide to early stop the worse performance curve.
     """
-    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95, gap=1):
+    def __init__(self, epoch_num=20, start_step=6, threshold=0.95, gap=1):
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
         # Record the target position we predict
         self.target_pos = epoch_num
-        # Record the optimize_mode
-        if optimize_mode == 'maximize':
-            self.higher_better = True
-        elif optimize_mode == 'minimize':
-            self.higher_better = False
-        else:
-            self.higher_better = True
-            logger.warning('unrecognized optimize_mode %s', optimize_mode)
         # Start forecasting when historical data reaches start step
         self.start_step = start_step
         # Record the compared threshold
@@ -122,14 +112,9 @@ class CurvefittingAssessor(Assessor):
                     trial_job_id, self.trial_history
                 )
 
-            if self.higher_better:
-                if predict_y > standard_performance:
-                    return AssessResult.Good
-                return AssessResult.Bad
-            else:
-                if predict_y < standard_performance:
-                    return AssessResult.Good
-                return AssessResult.Bad
+            if predict_y > standard_performance:
+                return AssessResult.Good
+            return AssessResult.Bad
 
         except Exception as exception:
             logger.exception('unrecognize exception in curvefitting_assessor %s', exception)

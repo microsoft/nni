@@ -13,7 +13,6 @@ assessor:
     builtinAssessorName: Curvefitting
     classArgs:
       epoch_num: 20
-      optimize_mode: maximize
       start_step: 6
       threshold: 0.95
 trial:
