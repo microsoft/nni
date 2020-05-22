@@ -2,21 +2,14 @@
 # Licensed under the MIT license.
 
 import logging
-import os
-import math
 import copy
-import csv
-import json
 import torch
-import numpy as np
 from schema import And, Optional
 
-from nni.utils import OptimizeMode
-
-from .compressor import Pruner, LayerInfo
+from .compressor import Pruner
+from .pruners import LevelPruner
 from .weight_rank_filter_pruners import L1FilterPruner
 from .utils import CompressorSchema
-from .utils import get_layers_no_dependency
 
 
 _logger = logging.getLogger(__name__)
@@ -26,10 +19,10 @@ _logger.setLevel(logging.DEBUG)
 class ADMMPruner(Pruner):
     """
     This is a Pytorch implementation of ADMM Pruner algorithm.
-
+    For details, please refer to paper https://arxiv.org/abs/1804.03294.
     """
 
-    def __init__(self, model, config_list, trainer, optimize_iterations=30, experiment_data_dir='./'):
+    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, pruning_mode='fine_grained'):
         """
         Parameters
         ----------
@@ -41,16 +34,21 @@ class ADMMPruner(Pruner):
                 - op_names : The operation type to prune.
         trainer : function
             function used for the first step of ADMM training
-        experiment_data_dir : string
-            PATH to save experiment data
+        optimize_iteration : int
+            ADMM optimize iterations
+        pruning_mode : str
+            'channel' or 'fine_grained, by default 'fine_grained'
         """
+        self._pruning_mode = pruning_mode
+        # TODO: modules to compress
+
         super().__init__(model, config_list)
 
         self._trainer = trainer
-
         self._optimize_iterations = optimize_iterations
+        self._epochs = 5
 
-        self._experiment_data_dir = experiment_data_dir
+        self.set_wrappers_attribute("if_calculated", False)
 
     def validate_config(self, model, config_list):
         """
@@ -71,12 +69,23 @@ class ADMMPruner(Pruner):
 
         schema.validate(config_list)
 
-    def projection(self, weight_arr, percent=10):
-        pcen = np.percentile(abs(weight_arr), percent)
-        print("percentile " + str(pcen))
-        under_threshold = abs(weight_arr) < pcen
-        weight_arr[under_threshold] = 0
-        return weight_arr
+    # TODO: check pruning mode
+    def _projection(self, weight, sparsity=0.1):
+        w_abs = weight.abs()
+        k = int(weight.numel() * sparsity)
+        if k == 0:
+            mask_weight = torch.ones(weight.shape).type_as(weight)
+        else:
+            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
+            mask_weight = torch.gt(w_abs, threshold).type_as(weight)
+
+        return weight.data.mul(mask_weight)
+
+    def calc_mask(self, wrapper, **kwargs):
+        if self._pruning_mode == 'fine_grained':
+            return LevelPruner.calc_mask(self, wrapper, **kwargs)
+        elif self._pruning_mode == 'channel':
+            return L1FilterPruner.calc_mask(self, wrapper, **kwargs)
 
     def compress(self):
         """
@@ -92,43 +101,49 @@ class ADMMPruner(Pruner):
         # initiaze Z, U
         # Z^0 = W_0
         # U^0 = 0
-
         Z = []
         U = []
         for wrapper in self.get_modules_wrapper():
-            z = wrapper.module.weight.data.copy()  # check , numpy matrix or tensor ?
+            z = wrapper.module.weight.data
             Z.append(z)
-            U.append(np.zeros_like(z))
+            U.append(torch.zeros_like(z))
 
+        # TODO: define a customized loss / optimizer
+        optimizer = torch.optim.Adam(
+            self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
+
+        # Loss = cross_entropy +  l2 regulization + \Sum_{i=1}^N \row_i ||W_i - Z_i^k + U_i^k||^2
+        criterion = torch.nn.CrossEntropyLoss()
+
+        # callback function to do additonal optimization, refer to Formula (7)
+        def callback():
+            for i, wrapper in enumerate(self.get_modules_wrapper()):
+                row = 1e-4
+                wrapper.module.weight.data -= row * \
+                    (wrapper.module.weight.data - Z[i] + U[i])
+
+        # optimization iteration
         for k in range(self._optimize_iterations):
             print('Iteration %d', k)
 
             # step 1: optimize W with AdamOptimizer
-            optimizer = torch.nn.optimize.AdamOptimizer(
-                self.bound_model.parameters(), lr=1e-3)
-
-            # TODO: maybe need to define a customized loss
-            # TODO: cross entropy plus sth
-            criterion = torch.nn.CrossEntropyLoss()
-            for _ in range(5000):
+            for _ in range(self._epochs):
                 self._trainer(self.bound_model, optimizer=optimizer,
-                              criterion=criterion)
+                              criterion=criterion, callback=callback)
 
             # step 2: update Z, U
-            # Z^{k+1} = projection(W_{k+1} + U^k)
-            # U^{k+1} = U^k + W_{k+1} - Z^{k+1}
+            # Z_i^{k+1} = projection(W_i^{k+1} + U_i^k)
+            # U_i^{k+1} = U^k + W_i^{k+1} - Z_i^{k+1}
+            for i, wrapper in enumerate(self.get_modules_wrapper()):
+                z = wrapper.module.weight.data + U[i]
+                Z[i] = self._projection(
+                    z, wrapper.config['sparsity'])
+                U[i] = U[i] + wrapper.module.weight.data - Z[i]
 
-            # TODO: save sparsity in init
-            sparsity = 0
-
-            for idx, wrapper in enumerate(self.get_modules_wrapper()):
-                z = wrapper.module.weight.data.copy()  # check , numpy matrix or tensor ?
-                Z[idx] = self._projection(
-                    wrapper.module.weight.data + U[idx], sparsity)
-                Z.append(z)
-                U.append(np.zeros_like(z))
+            # TODO: check stop conditions : formula (6) .. not necessary
 
         # apply prune
+        self.update_mask()
 
         _logger.info('----------Compression finished--------------')
 

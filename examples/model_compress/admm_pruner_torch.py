@@ -13,11 +13,11 @@ from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
-from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner, ADMMPruner
+from nni.compression.torch import LevelPruner, L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner, ADMMPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch):
+def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -26,6 +26,8 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
+        if callback:
+            callback()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -182,8 +184,8 @@ def main(args):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
 
-    def short_term_fine_tuner(model):
-        return fine_tuner(model, epochs=1)
+    def trainer(model, optimizer, criterion, callback):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=1, callback=callback)
 
     def evaluator(model):
         return test(model, device, criterion, val_loader)
@@ -195,7 +197,7 @@ def main(args):
     result['original'] = evaluation_result
 
     # module types to prune, only "Conv2d" supported for channel pruning
-    if args.pruner == 'ADMMPruner':
+    if args.pruner == 'ADMMPruner' or args.pruner == 'LevelPruner':
         config_list = [{
             'sparsity': 0.8,
             'op_names': ['conv1']
@@ -210,12 +212,15 @@ def main(args):
             'op_names': ['fc2']
         }]
 
+    if args.pruner == 'LevelPruner':
+        pruner = LevelPruner(
+            model, config_list)
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(
             model, config_list)
     elif args.pruner == 'ADMMPruner':
         pruner = ADMMPruner(
-            model, config_list, trainer=trainer, experiment_data_dir=args.experiment_data_dir)
+            model, config_list, trainer=trainer)
 
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
@@ -266,7 +271,6 @@ def main(args):
         print('Fined tuned model saved to %s', args.experiment_data_dir)
 
     # model speed up
-    print("args.speed_up: %s", args.speed_up)
     if args.speed_up:
         if args.model == 'LeNet':
             model = LeNet().to(device)
@@ -355,8 +359,8 @@ if __name__ == '__main__':
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=64,
                         help='input batch size for testing (default: 64)')
-    parser.add_argument('--epochs', type=int, default=1,
-                        help='number of epochs to train (default: 14)')
+    parser.add_argument('--epochs', type=int, default=15,
+                        help='number of epochs to train (default: 15)')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', type=str2bool, default=True,

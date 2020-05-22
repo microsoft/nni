@@ -267,7 +267,6 @@ def main(args):
         print('Fined tuned model saved to %s', args.experiment_data_dir)
 
     # model speed up
-    print("args.speed_up: %s", args.speed_up)
     if args.speed_up:
         if args.model == 'LeNet':
             model = LeNet().to(device)
