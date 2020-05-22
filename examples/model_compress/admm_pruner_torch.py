@@ -184,8 +184,8 @@ def main(args):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
 
-    def trainer(model, optimizer, criterion, callback):
-        return train(args, model, device, train_loader, criterion, optimizer, epoch=1, callback=callback)
+    def trainer(model, optimizer, criterion, epoch, callback):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
 
     def evaluator(model):
         return test(model, device, criterion, val_loader)
@@ -196,8 +196,19 @@ def main(args):
     print('Evaluation result (original model): %s' % evaluation_result)
     result['original'] = evaluation_result
 
+    if args.pruning_mode == 'channel':
+        config_list = [{
+            'sparsity': 0.8,
+            'op_types': ['Conv2d'],
+            'op_names': ['conv1']
+        }, {
+            'sparsity': 0.92,
+            'op_types': ['Conv2d'],
+            'op_names': ['conv2']
+        }]
+
     # module types to prune, only "Conv2d" supported for channel pruning
-    if args.pruner == 'ADMMPruner' or args.pruner == 'LevelPruner':
+    elif args.pruning_mode == 'fine_grained':
         config_list = [{
             'sparsity': 0.8,
             'op_names': ['conv1']

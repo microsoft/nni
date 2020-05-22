@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import copy
 import torch
 from schema import And, Optional
 
@@ -19,10 +18,16 @@ _logger.setLevel(logging.DEBUG)
 class ADMMPruner(Pruner):
     """
     This is a Pytorch implementation of ADMM Pruner algorithm.
-    For details, please refer to paper https://arxiv.org/abs/1804.03294.
+
+    Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
+    by decomposing an original problem into two subproblems that can be solved separately.
+    In weight pruning problem, the two subproblems are solved via gradient descent algorithm and Euclidean projection respectively.
+    This solution framework applies both to non-structured and different variations of structured pruning schemes.
+
+    For more details, please refer to the paper: https://arxiv.org/abs/1804.03294.
     """
 
-    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, pruning_mode='fine_grained'):
+    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, row=1e-4, pruning_mode='fine_grained'):
         """
         Parameters
         ----------
@@ -36,17 +41,21 @@ class ADMMPruner(Pruner):
             function used for the first step of ADMM training
         optimize_iteration : int
             ADMM optimize iterations
+        epochs : int
+            training epochs of the first optimization subproblem
+        row : float
+            penalty parameters for ADMM training
         pruning_mode : str
             'channel' or 'fine_grained, by default 'fine_grained'
         """
         self._pruning_mode = pruning_mode
-        # TODO: modules to compress
 
         super().__init__(model, config_list)
 
         self._trainer = trainer
         self._optimize_iterations = optimize_iterations
-        self._epochs = 5
+        self._epochs = epochs
+        self._row = row
 
         self.set_wrappers_attribute("if_calculated", False)
 
@@ -69,19 +78,61 @@ class ADMMPruner(Pruner):
 
         schema.validate(config_list)
 
-    # TODO: check pruning mode
     def _projection(self, weight, sparsity=0.1):
+        '''
+        Return the Euclidean projection of the weight matrix according to the pruning mode.
+
+        Parameters
+        ----------
+        weight : tensor
+            original matrix
+        sparsity : float
+            the ratio of parameters which need to be set to zero
+
+        Returns
+        -------
+        tensor
+            the projected matrix
+        '''
         w_abs = weight.abs()
-        k = int(weight.numel() * sparsity)
-        if k == 0:
-            mask_weight = torch.ones(weight.shape).type_as(weight)
-        else:
-            threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-            mask_weight = torch.gt(w_abs, threshold).type_as(weight)
+        if self._pruning_mode == 'fine_grained':
+            k = int(weight.numel() * sparsity)
+            if k == 0:
+                mask_weight = torch.ones(weight.shape).type_as(weight)
+            else:
+                threshold = torch.topk(
+                    w_abs.view(-1), k, largest=False)[0].max()
+                mask_weight = torch.gt(w_abs, threshold).type_as(weight)
+        elif self._pruning_mode == 'channel':
+            filters = weight.size(0)
+            num_prune = int(filters * sparsity)
+            if filters < 2 or num_prune < 1:
+                mask_weight = torch.ones(
+                    weight.size()).type_as(weight).detach()
+            else:
+                w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
+                threshold = torch.topk(w_abs_structured.view(-1),
+                                       num_prune, largest=False)[0].max()
+                mask_weight = torch.gt(w_abs_structured, threshold)[
+                    :, None, None, None].expand_as(weight).type_as(weight)
 
         return weight.data.mul(mask_weight)
 
     def calc_mask(self, wrapper, **kwargs):
+        """
+        Calculate the mask of given layer.
+        Use the function of LevelPruner or L1FilterPruner according to the pruning mode.
+
+        Parameters
+        ----------
+        wrapper : Module
+            the module to instrument the compression operation
+        Returns
+        -------
+        dict
+            dictionary for storing masks
+        """
+
         if self._pruning_mode == 'fine_grained':
             return LevelPruner.calc_mask(self, wrapper, **kwargs)
         elif self._pruning_mode == 'channel':
@@ -99,8 +150,8 @@ class ADMMPruner(Pruner):
         _logger.info('Starting ADMM Compression...')
 
         # initiaze Z, U
-        # Z^0 = W_0
-        # U^0 = 0
+        # Z_i^0 = W_i^0
+        # U_i^0 = 0
         Z = []
         U = []
         for wrapper in self.get_modules_wrapper():
@@ -108,28 +159,26 @@ class ADMMPruner(Pruner):
             Z.append(z)
             U.append(torch.zeros_like(z))
 
-        # TODO: define a customized loss / optimizer
         optimizer = torch.optim.Adam(
             self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
 
         # Loss = cross_entropy +  l2 regulization + \Sum_{i=1}^N \row_i ||W_i - Z_i^k + U_i^k||^2
         criterion = torch.nn.CrossEntropyLoss()
 
-        # callback function to do additonal optimization, refer to Formula (7)
+        # callback function to do additonal optimization, refer to the deriatives of Formula (7)
         def callback():
             for i, wrapper in enumerate(self.get_modules_wrapper()):
-                row = 1e-4
-                wrapper.module.weight.data -= row * \
+                wrapper.module.weight.data -= self._row * \
                     (wrapper.module.weight.data - Z[i] + U[i])
 
         # optimization iteration
         for k in range(self._optimize_iterations):
-            print('Iteration %d', k)
+            print('ADMM iteration : ', k)
 
             # step 1: optimize W with AdamOptimizer
-            for _ in range(self._epochs):
+            for epoch in range(self._epochs):
                 self._trainer(self.bound_model, optimizer=optimizer,
-                              criterion=criterion, callback=callback)
+                              criterion=criterion, epoch=epoch, callback=callback)
 
             # step 2: update Z, U
             # Z_i^{k+1} = projection(W_i^{k+1} + U_i^k)
@@ -139,12 +188,10 @@ class ADMMPruner(Pruner):
                 Z[i] = self._projection(
                     z, wrapper.config['sparsity'])
                 U[i] = U[i] + wrapper.module.weight.data - Z[i]
-
-            # TODO: check stop conditions : formula (6) .. not necessary
-
+            
         # apply prune
         self.update_mask()
 
-        _logger.info('----------Compression finished--------------')
+        _logger.info('Compression finished.')
 
         return self.bound_model

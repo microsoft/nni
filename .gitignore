@@ -84,5 +84,3 @@ venv.bak/
 
 # In case you place source code in ~/nni/
 /experiments
-
-.pth
