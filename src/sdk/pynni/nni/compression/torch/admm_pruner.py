@@ -188,7 +188,7 @@ class ADMMPruner(Pruner):
                 Z[i] = self._projection(
                     z, wrapper.config['sparsity'])
                 U[i] = U[i] + wrapper.module.weight.data - Z[i]
-            
+
         # apply prune
         self.update_mask()
 
