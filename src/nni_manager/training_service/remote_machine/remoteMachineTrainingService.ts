@@ -460,6 +460,10 @@ class RemoteMachineTrainingService implements TrainingService {
                             this.timer.unsubscribe(disposable);
                         }
                     }
+                    if (this.stopping){
+                        this.timer.unsubscribe(disposable);
+                        this.log.debug(`Stopped GPU collector on ${rmMeta.ip}, since experiment is exiting.`);
+                    }
                     collectingCount.pop();
                 }
             }
