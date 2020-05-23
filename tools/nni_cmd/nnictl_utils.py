@@ -227,7 +227,7 @@ def stop_experiment(args):
         experiment_config = Experiments()
         experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
-            print_normal('Stoping experiment %s' % experiment_id)
+            print_normal('Stopping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:

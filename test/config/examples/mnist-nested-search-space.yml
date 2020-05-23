@@ -15,7 +15,6 @@ assessor:
 trial:
   codeDir: ../../../examples/trials/mnist-nested-search-space
   command: python3 mnist.py --batch_num 10
-  gpuNum: 0
 
 useAnnotation: false
 multiPhase: false

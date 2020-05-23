@@ -15,7 +15,6 @@
     - [trainingServicePlatform](#trainingserviceplatform)
     - [searchSpacePath](#searchspacepath)
     - [useAnnotation](#useannotation)
-    - [multiPhase](#multiphase)
     - [multiThread](#multithread)
     - [nniManagerIp](#nnimanagerip)
     - [logDir](#logdir)
@@ -92,8 +91,6 @@ searchSpacePath:
 # 可选项: true, false, 默认值: false
 useAnnotation:
 # 可选项: true, false, 默认值: false
-multiPhase:
-# 可选项: true, false, 默认值: false
 multiThread:
 tuner:
   # 可选项: TPE, Random, Anneal, Evolution
@@ -127,8 +124,6 @@ trainingServicePlatform:
 searchSpacePath: 
 #可选项: true, false, 默认值: false
 useAnnotation:
-#可选项: true, false, 默认值: false
-multiPhase:
 #可选项: true, false, 默认值: false
 multiThread:
 tuner:
@@ -169,8 +164,6 @@ maxTrialNum:
 trainingServicePlatform: 
 #可选项: true, false, 默认值: false
 useAnnotation:
-#可选项: true, false, 默认值: false
-multiPhase:
 #可选项: true, false, 默认值: false
 multiThread:
 tuner:
@@ -282,12 +275,6 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 使用 Annotation 分析 Trial 代码并生成搜索空间。
 
 注意：如果 **useAnnotation** 为 true，searchSpacePath 字段会被删除。
-
-### multiPhase
-
-可选。 布尔。 默认值：false。
-
-启用[多阶段 Experiment](../AdvancedFeature/MultiPhase.md)。
 
 ### multiThread
 
