@@ -28,9 +28,9 @@ class WindowsCommands extends OsCommands {
             set MULTI_PHASE=${isMultiPhase}
             set NNI_CODE_DIR=${codeDir}
             ${cudaVisibleSetting !== "" ? "set " + cudaVisibleSetting : ""}
-
-            robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%
-            cd %NNI_SYS_DIR%
+            md %NNI_SYS_DIR%/code
+            robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%/code
+            cd %NNI_SYS_DIR%/code
             python -c "import nni" 2>nul
             if not %ERRORLEVEL% EQU 0 (
                 echo installing NNI as exit code of "import nni" is %ERRORLEVEL%
