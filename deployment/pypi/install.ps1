@@ -15,6 +15,7 @@ else{
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
 $NNI_VERSION_VALUE = git describe --tags --abbrev=0
+$NNI_VERSION_VALUE = $NNI_VERSION_VALUE.substring(1)
 
 # To include time stamp in version value, run:
 # make version_ts=true build
