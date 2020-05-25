@@ -54,7 +54,7 @@ const yaml = require('js-yaml');
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
     private copyExpCodeDirPromise?: Promise<void>;
-    private paiJobConfig: undefined;
+    private paiJobConfig: any;
     private nniVersion: string | undefined;
     constructor() {
         super();
@@ -190,7 +190,7 @@ class PAIK8STrainingService extends PAITrainingService {
 
         let nniJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
-            nniJobConfig = this.paiJobConfig;
+            nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             // Each taskRole will generate new command in NNI's command format
             // Each command will be formatted to NNI style
