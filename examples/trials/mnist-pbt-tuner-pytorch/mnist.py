@@ -146,7 +146,7 @@ def get_params():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument("--data_dir", type=str,
-                        default='data', help="data directory")
+                        default='./data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument("--hidden_size", type=int, default=512, metavar='N',
