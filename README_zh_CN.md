@@ -316,11 +316,10 @@ You can use these commands to get more information about the experiment
 经作者许可的一些 NNI 用法示例和相关文档。
 
 * ### **外部代码库** ### 
-   * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
-   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md)
-   * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md)
-   * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
-   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
+   * Run [ENAS](examples/nas/enas/README.md) with NNI
+   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
+   * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
+   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
 * ### **相关文章** ### 
    * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparision.md)
    * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparision.md)
