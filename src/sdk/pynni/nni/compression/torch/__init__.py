@@ -11,3 +11,4 @@ from .gradient_rank_filter_pruners import *
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
 from .net_adapt_pruner import NetAdaptPruner
 from .admm_pruner import ADMMPruner
+from .auto_compress_pruner import AutoCompressPruner

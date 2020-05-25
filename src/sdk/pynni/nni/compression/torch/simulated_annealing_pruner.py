@@ -92,6 +92,8 @@ class SimulatedAnnealingPruner(Pruner):
         self._search_history = []
 
         self._experiment_data_dir = experiment_data_dir
+        if not os.path.exists(self._experiment_data_dir):
+            os.makedirs(self._experiment_data_dir)
 
     def _detect_modules_to_compress(self):
         """
@@ -265,7 +267,7 @@ class SimulatedAnnealingPruner(Pruner):
     def calc_mask(self, wrapper, **kwargs):
         return None
 
-    def compress(self):
+    def compress(self, return_config_list=False):
         """
         Compress the model with Simulated Annealing.
 
@@ -347,8 +349,6 @@ class SimulatedAnnealingPruner(Pruner):
                      self._best_config_list)
 
         # save search history
-        if not os.path.exists(self._experiment_data_dir):
-            os.makedirs(self._experiment_data_dir)
         with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=[
                                     'sparsity', 'performance', 'config_list'])
@@ -368,5 +368,8 @@ class SimulatedAnnealingPruner(Pruner):
 
         _logger.info('search history and result saved to foler : %s',
                      self._experiment_data_dir)
+
+        if return_config_list:
+            return self._best_config_list
 
         return self.bound_model
