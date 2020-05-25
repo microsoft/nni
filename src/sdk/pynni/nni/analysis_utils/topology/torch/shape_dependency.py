@@ -17,7 +17,7 @@ logger = logging.getLogger('Shape_Dependency')
 
 
 class ChannelDependency:
-    def __init__(self, model, data):
+    def __init__(self, model=None, data=None, graph=None):
         """
         This model analyze the channel dependencis between the conv
         layers in a model.
@@ -28,8 +28,11 @@ class ChannelDependency:
                 The model to be analyzed.
             data: 
                 The example input data to trace the network architecture.
+            graph:
+                if we alreay has the traced graph of the target model, we donnot
+                need to trace the model again.
         """
-        self.graph_builder = VisualGraph(model, data)
+        self.graph_builder = VisualGraph(model, data, graph)
         self.cnodes = list(self.graph_builder.graph.nodes())
         self.graph = self.graph_builder.graph
         self.forward_edge = self.graph_builder.forward_edge

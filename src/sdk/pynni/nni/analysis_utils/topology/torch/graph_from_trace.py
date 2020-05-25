@@ -57,7 +57,7 @@ class PyNode:
 
 
 class VisualGraph:
-    def __init__(self, model, data):
+    def __init__(self, model=None, data=None, graph=None):
         """
         We build the network architecture graph according the graph
         in the scriptmodule. However, the original graph from jit.trace
@@ -72,14 +72,21 @@ class VisualGraph:
                 The model to build the network architecture.
             data:  
                 The sample input data for the model.
-
-        """
+            graph:
+                Traced graph from jit.trace, if this option is set,
+                we donnot need to trace the model again.
+        """ 
         self.model = model
-        self.data = data
-        with torch.onnx.set_training(model, False):
-            self.traced_model = jit.trace(model, data)
-            self.graph = self.traced_model.graph
-            torch._C._jit_pass_inline(self.graph)
+        self.data = data    
+        if graph is not None:
+            self.graph = graph
+        elif (model is not None) and (data is not None):
+            with torch.onnx.set_training(model, False):
+                self.traced_model = jit.trace(model, data)
+                self.graph = self.traced_model.graph
+                torch._C._jit_pass_inline(self.graph)
+        else:
+            raise Exception('Input parameters invalid!')
         self.forward_edge = {}        
         self.c2py = {}
         self.visited = set()

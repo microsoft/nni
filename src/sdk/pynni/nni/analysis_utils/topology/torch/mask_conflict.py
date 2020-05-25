@@ -8,7 +8,7 @@ from .shape_dependency import ChannelDependency
 _logger = logging.getLogger('FixMaskConflict')
 
 class MaskConflict:
-    def __init__(self, model, dummy_input, mask_file):
+    def __init__(self, mask_file, model=None, dummy_input=None, graph=None):
         """
         MaskConflict fix the mask conflict between the layers that
         has channel dependecy with each other.
@@ -21,9 +21,21 @@ class MaskConflict:
                 input example to trace the model
             mask_file:
                 the path of the original mask file  
+            graph:
+                the traced graph of the target model, is this parameter is not None,
+                we donnot use the model and dummpy_input to get the trace graph.
         """
+        # check if the parameters are valid
+        parameter_valid = False
+        if graph is not None:
+            parameter_valid = True
+        elif (model is not None) and (dummy_input is not None):
+            parameter_valid = True
+        if not parameter_valid:
+            raise Exception('The input parameters is invalid!')
         self.model = model
         self.dummy_input = dummy_input
+        self.graph = graph
         self.mask_file = mask_file
         self.masks = torch.load(self.mask_file)
 
@@ -33,7 +45,7 @@ class MaskConflict:
             has shape dependencies. This function should be called before the 
             mask inference of the 'speedup' module.
         """
-        channel_depen = ChannelDependency(self.model, self.dummy_input)
+        channel_depen = ChannelDependency(self.model, self.dummy_input, self.graph)
         depen_sets = channel_depen.dependency_sets
         for dset in depen_sets:
             if len(dset) == 1:
