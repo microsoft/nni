@@ -8,7 +8,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import { LinuxCommands } from '../extends/linuxCommands';
-// import { TrialConfigMetadataKey } from '../trialConfigMetadataKey';
 
 
 describe('Unit Test for linuxCommands', () => {
@@ -86,10 +85,6 @@ describe('Unit Test for linuxCommands', () => {
                 stderr: ""
             }
         )).to.equal(false);
-    })
-
-    it('killChildProcesses', async () => {
-        chai.expect(linuxCommands.killChildProcesses("test")).to.equal("pkill -P `cat 'test'`");
     })
 
     it('extractFile', async () => {
