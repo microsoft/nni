@@ -290,8 +290,6 @@ class PAIK8STrainingService extends PAITrainingService {
             await this.writeParameterFile(trialJobDetail.logPath, trialJobDetail.form.hyperParameters);
         }
 
-        //Copy codeDir files to local working folder
-        await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
         //Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
         this.log.debug(paiJobConfig);
