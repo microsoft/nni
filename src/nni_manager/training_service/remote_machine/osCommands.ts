@@ -25,7 +25,7 @@ abstract class OsCommands {
     public abstract readLastLines(fileName: string, lineCount: number): string;
     public abstract isProcessAliveCommand(pidFileName: string): string;
     public abstract isProcessAliveProcessOutput(result: RemoteCommandResult): boolean;
-    public abstract killChildProcesses(pidFileName: string): string;
+    public abstract killChildProcesses(pidFileName: string, killSelf: boolean): string;
     public abstract extractFile(tarFileName: string, targetFolder: string): string;
     public abstract executeScript(script: string, isFile: boolean): string;
 

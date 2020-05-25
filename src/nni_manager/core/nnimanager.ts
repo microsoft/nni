@@ -566,7 +566,7 @@ class NNIManager implements Manager {
             assert(this.status.status === 'RUNNING' ||
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL' ||
-                this.status.status === 'TUNER_NO_MORE_TRIAL');
+                this.status.status === 'TUNER_NO_MORE_TRIAL', `Actual status: ${this.status.status}`);
             if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
                 if (this.status.status !== 'DONE') {

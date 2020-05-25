@@ -93,9 +93,9 @@ class LinuxCommands extends OsCommands {
         return result;
     }
 
-    public killChildProcesses(pidFileName: string): string {
+    public killChildProcesses(pidFileName: string, killSelf: boolean): string {
         // prevent trialkeeper to be killed, so it can save exit code.
-        const command = `list_descendants ()
+        let command = `list_descendants ()
                 {
                 local children=$(ps -o pid= --ppid "$1")
 
@@ -107,6 +107,9 @@ class LinuxCommands extends OsCommands {
                 echo "$children"
                 }
             kill $(list_descendants \`cat '${pidFileName}'\`)`
+        if (killSelf) {
+            command += `\nkill \`cat '${pidFileName}'\``
+        }
         return command;
     }
 

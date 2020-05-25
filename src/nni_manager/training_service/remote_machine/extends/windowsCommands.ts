@@ -102,11 +102,14 @@ class WindowsCommands extends OsCommands {
         return result;
     }
 
-    public killChildProcesses(pidFileName: string): string {
-        const command = `powershell "$ppid=(type ${pidFileName}); function Kill-Tree {Param([int]$subppid);` +
+    public killChildProcesses(pidFileName: string, killSelf: boolean): string {
+        let command = `powershell "$ppid=(type ${pidFileName}); function Kill-Tree {Param([int]$subppid);` +
             `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $subppid } | ForEach-Object { Kill-Tree $_.ProcessId }; ` +
-            `if ($subppid -ne $ppid){Stop-Process -Id $subppid}}` +
+            `if ($subppid -ne $ppid){Stop-Process -Id $subppid -Force"}}` +
             `kill-tree $ppid"`;
+        if (killSelf){
+            command += `;Stop-Process -Id $ppid`;
+        }
         return command;
     }
 
