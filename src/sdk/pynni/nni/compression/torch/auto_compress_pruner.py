@@ -4,14 +4,13 @@
 import logging
 import os
 import copy
-import csv
-import json
 from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
 from .compressor import Pruner
-from .pruners import SimulatedAnnealingPruner, ADMMPruner
+from .simulated_annealing_pruner import SimulatedAnnealingPruner
+from .admm_pruner import ADMMPruner
 from .utils import CompressorSchema
 
 
@@ -32,7 +31,7 @@ class AutoCompressPruner(Pruner):
     For more details, please refer to the paper: https://arxiv.org/abs/1907.03141.
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, optimize_mode='maximize', pruning_mode='channel',
+    def __init__(self, model, config_list, trainer, evaluator, iterations=3, optimize_mode='maximize', pruning_mode='channel',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
                  optimize_iterations=30, epochs=5, row=1e-4,  # ADMM related
@@ -50,6 +49,8 @@ class AutoCompressPruner(Pruner):
             function used for the first step of ADMM training
         evaluator : function
             function to evaluate the pruned model
+        iterations : int
+            number of overall iterations 
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
         pruning_mode : str
@@ -79,6 +80,7 @@ class AutoCompressPruner(Pruner):
 
         self._trainer = trainer
         self._evaluator = evaluator
+        self._iterations = iterations
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for SA algorithm
@@ -103,7 +105,7 @@ class AutoCompressPruner(Pruner):
         """
         redefine this function, consider only the layers without dependencies
         """
-        SimualtedAnnealingPruner._detect_modules_to_compress(self)
+        SimulatedAnnealingPruner._detect_modules_to_compress(self)
 
     def validate_config(self, model, config_list):
         """
@@ -137,11 +139,17 @@ class AutoCompressPruner(Pruner):
         """
         _logger.info('Starting AutoCompress pruning...')
 
-        for i in range(10):
+        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._iterations)
+
+        for i in range(self._iterations):
             _logger.info('Pruning iteration: %d', i)
+            _logger.info('Target sparsity this round: %s', 1-pow(1-sparsity_each_round, i+1))
+
+            # TODO: check iterative pruning
             SApruner = SimulatedAnnealingPruner(
                 model=copy.deepcopy(self._model_to_prune),
-                config_list=[{"sparsity": 2, "op_types": 'default'}],
+                config_list=[
+                    {"sparsity": sparsity_each_round, "op_types": 'default'}],
                 evaluator=self._evaluator,
                 optimize_mode=self._optimize_mode,
                 pruning_mode=self._pruning_mode,
@@ -152,7 +160,7 @@ class AutoCompressPruner(Pruner):
                 experiment_data_dir=self._experiment_data_dir)
             config_list = SApruner.compress(return_config_list=True)
 
-            ADMMPruner = ADMMPruner(
+            ADMMpruner = ADMMPruner(
                 model=self._model_to_prune,
                 config_list=config_list,
                 trainer=self._trainer,
@@ -160,7 +168,9 @@ class AutoCompressPruner(Pruner):
                 epochs=self._epochs,
                 row=self._row,
                 pruning_mode=self._pruning_mode)
-            ADMMPruner.compress()
+            ADMMpruner.compress()
+
+            
 
         _logger.info('----------Compression finished--------------')
 
