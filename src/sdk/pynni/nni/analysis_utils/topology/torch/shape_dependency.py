@@ -153,5 +153,33 @@ class ChannelDependency:
                         row.append(self.c2py[other].name)
                 csv_w.writerow(row)
 
+    @property
+    def dependency_sets(self):
+        """
+        Get the list of the dependency set.
+        
+        Returns
+        -------
+            dependency_sets:
+                list of the dependency sets. For example,
+                [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
+
+        """
+        d_sets = []
+        visited = set()
+        for node in self.cnodes:
+            if node.kind() != CONV_TYPE or node in visited:
+                continue
+            tmp_set = set()
+            if node not in self.dependency:
+                visited.add(node)
+                tmp_set.add(self.c2py[node].name)
+            else:
+                for other in self.dependency[node]:
+                    visited.add(other)
+                    tmp_set.add(self.c2py[other].name)
+            d_sets.append(tmp_set)
+        return d_sets
+                
 
 
