@@ -2,17 +2,53 @@
 
 NNI can run one experiment on multiple remote machines through SSH, called `remote` mode. It's like a lightweight training platform. In this mode, NNI can be started from your computer, and dispatch trials to remote machines in parallel.
 
-## Remote machine requirements
+The OS of remote machines supports `Linux`, `Windows 10`, and `Windows Server 2019`.
 
-* It only supports Linux as remote machines, and [linux part in system specification](../Tutorial/InstallationLinux.md) is same as NNI local mode.
+## Requirements
 
-* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on each machine.
-
-* Make sure remote machines meet environment requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
+* Make sure the default environment of remote machines meets requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into `command` field of NNI config.
 
 * Make sure remote machines can be accessed through SSH from the machine which runs `nnictl` command. It supports both password and key authentication of SSH. For advanced usages, please refer to [machineList part of configuration](../Tutorial/ExperimentConfig.md).
 
 * Make sure the NNI version on each machine is consistent.
+
+* Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called `python3` on Linux, and `python` on Windows.
+
+### Linux
+
+* Follow [installation](../Tutorial/InstallationLinux.md) to install NNI on the remote machine.
+
+### Windows
+
+* Follow [installation](../Tutorial/InstallationWin.md) to install NNI on the remote machine.
+
+* Install and start `OpenSSH Server`.
+
+  1. Open `Settings` app on Windows.
+
+  2. Click `Apps`, then click `Optional features`.
+
+  3. Click `Add a feature`, search and select `OpenSSH Server`, and then click `Install`.
+
+  4. Once it's installed, run below command to start and set to automatic start.
+
+  ```bat
+  sc config sshd start=auto
+  net start sshd
+  ```
+
+* Make sure remote account is administrator, so that it can stop running trials.
+
+* Make sure there is no welcome message more than default, since it causes ssh2 failed in NodeJs. For example, if you're using Data Science VM on Azure, it needs to remove extra echo commands in `C:\dsvm\tools\setup\welcome.bat`.
+
+  The output like below is ok, when opening a new command window.
+
+  ```text
+  Microsoft Windows [Version 10.0.17763.1192]
+  (c) 2018 Microsoft Corporation. All rights reserved.
+
+  (py37_default) C:\Users\AzureUser>
+  ```
 
 ## Run an experiment
 

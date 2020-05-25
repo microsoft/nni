@@ -319,8 +319,7 @@ After getting familiar with contribution agreements, you are ready to create you
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
 * ### **External Repositories** ###
-   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI
+   * Run [ENAS](examples/nas/enas/README.md) with NNI
    * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
    * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI

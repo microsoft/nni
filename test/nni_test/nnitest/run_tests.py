@@ -15,7 +15,7 @@ import ruamel.yaml as yaml
 from utils import get_experiment_status, get_yml_content, dump_yml_content, get_experiment_id, \
     parse_max_duration_time, get_trial_stats, deep_update, print_trial_job_log, get_failed_trial_jobs, \
     get_experiment_dir, print_experiment_log
-from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT, detect_port
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, EXPERIMENT_URL, REST_ENDPOINT, wait_for_port_available
 import validators
 
 it_variables = {}
@@ -157,7 +157,7 @@ def launch_test(config_file, training_service, test_case_config):
             if num_failed > 0:
                 print('failed jobs: ', num_failed)
                 break
-            time.sleep(3)
+            time.sleep(1)
     except:
         print_experiment_log(experiment_id=experiment_id)
         raise
@@ -168,6 +168,7 @@ def launch_test(config_file, training_service, test_case_config):
     trial_stats = get_trial_stats(TRIAL_JOBS_URL)
     print(json.dumps(trial_stats, indent=4), flush=True)
     if status != 'DONE' or trial_stats['SUCCEEDED'] + trial_stats['EARLY_STOPPED'] < max_trial_num:
+        print_experiment_log(experiment_id=experiment_id)
         print_trial_job_log(training_service, TRIAL_JOBS_URL)
         raise AssertionError('Failed to finish in maxExecDuration')
 
@@ -187,16 +188,6 @@ def case_included(name, cases):
         if case in name:
             return True
     return False
-
-def wait_for_port_available(port, timeout):
-    begin_time = time.time()
-    while True:
-        if not detect_port(port):
-            return
-        if time.time() - begin_time > timeout:
-            msg = 'port {} is not available in {} seconds.'.format(port, timeout)
-            raise RuntimeError(msg)
-        time.sleep(5)
 
 def match_platform(test_case_config):
     return sys.platform in test_case_config['platform'].split(' ')
