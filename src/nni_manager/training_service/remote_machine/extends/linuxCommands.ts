@@ -24,8 +24,8 @@ class LinuxCommands extends OsCommands {
             export MULTI_PHASE=${isMultiPhase}
             mkdir -p $NNI_SYS_DIR/code
             cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR/code
+            sh $NNI_SYS_DIR/install_nni.sh
             cd $NNI_SYS_DIR/code
-            sh install_nni.sh
             python3 -m nni_trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
                 --job_id_file ${jobIdFileName} \
