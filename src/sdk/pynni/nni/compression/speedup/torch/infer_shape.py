@@ -86,6 +86,24 @@ class CoarseMask:
     def __repr__(self):
         return 'mask_index: {}'.format(self.mask_index)
 
+    def __eq__(self, other):
+        # print(other)
+        assert isinstance(other, CoarseMask)
+        if len(self.mask_index) != len(other.mask_index):
+            return False
+        for i in range(len(self.mask_index)):
+            # print(type(self.mask_index[i]))
+            # print(self.mask_index[i])
+            # print(other.mask_index[i])
+            if self.mask_index[i] is None:
+                continue
+            if not torch.equal(self.mask_index[i], other.mask_index[i]):
+                return False
+        return True
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class ModuleMasks:
     """
     The masks of a module, including the masks for weights, inputs, output
@@ -160,7 +178,9 @@ infer_from_inshape = {
     'aten::view': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
     'aten::flatten': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape), # support only start_dim=1
     'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask),
-    'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask)
+    'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask),
+    'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
+    'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask)
 }
 
 """
@@ -170,6 +190,24 @@ infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
 
+def add_inshape(module_masks, mask):
+    """
+    Inference the output mask of the add operation from the 
+    input mask.
+    """
+    assert isinstance(mask, CoarseMask)
+    if module_masks.input_mask is None:
+        module_masks.set_input_mask(mask)
+        module_masks.set_output_mask(mask)
+        # module_masks.input_mask = mask
+        return mask
+    # If alreay visited, validate if have the conflict
+    # if the mask is different with previous input_mask
+    # then there is a mask confilct.
+    if mask != module_masks.input_mask:
+        raise Exception('Mask conflict happenes!')
+    return None
+    
 def batchnorm2d_inshape(module_masks, mask):
     """
     We assume only the second dimension has coarse grained mask
@@ -313,7 +351,13 @@ def relu_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     # TODO: double check this assert, is it possible that a module is passed twice
-    assert module_masks.input_mask is None, "A relu op can only be processed once"
+    if module_masks.input_mask is not None:
+        # check if has a mask conflict
+        # print('### mask', mask)
+        assert module_masks.input_mask == mask
+        # No need to pass the mask again
+        return None
+    # assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return mask

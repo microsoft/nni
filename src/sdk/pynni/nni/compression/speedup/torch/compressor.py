@@ -3,6 +3,7 @@
 
 import logging
 import torch
+import numpy as np
 from nni._graph_utils import build_module_graph
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
@@ -53,6 +54,7 @@ class ModelSpeedup:
         self.bound_model = model
         self.masks = torch.load(masks_file, map_location)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
+        self.dummy_input = dummy_input
         self.torch_graph = build_module_graph(model, dummy_input)
 
     def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
@@ -78,6 +80,7 @@ class ModelSpeedup:
         out_shape : ModuleMasks
             Output shape of this node
         """
+        print('#########\n', module_name)
         input_cmask = output_cmask = None
         if module_name in self.inferred_masks:
             module_masks = self.inferred_masks[module_name]
@@ -116,10 +119,12 @@ class ModelSpeedup:
 
         if input_cmask:
             predecessors = self.torch_graph.find_predecessors(module_name)
+            print('fathers:', predecessors)
             for _module_name in predecessors:
                 self.infer_module_mask(_module_name, out_shape=input_cmask)
         if output_cmask:
             successors = self.torch_graph.find_successors(module_name)
+            print('sons:', successors)
             for _module_name in successors:
                 self.infer_module_mask(_module_name, in_shape=output_cmask)
 
@@ -128,6 +133,8 @@ class ModelSpeedup:
         Do shape inference of involved modules, including the shape of weights, inputs, output
         """
         for module_name, mask in self.masks.items():
+            print('%%%%%%%%%%')
+            print('start_from', module_name)
             self.infer_module_mask(module_name, mask=mask)
 
     def replace_compressed_modules(self):
@@ -157,6 +164,61 @@ class ModelSpeedup:
             else:
                 raise RuntimeError("Unsupported node type: {}".format(g_node.type))
 
+    def fix_mask_conflict(self):
+        """
+            Fix the mask conflict before the mask inference for the layers that 
+            has shape dependencies.
+        """
+        print('test 1')
+        # TODO change to the absolute import after the analysis_util pr is merged
+        from ....analysis_utils.topology.torch.shape_dependency import ChannelDependency
+        channel_depen = ChannelDependency(self.bound_model, self.dummy_input)
+        depen_sets = channel_depen.dependency_sets
+        print(depen_sets)
+        for dset in depen_sets:
+            if len(dset) == 1:
+                # This layer has no dependency on other layers
+                continue
+            else:
+                print(dset)
+                channel_remain = set()
+                for name in dset:
+                    if name not in self.masks:
+                        # this layer is not pruned
+                        continue
+                    w_mask = self.masks[name]['weight']
+                    shape = w_mask.size()
+                    count = np.prod(shape[1:])
+                    all_ones = []
+                    all_zeros = []
+                    for i in range(w_mask.size(0)):
+                        _count = torch.sum(w_mask[i])
+                        if _count == count:
+                            all_ones.append(i)
+                        elif _count == 0:
+                            all_zeros.append(i)
+                    if len(all_ones) + len(all_zeros) < w_mask.size(0):
+                        # In fine-grained pruning, there is no need to check 
+                        # the shape conflict 
+                        break
+                    else:
+                        channel_remain.update(all_ones)
+                # Update the masks for the layers in the dependency set
+                ori_channels = 0
+                for name in dset:
+                    mask = self.masks[name]
+                    w_shape = mask['weight'].size()
+                    ori_channels = w_shape[0]
+                    for i in channel_remain:
+                        mask['weight'][i] = torch.ones(w_shape[1:])
+                        if hasattr(mask, 'bias'):
+                            mask['bias'][i] = 1
+                print(dset)
+                print('Pruned Channel')
+                print(set(list(range(ori_channels)))-channel_remain)
+
+                            
+
     def speedup_model(self):
         """
         There are basically two steps:
@@ -165,6 +227,8 @@ class ModelSpeedup:
         """
         training = self.bound_model.training
         _logger.info("start to speed up the model")
+        _logger.info("fix the mask conflict of the interdependent layers")
+        self.fix_mask_conflict()
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")

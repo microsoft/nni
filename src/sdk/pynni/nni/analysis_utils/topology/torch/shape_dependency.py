@@ -178,7 +178,7 @@ class ChannelDependency:
                 for other in self.dependency[node]:
                     visited.add(other)
                     tmp_set.add(self.c2py[other].name)
-        d_sets.append(tmp_set)
+            d_sets.append(tmp_set)
         return d_sets
                 
 
