@@ -28,7 +28,7 @@ class WindowsCommands extends OsCommands {
             set MULTI_PHASE=${isMultiPhase}
             set NNI_CODE_DIR=${codeDir}
             ${cudaVisibleSetting !== "" ? "set " + cudaVisibleSetting : ""}
-
+            powershell -command "New-Item -ItemType \"directory\" -Path %NNI_SYS_DIR%/code"
             robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%
             cd %NNI_SYS_DIR%
             python -c "import nni" 2>nul

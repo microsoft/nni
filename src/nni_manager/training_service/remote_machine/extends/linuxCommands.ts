@@ -22,9 +22,9 @@ class LinuxCommands extends OsCommands {
             export NNI_PLATFORM=remote NNI_SYS_DIR=${workingDirectory} NNI_OUTPUT_DIR=${workingDirectory} NNI_TRIAL_JOB_ID=${trialJobId} \
             NNI_EXP_ID=${experimentId} NNI_TRIAL_SEQ_ID=${trialSequenceId} NNI_CODE_DIR=${codeDir}
             export MULTI_PHASE=${isMultiPhase}
-
-            cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
-            cd $NNI_SYS_DIR
+            mkdir -p $NNI_SYS_DIR/code
+            cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR/code
+            cd $NNI_SYS_DIR/code
             sh install_nni.sh
             python3 -m nni_trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
