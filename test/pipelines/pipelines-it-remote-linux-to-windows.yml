@@ -45,6 +45,5 @@ jobs:
           runOptions: commands
           commands: |
             rmdir /s /q "\\?\c:\tmp\nnitest\$(Build.BuildId)"
-            rmdir /s /q C:\tmp\pytorch\mnist
         condition: always()
         displayName: "clean up on remote server"
