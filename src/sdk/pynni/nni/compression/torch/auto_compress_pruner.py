@@ -202,6 +202,9 @@ class AutoCompressPruner(Pruner):
 
         _logger.info('----------Compression finished--------------')
 
+        os.remove(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'))
+        os.remove(os.path.join(self._experiment_data_dir, 'mask.pth'))
+
         return self._model_to_prune
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):

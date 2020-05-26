@@ -120,7 +120,7 @@ class ADMMPruner(Pruner):
 
     def get_mask(self, base_mask, weight, num_prune):
         return L1FilterPruner.get_mask(self, base_mask, weight, num_prune)
-  
+
     def calc_mask(self, wrapper, **kwargs):
         """
         Calculate the mask of given layer.
