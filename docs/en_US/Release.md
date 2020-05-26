@@ -7,7 +7,7 @@
 #### New Features and improvement
 * Improve IPC limitation to 100W
 * improve code storage upload logic among trials in non-local platform
-* support "__version__" for SDK version
+* support `__version__` for SDK version
 
 ### Web UI
 *  Show trial error message
