@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import tensorflow as tf
-from tensorflow.data import Dataset
 
 def get_dataset():
     (x_train, y_train), (x_valid, y_valid) = tf.keras.datasets.cifar10.load_data()

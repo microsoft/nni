@@ -28,9 +28,9 @@ class WindowsCommands extends OsCommands {
             set MULTI_PHASE=${isMultiPhase}
             set NNI_CODE_DIR=${codeDir}
             ${cudaVisibleSetting !== "" ? "set " + cudaVisibleSetting : ""}
-
-            robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%
-            cd %NNI_SYS_DIR%
+            md %NNI_SYS_DIR%/code
+            robocopy /s %NNI_CODE_DIR%/. %NNI_SYS_DIR%/code
+            cd %NNI_SYS_DIR%/code
             python -c "import nni" 2>nul
             if not %ERRORLEVEL% EQU 0 (
                 echo installing NNI as exit code of "import nni" is %ERRORLEVEL%
@@ -102,11 +102,14 @@ class WindowsCommands extends OsCommands {
         return result;
     }
 
-    public killChildProcesses(pidFileName: string): string {
-        const command = `powershell "$ppid=(type ${pidFileName}); function Kill-Tree {Param([int]$subppid);` +
+    public killChildProcesses(pidFileName: string, killSelf: boolean): string {
+        let command = `powershell "$ppid=(type ${pidFileName}); function Kill-Tree {Param([int]$subppid);` +
             `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $subppid } | ForEach-Object { Kill-Tree $_.ProcessId }; ` +
-            `if ($subppid -ne $ppid){Stop-Process -Id $subppid}}` +
+            `if ($subppid -ne $ppid){Stop-Process -Id $subppid -Force"}}` +
             `kill-tree $ppid"`;
+        if (killSelf){
+            command += `;Stop-Process -Id $ppid`;
+        }
         return command;
     }
 
