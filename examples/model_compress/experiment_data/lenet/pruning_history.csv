@@ -1,4 +1,0 @@
-sparsity,performance,config_list
-0.5,0.9847,"[{""sparsity"": 0.0, ""op_names"": [""conv1""]}, {""sparsity"": 0.19615723928529874, ""op_names"": [""fc2""]}, {""sparsity"": 0.3448651654062513, ""op_names"": [""conv2""]}, {""sparsity"": 0.502876660227256, ""op_names"": [""fc1""]}]"
-0.5,0.9841,"[{""sparsity"": 0.13985710835577606, ""op_names"": [""conv1""]}, {""sparsity"": 0.18625739875167974, ""op_names"": [""fc2""]}, {""sparsity"": 0.3215367383109635, ""op_names"": [""conv2""]}, {""sparsity"": 0.5032178302538748, ""op_names"": [""fc1""]}]"
-0.5,0.9842,"[{""sparsity"": 0.1076061632482603, ""op_names"": [""conv1""]}, {""sparsity"": 0.11417928598553244, ""op_names"": [""fc2""]}, {""sparsity"": 0.28990184117892365, ""op_names"": [""conv2""]}, {""sparsity"": 0.5037995280871311, ""op_names"": [""fc1""]}]"
