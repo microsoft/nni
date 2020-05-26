@@ -38,7 +38,8 @@ class NetAdaptPruner(Pruner):
     For the details of this algorithm, please refer to the paper: https://arxiv.org/abs/1804.03230
     """
 
-    def __init__(self, model, config_list, evaluator, fine_tuner, optimize_mode='maximize', pruning_mode='channel', pruning_step=0.05, experiment_data_dir='./'):
+    def __init__(self, model, config_list, evaluator, fine_tuner,
+                 optimize_mode='maximize', pruning_mode='channel', pruning_step=0.05, experiment_data_dir='./'):
         """
         Parameters
         ----------
@@ -338,7 +339,9 @@ class NetAdaptPruner(Pruner):
                 _logger.info(
                     "Layer : %s, evaluation result after short-term fine tuning : %s", wrapper.name, performance)
 
-                if not best_layer or (self._optimize_mode is OptimizeMode.Maximize and performance > best_layer['performance']) or (self._optimize_mode is OptimizeMode.Minimize and performance < best_layer['performance']):
+                if not best_layer \
+                    or (self._optimize_mode is OptimizeMode.Maximize and performance > best_layer['performance']) \
+                    or (self._optimize_mode is OptimizeMode.Minimize and performance < best_layer['performance']):
                     _logger.debug("updating best layer to %s...", wrapper.name)
                     # find weight mask of this layer
                     for w in pruner.get_modules_wrapper():
@@ -378,7 +381,8 @@ class NetAdaptPruner(Pruner):
 
             current_sparsity = target_sparsity
             _logger.info('Pruning iteration %d finished.', pruning_iteration)
-            _logger.info('Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, current overall sparsity : %s',
+            _logger.info('Layer %s seleted with sparsity %s, performance after pruning & short term fine-tuning : %s, \
+                         current overall sparsity : %s',
                          best_layer['op_name'], best_layer['sparsity'], best_layer['performance'], current_sparsity)
             pruning_iteration += 1
 

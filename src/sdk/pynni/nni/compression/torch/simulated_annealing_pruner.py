@@ -255,17 +255,6 @@ class SimulatedAnnealingPruner(Pruner):
                 _logger.info("Sparsities perturbated:%s", sparsities)
                 return sparsities
 
-    def _set_modules_wrapper(self, modules_wrapper):
-        """
-        To obtain all the wrapped modules.
-
-        Parameters
-        -------
-        list
-            a list of the wrapped modules
-        """
-        self.modules_wrapper = copy.deepcopy(modules_wrapper)
-
     def calc_mask(self, wrapper, **kwargs):
         return None
 
@@ -324,10 +313,8 @@ class SimulatedAnnealingPruner(Pruner):
                         _logger.info('updating best model...')
                         self._best_performance = evaluation_result
                         self._best_config_list = config_list
-                        # if SimulatedAnnealingTuner is used seperately, return the overall best sparsities
-                        # else return current sparsities
-                        # self._set_modules_wrapper(
-                        #     pruner.get_modules_wrapper())
+
+                        # save the overall best masked model
                         self.bound_model = model_masked
                     break
                 # if not, accept with probability e^(-deltaE/current_temperature)
