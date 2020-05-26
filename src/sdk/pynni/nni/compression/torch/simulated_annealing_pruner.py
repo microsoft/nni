@@ -352,8 +352,7 @@ class SimulatedAnnealingPruner(Pruner):
 
         # save search history
         with open(os.path.join(self._experiment_data_dir, 'search_history.csv'), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=[
-                                    'sparsity', 'performance', 'config_list'])
+            writer = csv.DictWriter(csvfile, fieldnames=['sparsity', 'performance', 'config_list'])
             writer.writeheader()
             for item in self._search_history:
                 writer.writerow({'sparsity': item['sparsity'], 'performance': item['performance'], 'config_list': json.dumps(
